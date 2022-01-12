@@ -1,13 +1,14 @@
 package gov.nasa.jpl.aerie.merlin.server.exceptions;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 
 public class NoSuchActivityInstanceException extends Exception {
-  private final String planId;
+  private final PlanId planId;
   private final ActivityInstanceId activityInstanceId;
 
-  public NoSuchActivityInstanceException(final String planId, final ActivityInstanceId activityInstanceId) {
-    super("No activity exists with id `" + planId + "` in plan with id `" + planId + "`");
+  public NoSuchActivityInstanceException(final PlanId planId, final ActivityInstanceId activityInstanceId) {
+    super("No activity exists with id `" + activityInstanceId + "` in plan with id `" + planId + "`");
     this.planId = planId;
     this.activityInstanceId = activityInstanceId;
   }
@@ -16,7 +17,7 @@ public class NoSuchActivityInstanceException extends Exception {
     return this.activityInstanceId;
   }
 
-  public String getPlanId() {
+  public PlanId getPlanId() {
     return this.planId;
   }
 }

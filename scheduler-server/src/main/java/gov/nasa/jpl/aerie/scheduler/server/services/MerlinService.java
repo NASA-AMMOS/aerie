@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.MissionModelWrapper;
 import gov.nasa.jpl.aerie.scheduler.Plan;
 import gov.nasa.jpl.aerie.scheduler.Time;
@@ -21,7 +22,7 @@ public interface MerlinService {
    * @return the current revision number of the plan as stored in aerie
    * @throws NoSuchPlanException when the plan container does not exist in aerie
    */
-  long getPlanRevision(final String planId) throws IOException, NoSuchPlanException;
+  long getPlanRevision(final PlanId planId) throws IOException, NoSuchPlanException;
 
   /**
    * fetch current metadata of the target plan (not the activity instance content)
@@ -30,7 +31,7 @@ public interface MerlinService {
    * @return metadata about the plan that is useful to the scheduler, including current plan revision
    * @throws NoSuchPlanException when the plan container does not exist in aerie
    */
-  PlanMetadata getPlanMetadata(final String planId) throws IOException, NoSuchPlanException;
+  PlanMetadata getPlanMetadata(final PlanId planId) throws IOException, NoSuchPlanException;
 
   /**
    * create an in-memory snapshot of the target plan's activity contents from aerie
@@ -53,7 +54,7 @@ public interface MerlinService {
    * @return the database id of the newly created aerie plan container
    * @throws NoSuchPlanException when the plan container could not be found in aerie after creation
    */
-  long createNewPlanWithActivities(final PlanMetadata planMetadata, final Plan plan)
+  PlanId createNewPlanWithActivities(final PlanMetadata planMetadata, final Plan plan)
   throws IOException, NoSuchPlanException;
 
   /**
@@ -68,7 +69,7 @@ public interface MerlinService {
    * @return the database id of the newly created aerie plan container
    * @throws NoSuchPlanException when the plan container could not be found in aerie after creation
    */
-  long createEmptyPlan(final String name, final long modelId, final Time startTime, final Duration duration)
+  PlanId createEmptyPlan(final String name, final long modelId, final Time startTime, final Duration duration)
   throws IOException, NoSuchPlanException;
 
 
@@ -78,7 +79,7 @@ public interface MerlinService {
    * @param planId the database id of the aerie plan container to attach the simulation container to
    * @throws NoSuchPlanException when the plan container does not exist in aerie
    */
-  void createSimulationForPlan(final long planId) throws IOException, NoSuchPlanException;
+  void createSimulationForPlan(final PlanId planId) throws IOException, NoSuchPlanException;
 
   /**
    * synchronize the in-memory plan back over to aerie data stores via update operations
@@ -89,7 +90,7 @@ public interface MerlinService {
    * @param plan plan with all activity instances that should be stored to target merlin plan container
    * @throws NoSuchPlanException when the plan container does not exist in aerie
    */
-  void updatePlanActivities(final long planId, final Plan plan) throws IOException, NoSuchPlanException;
+  void updatePlanActivities(final PlanId planId, final Plan plan) throws IOException, NoSuchPlanException;
 
   /**
    * confirms that the specified plan exists in the aerie database, throwing exception if not
@@ -98,7 +99,7 @@ public interface MerlinService {
    * @throws NoSuchPlanException when the plan container does not exist in aerie
    */
   //TODO: (defensive) should combine such checks into the mutations they are guarding, but not possible in graphql?
-  void ensurePlanExists(final long planId) throws IOException, NoSuchPlanException;
+  void ensurePlanExists(final PlanId planId) throws IOException, NoSuchPlanException;
 
   /**
    * delete all the activity instances stored in the target plan container
@@ -108,7 +109,7 @@ public interface MerlinService {
    * @param planId the database id of the plan container to clear
    * @throws NoSuchPlanException when the plan container does not exist in aerie
    */
-  void clearPlanActivities(final long planId) throws IOException, NoSuchPlanException;
+  void clearPlanActivities(final PlanId planId) throws IOException, NoSuchPlanException;
 
   /**
    * create activity instances in the target plan container for each activity in the input plan
@@ -121,7 +122,7 @@ public interface MerlinService {
    * @param plan the plan from which to copy all activity instances into aerie
    * @throws NoSuchPlanException when the plan container does not exist in aerie
    */
-  void createAllPlanActivities(final long planId, final Plan plan) throws IOException, NoSuchPlanException;
+  void createAllPlanActivities(final PlanId planId, final Plan plan) throws IOException, NoSuchPlanException;
 
 
 }

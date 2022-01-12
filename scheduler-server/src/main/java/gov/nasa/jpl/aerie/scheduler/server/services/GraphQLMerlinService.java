@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.AerieController;
 import gov.nasa.jpl.aerie.scheduler.MissionModelWrapper;
@@ -93,7 +94,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    * {@inheritDoc}
    */
   @Override
-  public long getPlanRevision(final String planId) throws IOException, NoSuchPlanException {
+  public long getPlanRevision(final PlanId planId) throws IOException, NoSuchPlanException {
     final var request = "query getPlanRevision { plan_by_pk( id: %s ) { revision } }"
         .formatted(planId);
     final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(planId));
@@ -110,7 +111,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    * retrieves the metadata via a single atomic graphql query
    */
   @Override
-  public PlanMetadata getPlanMetadata(final String planId) throws IOException, NoSuchPlanException {
+  public PlanMetadata getPlanMetadata(final PlanId planId) throws IOException, NoSuchPlanException {
     final var request = (
         "query getPlanMetadata { "
         + "plan_by_pk( id: %s ) { "
@@ -158,9 +159,13 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
           Time.fromString(endTime.toString()));
 
       return new PlanMetadata(
-          planPK, planRev,
+          new PlanId(planPK),
+          planRev,
           horizon,
-          modelId, modelPath, modelName, modelVersion,
+          modelId,
+          modelPath,
+          modelName,
+          modelVersion,
           modelConfiguration);
     } catch (ClassCastException | ArithmeticException | InvalidJsonException e) {
       //TODO: better error reporting upward to service response (NSPEx doesn't allow passing e as cause)
@@ -178,7 +183,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
     //thanks to AMaillard for already having these handy!
     final var controller = new AerieController(
         this.merlinGraphqlURI.toString(), (int) planMetadata.modelId(), planMetadata.horizon(), mission);
-    return controller.fetchPlan(planMetadata.planId());
+    return controller.fetchPlan(planMetadata.planId().id());
   }
 
   /**
@@ -198,7 +203,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    * {@inheritDoc}
    */
   @Override
-  public long createNewPlanWithActivities(final PlanMetadata planMetadata, final Plan plan)
+  public PlanId createNewPlanWithActivities(final PlanMetadata planMetadata, final Plan plan)
   throws IOException, NoSuchPlanException
   {
     final var planName = getNextPlanName();
@@ -215,7 +220,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    * {@inheritDoc}
    */
   @Override
-  public long createEmptyPlan(final String name, final long modelId, final Time startTime, final Duration duration)
+  public PlanId createEmptyPlan(final String name, final long modelId, final Time startTime, final Duration duration)
   throws IOException, NoSuchPlanException
   {
     final var requestFormat = (
@@ -228,11 +233,16 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
     final var request = requestFormat.formatted(
         getGraphQLValueString(name), modelId, getGraphQLValueString(startTime), durStr);
 
-    final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(name));
+    final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(null));
     try {
-      return response.getJsonObject("data").getJsonObject("insert_plan_one").getJsonNumber("id").longValueExact();
+      return new PlanId(
+          response
+              .getJsonObject("data")
+              .getJsonObject("insert_plan_one")
+              .getJsonNumber("id")
+              .longValueExact());
     } catch (ClassCastException | ArithmeticException e) {
-      throw new NoSuchPlanException(name);
+      throw new NoSuchPlanException(null);
     }
   }
 
@@ -240,16 +250,16 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    * {@inheritDoc}
    */
   @Override
-  public void createSimulationForPlan(final long planId) throws IOException, NoSuchPlanException {
+  public void createSimulationForPlan(final PlanId planId) throws IOException, NoSuchPlanException {
     final var request = (
         "mutation createSimulationForPlan { insert_simulation_one( object: {"
         + "plan_id: %d arguments: {} } ) { id } }")
-        .formatted(planId);
-    final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(Long.toString(planId)));
+        .formatted(planId.id());
+    final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(planId));
     try {
       response.getJsonObject("data").getJsonObject("insert_simulation_one").getJsonNumber("id").longValueExact();
     } catch (ClassCastException | ArithmeticException e) {
-      throw new NoSuchPlanException(Long.toString(planId));
+      throw new NoSuchPlanException(planId);
     }
   }
 
@@ -257,7 +267,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    * {@inheritDoc}
    */
   @Override
-  public void updatePlanActivities(final long planId, final Plan plan) throws IOException, NoSuchPlanException
+  public void updatePlanActivities(final PlanId planId, final Plan plan) throws IOException, NoSuchPlanException
   {
     //TODO: (api violation) currently clearing and repopulating plan; but loses existing activity instance ids!
     //TODO: (perf improvement) calculate or cache plan diffs during sched and then upload to aerie in batch here
@@ -270,14 +280,20 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    * {@inheritDoc}
    */
   @Override
-  public void ensurePlanExists(final long planId) throws IOException, NoSuchPlanException {
-    final Supplier<NoSuchPlanException> exceptionFactory = () -> new NoSuchPlanException(Long.toString(planId));
+  public void ensurePlanExists(final PlanId planId) throws IOException, NoSuchPlanException {
+    final Supplier<NoSuchPlanException> exceptionFactory = () -> new NoSuchPlanException(planId);
     final var request = "query ensurePlanExists { plan_by_pk( id: %s ) { id } }"
         .formatted(planId);
     final var response = postRequest(request).orElseThrow(exceptionFactory);
     try {
-      final var id = response.getJsonObject("data").getJsonObject("plan_by_pk").getJsonNumber("id").longValueExact();
-      if (id != planId) {
+      final var id =
+          new PlanId(
+              response
+              .getJsonObject("data")
+              .getJsonObject("plan_by_pk")
+              .getJsonNumber("id")
+              .longValueExact());
+      if (id.equals(planId)) {
         throw exceptionFactory.get();
       }
     } catch (ClassCastException | ArithmeticException e) {
@@ -291,7 +307,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    */
   //TODO: (error cleanup) more diverse exceptions for failed operations
   @Override
-  public void clearPlanActivities(final long planId) throws IOException, NoSuchPlanException {
+  public void clearPlanActivities(final PlanId planId) throws IOException, NoSuchPlanException {
     ensurePlanExists(planId);
     final var request = (
         "mutation clearPlanActivities {"
@@ -299,12 +315,12 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
         + "    affected_rows"
         + "  }"
         + "}"
-    ).formatted(planId);
-    final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(Long.toString(planId)));
+    ).formatted(planId.id());
+    final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(planId));
     try {
       response.getJsonObject("data").getJsonObject("delete_activity").getJsonNumber("affected_rows").longValueExact();
     } catch (ClassCastException | ArithmeticException e) {
-      throw new NoSuchPlanException(Long.toString(planId));
+      throw new NoSuchPlanException(planId);
     }
   }
 
@@ -312,7 +328,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    * {@inheritDoc}
    */
   @Override
-  public void createAllPlanActivities(final long planId, final Plan plan) throws IOException, NoSuchPlanException {
+  public void createAllPlanActivities(final PlanId planId, final Plan plan) throws IOException, NoSuchPlanException {
     ensurePlanExists(planId);
     final var requestPre = "mutation createAllPlanActivities { insert_activity( objects: [";
     final var requestPost = "] ) { affected_rows } }";
@@ -339,15 +355,15 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
     requestSB.append(requestPost);
     final var request = requestSB.toString();
 
-    final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(Long.toString(planId)));
+    final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(planId));
     try {
       final var numCreated = response
           .getJsonObject("data").getJsonObject("insert_activity").getJsonNumber("affected_rows").longValueExact();
       if (numCreated != plan.getActivities().size()) {
-        throw new NoSuchPlanException(Long.toString(planId));
+        throw new NoSuchPlanException(planId);
       }
     } catch (ClassCastException | ArithmeticException e) {
-      throw new NoSuchPlanException(Long.toString(planId));
+      throw new NoSuchPlanException(planId);
     }
   }
 

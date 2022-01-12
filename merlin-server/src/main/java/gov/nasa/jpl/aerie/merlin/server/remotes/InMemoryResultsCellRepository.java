@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryPlanRepository;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,7 +12,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public final class InMemoryResultsCellRepository implements ResultsCellRepository {
-  public record Key(String planId, long planRevision) {}
+  public record Key(PlanId planId, long planRevision) {}
 
   private final Map<InMemoryResultsCellRepository.Key, InMemoryCell> cells = new HashMap<>();
   private final PlanRepository planRepository;
@@ -21,7 +22,7 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
   }
 
   @Override
-  public ResultsProtocol.OwnerRole allocate(final String planId) {
+  public ResultsProtocol.OwnerRole allocate(final PlanId planId) {
     try {
       final var planRevision = planRepository.getPlanRevision(planId);
       final var cell = new InMemoryCell(planId, planRevision);
@@ -33,7 +34,7 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
   }
 
   @Override
-  public Optional<ResultsProtocol.ReaderRole> lookup(final String planId) {
+  public Optional<ResultsProtocol.ReaderRole> lookup(final PlanId planId) {
     try {
       final var planRevision = planRepository.getPlanRevision(planId);
       return Optional.ofNullable(this.cells.get(new InMemoryResultsCellRepository.Key(planId, planRevision)));
@@ -75,10 +76,10 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
   public static final class InMemoryCell implements ResultsProtocol.OwnerRole {
     private volatile boolean canceled = false;
     private volatile ResultsProtocol.State state = new ResultsProtocol.State.Incomplete();
-    public final String planId;
+    public final PlanId planId;
     public final long planRevision;
 
-    public InMemoryCell(final String planId, final long planRevision) {
+    public InMemoryCell(final PlanId planId, final long planRevision) {
       this.planId = planId;
       this.planRevision = planRevision;
     }

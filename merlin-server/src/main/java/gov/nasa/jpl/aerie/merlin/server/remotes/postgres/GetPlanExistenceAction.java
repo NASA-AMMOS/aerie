@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -17,8 +18,8 @@ import java.sql.SQLException;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public boolean get(final long planId) throws SQLException {
-    this.statement.setLong(1, planId);
+  public boolean get(final PlanId planId) throws SQLException {
+    this.statement.setLong(1, planId.id());
 
     try (final var results = this.statement.executeQuery()) {
       return results.next();

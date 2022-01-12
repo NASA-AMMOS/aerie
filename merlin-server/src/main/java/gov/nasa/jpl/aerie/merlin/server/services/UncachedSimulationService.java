@@ -2,11 +2,12 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryRevisionData;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.InMemoryResultsCellRepository.InMemoryCell;
 
 public record UncachedSimulationService (SimulationAgent action) implements SimulationService {
   @Override
-  public ResultsProtocol.State getSimulationResults(final String planId, final RevisionData revisionData) {
+  public ResultsProtocol.State getSimulationResults(final PlanId planId, final RevisionData revisionData) {
     if (!(revisionData instanceof InMemoryRevisionData inMemoryRevisionData)) {
       throw new Error("UncachedSimulationService only accepts InMemoryRevisionData");
     }

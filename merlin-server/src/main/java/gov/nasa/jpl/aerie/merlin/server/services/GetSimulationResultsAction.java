@@ -14,6 +14,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 
 import javax.json.Json;
 import java.io.StringReader;
@@ -46,7 +47,7 @@ public final class GetSimulationResultsAction {
     this.simulationService = Objects.requireNonNull(simulationService);
   }
 
-  public Response run(final String planId) throws NoSuchPlanException {
+  public Response run(final PlanId planId) throws NoSuchPlanException {
     final var revisionData = this.planService.getPlanRevisionData(planId);
 
     final var response = this.simulationService.getSimulationResults(planId, revisionData);
@@ -65,7 +66,7 @@ public final class GetSimulationResultsAction {
     }
   }
 
-  public Map<String, List<Violation>> getViolations(final String planId, final SimulationResults results)
+  public Map<String, List<Violation>> getViolations(final PlanId planId, final SimulationResults results)
   throws NoSuchPlanException
   {
     final var plan = this.planService.getPlan(planId);

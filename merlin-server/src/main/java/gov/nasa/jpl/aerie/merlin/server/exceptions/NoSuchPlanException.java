@@ -1,14 +1,16 @@
 package gov.nasa.jpl.aerie.merlin.server.exceptions;
 
-public class NoSuchPlanException extends Exception {
-  private final String id;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 
-  public NoSuchPlanException(final String id) {
+public class NoSuchPlanException extends Exception {
+  private final PlanId id;
+
+  public NoSuchPlanException(final PlanId id) {
     super("No plan exists with id `" + id + "`");
     this.id = id;
   }
 
-  public String getInvalidPlanId() {
+  public PlanId getInvalidPlanId() {
     return this.id;
   }
 }

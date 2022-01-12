@@ -11,11 +11,11 @@ public record HasuraAction<I extends HasuraAction.Input>(String name, I input, S
   public interface Input { }
 
   public record MissionModelInput(String missionModelId) implements Input { }
-  public record PlanInput(String planId) implements Input { }
+  public record PlanInput(PlanId planId) implements Input { }
   public record ActivityInput(String missionModelId,
                               String activityTypeName,
                               Map<String, SerializedValue> arguments) implements Input {}
-  public record UploadExternalDatasetInput(String planId,
+  public record UploadExternalDatasetInput(PlanId planId,
                                            Timestamp datasetStart,
                                            ProfileSet profileSet) implements Input {}
 }

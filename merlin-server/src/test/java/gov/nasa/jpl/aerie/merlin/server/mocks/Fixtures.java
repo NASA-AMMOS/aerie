@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ public final class Fixtures {
   public final StubMissionModelService missionModelService;
 
   public final String EXISTENT_MISSION_MODEL_ID;
-  public final String EXISTENT_PLAN_ID;
+  public final PlanId EXISTENT_PLAN_ID;
   public final String EXISTENT_ACTIVITY_TYPE_ID;
   public final ActivityInstanceId EXISTENT_ACTIVITY_INSTANCE_ID;
   public final ActivityInstance EXISTENT_ACTIVITY_INSTANCE;

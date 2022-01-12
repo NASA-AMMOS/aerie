@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.intellij.lang.annotations.Language;
 
@@ -24,13 +25,13 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
   }
 
   public PlanDatasetRecord apply(
-      final long planId,
+      final PlanId planId,
       final Timestamp planStart,
       final Timestamp datasetStart
   ) throws SQLException {
     final var offsetFromPlanStart = Duration.of(planStart.microsUntil(datasetStart), MICROSECONDS);
 
-    this.statement.setLong(1, planId);
+    this.statement.setLong(1, planId.id());
     PreparedStatements.setTimestamp(this.statement, 2, datasetStart);
     PreparedStatements.setTimestamp(this.statement, 3, planStart);
 

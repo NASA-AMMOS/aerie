@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 
@@ -52,7 +53,7 @@ public record ScheduleAction(MerlinService merlinService, SchedulerService sched
    * @return a response object wrapping summary results of the run (either successful or not)
    * @throws NoSuchPlanException if the target plan could not be found
    */
-  public Response run(final String planId) throws NoSuchPlanException, IOException {
+  public Response run(final PlanId planId) throws NoSuchPlanException, IOException {
     //record the plan revision as of the scheduling request time (in case work commences much later eg in worker thread)
     //TODO may also need to verify the model revision / other volatile metadata matches one from request
     final long planRev = this.merlinService.getPlanMetadata(planId).planRev();

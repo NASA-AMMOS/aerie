@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.models;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.PlanningHorizon;
 
 import java.nio.file.Path;
@@ -19,7 +20,7 @@ import java.util.Map;
  * @param modelConfiguration plan-specific arguments to tune the behavior of the mission model
  */
 public record PlanMetadata(
-    long planId,
+    PlanId planId,
     long planRev,
     PlanningHorizon horizon,
     long modelId,

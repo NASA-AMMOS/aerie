@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -25,7 +26,7 @@ public record SynchronousSimulationAgent (
   }
 
   @Override
-  public void simulate(final String planId, final RevisionData revisionData, final ResultsProtocol.WriterRole writer) {
+  public void simulate(final PlanId planId, final RevisionData revisionData, final ResultsProtocol.WriterRole writer) {
     final Plan plan;
     try {
       plan = this.planService.getPlan(planId);

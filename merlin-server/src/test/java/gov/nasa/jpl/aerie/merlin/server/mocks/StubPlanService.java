@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
@@ -43,7 +44,7 @@ public final class StubPlanService implements PlanService {
   }
 
 
-  public Plan getPlan(final String planId) throws NoSuchPlanException {
+  public Plan getPlan(final PlanId planId) throws NoSuchPlanException {
     if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(planId);
     }
@@ -52,7 +53,7 @@ public final class StubPlanService implements PlanService {
   }
 
   @Override
-  public RevisionData getPlanRevisionData(final String planId) throws NoSuchPlanException {
+  public RevisionData getPlanRevisionData(final PlanId planId) throws NoSuchPlanException {
     if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(planId);
     }
@@ -61,13 +62,13 @@ public final class StubPlanService implements PlanService {
   }
 
   @Override
-  public Map<String, Constraint> getConstraintsForPlan(final String planId)
+  public Map<String, Constraint> getConstraintsForPlan(final PlanId planId)
   throws NoSuchPlanException {
     return Map.of();
   }
 
   @Override
-  public long addExternalDataset(final String id, final Timestamp datasetStart, final ProfileSet profileSet)
+  public long addExternalDataset(final PlanId planId, final Timestamp datasetStart, final ProfileSet profileSet)
   throws NoSuchPlanException
   {
     return 0;

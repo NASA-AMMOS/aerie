@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
@@ -25,25 +26,25 @@ import java.util.Map;
  */
 public interface PlanRepository {
   // Queries
-  Map<String, Plan> getAllPlans();
-  Plan getPlan(String planId) throws NoSuchPlanException;
-  long getPlanRevision(String planId) throws NoSuchPlanException;
-  RevisionData getPlanRevisionData(String planId) throws NoSuchPlanException;
-  Map<ActivityInstanceId, ActivityInstance> getAllActivitiesInPlan(String planId) throws NoSuchPlanException;
+  Map<PlanId, Plan> getAllPlans();
+  Plan getPlan(PlanId planId) throws NoSuchPlanException;
+  long getPlanRevision(PlanId planId) throws NoSuchPlanException;
+  RevisionData getPlanRevisionData(PlanId planId) throws NoSuchPlanException;
+  Map<ActivityInstanceId, ActivityInstance> getAllActivitiesInPlan(PlanId planId) throws NoSuchPlanException;
 
   // Mutations
   CreatedPlan createPlan(NewPlan plan) throws MissionModelRepository.NoSuchMissionModelException;
-  PlanTransaction updatePlan(String planId) throws NoSuchPlanException;
-  void deletePlan(String planId) throws NoSuchPlanException;
+  PlanTransaction updatePlan(PlanId planId) throws NoSuchPlanException;
+  void deletePlan(PlanId planId) throws NoSuchPlanException;
 
-  ActivityInstanceId createActivity(String planId, ActivityInstance activity) throws NoSuchPlanException;
-  void deleteAllActivities(String planId) throws NoSuchPlanException;
+  ActivityInstanceId createActivity(PlanId planId, ActivityInstance activity) throws NoSuchPlanException;
+  void deleteAllActivities(PlanId planId) throws NoSuchPlanException;
 
-  Map<String, Constraint> getAllConstraintsInPlan(String planId) throws NoSuchPlanException;
+  Map<String, Constraint> getAllConstraintsInPlan(PlanId planId) throws NoSuchPlanException;
 
-  long addExternalDataset(String planId, Timestamp datasetStart, ProfileSet profileSet) throws NoSuchPlanException;
+  long addExternalDataset(PlanId planId, Timestamp datasetStart, ProfileSet profileSet) throws NoSuchPlanException;
 
-  record CreatedPlan(String planId, List<ActivityInstanceId> activityIds) {}
+  record CreatedPlan(PlanId planId, List<ActivityInstanceId> activityIds) {}
 
   interface PlanTransaction {
     void commit() throws NoSuchPlanException;

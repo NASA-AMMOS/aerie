@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.Goal;
 import gov.nasa.jpl.aerie.scheduler.HuginnConfiguration;
@@ -94,7 +95,7 @@ public record SynchronousSchedulerAgent(
    * @return snapshot of current metadata for target plan from merlin
    * @throws ResultsProtocolFailure when the requested plan cannot be found, or aerie could not be reached
    */
-  private PlanMetadata getMerlinPlanMetadata(final String planId) {
+  private PlanMetadata getMerlinPlanMetadata(final PlanId planId) {
     try {
       return merlinService.getPlanMetadata(planId);
     } catch (NoSuchPlanException | IOException e) {
@@ -109,7 +110,7 @@ public record SynchronousSchedulerAgent(
    * @return the current revision number of the target plan according to a fresh query
    * @throws ResultsProtocolFailure when the requested plan cannot be found, or aerie could not be reached
    */
-  private long getMerlinPlanRev(final String planId) {
+  private long getMerlinPlanRev(final PlanId planId) {
     try {
       return merlinService.getPlanRevision(planId);
     } catch (NoSuchPlanException | IOException e) {

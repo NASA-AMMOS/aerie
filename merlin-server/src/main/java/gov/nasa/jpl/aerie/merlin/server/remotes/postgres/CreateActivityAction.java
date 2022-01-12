@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.intellij.lang.annotations.Language;
 
@@ -23,12 +24,12 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
   }
 
   public long apply(
-      final long planId,
+      final PlanId planId,
       final Timestamp planStartTime,
       final Timestamp activityStartTime,
       final String type
   ) throws SQLException, FailedInsertException {
-    this.statement.setLong(1, planId);
+    this.statement.setLong(1, planId.id());
     setTimestamp(this.statement, 2, activityStartTime);
     setTimestamp(this.statement, 3, planStartTime);
     this.statement.setString(4, type);

@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 
 public record CachedSimulationService (
@@ -8,7 +9,7 @@ public record CachedSimulationService (
     SimulationAgent agent
 ) implements SimulationService {
   @Override
-  public ResultsProtocol.State getSimulationResults(final String planId, final RevisionData revisionData) {
+  public ResultsProtocol.State getSimulationResults(final PlanId planId, final RevisionData revisionData) {
     final var cell$ = this.store.lookup(planId);
     if (cell$.isPresent()) {
       return cell$.get().get();

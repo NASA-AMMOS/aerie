@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+
 import java.util.Objects;
 
 /**
@@ -8,7 +10,7 @@ import java.util.Objects;
  * @param planId target plan to read as initial input schedule as well as target for the output schedule
  * @param planRev the revision of the plan when the schedule request was placed (to determine if stale)
  */
-public record ScheduleRequest(String planId, long planRev) {
+public record ScheduleRequest(PlanId planId, long planRev) {
   public ScheduleRequest {
     Objects.requireNonNull(planId, "planId must not be null");
     Objects.requireNonNull(planRev, "planRev must not be null");
