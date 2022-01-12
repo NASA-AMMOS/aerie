@@ -4,8 +4,8 @@ import gov.nasa.jpl.aerie.banananation.Flag;
 import gov.nasa.jpl.aerie.banananation.Mission;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Validation;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Template;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Validation;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Template;
 
 /**
  * Throw a banana.

@@ -1,10 +1,10 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
-import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 
 public final class Configuration {
 
-  @ActivityType.Parameter
+  @Export.Parameter
   public Double sinkRate;
 
   public Configuration(final Double sinkRate) {

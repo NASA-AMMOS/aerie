@@ -6,8 +6,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.SpecificationTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
 
 import javax.lang.model.element.Modifier;
 import java.util.List;
@@ -17,13 +16,13 @@ import java.util.stream.Collectors;
 public class NoneDefinedMethodMaker implements MapperMethodMaker {
 
   @Override
-  public MethodSpec makeInstantiateMethod(final SpecificationTypeRecord specType) {
-    final var exceptionClass = MapperMethodMaker.getInstantiateException(specType);
+  public MethodSpec makeInstantiateMethod(final ExportTypeRecord exportType) {
+    final var exceptionClass = MapperMethodMaker.getInstantiateException(exportType);
 
     var methodBuilder = MethodSpec.methodBuilder("instantiate")
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
-        .returns(TypeName.get(specType.declaration().asType()))
+        .returns(TypeName.get(exportType.declaration().asType()))
         .addException(exceptionClass)
         .addParameter(
             ParameterizedTypeName.get(
@@ -34,7 +33,7 @@ public class NoneDefinedMethodMaker implements MapperMethodMaker {
             Modifier.FINAL);
 
     methodBuilder = methodBuilder.addCode(
-        specType.parameters()
+        exportType.parameters()
             .stream()
             .map(parameter -> CodeBlock
                 .builder()
@@ -54,7 +53,7 @@ public class NoneDefinedMethodMaker implements MapperMethodMaker {
     methodBuilder = methodBuilder.beginControlFlow("for (final var $L : $L.entrySet())", "entry", "arguments")
         .beginControlFlow("switch ($L.getKey())", "entry")
         .addCode(
-            specType.parameters()
+            exportType.parameters()
                 .stream()
                 .map(parameter -> CodeBlock
                     .builder()
@@ -84,13 +83,13 @@ public class NoneDefinedMethodMaker implements MapperMethodMaker {
         .endControlFlow().addCode("\n");
 
     methodBuilder = MapperMethodMaker
-        .makeArgumentPresentCheck(methodBuilder, specType).addCode("\n");
+        .makeArgumentPresentCheck(methodBuilder, exportType).addCode("\n");
 
     // Add return statement with instantiation of class with parameters
     methodBuilder = methodBuilder.addStatement(
         "return new $T($L)",
-        specType.declaration(),
-        specType.parameters().stream().map(
+        exportType.declaration(),
+        exportType.parameters().stream().map(
             parameter -> parameter.name + ".get()").collect(Collectors.joining(", ")));
 
     return methodBuilder.build();

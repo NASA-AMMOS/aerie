@@ -8,7 +8,7 @@ public record ConfigurationTypeRecord(
     TypeElement declaration,
     List<ParameterRecord> parameters,
     List<ParameterValidationRecord> validations,
-    ActivityMapperRecord mapper,
-    ActivityDefaultsStyle defaultsStyle
-  ) implements SpecificationTypeRecord { }
+    MapperRecord mapper,
+    ExportDefaultsStyle defaultsStyle
+  ) implements ExportTypeRecord { }
 

@@ -16,13 +16,12 @@ import gov.nasa.jpl.aerie.merlin.processor.Resolver;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ConfigurationTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.SpecificationTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 
-import java.io.ObjectInputFilter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -422,35 +421,35 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
   }
 
   /** Generate common `${activity_name}Mapper` methods. */
-  public Optional<TypeSpec> generateCommonMapperMethods(final MissionModelRecord missionModel, final SpecificationTypeRecord specType) {
-    final var maybeMapperBlocks = generateParameterMapperBlocks(missionModel, specType);
+  public Optional<TypeSpec> generateCommonMapperMethods(final MissionModelRecord missionModel, final ExportTypeRecord exportType) {
+    final var maybeMapperBlocks = generateParameterMapperBlocks(missionModel, exportType);
     if (maybeMapperBlocks.isEmpty()) return Optional.empty();
 
     final var mapperBlocks = maybeMapperBlocks.get();
-    final var mapperMethodMaker = MapperMethodMaker.make(specType.defaultsStyle());
+    final var mapperMethodMaker = MapperMethodMaker.make(exportType.defaultsStyle());
 
     // TODO currently only 2 permitted classes (activity and config. type records),
     //  this should be changed to a switch expression once sealed class pattern-matching switch expressions exist
     final TypeName superInterface;
-    if (specType instanceof ActivityTypeRecord) {
+    if (exportType instanceof ActivityTypeRecord) {
       superInterface = ParameterizedTypeName.get(
           ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
           ParameterizedTypeName.get(
               ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
               ClassName.get(missionModel.topLevelModel)),
-          ClassName.get(specType.declaration()));
+          ClassName.get(exportType.declaration()));
     } else { // is instanceof ConfigurationTypeRecord
       superInterface = ParameterizedTypeName.get(
           ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType.class),
-          ClassName.get(specType.declaration()));
+          ClassName.get(exportType.declaration()));
     }
 
     return Optional.of(TypeSpec
-        .classBuilder(specType.mapper().name)
+        .classBuilder(exportType.mapper().name)
         // The location of the missionModel package determines where to put this class.
         .addOriginatingElement(missionModel.$package)
         // The fields and methods of the activity determines the overall behavior of this class.
-        .addOriginatingElement(specType.declaration())
+        .addOriginatingElement(exportType.declaration())
         // TODO: Add an originating element for each of the mapper rulesets associated with the mission model.
         .addAnnotation(
             AnnotationSpec
@@ -460,7 +459,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
         .addSuperinterface(superInterface)
         .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
         .addFields(
-            specType.parameters()
+            exportType.parameters()
                 .stream()
                 .map(parameter -> FieldSpec
                     .builder(
@@ -484,7 +483,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         .addMember("value", "$S", "unchecked")
                         .build())
                 .addCode(
-                    specType.parameters()
+                    exportType.parameters()
                         .stream()
                         .map(parameter -> CodeBlock
                             .builder()
@@ -501,13 +500,13 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
                 .returns(String.class)
-                .addStatement("return $S", specType.name())
+                .addStatement("return $S", exportType.name())
                 .build())
-        .addMethod(mapperMethodMaker.makeGetRequiredParametersMethod(specType))
-        .addMethod(mapperMethodMaker.makeGetParametersMethod(specType))
-        .addMethod(mapperMethodMaker.makeGetArgumentsMethod(specType))
-        .addMethod(mapperMethodMaker.makeInstantiateMethod(specType))
-        .addMethod(mapperMethodMaker.makeGetValidationFailures(specType))
+        .addMethod(mapperMethodMaker.makeGetRequiredParametersMethod(exportType))
+        .addMethod(mapperMethodMaker.makeGetParametersMethod(exportType))
+        .addMethod(mapperMethodMaker.makeGetArgumentsMethod(exportType))
+        .addMethod(mapperMethodMaker.makeInstantiateMethod(exportType))
+        .addMethod(mapperMethodMaker.makeGetValidationFailures(exportType))
         .build());
   }
 
@@ -569,13 +568,13 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             .build());
   }
 
-  private Optional<Map<String, CodeBlock>> generateParameterMapperBlocks(final MissionModelRecord missionModel, final SpecificationTypeRecord specType)
+  private Optional<Map<String, CodeBlock>> generateParameterMapperBlocks(final MissionModelRecord missionModel, final ExportTypeRecord exportType)
   {
     final var resolver = new Resolver(this.typeUtils, this.elementUtils, missionModel.typeRules);
     var failed = false;
     final var mapperBlocks = new HashMap<String, CodeBlock>();
 
-    for (final var parameter : specType.parameters()) {
+    for (final var parameter : exportType.parameters()) {
       final var mapperBlock = resolver.instantiateNullableMapperFor(parameter.type);
       if (mapperBlock.isPresent()) {
         mapperBlocks.put(parameter.name, mapperBlock.get());

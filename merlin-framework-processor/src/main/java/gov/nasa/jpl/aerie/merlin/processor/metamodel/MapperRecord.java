@@ -5,20 +5,20 @@ import com.squareup.javapoet.ClassName;
 import javax.lang.model.element.PackageElement;
 import java.util.Objects;
 
-public final class ActivityMapperRecord {
+public final class MapperRecord {
   public final ClassName name;
   public final boolean isCustom;
 
-  public ActivityMapperRecord(final ClassName name, final boolean isCustom) {
+  public MapperRecord(final ClassName name, final boolean isCustom) {
     this.name = Objects.requireNonNull(name);
     this.isCustom = isCustom;
   }
 
-  public static ActivityMapperRecord custom(final ClassName name) {
-    return new ActivityMapperRecord(name, true);
+  public static MapperRecord custom(final ClassName name) {
+    return new MapperRecord(name, true);
   }
 
-  public static ActivityMapperRecord
+  public static MapperRecord
   generatedFor(final ClassName activityTypeName, final PackageElement missionModelElement) {
     final var missionModelPackage = missionModelElement.getQualifiedName().toString();
     final var activityPackage = activityTypeName.packageName();
@@ -34,6 +34,6 @@ public final class ActivityMapperRecord {
         missionModelPackage + ".generated" + generatedSuffix,
         activityTypeName.simpleName() + "Mapper");
 
-    return new ActivityMapperRecord(mapperName, false);
+    return new MapperRecord(mapperName, false);
   }
 }

@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.foomissionmodel.activities;
 import gov.nasa.jpl.aerie.foomissionmodel.Mission;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Parameter;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Parameter;
 
 import static gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityActions.call;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;

@@ -10,8 +10,8 @@ import java.util.List;
 import static gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityActions.call;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 import static gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
-import static gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Parameter;
-import static gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Validation;
+import static gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Parameter;
+import static gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Validation;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 
 @ActivityType("foo")

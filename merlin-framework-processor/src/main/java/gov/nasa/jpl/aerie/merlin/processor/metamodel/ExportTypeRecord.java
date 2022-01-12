@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.processor.metamodel;
 import javax.lang.model.element.TypeElement;
 import java.util.List;
 
-public sealed interface SpecificationTypeRecord permits
+public sealed interface ExportTypeRecord permits
     ActivityTypeRecord,
     ConfigurationTypeRecord
 {
@@ -11,6 +11,6 @@ public sealed interface SpecificationTypeRecord permits
     TypeElement declaration();
     List<ParameterRecord> parameters();
     List<ParameterValidationRecord> validations();
-    ActivityMapperRecord mapper();
-    ActivityDefaultsStyle defaultsStyle();
+    MapperRecord mapper();
+    ExportDefaultsStyle defaultsStyle();
 }

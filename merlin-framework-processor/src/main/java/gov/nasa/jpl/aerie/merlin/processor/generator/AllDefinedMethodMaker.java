@@ -5,31 +5,29 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.SpecificationTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class AllDefinedMethodMaker implements MapperMethodMaker {
 
   @Override
-  public MethodSpec makeInstantiateMethod(final SpecificationTypeRecord specType) {
-    final var exceptionClass = MapperMethodMaker.getInstantiateException(specType);
+  public MethodSpec makeInstantiateMethod(final ExportTypeRecord exportType) {
+    final var exceptionClass = MapperMethodMaker.getInstantiateException(exportType);
 
     // Create instantiate Method header
     var methodBuilder = MethodSpec.methodBuilder("instantiate")
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
-        .returns(TypeName.get(specType.declaration().asType()))
+        .returns(TypeName.get(exportType.declaration().asType()))
         .addException(exceptionClass)
         .addParameter(
             ParameterizedTypeName.get(
@@ -41,10 +39,10 @@ public class AllDefinedMethodMaker implements MapperMethodMaker {
 
     methodBuilder = methodBuilder.addStatement(
         "final var template = new $T()",
-        TypeName.get(specType.declaration().asType()));
+        TypeName.get(exportType.declaration().asType()));
 
     methodBuilder = methodBuilder.addCode(
-        specType.parameters()
+        exportType.parameters()
             .stream()
             .map(parameter -> CodeBlock
                 .builder()
@@ -64,7 +62,7 @@ public class AllDefinedMethodMaker implements MapperMethodMaker {
     methodBuilder = methodBuilder.beginControlFlow("for (final var $L : $L.entrySet())", "entry", "arguments")
         .beginControlFlow("switch ($L.getKey())", "entry")
         .addCode(
-            specType.parameters()
+            exportType.parameters()
                 .stream()
                 .map(parameter -> CodeBlock
                     .builder()
@@ -94,14 +92,14 @@ public class AllDefinedMethodMaker implements MapperMethodMaker {
         .endControlFlow().addCode("\n");
 
     methodBuilder = MapperMethodMaker
-        .makeArgumentPresentCheck(methodBuilder, specType).addCode("\n").addStatement("return template");
+        .makeArgumentPresentCheck(methodBuilder, exportType).addCode("\n").addStatement("return template");
 
     return methodBuilder.build();
   }
 
   @Override
-  public MethodSpec makeGetArgumentsMethod(final SpecificationTypeRecord specType) {
-    final var metaName = MapperMethodMaker.getMetaName(specType);
+  public MethodSpec makeGetArgumentsMethod(final ExportTypeRecord exportType) {
+    final var metaName = MapperMethodMaker.getMetaName(exportType);
     return MethodSpec
         .methodBuilder("getArguments")
         .addModifiers(Modifier.PUBLIC)
@@ -111,7 +109,7 @@ public class AllDefinedMethodMaker implements MapperMethodMaker {
             String.class,
             gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
         .addParameter(
-            TypeName.get(specType.declaration().asType()),
+            TypeName.get(exportType.declaration().asType()),
             metaName,
             Modifier.FINAL)
         .addStatement(
@@ -122,7 +120,7 @@ public class AllDefinedMethodMaker implements MapperMethodMaker {
                 String.class,
                 gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
         .addCode(
-            specType.parameters()
+            exportType.parameters()
                 .stream()
                 .map(parameter -> CodeBlock
                     .builder()
@@ -147,7 +145,7 @@ public class AllDefinedMethodMaker implements MapperMethodMaker {
     final var parameters = new ArrayList<ParameterRecord>();
     for (final var element : activityTypeElement.getEnclosedElements()) {
       if (element.getKind() != ElementKind.FIELD) continue;
-      if (element.getAnnotation(ActivityType.Parameter.class) == null) continue;
+      if (element.getAnnotation(Export.Parameter.class) == null) continue;
       final var name = element.getSimpleName().toString();
       final var type = element.asType();
       parameters.add(new ParameterRecord(name, type, element));

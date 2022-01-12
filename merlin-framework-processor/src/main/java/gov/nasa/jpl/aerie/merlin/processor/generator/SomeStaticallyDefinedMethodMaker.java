@@ -5,10 +5,9 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.SpecificationTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -21,14 +20,14 @@ import java.util.stream.Collectors;
 public class SomeStaticallyDefinedMethodMaker implements MapperMethodMaker {
 
   @Override
-  public MethodSpec makeInstantiateMethod(final SpecificationTypeRecord specType) {
-    final var exceptionClass = MapperMethodMaker.getInstantiateException(specType);
-    var activityTypeName = specType.declaration().getSimpleName().toString();
+  public MethodSpec makeInstantiateMethod(final ExportTypeRecord exportType) {
+    final var exceptionClass = MapperMethodMaker.getInstantiateException(exportType);
+    var activityTypeName = exportType.declaration().getSimpleName().toString();
 
     var methodBuilder = MethodSpec.methodBuilder("instantiate")
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
-        .returns(TypeName.get(specType.declaration().asType()))
+        .returns(TypeName.get(exportType.declaration().asType()))
         .addException(exceptionClass)
         .addParameter(
             ParameterizedTypeName.get(
@@ -38,8 +37,8 @@ public class SomeStaticallyDefinedMethodMaker implements MapperMethodMaker {
             "arguments",
             Modifier.FINAL);
 
-    for (final var element : specType.declaration().getEnclosedElements()) {
-      if (element.getAnnotation(ActivityType.WithDefaults.class) == null) continue;
+    for (final var element : exportType.declaration().getEnclosedElements()) {
+      if (element.getAnnotation(Export.WithDefaults.class) == null) continue;
       var defaultsName = element.getSimpleName().toString();
       methodBuilder = methodBuilder.addStatement(
           "final var defaults = new $L.$L()",
@@ -47,7 +46,7 @@ public class SomeStaticallyDefinedMethodMaker implements MapperMethodMaker {
           defaultsName);
 
       methodBuilder = methodBuilder.addCode(
-          specType.parameters()
+          exportType.parameters()
               .stream()
               .map(parameter -> CodeBlock
                   .builder()
@@ -64,12 +63,12 @@ public class SomeStaticallyDefinedMethodMaker implements MapperMethodMaker {
               .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
               .build()).addCode("\n");
 
-      methodBuilder = produceParametersFromDefaultsClass(specType, methodBuilder);
+      methodBuilder = produceParametersFromDefaultsClass(exportType, methodBuilder);
 
       methodBuilder = methodBuilder.beginControlFlow("for (final var $L : $L.entrySet())", "entry", "arguments")
         .beginControlFlow("switch ($L.getKey())", "entry")
         .addCode(
-            specType.parameters()
+            exportType.parameters()
                 .stream()
                 .map(parameter -> CodeBlock
                     .builder()
@@ -100,22 +99,22 @@ public class SomeStaticallyDefinedMethodMaker implements MapperMethodMaker {
     }
 
     methodBuilder = MapperMethodMaker
-        .makeArgumentPresentCheck(methodBuilder, specType).addCode("\n");
+        .makeArgumentPresentCheck(methodBuilder, exportType).addCode("\n");
 
     // Add return statement with instantiation of class with parameters
     methodBuilder = methodBuilder.addStatement(
         "return new $T($L)",
-        specType.declaration(),
-        specType.parameters().stream().map(parameter -> parameter.name + ".get()").collect(Collectors.joining(", ")));
+        exportType.declaration(),
+        exportType.parameters().stream().map(parameter -> parameter.name + ".get()").collect(Collectors.joining(", ")));
 
     return methodBuilder.build();
   }
 
   @Override
-  public List<String> getParametersWithDefaults(final SpecificationTypeRecord specType) {
+  public List<String> getParametersWithDefaults(final ExportTypeRecord exportType) {
     Optional<Element> defaultsClass = Optional.empty();
-    for (final var element : specType.declaration().getEnclosedElements()) {
-      if (element.getAnnotation(ActivityType.WithDefaults.class) == null) continue;
+    for (final var element : exportType.declaration().getEnclosedElements()) {
+      if (element.getAnnotation(Export.WithDefaults.class) == null) continue;
       defaultsClass = Optional.of(element);
     }
 
@@ -130,9 +129,9 @@ public class SomeStaticallyDefinedMethodMaker implements MapperMethodMaker {
     return fieldNameList;
   }
 
-  private MethodSpec.Builder produceParametersFromDefaultsClass(final SpecificationTypeRecord specType, MethodSpec.Builder methodBuilder)
+  private MethodSpec.Builder produceParametersFromDefaultsClass(final ExportTypeRecord exportType, MethodSpec.Builder methodBuilder)
   {
-    return methodBuilder.addCode(getParametersWithDefaults(specType).stream()
+    return methodBuilder.addCode(getParametersWithDefaults(exportType).stream()
         .map(fieldName -> CodeBlock
             .builder()
             .addStatement(
