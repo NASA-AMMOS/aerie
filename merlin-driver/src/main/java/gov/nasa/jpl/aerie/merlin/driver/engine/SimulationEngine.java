@@ -55,7 +55,7 @@ public final class SimulationEngine implements AutoCloseable {
   private final Subscriptions<Topic<?>, ResourceId> waitingResources = new Subscriptions<>();
 
   /** The execution state for every task. */
-  private final Map<TaskId, ExecutionState> tasks = new HashMap<>();
+  private final Map<TaskId, ExecutionState<?>> tasks = new HashMap<>();
   /** The getter for each tracked condition. */
   private final Map<ConditionId, Condition> conditions = new HashMap<>();
   /** The profiling state for each tracked resource. */
@@ -67,14 +67,14 @@ public final class SimulationEngine implements AutoCloseable {
   @DerivedFrom("taskParent")
   private final Map<TaskId, Set<TaskId>> taskChildren = new HashMap<>();
   /** The instantiated input provided to the task. Missing entries indicate tasks without input. */
-  private final Map<TaskId, Directive<?, ?>> taskDirective = new HashMap<>();
+  private final Map<TaskId, Directive<?, ?, ?>> taskDirective = new HashMap<>();
 
   /** Construct a task defined by the behavior of a model given a type and arguments. */
   public <Model>
   TaskId initiateTaskFromInput(final MissionModel<Model> model, final SerializedActivity input) {
     final var task = TaskId.generate();
 
-    final Directive<Model, ?> directive;
+    final Directive<Model, ?, ?> directive;
     try {
       directive = model.instantiateDirective(input);
     } catch (final TaskSpecType.UnconstructableTaskSpecException ex) {
@@ -84,23 +84,23 @@ public final class SimulationEngine implements AutoCloseable {
       return task;
     }
 
-    this.tasks.put(task, new ExecutionState.NotStarted(() -> directive.createTask(model.getModel())));
+    this.tasks.put(task, new ExecutionState.NotStarted<>(() -> directive.createTask(model.getModel())));
     this.taskDirective.put(task, directive);
 
     return task;
   }
 
   /** Define a task given a factory method from which that task can be constructed. */
-  public TaskId initiateTaskFromSource(final TaskSource source) {
+  public <Return> TaskId initiateTaskFromSource(final TaskSource<Return> source) {
     final var task = TaskId.generate();
-    this.tasks.put(task, new ExecutionState.NotStarted(source));
+    this.tasks.put(task, new ExecutionState.NotStarted<>(source));
     return task;
   }
 
   /** Define a task given a black-box task state. */
-  public TaskId initiateTask(final Duration startTime, final Task state) {
+  public <Return> TaskId initiateTask(final Duration startTime, final Task<Return> state) {
     final var task = TaskId.generate();
-    this.tasks.put(task, new ExecutionState.InProgress(startTime, state));
+    this.tasks.put(task, new ExecutionState.InProgress<>(startTime, state));
     return task;
   }
 
@@ -203,14 +203,24 @@ public final class SimulationEngine implements AutoCloseable {
     //   for putting an updated lifecycle back into the task set.
     var lifecycle = this.tasks.remove(task);
 
+    stepTaskHelper(task, frame, currentTime, model, lifecycle);
+  }
+
+  private <Return> void stepTaskHelper(
+      final TaskId task,
+      final TaskFrame<JobId> frame,
+      final Duration currentTime,
+      final MissionModel<?> model,
+      final ExecutionState<Return> lifecycle)
+  {
     // Extract the current modeling state.
-    if (lifecycle instanceof ExecutionState.IllegalSource) {
+    if (lifecycle instanceof ExecutionState.IllegalSource<Return>) {
       // pass -- uninstantiable tasks never progress or complete
-    } else if (lifecycle instanceof ExecutionState.NotStarted e) {
+    } else if (lifecycle instanceof ExecutionState.NotStarted<Return> e) {
       stepEffectModel(task, e.startedAt(currentTime), frame, currentTime, model);
-    } else if (lifecycle instanceof ExecutionState.InProgress e) {
+    } else if (lifecycle instanceof ExecutionState.InProgress<Return> e) {
       stepEffectModel(task, e, frame, currentTime, model);
-    } else if (lifecycle instanceof ExecutionState.AwaitingChildren e) {
+    } else if (lifecycle instanceof ExecutionState.AwaitingChildren<Return> e) {
       stepWaitingTask(task, e, frame, currentTime);
     } else {
       // TODO: Log this issue to somewhere more general than stderr.
@@ -219,9 +229,9 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Make progress in a task by stepping its associated effect model forward. */
-  private void stepEffectModel(
+  private <Return> void stepEffectModel(
       final TaskId task,
-      final ExecutionState.InProgress progress,
+      final ExecutionState.InProgress<Return> progress,
       final TaskFrame<JobId> frame,
       final Duration currentTime,
       final MissionModel<?> model
@@ -234,16 +244,26 @@ public final class SimulationEngine implements AutoCloseable {
     // TODO: Report which topics this activity wrote to at this point in time. This is useful insight for any user.
     // TODO: Report which cells this activity read from at this point in time. This is useful insight for any user.
 
+    this.stepEffectModelHelper(task, progress, currentTime, state, status);
+  }
+
+  private <Return> void stepEffectModelHelper(
+      final TaskId task,
+      final ExecutionState.InProgress<Return> progress,
+      final Duration currentTime,
+      final Task<Return> state,
+      final TaskStatus<Return> status)
+  {
     // Based on the task's return status, update its execution state and schedule its resumption.
-    if (status instanceof TaskStatus.Completed s) {
+    if (status instanceof TaskStatus.Completed<Return> s) {
       final var children = new LinkedList<>(this.taskChildren.getOrDefault(task, Collections.emptySet()));
 
       this.tasks.put(task, progress.completedAt(currentTime, s.returnValue(), children));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
-    } else if (status instanceof TaskStatus.Delayed s) {
+    } else if (status instanceof TaskStatus.Delayed<Return> s) {
       this.tasks.put(task, progress.continueWith(state));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
-    } else if (status instanceof TaskStatus.AwaitingTask s) {
+    } else if (status instanceof TaskStatus.AwaitingTask<Return> s) {
       this.tasks.put(task, progress.continueWith(state));
 
       final var target = new TaskId(s.target());
@@ -256,7 +276,7 @@ public final class SimulationEngine implements AutoCloseable {
       } else {
         this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(new TaskId(s.target()))));
       }
-    } else if (status instanceof TaskStatus.AwaitingCondition s) {
+    } else if (status instanceof TaskStatus.AwaitingCondition<Return> s) {
       final var condition = ConditionId.generate();
       this.conditions.put(condition, s.condition());
       this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(currentTime));
@@ -271,7 +291,7 @@ public final class SimulationEngine implements AutoCloseable {
   /** Make progress in a task by checking if all of the tasks it's waiting on have completed. */
   private <Return> void stepWaitingTask(
       final TaskId task,
-      final ExecutionState.AwaitingChildren<?> awaiting,
+      final ExecutionState.AwaitingChildren<Return> awaiting,
       final TaskFrame<JobId> frame,
       final Duration currentTime
   ) {
@@ -285,7 +305,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
 
       final var nextChild = awaiting.remainingChildren().getFirst();
-      if (!(this.tasks.get(nextChild) instanceof ExecutionState.Terminated)) {
+      if (!(this.tasks.get(nextChild) instanceof ExecutionState.Terminated<?>)) {
         this.tasks.put(task, awaiting);
         this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(nextChild)));
         break;
@@ -444,7 +464,7 @@ public final class SimulationEngine implements AutoCloseable {
 
       final var activityId = taskToPlannedDirective.get(task.id());
 
-      if (state instanceof ExecutionState.Terminated e) {
+      if (state instanceof ExecutionState.Terminated<?> e) {
         simulatedActivities.put(activityId, new SimulatedActivity(
             directive.getType(),
             directive.getArguments(),
@@ -631,9 +651,9 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public String spawn(final Task state) {
+    public <Return> String spawn(final Task<Return> state) {
       final var task = TaskId.generate();
-      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress(this.currentTime, state));
+      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state));
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       this.frame.signal(JobId.forTask(task));
@@ -684,24 +704,24 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** The lifecycle stages every task passes through. */
-  private sealed interface ExecutionState {
+  private sealed interface ExecutionState<Return> {
     /** The task has an invalid source for its behavior. */
     // TODO: Provide more details about the instantiation failure.
-    record IllegalSource()
-        implements ExecutionState {}
+    record IllegalSource<Return>()
+        implements ExecutionState<Return> {}
 
     /** The task has not yet started. */
-    record NotStarted(TaskSource source)
-        implements ExecutionState
+    record NotStarted<Return>(TaskSource<Return> source)
+        implements ExecutionState<Return>
     {
-      public InProgress startedAt(final Duration startOffset) {
-        return new InProgress(startOffset, this.source.createTask());
+      public InProgress<Return> startedAt(final Duration startOffset) {
+        return new InProgress<>(startOffset, this.source.createTask());
       }
     }
 
     /** The task is in its primary operational phase. */
-    record InProgress(Duration startOffset, Task state)
-        implements ExecutionState
+    record InProgress<Return>(Duration startOffset, Task<Return> state)
+        implements ExecutionState<Return>
     {
       public <Return> AwaitingChildren<Return> completedAt(
           final Duration endOffset,
@@ -710,8 +730,8 @@ public final class SimulationEngine implements AutoCloseable {
         return new AwaitingChildren<>(this.startOffset, endOffset, returnValue, remainingChildren);
       }
 
-      public InProgress continueWith(final Task newState) {
-        return new InProgress(this.startOffset, newState);
+      public InProgress<Return> continueWith(final Task<Return> newState) {
+        return new InProgress<>(this.startOffset, newState);
       }
     }
 
@@ -721,7 +741,7 @@ public final class SimulationEngine implements AutoCloseable {
         Duration endOffset,
         Return returnValue,
         LinkedList<TaskId> remainingChildren
-    ) implements ExecutionState
+    ) implements ExecutionState<Return>
     {
       public Terminated<Return> joinedAt(final Duration joinOffset) {
         return new Terminated<>(this.startOffset, this.endOffset, joinOffset, this.returnValue);
@@ -734,6 +754,6 @@ public final class SimulationEngine implements AutoCloseable {
         Duration endOffset,
         Duration joinOffset,
         Return returnValue
-    ) implements ExecutionState {}
+    ) implements ExecutionState<Return> {}
   }
 }

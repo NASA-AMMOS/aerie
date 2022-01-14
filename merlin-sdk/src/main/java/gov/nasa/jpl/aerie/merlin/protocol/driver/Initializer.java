@@ -19,13 +19,13 @@ public interface Initializer {
       EffectTrait<Effect> trait,
       Function<Event, Effect> projection);
 
-  String daemon(TaskFactory factory);
+  <Return> String daemon(TaskFactory<Return> factory);
 
   void resource(String name, Resource<?> resource);
 
   <Event> void topic(String name, Query<Event, ?> query, ValueSchema schema, Function<Event, SerializedValue> serializer);
 
-  interface TaskFactory {
-    Task create();
+  interface TaskFactory<Return> {
+    Task<Return> create();
   }
 }

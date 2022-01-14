@@ -8,12 +8,12 @@ import java.util.Map;
 
 /** A directive to a specific mission model. */
 // TODO: Move this into the framework basement layer.
-public final record Directive<Model, DirectiveType> (
-    TaskSpecType<Model, DirectiveType> directiveType,
+public final record Directive<Model, DirectiveType, Return> (
+    TaskSpecType<Model, DirectiveType, Return> directiveType,
     DirectiveType directive
 ) {
-  public static <Model, DirectiveType> Directive<Model, DirectiveType>
-  instantiate(final @Nullable TaskSpecType<Model, DirectiveType> directiveType, final Map<String, SerializedValue> arguments)
+  public static <Model, DirectiveType, Return> Directive<Model, DirectiveType, Return>
+  instantiate(final @Nullable TaskSpecType<Model, DirectiveType, Return> directiveType, final Map<String, SerializedValue> arguments)
   throws TaskSpecType.UnconstructableTaskSpecException
   {
     if (directiveType == null) throw new TaskSpecType.UnconstructableTaskSpecException();
@@ -28,7 +28,7 @@ public final record Directive<Model, DirectiveType> (
     return this.directiveType.getArguments(this.directive);
   }
 
-  public Task createTask(final Model model) {
+  public Task<Return> createTask(final Model model) {
     return this.directiveType.createTask(model, this.directive);
   }
 

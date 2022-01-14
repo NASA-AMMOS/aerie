@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public interface MissionModelFactory<Model> {
   Optional<ConfigurationType<?>> getConfigurationType();
-  Map<String, TaskSpecType<Model, ?>> getTaskSpecTypes();
+  Map<String, TaskSpecType<Model, ?, ?>> getTaskSpecTypes();
   List<Parameter> getParameters();
   Model instantiate(SerializedValue configuration, Initializer builder) throws MissionModelInstantiationException;
 

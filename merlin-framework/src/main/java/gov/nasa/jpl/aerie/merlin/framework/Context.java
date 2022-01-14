@@ -32,9 +32,9 @@ public interface Context {
   // Usable during simulation
   <Event> void emit(Event event, Query<Event, ?> query);
 
-  interface TaskFactory { Task create(ExecutorService executor); }
+  interface TaskFactory<Return> { Task<Return> create(ExecutorService executor); }
 
-  String spawn(TaskFactory task);
+  <Return> String spawn(TaskFactory<Return> task);
   String spawn(String type, Map<String, SerializedValue> arguments);
 
   void delay(Duration duration);

@@ -14,17 +14,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
 /* package-local */
-final class ThreadedReactionContext implements Context {
+final class ThreadedReactionContext<Return> implements Context {
   private final ExecutorService executor;
   private final Scoped<Context> rootContext;
-  private final TaskHandle handle;
+  private final TaskHandle<Return> handle;
   private Scheduler scheduler;
 
   public ThreadedReactionContext(
       final ExecutorService executor,
       final Scoped<Context> rootContext,
       final Scheduler scheduler,
-      final TaskHandle handle)
+      final TaskHandle<Return> handle)
   {
     this.executor = Objects.requireNonNull(executor);
     this.rootContext = Objects.requireNonNull(rootContext);
@@ -58,7 +58,7 @@ final class ThreadedReactionContext implements Context {
   }
 
   @Override
-  public String spawn(final TaskFactory task) {
+  public <T> String spawn(final TaskFactory<T> task) {
     return this.scheduler.spawn(task.create(this.executor));
   }
 

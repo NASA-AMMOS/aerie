@@ -10,6 +10,6 @@ public interface Scheduler {
 
   <Event> void emit(Event event, Query<? super Event, ?> query);
 
-  String spawn(Task task);
+  <Return> String spawn(Task<Return> task);
   String spawn(String type, Map<String, SerializedValue> arguments);
 }

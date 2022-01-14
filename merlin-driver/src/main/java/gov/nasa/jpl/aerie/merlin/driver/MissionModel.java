@@ -24,18 +24,18 @@ public final class MissionModel<Model> {
   private final LiveCells initialCells;
   private final Map<String, Resource<?>> resources;
   private final List<SerializableTopic<?>> topics;
-  private final Map<String, TaskSpecType<Model, ?>> taskSpecTypes;
+  private final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes;
   private final Optional<ConfigurationType<?>> configurationType;
-  private final List<Initializer.TaskFactory> daemons;
+  private final List<Initializer.TaskFactory<?>> daemons;
 
   public MissionModel(
       final Model model,
       final LiveCells initialCells,
       final Map<String, Resource<?>> resources,
       final List<SerializableTopic<?>> topics,
-      final List<Initializer.TaskFactory> daemons,
+      final List<Initializer.TaskFactory<?>> daemons,
       final Optional<ConfigurationType<?>> configurationType,
-      final Map<String, TaskSpecType<Model, ?>> taskSpecTypes)
+      final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes)
   {
     this.model = Objects.requireNonNull(model);
     this.initialCells = Objects.requireNonNull(initialCells);
@@ -54,20 +54,20 @@ public final class MissionModel<Model> {
     return this.configurationType;
   }
 
-  public Map<String, TaskSpecType<Model, ?>> getTaskSpecificationTypes() {
+  public Map<String, TaskSpecType<Model, ?, ?>> getTaskSpecificationTypes() {
     return this.taskSpecTypes;
   }
 
-  public Directive<Model, ?> instantiateDirective(final SerializedActivity specification)
+  public Directive<Model, ?, ?> instantiateDirective(final SerializedActivity specification)
   throws TaskSpecType.UnconstructableTaskSpecException
   {
     return Directive.instantiate(this.taskSpecTypes.get(specification.getTypeName()), specification.getArguments());
   }
 
-  public Task getDaemon() {
-    return new Task() {
+  public Task<Unit> getDaemon() {
+    return new Task<>() {
       @Override
-      public TaskStatus step(final Scheduler scheduler) {
+      public TaskStatus<Unit> step(final Scheduler scheduler) {
         MissionModel.this.daemons.forEach(daemon -> scheduler.spawn(daemon.create()));
         return TaskStatus.completed(Unit.UNIT);
       }

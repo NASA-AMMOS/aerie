@@ -56,7 +56,7 @@ public final class InitializationContext implements Context {
   }
 
   @Override
-  public String spawn(final TaskFactory task) {
+  public <Return> String spawn(final TaskFactory<Return> task) {
     return this.builder.daemon(() -> task.create(InitializationContext.this.executor));
   }
 

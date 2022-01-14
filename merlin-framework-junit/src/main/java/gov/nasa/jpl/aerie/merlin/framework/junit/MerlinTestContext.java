@@ -9,13 +9,13 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 public final class MerlinTestContext<Model> {
   private final Registrar registrar;
   private Model model;
-  private Map<String, TaskSpecType<RootModel<Model>, ?>> activityTypes = Map.of();
+  private Map<String, TaskSpecType<RootModel<Model>, ?, ?>> activityTypes = Map.of();
 
   public MerlinTestContext(final Registrar registrar) {
     this.registrar = registrar;
   }
 
-  public void use(final Model model, final Map<String, TaskSpecType<RootModel<Model>, ?>> activityTypes) {
+  public void use(final Model model, final Map<String, TaskSpecType<RootModel<Model>, ?, ?>> activityTypes) {
     this.model = model;
     this.activityTypes = activityTypes;
   }
@@ -28,7 +28,7 @@ public final class MerlinTestContext<Model> {
     return model;
   }
 
-  public Map<String, TaskSpecType<RootModel<Model>, ?>> activityTypes() {
+  public Map<String, TaskSpecType<RootModel<Model>, ?, ?>> activityTypes() {
     return activityTypes;
   }
 }

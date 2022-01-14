@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import java.util.List;
 import java.util.Map;
 
-public interface TaskSpecType<Model, Specification> {
+public interface TaskSpecType<Model, Specification, Return> {
   String getName();
   List<Parameter> getParameters();
   List<String> getRequiredParameters();
@@ -17,7 +17,7 @@ public interface TaskSpecType<Model, Specification> {
   Map<String, SerializedValue> getArguments(Specification taskSpec);
   List<String> getValidationFailures(Specification taskSpec);
 
-  Task createTask(Model model, Specification taskSpec);
+  Task<Return> createTask(Model model, Specification taskSpec);
 
   class UnconstructableTaskSpecException extends Exception {}
 }

@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public final class OneShotTask implements Task {
+public final class OneShotTask implements Task<VoidEnum> {
   private final Consumer<Scheduler> task;
   private boolean isTerminated = false;
 
@@ -16,7 +16,7 @@ public final class OneShotTask implements Task {
   }
 
   @Override
-  public TaskStatus step(final Scheduler scheduler) {
+  public TaskStatus<VoidEnum> step(final Scheduler scheduler) {
     if (this.isTerminated) throw new IllegalStateException("step() called on a terminated task");
 
     this.task.accept(scheduler);

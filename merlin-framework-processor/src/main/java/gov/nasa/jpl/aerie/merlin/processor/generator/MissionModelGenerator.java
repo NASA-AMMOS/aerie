@@ -11,6 +11,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.WildcardTypeName;
+import gov.nasa.jpl.aerie.merlin.framework.VoidEnum;
 import gov.nasa.jpl.aerie.merlin.processor.MissionModelProcessor;
 import gov.nasa.jpl.aerie.merlin.processor.Resolver;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
@@ -131,6 +132,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             ParameterizedTypeName.get(
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                                 ClassName.get(missionModel.topLevelModel)),
+                            WildcardTypeName.subtypeOf(Object.class),
                             WildcardTypeName.subtypeOf(Object.class))))
                     .addStatement("return $T.activityTypes", missionModel.getTypesName())
                     .build())
@@ -379,6 +381,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 ParameterizedTypeName.get(
                                     ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                                     ClassName.get(missionModel.topLevelModel)),
+                                WildcardTypeName.subtypeOf(Object.class),
                                 WildcardTypeName.subtypeOf(Object.class))),
                         "activityTypeList",
                         Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
@@ -403,6 +406,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 ParameterizedTypeName.get(
                                     ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                                     ClassName.get(missionModel.topLevelModel)),
+                                WildcardTypeName.subtypeOf(Object.class),
                                 WildcardTypeName.subtypeOf(Object.class))),
                         "activityTypes",
                         Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
@@ -436,7 +440,8 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
           ParameterizedTypeName.get(
               ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
               ClassName.get(missionModel.topLevelModel)),
-          ClassName.get(exportType.declaration()));
+          ClassName.get(exportType.declaration()),
+          ClassName.get(VoidEnum.class));
     } else { // is instanceof ConfigurationTypeRecord
       superInterface = ParameterizedTypeName.get(
           ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType.class),
@@ -517,7 +522,9 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                 .methodBuilder("createTask")
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
-                .returns(ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.Task.class))
+                .returns(ParameterizedTypeName.get(
+                    ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.Task.class),
+                    ClassName.get(VoidEnum.class)))
                 .addParameter(
                     ParameterizedTypeName.get(
                         ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
