@@ -503,17 +503,8 @@ public final class SimulationEngine implements AutoCloseable {
                                  serializedTimeline);
   }
 
-  public Duration getTaskDuration(String id){
-    TaskId taskId = null;
-    for(var task : tasks.keySet()){
-      if(task.id().equals(id)){
-        taskId = task;
-      }
-    }
-    if(taskId == null){
-      throw new IllegalArgumentException("Asking for unknown task id");
-    }
-    var state = tasks.get(taskId);
+  public Duration getTaskDuration(TaskId id) {
+    final var state = this.tasks.get(id);
     if (state instanceof ExecutionState.Terminated e) {
       return e.joinOffset().minus(e.startOffset());
     }
