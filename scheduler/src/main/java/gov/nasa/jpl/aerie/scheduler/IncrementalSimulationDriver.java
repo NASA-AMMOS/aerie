@@ -16,154 +16,156 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class IncrementalSimulationDriver {
-  private record SimulatedActivity(Duration start, SerializedActivity activity, String name) {}
-
+public final class IncrementalSimulationDriver {
   private final MissionModel<?> missionModel;
+  private CachedSimulation simulation;
 
   // The collection of activities scheduled so far.
-  private final List<SimulatedActivity> activitiesInserted = new ArrayList<>();
-
-  // The top-level simulation timeline.
-  private TemporalEventSource timeline;
-  private LiveCells cells;
-  private SimulationEngine engine;
-  // The current real time.
-  private Duration curTime;
-
-  // The task associated with each scheduled activity.
-  private final Map<String, TaskId> activityToTask = new HashMap<>();
-  // The scheduled activity that caused a task (if any).
-  private final Map<TaskId, String> taskToActivity = new HashMap<>();
-
-  // Cached simulation results covering the period [Duration.ZERO, lastSimResultsEnd],
-  //   or `null` if no results are cached.
-  private SimulationResults lastSimResults;
-  private Duration lastSimResultsEnd;
+  private final List<SimulatedActivity> schedule = new ArrayList<>();
 
   public IncrementalSimulationDriver(final MissionModel<?> missionModel){
     this.missionModel = missionModel;
-    resetSimulation();
+    this.simulation = new CachedSimulation(missionModel);
   }
 
-  private void resetSimulation() {
-    this.timeline = new TemporalEventSource();
-    this.cells = new LiveCells(this.timeline, this.missionModel.getInitialCells());
-    this.engine = new SimulationEngine();
-    this.curTime = Duration.ZERO;
-
-    this.activityToTask.clear();
-    this.taskToActivity.clear();
-
-    this.lastSimResults = null;
-    this.lastSimResultsEnd = Duration.ZERO;
-
-    // Begin tracking all resources.
-    for (final var entry : this.missionModel.getResources().entrySet()) {
-      final var name = entry.getKey();
-      final var resource = entry.getValue();
-      this.engine.trackResource(name, resource, this.curTime);
-    }
-
-    // Start daemon task(s) immediately, before anything else happens.
-    {
-      final var daemon = this.engine.initiateTaskFromSource(this.missionModel::getDaemon);
-      final var commit = this.engine.performJobs(
-          Set.of(SimulationEngine.JobId.forTask(daemon)),
-          this.cells,
-          this.curTime,
-          Duration.MAX_VALUE,
-          this.missionModel);
-
-      this.timeline.add(commit);
-    }
-  }
-
-  public void simulateActivity(SerializedActivity activity, Duration startTime, String nameAct){
+  public void simulateActivity(final SerializedActivity activity, final Duration startOffset, final String name) {
     // Add this activity to the schedule.
-    final var scheduledActivity = new SimulatedActivity(startTime, activity, nameAct);
-    this.activitiesInserted.add(scheduledActivity);
+    this.schedule.add(new SimulatedActivity(startOffset, activity, name));
 
     // Is this an incremental update?
-    final var isIncremental = scheduledActivity.start().longerThan(this.curTime);
+    final var isIncremental = startOffset.longerThan(this.simulation.getCurrentTime());
 
     // If not, start the simulation over from the beginning.
-    if (!isIncremental) resetSimulation();
+    if (!isIncremental) this.simulation = new CachedSimulation(this.missionModel);
 
-    // Spawn the activities that need to be simulated.
-    // If this is an incremental update, we only need to simulate the new activity.
-    // Otherwise, we have to simulate all the scheduled activities.
-    final var remainingTasks = (isIncremental)
-        ? spawnActivityTasks(List.of(scheduledActivity))
-        : spawnActivityTasks(this.activitiesInserted);
+    // Spawn all remaining activities, then simulate forward until they've all terminated.
+    final var remaining = (isIncremental)
+        ? this.schedule.subList(this.schedule.size() - 1, this.schedule.size())
+        : this.schedule;
 
-    // Simulate forward until all scheduled activities have terminated.
-    for (final var task : remainingTasks) {
+    for (final var entry : remaining) this.simulation.spawn(entry.name(), entry.start(), entry.activity());
+    for (final var entry : remaining) this.simulation.simulateUntilTerminated(entry.name());
+  }
+
+  /**
+   * Get the duration of an activity that has terminated.
+   *
+   * @param name The name of the activity to query.
+   * @return The duration of the queried activity.
+   * @throws IllegalArgumentException if the activity has not terminated
+   */
+  public Duration getTerminatedActivityDuration(final String name) {
+    return this.simulation.getTerminatedActivityDuration(name);
+  }
+
+  /** Get simulation results up to the current simulation time point. */
+  public SimulationResults getSimulationResults() {
+    return this.simulation.getSimulationResultsUntil(this.simulation.getCurrentTime());
+  }
+
+  /** Get simulation results up to at least the provided end time. */
+  public SimulationResults getSimulationResultsUntil(final Duration endTime) {
+    return this.simulation.getSimulationResultsUntil(endTime);
+  }
+
+  private record SimulatedActivity(Duration start, SerializedActivity activity, String name) {}
+
+  private static final class CachedSimulation {
+    private final MissionModel<?> missionModel;
+
+    // The top-level simulation timeline.
+    private final TemporalEventSource timeline = new TemporalEventSource();
+    private final LiveCells cells;
+    private final SimulationEngine engine = new SimulationEngine();
+    // The current real time.
+    private Duration currentTime = Duration.ZERO;
+
+    // The task associated with each scheduled activity.
+    private final Map<String, TaskId> activityToTask = new HashMap<>();
+    // The scheduled activity that caused a task (if any).
+    private final Map<TaskId, String> taskToActivity = new HashMap<>();
+
+    // Cached simulation results covering the period [Duration.ZERO, lastSimResultsEnd],
+    //   or `null` if no results are cached.
+    private SimulationResults lastSimResults = null;
+    private Duration lastSimResultsEnd = Duration.ZERO;
+
+    public CachedSimulation(final MissionModel<?> missionModel) {
+      this.missionModel = missionModel;
+      this.cells = new LiveCells(this.timeline, missionModel.getInitialCells());
+
+      // Begin tracking all resources.
+      for (final var entry : missionModel.getResources().entrySet()) {
+        final var name = entry.getKey();
+        final var resource = entry.getValue();
+        this.engine.trackResource(name, resource, this.currentTime);
+      }
+
+      // Start daemon task(s) immediately, before anything else happens.
+      {
+        final var daemon = this.engine.initiateTaskFromSource(missionModel::getDaemon);
+        final var commit = this.engine.performJobs(
+            Set.of(SimulationEngine.JobId.forTask(daemon)),
+            this.cells,
+            this.currentTime,
+            Duration.MAX_VALUE,
+            missionModel);
+
+        this.timeline.add(commit);
+      }
+    }
+
+    public void spawn(final String name, final Duration startOffset, final SerializedActivity activity) {
+      final var taskId = this.engine.initiateTaskFromInput(this.missionModel, activity);
+      this.activityToTask.put(name, taskId);
+      this.taskToActivity.put(taskId, name);
+
+      this.engine.scheduleTask(taskId, startOffset);
+    }
+
+    public void simulateUntilTerminated(final String name) {
+      final var task = this.activityToTask.get(name);
+
       while (!this.engine.isTaskComplete(task)) {
         final var batch = this.engine.extractNextJobs(Duration.MAX_VALUE);
 
         // Increment real time.
-        final var delta = batch.offsetFromStart().minus(this.curTime);
-        this.curTime = batch.offsetFromStart();
+        final var delta = batch.offsetFromStart().minus(this.currentTime);
+        this.currentTime = batch.offsetFromStart();
         this.timeline.add(delta);
 
         // Run the jobs in this batch.
-        final var commit = this.engine.performJobs(batch.jobs(), this.cells, this.curTime, Duration.MAX_VALUE, this.missionModel);
+        final var commit = this.engine.performJobs(
+            batch.jobs(),
+            this.cells,
+            this.currentTime,
+            Duration.MAX_VALUE,
+            this.missionModel);
         this.timeline.add(commit);
       }
     }
-  }
 
-  private List<TaskId> spawnActivityTasks(final List<SimulatedActivity> schedule){
-    final var taskIds = new ArrayList<TaskId>(schedule.size());
-
-    for (final var scheduledActivity : schedule) {
-      final var taskId = this.engine.initiateTaskFromInput(this.missionModel, scheduledActivity.activity());
-      this.activityToTask.put(scheduledActivity.name(), taskId);
-      this.taskToActivity.put(taskId, scheduledActivity.name());
-
-      this.engine.scheduleTask(taskId, scheduledActivity.start());
-      taskIds.add(taskId);
+    public Duration getCurrentTime() {
+      return this.currentTime;
     }
 
-    return taskIds;
-  }
+    public SimulationResults getSimulationResultsUntil(final Duration endTime) {
+      if (this.lastSimResults == null || endTime.longerThan(this.lastSimResultsEnd)) {
+        this.lastSimResults = this.engine.computeResults(
+            this.engine,
+            Instant.now(),  /* TODO: Provide a meaningful start time. */
+            endTime,
+            Map.of(),  /* TODO: Provide the actual mapping between activities and tasks. */
+            this.timeline,
+            this.missionModel);
+        this.lastSimResultsEnd = endTime;
+      }
 
-  /**
-   * Returns the duration of a terminated simulated activity
-   * @param actName the activity name
-   * @return its duration if the activity has been simulated and has finished simulating, an IllegalArgumentException otherwise
-   */
-  public Duration getTerminatedActivityDuration(final String actName) {
-    return this.engine.getTaskDuration(this.activityToTask.get(actName));
-  }
-
-  /**
-   * Get the simulation results from the Duration.ZERO to the current simulation time point
-   * @return the simulation results
-   */
-  public SimulationResults getSimulationResults() {
-    return getSimulationResultsUntil(this.curTime);
-  }
-
-  /**
-   * Get the simulation results from the Duration.ZERO to a specified end time point.
-   * The provided simulation results might cover more than the required time period.
-   * @return the simulation results
-   */
-  public SimulationResults getSimulationResultsUntil(final Duration endTime) {
-    //if previous results cover a bigger period, we return do not regenerate
-    if (this.lastSimResults == null || endTime.longerThan(this.lastSimResultsEnd)) {
-      this.lastSimResults = this.engine.computeResults(
-          this.engine,
-          Instant.now(),
-          endTime,
-          new HashMap<>(),  /* TODO: Provide the actual mapping between activities and tasks. */
-          this.timeline,
-          this.missionModel);
-      this.lastSimResultsEnd = endTime;
+      return this.lastSimResults;
     }
 
-    return this.lastSimResults;
+    public Duration getTerminatedActivityDuration(final String name) {
+      return this.engine.getTaskDuration(this.activityToTask.get(name));
+    }
   }
 }
