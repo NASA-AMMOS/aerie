@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,23 +29,30 @@ public final class IncrementalSimulationDriver {
     this.simulation = new CachedSimulation(missionModel);
   }
 
-  public void simulateActivity(final SerializedActivity activity, final Duration startOffset, final String name) {
-    // Add this activity to the schedule.
-    this.schedule.add(new SimulatedActivity(startOffset, activity, name));
+  public void simulateActivities(final Collection<SimulatedActivity> activities) {
+    // Add these activities to the schedule.
+    this.schedule.addAll(activities);
 
     // Is this an incremental update?
-    final var isIncremental = startOffset.longerThan(this.simulation.getCurrentTime());
+    final var isIncremental = activities
+        .stream()
+        .allMatch($ -> this.simulation.getCurrentTime().shorterThan($.start()));
 
     // If not, start the simulation over from the beginning.
+    // TODO: Actually, `isIncremental` will often be false the first time around,
+    //   so we may waste the initially-allocated `CachedSimulation`.
+    //   Find a way to avoid this.
     if (!isIncremental) this.simulation = new CachedSimulation(this.missionModel);
 
     // Spawn all remaining activities, then simulate forward until they've all terminated.
-    final var remaining = (isIncremental)
-        ? this.schedule.subList(this.schedule.size() - 1, this.schedule.size())
-        : this.schedule;
+    final var remaining = (isIncremental) ? activities : this.schedule;
 
     for (final var entry : remaining) this.simulation.spawn(entry.name(), entry.start(), entry.activity());
     for (final var entry : remaining) this.simulation.simulateUntilTerminated(entry.name());
+  }
+
+  public void simulateActivity(final SerializedActivity activity, final Duration startOffset, final String name) {
+    this.simulateActivities(List.of(new SimulatedActivity(startOffset, activity, name)));
   }
 
   /**
@@ -68,7 +76,7 @@ public final class IncrementalSimulationDriver {
     return this.simulation.getSimulationResultsUntil(endTime);
   }
 
-  private record SimulatedActivity(Duration start, SerializedActivity activity, String name) {}
+  public record SimulatedActivity(Duration start, SerializedActivity activity, String name) {}
 
   private static final class CachedSimulation {
     private final MissionModel<?> missionModel;
