@@ -22,6 +22,8 @@ public final class IncrementalSimulationDriver {
   private CachedSimulation simulation;
 
   // The collection of activities scheduled so far.
+  // TODO: For large schedules, the reallocating behavior of `ArrayList` may be suboptimal.
+  //   Consider using a different data structure to store the current schedule.
   private final List<SimulatedActivity> schedule = new ArrayList<>();
 
   public IncrementalSimulationDriver(final MissionModel<?> missionModel){
