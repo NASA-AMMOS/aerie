@@ -66,16 +66,6 @@ public final class InitializationContext implements Context {
   }
 
   @Override
-  public String defer(final Duration duration, final TaskFactory task) {
-    throw new IllegalStateException("Cannot schedule tasks during initialization");
-  }
-
-  @Override
-  public String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
-    throw new IllegalStateException("Cannot schedule activities during initialization");
-  }
-
-  @Override
   public void delay(final Duration duration) {
     throw new IllegalStateException("Cannot yield during initialization");
   }

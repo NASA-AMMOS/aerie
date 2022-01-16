@@ -68,16 +68,6 @@ final class ThreadedReactionContext implements Context {
   }
 
   @Override
-  public String defer(final Duration duration, final TaskFactory task) {
-    return this.scheduler.defer(duration, task.create(this.executor));
-  }
-
-  @Override
-  public String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
-    return this.scheduler.defer(duration, type, arguments);
-  }
-
-  @Override
   public void delay(final Duration duration) {
     this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
     this.scheduler = this.handle.yield(TaskStatus.delayed(duration));

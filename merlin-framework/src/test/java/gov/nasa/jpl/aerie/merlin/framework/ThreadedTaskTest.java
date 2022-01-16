@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,16 +35,6 @@ public final class ThreadedTaskTest {
 
       @Override
       public String spawn(final String type, final Map<String, SerializedValue> arguments) {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public String defer(final Duration delay, final Task task) {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public String defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
         throw new UnsupportedOperationException();
       }
     };
