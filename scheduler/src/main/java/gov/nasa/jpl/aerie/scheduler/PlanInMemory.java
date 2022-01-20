@@ -70,16 +70,16 @@ public class PlanInMemory implements Plan {
       throw new IllegalArgumentException(
           "adding activity with null start time to plan");
     }
-    final var name = act.getName();
+    final var name = act.getId();
     assert name != null;
-    if (actsByName.containsKey(name)) {
+    if (actsById.containsKey(name)) {
       throw new IllegalArgumentException(
           "adding activity with duplicate name=" + name + " to plan");
     }
     final var type = act.getType().getName();
     assert type != null;
 
-    actsByName.put(name, act);
+    actsById.put(name, act);
     //REVIEW: use a cleaner multimap? maybe guava
     actsByTime.computeIfAbsent(startT, k -> new java.util.LinkedList<ActivityInstance>())
               .add(act);
@@ -98,7 +98,7 @@ public class PlanInMemory implements Plan {
   @Override
   public void remove(ActivityInstance act) {
     //TODO: handle ownership. Constraint propagation ?
-    actsByName.remove(act.getName());
+    actsById.remove(act.getId());
     var acts = actsByTime.get(act.getStartTime());
     if (acts != null) acts.remove(act);
     acts = actsByType.get(act.getType().getName());
@@ -153,7 +153,7 @@ public class PlanInMemory implements Plan {
   /**
    * container of all activity instances in plan, indexed by name
    */
-  private java.util.HashMap<String, ActivityInstance> actsByName
+  private java.util.HashMap<Long, ActivityInstance> actsById
       = new java.util.HashMap<>();
 
   /**

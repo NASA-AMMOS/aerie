@@ -73,26 +73,26 @@ public class PrioritySolverTest {
   private static PlanInMemory makePlanA012(Problem problem) {
     final var plan = new PlanInMemory(problem.getMissionModel());
     final var actTypeA = problem.getMissionModel().getActivityType("A");
-    plan.add(new ActivityInstance("a0", actTypeA, t0, d1min));
-    plan.add(new ActivityInstance("a1", actTypeA, t1hr, d1min));
-    plan.add(new ActivityInstance("a2", actTypeA, t2hr, d1min));
+    plan.add(new ActivityInstance(actTypeA, t0, d1min));
+    plan.add(new ActivityInstance(actTypeA, t1hr, d1min));
+    plan.add(new ActivityInstance(actTypeA, t2hr, d1min));
     return plan;
   }
 
   private static PlanInMemory makePlanA12(Problem problem) {
     final var plan = new PlanInMemory(problem.getMissionModel());
     final var actTypeA = problem.getMissionModel().getActivityType("A");
-    plan.add(new ActivityInstance("a1", actTypeA, t1hr, d1min));
-    plan.add(new ActivityInstance("a2", actTypeA, t2hr, d1min));
+    plan.add(new ActivityInstance(actTypeA, t1hr, d1min));
+    plan.add(new ActivityInstance(actTypeA, t2hr, d1min));
     return plan;
   }
 
   private static PlanInMemory makePlanAB012(Problem problem) {
     final var plan = makePlanA012(problem);
     final var actTypeB = problem.getMissionModel().getActivityType("B");
-    plan.add(new ActivityInstance("b0", actTypeB, t0, d1min));
-    plan.add(new ActivityInstance("b1", actTypeB, t1hr, d1min));
-    plan.add(new ActivityInstance("b2", actTypeB, t2hr, d1min));
+    plan.add(new ActivityInstance(actTypeB, t0, d1min));
+    plan.add(new ActivityInstance(actTypeB, t1hr, d1min));
+    plan.add(new ActivityInstance(actTypeB, t2hr, d1min));
     return plan;
   }
 

@@ -206,23 +206,6 @@ public class ActivityExpression {
     protected @Nullable Window durationIn;
 
     /**
-     * requires activities have instance name matching given regular expression
-     *
-     * the regular expression semantics is as for java.util.regex.Pattern
-     *
-     * @param pattern IN the regular expression for the allowed activity
-     *     instance names, or null if no specific name pattern is required
-     * @return the same builder object updated with new criteria
-     */
-    public @NotNull
-    B nameMatches(@Nullable String pattern) {
-      this.nameMatches = pattern;
-      return getThis();
-    }
-
-    protected @Nullable String nameMatches;
-
-    /**
      * bootstraps a new query builder based on existing template
      *
      * the new builder may then be modified without impacting the existing
@@ -257,10 +240,6 @@ public class ActivityExpression {
 
       if (existingAct.getDuration() != null) {
         durationIn = Window.at(existingAct.getDuration());
-      }
-
-      if (existingAct.getName() != null) {
-        nameMatches = existingAct.getName();
       }
 
       //FINISH: extract all param values as == criteria
@@ -320,7 +299,6 @@ public class ActivityExpression {
       endsIn = template.endRange;
       durationIn = template.durationRange;
       startsOrEndsIn = template.startOrEndRange;
-      nameMatches = (template.nameRE != null) ? template.nameRE.pattern() : null;
       parameters = template.parameters;
 
       return getThis();
@@ -334,9 +312,6 @@ public class ActivityExpression {
       template.durationRange = durationIn;
       template.startOrEndRange = startsOrEndsIn;
       template.startOrEndRangeW = startsOrEndsInW;
-      template.nameRE = (nameMatches != null)
-          ? java.util.regex.Pattern.compile(nameMatches) : null;
-
       template.parameters = parameters;
       return template;
     }
@@ -507,11 +482,6 @@ public class ActivityExpression {
     if (match && durationRange != null) {
       final var dur = act.getDuration();
       match = (dur != null) && durationRange.contains(dur);
-    }
-
-    if (match && nameRE != null) {
-      final var name = act.getName();
-      match = nameRE.matcher(name).matches();
     }
 
     if (match && parameters != null) {

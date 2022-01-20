@@ -135,11 +135,11 @@ public class SimulationFacadeTest {
     final var actTypeBite = wrappedMissionModel.getActivityType("BiteBanana");
     final var actTypePeel = wrappedMissionModel.getActivityType("PeelBanana");
 
-    var act1 = new ActivityInstance("PeelBanana1", actTypePeel, t1);
+    var act1 = new ActivityInstance(actTypePeel, t1);
     act1.setParameters(Map.of("peelDirection", "fromStem"));
     plan.add(act1);
 
-    var act2 = new ActivityInstance("BiteBanana1", actTypeBite, t2);
+    var act2 = new ActivityInstance(actTypeBite, t2);
     act2.setParameters(Map.of("biteSize", 0.1));
     plan.add(act2);
 

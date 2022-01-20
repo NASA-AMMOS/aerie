@@ -108,7 +108,6 @@ public class ActivityCreationTemplate extends ActivityExpression {
       endsIn = template.endRange;
       durationIn = template.durationRange;
       startsOrEndsIn = template.startOrEndRange;
-      nameMatches = (template.nameRE != null) ? template.nameRE.pattern() : null;
       parameters = template.parameters;
       parametricDur = template.parametricDur;
       return getThis();
@@ -126,8 +125,6 @@ public class ActivityCreationTemplate extends ActivityExpression {
       template.startRange = startsIn;
       template.endRange = endsIn;
       template.startOrEndRange = startsOrEndsIn;
-      template.nameRE = (nameMatches != null)
-          ? java.util.regex.Pattern.compile(nameMatches) : null;
       if(parametricDur!=null){
         if(durationIn!= null){
           throw new RuntimeException("Cannot specify two different types of durations");
@@ -207,9 +204,9 @@ public class ActivityCreationTemplate extends ActivityExpression {
   private ActivityInstance createInstanceForReal(String name, Window window, boolean instantiateVariableParameters) {
     final ActivityInstance act;
     if (type instanceof AerieActivityType) {
-      act = new AerieActivityInstance(name, (AerieActivityType) type);
+      act = new AerieActivityInstance((AerieActivityType) type);
     } else {
-      act = new ActivityInstance(name, type);
+      act = new ActivityInstance(type);
     }
 
     TaskNetwork tw = new TaskNetwork();

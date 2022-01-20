@@ -5,8 +5,8 @@ import gov.nasa.jpl.aerie.scheduler.ActivityInstance;
 import java.lang.reflect.Field;
 
 public class AerieActivityInstance extends ActivityInstance {
-    public AerieActivityInstance(String name, AerieActivityType type) {
-        super(name, type);
+    public AerieActivityInstance(AerieActivityType type) {
+        super(type);
 
         try {
             for (final Field field : type.getClass().getFields()) {

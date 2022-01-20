@@ -214,7 +214,7 @@ public class XMLTOLWriter {
       final var act = getAct();
       final var dur = act.getDuration() == null ? Duration.of(1, Duration.SECONDS) : act.getDuration();
       xml.println("    <Instance>");
-      xml.println("      <ID>" + act.getName() + "</ID>");
+      xml.println("      <ID>" + act.getId() + "</ID>");
       xml.println("        <Name>" + act.getType().getName() + "</Name>");
       xml.println("        <Type>" + act.getType().getName() + "</Type>");
       xml.println("        <Parent></Parent>");
@@ -285,7 +285,7 @@ public class XMLTOLWriter {
     @Override
     public void write() {
       writeHeader();
-      xml.println("    <ActivityID>" + getAct().getName() + "</ActivityID>");
+      xml.println("    <ActivityID>" + getAct().getId()+ "</ActivityID>");
       writeFooter();
     }
   }
@@ -365,18 +365,9 @@ public class XMLTOLWriter {
    */
   private String getColor(ActivityRecord record) {
     final var act = record.getAct();
-    final var name = act.getName();
+    final var name = act.getId();
     final var type = act.getType().getName();
     String color = "#000000"; //black default
-
-    //TODO: reconsider where this configuration lives
-    for (final var colorEntry : config.getActColorMap().entrySet()) {
-      if (name.matches(colorEntry.getKey())) {
-        color = colorEntry.getValue();
-        break;
-      }
-    }
-
     return color;
   }
 

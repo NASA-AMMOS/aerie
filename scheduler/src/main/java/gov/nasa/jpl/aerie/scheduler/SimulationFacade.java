@@ -71,7 +71,7 @@ public class SimulationFacade {
   //simulation results from the last simulation, as output directly by simulation driver
   private SimulationResults lastSimDriverResults;
 
-  private Map<String, ActivityInstanceId> activityNameToActivityId= new HashMap<>();;
+  private Map<Long, ActivityInstanceId> activityNameToActivityId= new HashMap<>();;
 
   /**
    * Accessor for integer resource feeders
@@ -156,17 +156,17 @@ public class SimulationFacade {
     if (lastSimDriverResults == null) {
       System.out.println("You need to simulate before requesting activity duration");
     }
-    final var simAct = lastSimDriverResults.simulatedActivities.get(activityNameToActivityId.get(activityInstance.getName()));
+    final var simAct = lastSimDriverResults.simulatedActivities.get(activityNameToActivityId.get(activityInstance.getId()));
     if (simAct != null) {
       return simAct.duration;
     } else {
-      if(lastSimDriverResults.unfinishedActivities.get(activityNameToActivityId.get(activityInstance.getName())) != null){
+      if(lastSimDriverResults.unfinishedActivities.get(activityNameToActivityId.get(activityInstance.getId())) != null){
         System.out.println("Activity "
-                           + activityInstance.getName()
+                           + activityInstance.toString()
                            + " has not finished, check planning horizon ?");
       } else{
         System.out.println("Simulation has been launched but activity with name= "
-                           + activityInstance.getName()
+                           + activityInstance.toString()
                            + " has not been found");
       }
     }
@@ -196,7 +196,7 @@ public class SimulationFacade {
         System.out.println("Warning : activity has no duration parameter");
       }
       var activityIdSim = new ActivityInstanceId(counter++);
-      activityNameToActivityId.put(act.getName(), activityIdSim);
+      activityNameToActivityId.put(act.getId(), activityIdSim);
       schedule.put(activityIdSim, Pair.of(
           act.getStartTime(),
           new SerializedActivity(act.getType().getName(), params)));

@@ -112,7 +112,6 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
       //REVIEW: should strict name also match? but what if uuid names?
       final var satisfyingActSearch = new ActivityExpression.Builder()
           .basedOn(requestedAct)
-          .nameMatches(null)
           .build();
       final var matchingActs = plan.find(satisfyingActSearch);
 

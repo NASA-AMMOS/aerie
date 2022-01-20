@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * descriptor of a specific execution of a mission behavior
@@ -20,13 +21,12 @@ public class ActivityInstance {
   /**
    * creates a new unscheduled activity instance of specified type
    *
-   * @param name IN the human legible name of the activity instance
    * @param type IN the datatype signature of and behavior descriptor invoked
    *     by this activity instance
    */
   //TODO: reconsider unscheduled activity instances
-  public ActivityInstance(String name, ActivityType type) {
-    this.name = name;
+  public ActivityInstance(ActivityType type) {
+    this.id = uniqueId.getAndIncrement();
     this.type = type;
     //TODO: should guess duration from activity type bounds
   }
@@ -34,13 +34,12 @@ public class ActivityInstance {
   /**
    * creates a new activity instance of specified type
    *
-   * @param name IN the human legible name of the activity instance
    * @param type IN the datatype signature of and behavior descriptor invoked
    *     by this activity instance
    * @param start IN the time at which the activity is scheduled
    */
-  public ActivityInstance(String name, ActivityType type, Duration start) {
-    this(name, type);
+  public ActivityInstance(ActivityType type, Duration start) {
+    this(type);
     this.startTime = start;
     //TODO: should guess duration from activity type bounds
   }
@@ -48,14 +47,13 @@ public class ActivityInstance {
   /**
    * creates a new activity instance of specified type
    *
-   * @param name IN the human legible name of the activity instance
    * @param type IN the datatype signature of and behavior descriptor invoked
    *     by this activity instance
    * @param start IN the time at which the activity is scheduled
    * @param duration IN the duration that the activity lasts for
    */
-  public ActivityInstance(String name, ActivityType type, Duration start, Duration duration) {
-    this(name, type, start);
+  public ActivityInstance(ActivityType type, Duration start, Duration duration) {
+    this(type, start);
     if (duration.isNegative()) {
       throw new RuntimeException("Negative duration");
     }
@@ -63,12 +61,12 @@ public class ActivityInstance {
   }
 
   /**
-   * create an activity instance based on the provided one
+   * create an activity instance based on the provided one (but adifferent id)
    *
    * @param o IN the activity instance to copy from
    */
   public ActivityInstance(ActivityInstance o) {
-    this.name = o.name; //TODO: names should probably not be replicated
+    this.id = uniqueId.getAndIncrement();
     this.type = o.type;
     this.startTime = o.startTime;
     this.duration = o.duration;
@@ -205,8 +203,8 @@ public class ActivityInstance {
    *
    * @return a human-legible identifier for this activity instance
    */
-  public String getName() {
-    return this.name;
+  public Long getId() {
+    return this.id;
   }
 
   /**
@@ -219,11 +217,11 @@ public class ActivityInstance {
   }
 
   public String toString() {
-    return "[" + this.type.getName() + ","+ this.name + "," + this.getStartTime() + "," + this.getEndTime() + "]";
+    return "[" + this.type.getName() + ","+ this.id + "," + this.getStartTime() + "," + this.getEndTime() + "]";
   }
 
   /**
-   * Checks equality but in name
+   * Checks equality but not in name
    * @param that the other activity instance to compare to
    * @return true if they are equal in properties, false otherwise
    */
@@ -239,7 +237,7 @@ public class ActivityInstance {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     ActivityInstance that = (ActivityInstance) o;
-    return name.equals(that.name)
+    return id == that.id
            && type.equals(that.type)
            && duration.isEqualTo(that.duration)
            && startTime.isEqualTo(that.startTime)
@@ -292,15 +290,15 @@ public class ActivityInstance {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, type, duration, startTime);
+    return Objects.hash(id, type, duration, startTime);
 //TODO: should handle parameters too!
 //    return Objects.hash(name, type, duration, startTime, parameters);
   }
 
   /**
-   * the human-legible identifier of the activity instance
+   * unique id
    */
-  private String name;
+  private Long id;
 
   /**
    * the descriptor for the behavior invoked by this activity instance
@@ -350,4 +348,5 @@ public class ActivityInstance {
    */
   private Map<String, Object> parameters = new HashMap<String, Object>();
 
+  private static AtomicLong uniqueId = new AtomicLong();
 }

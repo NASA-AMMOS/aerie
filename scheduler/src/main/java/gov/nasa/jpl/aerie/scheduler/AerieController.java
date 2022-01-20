@@ -12,6 +12,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import java.awt.GridLayout;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -31,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipException;
 
@@ -119,11 +121,10 @@ public class AerieController {
   }
 
   private String createPlanName() {
-    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm");
+    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
     LocalDateTime localDate = LocalDateTime.now();
     String todayDate = dtf.format(localDate);
     return plan_prefix + IT_PLAN_BASENAME + todayDate;
-
   }
 
   public void deleteAllMissionModelsBut(String notThisOne) {
@@ -233,7 +234,9 @@ public class AerieController {
         //probably not in GZIP format
         e.printStackTrace();
         if (response != null) {
-          System.out.println(response.body());
+          String result = new BufferedReader(new InputStreamReader(response.body()))
+              .lines().collect(Collectors.joining("\n"));
+          System.out.println(result);
         }
         return false;
       } catch (IOException e) {
@@ -505,7 +508,7 @@ public class AerieController {
       throw new IllegalArgumentException("Activity type is not present in scheduler mission model wrapper");
     }
 
-    ActivityInstance act = new ActivityInstance("fetched_" + java.util.UUID.randomUUID(), schedulerActType);
+    ActivityInstance act = new ActivityInstance(schedulerActType);
     final var actPK = jsonActivity.getLong("id");
     addActInstanceId(act, actPK);
 

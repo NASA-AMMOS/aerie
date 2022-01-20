@@ -47,7 +47,7 @@ public class TextWriter {
         final var goalEval = eval.forGoal(goal);
         txt.println(goal.getName() + " = " + goalEval.getScore());
         for (final var act : goalEval.getAssociatedActivities()) {
-          final var name = shortenName(act.getName());
+          final var name = act.getId();
           final var type = act.getType().getName();
 
           txt.println("  " + type + "  " + name);
@@ -60,7 +60,7 @@ public class TextWriter {
     //for now a simple time ordered listing of scheduled activity instances
     for (final var act : plan.getActivitiesByTime()) {
 
-      final var name = shortenName(act.getName());
+      final var name = act.getId();
       final var type = act.getType().getName();
       final var t_start = act.getStartTime();
       final var dur = act.getDuration();
