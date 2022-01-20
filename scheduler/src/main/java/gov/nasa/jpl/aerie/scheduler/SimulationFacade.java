@@ -71,6 +71,8 @@ public class SimulationFacade {
   //simulation results from the last simulation, as output directly by simulation driver
   private SimulationResults lastSimDriverResults;
 
+  private Map<String, ActivityInstanceId> activityNameToActivityId= new HashMap<>();;
+
   /**
    * Accessor for integer resource feeders
    *
@@ -154,11 +156,11 @@ public class SimulationFacade {
     if (lastSimDriverResults == null) {
       System.out.println("You need to simulate before requesting activity duration");
     }
-    final var simAct = lastSimDriverResults.simulatedActivities.get(activityInstance.getName());
+    final var simAct = lastSimDriverResults.simulatedActivities.get(activityNameToActivityId.get(activityInstance.getName()));
     if (simAct != null) {
       return simAct.duration;
     } else {
-      if(lastSimDriverResults.unfinishedActivities.get(activityInstance.getName()) != null){
+      if(lastSimDriverResults.unfinishedActivities.get(activityNameToActivityId.get(activityInstance.getName())) != null){
         System.out.println("Activity "
                            + activityInstance.getName()
                            + " has not finished, check planning horizon ?");
@@ -179,7 +181,7 @@ public class SimulationFacade {
    * @param plan the plan to simulate
    */
   public void simulatePlan(Plan plan) {
-
+    activityNameToActivityId.clear();
     final var actsInPlan = plan.getActivitiesByTime();
     final var schedule = new HashMap<ActivityInstanceId, Pair<Duration, SerializedActivity>>();
     long counter = 0;
@@ -193,7 +195,9 @@ public class SimulationFacade {
       } else{
         System.out.println("Warning : activity has no duration parameter");
       }
-      schedule.put(new ActivityInstanceId(counter++), Pair.of(
+      var activityIdSim = new ActivityInstanceId(counter++);
+      activityNameToActivityId.put(act.getName(), activityIdSim);
+      schedule.put(activityIdSim, Pair.of(
           act.getStartTime(),
           new SerializedActivity(act.getType().getName(), params)));
     }
