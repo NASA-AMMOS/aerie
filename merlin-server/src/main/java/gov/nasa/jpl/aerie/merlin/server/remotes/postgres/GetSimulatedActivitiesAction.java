@@ -55,18 +55,18 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       final var start = simulationStart.toInstant().plus(startOffset.in(MICROSECONDS), ChronoUnit.MICROS);
       final var duration = parseOffset(resultSet, 5, start);
       final var attributes = parseActivityAttributes(resultSet.getCharacterStream(6));
-      final var directiveId = attributes.getLeft();
-      final var arguments = attributes.getRight();
+
       final var initialChildIds = new ArrayList<Long>();
 
       activities.put(id, new SimulatedActivityRecord(
           type,
-          arguments,
+          attributes.arguments(),
           start,
           duration,
           parentId,
           initialChildIds,
-          directiveId));
+          attributes.directiveId()
+      ));
     }
 
     // Since child IDs are not stored, we assign them by examining the parent ID of each activity
@@ -84,7 +84,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     return Optional.of(value);
   }
 
-  private Pair<Optional<ActivityInstanceId>, Map<String, SerializedValue>> parseActivityAttributes(final Reader jsonStream) {
+  private ActivityAttributesRecord parseActivityAttributes(final Reader jsonStream) {
     final var json = Json.createReader(jsonStream).readValue();
     return activityAttributesP
         .parse(json)

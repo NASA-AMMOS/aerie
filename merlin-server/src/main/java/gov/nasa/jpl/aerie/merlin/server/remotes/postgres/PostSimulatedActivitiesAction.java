@@ -68,7 +68,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
   }
 
   private String buildAttributes(final Optional<ActivityInstanceId> directiveId, final Map<String, SerializedValue> arguments) {
-    return activityAttributesP.unparse(Pair.of(directiveId, arguments)).toString();
+    return activityAttributesP.unparse(new ActivityAttributesRecord(directiveId, arguments)).toString();
   }
 
   @Override

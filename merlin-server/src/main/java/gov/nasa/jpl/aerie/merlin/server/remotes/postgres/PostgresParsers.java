@@ -61,11 +61,11 @@ public final class PostgresParsers {
   public static final JsonParser<Map<String, SerializedValue>> activityArgumentsP = mapP(serializedValueP);
   public static final JsonParser<Map<String, SerializedValue>> simulationArgumentsP = mapP(serializedValueP);
 
-  public static final JsonParser<Pair<Optional<ActivityInstanceId>, Map<String, SerializedValue>>> activityAttributesP = productP
+  public static final JsonParser<ActivityAttributesRecord> activityAttributesP = productP
       .optionalField("directiveId", activityInstanceIdP)
       .field("arguments", activityArgumentsP)
         .map(Iso.of(
-            untuple((directiveId, arguments) -> Pair.of(directiveId, arguments)),
-            $ -> tuple($.getLeft(), $.getRight())
+            untuple(ActivityAttributesRecord::new),
+            $ -> tuple($.directiveId(), $.arguments())
         ));
 }
