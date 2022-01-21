@@ -3,6 +3,10 @@ actions:
   definition:
     kind: synchronous
     handler: http://aerie_merlin:27183/addExternalDataset
+- name: getModelEffectiveArguments
+  definition:
+    kind: ""
+    handler: http://aerie_merlin:27183/getModelEffectiveArguments
 - name: getActivityEffectiveArguments
   definition:
     kind: ""
@@ -43,5 +47,6 @@ custom_types:
   - name: ResourceSchema
   - name: MerlinSimulationResults
   - name: MerlinSimulationFailureReason
+  - name: ModelArguments
   - name: ActivityArguments
   - name: ProfileSet

@@ -5,10 +5,10 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
@@ -17,30 +17,32 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class AllDefinedMethodMaker implements ActivityMapperMethodMaker {
+public class AllDefinedMethodMaker implements MapperMethodMaker {
 
   @Override
-  public MethodSpec makeInstantiateMethod(final ActivityTypeRecord activityType) {
+  public MethodSpec makeInstantiateMethod(final ExportTypeRecord exportType) {
+    final var exceptionClass = MapperMethodMaker.getInstantiateException(exportType);
+
     // Create instantiate Method header
     var methodBuilder = MethodSpec.methodBuilder("instantiate")
-                                  .addModifiers(Modifier.PUBLIC)
-                                  .addAnnotation(Override.class)
-                                  .returns(TypeName.get(activityType.declaration.asType()))
-                                  .addException(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
-                                  .addParameter(
-                                      ParameterizedTypeName.get(
-                                          java.util.Map.class,
-                                          String.class,
-                                          gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class),
-                                      "arguments",
-                                      Modifier.FINAL);
+        .addModifiers(Modifier.PUBLIC)
+        .addAnnotation(Override.class)
+        .returns(TypeName.get(exportType.declaration().asType()))
+        .addException(exceptionClass)
+        .addParameter(
+            ParameterizedTypeName.get(
+                java.util.Map.class,
+                String.class,
+                gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class),
+            "arguments",
+            Modifier.FINAL);
 
     methodBuilder = methodBuilder.addStatement(
         "final var template = new $T()",
-        TypeName.get(activityType.declaration.asType()));
+        TypeName.get(exportType.declaration().asType()));
 
     methodBuilder = methodBuilder.addCode(
-        activityType.parameters
+        exportType.parameters()
             .stream()
             .map(parameter -> CodeBlock
                 .builder()
@@ -60,7 +62,7 @@ public class AllDefinedMethodMaker implements ActivityMapperMethodMaker {
     methodBuilder = methodBuilder.beginControlFlow("for (final var $L : $L.entrySet())", "entry", "arguments")
         .beginControlFlow("switch ($L.getKey())", "entry")
         .addCode(
-            activityType.parameters
+            exportType.parameters()
                 .stream()
                 .map(parameter -> CodeBlock
                     .builder()
@@ -71,7 +73,7 @@ public class AllDefinedMethodMaker implements ActivityMapperMethodMaker {
                         parameter.name,
                         parameter.name,
                         "entry",
-                        gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
+                        exceptionClass)
                     .addStatement("break")
                     .unindent())
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -83,20 +85,21 @@ public class AllDefinedMethodMaker implements ActivityMapperMethodMaker {
                 .indent()
                 .addStatement(
                     "throw new $T()",
-                    gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
+                    exceptionClass)
                 .unindent()
                 .build())
         .endControlFlow()
         .endControlFlow().addCode("\n");
 
-    methodBuilder = ActivityMapperMethodMaker
-        .makeArgumentPresentCheck(methodBuilder, activityType).addCode("\n").addStatement("return template");
+    methodBuilder = MapperMethodMaker
+        .makeArgumentPresentCheck(methodBuilder, exportType).addCode("\n").addStatement("return template");
 
     return methodBuilder.build();
   }
 
   @Override
-  public MethodSpec makeGetArgumentsMethod(final ActivityTypeRecord activityType) {
+  public MethodSpec makeGetArgumentsMethod(final ExportTypeRecord exportType) {
+    final var metaName = MapperMethodMaker.getMetaName(exportType);
     return MethodSpec
         .methodBuilder("getArguments")
         .addModifiers(Modifier.PUBLIC)
@@ -106,8 +109,8 @@ public class AllDefinedMethodMaker implements ActivityMapperMethodMaker {
             String.class,
             gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
         .addParameter(
-            TypeName.get(activityType.declaration.asType()),
-            "activity",
+            TypeName.get(exportType.declaration().asType()),
+            metaName,
             Modifier.FINAL)
         .addStatement(
             "final var $L = new $T()",
@@ -117,7 +120,7 @@ public class AllDefinedMethodMaker implements ActivityMapperMethodMaker {
                 String.class,
                 gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
         .addCode(
-            activityType.parameters
+            exportType.parameters()
                 .stream()
                 .map(parameter -> CodeBlock
                     .builder()
@@ -126,7 +129,7 @@ public class AllDefinedMethodMaker implements ActivityMapperMethodMaker {
                         "arguments",
                         parameter.name,
                         parameter.name,
-                        "activity",
+                        metaName,
                         parameter.name
                     ))
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -138,14 +141,14 @@ public class AllDefinedMethodMaker implements ActivityMapperMethodMaker {
   }
 
   @Override
-  public List<ActivityParameterRecord> getActivityParameters(final TypeElement activityTypeElement) {
-    final var parameters = new ArrayList<ActivityParameterRecord>();
+  public List<ParameterRecord> getParameters(final TypeElement activityTypeElement) {
+    final var parameters = new ArrayList<ParameterRecord>();
     for (final var element : activityTypeElement.getEnclosedElements()) {
       if (element.getKind() != ElementKind.FIELD) continue;
-      if (element.getAnnotation(ActivityType.Parameter.class) == null) continue;
+      if (element.getAnnotation(Export.Parameter.class) == null) continue;
       final var name = element.getSimpleName().toString();
       final var type = element.asType();
-      parameters.add(new ActivityParameterRecord(name, type, element));
+      parameters.add(new ParameterRecord(name, type, element));
     }
     return parameters;
   }

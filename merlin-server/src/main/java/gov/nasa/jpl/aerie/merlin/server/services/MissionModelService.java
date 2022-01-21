@@ -41,6 +41,13 @@ public interface MissionModelService {
   List<Parameter> getModelParameters(String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoader.MissionModelLoadException;
 
+  Map<String, SerializedValue> getModelEffectiveArguments(String missionModelId, Map<String, SerializedValue> arguments)
+  throws NoSuchMissionModelException,
+    MissingArgumentException,
+    LocalMissionModelService.MissionModelLoadException,
+    UnconstructableMissionModelConfigurationException,
+    UnconfigurableMissionModelException;
+
   SimulationResults runSimulation(CreateSimulationMessage message)
           throws NoSuchMissionModelException, MissionModelFacade.NoSuchActivityTypeException;
 
@@ -81,6 +88,18 @@ public interface MissionModelService {
     public UnconstructableActivityInstanceException(final String activityTypeId, final Throwable cause) {
       super(cause);
       this.activityTypeId = activityTypeId;
+    }
+  }
+
+  class UnconfigurableMissionModelException extends Exception {
+    public UnconfigurableMissionModelException(final Throwable cause) {
+      super(cause);
+    }
+  }
+
+  class UnconstructableMissionModelConfigurationException extends Exception {
+    public UnconstructableMissionModelConfigurationException(final Throwable cause) {
+      super(cause);
     }
   }
 }

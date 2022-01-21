@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.Selector;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
+import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 public final class MissionModelBuilder implements Initializer {
@@ -65,12 +67,19 @@ public final class MissionModelBuilder implements Initializer {
     return this.state.daemon(task);
   }
 
+  public MissionModelBuilder withConfigurationType(final ConfigurationType<?> configurationType) {
+    this.state = state.withConfigurationType(configurationType);
+    return this;
+  }
+
   public <Model>
   MissionModel<Model> build(final Model model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
     return this.state.build(model, taskSpecTypes);
   }
 
   private interface MissionModelBuilderState extends Initializer {
+    MissionModelBuilderState withConfigurationType(ConfigurationType<?> configurationType);
+
     <Model>
     MissionModel<Model> build(Model model, Map<String, TaskSpecType<Model, ?>> taskSpecTypes);
   }
@@ -81,6 +90,8 @@ public final class MissionModelBuilder implements Initializer {
     private final Map<String, Resource<?>> resources = new HashMap<>();
     private final List<TaskFactory> daemons = new ArrayList<>();
     private final List<MissionModel.SerializableTopic<?>> topics = new ArrayList<>();
+
+    private ConfigurationType<?> configurationType;
 
     @Override
     public <CellType> CellType getInitialState(
@@ -139,6 +150,12 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
+    public MissionModelBuilderState withConfigurationType(final ConfigurationType<?> configurationType) {
+      this.configurationType = configurationType;
+      return this;
+    }
+
+    @Override
     public <Model>
     MissionModel<Model> build(final Model model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
       final var missionModel = new MissionModel<>(
@@ -147,6 +164,7 @@ public final class MissionModelBuilder implements Initializer {
           this.resources,
           this.topics,
           this.daemons,
+          Optional.ofNullable(configurationType),
           taskSpecTypes);
 
       MissionModelBuilder.this.state = new BuiltState();
@@ -192,6 +210,11 @@ public final class MissionModelBuilder implements Initializer {
     @Override
     public String daemon(final TaskFactory task) {
       throw new IllegalStateException("Daemons cannot be added after the schema is built");
+    }
+
+    @Override
+    public MissionModelBuilderState withConfigurationType(final ConfigurationType<?> configurationType) {
+      throw new IllegalStateException("Configuration type cannot be assigned after the schema is built");
     }
 
     @Override

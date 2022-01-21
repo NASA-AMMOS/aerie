@@ -82,15 +82,20 @@ public final class MissionModelProcessor implements Processor {
       try {
         final var missionModelRecord = missionModelParser.parseMissionModel(packageElement);
 
-        final var generatedFiles = new ArrayList<>(List.of(
-            missionModelGen.generateMerlinPlugin(missionModelRecord),
+        final var generatedFiles = new ArrayList<>(List.of(missionModelGen.generateMerlinPlugin(missionModelRecord)));
+
+        missionModelRecord.modelConfigurationType
+            .flatMap(configType -> missionModelGen.generateMissionModelConfigurationMapper(missionModelRecord, configType))
+            .ifPresent(generatedFiles::add);
+
+        generatedFiles.addAll(List.of(
             missionModelGen.generateMissionModelFactory(missionModelRecord),
             missionModelGen.generateActivityActions(missionModelRecord),
             missionModelGen.generateActivityTypes(missionModelRecord)
         ));
         for (final var activityRecord : missionModelRecord.activityTypes) {
-          this.ownedActivityTypes.add(activityRecord.declaration);
-          if (!activityRecord.mapper.isCustom) {
+          this.ownedActivityTypes.add(activityRecord.declaration());
+          if (!activityRecord.mapper().isCustom) {
             missionModelGen.generateActivityMapper(missionModelRecord, activityRecord).ifPresent(generatedFiles::add);
           }
         }

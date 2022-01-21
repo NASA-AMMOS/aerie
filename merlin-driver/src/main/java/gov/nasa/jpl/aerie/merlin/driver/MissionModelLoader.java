@@ -40,7 +40,10 @@ public final class MissionModelLoader {
         final MissionModelBuilder builder
     ) {
         final var model = factory.instantiate(missionModelConfig, builder);
-        return builder.build(model, factory.getTaskSpecTypes());
+        return factory.getConfigurationType()
+            .map(builder::withConfigurationType)
+            .orElse(builder)
+            .build(model, factory.getTaskSpecTypes());
     }
 
     public static MerlinPlugin loadMissionModelProvider(final Path path, final String name, final String version)

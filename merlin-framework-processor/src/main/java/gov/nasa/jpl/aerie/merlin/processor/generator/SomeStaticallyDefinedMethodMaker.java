@@ -5,9 +5,9 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -17,27 +17,28 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class SomeStaticallyDefinedMethodMaker implements ActivityMapperMethodMaker {
+public class SomeStaticallyDefinedMethodMaker implements MapperMethodMaker {
 
   @Override
-  public MethodSpec makeInstantiateMethod(final ActivityTypeRecord activityType) {
-    var activityTypeName = activityType.declaration.getSimpleName().toString();
+  public MethodSpec makeInstantiateMethod(final ExportTypeRecord exportType) {
+    final var exceptionClass = MapperMethodMaker.getInstantiateException(exportType);
+    var activityTypeName = exportType.declaration().getSimpleName().toString();
 
     var methodBuilder = MethodSpec.methodBuilder("instantiate")
-                                  .addModifiers(Modifier.PUBLIC)
-                                  .addAnnotation(Override.class)
-                                  .returns(TypeName.get(activityType.declaration.asType()))
-                                  .addException(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
-                                  .addParameter(
-                                      ParameterizedTypeName.get(
-                                          java.util.Map.class,
-                                          String.class,
-                                          gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class),
-                                      "arguments",
-                                      Modifier.FINAL);
+        .addModifiers(Modifier.PUBLIC)
+        .addAnnotation(Override.class)
+        .returns(TypeName.get(exportType.declaration().asType()))
+        .addException(exceptionClass)
+        .addParameter(
+            ParameterizedTypeName.get(
+                java.util.Map.class,
+                String.class,
+                gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class),
+            "arguments",
+            Modifier.FINAL);
 
-    for (final var element : activityType.declaration.getEnclosedElements()) {
-      if (element.getAnnotation(ActivityType.WithDefaults.class) == null) continue;
+    for (final var element : exportType.declaration().getEnclosedElements()) {
+      if (element.getAnnotation(Export.WithDefaults.class) == null) continue;
       var defaultsName = element.getSimpleName().toString();
       methodBuilder = methodBuilder.addStatement(
           "final var defaults = new $L.$L()",
@@ -45,7 +46,7 @@ public class SomeStaticallyDefinedMethodMaker implements ActivityMapperMethodMak
           defaultsName);
 
       methodBuilder = methodBuilder.addCode(
-          activityType.parameters
+          exportType.parameters()
               .stream()
               .map(parameter -> CodeBlock
                   .builder()
@@ -62,12 +63,12 @@ public class SomeStaticallyDefinedMethodMaker implements ActivityMapperMethodMak
               .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
               .build()).addCode("\n");
 
-      methodBuilder = produceParametersFromDefaultsClass(activityType, methodBuilder);
+      methodBuilder = produceParametersFromDefaultsClass(exportType, methodBuilder);
 
       methodBuilder = methodBuilder.beginControlFlow("for (final var $L : $L.entrySet())", "entry", "arguments")
         .beginControlFlow("switch ($L.getKey())", "entry")
         .addCode(
-            activityType.parameters
+            exportType.parameters()
                 .stream()
                 .map(parameter -> CodeBlock
                     .builder()
@@ -78,7 +79,7 @@ public class SomeStaticallyDefinedMethodMaker implements ActivityMapperMethodMak
                         parameter.name,
                         parameter.name,
                         "entry",
-                        gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
+                        exceptionClass)
                     .addStatement("break")
                     .unindent())
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -90,30 +91,30 @@ public class SomeStaticallyDefinedMethodMaker implements ActivityMapperMethodMak
                 .indent()
                 .addStatement(
                     "throw new $T()",
-                    gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
+                    exceptionClass)
                 .unindent()
                 .build())
         .endControlFlow()
         .endControlFlow().addCode("\n");
     }
 
-    methodBuilder = ActivityMapperMethodMaker
-        .makeArgumentPresentCheck(methodBuilder, activityType).addCode("\n");
+    methodBuilder = MapperMethodMaker
+        .makeArgumentPresentCheck(methodBuilder, exportType).addCode("\n");
 
     // Add return statement with instantiation of class with parameters
     methodBuilder = methodBuilder.addStatement(
         "return new $T($L)",
-        activityType.declaration,
-        activityType.parameters.stream().map(parameter -> parameter.name + ".get()").collect(Collectors.joining(", ")));
+        exportType.declaration(),
+        exportType.parameters().stream().map(parameter -> parameter.name + ".get()").collect(Collectors.joining(", ")));
 
     return methodBuilder.build();
   }
 
   @Override
-  public List<String> getParametersWithDefaults(final ActivityTypeRecord activityType) {
+  public List<String> getParametersWithDefaults(final ExportTypeRecord exportType) {
     Optional<Element> defaultsClass = Optional.empty();
-    for (final var element : activityType.declaration.getEnclosedElements()) {
-      if (element.getAnnotation(ActivityType.WithDefaults.class) == null) continue;
+    for (final var element : exportType.declaration().getEnclosedElements()) {
+      if (element.getAnnotation(Export.WithDefaults.class) == null) continue;
       defaultsClass = Optional.of(element);
     }
 
@@ -128,9 +129,9 @@ public class SomeStaticallyDefinedMethodMaker implements ActivityMapperMethodMak
     return fieldNameList;
   }
 
-  private MethodSpec.Builder produceParametersFromDefaultsClass(final ActivityTypeRecord activityType, MethodSpec.Builder methodBuilder)
+  private MethodSpec.Builder produceParametersFromDefaultsClass(final ExportTypeRecord exportType, MethodSpec.Builder methodBuilder)
   {
-    return methodBuilder.addCode(getParametersWithDefaults(activityType).stream()
+    return methodBuilder.addCode(getParametersWithDefaults(exportType).stream()
         .map(fieldName -> CodeBlock
             .builder()
             .addStatement(

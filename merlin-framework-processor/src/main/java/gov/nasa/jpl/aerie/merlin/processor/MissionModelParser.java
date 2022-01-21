@@ -1,14 +1,16 @@
 package gov.nasa.jpl.aerie.merlin.processor;
 
 import com.squareup.javapoet.ClassName;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
-import gov.nasa.jpl.aerie.merlin.processor.generator.ActivityMapperMethodMaker;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityDefaultsStyle;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityMapperRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
+import gov.nasa.jpl.aerie.merlin.processor.generator.MapperMethodMaker;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportDefaultsStyle;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.MapperRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ConfigurationTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityValidationRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 
@@ -45,7 +47,7 @@ import java.util.Set;
   throws InvalidMissionModelException
   {
     final var topLevelModel = this.getMissionModelModel(missionModelElement);
-    final var modelConfiguration = this.getMissionModelConfiguration(missionModelElement);
+    final var modelConfigurationType = this.getMissionModelConfigurationType(missionModelElement);
     final var activityTypes = new ArrayList<ActivityTypeRecord>();
     final var typeRules = new ArrayList<TypeRule>();
 
@@ -57,7 +59,7 @@ import java.util.Set;
       activityTypes.add(this.parseActivityType(missionModelElement, activityTypeElement));
     }
 
-    return new MissionModelRecord(missionModelElement, topLevelModel, modelConfiguration, typeRules, activityTypes);
+    return new MissionModelRecord(missionModelElement, topLevelModel, modelConfigurationType, typeRules, activityTypes);
   }
 
   private TypeElement getMissionModelModel(final PackageElement missionModelElement)
@@ -88,7 +90,7 @@ import java.util.Set;
     return (TypeElement) ((DeclaredType) modelAttribute.getValue()).asElement();
   }
 
-  private Optional<TypeElement> getMissionModelConfiguration(final PackageElement missionModelElement)
+  private Optional<ConfigurationTypeRecord> getMissionModelConfigurationType(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
     final var annotationMirror =
@@ -104,7 +106,13 @@ import java.util.Set;
           attribute);
     }
 
-    return Optional.of((TypeElement) ((DeclaredType) attribute.getValue()).asElement());
+    final var declaration = (TypeElement) ((DeclaredType) attribute.getValue()).asElement();
+    final var name = declaration.getSimpleName().toString();
+    final var parameters = getExportParameters(declaration);
+    final List<ParameterValidationRecord> validations = List.of(); // TODO validation list is empty, not parsing those yet
+    final var mapper = getExportMapper(missionModelElement, declaration);
+    final var defaultsStyle = getExportDefaultsStyle(declaration);
+    return Optional.of(new ConfigurationTypeRecord(name, declaration, parameters, List.of(), mapper, defaultsStyle));
   }
 
   private List<TypeElement> getMissionModelMapperClasses(final PackageElement missionModelElement)
@@ -230,9 +238,9 @@ import java.util.Set;
   throws InvalidMissionModelException
   {
     final var name = this.getActivityTypeName(activityTypeElement);
-    final var mapper = this.getActivityMapper(missionModelElement, activityTypeElement);
-    final var validations = this.getActivityValidations(activityTypeElement);
-    final var parameters = this.getActivityParameters(activityTypeElement);
+    final var mapper = this.getExportMapper(missionModelElement, activityTypeElement);
+    final var validations = this.getExportValidations(activityTypeElement);
+    final var parameters = this.getExportParameters(activityTypeElement);
     final var effectModel = this.getActivityEffectModel(activityTypeElement);
 
     /*
@@ -244,23 +252,22 @@ import java.util.Set;
     class (old-style) or as a record (new-style) by determining
     whether there are @Parameter tags (old-style) or not
      */
-    final var activityDefaultsStyle = this.getActivityDefaultsStyle(activityTypeElement);
+    final var defaultsStyle = this.getExportDefaultsStyle(activityTypeElement);
 
-    return new ActivityTypeRecord(activityTypeElement, name, mapper,
-                                  validations, parameters, effectModel, activityDefaultsStyle);
+    return new ActivityTypeRecord(name, activityTypeElement, parameters, validations, mapper, defaultsStyle, effectModel);
   }
 
-  private ActivityDefaultsStyle getActivityDefaultsStyle(final TypeElement activityTypeElement)
+  private ExportDefaultsStyle getExportDefaultsStyle(final TypeElement exportTypeElement)
   {
-    for (final var element : activityTypeElement.getEnclosedElements()) {
-      if (element.getAnnotation(ActivityType.Parameter.class) != null)
-        return ActivityDefaultsStyle.AllDefined;
-      if (element.getAnnotation(ActivityType.Template.class) != null)
-        return ActivityDefaultsStyle.AllStaticallyDefined;
-      if (element.getAnnotation(ActivityType.WithDefaults.class) != null)
-        return ActivityDefaultsStyle.SomeStaticallyDefined;
+    for (final var element : exportTypeElement.getEnclosedElements()) {
+      if (element.getAnnotation(Export.Parameter.class) != null)
+        return ExportDefaultsStyle.AllDefined;
+      if (element.getAnnotation(Export.Template.class) != null)
+        return ExportDefaultsStyle.AllStaticallyDefined;
+      if (element.getAnnotation(Export.WithDefaults.class) != null)
+        return ExportDefaultsStyle.SomeStaticallyDefined;
     }
-    return ActivityDefaultsStyle.NoneDefined; // No default arguments provided
+    return ExportDefaultsStyle.NoneDefined; // No default arguments provided
   }
 
   private String getActivityTypeName(final TypeElement activityTypeElement)
@@ -281,47 +288,47 @@ import java.util.Set;
     return (String) nameAttribute.getValue();
   }
 
-  private ActivityMapperRecord getActivityMapper(final PackageElement missionModelElement, final TypeElement activityTypeElement)
+  private MapperRecord getExportMapper(final PackageElement missionModelElement, final TypeElement exportTypeElement)
   throws InvalidMissionModelException
   {
-    final var annotationMirror = this.getAnnotationMirrorByType(activityTypeElement, ActivityType.WithMapper.class);
+    final var annotationMirror = this.getAnnotationMirrorByType(exportTypeElement, ActivityType.WithMapper.class);
     if (annotationMirror.isEmpty()) {
-      return ActivityMapperRecord.generatedFor(
-          ClassName.get(activityTypeElement),
+      return MapperRecord.generatedFor(
+          ClassName.get(exportTypeElement),
           missionModelElement);
     }
 
     final var mapperType = (DeclaredType) getAnnotationAttribute(annotationMirror.get(), "value")
         .orElseThrow(() -> new InvalidMissionModelException(
             "Unable to get value attribute of annotation",
-            activityTypeElement,
+            exportTypeElement,
             annotationMirror.get()))
         .getValue();
 
-    return ActivityMapperRecord.custom(
+    return MapperRecord.custom(
         ClassName.get((TypeElement) mapperType.asElement()));
   }
 
-  private List<ActivityValidationRecord> getActivityValidations(final TypeElement activityTypeElement)
+  private List<ParameterValidationRecord> getExportValidations(final TypeElement exportTypeElement)
   {
-    final var validations = new ArrayList<ActivityValidationRecord>();
+    final var validations = new ArrayList<ParameterValidationRecord>();
 
-    for (final var element : activityTypeElement.getEnclosedElements()) {
-      if (element.getAnnotation(ActivityType.Validation.class) == null) continue;
+    for (final var element : exportTypeElement.getEnclosedElements()) {
+      if (element.getAnnotation(Export.Validation.class) == null) continue;
 
       final var name = element.getSimpleName().toString();
-      final var message = element.getAnnotation(ActivityType.Validation.class).value();
+      final var message = element.getAnnotation(Export.Validation.class).value();
 
-      validations.add(new ActivityValidationRecord(name, message));
+      validations.add(new ParameterValidationRecord(name, message));
     }
 
     return validations;
   }
 
-  private List<ActivityParameterRecord> getActivityParameters(final TypeElement activityTypeElement)
+  private List<ParameterRecord> getExportParameters(final TypeElement exportTypeElement)
   {
-    return ActivityMapperMethodMaker.make(this.getActivityDefaultsStyle(activityTypeElement))
-                                    .getActivityParameters(activityTypeElement);
+    return MapperMethodMaker.make(this.getExportDefaultsStyle(exportTypeElement))
+                            .getParameters(exportTypeElement);
   }
 
   private Optional<Pair<String, ActivityType.Executor>> getActivityEffectModel(final TypeElement activityTypeElement)

@@ -1,0 +1,26 @@
+plugins {
+  id 'java-library'
+}
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(17)
+  }
+}
+
+test {
+  useJUnitPlatform()
+}
+
+dependencies {
+  annotationProcessor project(':merlin-framework-processor')
+
+  compileOnly project(':merlin-framework')
+  compileOnly project(':contrib')
+
+  testImplementation project(':merlin-framework-junit')
+  testImplementation project(':contrib')
+  testImplementation 'org.assertj:assertj-core:3.21.0'
+
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+}

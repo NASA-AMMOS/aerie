@@ -125,6 +125,20 @@ public abstract class MerlinParsers {
           untuple(missionModelId -> new HasuraMissionModelEvent(String.valueOf(missionModelId))),
           $ -> tuple(Long.parseLong($.missionModelId()))));
 
+  private static final JsonParser<HasuraAction.MissionModelArgumentsInput> hasuraMissionModelArgumentsInputP
+      = productP
+      .field("missionModelId", stringP)
+      .field("modelArguments", mapP(serializedValueP))
+      .map(Iso.of(
+          untuple(HasuraAction.MissionModelArgumentsInput::new),
+          $ -> tuple($.missionModelId(), $.arguments())));
+
+  public static final JsonParser<HasuraAction<HasuraAction.MissionModelArgumentsInput>> hasuraMissionModelArgumentsActionP
+      = hasuraActionP(hasuraMissionModelArgumentsInputP)
+      .map(Iso.of(
+          untuple(HasuraAction::new),
+          $ -> tuple($.name(), $.input(), $.session())));
+
   private static final JsonParser<HasuraAction.ActivityInput> hasuraActivityInputP
       = productP
       . field("missionModelId", stringP)
