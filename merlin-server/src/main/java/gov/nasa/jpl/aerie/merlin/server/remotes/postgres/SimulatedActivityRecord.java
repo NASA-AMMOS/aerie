@@ -16,5 +16,6 @@ import java.util.Optional;
     Duration duration,
     Optional<Long> parentId,
     List<Long> childIds,
-    Optional<ActivityInstanceId> directiveId
+    Optional<ActivityInstanceId> directiveId,
+    SerializedValue computedAttributes
 ) {}

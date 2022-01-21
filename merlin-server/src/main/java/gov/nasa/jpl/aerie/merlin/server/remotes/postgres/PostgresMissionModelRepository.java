@@ -135,7 +135,12 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
       try (final var createActivityTypeAction = new CreateActivityTypeAction(connection)) {
         final var id = toMissionModelId(missionModelId);
         for (final var activityType : activityTypes.values()) {
-          createActivityTypeAction.apply(id, activityType.name(), activityType.parameters(), activityType.requiredParameters());
+          createActivityTypeAction.apply(
+              id,
+              activityType.name(),
+              activityType.parameters(),
+              activityType.requiredParameters(),
+              activityType.computedAttributesValueSchema());
         }
       }
     } catch (final SQLException ex) {

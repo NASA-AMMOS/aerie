@@ -291,7 +291,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
             record.parentId().map(pgIdToSimId::get).orElse(null),
             record.childIds().stream().map(pgIdToSimId::get).collect(Collectors.toList()),
             record.directiveId(),
-            SerializedValue.of("VOID") // TODO retrieve return value from database
+            record.computedAttributes()
         ));
       }
 

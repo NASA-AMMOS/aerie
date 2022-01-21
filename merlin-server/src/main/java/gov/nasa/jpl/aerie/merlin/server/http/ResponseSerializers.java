@@ -157,6 +157,7 @@ public final class ResponseSerializers {
         .add("duration", serializeDuration(simulatedActivity.duration))
         .add("parent", serializeNullable(id -> Json.createValue(id.id()), simulatedActivity.parentId))
         .add("children", serializeIterable((id -> Json.createValue(id.id())), simulatedActivity.childIds))
+        .add("computedAttributes", serializeArgument(simulatedActivity.computedAttributes))
         .build();
   }
 

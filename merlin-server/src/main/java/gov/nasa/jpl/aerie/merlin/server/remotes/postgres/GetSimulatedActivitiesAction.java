@@ -1,9 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import org.apache.commons.lang3.tuple.Pair;
 import org.intellij.lang.annotations.Language;
 
 import javax.json.Json;
@@ -65,7 +62,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           duration,
           parentId,
           initialChildIds,
-          attributes.directiveId()
+          attributes.directiveId(),
+          attributes.computedAttributes()
       ));
     }
 
