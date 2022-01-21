@@ -25,6 +25,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.HashMap;
 import java.util.List;
@@ -582,6 +583,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
   /** Generate `${activity_name}Mapper` class. */
   public Optional<JavaFile> generateActivityMapper(final MissionModelRecord missionModel, final ActivityTypeRecord activityType) {
     return generateCommonMapperMethods(missionModel, activityType).map(typeSpec -> typeSpec.toBuilder()
+        .addMethod(makeGetReturnValueSchemaMethod())
         .addMethod(
             MethodSpec
                 .methodBuilder("createTask")
@@ -632,6 +634,15 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             .builder(activityType.mapper().name.packageName(), typeSpec)
             .skipJavaLangImports(true)
             .build());
+  }
+
+  private static MethodSpec makeGetReturnValueSchemaMethod() {
+    return MethodSpec.methodBuilder("getReturnValueSchema")
+                     .addModifiers(Modifier.PUBLIC)
+                     .addAnnotation(Override.class)
+                     .returns(ValueSchema.class)
+                     .addStatement("return this." + COMPUTED_ATTRIBUTES_VALUE_MAPPER_FIELD_NAME + ".getValueSchema()")
+                     .build();
   }
 
   private Optional<Map<String, CodeBlock>> generateParameterMapperBlocks(final MissionModelRecord missionModel, final ExportTypeRecord exportType)

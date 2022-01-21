@@ -135,7 +135,7 @@ public final class MissionModelFacade {
     {
       final var activityTypes = new HashMap<String, ActivityType>();
       factory.getTaskSpecTypes().forEach((name, specType) -> {
-        activityTypes.put(name, new ActivityType(name, specType.getParameters(), specType.getRequiredParameters()));
+        activityTypes.put(name, new ActivityType(name, specType.getParameters(), specType.getRequiredParameters(), specType.getReturnValueSchema()));
       });
       return activityTypes;
     }
@@ -147,7 +147,7 @@ public final class MissionModelFacade {
           .ofNullable(factory.getTaskSpecTypes().get(typeName))
           .orElseThrow(MissionModelFacade.NoSuchActivityTypeException::new);
 
-      return new ActivityType(typeName, specType.getParameters(), specType.getRequiredParameters());
+      return new ActivityType(typeName, specType.getParameters(), specType.getRequiredParameters(), specType.getReturnValueSchema());
     }
 
     public List<Parameter> getParameters() {

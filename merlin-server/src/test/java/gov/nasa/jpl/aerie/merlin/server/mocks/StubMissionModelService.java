@@ -1,7 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.framework.VoidEnum;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -30,7 +32,9 @@ public final class StubMissionModelService implements MissionModelService {
   public static final String NONEXISTENT_ACTIVITY_TYPE = "no-activity";
   public static final ActivityType EXISTENT_ACTIVITY = new ActivityType(
       EXISTENT_ACTIVITY_TYPE,
-      List.of(new Parameter("Param", ValueSchema.STRING)), List.of());
+      List.of(new Parameter("Param", ValueSchema.STRING)),
+      List.of(),
+      new EnumValueMapper<>(VoidEnum.class).getValueSchema());
 
   public static final SerializedActivity VALID_ACTIVITY_INSTANCE = new SerializedActivity(
       EXISTENT_ACTIVITY_TYPE,
