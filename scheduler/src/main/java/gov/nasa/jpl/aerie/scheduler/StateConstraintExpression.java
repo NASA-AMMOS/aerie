@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -81,49 +82,49 @@ public class StateConstraintExpression {
     }
 
 
-    public <T extends Comparable<T>> Builder lessThan(ExternalState<T> state, T value) {
-      StateConstraintBelow<T> bca = StateConstraintExpression.lessThan(state, value);
+    public Builder lessThan(ExternalState state, SerializedValue value) {
+      StateConstraintBelow bca = StateConstraintExpression.lessThan(state, value);
       this.constraints.add(new StateConstraintExpression(bca));
       return getThis();
     }
 
-    public <T extends Comparable<T>> Builder between(ExternalState<T> state, T value1, T value2) {
-      StateConstraintBetween<T> bca = StateConstraintExpression.buildBetweenConstraint(state, value1, value2);
+    public  Builder between(ExternalState state, SerializedValue value1, SerializedValue value2) {
+      StateConstraintBetween bca = StateConstraintExpression.buildBetweenConstraint(state, value1, value2);
       this.constraints.add(new StateConstraintExpression(bca));
       return getThis();
     }
 
-    public <T extends Comparable<T>> Builder above(ExternalState<T> state, T value) {
-      StateConstraintAbove<T> sca = StateConstraintExpression.buildAboveConstraint(state, value);
+    public  Builder above(ExternalState state, SerializedValue value) {
+      StateConstraintAbove sca = StateConstraintExpression.buildAboveConstraint(state, value);
       this.constraints.add(new StateConstraintExpression(sca));
       return getThis();
     }
 
-    public <T extends Comparable<T>> Builder equal(ExternalState<T> state, T value) {
-      StateConstraintEqual<T> sce = StateConstraintExpression.buildEqualConstraint(state, value);
+    public Builder equal(ExternalState state, SerializedValue value) {
+      StateConstraintEqual sce = StateConstraintExpression.buildEqualConstraint(state, value);
       this.constraints.add(new StateConstraintExpression(sce));
       return getThis();
     }
 
-    public <T extends Comparable<T>> Builder equal(List<? extends ExternalState<T>> states, T value) {
+    public Builder equal(List<? extends ExternalState> states, SerializedValue value) {
       if (forAll == false) {
         throw new IllegalArgumentException("forAll() should have been used before");
       } else {
-        for (ExternalState<T> state : states) {
-          StateConstraintEqual<T> sce = StateConstraintExpression.buildEqualConstraint(state, value);
+        for (ExternalState state : states) {
+          StateConstraintEqual sce = StateConstraintExpression.buildEqualConstraint(state, value);
           this.constraints.add(new StateConstraintExpression(sce));
         }
       }
       return getThis();
     }
 
-    public <T extends Comparable<T>> Builder equalSet(ExternalState<T> state, List<T> values) {
+    public Builder equalSet(ExternalState state, List<SerializedValue> values) {
       var sced = new StateConstraintExpressionEqualSet(state, values);
       this.constraints.add(sced);
       return getThis();
     }
 
-    public <T extends Comparable<T>> Builder transition(ExternalState<T> state, List<T> fromValues, List<T> toValues) {
+    public Builder transition(ExternalState state, List<SerializedValue> fromValues, List<SerializedValue> toValues) {
       var c1 = new StateConstraintExpressionEqualSet(state, fromValues);
       var c2 = new StateConstraintExpressionEqualSet(state, toValues);
       var sced = new StateConstraintExpressionTransition(c1, c2);
@@ -131,12 +132,12 @@ public class StateConstraintExpression {
       return getThis();
     }
 
-    public <T extends Comparable<T>> Builder notEqual(List<? extends ExternalState<T>> states, T value) {
+    public Builder notEqual(List<? extends ExternalState> states, SerializedValue value) {
       if (forAll == false) {
         throw new IllegalArgumentException("forAll() should have been used before");
       } else {
-        for (ExternalState<T> state : states) {
-          StateConstraintNotEqual<T> sce = StateConstraintExpression.buildNotEqualConstraint(state, value);
+        for (ExternalState state : states) {
+          StateConstraintNotEqual sce = StateConstraintExpression.buildNotEqualConstraint(state, value);
           this.constraints.add(new StateConstraintExpression(sce));
         }
       }
@@ -144,8 +145,8 @@ public class StateConstraintExpression {
     }
 
 
-    public <T extends Comparable<T>> Builder notEqual(ExternalState<T> state, T value) {
-      StateConstraintNotEqual<T> sce = StateConstraintExpression.buildNotEqualConstraint(state, value);
+    public Builder notEqual(ExternalState state, SerializedValue value) {
+      StateConstraintNotEqual sce = StateConstraintExpression.buildNotEqualConstraint(state, value);
       this.constraints.add(new StateConstraintExpression(sce));
       return getThis();
     }
@@ -196,10 +197,9 @@ public class StateConstraintExpression {
    *
    * @param state the state on which the constraint applies
    * @param value the value below which the state should be to satisfy the constraint
-   * @param <T> the state type
    * @return a below state constraint
    */
-  protected static <T extends Comparable<T>> StateConstraintBelow<T> lessThan(ExternalState<T> state, T value) {
+  protected static StateConstraintBelow lessThan(ExternalState state, SerializedValue value) {
     return lessThan(state, value, null);
   }
 
@@ -208,16 +208,15 @@ public class StateConstraintExpression {
    *
    * @param state the state on which the constraint applies
    * @param value the value above which the state should be to satisfy the constraint
-   * @param <T> the state type
    * @param timeDomain x
    * @return a above state constraint
    */
-  protected static <T extends Comparable<T>> StateConstraintBelow<T> lessThan(
-      ExternalState<T> state,
-      T value,
+  protected static StateConstraintBelow lessThan(
+      ExternalState state,
+      SerializedValue value,
       Windows timeDomain)
   {
-    StateConstraintBelow<T> sc = new StateConstraintBelow<T>();
+    StateConstraintBelow sc = new StateConstraintBelow();
     sc.setDomainUnary(value);
     sc.setState(state);
     sc.setTimeDomain(timeDomain);
@@ -230,12 +229,11 @@ public class StateConstraintExpression {
    *
    * @param state the state on which the constraint applies
    * @param value the value above which the state should be to satisfy the constraint
-   * @param <T> the state type
    * @return a above state constraint
    */
-  protected static <T extends Comparable<T>> StateConstraintAbove<T> buildAboveConstraint(
-      ExternalState<T> state,
-      T value)
+  protected static  StateConstraintAbove buildAboveConstraint(
+      ExternalState state,
+      SerializedValue value)
   {
     return buildAboveConstraint(state, value, null);
   }
@@ -247,15 +245,14 @@ public class StateConstraintExpression {
    * @param state the state on which the constraint applies
    * @param value the value above which the state should be to satisfy the constraint
    * @param timeDomain x
-   * @param <T> the state type
    * @return a above state constraint
    */
-  protected static <T extends Comparable<T>> StateConstraintAbove<T> buildAboveConstraint(
-      ExternalState<T> state,
-      T value,
+  protected static StateConstraintAbove buildAboveConstraint(
+      ExternalState state,
+      SerializedValue value,
       Windows timeDomain)
   {
-    StateConstraintAbove<T> sc = new StateConstraintAbove<T>();
+    StateConstraintAbove sc = new StateConstraintAbove();
     sc.setDomainUnary(value);
     sc.setState(state);
     sc.setTimeDomain(timeDomain);
@@ -269,13 +266,12 @@ public class StateConstraintExpression {
    * @param state the state on which the constraint applies
    * @param value1 the lower bounds of the interval in which the state should be to satisfy the constraint
    * @param value2 the upper bounds of the interval in which the state should be to satisfy the constraint
-   * @param <T> the state type
    * @return a between state constraint
    */
-  protected static <T extends Comparable<T>> StateConstraintBetween<T> buildBetweenConstraint(
-      ExternalState<T> state,
-      T value1,
-      T value2)
+  protected static StateConstraintBetween buildBetweenConstraint(
+      ExternalState state,
+      SerializedValue value1,
+      SerializedValue value2)
   {
     return buildBetweenConstraint(state, value1, value2, null);
   }
@@ -290,13 +286,13 @@ public class StateConstraintExpression {
    * @param <T> the state type
    * @return a between state constraint
    */
-  protected static <T extends Comparable<T>> StateConstraintBetween<T> buildBetweenConstraint(
-      ExternalState<T> state,
-      T value1,
-      T value2,
+  protected static <T extends Comparable<T>> StateConstraintBetween buildBetweenConstraint(
+      ExternalState state,
+      SerializedValue value1,
+      SerializedValue value2,
       Windows timeDomain)
   {
-    StateConstraintBetween<T> sc = new StateConstraintBetween<T>();
+    StateConstraintBetween sc = new StateConstraintBetween();
     sc.setValueDefinition(Arrays.asList(value1, value2));
     sc.setState(state);
     sc.setTimeDomain(timeDomain);
@@ -308,12 +304,11 @@ public class StateConstraintExpression {
    *
    * @param state the state on which the constraint applies
    * @param value the value to which the state should be equal to satisfy the constraint
-   * @param <T> the state type
    * @return an equal state constraint
    */
-  protected static <T extends Comparable<T>> StateConstraintEqual<T> buildEqualConstraint(
-      ExternalState<T> state,
-      T value)
+  protected static StateConstraintEqual buildEqualConstraint(
+      ExternalState state,
+      SerializedValue value)
   {
     return buildEqualConstraint(state, value, null);
   }
@@ -324,15 +319,14 @@ public class StateConstraintExpression {
    * @param state the state on which the constraint applies
    * @param value the value to which the state should be equal to satisfy the constraint
    * @param timeDomain x
-   * @param <T> the state type
    * @return an equal state constraint
    */
-  protected static <T extends Comparable<T>> StateConstraintEqual<T> buildEqualConstraint(
-      ExternalState<T> state,
-      T value,
+  protected static StateConstraintEqual buildEqualConstraint(
+      ExternalState state,
+      SerializedValue value,
       Windows timeDomain)
   {
-    StateConstraintEqual<T> sc = new StateConstraintEqual<T>();
+    StateConstraintEqual sc = new StateConstraintEqual();
     sc.setDomainUnary(value);
     sc.setState(state);
     sc.setTimeDomain(timeDomain);
@@ -345,14 +339,13 @@ public class StateConstraintExpression {
    *
    * @param state the state on which the constraint applies
    * @param value the value to which the state should be equal to satisfy the constraint
-   * @param <T> the state type
    * @return an equal state constraint
    */
-  protected static <T extends Comparable<T>> StateConstraintNotEqual<T> buildNotEqualConstraint(
-      ExternalState<T> state,
-      T value)
+  protected static StateConstraintNotEqual buildNotEqualConstraint(
+      ExternalState state,
+      SerializedValue value)
   {
-    StateConstraintNotEqual<T> sc = new StateConstraintNotEqual<T>();
+    StateConstraintNotEqual sc = new StateConstraintNotEqual();
     sc.setDomainUnary(value);
     sc.setState(state);
     sc.setTimeDomain(null);
@@ -360,12 +353,12 @@ public class StateConstraintExpression {
   }
 
 
-  public <T extends Comparable<T>> StateConstraintExpression(StateConstraint<T> sc) {
+  public StateConstraintExpression(StateConstraint sc) {
     this.name = "SC_WITHOUT_NAME";
     this.sc = sc;
   }
 
-  protected <T extends Comparable<T>> StateConstraintExpression(StateConstraint<T> sc, String name) {
+  protected <T extends Comparable<T>> StateConstraintExpression(StateConstraint sc, String name) {
     this.name = name;
     this.sc = sc;
   }

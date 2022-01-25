@@ -1,8 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 
+import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -487,15 +488,6 @@ public class AerieController {
     }
   }
 
-  private Parameter getParamName(List<Parameter> params, String name) {
-    for (var param : params) {
-      if (param.name().equals(name)) {
-        return param;
-      }
-    }
-    return null;
-  }
-
   private ActivityInstance jsonToInstance(JSONObject jsonActivity) {
     String type = jsonActivity.getString("type");
     var actTypes = missionModelWrapper.getMissionModel().getTaskSpecificationTypes();
@@ -516,15 +508,16 @@ public class AerieController {
     var params = jsonActivity.getJSONObject("arguments");
     for (var paramName : params.keySet()) {
       var visitor = new DemuxJson(paramName, params);
-      var paramSpec = getParamName(specType.getParameters(), paramName);
+      var paramSpec = ActivityType.getParameterSpecification(specType.getParameters(), paramName);
+      assert(paramSpec != null);
       var valueParam = paramSpec.schema().match(visitor);
       act.addParameter(paramName, valueParam);
     }
     act.setStartTime(DemuxJson.fromString(start));
     var actDurationAsParam = act.getParameters().get("duration");
     if (actDurationAsParam != null) {
-      act.setDuration((Duration) actDurationAsParam);
-      act.getParameters().remove("duration");
+      act.setDuration(new DurationValueMapper().deserializeValue(actDurationAsParam).getSuccessOrThrow());
+     act.getParameters().remove("duration");
     } else {
       act.setDuration(Duration.ZERO);
     }
@@ -823,31 +816,8 @@ public class AerieController {
     }
 
 
-    public String getGraphlqlVersionOfParameter(Object param) {
-      if (param instanceof Integer) {
-        return ((Integer) param).toString();
-      } else if (param instanceof Double) {
-        return ((Double) param).toString();
-      } else if (param instanceof Boolean) {
-        return ((Boolean) param).toString();
-      } else if (param instanceof Enum) {
-        return "\"" + ((Enum) param).toString() + "\"";
-      } else if (param instanceof Time) {
-        return "\"" + ((Time) param).toString() + "\"";
-      } else if (param instanceof StateQueryParam) {
-        StateQueryParam sqParam = (StateQueryParam) param;
-        gov.nasa.jpl.aerie.constraints.time.Window time = sqParam.timeExpr.computeTime(
-            plan,
-            gov.nasa.jpl.aerie.constraints.time.Window.between(
-                instance.getStartTime(),
-                instance.getEndTime()));
-        assert (time.isSingleton());
-        return getGraphlqlVersionOfParameter(sqParam.state.getValueAtTime(time.start));
-      } else if (param instanceof String s) {
-        return "\"" + s + "\"";
-      } else {
-        throw new RuntimeException("Unsupported parameter type");
-      }
+    public String getGraphlqlVersionOfParameter(SerializedValue param) {
+      return JsonEncoding.encode(param).toString();
     }
 
     public String getRequest() {
@@ -872,7 +842,7 @@ public class AerieController {
             .in(gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND)) + ",");
         atLeastOne = true;
       }
-      for (Map.Entry<String, Object> entry : instance.getParameters().entrySet()) {
+      for (Map.Entry<String, SerializedValue> entry : instance.getParameters().entrySet()) {
         atLeastOne = true;
         String fakeParamName = entry.getKey();
         sbParams.append(fakeParamName

@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ActivityExpressionDisjunction extends ActivityExpression {
 
@@ -45,6 +46,7 @@ public class ActivityExpressionDisjunction extends ActivityExpression {
       startsOrEndsIn = template.startOrEndRange;
       parameters = template.parameters;
       exprs = template.actExpressions;
+      variableParameters = template.variableParameters;
       return getThis();
     }
 

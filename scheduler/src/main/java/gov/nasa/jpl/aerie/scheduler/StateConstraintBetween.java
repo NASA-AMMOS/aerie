@@ -5,9 +5,8 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 /**
  * Between state constraint
  *
- * @param <T> the type of the state on which the constraint applies
  */
-public class StateConstraintBetween<T extends Comparable<T>> extends StateConstraint<T> {
+public class StateConstraintBetween extends StateConstraint {
 
   protected StateConstraintBetween() {
     cache = new ValidityCache() {

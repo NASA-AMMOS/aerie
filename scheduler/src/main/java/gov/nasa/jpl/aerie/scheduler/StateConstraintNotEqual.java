@@ -5,9 +5,8 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 /**
  * Equal state constraint
  *
- * @param <T> the type of the state on which the constraint applies
  */
-public class StateConstraintNotEqual<T extends Comparable<T>> extends StateConstraint<T> {
+public class StateConstraintNotEqual extends StateConstraint {
 
   protected StateConstraintNotEqual() {
     cache = new ValidityCache() {

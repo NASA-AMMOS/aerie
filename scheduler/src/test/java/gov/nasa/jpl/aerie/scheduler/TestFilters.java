@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -23,13 +24,13 @@ public class TestFilters {
     smallState2.draw();
 
     StateConstraintExpression ste = new StateConstraintExpression.Builder()
-        .equal(smallState1, true)
+        .equal(smallState1, SerializedValue.of(true))
         .build();
 
     StateConstraintExpression ste2 = new StateConstraintExpression.Builder()
         .andBuilder()
-        .equal(smallState1, true)
-        .equal(smallState2, true)
+        .equal(smallState1, SerializedValue.of(true))
+        .equal(smallState2, SerializedValue.of(true))
         .build();
 
     TimeRangeExpression tre = new TimeRangeExpression.Builder()
@@ -59,6 +60,7 @@ public class TestFilters {
   public class SmallState1 extends MockState<Boolean> {
 
     public SmallState1(Window horizon) {
+      type = SupportedTypes.BOOLEAN;
       values = new LinkedHashMap<Window, Boolean>() {{
         put(Window.betweenClosedOpen(horizon.start, Duration.of(20, Duration.SECONDS)), true);
         put(Window.betweenClosedOpen(Duration.of(20, Duration.SECONDS), Duration.of(25, Duration.SECONDS)), false);
@@ -85,6 +87,7 @@ public class TestFilters {
   public class SmallState2 extends MockState<Boolean> {
 
     public SmallState2(Window horizon) {
+      type = SupportedTypes.BOOLEAN;
       values = new LinkedHashMap<Window, Boolean>() {{
         put(Window.betweenClosedOpen(horizon.start, Duration.of(2, Duration.SECONDS)), true);
         put(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(3, Duration.SECONDS)), false);

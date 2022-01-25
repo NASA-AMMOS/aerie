@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -10,11 +11,9 @@ import java.util.TreeMap;
 /**
  * very basic implies working only on booleans
  *
- * @param <T> x
- * @param <E> x
  */
 //E is the type of this state and T of the other state on which it is based on
-public class ImpliesFromState<T extends Comparable<T>, E extends Comparable<E>> implements ExternalState<E> {
+public class ImpliesFromState implements ExternalState {
 
   public <T, E> T getKey(Map<T, E> map, E value) {
     for (Map.Entry<T, E> entry : map.entrySet()) {
@@ -26,53 +25,53 @@ public class ImpliesFromState<T extends Comparable<T>, E extends Comparable<E>> 
   }
 
   @Override
-  public E getValueAtTime(Duration t) {
+  public SerializedValue getValueAtTime(Duration t) {
     return valueMapping.get(state.getValueAtTime(t));
   }
 
   @Override
-  public Windows whenValueBetween(E inf, E sup, Windows timeDomain) {
+  public Windows whenValueBetween(SerializedValue inf, SerializedValue sup, Windows timeDomain) {
     throw new RuntimeException("Not implemented");
   }
 
   @Override
-  public Windows whenValueBelow(E val, Windows timeDomain) {
+  public Windows whenValueBelow(SerializedValue val, Windows timeDomain) {
     throw new RuntimeException("Not implemented");
   }
 
   @Override
-  public Windows whenValueAbove(E val, Windows timeDomain) {
+  public Windows whenValueAbove(SerializedValue val, Windows timeDomain) {
     throw new RuntimeException("Not implemented");
   }
 
   @Override
-  public Windows whenValueEqual(E val, Windows timeDomain) {
+  public Windows whenValueEqual(SerializedValue val, Windows timeDomain) {
     return state.whenValueEqual(getKey(valueMapping, val), timeDomain);
   }
 
   @Override
-  public Map<Window, E> getTimeline(Windows timeDomain) {
-    Map<Window, E> toReturn = new TreeMap<>();
+  public Map<Window, SerializedValue> getTimeline(Windows timeDomain) {
+    Map<Window, SerializedValue> toReturn = new TreeMap<>();
     state.getTimeline(timeDomain).forEach((key, value) -> toReturn.put(key, valueMapping.get(value)));
     return toReturn;
   }
 
   @Override
-  public Windows whenValueNotEqual(E val, Windows timeDomain) {
+  public Windows whenValueNotEqual(SerializedValue val, Windows timeDomain) {
     return state.whenValueNotEqual(getKey(valueMapping, val), timeDomain);
   }
 
 
-  public ImpliesFromState(ExternalState<T> state, Map<T, E> valueMapping) {
+  public ImpliesFromState(ExternalState state, Map<SerializedValue, SerializedValue> valueMapping) {
     this.valueMapping = valueMapping;
     this.state = state;
   }
 
-  private ExternalState<T> state;
+  private ExternalState state;
   /**
    * table stating that the value of this state in function of value of external state
    */
-  private Map<T, E> valueMapping;
+  private Map<SerializedValue, SerializedValue> valueMapping;
 
 
 }

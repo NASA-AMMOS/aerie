@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -42,7 +43,7 @@ public class RadarBeamCalibrationTest {
 
 
     StateConstraintExpression passWindows = new StateConstraintExpression.Builder()
-        .lessThan(altitudeAboveMoon, 10000)
+        .lessThan(altitudeAboveMoon, SerializedValue.of(10000))
         .build();
 
   }
@@ -87,6 +88,7 @@ public class RadarBeamCalibrationTest {
   public class FlybyEnumState extends MockState<FlybysEnum> {
 
     public FlybyEnumState(PlanningHorizon horizon) {
+      type = SupportedTypes.STRING;
       values = new HashMap<Window, FlybysEnum>() {{
         put(Window.betweenClosedOpen(horizon.getHor().start, Time.fromString("2025-180T00:00:00.000",horizon)), FlybysEnum.NOFLYBY);
         put(
@@ -115,6 +117,7 @@ public class RadarBeamCalibrationTest {
   public class AltitudeAboveMoon extends MockState<Integer> {
 
     public AltitudeAboveMoon(PlanningHorizon horizon) {
+      type = SupportedTypes.LONG;
       values = new HashMap<Window, Integer>() {{
         put(Window.betweenClosedOpen(horizon.getHor().start, Time.fromString("2025-180T00:00:00.000",horizon)), 10);
         put(Window.betweenClosedOpen(Time.fromString("2025-180T00:00:00.000",horizon), Time.fromString("2025-183T00:00:00.000",horizon)), 20);

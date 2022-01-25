@@ -9,7 +9,7 @@ public class GlobalConstraints {
     return NAryMutexConstraint.buildMutexConstraint(types);
   }
 
-  public static AlwaysGlobalConstraint always(StateConstraint<?> sc) {
+  public static AlwaysGlobalConstraint always(StateConstraint sc) {
     return new AlwaysGlobalConstraint(sc);
   }
 }

@@ -2,9 +2,11 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * the criteria used to identify activity instances in scheduling goals
@@ -64,19 +66,20 @@ public class ActivityExpression {
   public abstract static class AbstractBuilder<B extends AbstractBuilder<B, AT>, AT extends ActivityExpression> {
 
 
-    Map<String, Object> parameters = new HashMap<String, Object>();
+    Map<String, SerializedValue> parameters = new HashMap<>();
+    Map<String, VariableParameterComputer> variableParameters = new HashMap<>();
 
-    public <T> B withParameter(String param, QueriableState<T> state, TimeExpression timeToQuery) {
-      parameters.put(param, new StateQueryParam<T>(state, timeToQuery));
+    public B withParameter(String param, QueriableState state, TimeExpression timeToQuery) {
+      variableParameters.put(param, new StateQueryParam(state, timeToQuery));
       return getThis();
     }
 
-    public <T> B withParameter(String param, QueriableState<T> state) {
-      parameters.put(param, new StateQueryParam<T>(state, TimeExpression.atStart()));
+    public B withParameter(String param, QueriableState state) {
+      variableParameters.put(param, new StateQueryParam(state, TimeExpression.atStart()));
       return getThis();
     }
 
-    public B withParameter(String param, Object val) {
+    public B withParameter(String param, SerializedValue val) {
       parameters.put(param, val);
       return getThis();
     }
@@ -300,7 +303,7 @@ public class ActivityExpression {
       durationIn = template.durationRange;
       startsOrEndsIn = template.startOrEndRange;
       parameters = template.parameters;
-
+      variableParameters = template.variableParameters;
       return getThis();
     }
 
@@ -313,6 +316,7 @@ public class ActivityExpression {
       template.startOrEndRange = startsOrEndsIn;
       template.startOrEndRangeW = startsOrEndsInW;
       template.parameters = parameters;
+      template.variableParameters = variableParameters;
       return template;
     }
 
@@ -436,7 +440,8 @@ public class ActivityExpression {
   }
 
 
-  Map<String, Object> parameters = new HashMap<String, Object>();
+  Map<String, SerializedValue> parameters = new HashMap<>();
+  Map<String, VariableParameterComputer> variableParameters = new HashMap<>();
 
   /**
    * determines if the given activity matches all criteria of this template
@@ -484,24 +489,34 @@ public class ActivityExpression {
       match = (dur != null) && durationRange.contains(dur);
     }
 
+    //activity must have all instantiated parameters of template to be compatible
     if (match && parameters != null) {
-      Map<String, Object> params = act.getParameters();
+      Map<String, SerializedValue> actInstanceParameters = act.getParameters();
       for (var param : parameters.entrySet()) {
-        if (params.containsKey(param.getKey())) {
+        if (actInstanceParameters.containsKey(param.getKey())) {
+          match = actInstanceParameters.get(param.getKey()).equals(param.getValue());
+        }
+        if (!match) {
+          break;
+        }
+      }
+    }
+    if(match && variableParameters != null){
+      Map<String, VariableParameterComputer> actVariableParams = act.getVariableParameters();
+      for (var templateVariableParameter : variableParameters.entrySet()) {
+        var templateParamName = templateVariableParameter.getKey();
+        var templateParamValue = templateVariableParameter.getValue();
 
-          if (param.getValue() instanceof StateQueryParam) {
-            var sqp =(StateQueryParam) param.getValue();
-            var timeOfQuery = sqp.timeExpr.computeTime(null,Window.between(act.getStartTime(), act.getEndTime()));
-            if(!timeOfQuery.isSingleton()){
-              throw new RuntimeException("TimeExpression must return Singleton Window for StateQuery parameters");
-            }
-            match = params
-                .get(param.getKey())
-                .equals(sqp.state.getValueAtTime(timeOfQuery.start));
-          }else {
-            match = params.get(param.getKey()).equals(param.getValue());
-          }
-
+        if (actVariableParams.containsKey(templateParamName)) {
+          //if the variable parameter is formally defined
+          //we check on the equality between expression definitions
+          match = actVariableParams.get(templateParamName).equals(templateParamValue);
+        } else if(act.getParameters().containsKey(templateParamName)){
+            //if the variable parameter has been instantiated (which is always the case for instances coming from the
+            //simulation), we check that the value would correspond
+            //TODO: value computed at the start time of the activity, per the current behavior of ActivityCreationTemplate/ActivityInstance
+            // but should be different and more specialized
+            match = ActivityInstance.getValue(templateParamValue, act.getStartTime()).equals(act.getParameters().get(templateParamName));
         }
         if (!match) {
           break;
