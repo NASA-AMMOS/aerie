@@ -156,19 +156,6 @@ public interface MapperMethodMaker {
         .build();
   }
 
-  default List<ParameterRecord> getParameters(final TypeElement activityTypeElement)
-  {
-    final var parameters = new ArrayList<ParameterRecord>();
-    for (final var element : activityTypeElement.getEnclosedElements()) {
-      if (element.getKind() != ElementKind.FIELD) continue;
-      if (element.getModifiers().contains(Modifier.STATIC)) continue;
-      final var name = element.getSimpleName().toString();
-      final var type = element.asType();
-      parameters.add(new ParameterRecord(name, type, element));
-    }
-    return parameters;
-  }
-
   static MethodSpec.Builder makeArgumentPresentCheck(final MethodSpec.Builder methodBuilder, final ExportTypeRecord exportType) {
     // Ensure all parameters are non-null
     return methodBuilder.addCode(
