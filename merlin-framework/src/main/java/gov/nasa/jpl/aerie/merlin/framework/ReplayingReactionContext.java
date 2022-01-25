@@ -83,20 +83,6 @@ final class ReplayingReactionContext implements Context {
   }
 
   @Override
-  public String defer(final Duration duration, final TaskFactory task) {
-    return this.memory.doOnce(() -> {
-      return this.scheduler.defer(duration, task.create(this.executor));
-    });
-  }
-
-  @Override
-  public String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
-    return this.memory.doOnce(() -> {
-      return this.scheduler.defer(duration, type, arguments);
-    });
-  }
-
-  @Override
   public void delay(final Duration duration) {
     this.memory.doOnce(() -> {
       this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.

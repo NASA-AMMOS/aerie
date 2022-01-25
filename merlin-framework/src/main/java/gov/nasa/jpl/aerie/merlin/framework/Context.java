@@ -37,9 +37,6 @@ public interface Context {
   String spawn(TaskFactory task);
   String spawn(String type, Map<String, SerializedValue> arguments);
 
-  String defer(Duration duration, TaskFactory task);
-  String defer(Duration duration, String type, Map<String, SerializedValue> arguments);
-
   void delay(Duration duration);
   void waitFor(String id);
   void waitUntil(Condition condition);

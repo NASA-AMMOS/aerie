@@ -45,27 +45,27 @@ public /*non-final*/ class ModelActions {
   }
 
   public static String defer(final Duration duration, final Runnable task) {
-    return defer(duration, threaded(task));
+    return spawn(replaying(() -> { delay(duration); spawn(task); }));
   }
 
   public static String defer(final Duration duration, final Context.TaskFactory task) {
-    return context.get().defer(duration, task);
+    return spawn(replaying(() -> { delay(duration); spawn(task); }));
   }
 
   public static String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
-    return context.get().defer(duration, type, arguments);
+    return spawn(replaying(() -> { delay(duration); spawn(type, arguments); }));
   }
 
   public static String defer(final long quantity, final Duration unit, final Runnable task) {
-    return defer(unit.times(quantity), threaded(task));
-  }
-
-  public static String defer(final long quantity, final Duration unit, final String type, final Map<String, SerializedValue> arguments) {
-    return defer(unit.times(quantity), type, arguments);
+    return spawn(replaying(() -> { delay(quantity, unit); spawn(task); }));
   }
 
   public static String defer(final long quantity, final Duration unit, final Context.TaskFactory task) {
-    return context.get().defer(unit.times(quantity), task);
+    return spawn(replaying(() -> { delay(quantity, unit); spawn(task); }));
+  }
+
+  public static String defer(final long quantity, final Duration unit, final String type, final Map<String, SerializedValue> arguments) {
+    return spawn(replaying(() -> { delay(quantity, unit); spawn(type, arguments); }));
   }
 
 

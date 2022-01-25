@@ -650,31 +650,6 @@ public final class SimulationEngine implements AutoCloseable {
 
       return task.id();
     }
-
-    @Override
-    public String defer(final Duration delay, final Task state) {
-      if (delay.isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
-
-      final var task = TaskId.generate();
-      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress(this.currentTime, state));
-      SimulationEngine.this.taskParent.put(task, this.activeTask);
-      SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
-      SimulationEngine.this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(this.currentTime.plus(delay)));
-
-      return task.id();
-    }
-
-    @Override
-    public String defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
-      if (delay.isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
-
-      final var task = initiateTaskFromInput(this.model, new SerializedActivity(type, arguments));
-      SimulationEngine.this.taskParent.put(task, this.activeTask);
-      SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
-      SimulationEngine.this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(this.currentTime.plus(delay)));
-
-      return task.id();
-    }
   }
 
   /** A representation of a job processable by the {@link SimulationEngine}. */
