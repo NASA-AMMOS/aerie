@@ -202,13 +202,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
   }
 
   private ActivityInstance createInstanceForReal(String name, Window window, boolean instantiateVariableParameters) {
-    final ActivityInstance act;
-    if (type instanceof AerieActivityType) {
-      act = new AerieActivityInstance((AerieActivityType) type);
-    } else {
-      act = new ActivityInstance(type);
-    }
-
+    final ActivityInstance act = new ActivityInstance(type);
     TaskNetwork tw = new TaskNetwork();
     TaskNetworkAdapter tnw = new TaskNetworkAdapter(tw);
     tnw.addAct(name);
