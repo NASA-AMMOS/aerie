@@ -15,6 +15,10 @@ import javax.lang.model.element.Modifier;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Mapper method generator for all export types (activities and configurations).
+ * Generates common methods betweeen all export types.
+ */
 public abstract sealed class MapperMethodMaker permits
     AllDefinedMethodMaker,
     AllStaticallyDefinedMethodMaker,

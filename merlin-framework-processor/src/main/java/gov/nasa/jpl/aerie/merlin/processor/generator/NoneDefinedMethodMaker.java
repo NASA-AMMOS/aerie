@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/** Method maker for defaults style where no default arguments are provided (for example, a record class). */
 /*package-private*/ final class NoneDefinedMethodMaker extends MapperMethodMaker {
 
   public NoneDefinedMethodMaker(final ExportTypeRecord exportType) {

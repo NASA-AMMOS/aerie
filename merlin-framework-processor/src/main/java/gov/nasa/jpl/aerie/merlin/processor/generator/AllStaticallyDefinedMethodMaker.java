@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/** Method maker for defaults style where all default arguments are provided within a @Template static method. */
 /*package-private*/ final class AllStaticallyDefinedMethodMaker extends MapperMethodMaker {
 
   public AllStaticallyDefinedMethodMaker(final ExportTypeRecord exportType) {

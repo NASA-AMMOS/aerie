@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/** Method maker for defaults style where all default arguments are provided within @Parameter annotations. */
 /*package-private*/ final class AllDefinedMethodMaker extends MapperMethodMaker {
 
   public AllDefinedMethodMaker(final ExportTypeRecord exportType) {
