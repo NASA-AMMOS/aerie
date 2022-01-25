@@ -4,48 +4,48 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportDefaultsStyle;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public interface MapperMethodMaker {
+public abstract sealed class MapperMethodMaker permits
+    AllDefinedMethodMaker,
+    AllStaticallyDefinedMethodMaker,
+    NoneDefinedMethodMaker,
+    SomeStaticallyDefinedMethodMaker
+{
+  /*package-private*/ final ExportTypeRecord exportType;
+  /*package-private*/ final String metaName;
+  /*package-private*/ final Class<?> instantiationExceptionClass;
 
-  MethodSpec makeInstantiateMethod(final ExportTypeRecord exportType);
+  public MapperMethodMaker(final ExportTypeRecord exportType) {
+    this.exportType = exportType;
 
-  default List<String> getParametersWithDefaults(final ExportTypeRecord exportType) {
+    // TODO currently only 2 permitted classes (activity and config. type records),
+    //  this should be changed to a switch expression once sealed class pattern-matching switch expressions exist
+    if (exportType instanceof ActivityTypeRecord) {
+      this.metaName = "activity";
+      this.instantiationExceptionClass = TaskSpecType.UnconstructableTaskSpecException.class;
+    } else { // is instanceof ConfigurationTypeRecord
+      this.metaName = "configuration";
+      this.instantiationExceptionClass = ConfigurationType.UnconstructableConfigurationException.class;
+    }
+  }
+
+  public abstract MethodSpec makeInstantiateMethod();
+
+  public /*non-final*/ List<String> getParametersWithDefaults() {
     return exportType.parameters().stream().map(p -> p.name).toList();
   }
 
-  default MethodSpec makeGetRequiredParametersMethod(final ExportTypeRecord exportType) {
-    final var optionalParams = getParametersWithDefaults(exportType);
-    final var requiredParams = exportType.parameters().stream().filter(p -> !optionalParams.contains(p.name)).toList();
-
-    return MethodSpec.methodBuilder("getRequiredParameters")
-        .addModifiers(Modifier.PUBLIC)
-        .addAnnotation(Override.class)
-        .returns(ParameterizedTypeName.get(
-            java.util.List.class,
-            String.class))
-        .addStatement(
-            "return $T.of($L)",
-            List.class,
-            requiredParams.stream().map(p -> "\"%s\"".formatted(p.name)).collect(Collectors.joining(", ")))
-        .build();
-  }
-
-  default MethodSpec makeGetParametersMethod(final ExportTypeRecord exportType) {
+  public /*non-final*/ MethodSpec makeGetParametersMethod() {
     return MethodSpec.methodBuilder("getParameters")
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
@@ -77,8 +77,7 @@ public interface MapperMethodMaker {
         .build();
   }
 
-  default MethodSpec makeGetArgumentsMethod(final ExportTypeRecord exportType) {
-    final var metaName = getMetaName(exportType);
+  public /*non-final*/ MethodSpec makeGetArgumentsMethod() {
     return MethodSpec
         .methodBuilder("getArguments")
         .addModifiers(Modifier.PUBLIC)
@@ -119,8 +118,24 @@ public interface MapperMethodMaker {
         .build();
   }
 
-  default MethodSpec makeGetValidationFailures(final ExportTypeRecord exportType) {
-    final var metaName = getMetaName(exportType);
+  public final MethodSpec makeGetRequiredParametersMethod() {
+    final var optionalParams = getParametersWithDefaults();
+    final var requiredParams = exportType.parameters().stream().filter(p -> !optionalParams.contains(p.name)).toList();
+
+    return MethodSpec.methodBuilder("getRequiredParameters")
+        .addModifiers(Modifier.PUBLIC)
+        .addAnnotation(Override.class)
+        .returns(ParameterizedTypeName.get(
+            java.util.List.class,
+            String.class))
+        .addStatement(
+            "return $T.of($L)",
+            List.class,
+            requiredParams.stream().map(p -> "\"%s\"".formatted(p.name)).collect(Collectors.joining(", ")))
+        .build();
+  }
+
+  public final MethodSpec makeGetValidationFailuresMethod() {
     return MethodSpec
         .methodBuilder("getValidationFailures")
         .addModifiers(Modifier.PUBLIC)
@@ -156,7 +171,7 @@ public interface MapperMethodMaker {
         .build();
   }
 
-  static MethodSpec.Builder makeArgumentPresentCheck(final MethodSpec.Builder methodBuilder, final ExportTypeRecord exportType) {
+  protected final MethodSpec.Builder makeArgumentPresentCheck(final MethodSpec.Builder methodBuilder) {
     // Ensure all parameters are non-null
     return methodBuilder.addCode(
         exportType.parameters()
@@ -167,7 +182,7 @@ public interface MapperMethodMaker {
                     "if (!$L.isPresent()) throw new $T(\"$L\", \"$L\", \"$L\", this.mapper_$L.getValueSchema())",
                     parameter.name,
                     MissingArgumentException.class,
-                    getMetaName(exportType),
+                    metaName,
                     exportType.name(),
                     parameter.name,
                     parameter.name))
@@ -175,32 +190,12 @@ public interface MapperMethodMaker {
             .build());
   }
 
-  static String getMetaName(final ExportTypeRecord exportType) {
-    // TODO currently only 2 permitted classes (activity and config. type records),
-    //  this should be changed to a switch expression once sealed class pattern-matching switch expressions exist
-    if (exportType instanceof ActivityTypeRecord) {
-      return "activity";
-    } else { // is instanceof ConfigurationTypeRecord
-      return "configuration";
-    }
-  }
-
-  static Class<?> getInstantiateException(final ExportTypeRecord exportType) {
-    // TODO currently only 2 permitted classes (activity and config. type records),
-    //  this should be changed to a switch expression once sealed class pattern-matching switch expressions exist
-    if (exportType instanceof ActivityTypeRecord) {
-      return TaskSpecType.UnconstructableTaskSpecException.class;
-    } else { // is instanceof ConfigurationTypeRecord
-      return ConfigurationType.UnconstructableConfigurationException.class;
-    }
-  }
-
-  static MapperMethodMaker make(final ExportDefaultsStyle style) {
-    return switch (style) {
-      case AllStaticallyDefined -> new AllStaticallyDefinedMethodMaker();
-      case NoneDefined -> new NoneDefinedMethodMaker();
-      case AllDefined -> new AllDefinedMethodMaker();
-      case SomeStaticallyDefined -> new SomeStaticallyDefinedMethodMaker();
+  static MapperMethodMaker make(final ExportTypeRecord exportType) {
+    return switch (exportType.defaultsStyle()) {
+      case AllStaticallyDefined -> new AllStaticallyDefinedMethodMaker(exportType);
+      case NoneDefined -> new NoneDefinedMethodMaker(exportType);
+      case AllDefined -> new AllDefinedMethodMaker(exportType);
+      case SomeStaticallyDefined -> new SomeStaticallyDefinedMethodMaker(exportType);
     };
   }
 }

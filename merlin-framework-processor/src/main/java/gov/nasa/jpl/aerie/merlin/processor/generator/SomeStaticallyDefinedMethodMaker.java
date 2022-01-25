@@ -17,18 +17,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class SomeStaticallyDefinedMethodMaker implements MapperMethodMaker {
+/*package-private*/ final class SomeStaticallyDefinedMethodMaker extends MapperMethodMaker {
+
+  public SomeStaticallyDefinedMethodMaker(final ExportTypeRecord exportType) {
+    super(exportType);
+  }
 
   @Override
-  public MethodSpec makeInstantiateMethod(final ExportTypeRecord exportType) {
-    final var exceptionClass = MapperMethodMaker.getInstantiateException(exportType);
+  public MethodSpec makeInstantiateMethod() {
     var activityTypeName = exportType.declaration().getSimpleName().toString();
 
     var methodBuilder = MethodSpec.methodBuilder("instantiate")
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
         .returns(TypeName.get(exportType.declaration().asType()))
-        .addException(exceptionClass)
+        .addException(instantiationExceptionClass)
         .addParameter(
             ParameterizedTypeName.get(
                 java.util.Map.class,
@@ -63,7 +66,7 @@ public class SomeStaticallyDefinedMethodMaker implements MapperMethodMaker {
               .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
               .build()).addCode("\n");
 
-      methodBuilder = produceParametersFromDefaultsClass(exportType, methodBuilder);
+      methodBuilder = produceParametersFromDefaultsClass(methodBuilder);
 
       methodBuilder = methodBuilder.beginControlFlow("for (final var $L : $L.entrySet())", "entry", "arguments")
         .beginControlFlow("switch ($L.getKey())", "entry")
@@ -79,7 +82,7 @@ public class SomeStaticallyDefinedMethodMaker implements MapperMethodMaker {
                         parameter.name,
                         parameter.name,
                         "entry",
-                        exceptionClass)
+                        instantiationExceptionClass)
                     .addStatement("break")
                     .unindent())
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -91,15 +94,14 @@ public class SomeStaticallyDefinedMethodMaker implements MapperMethodMaker {
                 .indent()
                 .addStatement(
                     "throw new $T()",
-                    exceptionClass)
+                    instantiationExceptionClass)
                 .unindent()
                 .build())
         .endControlFlow()
         .endControlFlow().addCode("\n");
     }
 
-    methodBuilder = MapperMethodMaker
-        .makeArgumentPresentCheck(methodBuilder, exportType).addCode("\n");
+    methodBuilder = makeArgumentPresentCheck(methodBuilder).addCode("\n");
 
     // Add return statement with instantiation of class with parameters
     methodBuilder = methodBuilder.addStatement(
@@ -111,7 +113,7 @@ public class SomeStaticallyDefinedMethodMaker implements MapperMethodMaker {
   }
 
   @Override
-  public List<String> getParametersWithDefaults(final ExportTypeRecord exportType) {
+  public List<String> getParametersWithDefaults() {
     Optional<Element> defaultsClass = Optional.empty();
     for (final var element : exportType.declaration().getEnclosedElements()) {
       if (element.getAnnotation(Export.WithDefaults.class) == null) continue;
@@ -129,9 +131,9 @@ public class SomeStaticallyDefinedMethodMaker implements MapperMethodMaker {
     return fieldNameList;
   }
 
-  private MethodSpec.Builder produceParametersFromDefaultsClass(final ExportTypeRecord exportType, MethodSpec.Builder methodBuilder)
+  private MethodSpec.Builder produceParametersFromDefaultsClass(final MethodSpec.Builder methodBuilder)
   {
-    return methodBuilder.addCode(getParametersWithDefaults(exportType).stream()
+    return methodBuilder.addCode(getParametersWithDefaults().stream()
         .map(fieldName -> CodeBlock
             .builder()
             .addStatement(

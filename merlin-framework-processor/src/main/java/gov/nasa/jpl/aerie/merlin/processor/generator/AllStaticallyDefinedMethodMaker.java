@@ -15,18 +15,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class AllStaticallyDefinedMethodMaker implements MapperMethodMaker {
+/*package-private*/ final class AllStaticallyDefinedMethodMaker extends MapperMethodMaker {
+
+  public AllStaticallyDefinedMethodMaker(final ExportTypeRecord exportType) {
+    super(exportType);
+  }
 
   @Override
-  public MethodSpec makeInstantiateMethod(final ExportTypeRecord exportType) {
-    final var exceptionClass = MapperMethodMaker.getInstantiateException(exportType);
+  public MethodSpec makeInstantiateMethod() {
     final var activityTypeName = exportType.declaration().getSimpleName().toString();
 
     var methodBuilder = MethodSpec.methodBuilder("instantiate")
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
         .returns(TypeName.get(exportType.declaration().asType()))
-        .addException(exceptionClass)
+        .addException(instantiationExceptionClass)
         .addParameter(
             ParameterizedTypeName.get(
                 java.util.Map.class,
@@ -74,7 +77,7 @@ public class AllStaticallyDefinedMethodMaker implements MapperMethodMaker {
                             "Optional.ofNullable",
                             parameter.name,
                             "entry",
-                            exceptionClass)
+                            instantiationExceptionClass)
                         .addStatement("break")
                         .unindent())
                     .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -86,7 +89,7 @@ public class AllStaticallyDefinedMethodMaker implements MapperMethodMaker {
                     .indent()
                     .addStatement(
                         "throw new $T()",
-                        exceptionClass)
+                        instantiationExceptionClass)
                     .unindent()
                     .build())
             .endControlFlow()
@@ -94,8 +97,7 @@ public class AllStaticallyDefinedMethodMaker implements MapperMethodMaker {
       break;
     }
 
-    methodBuilder = MapperMethodMaker
-        .makeArgumentPresentCheck(methodBuilder, exportType).addCode("\n");
+    methodBuilder = makeArgumentPresentCheck(methodBuilder).addCode("\n");
 
     // Add return statement with instantiation of class with parameters
     methodBuilder = methodBuilder.addStatement(

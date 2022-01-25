@@ -29,7 +29,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
@@ -112,7 +111,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 .addStatement(
                                     "return $T.of(new $L())",
                                     Optional.class,
-                                    configType.name()+"Mapper"))
+                                    configType.mapper().name))
                             .orElseGet(() -> CodeBlock.builder() // If configuration is not provided
                                 .addStatement(
                                     "return $T.empty()",
@@ -176,7 +175,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 .addStatement(
                                     "final var $L = new $L().instantiate($L)",
                                     "deserializedConfig",
-                                    configType.name()+"Mapper",
+                                    configType.mapper().name,
                                     "serializedArguments")
                                 .addStatement(
                                     "final var $L = $T.initializing($L, $L, () -> new $T($L, $L))",
@@ -426,7 +425,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
     if (maybeMapperBlocks.isEmpty()) return Optional.empty();
 
     final var mapperBlocks = maybeMapperBlocks.get();
-    final var mapperMethodMaker = MapperMethodMaker.make(exportType.defaultsStyle());
+    final var mapperMethodMaker = MapperMethodMaker.make(exportType);
 
     // TODO currently only 2 permitted classes (activity and config. type records),
     //  this should be changed to a switch expression once sealed class pattern-matching switch expressions exist
@@ -502,11 +501,11 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                 .returns(String.class)
                 .addStatement("return $S", exportType.name())
                 .build())
-        .addMethod(mapperMethodMaker.makeGetRequiredParametersMethod(exportType))
-        .addMethod(mapperMethodMaker.makeGetParametersMethod(exportType))
-        .addMethod(mapperMethodMaker.makeGetArgumentsMethod(exportType))
-        .addMethod(mapperMethodMaker.makeInstantiateMethod(exportType))
-        .addMethod(mapperMethodMaker.makeGetValidationFailures(exportType))
+        .addMethod(mapperMethodMaker.makeGetRequiredParametersMethod())
+        .addMethod(mapperMethodMaker.makeGetParametersMethod())
+        .addMethod(mapperMethodMaker.makeGetArgumentsMethod())
+        .addMethod(mapperMethodMaker.makeInstantiateMethod())
+        .addMethod(mapperMethodMaker.makeGetValidationFailuresMethod())
         .build());
   }
 
@@ -588,14 +587,5 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
     }
 
     return failed ? Optional.empty() : Optional.of(mapperBlocks);
-  }
-
-  private CodeBlock generateConfigurationMapperBlock(final MissionModelRecord missionModel, final TypeElement typeElem) {
-    final var resolver = new Resolver(this.typeUtils, this.elementUtils, missionModel.typeRules);
-    final var mapperBlock = resolver.instantiateMapperFor(typeElem.asType());
-    if (mapperBlock.isEmpty()) {
-      messager.printMessage(Diagnostic.Kind.ERROR, "Failed to generate value mapper for configuration", typeElem);
-    }
-    return mapperBlock.get();
   }
 }
