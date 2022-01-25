@@ -5,9 +5,8 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 /**
  * Above state constraint
  *
- * @param <T> the type of the state on which the constraint applies
  */
-public class StateConstraintAbove<T extends Comparable<T>> extends StateConstraint {
+public class StateConstraintAbove extends StateConstraint {
 
   protected StateConstraintAbove() {
     cache = new ValidityCache() {
@@ -26,8 +25,7 @@ public class StateConstraintAbove<T extends Comparable<T>> extends StateConstrai
    * @return a set of time ranges in which the constraint is satisfied
    */
   public Windows findWindowsPart(Plan plan, Windows windows) {
-    Windows wins = this.state.whenValueAbove(this.valueDefinition.get(0), windows);
-    return wins;
+    return this.state.whenValueAbove(this.valueDefinition.get(0), windows);
   }
 
 

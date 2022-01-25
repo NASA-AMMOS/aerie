@@ -71,17 +71,6 @@ public class MissionModelWrapper {
     return simFacade;
   }
 
-  /**
-   * adds a new state definition to the mission model
-   *
-   * @param stateDef IN the state definition to add to the mission model,
-   *     which must not already have a state definition with matching
-   *     identifier
-   * @param <T> the value type of the state
-   */
-  public <T extends Comparable<T>> void add(StateDefinition<T> stateDef) {
-  }
-
   public PlanningHorizon getPlanningHorizon(){
     return simFacade.getPlanningHorizon();
   }
@@ -143,12 +132,12 @@ public class MissionModelWrapper {
   /**
    * activity type definitions in the mission model, indexed by name
    */
-  private java.util.Map<String, ActivityType> actTypeByName
+  private final java.util.Map<String, ActivityType> actTypeByName
       = new java.util.HashMap<>();
 
   /**
    * global constraints in the mission model, indexed by name
    */
-  private List<GlobalConstraint> globalConstraints
+  private final List<GlobalConstraint> globalConstraints
       = new java.util.LinkedList<>();
 }

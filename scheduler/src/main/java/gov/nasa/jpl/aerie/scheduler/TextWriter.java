@@ -23,7 +23,7 @@ public class TextWriter {
   /**
    * the controlling configuration for the writer
    */
-  private HuginnConfiguration config;
+  private final HuginnConfiguration config;
 
 
   /**

@@ -26,7 +26,7 @@ public class STN {
     for(var edge :graph.edgeSet()){
       System.out.println(edge.toString() + " "+graph.getEdgeWeight(edge));
     }  }
-  private Graph<String, DefaultWeightedEdge> graph;
+  private final Graph<String, DefaultWeightedEdge> graph;
 
   private BellmanFordShortestPath<String, DefaultWeightedEdge> latestComputation;
 

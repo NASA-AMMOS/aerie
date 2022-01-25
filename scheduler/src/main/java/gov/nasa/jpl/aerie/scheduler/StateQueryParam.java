@@ -8,8 +8,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
  */
 public class StateQueryParam implements VariableParameterComputer {
 
-  public QueriableState state;
-  public TimeExpression timeExpr;
+  public final QueriableState state;
+  public final TimeExpression timeExpr;
 
   public StateQueryParam(QueriableState state, TimeExpression timeExpression) {
     this.state = state;

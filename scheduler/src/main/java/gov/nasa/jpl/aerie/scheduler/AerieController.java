@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -214,6 +215,7 @@ public class AerieController {
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
+    assert response != null;
     System.out.println(response.statusCode());
     if (response.statusCode() != 200) {
       return false;
@@ -234,11 +236,9 @@ public class AerieController {
       } catch (ZipException e) {
         //probably not in GZIP format
         e.printStackTrace();
-        if (response != null) {
-          String result = new BufferedReader(new InputStreamReader(response.body()))
-              .lines().collect(Collectors.joining("\n"));
-          System.out.println(result);
-        }
+        String result = new BufferedReader(new InputStreamReader(response.body()))
+            .lines().collect(Collectors.joining("\n"));
+        System.out.println(result);
         return false;
       } catch (IOException e) {
         e.printStackTrace();
@@ -439,15 +439,7 @@ public class AerieController {
     return null;
   }
 
-  public Object getStringValue(Plan plan, String nameState, Duration t) {
-    return "";
-  }
-
-  public Object getIntegerValue(Plan plan, String nameState, Duration t) {
-    return 0;
-  }
-
-  protected abstract class GraphRequest {
+  protected abstract static class GraphRequest {
 
     public abstract String getRequest();
 
@@ -468,7 +460,7 @@ public class AerieController {
     }
 
     Plan plan;
-    long id;
+    final long id;
 
     public Plan getPlan() {
       return plan;
@@ -531,7 +523,7 @@ public class AerieController {
       return "query { plan { id} } ";
     }
 
-    ArrayList<Long> idsL = new ArrayList<>();
+    final ArrayList<Long> idsL = new ArrayList<>();
 
     public ArrayList<Long> getIds() {
       return idsL;
@@ -555,28 +547,22 @@ public class AerieController {
   );
 
   protected class StateTypesRequest extends GraphRequest {
-    Plan plan;
+    final Plan plan;
 
     public StateTypesRequest(Plan plan) {
       this.plan = plan;
     }
 
     public String getRequest() {
-      StringBuilder sbPlanRequest = new StringBuilder();
-      sbPlanRequest.append("query ResourceTypes { stateTypes( missionModelId: \"");
-      sbPlanRequest.append(AMMOS_MISSION_MODEL_ID);
-      sbPlanRequest.append("\"){ name schema }}");
-      return sbPlanRequest.toString();
+      return "query ResourceTypes { stateTypes( missionModelId: \""
+             + AMMOS_MISSION_MODEL_ID
+             + "\"){ name schema }}";
     }
 
     @Override
     public boolean handleResponse(JSONObject response) {
 
-      var map = stateTypes.get(plan);
-      if (map == null) {
-        map = new HashMap<String, Class<?>>();
-        stateTypes.put(plan, map);
-      }
+      var map = stateTypes.computeIfAbsent(plan, k -> new HashMap<String, Class<?>>());
 
 
       JSONObject data = (JSONObject) response.get("data");
@@ -600,20 +586,10 @@ public class AerieController {
         getCredentialsFromUser();
       }
 
-
-      StringBuilder sbPlanRequest = new StringBuilder();
-      /*
-      sbPlanRequest.append("mutation { login(username: \"");
-      sbPlanRequest.append(username);
-      sbPlanRequest.append("\", password:\"");
-      sbPlanRequest.append(password);
-      sbPlanRequest.append("\"){ message ssoCookieName ssoCookieValue success }}");*/
-      sbPlanRequest.append("{\", username:\"");
-      sbPlanRequest.append(username);
-      sbPlanRequest.append("\", password:\"}");
-      sbPlanRequest.append(password);
-
-      return sbPlanRequest.toString();
+      return "{\", username:\""
+             + username
+             + "\", password:\"}"
+             + password;
     }
 
     @Override
@@ -627,11 +603,7 @@ public class AerieController {
   protected class LogoutRequest extends GraphRequest {
 
     public String getRequest() {
-
-
-      StringBuilder sbPlanRequest = new StringBuilder();
-      sbPlanRequest.append("mutation { logout { message success }}");
-      return sbPlanRequest.toString();
+      return "mutation { logout { message success }}";
     }
 
     @Override
@@ -642,18 +614,16 @@ public class AerieController {
 
   protected class DeleteMissionModel extends GraphRequest {
 
-    String delete;
+    final String delete;
 
     public DeleteMissionModel(String id) {
       delete = id;
     }
 
     public String getRequest() {
-      StringBuilder sbPlanRequest = new StringBuilder();
-      sbPlanRequest.append("mutation { deleteMissionModel(  id :\"");
-      sbPlanRequest.append(delete);
-      sbPlanRequest.append("\"){message success} }");
-      return sbPlanRequest.toString();
+      return "mutation { deleteMissionModel(  id :\""
+             + delete
+             + "\"){message success} }";
     }
 
     @Override
@@ -668,12 +638,10 @@ public class AerieController {
 
 
     public String getRequest() {
-      StringBuilder sbPlanRequest = new StringBuilder();
-      sbPlanRequest.append("query { adaptations {  id }}");
-      return sbPlanRequest.toString();
+      return "query { adaptations {  id }}";
     }
 
-    ArrayList<String> idsL = new ArrayList<String>();
+    final ArrayList<String> idsL = new ArrayList<>();
 
     public ArrayList<String> getMissionModelIds() {
       return idsL;
@@ -693,9 +661,7 @@ public class AerieController {
   protected class SessionAliveRequest extends GraphRequest {
 
     public String getRequest() {
-      StringBuilder sbPlanRequest = new StringBuilder();
-      sbPlanRequest.append("query { session { message success }}");
-      return sbPlanRequest.toString();
+      return "query { session { message success }}";
     }
 
     @Override
@@ -707,8 +673,8 @@ public class AerieController {
 
   protected class DeleteActivityInstanceRequest extends GraphRequest {
 
-    ActivityInstance act;
-    Plan plan;
+    final ActivityInstance act;
+    final Plan plan;
 
     public DeleteActivityInstanceRequest(ActivityInstance act, Plan plan) {
       this.act = act;
@@ -716,13 +682,11 @@ public class AerieController {
     }
 
     public String getRequest() {
-      StringBuilder sbPlanRequest = new StringBuilder();
-      sbPlanRequest.append("mutation { deleteActivityInstance(planId: \"");
-      sbPlanRequest.append(getPlanId(plan));
-      sbPlanRequest.append("\", activityInstanceId:\"");
-      sbPlanRequest.append(getActivityInstanceId(act));
-      sbPlanRequest.append("\"){ message success }}");
-      return sbPlanRequest.toString();
+      return "mutation { deleteActivityInstance(planId: \""
+             + getPlanId(plan)
+             + "\", activityInstanceId:\""
+             + getActivityInstanceId(act)
+             + "\"){ message success }}";
     }
 
     @Override
@@ -769,10 +733,10 @@ public class AerieController {
   }
 
   protected class CreatePlanRequest extends GraphRequest {
-    Time horizonBegin;
-    Duration horizonEnd;
-    Plan plan;
-    Map<String, AerieStateCache> cache;
+    final Time horizonBegin;
+    final  Duration horizonEnd;
+    final Plan plan;
+    final Map<String, AerieStateCache> cache;
 
     public CreatePlanRequest(Plan plan, Duration horizonBegin, Duration duration, Map<String, AerieStateCache> cache) {
       this.horizonBegin = planningHorizon.getStartHuginn();
@@ -782,17 +746,15 @@ public class AerieController {
     }
 
     public String getRequest() {
-      StringBuilder sbPlanRequest = new StringBuilder();
-      sbPlanRequest.append("mutation { insert_plan_one(object : { model_id: ");
-      sbPlanRequest.append("" + AMMOS_MISSION_MODEL_ID);
-      sbPlanRequest.append(", start_time:\"");
-      sbPlanRequest.append(horizonBegin);
-      sbPlanRequest.append("\", duration:\"");
-      sbPlanRequest.append(horizonEnd.in(Duration.SECONDS) + "s");
-      sbPlanRequest.append("\", name:\"");
-      sbPlanRequest.append(createPlanName());
-      sbPlanRequest.append("\"}){ id }}");
-      return sbPlanRequest.toString();
+      return "mutation { insert_plan_one(object : { model_id: "
+             + "" + AMMOS_MISSION_MODEL_ID
+             + ", start_time:\""
+             + horizonBegin
+             + "\", duration:\""
+             + horizonEnd.in(Duration.SECONDS) + "s"
+             + "\", name:\""
+             + createPlanName()
+             + "\"}){ id }}";
     }
 
     public boolean handleResponse(JSONObject response) {
@@ -807,8 +769,8 @@ public class AerieController {
 
 
   protected class CreateActivityInstanceRequest extends GraphRequest {
-    ActivityInstance instance;
-    Plan plan;
+    final ActivityInstance instance;
+    final Plan plan;
 
     public CreateActivityInstanceRequest(ActivityInstance instance, Plan plan) {
       this.instance = instance;
@@ -920,11 +882,9 @@ public class AerieController {
     }
 
     public String getRequest() {
-      StringBuilder sbPlanRequest = new StringBuilder();
-      sbPlanRequest.append("query { simulate(planId :");
-      sbPlanRequest.append(getPlanId(plan));
-      sbPlanRequest.append("){status}");
-      return sbPlanRequest.toString();
+      return "query { simulate(planId :"
+             + getPlanId(plan)
+             + "){status}";
     }
 
     public boolean handleResponse(JSONObject response) {
@@ -976,8 +936,8 @@ public class AerieController {
 
   protected class UpdateInstanceRequest extends GraphRequest {
 
-    Plan plan;
-    ActivityInstance act;
+    final Plan plan;
+    final ActivityInstance act;
 
     protected UpdateInstanceRequest(ActivityInstance act, Plan plan) {
       this.plan = plan;
@@ -986,18 +946,16 @@ public class AerieController {
 
 
     public String getRequest() {
-      StringBuilder sbPlanRequest = new StringBuilder();
-      sbPlanRequest.append("mutation { updateActivityInstance(activityInstance : { id :\"");
-      sbPlanRequest.append(getActivityInstanceId(act));
-      sbPlanRequest.append("\", parameters:{name:\"\"}");
-      sbPlanRequest.append(", startTimestamp:\"");
-      sbPlanRequest.append(act.getStartTime());
-      sbPlanRequest.append("\", type:\"");
-      sbPlanRequest.append(act.getType().getName());
-      sbPlanRequest.append("\"}, planId :\"");
-      sbPlanRequest.append(getPlanId(plan));
-      sbPlanRequest.append("\"){ message success }}");
-      return sbPlanRequest.toString();
+      return "mutation { updateActivityInstance(activityInstance : { id :\""
+             + getActivityInstanceId(act)
+             + "\", parameters:{name:\"\"}"
+             + ", startTimestamp:\""
+             + act.getStartTime()
+             + "\", type:\""
+             + act.getType().getName()
+             + "\"}, planId :\""
+             + getPlanId(plan)
+             + "\"){ message success }}";
     }
 
     public boolean handleResponse(JSONObject response) {

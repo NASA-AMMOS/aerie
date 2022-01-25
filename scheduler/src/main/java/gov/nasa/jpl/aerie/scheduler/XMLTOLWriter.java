@@ -25,12 +25,12 @@ public class XMLTOLWriter {
   /**
    * the configuration that controls the serializer
    */
-  private HuginnConfiguration config;
+  private final HuginnConfiguration config;
 
   /**
    * stream to serialize output to
    */
-  private java.io.PrintStream xml;
+  private final java.io.PrintStream xml;
 
   /**
    * serialize the entire plan to xml tol output
@@ -87,10 +87,7 @@ public class XMLTOLWriter {
   //TODO: use some multimap library eg guava
   private void addRecord(TolRecord record, java.util.TreeMap<Time, java.util.List<TolRecord>> timedLists) {
     final var t = record.getTime();
-    var list = timedLists.get(t);
-    if (list == null) {
-      timedLists.put(t, list = new java.util.LinkedList<TolRecord>());
-    }
+    var list = timedLists.computeIfAbsent(t, k -> new java.util.LinkedList<TolRecord>());
     list.add(record);
   }
 
@@ -102,7 +99,7 @@ public class XMLTOLWriter {
     /**
      * the plan time at which the record is relevant
      */
-    private Time time;
+    private final Time time;
 
     /**
      * create a new record at the given time
@@ -169,7 +166,7 @@ public class XMLTOLWriter {
     /**
      * the activity that is being described by the record
      */
-    private ActivityInstance act;
+    private final ActivityInstance act;
 
     /**
      * fetches the activity that is being described by the record
@@ -367,8 +364,7 @@ public class XMLTOLWriter {
     final var act = record.getAct();
     final var name = act.getId();
     final var type = act.getType().getName();
-    String color = "#000000"; //black default
-    return color;
+    return "#000000";
   }
 
 }

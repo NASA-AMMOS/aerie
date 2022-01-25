@@ -133,9 +133,6 @@ public class ActivityCreationTemplate extends ActivityExpression {
       template.type = type;
 
       if (durationIn != null) {
-        if(parametricDur!= null){
-          throw new RuntimeException("Cannot specify two different types of durations");
-        }
         template.durationRange = durationIn;
       }
       //REVIEW: probably want to store permissible rane separate from creation

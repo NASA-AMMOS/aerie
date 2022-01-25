@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 public class DurationExpressionRelative implements DurationExpression {
 
 
-  DurationAnchorEnum anchor;
+  final DurationAnchorEnum anchor;
 
   public DurationExpressionRelative(DurationAnchorEnum anchor){
     this.anchor = anchor;

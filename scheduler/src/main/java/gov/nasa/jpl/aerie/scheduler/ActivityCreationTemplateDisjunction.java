@@ -12,7 +12,7 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
 
   protected ActivityCreationTemplateDisjunction(List<ActivityCreationTemplate> acts) {
     assert (acts.size() > 0);
-    this.acts = new ArrayList<ActivityCreationTemplate>(acts);
+    this.acts = new ArrayList<>(acts);
   }
 
   @Override
@@ -150,13 +150,12 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
         }
       }
 
-      ActivityCreationTemplateDisjunction dis = new ActivityCreationTemplateDisjunction(exprs);
-      return dis;
+      return new ActivityCreationTemplateDisjunction(exprs);
     }
 
     protected boolean orBuilder = false;
 
-    List<ActivityCreationTemplate> exprs = new ArrayList<ActivityCreationTemplate>();
+    List<ActivityCreationTemplate> exprs = new ArrayList<>();
 
     public OrBuilder or(ActivityCreationTemplate expr) {
       exprs.add(expr);

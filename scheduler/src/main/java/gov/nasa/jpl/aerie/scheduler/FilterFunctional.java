@@ -11,7 +11,7 @@ public abstract class FilterFunctional implements TimeWindowsFilter {
 
   @Override
   public Windows filter(Plan plan, Windows windows) {
-    List<Window> ret = new ArrayList<Window>();
+    List<Window> ret = new ArrayList<>();
     for (var window : windows) {
       if (shouldKeep(plan, window)) {
         ret.add(window);

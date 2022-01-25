@@ -28,7 +28,7 @@ public abstract class StateConstraint {
   /**
    * Static boolean allowing to enable caching or not
    */
-  public static boolean ACTIVATE_CACHE = false;
+  public static final boolean ACTIVATE_CACHE = false;
 
   protected Windows timeDomain;
 
@@ -62,7 +62,7 @@ public abstract class StateConstraint {
 
 
   protected void setDomainUnary(SerializedValue value) {
-    this.valueDefinition = new ArrayList<SerializedValue>();
+    this.valueDefinition = new ArrayList<>();
     this.valueDefinition.add(value);
   }
 

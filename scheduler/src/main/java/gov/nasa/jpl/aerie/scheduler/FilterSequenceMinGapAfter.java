@@ -14,7 +14,7 @@ import java.util.stream.StreamSupport;
  */
 public class FilterSequenceMinGapAfter implements TimeWindowsFilter {
 
-  private Duration minDelay;
+  private final Duration minDelay;
   public FilterSequenceMinGapAfter(Duration minDelay) {
     this.minDelay = minDelay;
   }

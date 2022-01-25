@@ -237,14 +237,14 @@ public class Time implements Comparable<Time> {
    * the span may be negative, expressing a difference to an earlier time point
    */
   //TODO: switch to fixed precision to avoid floating point mess
-  private double jplET_s;
+  private final double jplET_s;
 
 
   /**
    * the constant object representing the zero time, ie the reference epoch
    * time point
    */
-  private static Time zeroConstant = new Time(0.0);
+  private static final Time zeroConstant = new Time(0.0);
 
 
   /**
@@ -263,7 +263,7 @@ public class Time implements Comparable<Time> {
    *
    * produces UTC times in the form 2020-11-30T14:33:66.221
    */
-  private static DateTimeFormatter formatDOM
+  private static final DateTimeFormatter formatDOM
       = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
                          .withZone(ZoneId.of("Z"));
 

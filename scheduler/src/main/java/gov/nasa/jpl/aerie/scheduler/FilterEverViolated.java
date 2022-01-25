@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
  */
 public class FilterEverViolated extends FilterFunctional {
 
-  private StateConstraintExpression expr;
+  private final StateConstraintExpression expr;
 
   public FilterEverViolated(StateConstraintExpression expr) {
     this.expr = expr;

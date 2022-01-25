@@ -81,9 +81,9 @@ public class PlanInMemory implements Plan {
 
     actsById.put(name, act);
     //REVIEW: use a cleaner multimap? maybe guava
-    actsByTime.computeIfAbsent(startT, k -> new java.util.LinkedList<ActivityInstance>())
+    actsByTime.computeIfAbsent(startT, k -> new java.util.LinkedList<>())
               .add(act);
-    actsByType.computeIfAbsent(type, k -> new java.util.LinkedList<ActivityInstance>())
+    actsByType.computeIfAbsent(type, k -> new java.util.LinkedList<>())
               .add(act);
     actsSet.add(act);
   }
@@ -153,25 +153,25 @@ public class PlanInMemory implements Plan {
   /**
    * container of all activity instances in plan, indexed by name
    */
-  private java.util.HashMap<Long, ActivityInstance> actsById
+  private final java.util.HashMap<Long, ActivityInstance> actsById
       = new java.util.HashMap<>();
 
   /**
    * container of all activity instances in plan, indexed by type
    */
-  private java.util.HashMap<String, java.util.List<ActivityInstance>> actsByType
+  private final java.util.HashMap<String, java.util.List<ActivityInstance>> actsByType
       = new java.util.HashMap<>();
 
   /**
    * container of all activity instances in plan, indexed by start time
    */
-  private java.util.TreeMap<Duration, java.util.List<ActivityInstance>> actsByTime
+  private final java.util.TreeMap<Duration, java.util.List<ActivityInstance>> actsByTime
       = new java.util.TreeMap<>();
 
   /**
    * container of all activity instances in plan
    */
-  private java.util.HashSet<ActivityInstance> actsSet
+  private final java.util.HashSet<ActivityInstance> actsSet
       = new java.util.HashSet<>();
 
   /**
@@ -215,7 +215,7 @@ public class PlanInMemory implements Plan {
    *
    * note that different solvers may evaluate the same plan differently
    */
-  protected java.util.List<Evaluation> evals = new java.util.LinkedList<Evaluation>();
+  protected final java.util.List<Evaluation> evals = new java.util.LinkedList<>();
 
 
 }

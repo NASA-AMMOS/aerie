@@ -17,7 +17,7 @@ public class NAryMutexConstraint extends GlobalConstraintWithIntrospection {
 
   public static NAryMutexConstraint buildMutexConstraint(List<ActivityExpression> actTypes) {
     NAryMutexConstraint mc = new NAryMutexConstraint();
-    mc.actTypes = new HashSet<ActivityExpression>(actTypes);
+    mc.actTypes = new HashSet<>(actTypes);
     return mc;
   }
 

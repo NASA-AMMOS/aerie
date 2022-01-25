@@ -24,8 +24,7 @@ public class StateConstraintBelow extends StateConstraint {
    * @return a set of time ranges in which the constraint is satisfied
    */
   public Windows findWindowsPart(Plan plan, Windows windows) {
-    Windows wins = this.state.whenValueBelow(this.valueDefinition.get(0), windows);
-    return wins;
+    return this.state.whenValueBelow(this.valueDefinition.get(0), windows);
   }
 
 

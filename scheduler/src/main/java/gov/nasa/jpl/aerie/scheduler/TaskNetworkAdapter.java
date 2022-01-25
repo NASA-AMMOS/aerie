@@ -9,7 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public class TaskNetworkAdapter {
 
-  TaskNetwork tw;
+  private final TaskNetwork tw;
 
   public TaskNetworkAdapter(TaskNetwork tw){
     this.tw = tw;

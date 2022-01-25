@@ -13,14 +13,14 @@ import java.util.Map;
  */
 public class TaskNetwork {
 
-  private Map<String, String> startActTimepoints;
-  private Map<String, String> endActTimepoints;
-  private String startHorizon = "SI";
-  private String endHorizon = "EI";
+  private final Map<String, String> startActTimepoints;
+  private final Map<String, String> endActTimepoints;
+  private final String startHorizon = "SI";
+  private final String endHorizon = "EI";
 
   double stHorizon = 0;
 
-  private STN stn;
+  private final STN stn;
 
   public TaskNetwork(){
     this(0., Double.MAX_VALUE);

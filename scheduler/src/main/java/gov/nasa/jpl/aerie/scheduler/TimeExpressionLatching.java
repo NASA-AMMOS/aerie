@@ -20,9 +20,9 @@ public class TimeExpressionLatching extends TimeExpression {
   }
 
 
-  TimeExpression expr1;
-  TimeExpression expr2;
-  TimeRangeExpression resetWindowsExpression;
+  private final TimeExpression expr1;
+  private final TimeExpression expr2;
+  private final TimeRangeExpression resetWindowsExpression;
 
 
   @Override

@@ -13,7 +13,7 @@ public class StateConstraintExpressionConjunction extends StateConstraintExpress
 
   protected StateConstraintExpressionConjunction(List<StateConstraintExpression> constraints, String name) {
     super(null, name);
-    conjonction = new LinkedList<StateConstraintExpression>(constraints);
+    conjonction = new LinkedList<>(constraints);
     cache = new ValidityCache() {
       @Override
       public Windows fetchValue(Plan plan, Windows intervals) {
@@ -22,11 +22,11 @@ public class StateConstraintExpressionConjunction extends StateConstraintExpress
     };
   }
 
-  private ValidityCache cache;
+  private final ValidityCache cache;
 
-  public static boolean ACTIVATE_CACHE = false;
+  public static final boolean ACTIVATE_CACHE = false;
 
-  private List<StateConstraintExpression> conjonction;
+  private final List<StateConstraintExpression> conjonction;
 
   /**
    * Finding a window for a conjunction is finding the intersection of the windows of all the contributing constraints
@@ -55,12 +55,4 @@ public class StateConstraintExpressionConjunction extends StateConstraintExpress
     }
     return returnedWindows;
   }
-
-  /**
-   * Simplification and verification of consistency (no contradictory statements)
-   * TODO:implement
-   */
-  protected void reduce() {
-  }
-
 }

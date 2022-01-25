@@ -10,9 +10,9 @@ import java.util.Map;
  */
 public class StateProxy implements QueriableState {
 
-  private QueriableState state;
+  private final QueriableState state;
 
-  private Map<SerializedValue, SerializedValue> proxyValues;
+  private final Map<SerializedValue, SerializedValue> proxyValues;
 
 
   public StateProxy(QueriableState state, Map<SerializedValue, SerializedValue> proxyValues) {

@@ -129,7 +129,7 @@ public class Range<T extends Comparable<T>> implements Comparable<Range<T>> {
   }
 
   public List<Range<T>> subsetFullyContained(List<Range<T>> windows) {
-    List<Range<T>> ret = new ArrayList<Range<T>>();
+    List<Range<T>> ret = new ArrayList<>();
     for (var win : windows) {
       if (this.contains(win)) {
         ret.add(win);
@@ -148,37 +148,37 @@ public class Range<T extends Comparable<T>> implements Comparable<Range<T>> {
     if (otherRange.minimum.compareTo(this.maximum) > 0 || this.minimum.compareTo(otherRange.maximum) > 0) {
       return null;
     } else {
-      return new Range<T>(
+      return new Range<>(
           Collections.max(Arrays.asList(this.minimum, otherRange.minimum)),
           Collections.min(Arrays.asList(this.maximum, otherRange.maximum)));
     }
   }
 
   public List<Range<T>> subtract(Range<T> otherRange) {
-    List<Range<T>> retList = new ArrayList<Range<T>>();
+    List<Range<T>> retList = new ArrayList<>();
     var intersect = intersect(otherRange);
     if (intersect == null) {
       //case 1 : disjoint => return this interval
-      retList.add(new Range<T>(this.minimum, this.maximum));
+      retList.add(new Range<>(this.minimum, this.maximum));
     } else {
       if (intersect.equalsRange(this)) {
         //case 2, return nothing
       } else if (this.contains(otherRange)) {
         // case 3 : make two
         if (this.getMinimum().compareTo(intersect.getMinimum()) != 0) {
-          retList.add(new Range<T>(this.getMinimum(), intersect.getMinimum()));
+          retList.add(new Range<>(this.getMinimum(), intersect.getMinimum()));
         }
         if (this.getMaximum().compareTo(intersect.getMaximum()) != 0) {
-          retList.add(new Range<T>(intersect.getMaximum(), this.getMaximum()));
+          retList.add(new Range<>(intersect.getMaximum(), this.getMaximum()));
         }
       } else {
         //simple intersection
         //other is before
         if (intersect.contains(this.getMinimum())) {
-          retList.add(new Range<T>(intersect.getMaximum(), this.getMaximum()));
+          retList.add(new Range<>(intersect.getMaximum(), this.getMaximum()));
           //other is after
         } else if (intersect.contains(this.getMaximum())) {
-          retList.add(new Range<T>(this.getMinimum(), intersect.getMinimum()));
+          retList.add(new Range<>(this.getMinimum(), intersect.getMinimum()));
         }
       }
     }
@@ -209,7 +209,7 @@ public class Range<T extends Comparable<T>> implements Comparable<Range<T>> {
    * @return a range enveloping the two passed ranges
    */
   public <T extends Comparable<T>> Range<T> envelop(@NotNull Range<T> range1, @NotNull Range<T> range2) {
-    return new Range<T>(
+    return new Range<>(
         Collections.min(Arrays.asList(range1.getMinimum(), range2.getMinimum())),
         Collections.max(Arrays.asList(range1.getMaximum(), range2.getMaximum())));
   }

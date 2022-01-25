@@ -137,7 +137,7 @@ public class Goal {
       return getThis();
     }
 
-    protected List<StateConstraintExpression> constraints = new LinkedList<StateConstraintExpression>();
+    protected  final List<StateConstraintExpression> constraints = new LinkedList<>();
 
     public T partialSatisfaction() {
       this.partialSatisfaction = true;
@@ -270,7 +270,7 @@ public class Goal {
    * @return a list of issues in the plan that diminish goal satisfaction
    */
   public java.util.Collection<Conflict> getConflicts(Plan plan) {
-    return java.util.Collections.<Conflict>emptyList();
+    return java.util.Collections.emptyList();
   }
 
   public StateConstraintExpression getStateConstraints() {

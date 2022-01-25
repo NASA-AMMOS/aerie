@@ -56,7 +56,7 @@ public class SimulationFacade {
   //simulation results from the last simulation, as output directly by simulation driver
   private SimulationResults lastSimDriverResults;
 
-  private Map<Long, ActivityInstanceId> activityNameToActivityId= new HashMap<>();;
+  private final Map<Long, ActivityInstanceId> activityNameToActivityId= new HashMap<>();;
 
   /**
    * Accessor for integer resource feeders
@@ -123,8 +123,7 @@ public class SimulationFacade {
 
     for (final var act : actsInPlan) {
 
-      Map<String, SerializedValue> params = new HashMap<>();
-      act.getParameters().forEach((name, value) -> params.put(name, value));
+      Map<String, SerializedValue> params = new HashMap<>(act.getParameters());
       if(act.getDuration()!= null) {
         params.put("duration", new DurationValueMapper().serializeValue(act.getDuration()));
       } else{

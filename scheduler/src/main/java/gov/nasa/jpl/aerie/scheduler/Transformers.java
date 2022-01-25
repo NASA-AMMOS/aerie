@@ -22,7 +22,7 @@ public class Transformers {
 
   public static class EnveloppeBuilder {
 
-    List<TimeRangeExpression> insideExprs = new ArrayList<TimeRangeExpression>();
+    final List<TimeRangeExpression> insideExprs = new ArrayList<>();
     TimeRangeExpression resetExpr;
 
     public EnveloppeBuilder withinEach(TimeRangeExpression expr) {
@@ -47,8 +47,7 @@ public class Transformers {
     }
 
     public TimeWindowsTransformer build() {
-      TimeWindowsTransformer filter = new TransformWithReset(resetExpr, new TransformerEnveloppe(insideExprs));
-      return filter;
+      return new TransformWithReset(resetExpr, new TransformerEnveloppe(insideExprs));
     }
 
 

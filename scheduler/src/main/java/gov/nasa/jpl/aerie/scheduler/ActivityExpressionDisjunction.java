@@ -7,10 +7,10 @@ import java.util.Objects;
 public class ActivityExpressionDisjunction extends ActivityExpression {
 
 
-  List<ActivityExpression> actExpressions;
+  final List<ActivityExpression> actExpressions;
 
   protected ActivityExpressionDisjunction(List<ActivityExpression> actExpressions) {
-    this.actExpressions = new ArrayList<ActivityExpression>(actExpressions);
+    this.actExpressions = new ArrayList<>(actExpressions);
   }
 
 
@@ -60,11 +60,10 @@ public class ActivityExpressionDisjunction extends ActivityExpression {
 
     @Override
     public ActivityExpressionDisjunction build() {
-      ActivityExpressionDisjunction dis = new ActivityExpressionDisjunction(exprs);
-      return dis;
+      return new ActivityExpressionDisjunction(exprs);
     }
 
-    List<ActivityExpression> exprs = new ArrayList<ActivityExpression>();
+    List<ActivityExpression> exprs = new ArrayList<>();
 
     public OrBuilder or(ActivityExpression expr) {
       exprs.add(expr);

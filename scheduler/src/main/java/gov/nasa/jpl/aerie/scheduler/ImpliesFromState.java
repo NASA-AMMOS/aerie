@@ -67,11 +67,11 @@ public class ImpliesFromState implements ExternalState {
     this.state = state;
   }
 
-  private ExternalState state;
+  private final ExternalState state;
   /**
    * table stating that the value of this state in function of value of external state
    */
-  private Map<SerializedValue, SerializedValue> valueMapping;
+  private final Map<SerializedValue, SerializedValue> valueMapping;
 
 
 }

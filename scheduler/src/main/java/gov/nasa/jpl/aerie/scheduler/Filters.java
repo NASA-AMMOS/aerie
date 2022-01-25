@@ -35,8 +35,7 @@ public class Filters {
     }
 
     TimeWindowsFilter build() {
-      var filter = Filters.withinEach(expr, new FilterLatching(filter1, filter2));
-      return filter;
+      return Filters.withinEach(expr, new FilterLatching(filter1, filter2));
     }
 
 

@@ -7,9 +7,9 @@ import java.util.Map;
 
 public class TimeExpressionFromExpr extends TimeExpression {
 
-  protected TimeExpression expression;
+  protected final TimeExpression expression;
   protected boolean fixed = true;
-  protected String name;
+  protected final String name;
 
   public TimeExpressionFromExpr(TimeExpression expression, String name) {
     this.expression = expression;

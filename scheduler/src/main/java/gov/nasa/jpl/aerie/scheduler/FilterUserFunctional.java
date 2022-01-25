@@ -6,7 +6,7 @@ import java.util.function.Function;
 
 public class FilterUserFunctional extends FilterFunctional {
 
-  Function<Window, Boolean> function;
+  final Function<Window, Boolean> function;
 
   public FilterUserFunctional(Function<Window, Boolean> function) {
     this.function = function;

@@ -20,7 +20,7 @@ public abstract class TimeExpression {
   public abstract Window computeTime(Plan plan, Window interval);
 
 
-  protected LinkedHashMap<Time.Operator, Duration> operations = new LinkedHashMap<Time.Operator, Duration>();
+  protected LinkedHashMap<Time.Operator, Duration> operations = new LinkedHashMap<>();
 
 
   public static TimeExpression fromAnchor(TimeAnchor anchor) {
@@ -52,8 +52,7 @@ public abstract class TimeExpression {
     }
 
     TimeExpression build() {
-      TimeExpression exprLatch = new TimeExpressionLatching(expr1, expr2, expr);
-      return exprLatch;
+      return new TimeExpressionLatching(expr1, expr2, expr);
     }
 
 
@@ -115,13 +114,12 @@ public abstract class TimeExpression {
   }
 
   public static final TimeExpression endsBefore(TimeExpression expr){
-    TimeExpression te = new TimeExpressionBefore(expr,  DEF_NAME);
     //te.operations.put(Time.Operator.MINUS,Duration.MAX_VALUE);
-    return te;
+    return new TimeExpressionBefore(expr, DEF_NAME);
   }
 
 
-  public static String DEF_NAME = "NO_NAME_TIME_EXPR";
+  public static final String DEF_NAME = "NO_NAME_TIME_EXPR";
 
   public static class Builder {
     private boolean interval = false;
@@ -166,7 +164,7 @@ public abstract class TimeExpression {
       return getThis();
     }
 
-    protected LinkedHashMap<Time.Operator, Duration> operations = new LinkedHashMap<Time.Operator, Duration>();
+    protected final LinkedHashMap<Time.Operator, Duration> operations = new LinkedHashMap<>();
 
     public TimeExpression build() {
       if (fromExpression != null) {
