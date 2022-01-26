@@ -208,7 +208,6 @@ public class MerlInsightRules extends Problem {
       .forAllTimeIn(planningHorizon.getHor())
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(atGrapple)
-                          .duration(Duration.of(20, Duration.MINUTE))
                           .build())
       .forEach(ActivityExpression.ofType(actTypeIDAMoveArm))
       .withPriority(9)

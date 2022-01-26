@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol.model;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -11,6 +12,8 @@ public interface TaskSpecType<Model, Specification, Return> {
   String getName();
   List<Parameter> getParameters();
   List<String> getRequiredParameters();
+
+  DurationSpecification getDurationSpecification();
 
   Specification instantiate(Map<String, SerializedValue> arguments)
   throws UnconstructableTaskSpecException;

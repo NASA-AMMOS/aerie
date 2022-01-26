@@ -6,6 +6,11 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Parameter;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Validation;
+import gov.nasa.jpl.aerie.merlin.protocol.model.DurationSpecification;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+
+import java.util.Map;
 
 /**
  * Bite a banana.
@@ -17,6 +22,21 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Validation;
  */
 @ActivityType("BiteBanana")
 public final class BiteBananaActivity {
+
+  DurationSpecification getDurationSpecification() {
+    return new DurationSpecification() {
+      @Override
+      public DurationType getDurationType() {
+        return DurationType.Constant;
+      }
+
+      @Override
+      public DurationBounds getDurationBounds() {
+        return new DurationBounds(Duration.ZERO, Duration.ZERO);
+      }
+    };
+  }
+
   @Parameter
   public double biteSize = 1.0;
 
