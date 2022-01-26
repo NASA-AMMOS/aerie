@@ -429,8 +429,8 @@ public final class ResponseSerializers {
           .add("variants", serializeIterable(
               v -> Json
                   .createObjectBuilder()
-                  .add("key", v.key)
-                  .add("label", v.label)
+                  .add("key", v.key())
+                  .add("label", v.label())
                   .build(),
               variants))
           .build();
