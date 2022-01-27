@@ -12,5 +12,6 @@ public record ActivityTypeRecord(
     List<ParameterValidationRecord> validations,
     MapperRecord mapper,
     ExportDefaultsStyle defaultsStyle,
-    Optional<EffectModelRecord> effectModel
-  ) implements ExportTypeRecord { }
+    Optional<EffectModelRecord> effectModel,
+    Optional<String> durationSpecification
+) implements ExportTypeRecord { }

@@ -25,4 +25,8 @@ public @interface ActivityType {
   @interface EffectModel {
     Executor value() default Executor.Threaded;
   }
+
+  @Retention(RetentionPolicy.CLASS)
+  @Target(ElementType.METHOD)
+  @interface DurationSpecification {}
 }

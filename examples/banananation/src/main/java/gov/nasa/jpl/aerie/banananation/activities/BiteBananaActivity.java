@@ -24,17 +24,7 @@ import java.util.Map;
 public final class BiteBananaActivity {
 
   DurationSpecification getDurationSpecification() {
-    return new DurationSpecification() {
-      @Override
-      public DurationType getDurationType() {
-        return DurationType.Constant;
-      }
-
-      @Override
-      public DurationBounds getDurationBounds() {
-        return new DurationBounds(Duration.ZERO, Duration.ZERO);
-      }
-    };
+    return () -> new DurationSpecification.DurationType.Constant(Duration.ZERO);
   }
 
   @Parameter

@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.banananation.activities;
 import gov.nasa.jpl.aerie.banananation.Mission;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.DurationSpecification;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -16,17 +17,11 @@ public final class DecomposingActivity {
   public static final class ParentActivity {
 
     static DurationSpecification getDurationSpecification() {
-      return new DurationSpecification() {
-        @Override
-        public DurationType getDurationType() {
-          return ;
-        }
-
-        @Override
-        public DurationBounds getDurationBounds() {
-          return null;
-        }
-      };
+      return () -> DurationSpecification.DurationType.combineMultiple(
+        ChildActivity.getDurationSpecification().getDurationType(),
+        new DurationSpecification.DurationType.Constant(Duration.of(30 * 24, HOURS)),
+        ChildActivity.getDurationSpecification().getDurationType()
+      );
     }
 
     @Parameter
@@ -46,17 +41,9 @@ public final class DecomposingActivity {
     private static Duration constantDuration = Duration.of(15 * 24, HOURS);
 
     static DurationSpecification getDurationSpecification() {
-      return new DurationSpecification() {
-        @Override
-        public DurationType getDurationType() {
-          final var grandChildDurationSpecification = GrandchildActivity.getDurationSpecification();
-          return DurationType.combine(DurationType.Constant, grandChildDurationSpecification.getDurationType());
-        }
-
-        @Override
-        public DurationBounds getDurationBounds() {
-          return new DurationBounds(constantDuration, constantDuration);
-        }
+      return () -> {
+        final var grandChildDurationSpecification = GrandchildActivity.getDurationSpecification();
+        return DurationSpecification.DurationType.combine(new DurationSpecification.DurationType.Constant(constantDuration), grandChildDurationSpecification.getDurationType());
       };
     }
 
@@ -71,7 +58,6 @@ public final class DecomposingActivity {
 
     @EffectModel
     public void run(final Mission mission) {
-      call(new GrandchildActivity(1));
       delay(constantDuration);
       call(new GrandchildActivity(2));
     }
@@ -82,18 +68,9 @@ public final class DecomposingActivity {
 
     private static final Duration constantDuration = Duration.of(6 * 24, HOURS);
 
-    static DurationSpecification getDurationSpecification() {
-      return new DurationSpecification() {
-        @Override
-        public DurationType getDurationType() {
-          return DurationType.Constant;
-        }
-
-        @Override
-        public DurationBounds getDurationBounds() {
-          return new DurationBounds(constantDuration, constantDuration);
-        }
-      };
+    @ActivityType.DurationSpecification
+    public static DurationSpecification getDurationSpecification() {
+      return () -> new DurationSpecification.DurationType.Constant(constantDuration);
     }
 
     @Parameter

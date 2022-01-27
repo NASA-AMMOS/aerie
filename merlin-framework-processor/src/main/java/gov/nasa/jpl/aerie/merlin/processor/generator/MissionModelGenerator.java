@@ -22,6 +22,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.DurationSpecification;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
@@ -586,6 +587,20 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
     return generateCommonMapperMethods(missionModel, activityType).map(typeSpec -> typeSpec.toBuilder()
         .addMethod(makeGetReturnValueSchemaMethod())
         .addMethod(makeSerializeReturnValueMethod(activityType))
+        .addMethod(
+            MethodSpec
+                .methodBuilder("getDurationSpecification")
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class)
+                .returns(DurationSpecification.class)
+                .addCode(activityType.durationSpecification().map(methodName -> CodeBlock
+                             .builder()
+                             .addStatement(
+                                 "return $T.$L()",
+                                 TypeName.get(activityType.declaration().asType()),
+                                 methodName)
+                             .build()).orElse(CodeBlock.of("return DurationSpecification.BROADEST;")))
+                .build())
         .addMethod(
             MethodSpec
                 .methodBuilder("createTask")

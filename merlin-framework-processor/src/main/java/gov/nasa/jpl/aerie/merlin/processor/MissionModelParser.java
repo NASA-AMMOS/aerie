@@ -245,6 +245,7 @@ import java.util.function.Predicate;
     final var validations = this.getExportValidations(activityTypeElement);
     final var parameters = this.getExportParameters(activityTypeElement);
     final var effectModel = this.getActivityEffectModel(activityTypeElement);
+    final var durationSpecification = this.getDurationSpecification(activityTypeElement);
 
     /*
     The following parameter was created as a result of AERIE-1295/1296/1297 on JIRA
@@ -257,7 +258,7 @@ import java.util.function.Predicate;
      */
     final var defaultsStyle = this.getExportDefaultsStyle(activityTypeElement);
 
-    return new ActivityTypeRecord(name, activityTypeElement, parameters, validations, mapper, defaultsStyle, effectModel);
+    return new ActivityTypeRecord(name, activityTypeElement, parameters, validations, mapper, defaultsStyle, effectModel, durationSpecification);
   }
 
   private ExportDefaultsStyle getExportDefaultsStyle(final TypeElement exportTypeElement)
@@ -360,6 +361,20 @@ import java.util.function.Predicate;
           : Optional.of(returnType);
 
       return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value(), nonVoidReturnType));
+    }
+
+    return Optional.empty();
+  }
+
+  private Optional<String> getDurationSpecification(final TypeElement activityTypeElement)
+  {
+    for (final var element : activityTypeElement.getEnclosedElements()) {
+      if (element.getKind() != ElementKind.METHOD) continue;
+
+      final var executorAnnotation = element.getAnnotation(ActivityType.DurationSpecification.class);
+      if (executorAnnotation == null) continue;
+
+      return Optional.of(element.getSimpleName().toString());
     }
 
     return Optional.empty();

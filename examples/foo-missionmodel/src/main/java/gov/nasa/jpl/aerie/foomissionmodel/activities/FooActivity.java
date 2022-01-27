@@ -3,6 +3,8 @@ package gov.nasa.jpl.aerie.foomissionmodel.activities;
 import gov.nasa.jpl.aerie.foomissionmodel.Mission;
 import gov.nasa.jpl.aerie.foomissionmodel.models.ImagerMode;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.DurationSpecification;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 
 import java.util.List;
@@ -13,6 +15,7 @@ import static gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Effec
 import static gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Parameter;
 import static gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Validation;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 
 @ActivityType("foo")
 public final class FooActivity {
@@ -33,6 +36,13 @@ public final class FooActivity {
   @Validation("y cannot be 'bad'")
   public boolean validateY() {
     return !y.equals("bad");
+  }
+
+  static DurationSpecification getDurationSpecification() {
+    return () -> new DurationSpecification.DurationType.ContextDependent(
+        new DurationSpecification.DurationBounds(
+            Duration.of(12, SECONDS),
+            Duration.MAX_VALUE));
   }
 
   @EffectModel
