@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.model.DurationSpecification;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -91,7 +92,22 @@ public class PrioritySolver implements Solver {
       //if some parameters are left uninstantiated, this is the last moment to do it
       act.instantiateVariableParameters();
       plan.add(act);
-      if(checkSimBeforeInsertingActivities) {
+      var shouldSimulate = true;
+      var durationSpecification = act.getType().specType.getDurationSpecification().getDurationType();
+      if(durationSpecification instanceof DurationSpecification.DurationType.Constant constantSpecification){
+        assert(act.getDuration().isEqualTo(constantSpecification.duration()));
+        shouldSimulate = false;
+      } else if (durationSpecification instanceof DurationSpecification.DurationType.ContextDependent){
+        //simulation should happen
+      } else if (durationSpecification instanceof DurationSpecification.DurationType.ComputableFromParameters computableFromParameters){
+          //we do not have to simulate
+      } else if (durationSpecification instanceof DurationSpecification.DurationType.DirectlyControllable directlyControllable){
+
+      } else{
+        throw new Error("Duration specification for act type " + act.getType().name + " should only part of {ContextDependent, Constant, ComputableFromParameters, DirectlyControllable}");
+      }
+
+      if(checkSimBeforeInsertingActivities && shouldSimulate) {
         getSimFacade().simulatePlan(plan);
         var simDur = getSimFacade().getActivityDuration(act);
         if (simDur == null) {

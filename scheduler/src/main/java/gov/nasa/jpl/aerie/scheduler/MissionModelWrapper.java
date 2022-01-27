@@ -41,7 +41,6 @@ public class MissionModelWrapper {
 
     //include special activity type for marking plan horizon
     add(new ActivityType("HorizonMarker"));
-
     //add all activity types known to aerie to scheduler index
     //TODO: reduce duplicate activity type abstractions between aerie and scheduler
     if( missionModel != null ) {

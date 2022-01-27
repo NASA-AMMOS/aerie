@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -84,7 +86,8 @@ public class ActivityType {
    * a list of constraints associated to this activity type
    */
   StateConstraintExpression activityConstraints;
-
+  //TODO: this is never initialized.
+  public TaskSpecType<?,?> specType;
   Map<String, Object> parameters = new HashMap<String, Object>();
 
 }

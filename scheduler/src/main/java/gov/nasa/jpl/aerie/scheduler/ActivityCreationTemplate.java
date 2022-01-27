@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.model.DurationSpecification;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.aerie.AerieActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.aerie.AerieActivityType;
@@ -226,7 +227,25 @@ public class ActivityCreationTemplate extends ActivityExpression {
     }
     if(durationRange!=null){
       tnw.addDurationInterval(name, durationRange.start, durationRange.end);
+      //TODO: check that durastion is controllable somehow
     }
+
+    var durationSpecification = act.getType().specType.getDurationSpecification().getDurationType();
+    if(durationSpecification instanceof DurationSpecification.DurationType.Constant constantSpecification){
+      var dur = constantSpecification.duration();
+      tnw.addDurationInterval(name, dur, dur);
+    } else if (durationSpecification instanceof DurationSpecification.DurationType.ContextDependent contextDependent){
+      //this is where the search will happen
+      tnw.addDurationInterval(name, contextDependent.durationBounds().min(), contextDependent.durationBounds().max());
+    } else if (durationSpecification instanceof DurationSpecification.DurationType.ComputableFromParameters computableFromParameters){
+      tnw.addDurationInterval(name, computableFromParameters.minValue(), computableFromParameters.maxValue());
+    } else if (durationSpecification instanceof DurationSpecification.DurationType.DirectlyControllable directlyControllable){
+      tnw.addDurationInterval(name, directlyControllable.minValue(), directlyControllable.maxValue());
+    } else{
+      throw new Error("Duration specification for act type " + act.getType().name + " should only part of {ContextDependent, Constant, ComputableFromParameters, DirectlyControllable}");
+    }
+
+
     var success = tnw.solveConstraints();
     if(!success){
       System.out.println("Inconsistent temporal constraints, returning empty activity");
