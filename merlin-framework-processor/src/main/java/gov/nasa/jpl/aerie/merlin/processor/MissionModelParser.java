@@ -4,7 +4,6 @@ import com.squareup.javapoet.ClassName;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
-import gov.nasa.jpl.aerie.merlin.processor.generator.MapperMethodMaker;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportDefaultsStyle;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MapperRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ConfigurationTypeRecord;
@@ -35,6 +34,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /** Parses mission model annotations to record type metamodels. */
 /*package-private*/ record MissionModelParser(Elements elementUtils, Types typeUtils) {
@@ -325,10 +325,20 @@ import java.util.Set;
     return validations;
   }
 
+  /** Parse a list of parameters from an export type element, depending on the export defaults style in use. */
   private List<ParameterRecord> getExportParameters(final TypeElement exportTypeElement)
   {
-    return MapperMethodMaker.make(this.getExportDefaultsStyle(exportTypeElement))
-                            .getParameters(exportTypeElement);
+    final var defaultsStyle = this.getExportDefaultsStyle(exportTypeElement);
+    final Predicate<Element> excludeParamPred = switch (defaultsStyle) {
+      case AllDefined -> e -> e.getAnnotation(Export.Parameter.class) == null; // Exclude class members with @Parameter annotations
+      default ->         e -> e.getModifiers().contains(Modifier.STATIC);      // Exclude static class members
+    };
+
+    return exportTypeElement.getEnclosedElements().stream()
+        .filter(e -> e.getKind() == ElementKind.FIELD) // Element must be a field
+        .filter(e -> !excludeParamPred.test(e))        // Element must not be deemed excluded for the defaults style
+        .map(e -> new ParameterRecord(e.getSimpleName().toString(), e.asType(), e))
+        .toList();
   }
 
   private Optional<Pair<String, ActivityType.Executor>> getActivityEffectModel(final TypeElement activityTypeElement)

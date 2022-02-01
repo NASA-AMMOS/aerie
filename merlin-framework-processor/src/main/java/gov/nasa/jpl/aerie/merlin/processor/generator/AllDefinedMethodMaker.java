@@ -17,18 +17,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class AllDefinedMethodMaker implements MapperMethodMaker {
+/** Method maker for defaults style where all default arguments are provided within @Parameter annotations. */
+/*package-private*/ final class AllDefinedMethodMaker extends MapperMethodMaker {
+
+  public AllDefinedMethodMaker(final ExportTypeRecord exportType) {
+    super(exportType);
+  }
 
   @Override
-  public MethodSpec makeInstantiateMethod(final ExportTypeRecord exportType) {
-    final var exceptionClass = MapperMethodMaker.getInstantiateException(exportType);
-
+  public MethodSpec makeInstantiateMethod() {
     // Create instantiate Method header
     var methodBuilder = MethodSpec.methodBuilder("instantiate")
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
         .returns(TypeName.get(exportType.declaration().asType()))
-        .addException(exceptionClass)
+        .addException(instantiationExceptionClass)
         .addParameter(
             ParameterizedTypeName.get(
                 java.util.Map.class,
@@ -73,7 +76,7 @@ public class AllDefinedMethodMaker implements MapperMethodMaker {
                         parameter.name,
                         parameter.name,
                         "entry",
-                        exceptionClass)
+                        instantiationExceptionClass)
                     .addStatement("break")
                     .unindent())
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -85,21 +88,19 @@ public class AllDefinedMethodMaker implements MapperMethodMaker {
                 .indent()
                 .addStatement(
                     "throw new $T()",
-                    exceptionClass)
+                    instantiationExceptionClass)
                 .unindent()
                 .build())
         .endControlFlow()
         .endControlFlow().addCode("\n");
 
-    methodBuilder = MapperMethodMaker
-        .makeArgumentPresentCheck(methodBuilder, exportType).addCode("\n").addStatement("return template");
+    methodBuilder = makeArgumentPresentCheck(methodBuilder).addCode("\n").addStatement("return template");
 
     return methodBuilder.build();
   }
 
   @Override
-  public MethodSpec makeGetArgumentsMethod(final ExportTypeRecord exportType) {
-    final var metaName = MapperMethodMaker.getMetaName(exportType);
+  public MethodSpec makeGetArgumentsMethod() {
     return MethodSpec
         .methodBuilder("getArguments")
         .addModifiers(Modifier.PUBLIC)
@@ -138,18 +139,5 @@ public class AllDefinedMethodMaker implements MapperMethodMaker {
             "return $L",
             "arguments")
         .build();
-  }
-
-  @Override
-  public List<ParameterRecord> getParameters(final TypeElement activityTypeElement) {
-    final var parameters = new ArrayList<ParameterRecord>();
-    for (final var element : activityTypeElement.getEnclosedElements()) {
-      if (element.getKind() != ElementKind.FIELD) continue;
-      if (element.getAnnotation(Export.Parameter.class) == null) continue;
-      final var name = element.getSimpleName().toString();
-      final var type = element.asType();
-      parameters.add(new ParameterRecord(name, type, element));
-    }
-    return parameters;
   }
 }
