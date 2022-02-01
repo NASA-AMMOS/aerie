@@ -173,7 +173,7 @@ public final class SimulationDriver {
         this.taskToPlannedDirective.put(id, directiveId);
       }
 
-      return TaskStatus.completed();
+      return TaskStatus.completed(Unit.UNIT);
     }
 
     @Override

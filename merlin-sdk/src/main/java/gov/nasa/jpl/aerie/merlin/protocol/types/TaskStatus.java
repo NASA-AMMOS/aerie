@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.protocol.types;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 
 public sealed interface TaskStatus {
-  record Completed() implements TaskStatus {}
+  record Completed<Return>(Return returnValue) implements TaskStatus {}
 
   record Delayed(Duration delay) implements TaskStatus {}
 
@@ -12,8 +12,8 @@ public sealed interface TaskStatus {
   record AwaitingCondition(Condition condition) implements TaskStatus {}
 
 
-  static Completed completed() {
-    return new Completed();
+  static <Return> Completed<Return> completed(final Return returnValue) {
+    return new Completed<>(returnValue);
   }
 
   static Delayed delayed(final Duration delay) {

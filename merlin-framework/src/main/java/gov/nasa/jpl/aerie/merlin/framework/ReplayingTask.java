@@ -7,16 +7,17 @@ import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.concurrent.ExecutorService;
 
-public final class ReplayingTask implements Task {
+public final class ReplayingTask<ReturnType> implements Task {
   private final ExecutorService executor;
   private final Scoped<Context> rootContext;
-  private final Runnable task;
+  private final Supplier<ReturnType> task;
 
   private final ReplayingReactionContext.Memory memory = new ReplayingReactionContext.Memory(new ArrayList<>(), new MutableInt(0));
 
-  public ReplayingTask(final ExecutorService executor, final Scoped<Context> rootContext, final Runnable task) {
+  public ReplayingTask(final ExecutorService executor, final Scoped<Context> rootContext, final Supplier<ReturnType> task) {
     this.executor = Objects.requireNonNull(executor);
     this.rootContext = Objects.requireNonNull(rootContext);
     this.task = Objects.requireNonNull(task);
@@ -28,10 +29,10 @@ public final class ReplayingTask implements Task {
     final var context = new ReplayingReactionContext(this.executor, this.rootContext, this.memory, scheduler, handle);
 
     try (final var restore = this.rootContext.set(context)){
-      this.task.run();
+      final var returnValue = this.task.get();
 
       // If we get here, the activity has completed normally.
-      return TaskStatus.completed();
+      return TaskStatus.completed(returnValue);
     } catch (final Yield ignored) {
       // If we get here, the activity has suspended.
       return handle.status;
@@ -44,7 +45,7 @@ public final class ReplayingTask implements Task {
   }
 
   private static final class ReplayingTaskHandle implements TaskHandle {
-    public TaskStatus status = TaskStatus.completed();
+    public TaskStatus status = TaskStatus.completed(VoidEnum.VOID);
 
     @Override
     public Scheduler yield(final TaskStatus status) {

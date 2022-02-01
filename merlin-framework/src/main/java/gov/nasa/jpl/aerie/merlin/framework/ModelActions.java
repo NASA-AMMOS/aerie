@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 public /*non-final*/ class ModelActions {
   protected ModelActions() {}
@@ -12,16 +13,38 @@ public /*non-final*/ class ModelActions {
   static final Scoped<Context> context = Scoped.create();
 
 
-  public static Context.TaskFactory threaded(final Runnable task) {
-    return executor -> new ThreadedTask(executor, ModelActions.context, task);
-  }
-  public static Context.TaskFactory replaying(final Runnable task) {
-    return executor -> new ReplayingTask(executor, ModelActions.context, task);
+  public static <T> Context.TaskFactory threaded(final Supplier<T> task) {
+    return executor -> new ThreadedTask<>(executor, ModelActions.context, task);
   }
 
+  public static Context.TaskFactory threaded(final Runnable task) {
+    return threaded(() -> {
+      task.run();
+      return VoidEnum.VOID;
+    });
+  }
+
+  public static <T> Context.TaskFactory replaying(final Supplier<T> task) {
+    return executor -> new ReplayingTask<>(executor, ModelActions.context, task);
+  }
+
+  public static Context.TaskFactory replaying(final Runnable task) {
+    return replaying(() -> {
+      task.run();
+      return VoidEnum.VOID;
+    });
+  }
+
+
+  public static <T> String spawn(final Supplier<T> task) {
+    return spawn(threaded(task));
+  }
 
   public static String spawn(final Runnable task) {
-    return spawn(threaded(task));
+    return spawn(() -> {
+      task.run();
+      return VoidEnum.VOID;
+    });
   }
 
   public static String spawn(final Context.TaskFactory task) {
@@ -33,6 +56,10 @@ public /*non-final*/ class ModelActions {
   }
 
   public static void call(final Runnable task) {
+    call(threaded(task));
+  }
+
+  public static <T> void call(final Supplier<T> task) {
     call(threaded(task));
   }
 

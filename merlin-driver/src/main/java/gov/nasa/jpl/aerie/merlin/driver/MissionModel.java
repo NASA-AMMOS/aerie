@@ -69,7 +69,7 @@ public final class MissionModel<Model> {
       @Override
       public TaskStatus step(final Scheduler scheduler) {
         MissionModel.this.daemons.forEach(daemon -> scheduler.spawn(daemon.create()));
-        return TaskStatus.completed();
+        return TaskStatus.completed(Unit.UNIT);
       }
 
       @Override

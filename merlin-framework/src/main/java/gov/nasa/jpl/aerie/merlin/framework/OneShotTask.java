@@ -22,7 +22,7 @@ public final class OneShotTask implements Task {
     this.task.accept(scheduler);
 
     this.isTerminated = true;
-    return TaskStatus.completed();
+    return TaskStatus.completed(VoidEnum.VOID);
   }
 
   @Override

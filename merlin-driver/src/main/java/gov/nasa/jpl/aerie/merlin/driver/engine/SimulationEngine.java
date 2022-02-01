@@ -235,10 +235,10 @@ public final class SimulationEngine implements AutoCloseable {
     // TODO: Report which cells this activity read from at this point in time. This is useful insight for any user.
 
     // Based on the task's return status, update its execution state and schedule its resumption.
-    if (status instanceof TaskStatus.Completed) {
+    if (status instanceof TaskStatus.Completed s) {
       final var children = new LinkedList<>(this.taskChildren.getOrDefault(task, Collections.emptySet()));
 
-      this.tasks.put(task, progress.completedAt(currentTime, children));
+      this.tasks.put(task, progress.completedAt(currentTime, s.returnValue(), children));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
     } else if (status instanceof TaskStatus.Delayed s) {
       this.tasks.put(task, progress.continueWith(state));
@@ -269,9 +269,9 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Make progress in a task by checking if all of the tasks it's waiting on have completed. */
-  private void stepWaitingTask(
+  private <Return> void stepWaitingTask(
       final TaskId task,
-      final ExecutionState.AwaitingChildren awaiting,
+      final ExecutionState.AwaitingChildren<?> awaiting,
       final TaskFrame<JobId> frame,
       final Duration currentTime
   ) {
@@ -703,8 +703,11 @@ public final class SimulationEngine implements AutoCloseable {
     record InProgress(Duration startOffset, Task state)
         implements ExecutionState
     {
-      public AwaitingChildren completedAt(final Duration endOffset, final LinkedList<TaskId> remainingChildren) {
-        return new AwaitingChildren(this.startOffset, endOffset, remainingChildren);
+      public <Return> AwaitingChildren<Return> completedAt(
+          final Duration endOffset,
+          final Return returnValue,
+          final LinkedList<TaskId> remainingChildren) {
+        return new AwaitingChildren<>(this.startOffset, endOffset, returnValue, remainingChildren);
       }
 
       public InProgress continueWith(final Task newState) {
@@ -713,16 +716,24 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     /** The task has completed its primary operation, but has unfinished children. */
-    record AwaitingChildren(Duration startOffset, Duration endOffset, LinkedList<TaskId> remainingChildren)
-        implements ExecutionState
+    record AwaitingChildren<Return>(
+        Duration startOffset,
+        Duration endOffset,
+        Return returnValue,
+        LinkedList<TaskId> remainingChildren
+    ) implements ExecutionState
     {
-      public Terminated joinedAt(final Duration joinOffset) {
-        return new Terminated(this.startOffset, this.endOffset, joinOffset);
+      public Terminated<Return> joinedAt(final Duration joinOffset) {
+        return new Terminated<>(this.startOffset, this.endOffset, joinOffset, this.returnValue);
       }
     }
 
     /** The task and all its delegated children have completed. */
-    record Terminated(Duration startOffset, Duration endOffset, Duration joinOffset)
-        implements ExecutionState {}
+    record Terminated<Return>(
+        Duration startOffset,
+        Duration endOffset,
+        Duration joinOffset,
+        Return returnValue
+    ) implements ExecutionState {}
   }
 }
