@@ -9,20 +9,20 @@ import java.util.Objects;
 public final class ActivityInstance {
   public String type;
   public Timestamp startTimestamp;
-  public Map<String, SerializedValue> parameters;
+  public Map<String, SerializedValue> arguments;
 
   public ActivityInstance() {}
 
   public ActivityInstance(final ActivityInstance other) {
     this.type = other.type;
     this.startTimestamp = other.startTimestamp;
-    this.parameters = (other.parameters == null) ? null : new HashMap<>(other.parameters);
+    this.arguments = (other.arguments == null) ? null : new HashMap<>(other.arguments);
   }
 
-  public ActivityInstance(final String type, final Timestamp startTimestamp, final Map<String, SerializedValue> parameters) {
+  public ActivityInstance(final String type, final Timestamp startTimestamp, final Map<String, SerializedValue> arguments) {
     this.type = type;
     this.startTimestamp = startTimestamp;
-    this.parameters = (parameters != null) ? Map.copyOf(parameters) : null;
+    this.arguments = (arguments != null) ? Map.copyOf(arguments) : null;
   }
 
   @Override
@@ -35,7 +35,7 @@ public final class ActivityInstance {
     return
         (  Objects.equals(this.type, other.type)
         && Objects.equals(this.startTimestamp, other.startTimestamp)
-        && Objects.equals(this.parameters, other.parameters)
+        && Objects.equals(this.arguments, other.arguments)
         );
   }
 }

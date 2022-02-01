@@ -7,8 +7,7 @@ create table span (
   start_offset interval not null,
   duration interval null,
   type text not null,
-  attributes merlin_argument_set not null,
-  -- TODO: add time-ordered logs (events)
+  attributes jsonb not null,
 
   constraint span_synthetic_key
     primary key (dataset_id, id),

@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 public /*non-final*/ class ModelActions {
   protected ModelActions() {}
@@ -12,19 +13,41 @@ public /*non-final*/ class ModelActions {
   static final Scoped<Context> context = Scoped.create();
 
 
-  public static Context.TaskFactory threaded(final Runnable task) {
-    return executor -> new ThreadedTask(executor, ModelActions.context, task);
+  public static <T> Context.TaskFactory<T> threaded(final Supplier<T> task) {
+    return executor -> new ThreadedTask<>(executor, ModelActions.context, task);
   }
-  public static Context.TaskFactory replaying(final Runnable task) {
-    return executor -> new ReplayingTask(executor, ModelActions.context, task);
+
+  public static Context.TaskFactory<VoidEnum> threaded(final Runnable task) {
+    return threaded(() -> {
+      task.run();
+      return VoidEnum.VOID;
+    });
+  }
+
+  public static <T> Context.TaskFactory<T> replaying(final Supplier<T> task) {
+    return executor -> new ReplayingTask<>(executor, ModelActions.context, task);
+  }
+
+  public static Context.TaskFactory<VoidEnum> replaying(final Runnable task) {
+    return replaying(() -> {
+      task.run();
+      return VoidEnum.VOID;
+    });
   }
 
 
-  public static String spawn(final Runnable task) {
+  public static <T> String spawn(final Supplier<T> task) {
     return spawn(threaded(task));
   }
 
-  public static String spawn(final Context.TaskFactory task) {
+  public static String spawn(final Runnable task) {
+    return spawn(() -> {
+      task.run();
+      return VoidEnum.VOID;
+    });
+  }
+
+  public static <T> String spawn(final Context.TaskFactory<T> task) {
     return context.get().spawn(task);
   }
 
@@ -36,7 +59,11 @@ public /*non-final*/ class ModelActions {
     call(threaded(task));
   }
 
-  public static void call(final Context.TaskFactory task) {
+  public static <T> void call(final Supplier<T> task) {
+    call(threaded(task));
+  }
+
+  public static <T> void call(final Context.TaskFactory<T> task) {
     waitFor(spawn(task));
   }
 
@@ -48,7 +75,7 @@ public /*non-final*/ class ModelActions {
     return spawn(replaying(() -> { delay(duration); spawn(task); }));
   }
 
-  public static String defer(final Duration duration, final Context.TaskFactory task) {
+  public static String defer(final Duration duration, final Context.TaskFactory<?> task) {
     return spawn(replaying(() -> { delay(duration); spawn(task); }));
   }
 
@@ -60,7 +87,7 @@ public /*non-final*/ class ModelActions {
     return spawn(replaying(() -> { delay(quantity, unit); spawn(task); }));
   }
 
-  public static String defer(final long quantity, final Duration unit, final Context.TaskFactory task) {
+  public static String defer(final long quantity, final Duration unit, final Context.TaskFactory<?> task) {
     return spawn(replaying(() -> { delay(quantity, unit); spawn(task); }));
   }
 

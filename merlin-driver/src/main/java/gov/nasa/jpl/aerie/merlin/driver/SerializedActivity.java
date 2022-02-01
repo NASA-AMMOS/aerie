@@ -24,11 +24,11 @@ import static java.util.Collections.unmodifiableMap;
  */
 public final class SerializedActivity {
   private final String typeName;
-  private final Map<String, SerializedValue> parameters;
+  private final Map<String, SerializedValue> arguments;
 
-  public SerializedActivity(final String typeName, final Map<String, SerializedValue> parameters) {
+  public SerializedActivity(final String typeName, final Map<String, SerializedValue> arguments) {
     this.typeName = Objects.requireNonNull(typeName);
-    this.parameters = Objects.requireNonNull(parameters);
+    this.arguments = Objects.requireNonNull(arguments);
   }
 
   /**
@@ -45,8 +45,8 @@ public final class SerializedActivity {
    *
    * @return A map of serialized parameters keyed by parameter name.
    */
-  public Map<String, SerializedValue> getParameters() {
-    return unmodifiableMap(this.parameters);
+  public Map<String, SerializedValue> getArguments() {
+    return unmodifiableMap(this.arguments);
   }
 
   // SAFETY: If equals is overridden, then hashCode must also be overridden.
@@ -57,17 +57,17 @@ public final class SerializedActivity {
     final SerializedActivity other = (SerializedActivity)o;
     return
         (  Objects.equals(this.typeName, other.typeName)
-        && Objects.equals(this.parameters, other.parameters)
+        && Objects.equals(this.arguments, other.arguments)
         );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.typeName, this.parameters);
+    return Objects.hash(this.typeName, this.arguments);
   }
 
   @Override
   public String toString() {
-    return "SerializedActivity { typeName = " + this.typeName + ", parameters = " + this.parameters.toString() + " }";
+    return "SerializedActivity { typeName = " + this.typeName + ", arguments = " + this.arguments.toString() + " }";
   }
 }

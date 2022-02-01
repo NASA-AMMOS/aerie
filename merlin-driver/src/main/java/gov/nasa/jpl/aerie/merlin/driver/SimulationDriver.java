@@ -81,8 +81,8 @@ public final class SimulationDriver {
     }
   }
 
-  public static <Model>
-  void simulateTask(final MissionModel<Model> missionModel, final Task task) {
+  public static <Model, Return>
+  void simulateTask(final MissionModel<Model> missionModel, final Task<Return> task) {
     try (final var engine = new SimulationEngine()) {
       /* The top-level simulation timeline. */
       var timeline = new TemporalEventSource();
@@ -128,7 +128,7 @@ public final class SimulationDriver {
     }
   }
 
-  private static final class ControlTask implements Task {
+  private static final class ControlTask implements Task<Unit> {
     private final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule;
 
     /* The directive that caused a task (if any). */
@@ -152,7 +152,7 @@ public final class SimulationDriver {
     }
 
     @Override
-    public TaskStatus step(final Scheduler scheduler) {
+    public TaskStatus<Unit> step(final Scheduler scheduler) {
       while (true) {
         var nextTask = this.scheduledTasks.peek();
         if (nextTask == null) break;
@@ -169,11 +169,11 @@ public final class SimulationDriver {
         final var directiveId = nextTask.getMiddle();
         final var specification = nextTask.getRight();
 
-        final var id = scheduler.spawn(specification.getTypeName(), specification.getParameters());
+        final var id = scheduler.spawn(specification.getTypeName(), specification.getArguments());
         this.taskToPlannedDirective.put(id, directiveId);
       }
 
-      return TaskStatus.completed();
+      return TaskStatus.completed(Unit.UNIT);
     }
 
     @Override

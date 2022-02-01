@@ -152,11 +152,12 @@ public final class ResponseSerializers {
     return Json
         .createObjectBuilder()
         .add("type", simulatedActivity.type)
-        .add("parameters", serializeArgumentMap(simulatedActivity.parameters))
+        .add("arguments", serializeArgumentMap(simulatedActivity.arguments))
         .add("startTimestamp", serializeTimestamp(simulatedActivity.start))
         .add("duration", serializeDuration(simulatedActivity.duration))
         .add("parent", serializeNullable(id -> Json.createValue(id.id()), simulatedActivity.parentId))
         .add("children", serializeIterable((id -> Json.createValue(id.id())), simulatedActivity.childIds))
+        .add("computedAttributes", serializeArgument(simulatedActivity.computedAttributes))
         .build();
   }
 
@@ -429,8 +430,8 @@ public final class ResponseSerializers {
           .add("variants", serializeIterable(
               v -> Json
                   .createObjectBuilder()
-                  .add("key", v.key)
-                  .add("label", v.label)
+                  .add("key", v.key())
+                  .add("label", v.label())
                   .build(),
               variants))
           .build();

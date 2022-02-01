@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import org.apache.commons.lang3.tuple.Pair;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -50,7 +49,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
       setTimestamp(statement, 4, endTimestamp);
       setTimestamp(statement, 5, startTimestamp);
       statement.setString(6, act.type);
-      statement.setString(7, buildAttributes(act.directiveId, act.parameters));
+      statement.setString(7, buildAttributes(act.directiveId, act.arguments, act.computedAttributes));
 
       statement.addBatch();
     }
@@ -67,8 +66,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
     return simIdToPostgresId;
   }
 
-  private String buildAttributes(final Optional<ActivityInstanceId> directiveId, final Map<String, SerializedValue> arguments) {
-    return activityAttributesP.unparse(Pair.of(directiveId, arguments)).toString();
+  private String buildAttributes(final Optional<ActivityInstanceId> directiveId, final Map<String, SerializedValue> arguments, final SerializedValue returnValue) {
+    return activityAttributesP.unparse(new ActivityAttributesRecord(directiveId, arguments, returnValue)).toString();
   }
 
   @Override

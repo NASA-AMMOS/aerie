@@ -1,10 +1,11 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
 import gov.nasa.jpl.aerie.foomissionmodel.Configuration;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.ConfigurationMapper;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
-import gov.nasa.jpl.aerie.foomissionmodel.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
+import gov.nasa.jpl.aerie.merlin.framework.VoidEnum;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -46,13 +47,16 @@ public final class MissionModelTest {
     @Test
     public void shouldGetActivityTypeList() throws MissionModelFacade.MissionModelContractException {
         // GIVEN
-        final Map<String, ActivityType> expectedTypes = Map.of(
+      final Map<String, ActivityType> expectedTypes = Map.of(
             "foo", new ActivityType(
                 "foo",
                 List.of(
                     new Parameter("x", ValueSchema.INT),
                     new Parameter("y", ValueSchema.STRING),
-                    new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))), List.of()));
+                    new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
+                List.of(),
+                new EnumValueMapper<>(VoidEnum.class).getValueSchema()
+            ));
 
         // WHEN
         final Map<String, ActivityType> typeList = unconfiguredMissionModel.getActivityTypes();
@@ -64,12 +68,15 @@ public final class MissionModelTest {
     @Test
     public void shouldGetActivityType() throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.MissionModelContractException {
         // GIVEN
-        final ActivityType expectedType = new ActivityType(
+      final ActivityType expectedType = new ActivityType(
             "foo",
             List.of(
                 new Parameter("x", ValueSchema.INT),
                 new Parameter("y", ValueSchema.STRING),
-                new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))), List.of());
+                new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
+            List.of(),
+            new EnumValueMapper<>(VoidEnum.class).getValueSchema()
+        );
 
         // WHEN
         final ActivityType type = unconfiguredMissionModel.getActivityType(expectedType.name());

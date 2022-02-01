@@ -516,15 +516,9 @@ public abstract class ValueSchema {
     });
   }
 
-  public static final class Variant {
-    /** The unique internal name of this variant. */
-    public final String key;
-    /** The user-facing presentation of this variant. */
-    public final String label;
-
-    public Variant(final String key, final String label) {
-      this.key = Objects.requireNonNull(key);
-      this.label = Objects.requireNonNull(label);
-    }
-  }
+  /**
+   * @param key The unique internal name of this variant
+   * @param label The user-facing presentation of this variant
+   */
+  public record Variant(String key, String label) {}
 }

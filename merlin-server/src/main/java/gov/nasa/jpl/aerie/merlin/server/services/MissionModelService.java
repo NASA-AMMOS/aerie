@@ -29,7 +29,7 @@ public interface MissionModelService {
   Map<String, ActivityType> getActivityTypes(String missionModelId)
   throws NoSuchMissionModelException;
   // TODO: Provide a finer-scoped validation return type. Mere strings make all validations equally severe.
-  List<String> validateActivityParameters(String missionModelId, SerializedActivity activityParameters)
+  List<String> validateActivityArguments(String missionModelId, SerializedActivity activity)
   throws NoSuchMissionModelException;
 
   Map<String, SerializedValue> getActivityEffectiveArguments(String missionModelId, SerializedActivity activity)

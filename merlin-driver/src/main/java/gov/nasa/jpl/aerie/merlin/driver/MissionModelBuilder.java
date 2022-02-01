@@ -63,7 +63,7 @@ public final class MissionModelBuilder implements Initializer {
   }
 
   @Override
-  public String daemon(final TaskFactory task) {
+  public <Return> String daemon(final TaskFactory<Return> task) {
     return this.state.daemon(task);
   }
 
@@ -73,7 +73,7 @@ public final class MissionModelBuilder implements Initializer {
   }
 
   public <Model>
-  MissionModel<Model> build(final Model model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
+  MissionModel<Model> build(final Model model, final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes) {
     return this.state.build(model, taskSpecTypes);
   }
 
@@ -81,14 +81,14 @@ public final class MissionModelBuilder implements Initializer {
     MissionModelBuilderState withConfigurationType(ConfigurationType<?> configurationType);
 
     <Model>
-    MissionModel<Model> build(Model model, Map<String, TaskSpecType<Model, ?>> taskSpecTypes);
+    MissionModel<Model> build(Model model, Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes);
   }
 
   private final class UnbuiltState implements MissionModelBuilderState {
     private final LiveCells initialCells = new LiveCells(new CausalEventSource());
 
     private final Map<String, Resource<?>> resources = new HashMap<>();
-    private final List<TaskFactory> daemons = new ArrayList<>();
+    private final List<TaskFactory<?>> daemons = new ArrayList<>();
     private final List<MissionModel.SerializableTopic<?>> topics = new ArrayList<>();
 
     private ConfigurationType<?> configurationType;
@@ -144,7 +144,7 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
-    public String daemon(final TaskFactory task) {
+    public <Return> String daemon(final TaskFactory<Return> task) {
       this.daemons.add(task);
       return null;  // TODO: get some way to refer to the daemon task
     }
@@ -157,7 +157,7 @@ public final class MissionModelBuilder implements Initializer {
 
     @Override
     public <Model>
-    MissionModel<Model> build(final Model model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
+    MissionModel<Model> build(final Model model, final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes) {
       final var missionModel = new MissionModel<>(
           model,
           this.initialCells,
@@ -208,7 +208,7 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
-    public String daemon(final TaskFactory task) {
+    public <Return> String daemon(final TaskFactory<Return> task) {
       throw new IllegalStateException("Daemons cannot be added after the schema is built");
     }
 
@@ -219,7 +219,7 @@ public final class MissionModelBuilder implements Initializer {
 
     @Override
     public <Model>
-    MissionModel<Model> build(final Model model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
+    MissionModel<Model> build(final Model model, final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes) {
       throw new IllegalStateException("Cannot build a builder multiple times");
     }
   }

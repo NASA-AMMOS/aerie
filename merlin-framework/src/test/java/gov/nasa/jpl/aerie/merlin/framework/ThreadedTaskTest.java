@@ -43,7 +43,7 @@ public final class ThreadedTaskTest {
     try {
       class TestException extends RuntimeException {}
 
-      final var task = new ThreadedTask(
+      final var task = new ThreadedTask<>(
         pool,
         Scoped.create(),
         () -> { throw new TestException(); });

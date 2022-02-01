@@ -58,8 +58,8 @@ public final class MissionModelFacade {
     return getValidationFailures(specType, arguments);
   }
 
-  private <Specification> List<String> getValidationFailures(
-      final TaskSpecType<?, Specification> specType,
+  private <Specification, Return> List<String> getValidationFailures(
+      final TaskSpecType<?, Specification, Return> specType,
       final Map<String, SerializedValue> arguments)
   throws UnconstructableActivityInstanceException
   {
@@ -84,8 +84,8 @@ public final class MissionModelFacade {
     return getActivityEffectiveArguments(specType, arguments);
   }
 
-  private static <Specification> Map<String, SerializedValue> getActivityEffectiveArguments(
-      final TaskSpecType<?, Specification> specType,
+  private static <Specification, Return> Map<String, SerializedValue> getActivityEffectiveArguments(
+      final TaskSpecType<?, Specification, Return> specType,
       final Map<String, SerializedValue> arguments)
   throws UnconstructableActivityInstanceException, MissingArgumentException
   {
@@ -135,7 +135,7 @@ public final class MissionModelFacade {
     {
       final var activityTypes = new HashMap<String, ActivityType>();
       factory.getTaskSpecTypes().forEach((name, specType) -> {
-        activityTypes.put(name, new ActivityType(name, specType.getParameters(), specType.getRequiredParameters()));
+        activityTypes.put(name, new ActivityType(name, specType.getParameters(), specType.getRequiredParameters(), specType.getReturnValueSchema()));
       });
       return activityTypes;
     }
@@ -147,7 +147,7 @@ public final class MissionModelFacade {
           .ofNullable(factory.getTaskSpecTypes().get(typeName))
           .orElseThrow(MissionModelFacade.NoSuchActivityTypeException::new);
 
-      return new ActivityType(typeName, specType.getParameters(), specType.getRequiredParameters());
+      return new ActivityType(typeName, specType.getParameters(), specType.getRequiredParameters(), specType.getReturnValueSchema());
     }
 
     public List<Parameter> getParameters() {

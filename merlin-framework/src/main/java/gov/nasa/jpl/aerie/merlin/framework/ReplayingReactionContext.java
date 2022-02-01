@@ -17,10 +17,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /* package-local */
-final class ReplayingReactionContext implements Context {
+final class ReplayingReactionContext<Return> implements Context {
   private final ExecutorService executor;
   private final Scoped<Context> rootContext;
-  private final TaskHandle handle;
+  private final TaskHandle<Return> handle;
   private Scheduler scheduler;
 
   private final MemoryCursor memory;
@@ -30,7 +30,7 @@ final class ReplayingReactionContext implements Context {
       final Scoped<Context> rootContext,
       final Memory memory,
       final Scheduler scheduler,
-      final TaskHandle handle)
+      final TaskHandle<Return> handle)
   {
     this.executor = Objects.requireNonNull(executor);
     this.rootContext = Objects.requireNonNull(rootContext);
@@ -69,7 +69,7 @@ final class ReplayingReactionContext implements Context {
   }
 
   @Override
-  public String spawn(final TaskFactory task) {
+  public <T> String spawn(final TaskFactory<T> task) {
     return this.memory.doOnce(() -> {
       return this.scheduler.spawn(task.create(this.executor));
     });

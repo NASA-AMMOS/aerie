@@ -11,16 +11,22 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.WildcardTypeName;
+import gov.nasa.jpl.aerie.merlin.framework.VoidEnum;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.processor.MissionModelProcessor;
 import gov.nasa.jpl.aerie.merlin.processor.Resolver;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ConfigurationTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +41,8 @@ import javax.tools.Diagnostic;
 
 /** Auto-generates Java source files from mission model metamodels. */
 public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Messager messager) {
+
+  private static final String COMPUTED_ATTRIBUTES_VALUE_MAPPER_FIELD_NAME = "computedAttributesValueMapper";
 
   /** Generate `GeneratedMerlinPlugin` class. */
   public JavaFile generateMerlinPlugin(final MissionModelRecord missionModel) {
@@ -131,6 +139,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             ParameterizedTypeName.get(
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                                 ClassName.get(missionModel.topLevelModel)),
+                            WildcardTypeName.subtypeOf(Object.class),
                             WildcardTypeName.subtypeOf(Object.class))))
                     .addStatement("return $T.activityTypes", missionModel.getTypesName())
                     .build())
@@ -379,6 +388,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 ParameterizedTypeName.get(
                                     ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                                     ClassName.get(missionModel.topLevelModel)),
+                                WildcardTypeName.subtypeOf(Object.class),
                                 WildcardTypeName.subtypeOf(Object.class))),
                         "activityTypeList",
                         Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
@@ -403,6 +413,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 ParameterizedTypeName.get(
                                     ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                                     ClassName.get(missionModel.topLevelModel)),
+                                WildcardTypeName.subtypeOf(Object.class),
                                 WildcardTypeName.subtypeOf(Object.class))),
                         "activityTypes",
                         Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
@@ -419,6 +430,8 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
         .build();
   }
 
+  private record ComputedAttributesCodeBlocks(TypeName typeName, FieldSpec fieldDef, CodeBlock fieldInit) {}
+
   /** Generate common `${activity_name}Mapper` methods. */
   public Optional<TypeSpec> generateCommonMapperMethods(final MissionModelRecord missionModel, final ExportTypeRecord exportType) {
     final var maybeMapperBlocks = generateParameterMapperBlocks(missionModel, exportType);
@@ -430,14 +443,23 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
     // TODO currently only 2 permitted classes (activity and config. type records),
     //  this should be changed to a switch expression once sealed class pattern-matching switch expressions exist
     final TypeName superInterface;
-    if (exportType instanceof ActivityTypeRecord) {
+    final Optional<ComputedAttributesCodeBlocks> computedAttributesCodeBlocks;
+    if (exportType instanceof ActivityTypeRecord activityType) {
+      computedAttributesCodeBlocks = this.getComputedAttributesCodeBlocks(
+          missionModel,
+          activityType);
+      if (computedAttributesCodeBlocks.isEmpty()) {
+        return Optional.empty();
+      }
       superInterface = ParameterizedTypeName.get(
           ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
           ParameterizedTypeName.get(
               ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
               ClassName.get(missionModel.topLevelModel)),
-          ClassName.get(exportType.declaration()));
+          ClassName.get(exportType.declaration()),
+          computedAttributesCodeBlocks.get().typeName().box());
     } else { // is instanceof ConfigurationTypeRecord
+      computedAttributesCodeBlocks = Optional.empty();
       superInterface = ParameterizedTypeName.get(
           ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType.class),
           ClassName.get(exportType.declaration()));
@@ -469,6 +491,11 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                     .build())
                 .collect(Collectors.toList()))
+        .addFields(
+            computedAttributesCodeBlocks
+                .stream()
+                .map(codeBlocks -> codeBlocks.fieldDef())
+                .collect(Collectors.toList()))
         .addMethod(
             MethodSpec
                 .constructorBuilder()
@@ -492,6 +519,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 mapperBlocks.get(parameter.name)))
                         .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
                         .build())
+                .addCode(computedAttributesCodeBlocks.map(ComputedAttributesCodeBlocks::fieldInit).orElse(CodeBlock.of("")))
                 .build())
         .addMethod(
             MethodSpec
@@ -509,15 +537,67 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
         .build());
   }
 
+  private Optional<ComputedAttributesCodeBlocks> getComputedAttributesCodeBlocks(
+      final MissionModelRecord missionModel,
+      final ActivityTypeRecord activityType)
+  {
+    final Optional<CodeBlock> effectModelReturnMapperBlock;
+    final TypeName computedAttributesTypeName;
+    final Optional<EffectModelRecord> effectModel;
+    effectModel = activityType.effectModel();
+    final var typeMirror = effectModel.flatMap(EffectModelRecord::returnType);
+    if (typeMirror.isPresent()) {
+      effectModelReturnMapperBlock = new Resolver(this.typeUtils, this.elementUtils, missionModel.typeRules)
+                  .instantiateNullableMapperFor(typeMirror.get());
+      if (effectModelReturnMapperBlock.isEmpty()) {
+        this.messager.printMessage(
+            Diagnostic.Kind.ERROR,
+            "Failed to generate value mapper for effect model return type "
+            + typeMirror.get()
+            + " of activity "
+            + activityType.name());
+        return Optional.empty();
+      }
+      computedAttributesTypeName = TypeName.get(typeMirror.get());
+    } else {
+      effectModelReturnMapperBlock = Optional.of(CodeBlock.of("new $T(VoidEnum.class)", EnumValueMapper.class));
+      computedAttributesTypeName = TypeName.get(VoidEnum.class);
+    }
+    return Optional.of(new ComputedAttributesCodeBlocks(
+        computedAttributesTypeName,
+        FieldSpec
+            .builder(
+                ParameterizedTypeName.get(
+                    ClassName.get(ValueMapper.class),
+                    computedAttributesTypeName.box()),
+                COMPUTED_ATTRIBUTES_VALUE_MAPPER_FIELD_NAME)
+            .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+            .build(),
+        CodeBlock
+            .builder()
+            .addStatement(
+                "this.$L =\n$L",
+                COMPUTED_ATTRIBUTES_VALUE_MAPPER_FIELD_NAME,
+                effectModelReturnMapperBlock.get()).build()));
+  }
+
   /** Generate `${activity_name}Mapper` class. */
   public Optional<JavaFile> generateActivityMapper(final MissionModelRecord missionModel, final ActivityTypeRecord activityType) {
     return generateCommonMapperMethods(missionModel, activityType).map(typeSpec -> typeSpec.toBuilder()
+        .addMethod(makeGetReturnValueSchemaMethod())
+        .addMethod(makeSerializeReturnValueMethod(activityType))
         .addMethod(
             MethodSpec
                 .methodBuilder("createTask")
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
-                .returns(ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.Task.class))
+                .returns(ParameterizedTypeName.get(
+                    ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.Task.class),
+                    activityType
+                        .effectModel()
+                        .flatMap(EffectModelRecord::returnType)
+                        .map(returnType -> TypeName.get(returnType).box())
+                        .orElse(TypeName.get(VoidEnum.class))))
                 .addParameter(
                     ParameterizedTypeName.get(
                         ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
@@ -530,29 +610,20 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     Modifier.FINAL)
                 .addCode(
                     activityType.effectModel()
-                        .map(effectModel -> switch (effectModel.getRight()) {
-                          case Threaded -> CodeBlock
+                        .map(effectModel -> CodeBlock
                               .builder()
                               .addStatement(
-                                  "return $T.threaded(() -> $L.$L($L.model())).create($L.executor())",
+                                  "return $T.$L(() -> $L.$L($L.model())).create($L.executor())",
                                   gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
+                                  switch (effectModel.executor()) {
+                                    case Threaded -> "threaded";
+                                    case Replaying -> "replaying";
+                                  },
                                   "activity",
-                                  effectModel.getLeft(),
+                                  effectModel.methodName(),
                                   "model",
                                   "model")
-                              .build();
-
-                          case Replaying -> CodeBlock
-                              .builder()
-                              .addStatement(
-                                  "return $T.replaying(() -> $L.$L($L.model())).create($L.executor())",
-                                  gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
-                                  "activity",
-                                  effectModel.getLeft(),
-                                  "model",
-                                  "model")
-                              .build();
-                        })
+                              .build())
                         .orElseGet(() -> CodeBlock
                             .builder()
                             .addStatement(
@@ -565,6 +636,32 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             .builder(activityType.mapper().name.packageName(), typeSpec)
             .skipJavaLangImports(true)
             .build());
+  }
+
+  private static MethodSpec makeGetReturnValueSchemaMethod() {
+    return MethodSpec.methodBuilder("getReturnValueSchema")
+                     .addModifiers(Modifier.PUBLIC)
+                     .addAnnotation(Override.class)
+                     .returns(ValueSchema.class)
+                     .addStatement("return this." + COMPUTED_ATTRIBUTES_VALUE_MAPPER_FIELD_NAME + ".getValueSchema()")
+                     .build();
+  }
+
+  private static MethodSpec makeSerializeReturnValueMethod(final ActivityTypeRecord activityType) {
+    return MethodSpec.methodBuilder("serializeReturnValue")
+                     .addModifiers(Modifier.PUBLIC)
+                     .addAnnotation(Override.class)
+                     .returns(SerializedValue.class)
+                     .addParameter(
+                         activityType.effectModel()
+                             .flatMap(EffectModelRecord::returnType)
+                             .map(TypeName::get)
+                             .orElse(TypeName.get(VoidEnum.class)).box(),
+                         "returnValue",
+                         Modifier.FINAL)
+                     .addStatement(
+                         "return this." + COMPUTED_ATTRIBUTES_VALUE_MAPPER_FIELD_NAME + ".serializeValue(returnValue)")
+                     .build();
   }
 
   private Optional<Map<String, CodeBlock>> generateParameterMapperBlocks(final MissionModelRecord missionModel, final ExportTypeRecord exportType)

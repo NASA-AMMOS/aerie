@@ -6,29 +6,31 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.function.Supplier;
 import java.util.concurrent.ExecutorService;
 
-public final class ThreadedTask implements Task {
+public final class ThreadedTask<Return> implements Task<Return> {
   private final Scoped<Context> rootContext;
-  private final Runnable task;
+  private final Supplier<Return> task;
   private final ExecutorService executor;
 
   private final ArrayBlockingQueue<TaskRequest> hostToTask = new ArrayBlockingQueue<>(1);
-  private final ArrayBlockingQueue<TaskResponse> taskToHost = new ArrayBlockingQueue<>(1);
+  private final ArrayBlockingQueue<TaskResponse<Return>> taskToHost = new ArrayBlockingQueue<>(1);
 
   private Lifecycle lifecycle = Lifecycle.Inactive;
+  private Return returnValue;
 
-  public ThreadedTask(final ExecutorService executor, final Scoped<Context> rootContext, final Runnable task) {
+  public ThreadedTask(final ExecutorService executor, final Scoped<Context> rootContext, final Supplier<Return> task) {
     this.rootContext = Objects.requireNonNull(rootContext);
     this.task = Objects.requireNonNull(task);
     this.executor = Objects.requireNonNull(executor);
   }
 
   @Override
-  public TaskStatus step(final Scheduler scheduler) {
+  public TaskStatus<Return> step(final Scheduler scheduler) {
     try {
       if (this.lifecycle == Lifecycle.Terminated) {
-        return TaskStatus.completed();
+        return TaskStatus.completed(this.returnValue);
       } else if (this.lifecycle == Lifecycle.Inactive) {
         this.lifecycle = Lifecycle.Running;
         beginAsync();
@@ -43,28 +45,29 @@ public final class ThreadedTask implements Task {
       this.hostToTask.put(new TaskRequest.Resume(scheduler));
       final var response = this.taskToHost.take();
 
-      if (response instanceof TaskResponse.Success) {
-        final var status = ((TaskResponse.Success) response).status;
+      if (response instanceof TaskResponse.Success<Return> r) {
+        final var status = r.status;
 
-        if (status instanceof TaskStatus.Completed) {
+        if (status instanceof TaskStatus.Completed<Return> s) {
           this.lifecycle = Lifecycle.Terminated;
+          this.returnValue = s.returnValue();
         }
 
         return status;
-      } else if (response instanceof TaskResponse.Failure) {
+      } else if (response instanceof TaskResponse.Failure<Return> r) {
         this.lifecycle = Lifecycle.Terminated;
 
         // We re-throw the received exception to avoid interfering with `catch` blocks
         //   that might be looking for this specific exception, but we add a new exception
         //   to its suppression list to provide a stack trace in this thread, too.
-        final var ex = ((TaskResponse.Failure) response).failure;
+        final var ex = r.failure;
         ex.addSuppressed(new TaskFailureException());
 
         // This exception shouldn't be a checked exception, but we have to prove it to Java.
-        if (ex instanceof RuntimeException) {
-          throw (RuntimeException) ex;
-        } else if (ex instanceof Error) {
-          throw (Error) ex;
+        if (ex instanceof RuntimeException runtimeException) {
+          throw runtimeException;
+        } else if (ex instanceof Error error) {
+          throw error;
         } else {
           throw new RuntimeException("Unexpected checked exception escaped from task thread", ex);
         }
@@ -90,11 +93,11 @@ public final class ThreadedTask implements Task {
         throw new Error("Merlin task unexpectedly interrupted", ex);
       }
 
-      TaskResponse response;
+      TaskResponse<Return> response;
       try {
         response = handle.run(request);
       } catch (final Throwable ex) {
-        response = new TaskResponse.Failure(ex);
+        response = new TaskResponse.Failure<>(ex);
       }
 
       try {
@@ -123,29 +126,28 @@ public final class ThreadedTask implements Task {
     this.lifecycle = Lifecycle.Inactive;
   }
 
-  private final class ThreadedTaskHandle implements TaskHandle {
+  private final class ThreadedTaskHandle implements TaskHandle<Return> {
     private boolean isAborting = false;
 
-    public TaskResponse run(final TaskRequest request) {
-      if (request instanceof TaskRequest.Resume) {
-        final var scheduler = ((TaskRequest.Resume) request).scheduler;
+    public TaskResponse<Return> run(final TaskRequest request) {
+      if (request instanceof TaskRequest.Resume resume) {
+        final var scheduler = resume.scheduler;
 
-        final var context = new ThreadedReactionContext(
+        final var context = new ThreadedReactionContext<>(
             ThreadedTask.this.executor,
             ThreadedTask.this.rootContext,
             scheduler,
             this);
 
         try (final var restore = ThreadedTask.this.rootContext.set(context)) {
-          ThreadedTask.this.task.run();
-          return new TaskResponse.Success(TaskStatus.completed());
+          return new TaskResponse.Success<>(TaskStatus.completed(ThreadedTask.this.task.get()));
         } catch (final TaskAbort ex) {
-          return new TaskResponse.Success(TaskStatus.completed());
+          return new TaskResponse.Success<>(TaskStatus.completed(null));
         } catch (final Throwable ex) {
-          return new TaskResponse.Failure(ex);
+          return new TaskResponse.Failure<>(ex);
         }
       } else if (request instanceof TaskRequest.Abort) {
-        return new TaskResponse.Success(TaskStatus.completed());
+        return new TaskResponse.Success<>(TaskStatus.completed(null));
       } else {
         throw new Error(String.format(
             "Unexpected variant of %s: %s",
@@ -155,22 +157,22 @@ public final class ThreadedTask implements Task {
     }
 
     @Override
-    public Scheduler yield(final TaskStatus status) {
+    public Scheduler yield(final TaskStatus<Return> status) {
       // If we're in the middle of aborting, just keep trying to bail out.
       if (this.isAborting) throw TaskAbort;
 
       // Get the next request from the driver.
       final TaskRequest request;
       try {
-        ThreadedTask.this.taskToHost.put(new TaskResponse.Success(status));
+        ThreadedTask.this.taskToHost.put(new TaskResponse.Success<>(status));
         request = ThreadedTask.this.hostToTask.take();
       } catch (final InterruptedException ex) {
         throw new Error("Merlin task unexpectedly interrupted", ex);
       }
 
-      if (request instanceof TaskRequest.Resume) {
+      if (request instanceof TaskRequest.Resume resumeRequest) {
         // We've been told to continue executing.
-        return ((TaskRequest.Resume) request).scheduler;
+        return resumeRequest.scheduler;
       } else if (request instanceof TaskRequest.Abort) {
         // We've been told to bail out and release this thread ASAP.
         //
@@ -201,34 +203,16 @@ public final class ThreadedTask implements Task {
 
   private enum Lifecycle { Inactive, Running, Terminated }
 
-  /*sealed*/ interface TaskRequest {
-    final class Resume implements TaskRequest {
-      public final Scheduler scheduler;
+  sealed interface TaskRequest {
+    record Resume(Scheduler scheduler) implements TaskRequest {}
 
-      public Resume(final Scheduler scheduler) {
-        this.scheduler = Objects.requireNonNull(scheduler);
-      }
-    }
-
-    final class Abort implements TaskRequest {}
+    record Abort() implements TaskRequest {}
   }
 
-  /*sealed*/ interface TaskResponse {
-    final class Success implements TaskResponse {
-      public final TaskStatus status;
+  sealed interface TaskResponse<Return> {
+    record Success<Return>(TaskStatus<Return> status) implements TaskResponse<Return> {}
 
-      public Success(final TaskStatus status) {
-        this.status = Objects.requireNonNull(status);
-      }
-    }
-
-    final class Failure implements TaskResponse {
-      public final Throwable failure;
-
-      public Failure(final Throwable failure) {
-        this.failure = Objects.requireNonNull(failure);
-      }
-    }
+    record Failure<Return>(Throwable failure) implements TaskResponse<Return> {}
   }
 
   public static final class TaskFailureException extends RuntimeException {

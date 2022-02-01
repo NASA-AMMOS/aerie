@@ -79,7 +79,7 @@ public record SynchronousSimulationAgent (
 
       scheduledActivities.put(id, Pair.of(
           Duration.of(startTime.until(activity.startTimestamp.toInstant(), ChronoUnit.MICROS), Duration.MICROSECONDS),
-          new SerializedActivity(activity.type, activity.parameters)));
+          new SerializedActivity(activity.type, activity.arguments)));
     }
 
     return scheduledActivities;

@@ -163,7 +163,7 @@ public final class MerlinBindings implements Plugin {
 
       final var serializedActivity = new SerializedActivity(activityTypeName, activityArguments);
 
-      final var failures = this.missionModelService.validateActivityParameters(missionModelId, serializedActivity);
+      final var failures = this.missionModelService.validateActivityArguments(missionModelId, serializedActivity);
 
       ctx.result(ResponseSerializers.serializeFailures(failures).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {

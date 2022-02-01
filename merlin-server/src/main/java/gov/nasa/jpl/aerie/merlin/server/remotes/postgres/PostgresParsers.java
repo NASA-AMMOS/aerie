@@ -4,7 +4,6 @@ import com.impossibl.postgres.api.data.Interval;
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.Unit;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -15,7 +14,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Map;
-import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
@@ -61,11 +59,12 @@ public final class PostgresParsers {
   public static final JsonParser<Map<String, SerializedValue>> activityArgumentsP = mapP(serializedValueP);
   public static final JsonParser<Map<String, SerializedValue>> simulationArgumentsP = mapP(serializedValueP);
 
-  public static final JsonParser<Pair<Optional<ActivityInstanceId>, Map<String, SerializedValue>>> activityAttributesP = productP
+  public static final JsonParser<ActivityAttributesRecord> activityAttributesP = productP
       .optionalField("directiveId", activityInstanceIdP)
       .field("arguments", activityArgumentsP)
+      .field("computedAttributes", serializedValueP)
         .map(Iso.of(
-            untuple((directiveId, arguments) -> Pair.of(directiveId, arguments)),
-            $ -> tuple($.getLeft(), $.getRight())
+            untuple(ActivityAttributesRecord::new),
+            $ -> tuple($.directiveId(), $.arguments(), $.computedAttributes())
         ));
 }

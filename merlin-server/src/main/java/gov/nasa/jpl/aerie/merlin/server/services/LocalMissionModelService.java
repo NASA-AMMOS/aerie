@@ -92,7 +92,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * Validate that a set of activity parameters conforms to the expectations of a named mission model.
    *
    * @param missionModelId The ID of the mission model to load.
-   * @param activityParameters The serialized activity to validate against the named mission model.
+   * @param activity The serialized activity to validate against the named mission model.
    * @return A list of validation errors that is empty if validation succeeds.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    * @throws MissionModelFacade.MissionModelContractException If the named mission model does not abide by the expected contract.
@@ -100,13 +100,13 @@ public final class LocalMissionModelService implements MissionModelService {
    * it contains may not abide by the expected contract at load time.
    */
   @Override
-  public List<String> validateActivityParameters(final String missionModelId, final SerializedActivity activityParameters)
+  public List<String> validateActivityArguments(final String missionModelId, final SerializedActivity activity)
   throws NoSuchMissionModelException, MissionModelFacade.MissionModelContractException, MissionModelLoadException
   {
     try {
       // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
       return this.loadConfiguredMissionModel(missionModelId)
-                 .validateActivity(activityParameters.getTypeName(), activityParameters.getParameters());
+                 .validateActivity(activity.getTypeName(), activity.getArguments());
     } catch (final MissionModelFacade.NoSuchActivityTypeException ex) {
       return List.of("unknown activity type");
     } catch (final MissionModelFacade.UnconstructableActivityInstanceException ex) {
@@ -124,7 +124,7 @@ public final class LocalMissionModelService implements MissionModelService {
   {
     try {
       return this.loadConfiguredMissionModel(missionModelId)
-                 .getActivityEffectiveArguments(activity.getTypeName(), activity.getParameters());
+                 .getActivityEffectiveArguments(activity.getTypeName(), activity.getArguments());
     } catch (final MissionModelFacade.NoSuchActivityTypeException ex) {
       throw new NoSuchActivityTypeException(activity.getTypeName(), ex);
     } catch (final MissionModelFacade.UnconstructableActivityInstanceException ex) {

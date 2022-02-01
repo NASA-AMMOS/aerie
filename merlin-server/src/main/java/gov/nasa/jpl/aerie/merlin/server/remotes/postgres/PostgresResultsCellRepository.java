@@ -285,12 +285,13 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
         simulatedActivities.put(pgIdToSimId.get(pgId), new SimulatedActivity(
             record.type(),
-            record.parameters(),
+            record.arguments(),
             record.start(),
             record.duration(),
             record.parentId().map(pgIdToSimId::get).orElse(null),
             record.childIds().stream().map(pgIdToSimId::get).collect(Collectors.toList()),
-            record.directiveId()
+            record.directiveId(),
+            record.computedAttributes()
         ));
       }
 
