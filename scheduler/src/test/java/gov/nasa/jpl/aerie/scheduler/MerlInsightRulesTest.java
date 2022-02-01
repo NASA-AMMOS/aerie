@@ -8,7 +8,7 @@ public class MerlInsightRulesTest {
 
   @BeforeEach
   void setUp(){
-    planningHorizon = new PlanningHorizon(new Time(0), new Time(24*3600));
+    planningHorizon = new PlanningHorizon(new Time(0), new Time(48*3600));
     rules = new MerlInsightRules(MerlinSightTestUtility.getMerlinSightMissionModel(planningHorizon));
     missionModelWrapper = rules.getMissionModel();
     missionModelWrapper.getSimulationFacade().simulatePlan(makeEmptyPlan());
