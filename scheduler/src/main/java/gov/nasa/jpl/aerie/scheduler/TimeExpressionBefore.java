@@ -8,8 +8,8 @@ import java.util.Objects;
 
 public class TimeExpressionBefore extends TimeExpression {
 
-  protected String name;
-  protected TimeExpression expr;
+  protected final String name;
+  protected final TimeExpression expr;
 
   public TimeExpressionBefore(TimeExpression expr, String name) {
     this.name = name;

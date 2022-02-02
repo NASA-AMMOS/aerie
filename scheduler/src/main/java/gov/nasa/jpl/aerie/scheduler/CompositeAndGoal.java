@@ -14,7 +14,7 @@ public class CompositeAndGoal extends Goal {
 
   public static class Builder extends Goal.Builder<Builder> {
 
-    List<Goal> goals = new ArrayList<Goal>();
+    final List<Goal> goals = new ArrayList<>();
 
     public Builder and(Goal goal) {
       goals.add(goal);

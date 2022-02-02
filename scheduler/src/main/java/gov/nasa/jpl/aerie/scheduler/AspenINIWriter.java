@@ -25,7 +25,7 @@ public class AspenINIWriter {
   /**
    * the controlling configuration for the serializer
    */
-  private HuginnConfiguration config;
+  final private HuginnConfiguration config;
 
   /**
    * the output stream to use for the aspen model

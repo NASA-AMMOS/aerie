@@ -120,27 +120,24 @@ public class TimeRangeExpression {
   protected Range<Time> horizon;
 
   public static TimeRangeExpression constantValuesOf(ExternalState sce) {
-    TimeRangeExpression tre = new Builder().ofEachValue(sce).build();
-    return tre;
+    return new Builder().ofEachValue(sce).build();
   }
 
   public static TimeRangeExpression of(StateConstraintExpression sce) {
-    TimeRangeExpression tre = new Builder().from(sce).build();
-    return tre;
+    return new Builder().from(sce).build();
   }
 
   public static TimeRangeExpression of(Windows wins) {
-    TimeRangeExpression tre = new Builder().from(wins).build();
-    return tre;
+    return new Builder().from(wins).build();
   }
 
   public static class Builder {
-    List<Object> filtersAndTransformers = new ArrayList<Object>();
-    List<StateConstraintExpression> stateExpr = new ArrayList<StateConstraintExpression>();
-    List<ExternalState> constantsStates = new ArrayList<ExternalState>();
-    List<TimeRangeExpression> timeRangeExpressions = new ArrayList<TimeRangeExpression>();
+    final List<Object> filtersAndTransformers = new ArrayList<>();
+    final List<StateConstraintExpression> stateExpr = new ArrayList<>();
+    final List<ExternalState> constantsStates = new ArrayList<>();
+    final List<TimeRangeExpression> timeRangeExpressions = new ArrayList<>();
 
-    List<Windows> constantWin = new ArrayList<Windows>();
+    final List<Windows> constantWin = new ArrayList<>();
 
     Range<Time> horizon = null;
     private ActivityExpression actTemplate;

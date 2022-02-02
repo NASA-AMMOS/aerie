@@ -18,7 +18,7 @@ import java.util.stream.StreamSupport;
 public class FilterElementSequence implements TimeWindowsFilter {
 
 
-  private int elementIndex;
+  private final int elementIndex;
 
   private FilterElementSequence(int numberInSequence) {
     elementIndex = numberInSequence;

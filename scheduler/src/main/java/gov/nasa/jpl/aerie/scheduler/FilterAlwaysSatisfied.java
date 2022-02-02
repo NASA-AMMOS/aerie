@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 public class FilterAlwaysSatisfied extends FilterFunctional {
 
-  private StateConstraintExpression expr;
+  private final StateConstraintExpression expr;
 
   public FilterAlwaysSatisfied(StateConstraintExpression expr) {
     this.expr = expr;

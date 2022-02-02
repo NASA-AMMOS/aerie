@@ -14,7 +14,7 @@ import java.util.stream.StreamSupport;
  */
 public class FilterSequenceMaxGapAfter implements TimeWindowsFilter {
 
-  private Duration maxDelay;
+  private final Duration maxDelay;
 
   public FilterSequenceMaxGapAfter(Duration maxDelay) {
     this.maxDelay = maxDelay;

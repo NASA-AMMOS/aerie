@@ -37,7 +37,7 @@ public class TestStateConstraints {
   }
 
   @AfterEach
-  public void tearDown() throws Exception {
+  public void tearDown() {
     missionModel = null;
     plan = null;
   }
@@ -324,22 +324,28 @@ public class TestStateConstraints {
   /**
    * Hardcoded state describing some two-value orbit phases
    */
-  public class EncounterEnumState extends MockState<String> {
+  public static class EncounterEnumState extends MockState<String> {
 
     public EncounterEnumState(PlanningHorizon horizon) {
       type = SupportedTypes.STRING;
-      values = new HashMap<Window, String>() {{
+      values = new HashMap<>() {{
         put(
             Window.betweenClosedOpen(horizon.getHor().start, Time.fromString("2025-180T00:00:00.000", horizon)),
             OrbitPhasesEnum.NOTENCOUNTER.name());
         put(
-            Window.betweenClosedOpen(Time.fromString("2025-180T00:00:00.000", horizon), Time.fromString("2025-185T00:00:00.000", horizon)),
+            Window.betweenClosedOpen(
+                Time.fromString("2025-180T00:00:00.000", horizon),
+                Time.fromString("2025-185T00:00:00.000", horizon)),
             OrbitPhasesEnum.ENCOUNTER.name());
         put(
-            Window.betweenClosedOpen(Time.fromString("2025-185T00:00:00.000", horizon), Time.fromString("2025-200T00:00:00.000", horizon)),
+            Window.betweenClosedOpen(
+                Time.fromString("2025-185T00:00:00.000", horizon),
+                Time.fromString("2025-200T00:00:00.000", horizon)),
             OrbitPhasesEnum.NOTENCOUNTER.name());
         put(
-            Window.betweenClosedOpen(Time.fromString("2025-200T00:00:00.000", horizon), Time.fromString("2025-205T00:00:00.000", horizon)),
+            Window.betweenClosedOpen(
+                Time.fromString("2025-200T00:00:00.000", horizon),
+                Time.fromString("2025-205T00:00:00.000", horizon)),
             OrbitPhasesEnum.ENCOUNTER.name());
         put(
             Window.betweenClosedOpen(Time.fromString("2025-205T00:00:00.000", horizon), horizon.getHor().end),
@@ -351,16 +357,24 @@ public class TestStateConstraints {
   /**
    * Hardcoded state describing some altitude state
    */
-  public class AltitudeIntegerState extends MockState<Long> {
+  public static class AltitudeIntegerState extends MockState<Long> {
 
     public AltitudeIntegerState(PlanningHorizon horizon) {
       type = SupportedTypes.LONG;
-      values = new HashMap<Window, Long>() {{
+      values = new HashMap<>() {{
         put(Window.betweenClosedOpen(horizon.getHor().start, Time.fromString("2025-180T00:00:00.000", horizon)), 10L);
-        put(Window.betweenClosedOpen(Time.fromString("2025-180T00:00:00.000", horizon), Time.fromString("2025-183T00:00:00.000", horizon)), 20L);
-        put(Window.betweenClosedOpen(Time.fromString("2025-183T00:00:00.000", horizon), Time.fromString("2025-185T00:00:00.000", horizon)), 30L);
-        put(Window.betweenClosedOpen(Time.fromString("2025-185T00:00:00.000", horizon), Time.fromString("2025-202T00:00:00.000", horizon)), 40L);
-        put(Window.betweenClosedOpen(Time.fromString("2025-202T00:00:00.000", horizon), Time.fromString("2025-203T00:00:00.000", horizon)), 50L);
+        put(Window.betweenClosedOpen(
+            Time.fromString("2025-180T00:00:00.000", horizon),
+            Time.fromString("2025-183T00:00:00.000", horizon)), 20L);
+        put(Window.betweenClosedOpen(
+            Time.fromString("2025-183T00:00:00.000", horizon),
+            Time.fromString("2025-185T00:00:00.000", horizon)), 30L);
+        put(Window.betweenClosedOpen(
+            Time.fromString("2025-185T00:00:00.000", horizon),
+            Time.fromString("2025-202T00:00:00.000", horizon)), 40L);
+        put(Window.betweenClosedOpen(
+            Time.fromString("2025-202T00:00:00.000", horizon),
+            Time.fromString("2025-203T00:00:00.000", horizon)), 50L);
         put(Window.betweenClosedOpen(Time.fromString("2025-203T00:00:00.000", horizon), horizon.getHor().end), 60L);
       }};
     }
@@ -370,14 +384,18 @@ public class TestStateConstraints {
   /**
    * Hardcoded state describing some altitude derivative state
    */
-  public class AltitudeDerivativeState extends MockState<Double> {
+  public static class AltitudeDerivativeState extends MockState<Double> {
 
     public AltitudeDerivativeState(PlanningHorizon horizon) {
       type = SupportedTypes.REAL;
-      values = new HashMap<Window, Double>() {{
+      values = new HashMap<>() {{
         put(Window.betweenClosedOpen(horizon.getHor().start, Time.fromString("2025-180T00:00:00.000", horizon)), 0.0);
-        put(Window.betweenClosedOpen(Time.fromString("2025-180T00:00:00.000", horizon), Time.fromString("2025-185T00:00:00.000", horizon)), 0.0);
-        put(Window.betweenClosedOpen(Time.fromString("2025-185T00:00:00.000", horizon), Time.fromString("2025-200T00:00:00.000", horizon)), 0.0);
+        put(Window.betweenClosedOpen(
+            Time.fromString("2025-180T00:00:00.000", horizon),
+            Time.fromString("2025-185T00:00:00.000", horizon)), 0.0);
+        put(Window.betweenClosedOpen(
+            Time.fromString("2025-185T00:00:00.000", horizon),
+            Time.fromString("2025-200T00:00:00.000", horizon)), 0.0);
         put(Window.betweenClosedOpen(Time.fromString("2025-200T00:00:00.000", horizon), horizon.getHor().end), 1.0);
       }};
     }

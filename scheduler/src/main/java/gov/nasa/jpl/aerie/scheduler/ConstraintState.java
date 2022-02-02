@@ -10,7 +10,7 @@ public class ConstraintState {
   /**
    * constraint concerned by this state
    */
-  public GlobalConstraint constraint;
+  final public GlobalConstraint constraint;
 
   /**
    * boolean stating whether the constraint is violated or not
@@ -20,7 +20,7 @@ public class ConstraintState {
   /**
    * intervals during which the constraint is violated
    */
-  public Windows violationWindows;
+  final public Windows violationWindows;
 
   //readable explanation when possible
   public String cause;

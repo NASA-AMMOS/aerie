@@ -6,11 +6,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 public class DurationExpressionState implements DurationExpression{
 
-  StateQueryParam state;
+  final StateQueryParam state;
 
-public DurationExpressionState(StateQueryParam state){
-  this.state = state;
-}
+  public DurationExpressionState(StateQueryParam state){
+    this.state = state;
+  }
 
   @Override
   public Duration compute(final Window window) {

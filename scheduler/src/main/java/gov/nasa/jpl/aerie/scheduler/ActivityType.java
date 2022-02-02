@@ -37,7 +37,7 @@ public class ActivityType {
    *
    * @param name IN the identifier of the activity type
    */
-  public ActivityType(String name, TaskSpecType<?,?,?> specType) {
+  public ActivityType(String name, TaskSpecType<?, ?, ?> specType) {
     checkNotNull(name, "creating activity type with null name");
     this.name = name;
     this.specType = specType;

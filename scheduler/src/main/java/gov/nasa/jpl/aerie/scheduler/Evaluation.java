@@ -71,7 +71,7 @@ public class Evaluation {
     /**
      * the set of all activities that contributed to the evaluation
      */
-    protected java.util.Set<ActivityInstance> acts = new java.util.HashSet<>();
+    protected final java.util.Set<ActivityInstance> acts = new java.util.HashSet<>();
 
   }
 
@@ -107,7 +107,7 @@ public class Evaluation {
   /**
    * the set of all per-goal evaluations
    */
-  protected java.util.HashMap<Goal, GoalEvaluation> goalEvals = new java.util.HashMap<>();
+  protected final java.util.HashMap<Goal, GoalEvaluation> goalEvals = new java.util.HashMap<>();
 
   @Override
   public boolean equals(final Object o) {

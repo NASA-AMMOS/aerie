@@ -8,7 +8,7 @@ import java.util.List;
 
 public class TransformerEnveloppe implements TimeWindowsTransformer {
 
-  List<TimeRangeExpression> insideExprs;
+  private final List<TimeRangeExpression> insideExprs;
 
 
   public TransformerEnveloppe(List<TimeRangeExpression> insideExprs) {

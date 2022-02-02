@@ -25,8 +25,7 @@ public class StateConstraintBetween extends StateConstraint {
    * @return a set of time ranges in which the constraint is satisfied
    */
   public Windows findWindowsPart(Plan plan, Windows windows) {
-    Windows wins = this.state.whenValueBetween(this.valueDefinition.get(0), this.valueDefinition.get(1), windows);
-    return wins;
+    return this.state.whenValueBetween(this.valueDefinition.get(0), this.valueDefinition.get(1), windows);
   }
 
 

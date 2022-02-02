@@ -113,7 +113,7 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
     evalSet.intersectWith(this.interval);
 
     //to avoid recounting twice the same activities in case they span over multiples windows
-    Set<ActivityInstance> allActs = new HashSet<ActivityInstance>();
+    Set<ActivityInstance> allActs = new HashSet<>();
 
     Windows violationWindows = new Windows();
 
@@ -135,9 +135,8 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
       violated = true;
       explanation += "required cardinality <= " + max + ", actual number of activities = " + allActs.size() + "\n";
     }
-    ConstraintState cState = new ConstraintState(this, violated, evalSet);
 
-    return cState;
+    return new ConstraintState(this, violated, evalSet);
   }
 
 
@@ -148,7 +147,7 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
     evalSet.intersectWith(this.interval);
 
     //to avoid recounting twice the same activities in case they span over multiples windows
-    Set<ActivityInstance> allActs = new HashSet<ActivityInstance>();
+    Set<ActivityInstance> allActs = new HashSet<>();
 
     Windows violationWindows = new Windows();
 

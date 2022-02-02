@@ -11,7 +11,7 @@ import java.util.List;
 
 public class MerlInsightRules extends Problem {
 
-  PlanningHorizon planningHorizon;
+  final PlanningHorizon planningHorizon;
 
   public MerlInsightRules(MissionModelWrapper missionModelWrapper) {
     super(missionModelWrapper);

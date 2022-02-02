@@ -49,7 +49,7 @@ public class StateConstraintExpression {
     BuilderType builderType = null;
 
     //Conjonction is locally modeled as a list of constraint before being transformed in proper ConstraintConjunction
-    protected List<StateConstraintExpression> constraints = new LinkedList<StateConstraintExpression>();
+    protected final List<StateConstraintExpression> constraints = new LinkedList<>();
 
     boolean forAll = false;
     private String name = "SC_WITHOUT_NAME";
@@ -358,13 +358,12 @@ public class StateConstraintExpression {
     this.sc = sc;
   }
 
-  protected <T extends Comparable<T>> StateConstraintExpression(StateConstraint sc, String name) {
+  protected StateConstraintExpression(StateConstraint sc, String name) {
     this.name = name;
     this.sc = sc;
   }
 
-  @SuppressWarnings("rawtypes")
-  StateConstraint sc;
-  String name;
+  final StateConstraint sc;
+  final String name;
 
 }

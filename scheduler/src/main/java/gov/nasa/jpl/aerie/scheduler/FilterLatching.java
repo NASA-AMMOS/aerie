@@ -13,8 +13,8 @@ import java.util.List;
  */
 public class FilterLatching implements TimeWindowsFilter {
 
-  private FilterFunctional firstFilter;
-  private FilterFunctional otherFilter;
+  private final FilterFunctional firstFilter;
+  private final FilterFunctional otherFilter;
 
   public FilterLatching(FilterFunctional filter1, FilterFunctional filter2) {
     firstFilter = filter1;

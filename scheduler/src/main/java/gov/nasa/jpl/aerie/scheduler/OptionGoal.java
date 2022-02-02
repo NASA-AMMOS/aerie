@@ -22,7 +22,7 @@ public class OptionGoal extends Goal {
 
   public static class Builder {
 
-    List<Goal> goals = new ArrayList<Goal>();
+    final List<Goal> goals = new ArrayList<>();
     private String name;
 
     enum CHOICE {
@@ -88,15 +88,9 @@ public class OptionGoal extends Goal {
       dg.name = name;
       dg.optimizer = optimizer;
       switch (choice) {
-        case ATLEAST:
-          dg.namongp = new Range<Integer>(this.namongp, goals.size());
-          break;
-        case ATMOST:
-          dg.namongp = new Range<Integer>(0, this.namongp);
-          break;
-        case EXACTLY:
-          dg.namongp = new Range<Integer>(this.namongp, this.namongp);
-          break;
+        case ATLEAST -> dg.namongp = new Range<>(this.namongp, goals.size());
+        case ATMOST -> dg.namongp = new Range<>(0, this.namongp);
+        case EXACTLY -> dg.namongp = new Range<>(this.namongp, this.namongp);
       }
 
       return dg;

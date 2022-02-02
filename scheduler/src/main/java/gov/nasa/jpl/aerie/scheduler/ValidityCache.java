@@ -18,11 +18,11 @@ public abstract class ValidityCache {
     UNKNOWN
   }
 
-  private TreeMap<Window, Validity> cache;
+  private final TreeMap<Window, Validity> cache;
 
 
   public ValidityCache() {
-    cache = new TreeMap<Window, Validity>();
+    cache = new TreeMap<>();
     cache.put(Window.between(Duration.ZERO, Duration.MAX_VALUE), Validity.UNKNOWN);
   }
 
@@ -41,9 +41,8 @@ public abstract class ValidityCache {
     boolean reset = false;
     Window window = null;
     //for each input window
-    var it = windows.iterator();
-    while (it.hasNext()) {
-      window = it.next();
+    for (final Window value : windows) {
+      window = value;
       //for each entry in the cache
       Iterator<Map.Entry<Window, Validity>> itCache = cache.entrySet().iterator();
       var toAdd = new HashMap<Window, Validity>();
@@ -62,7 +61,7 @@ public abstract class ValidityCache {
         }
 
         Validity val = entry.getValue();
-        var intersection = Window.intersect(window,cacheInter);
+        var intersection = Window.intersect(window, cacheInter);
         if (!intersection.isEmpty()) {
           if (val == Validity.TRUE) {
             returnWin.add(intersection);

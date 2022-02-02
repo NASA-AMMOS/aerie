@@ -42,7 +42,7 @@ public class TestOrderingConstraints {
   }
 
   @AfterEach
-  public void tearDown() throws Exception {
+  public void tearDown() {
     missionModel = null;
     plan = null;
   }

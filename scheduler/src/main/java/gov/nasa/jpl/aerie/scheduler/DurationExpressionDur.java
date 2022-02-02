@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 public class DurationExpressionDur implements DurationExpression {
 
 
-  Duration dur;
+  final Duration dur;
 
   public DurationExpressionDur(Duration dur){
     this.dur = dur;

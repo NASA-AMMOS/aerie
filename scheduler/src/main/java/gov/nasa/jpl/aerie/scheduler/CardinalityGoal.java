@@ -202,25 +202,24 @@ public class CardinalityGoal extends ActivityTemplateGoal {
     StateConstraintExpression goalConstraints = this.getStateConstraints();
 
     //TODO: what if there is no duration range ?
-    Windows rangeAfterConstraints = range;
     if (actConstraints != null) {
       var actCstWins = actConstraints.findWindows(plan, range);
-      rangeAfterConstraints.intersectWith(actCstWins);
+      range.intersectWith(actCstWins);
     }
     if (goalConstraints != null) {
-      var goalCstWins = goalConstraints.findWindows(plan, rangeAfterConstraints);
-      rangeAfterConstraints.intersectWith(goalCstWins);
+      var goalCstWins = goalConstraints.findWindows(plan, range);
+      range.intersectWith(goalCstWins);
     }
     List<Window> rangesForSchedulings = StreamSupport
-        .stream(rangeAfterConstraints.spliterator(), false)
+        .stream(range.spliterator(), false)
         .collect(Collectors.toList());
-    Iterator<Window> itRanges = rangeAfterConstraints.iterator();
+    Iterator<Window> itRanges = range.iterator();
     if(!itRanges.hasNext()) { return List.of(); }
 
     Map<Window, List<ActivityInstance>> instancesCreated = new TreeMap<>();
     Map<Window, List<ActivityCreationTemplate>> templatesCreated = new TreeMap<>();
 
-    for (var r : rangeAfterConstraints) {
+    for (var r : range) {
       instancesCreated.put(r, new ArrayList<>());
       templatesCreated.put(r, new ArrayList<>());
     }
@@ -246,9 +245,9 @@ public class CardinalityGoal extends ActivityTemplateGoal {
         //schedule the smallest activity possible
         ActivityCreationTemplate.Builder builderAct = new ActivityCreationTemplate.Builder();
         builderAct.basedOn(this.desiredActTemplate);
-        var inst = builderAct;
-        templatesCreated.get(curRange).add(inst.build());
-        instancesCreated.get(curRange).add(inst.duration(dur).startsIn(Window.between(start,start)).build().createActivity("act_" + scheduled));
+        templatesCreated.get(curRange).add(builderAct.build());
+        instancesCreated.get(curRange).add(builderAct
+                                               .duration(dur).startsIn(Window.between(start, start)).build().createActivity("act_" + scheduled));
         scheduled += 1;
         scheduledDur = scheduledDur.plus(dur);
         durWindow = durWindow.minus(dur);
@@ -271,7 +270,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
         start = lastAct.getEndTime();
       }
       var durWindow = curRange.end.minus(start);
-      Duration dur =  (Duration) parametricDur.compute(curRange);
+      Duration dur = parametricDur.compute(curRange);
       if (durWindow.compareTo(dur) >= 0) {
         //schedule the biggest activity possible to avoiding hitting maximum occurrence
         ActivityCreationTemplate.Builder builderAct = new ActivityCreationTemplate.Builder();
@@ -319,24 +318,23 @@ public class CardinalityGoal extends ActivityTemplateGoal {
     Window actPossibleDurations = this.desiredActTemplate.getDurationRange();
 
     //TODO: what if there is no duration range ?
-    Windows rangeAfterConstraints = range;
     if (actConstraints != null) {
       var actCstWins = actConstraints.findWindows(plan, range);
-      rangeAfterConstraints.intersectWith(actCstWins);
+      range.intersectWith(actCstWins);
     }
     if (goalConstraints != null) {
-      var goalCstWins = goalConstraints.findWindows(plan, rangeAfterConstraints);
-      rangeAfterConstraints.intersectWith(goalCstWins);
+      var goalCstWins = goalConstraints.findWindows(plan, range);
+      range.intersectWith(goalCstWins);
     }
     List<Window> rangesForSchedulings = StreamSupport
-        .stream(rangeAfterConstraints.spliterator(), false)
+        .stream(range.spliterator(), false)
         .collect(Collectors.toList());
-    Iterator<Window> itRanges = rangeAfterConstraints.iterator();
+    Iterator<Window> itRanges = range.iterator();
 
     Map<Window, List<ActivityInstance>> instancesCreated = new TreeMap<>();
     Map<Window, List<ActivityCreationTemplate>> templatesCreated = new TreeMap<>();
 
-    for (var r : rangeAfterConstraints) {
+    for (var r : range) {
       instancesCreated.put(r, new ArrayList<>());
       templatesCreated.put(r, new ArrayList<>());
     }
@@ -375,7 +373,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
 
     if (scheduledDur.compareTo(durToSchedule) < 0) {
 
-      for (int i = 0; i < rangeAfterConstraints.size(); i++) {
+      for (int i = 0; i < range.size(); i++) {
         var win = rangesForSchedulings.get(i);
         List<ActivityInstance> acts = instancesCreated.get(win);
         if (acts.size() > 0) {

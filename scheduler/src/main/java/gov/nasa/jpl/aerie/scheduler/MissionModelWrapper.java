@@ -132,12 +132,12 @@ public class MissionModelWrapper {
   /**
    * activity type definitions in the mission model, indexed by name
    */
-  private java.util.Map<String, ActivityType> actTypeByName
+  private final java.util.Map<String, ActivityType> actTypeByName
       = new java.util.HashMap<>();
 
   /**
    * global constraints in the mission model, indexed by name
    */
-  private List<GlobalConstraint> globalConstraints
+  private final List<GlobalConstraint> globalConstraints
       = new java.util.LinkedList<>();
 }

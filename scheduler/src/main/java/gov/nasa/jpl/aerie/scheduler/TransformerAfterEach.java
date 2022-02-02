@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 public class TransformerAfterEach implements TimeWindowsTransformer {
 
-  Duration dur;
+  private final Duration dur;
 
   public TransformerAfterEach(Duration dur) {
     this.dur = dur;

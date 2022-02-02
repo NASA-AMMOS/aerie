@@ -72,7 +72,7 @@ public class MockState<T extends Comparable<T>> implements ExternalState
     return returnWindows;
   }
 
-  static Supplier<RuntimeException> exceptionSupplier =
+  final static Supplier<RuntimeException> exceptionSupplier =
       () -> new UnsupportedOperationException("Type not supported by MockState");
 
   @SuppressWarnings("unchecked")
@@ -139,8 +139,7 @@ public class MockState<T extends Comparable<T>> implements ExternalState
 
   public void draw() {
     for (Map.Entry<Window, T> v : values.entrySet()) {
-      if (v.getValue() instanceof Boolean) {
-        Boolean val = (Boolean) v.getValue();
+      if (v.getValue() instanceof Boolean val) {
         String toPrint = "";
         if (val) {
           toPrint = "X";
@@ -157,9 +156,6 @@ public class MockState<T extends Comparable<T>> implements ExternalState
 
       }
     }
-    System.out.println("");
-
-
   }
 
 }

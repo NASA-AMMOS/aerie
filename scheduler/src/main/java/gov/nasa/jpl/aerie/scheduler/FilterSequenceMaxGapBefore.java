@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class FilterSequenceMaxGapBefore implements TimeWindowsFilter {
 
-  private Duration delay;
+  private final Duration delay;
 
   public FilterSequenceMaxGapBefore(Duration delay) {
     this.delay = delay;
@@ -21,7 +21,7 @@ public class FilterSequenceMaxGapBefore implements TimeWindowsFilter {
   @Override
   public Windows filter(Plan plan, Windows windows) {
     Window before = null;
-    List<Window> filtered = new ArrayList<Window>();
+    List<Window> filtered = new ArrayList<>();
     for (var range : windows) {
       if (before != null) {
         if (range.start.minus(before.end).compareTo(delay) <= 0) {
