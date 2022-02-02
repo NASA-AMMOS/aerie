@@ -99,6 +99,29 @@ public final class MissionModelFacade {
     }
   }
 
+  public List<String> validateConfiguration(final Map<String, SerializedValue> arguments)
+  throws UnconfigurableMissionModelException, UnconstructableMissionModelConfigurationException
+  {
+    final var configType = this.missionModel.getConfigurationType()
+        .orElseThrow(UnconfigurableMissionModelException::new);
+
+    return getValidationFailures(configType, arguments);
+  }
+
+  private <Config> List<String> getValidationFailures(
+      final ConfigurationType<Config> configurationType,
+      final Map<String, SerializedValue> arguments)
+  throws UnconstructableMissionModelConfigurationException
+  {
+    try {
+      return configurationType.getValidationFailures(configurationType.instantiate(arguments));
+    } catch (final ConfigurationType.UnconstructableConfigurationException e) {
+      throw new UnconstructableMissionModelConfigurationException(
+          "Unknown failure when deserializing configuration -- do the parameters match the schema?",
+          e);
+    }
+  }
+
   /** Get mission model configuration effective arguments. */
   public Map<String, SerializedValue> getEffectiveArguments(final Map<String, SerializedValue> arguments)
   throws UnconfigurableMissionModelException, MissingArgumentException, UnconstructableMissionModelConfigurationException
