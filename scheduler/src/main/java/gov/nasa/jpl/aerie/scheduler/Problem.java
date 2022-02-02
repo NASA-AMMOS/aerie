@@ -1,6 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * description of a planning problem to be solved
@@ -8,41 +12,88 @@ import java.util.Collection;
 public class Problem {
 
   /**
-   * creates a new empty problem based in the given mission model
-   *
-   * @param mission IN the mission model that this problem is based on
-   */
-  public Problem(MissionModelWrapper mission) {
-    if (mission == null) {
-      throw new IllegalArgumentException(
-          "creating problem descriptor with null mission model");
-    }
-    this.mission = mission;
-    this.initialPlan = new PlanInMemory(mission);
-  }
-
-  /**
    * the mission model that this problem is based on
    */
-  protected MissionModelWrapper mission;
+  private final MissionModel<?> missionModel;
 
+  private final SimulationFacade simulationFacade;
+
+  //should be accessible inside problem definition
+  protected final PlanningHorizon planningHorizon;
+
+  /**
+   * global constraints in the mission model, indexed by name
+   */
+  private final List<GlobalConstraint> globalConstraints
+      = new java.util.LinkedList<>();
   /**
    * the initial seed plan to start scheduling from
    */
-  protected Plan initialPlan;
+  private Plan initialPlan;
 
   /**
    * container of all goals in the problem, indexed by name
    */
-  protected final java.util.HashMap<String, Goal> goalsByName = new java.util.HashMap<>();
+  private final java.util.HashMap<String, Goal> goalsByName = new java.util.HashMap<>();
+
+  /**
+   * activity type definitions in the mission model, indexed by name
+   */
+  private final java.util.Map<String, ActivityType> actTypeByName
+      = new java.util.HashMap<>();
+
+  /**
+   * creates a new empty problem based in the given mission model
+   *
+   * @param mission IN the mission model that this problem is based on
+   */
+  public Problem(MissionModel<?> mission, PlanningHorizon planningHorizon) {
+    this.missionModel = mission;
+    this.initialPlan = new PlanInMemory();
+    this.planningHorizon = planningHorizon;
+    //TODO: find cleaner way to handle built-in act types
+    //TODO: find cleaner way to handle windows in general
+    //special activity for displaying valid windows in visualization
+    add(new ActivityType("Window"));
+
+    //include special activity type for marking plan horizon
+    add(new ActivityType("HorizonMarker"));
+
+    //add all activity types known to aerie to scheduler index
+    //TODO: reduce duplicate activity type abstractions between aerie and scheduler
+    if( missionModel != null ) {
+      for(var taskType : missionModel.getTaskSpecificationTypes().entrySet()){
+        this.add(new ActivityType(taskType.getKey(), taskType.getValue()));
+      }
+    }
+
+    simulationFacade = new SimulationFacade(planningHorizon, missionModel);
+  }
+
+  public SimulationFacade getSimulationFacade(){
+    return simulationFacade;
+  }
+
+  /**
+   * adds a new global constraint to the mission model
+   *
+   * @param globalConstraint IN the global constraint
+   */
+  public void add(GlobalConstraint globalConstraint) {
+    this.globalConstraints.add(globalConstraint);
+  }
+
+  public List<GlobalConstraint> getGlobalConstraints() {
+    return this.globalConstraints;
+  }
 
   /**
    * fetches the mission model that this problem is based on
    *
    * @return the mission model that this problem is based on
    */
-  public MissionModelWrapper getMissionModel() {
-    return mission;
+  public MissionModel<?> getMissionModel() {
+    return missionModel;
   }
 
   /**
@@ -102,5 +153,59 @@ public class Problem {
     return java.util.Collections.unmodifiableCollection(goalsByName.values());
   }
 
+  private void failIfActivityTypeAbsent(String name){
+    if (!this.actTypeByName.containsKey(name)) {
+      throw new IllegalArgumentException(
+          "no activity type definition name=" + name +
+          " in mission model. Either add it manually to the Problem or it should already exists in the mission model");
+    }
+  }
+
+  /**
+   * adds a new activity type definition to the mission model
+   *
+   * @param actType IN the activity type definition to add to the mission
+   *     model, which must not already have a type definition with matching
+   *     identifier
+   */
+  public void add(ActivityType actType) {
+
+    if (actType == null) {
+      throw new IllegalArgumentException(
+          "adding null activity type to mission model");
+    }
+
+    final String name = actType.getName();
+    if (name == null) {
+      throw new IllegalArgumentException(
+          "adding activity type definition with null name to mission model");
+    }
+    if (this.actTypeByName.containsKey(name)) {
+      throw new IllegalArgumentException(
+          "adding duplicate activity type definition name=" + name + " to mission model");
+    }
+
+    this.actTypeByName.put(name, actType);
+  }
+
+  public ExternalState getResource(String name){
+    return simulationFacade.getResource(name);
+  }
+
+  /**
+   * fetches the activity type object with the given name
+   *
+   * @param name IN the name associated with the requested activity type
+   * @return the activity type with a matching name, or null if there is
+   *     no such activity type in the mission model
+   */
+  public ActivityType getActivityType(String name) {
+    failIfActivityTypeAbsent(name);
+    return actTypeByName.get(name);
+  }
+
+  public Collection<ActivityType> getActivityTypes(){
+    return Collections.unmodifiableCollection(actTypeByName.values());
+  }
 
 }

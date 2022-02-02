@@ -11,7 +11,7 @@ import static com.google.common.truth.Truth8.assertThat;
 
 public class PrioritySolverTest {
   private static PrioritySolver makeEmptyProblemSolver() {
-    return new PrioritySolver(new HuginnConfiguration(), new Problem(new MissionModelWrapper()));
+    return new PrioritySolver(new HuginnConfiguration(), new Problem(null,h));
   }
 
   private static PrioritySolver makeProblemSolver(Problem problem) {
@@ -20,12 +20,8 @@ public class PrioritySolverTest {
 
   @Test
   public void ctor_onEmptyProblemWorks() {
-    new PrioritySolver(new HuginnConfiguration(), new Problem(new MissionModelWrapper()));
+    new PrioritySolver(new HuginnConfiguration(), new Problem(null,h));
   }
-
-  private static final NullPointerTester NULL_POINTER_TESTER = new NullPointerTester()
-      .setDefault(HuginnConfiguration.class, new HuginnConfiguration())
-      .setDefault(Problem.class, new Problem(new MissionModelWrapper()));
 
   @Test
   void ctors_nullArgThrowsNPE() {
@@ -52,8 +48,8 @@ public class PrioritySolverTest {
   }
 
   //test mission with two primitive activity types
-  private static MissionModelWrapper makeTestMissionAB() {
-    final var mission = new MissionModelWrapper();
+  private static Problem makeTestMissionAB() {
+    final var mission = new Problem(null, h);
     final var actA = new ActivityType("A");
     mission.add(actA);
     final var actB = new ActivityType("B");
@@ -70,9 +66,14 @@ public class PrioritySolverTest {
   private final static Duration t2hr = t0.plus(d1hr.times(2));
   private final static Duration t3hr = t0.plus(d1hr.times(2));
 
+  private static final NullPointerTester NULL_POINTER_TESTER = new NullPointerTester()
+      .setDefault(HuginnConfiguration.class, new HuginnConfiguration())
+      .setDefault(Problem.class, new Problem(null,h));
+
+
   private static PlanInMemory makePlanA012(Problem problem) {
-    final var plan = new PlanInMemory(problem.getMissionModel());
-    final var actTypeA = problem.getMissionModel().getActivityType("A");
+    final var plan = new PlanInMemory();
+    final var actTypeA = problem.getActivityType("A");
     plan.add(new ActivityInstance(actTypeA, t0, d1min));
     plan.add(new ActivityInstance(actTypeA, t1hr, d1min));
     plan.add(new ActivityInstance(actTypeA, t2hr, d1min));
@@ -80,8 +81,8 @@ public class PrioritySolverTest {
   }
 
   private static PlanInMemory makePlanA12(Problem problem) {
-    final var plan = new PlanInMemory(problem.getMissionModel());
-    final var actTypeA = problem.getMissionModel().getActivityType("A");
+    final var plan = new PlanInMemory();
+    final var actTypeA = problem.getActivityType("A");
     plan.add(new ActivityInstance(actTypeA, t1hr, d1min));
     plan.add(new ActivityInstance(actTypeA, t2hr, d1min));
     return plan;
@@ -89,7 +90,7 @@ public class PrioritySolverTest {
 
   private static PlanInMemory makePlanAB012(Problem problem) {
     final var plan = makePlanA012(problem);
-    final var actTypeB = problem.getMissionModel().getActivityType("B");
+    final var actTypeB = problem.getActivityType("B");
     plan.add(new ActivityInstance(actTypeB, t0, d1min));
     plan.add(new ActivityInstance(actTypeB, t1hr, d1min));
     plan.add(new ActivityInstance(actTypeB, t2hr, d1min));
@@ -112,7 +113,7 @@ public class PrioritySolverTest {
 
   @Test
   public void getNextSolution_initialPlanInOutput() {
-    final var problem = new Problem(makeTestMissionAB());
+    final var problem = makeTestMissionAB();
     final var expectedPlan = makePlanA012(problem);
     problem.setInitialPlan(makePlanA012(problem));
     final var solver = makeProblemSolver(problem);
@@ -127,7 +128,7 @@ public class PrioritySolverTest {
 
   @Test
   public void getNextSolution_proceduralGoalCreatesActivities() {
-    final var problem = new Problem(makeTestMissionAB());
+    final var problem = makeTestMissionAB();
     final var expectedPlan = makePlanA012(problem);
     final var goal = new ProceduralCreationGoal.Builder()
         .named("g0")
@@ -146,7 +147,7 @@ public class PrioritySolverTest {
 
   @Test
   public void getNextSolution_proceduralGoalAttachesActivitiesToEvaluation() {
-    final var problem = new Problem(makeTestMissionAB());
+    final var problem = makeTestMissionAB();
     final var expectedPlan = makePlanA012(problem);
     final var goal = new ProceduralCreationGoal.Builder()
         .named("g0")
@@ -168,13 +169,13 @@ public class PrioritySolverTest {
 
   @Test
   public void getNextSolution_recurrenceGoalWorks() {
-    final var problem = new Problem(makeTestMissionAB());
+    final var problem = makeTestMissionAB();
     final var goal = new RecurrenceGoal.Builder()
         .named("g0")
         .startingAt(t0).endingAt(t2hr.plus(Duration.of(10, Duration.MINUTE)))
         .repeatingEvery(d1hr)
         .thereExistsOne(new ActivityCreationTemplate.Builder()
-                            .ofType(problem.getMissionModel().getActivityType("A"))
+                            .ofType(problem.getActivityType("A"))
                             .duration(d1min)
                             .build())
         .build();
@@ -196,10 +197,10 @@ public class PrioritySolverTest {
 
   @Test
   public void getNextSolution_coexistenceGoalOnActivityWorks() {
-    final var problem = new Problem(makeTestMissionAB());
+    final var problem = makeTestMissionAB();
     problem.setInitialPlan(makePlanA012(problem));
-    final var actTypeA = problem.getMissionModel().getActivityType("A");
-    final var actTypeB = problem.getMissionModel().getActivityType("B");
+    final var actTypeA = problem.getActivityType("A");
+    final var actTypeB = problem.getActivityType("B");
     final var goal = new CoexistenceGoal.Builder()
         .named("g0")
         .forAllTimeIn(h.getHor())

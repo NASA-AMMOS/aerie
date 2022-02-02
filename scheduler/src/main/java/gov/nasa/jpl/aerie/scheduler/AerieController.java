@@ -31,6 +31,7 @@ import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +52,7 @@ public class AerieController {
   private final Map<Plan, Long> planIds;
   private final Map<Plan, Map<String, AerieStateCache>> stateCaches;
   private final Map<Plan, Duration> planStartTimes;
-  private final MissionModelWrapper missionModelWrapper;
+  private final Map<String, ActivityType> activityTypes;
 
 
   private final Map<Plan, Map<String, Class<?>>> stateTypes;
@@ -75,9 +76,9 @@ public class AerieController {
       final int missionModelId,
       final boolean authenticationRequired,
       final PlanningHorizon planningHorizon,
-      final MissionModelWrapper missionModel)
+      final Collection<ActivityType> activityTypes)
   {
-    this(distantAerieURL, missionModelId, planningHorizon, missionModel);
+    this(distantAerieURL, missionModelId, planningHorizon, activityTypes);
     this.authenticationRequired = authenticationRequired;
   }
 
@@ -85,9 +86,9 @@ public class AerieController {
       final String distantAerieURL,
       final int missionModelId,
       final PlanningHorizon planningHorizon,
-      final MissionModelWrapper missionModel)
+      final Collection<ActivityType> activityTypes)
   {
-    this(distantAerieURL, missionModelId, "", planningHorizon, missionModel);
+    this(distantAerieURL, missionModelId, "", planningHorizon, activityTypes);
   }
 
   public AerieController(
@@ -95,9 +96,9 @@ public class AerieController {
       final int missionModelId,
       final String planPrefix,
       final PlanningHorizon planningHorizon,
-      final MissionModelWrapper missionModel)
+      final Collection<ActivityType> activityTypes)
   {
-    this.missionModelWrapper = missionModel;
+    this.activityTypes = activityTypes.stream().collect(Collectors.toMap(ActivityType::getName, at -> at));
     this.distantAerieURL = distantAerieURL;
     this.AMMOS_MISSION_MODEL_ID = missionModelId;
     planIds = new HashMap<>();
@@ -470,7 +471,7 @@ public class AerieController {
     public boolean handleResponse(JSONObject response) {
       var jsonplan = ((JSONObject) response.get("data")).getJSONObject("plan_by_pk");
       var activities = jsonplan.getJSONArray("activities");
-      this.plan = new PlanInMemory(missionModelWrapper);
+      this.plan = new PlanInMemory();
       addPlanId(plan, this.id);
       for (int i = 0; i < activities.length(); i++) {
         var actInst = jsonToInstance(activities.getJSONObject(i));
@@ -482,16 +483,10 @@ public class AerieController {
 
   private ActivityInstance jsonToInstance(JSONObject jsonActivity) {
     String type = jsonActivity.getString("type");
-    var actTypes = missionModelWrapper.getMissionModel().getTaskSpecificationTypes();
-    var specType = actTypes.get(type);
-    if (specType == null) {
-      throw new IllegalArgumentException("Activity type is not present in mission model");
+    if(!activityTypes.containsKey(type)){
+      throw new IllegalArgumentException("Activity type found in JSON object has not been not been found. Inconsistency between mission model used by scheduler server and merlin server ? ");
     }
-    var schedulerActType = missionModelWrapper.getActivityType(type);
-    if (schedulerActType == null) {
-      throw new IllegalArgumentException("Activity type is not present in scheduler mission model wrapper");
-    }
-
+    var schedulerActType = activityTypes.get(type);
     ActivityInstance act = new ActivityInstance(schedulerActType);
     final var actPK = jsonActivity.getLong("id");
     addActInstanceId(act, actPK);
@@ -500,7 +495,7 @@ public class AerieController {
     var arguments = jsonActivity.getJSONObject("arguments");
     for (var paramName : arguments.keySet()) {
       var visitor = new DemuxJson(paramName, arguments);
-      var paramSpec = ActivityType.getParameterSpecification(specType.getParameters(), paramName);
+      var paramSpec = ActivityType.getParameterSpecification(schedulerActType.getSpecType().getParameters(), paramName);
       assert(paramSpec != null);
       var valueParam = paramSpec.schema().match(visitor);
       act.addArgument(paramName, valueParam);

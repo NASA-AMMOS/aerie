@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -9,23 +10,23 @@ public class MerlInsightRulesTest {
   @BeforeEach
   void setUp(){
     planningHorizon = new PlanningHorizon(new Time(0), new Time(48*3600));
-    rules = new MerlInsightRules(MerlinSightTestUtility.getMerlinSightMissionModel(planningHorizon));
-    missionModelWrapper = rules.getMissionModel();
-    missionModelWrapper.getSimulationFacade().simulatePlan(makeEmptyPlan());
+    aerieLanderMissionModel = MerlinSightTestUtility.getMerlinSightMissionModel();
+    rules = new MerlInsightRules(aerieLanderMissionModel, planningHorizon);
+    rules.getSimulationFacade().simulatePlan(makeEmptyPlan());
     plan = makeEmptyPlan();
-    controller = new AerieController(MerlinSightTestUtility.LOCAL_AERIE, MerlinSightTestUtility.latest, false, planningHorizon, missionModelWrapper);
-    smallProblem = new Problem(missionModelWrapper);
+    controller = new AerieController(MerlinSightTestUtility.LOCAL_AERIE, MerlinSightTestUtility.latest, false, planningHorizon, rules.getActivityTypes());
+    smallProblem = new Problem(aerieLanderMissionModel, planningHorizon);
   }
 
+  private MissionModel<?> aerieLanderMissionModel;
   private PlanningHorizon planningHorizon;
-  private MissionModelWrapper missionModelWrapper;
   private MerlInsightRules rules;
   private AerieController controller;
   private Problem smallProblem;
   private Plan plan;
   /** constructs an empty plan with the test model/horizon **/
   private PlanInMemory makeEmptyPlan() {
-    return new PlanInMemory(missionModelWrapper);
+    return new PlanInMemory();
   }
 
   public void schedule(){

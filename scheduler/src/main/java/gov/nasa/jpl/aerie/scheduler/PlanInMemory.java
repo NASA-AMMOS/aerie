@@ -15,35 +15,9 @@ public class PlanInMemory implements Plan {
   /**
    * ctor creates a new empty solution plan
    *
-   * @param mission IN the mission model that this plan is based on
    */
-  public PlanInMemory(MissionModelWrapper mission) {
-    if (mission == null) {
-      throw new IllegalArgumentException(
-          "creating plan with null mission model");
-    }
-    this.mission = mission;
+  public PlanInMemory() {
   }
-
-
-  /**
-   * fetches the mission model that this plan is based on
-   *
-   * @return the mission model that this plan is based on
-   */
-  @Override
-  public MissionModelWrapper getMissionModel() {
-    return this.mission;
-  }
-
-
-  /**
-   * the mission model that this plan is based on
-   *
-   * all instance entities in the plan refer to definitions in the model
-   */
-  MissionModelWrapper mission;
-
 
   /**
    * {@inheritDoc}

@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class SimulationFacadeTest {
 
   MissionModel<?> missionModel;
-  MissionModelWrapper wrappedMissionModel;
+  Problem problem;
   SimulationFacade facade;
   //concrete named time points used to setup tests and validate expectations
   private static final Time t0h = Time.fromMilli(0);
@@ -61,20 +61,20 @@ public class SimulationFacadeTest {
   @BeforeEach
   public void setUp() {
     missionModel = SimulationUtility.getBananaMissionModel();
-    wrappedMissionModel = new MissionModelWrapper(missionModel, horizon);
+    problem = new Problem(missionModel, horizon);
     facade = new SimulationFacade(horizon, missionModel);
   }
 
   @AfterEach
   public void tearDown() {
     missionModel = null;
-    wrappedMissionModel = null;
+    problem = null;
     facade = null;
   }
 
   /** constructs an empty plan with the test model/horizon **/
   private PlanInMemory makeEmptyPlan() {
-    return new PlanInMemory(wrappedMissionModel);
+    return new PlanInMemory();
   }
 
   @Test
@@ -133,8 +133,8 @@ public class SimulationFacadeTest {
    **/
   private PlanInMemory makeTestPlanP0B1() {
     final var plan = makeEmptyPlan();
-    final var actTypeBite = wrappedMissionModel.getActivityType("BiteBanana");
-    final var actTypePeel = wrappedMissionModel.getActivityType("PeelBanana");
+    final var actTypeBite = problem.getActivityType("BiteBanana");
+    final var actTypePeel = problem.getActivityType("PeelBanana");
 
     var act1 = new ActivityInstance(actTypePeel, t1);
     act1.setArguments(Map.of("peelDirection", SerializedValue.of("fromStem")));

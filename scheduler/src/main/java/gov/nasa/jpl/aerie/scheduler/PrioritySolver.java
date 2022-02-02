@@ -37,6 +37,7 @@ public class PrioritySolver implements Solver {
     this.checkSimBeforeInsertingActivities = false;
     this.config = config;
     this.problem = problem;
+    this.simulationFacade = problem.getSimulationFacade();
   }
 
   //TODO: should probably be part of sched configuration; maybe even per rule
@@ -70,10 +71,6 @@ public class PrioritySolver implements Solver {
     }
   }
 
-  private SimulationFacade getSimFacade(){
-    return problem.getMissionModel().getSimulationFacade();
-  }
-
   private boolean checkAndInsertAct(ActivityInstance act){
     return checkAndInsertActs(List.of(act));
   }
@@ -98,8 +95,8 @@ public class PrioritySolver implements Solver {
       }
       plan.add(act);
       if(checkSimBeforeInsertingActivities) {
-        getSimFacade().simulatePlan(plan);
-        var simDur = getSimFacade().getActivityDuration(act);
+        simulationFacade.simulatePlan(plan);
+        var simDur = simulationFacade.getActivityDuration(act);
         if (simDur == null) {
           System.out.println("Activity " + act.toString() + " could not be simulated");
           allGood = false;
@@ -125,7 +122,7 @@ public class PrioritySolver implements Solver {
    * creates internal storage space to build up partial solutions in
    **/
   public void initializePlan() {
-    plan = new PlanInMemory(problem.getMissionModel());
+    plan = new PlanInMemory();
 
     //turn off simulation checking for initial plan contents (must accept user input regardless)
     final var prevCheckFlag = this.checkSimBeforeInsertingActivities;
@@ -140,8 +137,8 @@ public class PrioritySolver implements Solver {
     plan.addEvaluation(evaluation);
 
     //if backed by real models, initialize the simulation states/resources/profiles for the plan so state queries work
-    if (problem.getMissionModel() != null && problem.getMissionModel().getMissionModel() != null) {
-      problem.getMissionModel().getSimulationFacade().simulatePlan(plan);
+    if (problem.getMissionModel() != null) {
+      simulationFacade.simulatePlan(plan);
     }
   }
 
@@ -485,7 +482,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
     }
     possibleWindows = narrowByStateConstraints(possibleWindows, stateConstraints);
 
-    possibleWindows = narrowGlobalConstraints(plan, missing, possibleWindows, this.problem.getMissionModel().getGlobalConstraints());
+    possibleWindows = narrowGlobalConstraints(plan, missing, possibleWindows, this.problem.getGlobalConstraints());
 
     //narrow to windows where activity duration will fit
     final var startWindows = possibleWindows;
@@ -596,7 +593,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
 
     //find the window act type
     //REVIEW: can cache this
-    final var windowActType = this.problem.getMissionModel().getActivityType("Window");
+    final var windowActType = this.problem.getActivityType("Window");
     assert windowActType != null;
 
     //create an indexed window act for each of the possible time ranges
@@ -710,5 +707,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
    * including which activities were created to satisfy each goal
    */
   Evaluation evaluation;
+
+  private final SimulationFacade simulationFacade;
 
 }

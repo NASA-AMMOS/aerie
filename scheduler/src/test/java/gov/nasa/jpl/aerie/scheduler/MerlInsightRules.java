@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
@@ -11,15 +12,13 @@ import java.util.List;
 
 public class MerlInsightRules extends Problem {
 
-  final PlanningHorizon planningHorizon;
+  static final PlanningHorizon DEFAULT_PLANNING_HORIZON = new PlanningHorizon(new Time(0), new Time(48 * 3600));
 
-  public MerlInsightRules(MissionModelWrapper missionModelWrapper) {
-    super(missionModelWrapper);
-    this.planningHorizon  = mission.getPlanningHorizon();
+  public MerlInsightRules(MissionModel<?> missionModel) {
+    super(missionModel, DEFAULT_PLANNING_HORIZON);
   }
-
-  private ActivityType getActivityType(final String name) {
-    return this.getMissionModel().getActivityType(name);
+  public MerlInsightRules(MissionModel<?> missionModel, PlanningHorizon planningHorizon) {
+    super(missionModel, planningHorizon);
   }
 
   @Override
@@ -43,11 +42,11 @@ public class MerlInsightRules extends Problem {
     int index = 0;
     int actIndex = 0;
     int curAlloc = 1;
-    var time = planningHorizon.getHor().start;
-    while(time.shorterThan(planningHorizon.getHor().end)){
+    var time = DEFAULT_PLANNING_HORIZON.getHor().start;
+    while(time.shorterThan(DEFAULT_PLANNING_HORIZON.getHor().end)){
       var curStation = values[index];
 
-      var actInstance = new ActivityInstance(actType2, time, Duration.min(planningHorizon.getHor().end.minus(time),period));
+      var actInstance = new ActivityInstance(actType2, time, Duration.min(DEFAULT_PLANNING_HORIZON.getHor().end.minus(time), period));
       actInstance.addArgument("dsnStation", SerializedValue.of(curStation));
       actList.add(actInstance);
       index +=1;
@@ -58,7 +57,7 @@ public class MerlInsightRules extends Problem {
       curAlloc +=1;
       if(curAlloc == ratioAlloc){
         //allocate this to insight
-        var actInstanceAlloc = new ActivityInstance(actType1, time, Duration.min(planningHorizon.getHor().end.minus(time),period));
+        var actInstanceAlloc = new ActivityInstance(actType1, time, Duration.min(DEFAULT_PLANNING_HORIZON.getHor().end.minus(time), period));
         actInstanceAlloc.addArgument("dsnStation", SerializedValue.of(curStation));
         actList.add(actInstanceAlloc);
         curAlloc = 1;
@@ -71,7 +70,7 @@ public class MerlInsightRules extends Problem {
     ProceduralCreationGoal dsnGoal = new ProceduralCreationGoal.Builder()
         .named("Schedule DSN contacts for initial setup")
         .withPriority(50)
-        .forAllTimeIn(planningHorizon.getHor())
+        .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
         .generateWith((plan) -> actList)
         .build();
 
@@ -98,30 +97,30 @@ public class MerlInsightRules extends Problem {
 
     var HP3actType = getActivityType("HP3TemP");
     var mutex = GlobalConstraints.atMostOneOf(List.of(ActivityExpression.ofType(HP3actType)));
-    mission.add(mutex);
+    add(mutex);
 
     var actT1 = getActivityType("SSAMonitoring");
 
     List<ActivityInstance> turnONFFMonitoring = List.of(
-        new ActivityInstance(actT1,planningHorizon.getStartAerie()
-                                                  .plus(Duration.of(1,Duration.MINUTE)),
+        new ActivityInstance(actT1, DEFAULT_PLANNING_HORIZON.getStartAerie()
+                                                            .plus(Duration.of(1,Duration.MINUTE)),
                              Duration.of(1,Duration.MINUTE)));
     ProceduralCreationGoal pro = new ProceduralCreationGoal.Builder()
         .named("TurnOnAndOFFMonitoring")
         .withPriority(10)
-        .forAllTimeIn(planningHorizon.getHor())
+        .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
         .generateWith((plan) -> turnONFFMonitoring)
         .build();
     goals.add(pro);
 
     var sce = new StateConstraintExpression.Builder()
-        .equal(mission.getResource("/hp3/ssaState"), SerializedValue.of("Monitoring"))
+        .equal(getResource("/hp3/ssaState"), SerializedValue.of("Monitoring"))
         .build();
 
     var HP3Acts = new ActivityCreationTemplate.Builder()
         .ofType(HP3actType)
         .duration(
-            mission.getResource("/hp3/currentParams/PARAM_HP3_MON_TEMP_DURATION"),
+            getResource("/hp3/currentParams/PARAM_HP3_MON_TEMP_DURATION"),
             TimeExpression.atStart())
         .withArgument("setNewSSATime", SerializedValue.of(true))
         .build();
@@ -131,7 +130,7 @@ public class MerlInsightRules extends Problem {
         .withPriority(9)
         .repeatingEvery(Duration.of(60, Duration.MINUTE))
         .attachStateConstraint(sce)
-        .forAllTimeIn(planningHorizon.getHor())
+        .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
         .thereExistsOne(HP3Acts)
         .build();
     goals.add(goal1a);
@@ -148,8 +147,8 @@ public class MerlInsightRules extends Problem {
 
     CardinalityGoal goal1c = new CardinalityGoal.Builder()
         .named("1c")
-        .inPeriod(new TimeRangeExpression.Builder().from(new Windows(planningHorizon.getHor())).build())
-        .forAllTimeIn(planningHorizon.getHor())
+        .inPeriod(new TimeRangeExpression.Builder().from(new Windows(DEFAULT_PLANNING_HORIZON.getHor())).build())
+        .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
         .withPriority(8)
         .thereExistsOne(HP3Acts)
         .attachStateConstraint(sce)
@@ -183,14 +182,14 @@ public class MerlInsightRules extends Problem {
 
   var actTypeIDAMoveArm = getActivityType("IDAMoveArm");
   //starts at middle of horizon
-  var stMoveArm = planningHorizon.getAerieHorizonDuration().dividedBy(2);
+  var stMoveArm = DEFAULT_PLANNING_HORIZON.getAerieHorizonDuration().dividedBy(2);
   var duroveArm = Duration.of(20,Duration.MINUTE);
 
   ProceduralCreationGoal goal2a = new ProceduralCreationGoal.Builder()
       .named("SchedIDAMoveArm")
-      .forAllTimeIn(planningHorizon.getHor())
+      .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
       .withPriority(10)
-      .forAllTimeIn(planningHorizon.getHor())
+      .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
       .generateWith((plan) -> List.of(new ActivityInstance(actTypeIDAMoveArm,stMoveArm, duroveArm)))
       .build();
 
@@ -206,7 +205,7 @@ public class MerlInsightRules extends Problem {
 
   CoexistenceGoal goal2b= new CoexistenceGoal.Builder()
       .named("Grapple IDA")
-      .forAllTimeIn(planningHorizon.getHor())
+      .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(atGrapple)
                           .duration(Duration.of(20, Duration.MINUTE))
@@ -224,7 +223,7 @@ public class MerlInsightRules extends Problem {
   */
   CoexistenceGoal goal2c= new CoexistenceGoal.Builder()
       .named("SchedIDAMoveArm Back")
-      .forAllTimeIn(planningHorizon.getHor())
+      .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDAMoveArm)
                           .duration(Duration.of(1, Duration.HOUR))
@@ -248,7 +247,7 @@ public class MerlInsightRules extends Problem {
 
     CoexistenceGoal goal2d= new CoexistenceGoal.Builder()
         .named("Grapple IDA second")
-        .forAllTimeIn(planningHorizon.getHor())
+        .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(atGrapple)
                             .duration(Duration.of(20, Duration.MINUTE))
@@ -281,7 +280,7 @@ public class MerlInsightRules extends Problem {
 
   CoexistenceGoal goal2e= new CoexistenceGoal.Builder()
       .named("Heaters ON")
-      .forAllTimeIn(planningHorizon.getHor())
+      .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDAHeatersOn)
                           .duration(Duration.of(3, Duration.MINUTE))
@@ -306,7 +305,7 @@ public class MerlInsightRules extends Problem {
 
   CoexistenceGoal goal2f= new CoexistenceGoal.Builder()
       .named("Heaters Off")
-      .forAllTimeIn(planningHorizon.getHor())
+      .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDAHeatersOff)
                           .duration(Duration.of(3, Duration.MINUTE))
@@ -329,7 +328,7 @@ public class MerlInsightRules extends Problem {
 
   CoexistenceGoal goal2g= new CoexistenceGoal.Builder()
       .named("Image before grapple")
-      .forAllTimeIn(planningHorizon.getHor())
+      .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDCImage)
                           .duration(Duration.of(6, Duration.MINUTE))
@@ -352,7 +351,7 @@ public class MerlInsightRules extends Problem {
 */
   CoexistenceGoal goal2h= new CoexistenceGoal.Builder()
       .named("Image after grapple")
-      .forAllTimeIn(planningHorizon.getHor())
+      .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDCImage)
                           .duration(Duration.of(6, Duration.MINUTE))
@@ -389,7 +388,7 @@ public class MerlInsightRules extends Problem {
 
   CoexistenceGoal goal2i= new CoexistenceGoal.Builder()
       .named("Heaters before earliest image")
-      .forAllTimeIn(planningHorizon.getHor())
+      .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDCHeatersOn)
                           .duration(Duration.of(15, Duration.MINUTE))
@@ -415,7 +414,7 @@ public class MerlInsightRules extends Problem {
 
   CoexistenceGoal goal2j= new CoexistenceGoal.Builder()
       .named("Heaters after latest image")
-      .forAllTimeIn(planningHorizon.getHor())
+      .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDCHeatersOff)
                           .duration(Duration.of(15, Duration.MINUTE))
@@ -443,7 +442,7 @@ public class MerlInsightRules extends Problem {
 
   CoexistenceGoal goal2k= new CoexistenceGoal.Builder()
       .named("image stowed device in context before pickup")
-      .forAllTimeIn(planningHorizon.getHor())
+      .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeICCImages)
                           .duration(Duration.of(6, Duration.MINUTE))
@@ -467,7 +466,7 @@ public class MerlInsightRules extends Problem {
 
   CoexistenceGoal goal2l= new CoexistenceGoal.Builder()
       .named("image stowage area after relocating device")
-      .forAllTimeIn(planningHorizon.getHor())
+      .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeICCImages)
                           .duration(Duration.of(6, Duration.MINUTE))
@@ -498,7 +497,7 @@ public class MerlInsightRules extends Problem {
 
   CoexistenceGoal goal2m= new CoexistenceGoal.Builder()
       .named("preheat for ICC image")
-      .forAllTimeIn(planningHorizon.getHor())
+      .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIccHeatersOn)
                           .duration(Duration.of(15, Duration.MINUTE))
@@ -528,7 +527,7 @@ public class MerlInsightRules extends Problem {
 
   CoexistenceGoal goal2n= new CoexistenceGoal.Builder()
       .named("turn off heaters for ICC image")
-      .forAllTimeIn(planningHorizon.getHor())
+      .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIccHeatersOff)
                           .duration(Duration.of(10, Duration.SECONDS))
@@ -550,20 +549,20 @@ public class MerlInsightRules extends Problem {
     StateConstraintExpression sc1 = new StateConstraintExpression.Builder()
         .andBuilder()
         .name("CanberraSC")
-        .equal(mission.getResource("/dsn/visible/Canberra"), SerializedValue.of("InView"))
-        .equal(mission.getResource("/dsn/allocated/Canberra"), SerializedValue.of("Allocated"))
+        .equal(getResource("/dsn/visible/Canberra"), SerializedValue.of("InView"))
+        .equal(getResource("/dsn/allocated/Canberra"), SerializedValue.of("Allocated"))
         .build();
     StateConstraintExpression sc2 = new StateConstraintExpression.Builder()
         .andBuilder()
         .name("MadridSC")
-        .equal(mission.getResource("/dsn/visible/Madrid"), SerializedValue.of("InView"))
-        .equal(mission.getResource("/dsn/allocated/Madrid"), SerializedValue.of("Allocated"))
+        .equal(getResource("/dsn/visible/Madrid"), SerializedValue.of("InView"))
+        .equal(getResource("/dsn/allocated/Madrid"), SerializedValue.of("Allocated"))
         .build();
     StateConstraintExpression sc3 = new StateConstraintExpression.Builder()
         .andBuilder()
         .name("GoldstoneSC")
-        .equal(mission.getResource("/dsn/visible/Goldstone"), SerializedValue.of("InView"))
-        .equal(mission.getResource("/dsn/allocated/Goldstone"), SerializedValue.of("Allocated"))
+        .equal(getResource("/dsn/visible/Goldstone"), SerializedValue.of("InView"))
+        .equal(getResource("/dsn/allocated/Goldstone"), SerializedValue.of("Allocated"))
         .build();
 
     var disj = new StateConstraintExpressionDisjunction(List.of(sc1,sc2,sc3), "disjunction");
@@ -603,7 +602,7 @@ public class MerlInsightRules extends Problem {
 
   CoexistenceGoal goal3a= new CoexistenceGoal.Builder()
       .named("xbandactivegoal")
-      .forAllTimeIn(planningHorizon.getHor())
+      .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeXbandActive)
                           .build())
@@ -633,7 +632,7 @@ public class MerlInsightRules extends Problem {
 
     CoexistenceGoal goal3b= new CoexistenceGoal.Builder()
         .named("xbandprepgoal")
-        .forAllTimeIn(planningHorizon.getHor())
+        .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(actTypeXbandPrep)
                             .duration(prepDur)
@@ -661,7 +660,7 @@ public class MerlInsightRules extends Problem {
 
     CoexistenceGoal goal3c= new CoexistenceGoal.Builder()
         .named("xbandcleanupgoal")
-        .forAllTimeIn(planningHorizon.getHor())
+        .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(actTypeXbandCleanup)
                             .duration(cleanupDur)
@@ -703,10 +702,10 @@ public class MerlInsightRules extends Problem {
 
     CoexistenceGoal goal3d= new CoexistenceGoal.Builder()
         .named("xbancommgoal")
-        .forAllTimeIn(planningHorizon.getHor())
+        .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(actTypeXbandCommched)
-                            .withArgument("DSNTrack", mission.getResource("/dsn/allocstation"))
+                            .withArgument("DSNTrack", getResource("/dsn/allocstation"))
                             .withArgument("xbandAntSel", SerializedValue.of("EAST_MGA"))
                             .build())
         .forEach(tre2)

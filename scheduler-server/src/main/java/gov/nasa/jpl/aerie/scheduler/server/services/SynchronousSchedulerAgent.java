@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
@@ -7,7 +8,6 @@ import gov.nasa.jpl.aerie.scheduler.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.Goal;
 import gov.nasa.jpl.aerie.scheduler.HuginnConfiguration;
 import gov.nasa.jpl.aerie.scheduler.JarClassLoader;
-import gov.nasa.jpl.aerie.scheduler.MissionModelWrapper;
 import gov.nasa.jpl.aerie.scheduler.Plan;
 import gov.nasa.jpl.aerie.scheduler.PrioritySolver;
 import gov.nasa.jpl.aerie.scheduler.Problem;
@@ -111,15 +111,14 @@ public record SynchronousSchedulerAgent(
    * @return a problem specification ready for passing to the scheduler
    */
   private Problem createProblem(final PlanMetadata planMetadata) {
-    final var mission = loadMissionModel(planMetadata);
-    final var problem = new Problem(mission);
-
+    final var missionModel = loadMissionModel(planMetadata);
+    final var problem = new Problem(missionModel, planMetadata.horizon());
     //seed the problem with the initial plan contents
-    problem.setInitialPlan(loadInitialPlan(planMetadata, mission));
+    problem.setInitialPlan(loadInitialPlan(planMetadata, problem));
 
     //apply constraints/goals to the problem
-    loadConstraints(planMetadata, mission).forEach(problem.getMissionModel()::add);
-    loadGoals(planMetadata, mission).forEach(problem::add);
+    loadConstraints(planMetadata, missionModel).forEach(problem::add);
+    loadGoals(planMetadata, missionModel).forEach(problem::add);
 
     return problem;
   }
@@ -133,7 +132,7 @@ public record SynchronousSchedulerAgent(
    * @throws ResultsProtocolFailure when the constraints could not be loaded, or the data stores could not be
    *     reached
    */
-  private List<GlobalConstraint> loadConstraints(final PlanMetadata planMetadata, final MissionModelWrapper mission) {
+  private List<GlobalConstraint> loadConstraints(final PlanMetadata planMetadata, final MissionModel<?> mission) {
     //TODO: is the plan and mission model enough to find the relevant constraints? (eg what about sandbox toggling?)
     //TODO: load global constraints from scheduler data store?
     //TODO: load activity type constraints from somewhere (scheduler store? mission model?)
@@ -145,17 +144,17 @@ public record SynchronousSchedulerAgent(
    * collects the scheduling goals that apply to the current scheduling run on the target plan
    *
    * @param planMetadata details of the plan container whose associated goals should be collected
-   * @param mission the mission model that the plan adheres to, possibly associating additional relevant goals
+   * @param missionModel the mission model that the plan adheres to, possibly associating additional relevant goals
    * @return the list of goals relevant to the target plan
    * @throws ResultsProtocolFailure when the goals could not be loaded, or the goal data store could not be reached
    */
-  private List<Goal> loadGoals(final PlanMetadata planMetadata, final MissionModelWrapper mission) {
+  private List<Goal> loadGoals(final PlanMetadata planMetadata, final MissionModel<?> missionModel) {
     //TODO: is the plan and mission model enough to find the relevant goals? (eg what about sandbox goals?)
     //TODO: somehow apply user control over which scheduling rules to actually run vs just check
     //TODO: load scheduling goals from scheduler data store into problem
     try {
       //for v0.10.0, load all hardcoded scheduling goals from a jar into the problem
-      final var problems = JarClassLoader.loadProblemsFromJar(this.rulesJarPath.toString(), mission);
+      final var problems = JarClassLoader.loadProblemsFromJar(this.rulesJarPath.toString(), missionModel);
       return problems.stream().map(Problem::getGoals).flatMap(Collection::stream).collect(Collectors.toList());
     } catch (IOException | ClassNotFoundException | InvocationTargetException | InstantiationException e) {
       //TODO: class-loader related exceptions will not be relevant once interim jar-based rule loading is replaced
@@ -185,15 +184,15 @@ public record SynchronousSchedulerAgent(
    * load the activity instance content of the specified merlin plan into scheduler-ready objects
    *
    * @param planMetadata metadata of plan container to load from
-   * @param mission the mission model that the plan adheres to
+   * @param problem the problem that the plan adheres to
    * @return a plan with all activity instances loaded from the target merlin plan container
    * @throws ResultsProtocolFailure when the requested plan cannot be loaded, or the target plan revision has
    *     changed, or aerie could not be reached
    */
-  private Plan loadInitialPlan(final PlanMetadata planMetadata, final MissionModelWrapper mission) {
+  private Plan loadInitialPlan(final PlanMetadata planMetadata, final Problem problem) {
     //TODO: maybe paranoid check if plan rev has changed since original metadata?
     try {
-      return merlinService.getPlanActivities(planMetadata, mission);
+      return merlinService.getPlanActivities(planMetadata, problem);
     } catch (Exception e) {
       throw new ResultsProtocolFailure(e);
     }
@@ -208,7 +207,7 @@ public record SynchronousSchedulerAgent(
    * @throws ResultsProtocolFailure when the mission model could not be loaded: eg jar file not found, declared
    *     version/name in jar does not match, or aerie filesystem could not be mounted
    */
-  private MissionModelWrapper loadMissionModel(final PlanMetadata plan) {
+  private MissionModel<?> loadMissionModel(final PlanMetadata plan) {
     try {
       final var missionConfig = SerializedValue.of(plan.modelConfiguration());
       final var modelJarPath = modelJarsDir.resolve(plan.modelPath());
@@ -217,7 +216,7 @@ public record SynchronousSchedulerAgent(
           missionConfig, modelJarPath, plan.modelName(), plan.modelVersion());
 
       //TODO: unify model access patterns to avoid disparate wrappers/facades
-      return new MissionModelWrapper(aerieModel, plan.horizon());
+      return aerieModel;
     } catch (MissionModelLoader.MissionModelLoadException e) {
       throw new ResultsProtocolFailure(e);
     }
@@ -229,13 +228,12 @@ public record SynchronousSchedulerAgent(
    * this will obsolete the locally cached planMetadata since the plan revision will change!
    *
    * @param planMetadata metadata of plan container to store into; outdated after return
-   * @param mission the mission model that the plan adheres to
    * @param newPlan plan with all activity instances that should be stored to target merlin plan container
    * @throws ResultsProtocolFailure when the plan could not be stored to aerie, the target plan revision has
    *     changed, or aerie could not be reached
    */
   //TODO: remove mission model from signature: isn't really required (just passed to allow ctor of AerieController)
-  private void storeFinalPlan(final PlanMetadata planMetadata, final MissionModelWrapper mission, final Plan newPlan) {
+  private void storeFinalPlan(final PlanMetadata planMetadata, final Plan newPlan) {
     try {
       switch (this.outputMode) {
         case CreateNewOutputPlan -> merlinService.createNewPlanWithActivities(planMetadata, newPlan);

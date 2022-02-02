@@ -35,14 +35,13 @@ public class TestCardinalityGoal {
 
         .build();
 
-    MissionModelWrapper missionModel = new MissionModelWrapper();
-    Problem problem = new Problem(missionModel);
+    Problem problem = new Problem(null, null);
 
     problem.add(goal);
 
     HuginnConfiguration huginn = new HuginnConfiguration();
     final var solver = new PrioritySolver(huginn, problem);
-    var plan = new PlanInMemory(problem.getMissionModel());
+    var plan = new PlanInMemory();
 
 
     var evaluation = new Evaluation();
@@ -81,14 +80,13 @@ public class TestCardinalityGoal {
 
         .build();
 
-    MissionModelWrapper missionModel = new MissionModelWrapper();
-    Problem problem = new Problem(missionModel);
+    Problem problem = new Problem(null, null);
 
     problem.add(goal);
 
     HuginnConfiguration huginn = new HuginnConfiguration();
     final var solver = new PrioritySolver(huginn, problem);
-    var plan = new PlanInMemory(problem.getMissionModel());
+    var plan = new PlanInMemory();
 
 
     var evaluation = new Evaluation();
