@@ -112,10 +112,10 @@ import java.util.function.Predicate;
     final var declaration = (TypeElement) ((DeclaredType) attribute.getValue()).asElement();
     final var name = declaration.getSimpleName().toString();
     final var parameters = getExportParameters(declaration);
-    final List<ParameterValidationRecord> validations = List.of(); // TODO validation list is empty, not parsing those yet
+    final var validations = this.getExportValidations(declaration);
     final var mapper = getExportMapper(missionModelElement, declaration);
     final var defaultsStyle = getExportDefaultsStyle(declaration);
-    return Optional.of(new ConfigurationTypeRecord(name, declaration, parameters, List.of(), mapper, defaultsStyle));
+    return Optional.of(new ConfigurationTypeRecord(name, declaration, parameters, validations, mapper, defaultsStyle));
   }
 
   private List<TypeElement> getMissionModelMapperClasses(final PackageElement missionModelElement)
