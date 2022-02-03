@@ -3,8 +3,6 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.scheduler.aerie.AerieActivityInstance;
-import gov.nasa.jpl.aerie.scheduler.aerie.AerieActivityType;
 
 /**
  * criteria used to identify create activity instances in scheduling goals
@@ -205,13 +203,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
   }
 
   private ActivityInstance createInstanceForReal(String name, Window window, boolean instantiateVariableParameters) {
-    final ActivityInstance act;
-    if (type instanceof AerieActivityType) {
-      act = new AerieActivityInstance(name, (AerieActivityType) type);
-    } else {
-      act = new ActivityInstance(name, type);
-    }
-
+    final ActivityInstance act = new ActivityInstance(name, type);
     TaskNetwork tw = new TaskNetwork();
     TaskNetworkAdapter tnw = new TaskNetworkAdapter(tw);
     tnw.addAct(name);

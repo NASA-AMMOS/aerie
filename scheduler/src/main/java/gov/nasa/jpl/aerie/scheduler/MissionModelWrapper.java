@@ -85,17 +85,6 @@ public class MissionModelWrapper {
     return simFacade;
   }
 
-  /**
-   * adds a new state definition to the mission model
-   *
-   * @param stateDef IN the state definition to add to the mission model,
-   *     which must not already have a state definition with matching
-   *     identifier
-   * @param <T> the value type of the state
-   */
-  public <T extends Comparable<T>> void add(StateDefinition<T> stateDef) {
-  }
-
   public PlanningHorizon getPlanningHorizon(){
     return simFacade.getPlanningHorizon();
   }
