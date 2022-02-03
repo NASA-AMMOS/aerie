@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.List;
 
@@ -45,8 +44,10 @@ public class MissionModelWrapper {
     //add all activity types known to aerie to scheduler index
     //TODO: reduce duplicate activity type abstractions between aerie and scheduler
     if( missionModel != null ) {
-      missionModel.getTaskSpecificationTypes().keySet().stream()
-                  .map(ActivityType::new).forEach(this::add);
+      for(var taskType : missionModel.getTaskSpecificationTypes().entrySet()){
+        this.add(new ActivityType(taskType.getKey(), taskType.getValue()));
+      }
+
     }
   }
 
@@ -58,23 +59,8 @@ public class MissionModelWrapper {
     this(null, null);
   }
 
-  public ExternalState<Integer> getIntState(String name){
-    return simFacade.getIntResource(name);
-  }
-
-  public ExternalState<Duration> getDurState(String name){
-    return simFacade.getDurResource(name);
-  }
-
-  public ExternalState<Double> getDoubleState(String name){
-    return simFacade.getDoubleResource(name);
-  }
-  public ExternalState<Boolean> getBoolState(String name){
-    return simFacade.getBooleanResource(name);
-  }
-
-  public ExternalState<String> getStringState(String name){
-    return simFacade.getStringResource(name);
+  public ExternalState getResource(String name){
+    return simFacade.getResource(name);
   }
 
   public MissionModel<?> getMissionModel(){

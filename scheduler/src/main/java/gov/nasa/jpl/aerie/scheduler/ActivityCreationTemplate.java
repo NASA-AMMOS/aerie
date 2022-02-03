@@ -89,8 +89,8 @@ public class ActivityCreationTemplate extends ActivityExpression {
 
     protected DurationExpression parametricDur;
 
-    public Builder duration(@NotNull ExternalState<Duration> state, TimeExpression expr){
-      this.parametricDur = new DurationExpressionState(new StateQueryParam<>(state, expr));
+    public Builder duration(@NotNull ExternalState state, TimeExpression expr){
+      this.parametricDur = new DurationExpressionState(new StateQueryParam(state, expr));
       return this;
     }
 
@@ -107,6 +107,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
       durationIn = template.durationRange;
       startsOrEndsIn = template.startOrEndRange;
       parameters = template.parameters;
+      variableParameters = template.variableParameters;
       parametricDur = template.parametricDur;
       return getThis();
     }
@@ -141,6 +142,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
       //        default value
 
       template.parameters = parameters;
+      template.variableParameters = variableParameters;
       return template;
     }
 
@@ -201,6 +203,8 @@ public class ActivityCreationTemplate extends ActivityExpression {
 
   private ActivityInstance createInstanceForReal(String name, Window window, boolean instantiateVariableParameters) {
     final ActivityInstance act = new ActivityInstance(type);
+    act.setParameters(parameters);
+    act.setVariableParameters(variableParameters);
     TaskNetwork tw = new TaskNetwork();
     TaskNetworkAdapter tnw = new TaskNetworkAdapter(tw);
     tnw.addAct(name);
@@ -237,14 +241,9 @@ public class ActivityCreationTemplate extends ActivityExpression {
       }
     }
 
-    for (var param : parameters.entrySet()) {
-      if (param.getValue() instanceof ExternalState && instantiateVariableParameters) {
+    for (var param : variableParameters.entrySet()) {
+      if (instantiateVariableParameters) {
         act.instantiateVariableParameter(param.getKey());
-      } else if(param.getValue() instanceof StateQueryParam && instantiateVariableParameters) {
-        act.instantiateVariableParameter(param.getKey());
-      } else{
-        //if not variable OR variable and not to be instantiated
-        act.addParameter(param.getKey(), param.getValue());
       }
     }
     return act;

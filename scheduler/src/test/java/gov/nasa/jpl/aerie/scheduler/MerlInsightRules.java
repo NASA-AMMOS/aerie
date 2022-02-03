@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,7 +48,7 @@ public class MerlInsightRules extends Problem {
       var curStation = values[index];
 
       var actInstance = new ActivityInstance(actType2, time, Duration.min(planningHorizon.getHor().end.minus(time),period));
-      actInstance.addParameter("dsnStation", curStation);
+      actInstance.addParameter("dsnStation", SerializedValue.of(curStation));
       actList.add(actInstance);
       index +=1;
 
@@ -58,7 +59,7 @@ public class MerlInsightRules extends Problem {
       if(curAlloc == ratioAlloc){
         //allocate this to insight
         var actInstanceAlloc = new ActivityInstance(actType1, time, Duration.min(planningHorizon.getHor().end.minus(time),period));
-        actInstanceAlloc.addParameter("dsnStation", curStation);
+        actInstanceAlloc.addParameter("dsnStation", SerializedValue.of(curStation));
         actList.add(actInstanceAlloc);
         curAlloc = 1;
       }
@@ -103,7 +104,7 @@ public class MerlInsightRules extends Problem {
 
     List<ActivityInstance> turnONFFMonitoring = List.of(
         new ActivityInstance(actT1,planningHorizon.getStartAerie()
-                                                                         .plus(Duration.of(1,Duration.MINUTE)),
+                                                  .plus(Duration.of(1,Duration.MINUTE)),
                              Duration.of(1,Duration.MINUTE)));
     ProceduralCreationGoal pro = new ProceduralCreationGoal.Builder()
         .named("TurnOnAndOFFMonitoring")
@@ -114,15 +115,15 @@ public class MerlInsightRules extends Problem {
     goals.add(pro);
 
     var sce = new StateConstraintExpression.Builder()
-        .equal(mission.getStringState("/hp3/ssaState"), "Monitoring")
+        .equal(mission.getResource("/hp3/ssaState"), SerializedValue.of("Monitoring"))
         .build();
 
     var HP3Acts = new ActivityCreationTemplate.Builder()
         .ofType(HP3actType)
         .duration(
-            mission.getDurState("/hp3/currentParams/PARAM_HP3_MON_TEMP_DURATION"),
+            mission.getResource("/hp3/currentParams/PARAM_HP3_MON_TEMP_DURATION"),
             TimeExpression.atStart())
-        .withParameter("setNewSSATime", true)
+        .withParameter("setNewSSATime", SerializedValue.of(true))
         .build();
 
     RecurrenceGoal goal1a = new RecurrenceGoal.Builder()
@@ -332,9 +333,9 @@ public class MerlInsightRules extends Problem {
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDCImage)
                           .duration(Duration.of(6, Duration.MINUTE))
-                          .withParameter("nFrames",1)
-                          .withParameter("apid", "APID_IDC_6")
-                          .withParameter("compQuality", 97)
+                          .withParameter("nFrames",SerializedValue.of(1))
+                          .withParameter("apid", SerializedValue.of("APID_IDC_6"))
+                          .withParameter("compQuality", SerializedValue.of(97))
                           .build())
       .forEach(ActivityExpression.ofType(atGrapple))
       .withPriority(6)
@@ -355,9 +356,9 @@ public class MerlInsightRules extends Problem {
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDCImage)
                           .duration(Duration.of(6, Duration.MINUTE))
-                          .withParameter("nFrames",1)
-                          .withParameter("apid","APID_IDC_6")
-                          .withParameter("compQuality", 97)
+                          .withParameter("nFrames",SerializedValue.of(1))
+                          .withParameter("apid",SerializedValue.of("APID_IDC_6"))
+                          .withParameter("compQuality", SerializedValue.of(97))
                           .build())
       .forEach(ActivityExpression.ofType(atGrapple))
       .withPriority(6)
@@ -446,9 +447,9 @@ public class MerlInsightRules extends Problem {
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeICCImages)
                           .duration(Duration.of(6, Duration.MINUTE))
-                          .withParameter("nFrames",1)
-                          .withParameter("apid","APID_ICC_6")
-                          .withParameter("compQuality", 95)
+                          .withParameter("nFrames",SerializedValue.of(1))
+                          .withParameter("apid",SerializedValue.of("APID_ICC_6"))
+                          .withParameter("compQuality", SerializedValue.of(95))
                           .build())
       .forEach(firstIdaMoveArm)
       .withPriority(4)
@@ -470,9 +471,9 @@ public class MerlInsightRules extends Problem {
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeICCImages)
                           .duration(Duration.of(6, Duration.MINUTE))
-                          .withParameter("nFrames",1)
-                          .withParameter("apid","APID_ICC_6")
-                          .withParameter("compQuality", 95)
+                          .withParameter("nFrames",SerializedValue.of(1))
+                          .withParameter("apid",SerializedValue.of("APID_ICC_6"))
+                          .withParameter("compQuality", SerializedValue.of(95))
                           .build())
       .forEach(secondIdaMoveArm)
       .withPriority(4)
@@ -549,20 +550,20 @@ public class MerlInsightRules extends Problem {
     StateConstraintExpression sc1 = new StateConstraintExpression.Builder()
         .andBuilder()
         .name("CanberraSC")
-        .equal(mission.getStringState("/dsn/visible/Canberra"), "InView")
-        .equal(mission.getStringState("/dsn/allocated/Canberra"), "Allocated")
+        .equal(mission.getResource("/dsn/visible/Canberra"), SerializedValue.of("InView"))
+        .equal(mission.getResource("/dsn/allocated/Canberra"), SerializedValue.of("Allocated"))
         .build();
     StateConstraintExpression sc2 = new StateConstraintExpression.Builder()
         .andBuilder()
         .name("MadridSC")
-        .equal(mission.getStringState("/dsn/visible/Madrid"), "InView")
-        .equal(mission.getStringState("/dsn/allocated/Madrid"), "Allocated")
+        .equal(mission.getResource("/dsn/visible/Madrid"), SerializedValue.of("InView"))
+        .equal(mission.getResource("/dsn/allocated/Madrid"), SerializedValue.of("Allocated"))
         .build();
     StateConstraintExpression sc3 = new StateConstraintExpression.Builder()
         .andBuilder()
         .name("GoldstoneSC")
-        .equal(mission.getStringState("/dsn/visible/Goldstone"), "InView")
-        .equal(mission.getStringState("/dsn/allocated/Goldstone"), "Allocated")
+        .equal(mission.getResource("/dsn/visible/Goldstone"), SerializedValue.of("InView"))
+        .equal(mission.getResource("/dsn/allocated/Goldstone"), SerializedValue.of("Allocated"))
         .build();
 
     var disj = new StateConstraintExpressionDisjunction(List.of(sc1,sc2,sc3), "disjunction");
@@ -573,7 +574,7 @@ public class MerlInsightRules extends Problem {
         .thenFilter(Filters.minDuration(Duration.of(20, Duration.MINUTE)))
         .build();
 
-    Duration prepDur =Duration.of(5, Duration.MINUTE).plus(Duration.of(23, Duration.SECONDS));
+    Duration prepDur = Duration.of(5, Duration.MINUTE).plus(Duration.of(23, Duration.SECONDS));
     Duration cleanupDur =Duration.of(19, Duration.SECONDS);
 
 
@@ -705,8 +706,8 @@ public class MerlInsightRules extends Problem {
         .forAllTimeIn(planningHorizon.getHor())
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(actTypeXbandCommched)
-                            .withParameter("DSNTrack",mission.getStringState("/dsn/allocstation"))
-                            .withParameter("xbandAntSel", "EAST_MGA")
+                            .withParameter("DSNTrack",mission.getResource("/dsn/allocstation"))
+                            .withParameter("xbandAntSel", SerializedValue.of("EAST_MGA"))
                             .build())
         .forEach(tre2)
         .withPriority(3)

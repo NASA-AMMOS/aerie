@@ -90,6 +90,12 @@ public class PrioritySolver implements Solver {
     for(var act: acts){
       //if some parameters are left uninstantiated, this is the last moment to do it
       act.instantiateVariableParameters();
+      var duration = act.getDuration();
+      if(duration != null && duration.longerThan(this.config.getHorizon().getEndAerie())){
+        System.out.println("Activity " + act.toString() + " is planned to finish after the end of the planning horizon, not simulating. Extend the planning horizon.");
+        allGood = false;
+        break;
+      }
       plan.add(act);
       if(checkSimBeforeInsertingActivities) {
         getSimFacade().simulatePlan(plan);

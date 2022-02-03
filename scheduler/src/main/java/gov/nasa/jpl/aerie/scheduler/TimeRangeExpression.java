@@ -113,13 +113,13 @@ public class TimeRangeExpression {
   protected List<TimeRangeExpression> timeRangeExpressions;
   protected List<Object> filtersAndTransformers;
   protected List<StateConstraintExpression> stateExpr;
-  protected List<ExternalState<?>> constantsStates;
+  protected List<ExternalState> constantsStates;
   private ActivityExpression actTemplate;
 
   //TODO:unused now, not sure it is useful
   protected Range<Time> horizon;
 
-  public static TimeRangeExpression constantValuesOf(ExternalState<?> sce) {
+  public static TimeRangeExpression constantValuesOf(ExternalState sce) {
     TimeRangeExpression tre = new Builder().ofEachValue(sce).build();
     return tre;
   }
@@ -137,7 +137,7 @@ public class TimeRangeExpression {
   public static class Builder {
     List<Object> filtersAndTransformers = new ArrayList<Object>();
     List<StateConstraintExpression> stateExpr = new ArrayList<StateConstraintExpression>();
-    List<ExternalState<?>> constantsStates = new ArrayList<ExternalState<?>>();
+    List<ExternalState> constantsStates = new ArrayList<ExternalState>();
     List<TimeRangeExpression> timeRangeExpressions = new ArrayList<TimeRangeExpression>();
 
     List<Windows> constantWin = new ArrayList<Windows>();
@@ -207,7 +207,7 @@ public class TimeRangeExpression {
      * @param <T> x
      * @return x
      */
-    public <T> Builder ofEachValue(ExternalState<T> state) {
+    public <T> Builder ofEachValue(ExternalState state) {
       this.constantsStates.add(state);
       return getThis();
 

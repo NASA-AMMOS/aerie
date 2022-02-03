@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
  *
  * @param <T> the type of the state on which the constraint applies
  */
-public class StateConstraintAbove<T extends Comparable<T>> extends StateConstraint<T> {
+public class StateConstraintAbove<T extends Comparable<T>> extends StateConstraint {
 
   protected StateConstraintAbove() {
     cache = new ValidityCache() {

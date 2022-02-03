@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,20 +45,19 @@ public class TestStateConstraints {
 
   @Test
   public void testImpliesBoolean() {
-    Map<OrbitPhasesEnum, Boolean> mapping = new HashMap<>();
-    mapping.put(OrbitPhasesEnum.ENCOUNTER, true);
-    mapping.put(OrbitPhasesEnum.NOTENCOUNTER, false);
-    ImpliesFromState<OrbitPhasesEnum, Boolean> lunarSomething = new ImpliesFromState<OrbitPhasesEnum, Boolean>(
+    Map<SerializedValue, SerializedValue> mapping = new HashMap<>();
+    mapping.put(SerializedValue.of(OrbitPhasesEnum.ENCOUNTER.name()), SerializedValue.of(true));
+    mapping.put(SerializedValue.of(OrbitPhasesEnum.NOTENCOUNTER.name()), SerializedValue.of(false));
+    ImpliesFromState lunarSomething = new ImpliesFromState(
         encounterEnumState,
         mapping);
 
     StateConstraintExpression constraintOnImpliesBool = new StateConstraintExpression.Builder().equal(
         lunarSomething,
-        false).build();
+        SerializedValue.of(false)).build();
     StateConstraintExpression constraintEncounter = new StateConstraintExpression.Builder()
-        .equal(
-            encounterEnumState,
-            OrbitPhasesEnum.NOTENCOUNTER)
+        .equal(encounterEnumState,
+               SerializedValue.of(OrbitPhasesEnum.NOTENCOUNTER.name()))
         .build();
 
 
@@ -74,19 +74,15 @@ public class TestStateConstraints {
 
   @Test
   public void testor() {
-    StateConstraintExpression approachStateConstraint1 = new StateConstraintExpression.Builder().andBuilder()
-                                                                                                .equal(
-                                                                                                    encounterEnumState,
-                                                                                                    OrbitPhasesEnum.ENCOUNTER)
-                                                                                                .between(
-                                                                                                    altitudeIntegerState,
-                                                                                                    20,
-                                                                                                    50)
-                                                                                                .build();
+    StateConstraintExpression approachStateConstraint1 =
+        new StateConstraintExpression.Builder().andBuilder()
+                                               .equal(encounterEnumState, SerializedValue.of(OrbitPhasesEnum.ENCOUNTER.name()))
+                                               .between(altitudeIntegerState,SerializedValue.of(20),SerializedValue.of(50))
+                                               .build();
     assert (approachStateConstraint1.getClass() == StateConstraintExpressionConjunction.class);
 
     StateConstraintExpression approachStateConstraint2 = new StateConstraintExpression.Builder()
-        .above(altitudeDerivativeState, 0.0)
+        .above(altitudeDerivativeState, SerializedValue.of(0.0))
         .build();
 
     assert (approachStateConstraint2.getClass() == StateConstraintExpressionDisjunction.class);
@@ -130,9 +126,9 @@ public class TestStateConstraints {
 
     StateConstraintExpression approachStateConstraint1 = new StateConstraintExpression.Builder()
         .andBuilder()
-        .equal(encounterEnumState, OrbitPhasesEnum.ENCOUNTER)
-        .between(altitudeIntegerState, 20, 50)
-        .above(altitudeDerivativeState, 0.0)
+        .equal(encounterEnumState, SerializedValue.of(OrbitPhasesEnum.ENCOUNTER.name()))
+        .between(altitudeIntegerState, SerializedValue.of(20),SerializedValue.of(50))
+        .above(altitudeDerivativeState, SerializedValue.of(0.0))
         .build();
 
     CoexistenceGoal cg = new CoexistenceGoal.Builder()
@@ -166,9 +162,9 @@ public class TestStateConstraints {
 
     StateConstraintExpression approachStateConstraint = new StateConstraintExpression.Builder()
         .andBuilder()
-        .equal(encounterEnumState, OrbitPhasesEnum.ENCOUNTER)
-        .between(altitudeIntegerState, 20, 50)
-        .above(altitudeDerivativeState, 0.0)
+        .equal(encounterEnumState, SerializedValue.of(OrbitPhasesEnum.ENCOUNTER.name()))
+        .between(altitudeIntegerState, SerializedValue.of(20), SerializedValue.of(50))
+        .above(altitudeDerivativeState, SerializedValue.of(0.0))
         .build();
 
     final var activityTypeImage = new ActivityType("EISImage");
@@ -212,13 +208,13 @@ public class TestStateConstraints {
 
     StateConstraintExpression approachStateConstraint1 = new StateConstraintExpression.Builder()
         .orBuilder()
-        .above(altitudeDerivativeState, 0.0)
+        .above(altitudeDerivativeState, SerializedValue.of(0.0))
         .build();
 
     StateConstraintExpression approachStateConstraint2 = new StateConstraintExpression.Builder()
         .orBuilder()
-        .equal(encounterEnumState, OrbitPhasesEnum.ENCOUNTER)
-        .between(altitudeIntegerState, 20, 50)
+        .equal(encounterEnumState, SerializedValue.of(OrbitPhasesEnum.ENCOUNTER.name()))
+        .between(altitudeIntegerState, SerializedValue.of(20), SerializedValue.of(50))
         .build();
 
     StateConstraintExpression approachStateConstraint = new StateConstraintExpression.Builder()
@@ -244,9 +240,9 @@ public class TestStateConstraints {
 
     StateConstraintExpression approachStateConstraint = new StateConstraintExpression.Builder()
         .andBuilder()
-        .equal(encounterEnumState, OrbitPhasesEnum.ENCOUNTER)
-        .between(altitudeIntegerState, 20, 50)
-        .above(altitudeDerivativeState, 0.0)
+        .equal(encounterEnumState, SerializedValue.of(OrbitPhasesEnum.ENCOUNTER.name()))
+        .between(altitudeIntegerState, SerializedValue.of(20), SerializedValue.of(50))
+        .above(altitudeDerivativeState, SerializedValue.of(0.0))
         .build();
 
     final var activityTypeImageWithConstraint = new ActivityType("EISImageWithConstraints", approachStateConstraint);
@@ -302,7 +298,7 @@ public class TestStateConstraints {
         .build();
     TimeRangeExpression tre = new TimeRangeExpression.Builder()
         .ofEachValue(encounterEnumState)
-        .from(new StateConstraintExpression.Builder().lessThan(altitudeDerivativeState,1.).build())
+        .from(new StateConstraintExpression.Builder().lessThan(altitudeDerivativeState, SerializedValue.of(1.)).build())
         .build();
 
     CoexistenceGoal cg = new CoexistenceGoal.Builder()
@@ -328,25 +324,26 @@ public class TestStateConstraints {
   /**
    * Hardcoded state describing some two-value orbit phases
    */
-  public class EncounterEnumState extends MockState<OrbitPhasesEnum> {
+  public class EncounterEnumState extends MockState<String> {
 
     public EncounterEnumState(PlanningHorizon horizon) {
-      values = new HashMap<Window, OrbitPhasesEnum>() {{
+      type = SupportedTypes.STRING;
+      values = new HashMap<Window, String>() {{
         put(
             Window.betweenClosedOpen(horizon.getHor().start, Time.fromString("2025-180T00:00:00.000", horizon)),
-            OrbitPhasesEnum.NOTENCOUNTER);
+            OrbitPhasesEnum.NOTENCOUNTER.name());
         put(
             Window.betweenClosedOpen(Time.fromString("2025-180T00:00:00.000", horizon), Time.fromString("2025-185T00:00:00.000", horizon)),
-            OrbitPhasesEnum.ENCOUNTER);
+            OrbitPhasesEnum.ENCOUNTER.name());
         put(
             Window.betweenClosedOpen(Time.fromString("2025-185T00:00:00.000", horizon), Time.fromString("2025-200T00:00:00.000", horizon)),
-            OrbitPhasesEnum.NOTENCOUNTER);
+            OrbitPhasesEnum.NOTENCOUNTER.name());
         put(
             Window.betweenClosedOpen(Time.fromString("2025-200T00:00:00.000", horizon), Time.fromString("2025-205T00:00:00.000", horizon)),
-            OrbitPhasesEnum.ENCOUNTER);
+            OrbitPhasesEnum.ENCOUNTER.name());
         put(
             Window.betweenClosedOpen(Time.fromString("2025-205T00:00:00.000", horizon), horizon.getHor().end),
-            OrbitPhasesEnum.NOTENCOUNTER);
+            OrbitPhasesEnum.NOTENCOUNTER.name());
       }};
     }
   }
@@ -354,16 +351,17 @@ public class TestStateConstraints {
   /**
    * Hardcoded state describing some altitude state
    */
-  public class AltitudeIntegerState extends MockState<Integer> {
+  public class AltitudeIntegerState extends MockState<Long> {
 
     public AltitudeIntegerState(PlanningHorizon horizon) {
-      values = new HashMap<Window, Integer>() {{
-        put(Window.betweenClosedOpen(horizon.getHor().start, Time.fromString("2025-180T00:00:00.000", horizon)), 10);
-        put(Window.betweenClosedOpen(Time.fromString("2025-180T00:00:00.000", horizon), Time.fromString("2025-183T00:00:00.000", horizon)), 20);
-        put(Window.betweenClosedOpen(Time.fromString("2025-183T00:00:00.000", horizon), Time.fromString("2025-185T00:00:00.000", horizon)), 30);
-        put(Window.betweenClosedOpen(Time.fromString("2025-185T00:00:00.000", horizon), Time.fromString("2025-202T00:00:00.000", horizon)), 40);
-        put(Window.betweenClosedOpen(Time.fromString("2025-202T00:00:00.000", horizon), Time.fromString("2025-203T00:00:00.000", horizon)), 50);
-        put(Window.betweenClosedOpen(Time.fromString("2025-203T00:00:00.000", horizon), horizon.getHor().end), 60);
+      type = SupportedTypes.LONG;
+      values = new HashMap<Window, Long>() {{
+        put(Window.betweenClosedOpen(horizon.getHor().start, Time.fromString("2025-180T00:00:00.000", horizon)), 10L);
+        put(Window.betweenClosedOpen(Time.fromString("2025-180T00:00:00.000", horizon), Time.fromString("2025-183T00:00:00.000", horizon)), 20L);
+        put(Window.betweenClosedOpen(Time.fromString("2025-183T00:00:00.000", horizon), Time.fromString("2025-185T00:00:00.000", horizon)), 30L);
+        put(Window.betweenClosedOpen(Time.fromString("2025-185T00:00:00.000", horizon), Time.fromString("2025-202T00:00:00.000", horizon)), 40L);
+        put(Window.betweenClosedOpen(Time.fromString("2025-202T00:00:00.000", horizon), Time.fromString("2025-203T00:00:00.000", horizon)), 50L);
+        put(Window.betweenClosedOpen(Time.fromString("2025-203T00:00:00.000", horizon), horizon.getHor().end), 60L);
       }};
     }
 
@@ -375,6 +373,7 @@ public class TestStateConstraints {
   public class AltitudeDerivativeState extends MockState<Double> {
 
     public AltitudeDerivativeState(PlanningHorizon horizon) {
+      type = SupportedTypes.REAL;
       values = new HashMap<Window, Double>() {{
         put(Window.betweenClosedOpen(horizon.getHor().start, Time.fromString("2025-180T00:00:00.000", horizon)), 0.0);
         put(Window.betweenClosedOpen(Time.fromString("2025-180T00:00:00.000", horizon), Time.fromString("2025-185T00:00:00.000", horizon)), 0.0);

@@ -45,6 +45,7 @@ public class ActivityExpressionDisjunction extends ActivityExpression {
       startsOrEndsIn = template.startOrEndRange;
       parameters = template.parameters;
       exprs = template.actExpressions;
+      variableParameters = template.variableParameters;
       return getThis();
     }
 
