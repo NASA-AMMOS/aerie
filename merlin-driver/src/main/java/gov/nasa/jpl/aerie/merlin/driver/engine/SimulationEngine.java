@@ -524,6 +524,14 @@ public final class SimulationEngine implements AutoCloseable {
                                  serializedTimeline);
   }
 
+  public Duration getTaskDuration(TaskId taskId){
+    final var state = tasks.get(taskId);
+    if (state instanceof ExecutionState.Terminated e) {
+      return e.joinOffset().minus(e.startOffset());
+    }
+    throw new IllegalStateException("Asking for the duration of unfinished task");
+  }
+
   @SuppressWarnings("unchecked")
   private static <DirectiveReturn, TaskReturn> SerializedValue serializeReturnValue(
       final Directive<?, ?, DirectiveReturn> directive,
