@@ -106,8 +106,8 @@ public class ActivityCreationTemplate extends ActivityExpression {
       endsIn = template.endRange;
       durationIn = template.durationRange;
       startsOrEndsIn = template.startOrEndRange;
-      parameters = template.parameters;
-      variableParameters = template.variableParameters;
+      arguments = template.arguments;
+      variableArguments = template.variableArguments;
       parametricDur = template.parametricDur;
       return getThis();
     }
@@ -141,8 +141,8 @@ public class ActivityCreationTemplate extends ActivityExpression {
       //REVIEW: probably want to store permissible rane separate from creation
       //        default value
 
-      template.parameters = parameters;
-      template.variableParameters = variableParameters;
+      template.arguments = arguments;
+      template.variableArguments = variableArguments;
       return template;
     }
 
@@ -187,12 +187,12 @@ public class ActivityCreationTemplate extends ActivityExpression {
    * @return
    */
   public @NotNull
-  ActivityInstance createActivity(String name, Windows windows, boolean instantiateVariableParameters) {
+  ActivityInstance createActivity(String name, Windows windows, boolean instantiateVariableArguments) {
     //REVIEW: how to properly export any flexibility to instance?
 
     for (var window : windows) {
       //success = STNProcess(window);
-      var act = createInstanceForReal(name, window, instantiateVariableParameters);
+      var act = createInstanceForReal(name, window, instantiateVariableArguments);
       if (act!=null) {
         return act;
       }
@@ -201,10 +201,10 @@ public class ActivityCreationTemplate extends ActivityExpression {
 
   }
 
-  private ActivityInstance createInstanceForReal(String name, Window window, boolean instantiateVariableParameters) {
+  private ActivityInstance createInstanceForReal(String name, Window window, boolean instantiateVariableArguments) {
     final ActivityInstance act = new ActivityInstance(type);
-    act.setParameters(parameters);
-    act.setVariableParameters(variableParameters);
+    act.setArguments(arguments);
+    act.setVariableArguments(variableArguments);
     TaskNetwork tw = new TaskNetwork();
     TaskNetworkAdapter tnw = new TaskNetworkAdapter(tw);
     tnw.addAct(name);
@@ -241,9 +241,9 @@ public class ActivityCreationTemplate extends ActivityExpression {
       }
     }
 
-    for (var param : variableParameters.entrySet()) {
-      if (instantiateVariableParameters) {
-        act.instantiateVariableParameter(param.getKey());
+    for (var param : variableArguments.entrySet()) {
+      if (instantiateVariableArguments) {
+        act.instantiateVariableArgument(param.getKey());
       }
     }
     return act;

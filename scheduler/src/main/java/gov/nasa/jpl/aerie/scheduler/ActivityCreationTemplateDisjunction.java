@@ -47,9 +47,9 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
    */
   @Override
   public @NotNull
-  ActivityInstance createActivity(String name, Windows windows, boolean instantiateVariableParameters) {
+  ActivityInstance createActivity(String name, Windows windows, boolean instantiateVariableArguments) {
     //TODO: returns first ACT of disjunction, change it
-    return acts.get(0).createActivity(name, windows, instantiateVariableParameters);
+    return acts.get(0).createActivity(name, windows, instantiateVariableArguments);
 
   }
 
@@ -103,7 +103,7 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
       endsIn = template.endRange;
       durationIn = template.durationRange;
       startsOrEndsIn = template.startOrEndRange;
-      parameters = template.parameters;
+      arguments = template.arguments;
       exprs = template.acts;
       return getThis();
     }
@@ -142,11 +142,11 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
           //}
           expr.startOrEndRange = startsOrEndsIn;
         }
-        if (parameters.size() > 0) {
+        if (arguments.size() > 0) {
           // if(expr.parameters.size()>0){
           //    throw new IllegalArgumentException("Overdefined activity expression");
           //}
-          expr.parameters = parameters;
+          expr.arguments = arguments;
         }
       }
 

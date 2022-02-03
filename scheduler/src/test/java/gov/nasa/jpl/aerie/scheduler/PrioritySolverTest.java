@@ -103,7 +103,7 @@ public class PrioritySolverTest {
            && Objects.equals(a.getStartTime(), b.getStartTime())
            && Objects.equals(a.getEndTime(), b.getEndTime())
            && Objects.equals(a.getDuration(), b.getDuration())
-           && Objects.equals(a.getParameters(), b.getParameters());
+           && Objects.equals(a.getArguments(), b.getArguments());
   }
 
   /** matches activities if they agree in everything except the (possibly auto-generated) names **/

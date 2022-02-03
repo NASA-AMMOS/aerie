@@ -37,7 +37,7 @@ public class AerieControllerTest {
     missionModel.add(actType);
     var actinstance = new ActivityInstance(actType , Duration.of(1, Duration.MINUTE),
                                            Duration.of(1,  Duration.MINUTE));
-    actinstance.addParameter("setNewSSATime", SerializedValue.of(true));
+    actinstance.addArgument("setNewSSATime", SerializedValue.of(true));
     controller.sendActivityInstance(localPlan, actinstance);
 
     Plan fetchedPlan = controller.fetchPlan(controller.getPlanId(localPlan));

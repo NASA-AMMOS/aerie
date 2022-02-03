@@ -48,7 +48,7 @@ public class MerlInsightRules extends Problem {
       var curStation = values[index];
 
       var actInstance = new ActivityInstance(actType2, time, Duration.min(planningHorizon.getHor().end.minus(time),period));
-      actInstance.addParameter("dsnStation", SerializedValue.of(curStation));
+      actInstance.addArgument("dsnStation", SerializedValue.of(curStation));
       actList.add(actInstance);
       index +=1;
 
@@ -59,7 +59,7 @@ public class MerlInsightRules extends Problem {
       if(curAlloc == ratioAlloc){
         //allocate this to insight
         var actInstanceAlloc = new ActivityInstance(actType1, time, Duration.min(planningHorizon.getHor().end.minus(time),period));
-        actInstanceAlloc.addParameter("dsnStation", SerializedValue.of(curStation));
+        actInstanceAlloc.addArgument("dsnStation", SerializedValue.of(curStation));
         actList.add(actInstanceAlloc);
         curAlloc = 1;
       }
@@ -123,7 +123,7 @@ public class MerlInsightRules extends Problem {
         .duration(
             mission.getResource("/hp3/currentParams/PARAM_HP3_MON_TEMP_DURATION"),
             TimeExpression.atStart())
-        .withParameter("setNewSSATime", SerializedValue.of(true))
+        .withArgument("setNewSSATime", SerializedValue.of(true))
         .build();
 
     RecurrenceGoal goal1a = new RecurrenceGoal.Builder()
@@ -333,9 +333,9 @@ public class MerlInsightRules extends Problem {
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDCImage)
                           .duration(Duration.of(6, Duration.MINUTE))
-                          .withParameter("nFrames",SerializedValue.of(1))
-                          .withParameter("apid", SerializedValue.of("APID_IDC_6"))
-                          .withParameter("compQuality", SerializedValue.of(97))
+                          .withArgument("nFrames", SerializedValue.of(1))
+                          .withArgument("apid", SerializedValue.of("APID_IDC_6"))
+                          .withArgument("compQuality", SerializedValue.of(97))
                           .build())
       .forEach(ActivityExpression.ofType(atGrapple))
       .withPriority(6)
@@ -356,9 +356,9 @@ public class MerlInsightRules extends Problem {
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDCImage)
                           .duration(Duration.of(6, Duration.MINUTE))
-                          .withParameter("nFrames",SerializedValue.of(1))
-                          .withParameter("apid",SerializedValue.of("APID_IDC_6"))
-                          .withParameter("compQuality", SerializedValue.of(97))
+                          .withArgument("nFrames", SerializedValue.of(1))
+                          .withArgument("apid", SerializedValue.of("APID_IDC_6"))
+                          .withArgument("compQuality", SerializedValue.of(97))
                           .build())
       .forEach(ActivityExpression.ofType(atGrapple))
       .withPriority(6)
@@ -447,9 +447,9 @@ public class MerlInsightRules extends Problem {
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeICCImages)
                           .duration(Duration.of(6, Duration.MINUTE))
-                          .withParameter("nFrames",SerializedValue.of(1))
-                          .withParameter("apid",SerializedValue.of("APID_ICC_6"))
-                          .withParameter("compQuality", SerializedValue.of(95))
+                          .withArgument("nFrames", SerializedValue.of(1))
+                          .withArgument("apid", SerializedValue.of("APID_ICC_6"))
+                          .withArgument("compQuality", SerializedValue.of(95))
                           .build())
       .forEach(firstIdaMoveArm)
       .withPriority(4)
@@ -471,9 +471,9 @@ public class MerlInsightRules extends Problem {
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeICCImages)
                           .duration(Duration.of(6, Duration.MINUTE))
-                          .withParameter("nFrames",SerializedValue.of(1))
-                          .withParameter("apid",SerializedValue.of("APID_ICC_6"))
-                          .withParameter("compQuality", SerializedValue.of(95))
+                          .withArgument("nFrames", SerializedValue.of(1))
+                          .withArgument("apid", SerializedValue.of("APID_ICC_6"))
+                          .withArgument("compQuality", SerializedValue.of(95))
                           .build())
       .forEach(secondIdaMoveArm)
       .withPriority(4)
@@ -706,8 +706,8 @@ public class MerlInsightRules extends Problem {
         .forAllTimeIn(planningHorizon.getHor())
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(actTypeXbandCommched)
-                            .withParameter("DSNTrack",mission.getResource("/dsn/allocstation"))
-                            .withParameter("xbandAntSel", SerializedValue.of("EAST_MGA"))
+                            .withArgument("DSNTrack", mission.getResource("/dsn/allocstation"))
+                            .withArgument("xbandAntSel", SerializedValue.of("EAST_MGA"))
                             .build())
         .forEach(tre2)
         .withPriority(3)

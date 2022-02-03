@@ -65,21 +65,21 @@ public class ActivityExpression {
   public abstract static class AbstractBuilder<B extends AbstractBuilder<B, AT>, AT extends ActivityExpression> {
 
 
-    Map<String, SerializedValue> parameters = new HashMap<>();
-    Map<String, VariableArgumentComputer> variableParameters = new HashMap<>();
+    Map<String, SerializedValue> arguments = new HashMap<>();
+    Map<String, VariableArgumentComputer> variableArguments = new HashMap<>();
 
-    public B withParameter(String param, QueriableState state, TimeExpression timeToQuery) {
-      variableParameters.put(param, new StateQueryParam(state, timeToQuery));
+    public B withArgument(String argument, QueriableState state, TimeExpression timeToQuery) {
+      variableArguments.put(argument, new StateQueryParam(state, timeToQuery));
       return getThis();
     }
 
-    public B withParameter(String param, QueriableState state) {
-      variableParameters.put(param, new StateQueryParam(state, TimeExpression.atStart()));
+    public B withArgument(String argument, QueriableState state) {
+      variableArguments.put(argument, new StateQueryParam(state, TimeExpression.atStart()));
       return getThis();
     }
 
-    public B withParameter(String param, SerializedValue val) {
-      parameters.put(param, val);
+    public B withArgument(String argument, SerializedValue val) {
+      arguments.put(argument, val);
       return getThis();
     }
 
@@ -301,8 +301,8 @@ public class ActivityExpression {
       endsIn = template.endRange;
       durationIn = template.durationRange;
       startsOrEndsIn = template.startOrEndRange;
-      parameters = template.parameters;
-      variableParameters = template.variableParameters;
+      arguments = template.arguments;
+      variableArguments = template.variableArguments;
       return getThis();
     }
 
@@ -314,8 +314,8 @@ public class ActivityExpression {
       template.durationRange = durationIn;
       template.startOrEndRange = startsOrEndsIn;
       template.startOrEndRangeW = startsOrEndsInW;
-      template.parameters = parameters;
-      template.variableParameters = variableParameters;
+      template.arguments = arguments;
+      template.variableArguments = variableArguments;
       return template;
     }
 
@@ -439,8 +439,8 @@ public class ActivityExpression {
   }
 
 
-  Map<String, SerializedValue> parameters = new HashMap<>();
-  Map<String, VariableArgumentComputer> variableParameters = new HashMap<>();
+  Map<String, SerializedValue> arguments = new HashMap<>();
+  Map<String, VariableArgumentComputer> variableArguments = new HashMap<>();
 
   /**
    * determines if the given activity matches all criteria of this template
@@ -488,34 +488,34 @@ public class ActivityExpression {
       match = (dur != null) && durationRange.contains(dur);
     }
 
-    //activity must have all instantiated parameters of template to be compatible
-    if (match && parameters != null) {
-      Map<String, SerializedValue> actInstanceParameters = act.getParameters();
-      for (var param : parameters.entrySet()) {
-        if (actInstanceParameters.containsKey(param.getKey())) {
-          match = actInstanceParameters.get(param.getKey()).equals(param.getValue());
+    //activity must have all instantiated arguments of template to be compatible
+    if (match && arguments != null) {
+      Map<String, SerializedValue> actInstanceArguments = act.getArguments();
+      for (var param : arguments.entrySet()) {
+        if (actInstanceArguments.containsKey(param.getKey())) {
+          match = actInstanceArguments.get(param.getKey()).equals(param.getValue());
         }
         if (!match) {
           break;
         }
       }
     }
-    if(match && variableParameters != null){
-      Map<String, VariableArgumentComputer> actVariableParams = act.getVariableParameters();
-      for (var templateVariableParameter : variableParameters.entrySet()) {
-        var templateParamName = templateVariableParameter.getKey();
-        var templateParamValue = templateVariableParameter.getValue();
+    if(match && variableArguments != null){
+      Map<String, VariableArgumentComputer> actVariableParams = act.getVariableArguments();
+      for (var templateVariableArgument : variableArguments.entrySet()) {
+        var templateParamName = templateVariableArgument.getKey();
+        var templateParamValue = templateVariableArgument.getValue();
 
         if (actVariableParams.containsKey(templateParamName)) {
-          //if the variable parameter is formally defined
+          //if the variable argument is formally defined
           //we check on the equality between expression definitions
           match = actVariableParams.get(templateParamName).equals(templateParamValue);
-        } else if(act.getParameters().containsKey(templateParamName)){
-            //if the variable parameter has been instantiated (which is always the case for instances coming from the
+        } else if(act.getArguments().containsKey(templateParamName)){
+            //if the variable argument has been instantiated (which is always the case for instances coming from the
             //simulation), we check that the value would correspond
             //TODO: value computed at the start time of the activity, per the current behavior of ActivityCreationTemplate/ActivityInstance
             // but should be different and more specialized
-            match = ActivityInstance.getValue(templateParamValue, act.getStartTime()).equals(act.getParameters().get(templateParamName));
+            match = ActivityInstance.getValue(templateParamValue, act.getStartTime()).equals(act.getArguments().get(templateParamName));
         }
         if (!match) {
           break;

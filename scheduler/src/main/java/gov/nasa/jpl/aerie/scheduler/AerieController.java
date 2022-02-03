@@ -506,19 +506,19 @@ public class AerieController {
     addActInstanceId(act, actPK);
 
     String start = jsonActivity.getString("start_offset");
-    var params = jsonActivity.getJSONObject("arguments");
-    for (var paramName : params.keySet()) {
-      var visitor = new DemuxJson(paramName, params);
+    var arguments = jsonActivity.getJSONObject("arguments");
+    for (var paramName : arguments.keySet()) {
+      var visitor = new DemuxJson(paramName, arguments);
       var paramSpec = ActivityType.getParameterSpecification(specType.getParameters(), paramName);
       assert(paramSpec != null);
       var valueParam = paramSpec.schema().match(visitor);
-      act.addParameter(paramName, valueParam);
+      act.addArgument(paramName, valueParam);
     }
     act.setStartTime(DemuxJson.fromString(start));
-    var actDurationAsParam = act.getParameters().get("duration");
+    var actDurationAsParam = act.getArguments().get("duration");
     if (actDurationAsParam != null) {
       act.setDuration(new DurationValueMapper().deserializeValue(actDurationAsParam).getSuccessOrThrow());
-     act.getParameters().remove("duration");
+     act.getArguments().remove("duration");
     } else {
       act.setDuration(Duration.ZERO);
     }
@@ -843,7 +843,7 @@ public class AerieController {
             .in(gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND)) + ",");
         atLeastOne = true;
       }
-      for (Map.Entry<String, SerializedValue> entry : instance.getParameters().entrySet()) {
+      for (Map.Entry<String, SerializedValue> entry : instance.getArguments().entrySet()) {
         atLeastOne = true;
         String fakeParamName = entry.getKey();
         sbParams.append(fakeParamName

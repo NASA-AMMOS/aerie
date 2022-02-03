@@ -137,11 +137,11 @@ public class SimulationFacadeTest {
     final var actTypePeel = wrappedMissionModel.getActivityType("PeelBanana");
 
     var act1 = new ActivityInstance(actTypePeel, t1);
-    act1.setParameters(Map.of("peelDirection", SerializedValue.of("fromStem")));
+    act1.setArguments(Map.of("peelDirection", SerializedValue.of("fromStem")));
     plan.add(act1);
 
     var act2 = new ActivityInstance(actTypeBite, t2);
-    act2.setParameters(Map.of("biteSize", SerializedValue.of(0.1)));
+    act2.setArguments(Map.of("biteSize", SerializedValue.of(0.1)));
     plan.add(act2);
 
     return plan;
