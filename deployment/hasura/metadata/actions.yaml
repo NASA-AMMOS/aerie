@@ -23,6 +23,10 @@ actions:
   definition:
     kind: ""
     handler: http://aerie_merlin:27183/validateActivityArguments
+- name: validateModelArguments
+  definition:
+    kind: ""
+    handler: http://aerie_merlin:27183/validateModelArguments
 custom_types:
   enums:
   - name: MerlinSimulationStatus

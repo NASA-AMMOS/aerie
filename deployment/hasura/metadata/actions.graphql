@@ -41,6 +41,13 @@ type Query {
   ): ValidationResponse
 }
 
+type Query {
+  validateModelArguments(
+    missionModelId: ID!
+    modelArguments: ModelArguments!
+  ): ValidationResponse
+}
+
 enum MerlinSimulationStatus {
   complete
   failed
