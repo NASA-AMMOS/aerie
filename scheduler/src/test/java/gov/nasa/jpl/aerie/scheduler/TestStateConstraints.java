@@ -173,10 +173,10 @@ public class TestStateConstraints {
 
     final var activityTypeImage = new ActivityType("EISImage");
 
-    ActivityInstance act1 = new ActivityInstance("EISImage1_shouldbescheduled", activityTypeImage,
+    ActivityInstance act1 = new ActivityInstance(activityTypeImage,
                                                  Time.fromString("2025-202T00:00:00.000",horizon), dur);
 
-    ActivityInstance act2 = new ActivityInstance("EISImage2_shouldnotbescheduled", activityTypeImage,
+    ActivityInstance act2 = new ActivityInstance(activityTypeImage,
                                                  Time.fromString("2025-179T00:00:00.000",horizon), dur);
 
     //create an "external tool" that insists on a few fixed activities
@@ -251,10 +251,10 @@ public class TestStateConstraints {
 
     final var activityTypeImageWithConstraint = new ActivityType("EISImageWithConstraints", approachStateConstraint);
 
-    ActivityInstance act1 = new ActivityInstance("EISImage1_shouldbescheduled", activityTypeImageWithConstraint,
+    ActivityInstance act1 = new ActivityInstance(activityTypeImageWithConstraint,
                                                  Time.fromString("2025-202T00:00:00.000",horizon), dur);
 
-    ActivityInstance act2 = new ActivityInstance("EISImage2_shouldnotbescheduled", activityTypeImageWithConstraint,
+    ActivityInstance act2 = new ActivityInstance(activityTypeImageWithConstraint,
                                                  Time.fromString("2025-179T00:00:00.000",horizon), dur);
 
     //create an "external tool" that insists on a few fixed activities

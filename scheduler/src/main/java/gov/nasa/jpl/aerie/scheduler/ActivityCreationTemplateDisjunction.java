@@ -103,7 +103,6 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
       endsIn = template.endRange;
       durationIn = template.durationRange;
       startsOrEndsIn = template.startOrEndRange;
-      nameMatches = (template.nameRE != null) ? template.nameRE.pattern() : null;
       parameters = template.parameters;
       exprs = template.acts;
       return getThis();
@@ -142,13 +141,6 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
           //    throw new IllegalArgumentException("Overdefined activity expression");
           //}
           expr.startOrEndRange = startsOrEndsIn;
-        }
-        if (nameMatches != null) {
-          //if(expr.nameRE!=null){
-          //    throw new IllegalArgumentException("Overdefined activity expression");
-          // }
-          throw new IllegalArgumentException("Todo");
-
         }
         if (parameters.size() > 0) {
           // if(expr.parameters.size()>0){

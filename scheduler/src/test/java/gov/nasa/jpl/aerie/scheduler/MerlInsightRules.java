@@ -46,7 +46,7 @@ public class MerlInsightRules extends Problem {
     while(time.shorterThan(planningHorizon.getHor().end)){
       var curStation = values[index];
 
-      var actInstance = new ActivityInstance("dsnvis"+actIndex+++curStation, actType2, time, Duration.min(planningHorizon.getHor().end.minus(time),period));
+      var actInstance = new ActivityInstance(actType2, time, Duration.min(planningHorizon.getHor().end.minus(time),period));
       actInstance.addParameter("dsnStation", curStation);
       actList.add(actInstance);
       index +=1;
@@ -57,7 +57,7 @@ public class MerlInsightRules extends Problem {
       curAlloc +=1;
       if(curAlloc == ratioAlloc){
         //allocate this to insight
-        var actInstanceAlloc = new ActivityInstance("dsnallo"+actIndex+++curStation, actType1, time, Duration.min(planningHorizon.getHor().end.minus(time),period));
+        var actInstanceAlloc = new ActivityInstance(actType1, time, Duration.min(planningHorizon.getHor().end.minus(time),period));
         actInstanceAlloc.addParameter("dsnStation", curStation);
         actList.add(actInstanceAlloc);
         curAlloc = 1;
@@ -102,7 +102,7 @@ public class MerlInsightRules extends Problem {
     var actT1 = getActivityType("SSAMonitoring");
 
     List<ActivityInstance> turnONFFMonitoring = List.of(
-        new ActivityInstance("TurnOnSSAMonitoring", actT1,planningHorizon.getStartAerie()
+        new ActivityInstance(actT1,planningHorizon.getStartAerie()
                                                                          .plus(Duration.of(1,Duration.MINUTE)),
                              Duration.of(1,Duration.MINUTE)));
     ProceduralCreationGoal pro = new ProceduralCreationGoal.Builder()
@@ -190,7 +190,7 @@ public class MerlInsightRules extends Problem {
       .forAllTimeIn(planningHorizon.getHor())
       .withPriority(10)
       .forAllTimeIn(planningHorizon.getHor())
-      .generateWith((plan) -> List.of(new ActivityInstance("MoveArm",actTypeIDAMoveArm,stMoveArm, duroveArm)))
+      .generateWith((plan) -> List.of(new ActivityInstance(actTypeIDAMoveArm,stMoveArm, duroveArm)))
       .build();
 
   goals.add(goal2a);

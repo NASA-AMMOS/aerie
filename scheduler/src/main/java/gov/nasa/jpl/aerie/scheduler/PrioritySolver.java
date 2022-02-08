@@ -604,8 +604,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
 
       //base window act name on notional act name and index
       //REVIEW: windows should be able to exist absent a notional act
-      final var windowName = notionalAct.getName() + "_window" + windowIdx;
-      final var windowAct = new ActivityInstance(windowName, windowActType);
+      final var windowAct = new ActivityInstance(windowActType);
 
       //align window with span of valid start times
       windowAct.setStartTime(startRange.start);

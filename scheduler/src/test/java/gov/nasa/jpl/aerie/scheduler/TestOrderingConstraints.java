@@ -53,8 +53,8 @@ public class TestOrderingConstraints {
     ActivityType type1 = new ActivityType("Type1");
     ActivityType type2 = new ActivityType("Type2");
 
-    ActivityInstance act1 = new ActivityInstance("act1type1", type1, t1, Duration.of(4, Duration.SECONDS));
-    ActivityInstance act2 = new ActivityInstance("act1type2", type2, t3, Duration.of(5, Duration.SECONDS));
+    ActivityInstance act1 = new ActivityInstance(type1, t1, Duration.of(4, Duration.SECONDS));
+    ActivityInstance act2 = new ActivityInstance(type2, t3, Duration.of(5, Duration.SECONDS));
 
     plan.add(act1);
     CardinalityConstraint cc =
@@ -81,8 +81,8 @@ public class TestOrderingConstraints {
     ActivityType type1 = new ActivityType("Type1");
     ActivityType type2 = new ActivityType("Type2");
 
-    ActivityInstance act1 = new ActivityInstance("act1type1", type1, t1, Duration.of(4, Duration.SECONDS));
-    ActivityInstance act2 = new ActivityInstance("act1type2", type2, t3, Duration.of(5, Duration.SECONDS));
+    ActivityInstance act1 = new ActivityInstance(type1, t1, Duration.of(4, Duration.SECONDS));
+    ActivityInstance act2 = new ActivityInstance(type2, t3, Duration.of(5, Duration.SECONDS));
 
     plan.add(act1);
     plan.add(act2);
@@ -109,8 +109,8 @@ public class TestOrderingConstraints {
     ActivityType type1 = new ActivityType("Type1");
     ActivityType type2 = new ActivityType("Type2");
 
-    ActivityInstance act1 = new ActivityInstance("act1type1", type1, t1, Duration.of(4,Duration.SECONDS));
-    ActivityInstance act2 = new ActivityInstance("act1type2", type2, t3, Duration.of(5, Duration.SECONDS));
+    ActivityInstance act1 = new ActivityInstance(type1, t1, Duration.of(4,Duration.SECONDS));
+    ActivityInstance act2 = new ActivityInstance(type2, t3, Duration.of(5, Duration.SECONDS));
 
     plan.add(act1);
     plan.add(act2);
@@ -137,7 +137,7 @@ public class TestOrderingConstraints {
     ActivityType type1 = new ActivityType("Type1");
     ActivityType type2 = new ActivityType("Type2");
 
-    ActivityInstance act1 = new ActivityInstance("act1type1", type1, t1, Duration.of(4,Duration.SECONDS));
+    ActivityInstance act1 = new ActivityInstance(type1, t1, Duration.of(4,Duration.SECONDS));
 
     plan.add(act1);
     CardinalityConstraint cc =

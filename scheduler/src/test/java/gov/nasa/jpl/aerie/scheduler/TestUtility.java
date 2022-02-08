@@ -64,7 +64,7 @@ public class TestUtility {
    */
   public static boolean containsExactlyActivity(Plan plan, ActivityInstance act) {
     for (ActivityInstance actI : plan.getActivitiesByTime()) {
-      if (actI.equals(act)) {
+      if (actI.equalsInProperties(act)) {
         return true;
       }
     }
