@@ -50,12 +50,17 @@ public final class RegisterCell<T> {
 
     @Override
     public void apply(final RegisterCell<T> cell, final RegisterEffect<T> effect) {
-      if (effect.newValue != null) {
-        cell.value = effect.newValue;
-        cell.conflicted = effect.conflicted;
-      } else if (effect.conflicted) {
+      if (effect instanceof RegisterEffect.ConflictedWrite<T> e) {
+        cell.value = e.value();
+        cell.conflicted = true;
+      } else if (effect instanceof RegisterEffect.UnconflictedWrite<T> e) {
+        cell.value = e.value();
+        cell.conflicted = false;
+      } else if (effect instanceof RegisterEffect.PureConflict<T>) {
+        // Leave value unchanged
         cell.conflicted = true;
       }
+      // If effect is a NoOp, do nothing.
     }
   }
 }
