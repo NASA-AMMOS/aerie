@@ -23,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -296,7 +297,7 @@ public record SynchronousSchedulerAgent(
             e -> e.getValue().getScore(),
             (a, b) -> a)); //just replace any duplicate goal name scores
 
-    return new ScheduleResults(activityCount, goalScores);
+    return new ScheduleResults(Map.of()); // TODO Adrien: complete this stubbed instance
   }
 
 }
