@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.InMemoryResultsCell;
+import gov.nasa.jpl.aerie.scheduler.server.remotes.ResultsCellRepository;
 
 import java.util.Objects;
 
@@ -10,7 +11,7 @@ import java.util.Objects;
  *
  * @param agent the agent that can be used to carry out scheduling requests
  */
-public record UncachedSchedulerService(SchedulerAgent agent) implements SchedulerService {
+public record UncachedSchedulerService(ResultsCellRepository results, SchedulerAgent agent) implements SchedulerService {
   public UncachedSchedulerService {
     Objects.requireNonNull(agent);
   }
