@@ -1,9 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
-import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
+import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -14,14 +13,14 @@ import java.util.Objects;
  * the query can be run using the scheduling service configured at construction, possibly resulting in the activation of
  * a scheduling agent to produce the results (depending on caching etc)
  *
- * @param merlinService interface to merlin for any necessary plan details
+ * @param specificationService interface to specification service for any necessary specification details
  * @param schedulerService scheduling service that handles activity scheduling requests
  */
 //TODO: how to handle successive scheduling requests (probably synchronous per-plan, but not service-wide)
 //TODO: how to fetch in-progress status without risking mutating the plan again (since scheduling is NOT idempotent)
-public record ScheduleAction(MerlinService merlinService, SchedulerService schedulerService) {
+public record ScheduleAction(SpecificationService specificationService, SchedulerService schedulerService) {
   public ScheduleAction {
-    Objects.requireNonNull(merlinService);
+    Objects.requireNonNull(specificationService);
     Objects.requireNonNull(schedulerService);
   }
 
@@ -49,17 +48,17 @@ public record ScheduleAction(MerlinService merlinService, SchedulerService sched
   /**
    * execute the scheduling operation on the target plan (or retrieve existing scheduling results)
    *
-   * @param planId identifier of the plan to start scheduling from and to store scheduled output into
+   * @param specificationId identifier of the plan to start scheduling from and to store scheduled output into
    * @return a response object wrapping summary results of the run (either successful or not)
-   * @throws NoSuchPlanException if the target plan could not be found
+   * @throws NoSuchSpecificationException if the target specification could not be found
    */
-  public Response run(final PlanId planId) throws NoSuchPlanException, IOException {
+  public Response run(final SpecificationId specificationId) throws NoSuchSpecificationException, IOException {
     //record the plan revision as of the scheduling request time (in case work commences much later eg in worker thread)
     //TODO may also need to verify the model revision / other volatile metadata matches one from request
-    final long planRev = this.merlinService.getPlanMetadata(planId).planRev();
+    final var specificationRev = this.specificationService.getSpecificationRevisionData(specificationId);
 
     //submit request to run scheduler (possibly asynchronously or even cached depending on service)
-    final var response = this.schedulerService.scheduleActivities(new ScheduleRequest(planId, planRev));
+    final var response = this.schedulerService.scheduleActivities(new ScheduleRequest(specificationId, specificationRev));
 
     return repackResponse(response);
   }

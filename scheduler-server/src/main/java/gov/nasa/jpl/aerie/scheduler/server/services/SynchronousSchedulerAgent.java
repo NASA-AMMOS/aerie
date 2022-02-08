@@ -2,8 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.Goal;
 import gov.nasa.jpl.aerie.scheduler.HuginnConfiguration;
@@ -37,6 +36,7 @@ import java.util.stream.Collectors;
  */
 //TODO: will eventually need scheduling goal service arg to pull goals from scheduler's own data store
 public record SynchronousSchedulerAgent(
+    SpecificationService specificationService,
     GraphQLMerlinService merlinService,
     Path modelJarsDir,
     Path rulesJarPath,
@@ -64,72 +64,43 @@ public record SynchronousSchedulerAgent(
     try {
       //confirm requested plan to schedule from/into still exists at targeted version (request could be stale)
       //TODO: maybe some kind of high level db transaction wrapping entire read/update of target plan revision
-      final var planMetadata = getMerlinPlanMetadata(request.planId());
-      ensureRevisionMatch(request, planMetadata.planRev());
+      ensureRequestIsCurrent(request);
 
-      //create scheduler problem seeded with initial plan
-      final var problem = createProblem(planMetadata);
-      final var scheduler = createScheduler(planMetadata, problem);
-
-      //run the scheduler to find a solution to the posed problem, if any
-      final var solutionPlan = scheduler.getNextSolution().orElseThrow(
-          () -> new ResultsProtocolFailure("scheduler returned no solution"));
-
-      //store the solution plan back into merlin (and reconfirm no intervening mods!)
-      //TODO: make revision confirmation atomic part of plan mutation (plan might have been modified during scheduling!)
-      ensureRevisionMatch(request, getMerlinPlanRev(request.planId()));
-      storeFinalPlan(planMetadata, problem.getMissionModel(), solutionPlan);
-
-      //collect results and notify subscribers of success
-      final var results = collectResults(solutionPlan);
-      writer.succeedWith(results);
-    } catch (final ResultsProtocolFailure e) {
+      // TODO Adrien: complete this stubbed block
+//      //create scheduler problem seeded with initial plan
+//      final var problem = createProblem(planMetadata);
+//      final var scheduler = createScheduler(planMetadata, problem);
+//
+//      //run the scheduler to find a solution to the posed problem, if any
+//      final var solutionPlan = scheduler.getNextSolution().orElseThrow(
+//          () -> new ResultsProtocolFailure("scheduler returned no solution"));
+//
+//      //store the solution plan back into merlin (and reconfirm no intervening mods!)
+//      //TODO: make revision confirmation atomic part of plan mutation (plan might have been modified during scheduling!)
+//      ensureRequestIsCurrent(request);
+//      storeFinalPlan(planMetadata, problem.getMissionModel(), solutionPlan);
+//
+//      //collect results and notify subscribers of success
+//      final var results = collectResults(solutionPlan);
+//      writer.succeedWith(results);
+      writer.failWith("Not yet implemented"); // TODO Adrien: complete this stubbed block
+    } catch (final ResultsProtocolFailure | NoSuchSpecificationException e) {
       //unwrap failure message from any anticipated exceptions and forward to subscribers
       writer.failWith(e.getMessage());
     }
   }
 
   /**
-   * fetch all necessary details about the target plan from aerie services
+   * confirms that specification revision still matches that expected by the scheduling request
    *
-   * @param planId identifier of the target plan to load metadata for
-   * @return snapshot of current metadata for target plan from merlin
-   * @throws ResultsProtocolFailure when the requested plan cannot be found, or aerie could not be reached
+   * @param request the original request for scheduling, containing an intended starting specification revision
+   * @throws ResultsProtocolFailure when the requested specification revision does not match the actual revision
    */
-  private PlanMetadata getMerlinPlanMetadata(final PlanId planId) {
-    try {
-      return merlinService.getPlanMetadata(planId);
-    } catch (NoSuchPlanException | IOException e) {
-      throw new ResultsProtocolFailure(e);
-    }
-  }
-
-  /**
-   * fetch just the current revision number of the target plan from aerie services
-   *
-   * @param planId identifier of the target plan to load metadata for
-   * @return the current revision number of the target plan according to a fresh query
-   * @throws ResultsProtocolFailure when the requested plan cannot be found, or aerie could not be reached
-   */
-  private long getMerlinPlanRev(final PlanId planId) {
-    try {
-      return merlinService.getPlanRevision(planId);
-    } catch (NoSuchPlanException | IOException e) {
-      throw new ResultsProtocolFailure(e);
-    }
-  }
-
-  /**
-   * confirms that plan revision still matches that expected by the scheduling request
-   *
-   * @param request the original request for scheduling, containing an intended starting plan revision
-   * @param actualRev snapshot of the actual plan revision from plan metadata query
-   * @throws ResultsProtocolFailure when the requested plan revision does not match the actual revision
-   */
-  private void ensureRevisionMatch(final ScheduleRequest request, final long actualRev) {
-    if (actualRev != request.planRev()) {
-      throw new ResultsProtocolFailure("plan with id %s at revision %d is no longer at revision %d".formatted(
-          request.planId(), actualRev, request.planRev()));
+  private void ensureRequestIsCurrent(final ScheduleRequest request) throws NoSuchSpecificationException {
+    final var currentRevisionData = specificationService.getSpecificationRevisionData(request.specificationId());
+    if (currentRevisionData.matches(request.specificationRev()) instanceof final RevisionData.MatchResult.Failure failure) {
+      throw new ResultsProtocolFailure("schedule specification with id %s is stale: %s".formatted(
+          request.specificationId(), failure));
     }
   }
 

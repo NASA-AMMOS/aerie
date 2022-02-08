@@ -2,16 +2,17 @@ package gov.nasa.jpl.aerie.scheduler.server.http;
 
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
-import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
+import gov.nasa.jpl.aerie.scheduler.server.models.HasuraAction;
+import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Optional;
 
+import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.planIdP;
 
 /**
  * json parsers for data objects used in the scheduler service endpoints
@@ -20,6 +21,12 @@ public class SchedulerParsers {
   private SchedulerParsers() {}
 
   //TODO: unify common private parsers between services (eg hasura details copied from MerlinParsers)
+
+  public static final JsonParser<SpecificationId> specificationIdP
+      = longP
+      . map(Iso.of(
+          SpecificationId::new,
+          SpecificationId::id));
 
   /**
    * parser for hasura session details
@@ -52,11 +59,9 @@ public class SchedulerParsers {
   /**
    * parser for a hasura action that accepts a plan id as its sole input, along with normal hasura session details
    */
-  public static final JsonParser<HasuraAction<HasuraAction.PlanInput>> hasuraPlanActionP
-      = hasuraActionP(productP.field("planId", planIdP))
+  public static final JsonParser<HasuraAction<HasuraAction.SpecificationInput>> hasuraSpecificationActionP
+      = hasuraActionP(productP.field("specificationId", specificationIdP))
       .map(Iso.of(
-          untuple((name, planId, session) -> new HasuraAction<>(name, new HasuraAction.PlanInput(planId), session)),
-          action -> tuple(action.name(), action.input().planId(), action.session())));
-
-
+          untuple((name, specificationId, session) -> new HasuraAction<>(name, new HasuraAction.SpecificationInput(specificationId), session)),
+          action -> tuple(action.name(), action.input().specificationId(), action.session())));
 }

@@ -1,18 +1,19 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
+import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 
 import java.util.Objects;
 
 /**
- * details of a scheduling request, including the target plan version and goals to operate on
+ * details of a scheduling request, including the target schedule specification version and goals to operate on
  *
- * @param planId target plan to read as initial input schedule as well as target for the output schedule
- * @param planRev the revision of the plan when the schedule request was placed (to determine if stale)
+ * @param specificationId target schedule specification to read as schedule configuration
+ * @param specificationRev the revision of the schedule specification when the schedule request was placed (to determine if stale)
  */
-public record ScheduleRequest(PlanId planId, long planRev) {
+public record ScheduleRequest(SpecificationId specificationId, RevisionData specificationRev) {
   public ScheduleRequest {
-    Objects.requireNonNull(planId, "planId must not be null");
-    Objects.requireNonNull(planRev, "planRev must not be null");
+    Objects.requireNonNull(specificationId, "specificationId must not be null");
+    Objects.requireNonNull(specificationRev, "specificationRev must not be null");
   }
 }
