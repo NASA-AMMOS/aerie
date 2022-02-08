@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
@@ -36,6 +37,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
+import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.discreteProfileSegmentP;
+import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.realProfileSegmentP;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.server.http.ValueSchemaJsonParser.valueSchemaP;
 
@@ -171,10 +174,45 @@ public final class ResponseSerializers {
                 Collectors.toMap(e -> Long.toString(e.getKey().id()), Map.Entry::getValue)));
   }
 
+  public static JsonValue serializeDiscreteProfileSegment(final Pair<Duration, SerializedValue> element) {
+    if (element == null) return JsonValue.NULL;
+    return discreteProfileSegmentP.unparse(element);
+  }
+
+  public static JsonValue serializeDiscreteProfile(final Pair<ValueSchema, List<Pair<Duration, SerializedValue>>> element) {
+    if (element == null) return JsonValue.NULL;
+    return Json
+        .createObjectBuilder()
+        .add("type", "discrete")
+        .add("schema", valueSchemaP.unparse((element.getLeft())))
+        .add("segments", serializeIterable(ResponseSerializers::serializeDiscreteProfileSegment, element.getRight()))
+        .build();
+  }
+
+  public static JsonValue serializeRealProfileSegment(final Pair<Duration, RealDynamics> element) {
+    if (element == null) return JsonValue.NULL;
+    return realProfileSegmentP.unparse(element);
+  }
+
+  public static JsonValue serializeRealProfile(final List<Pair<Duration, RealDynamics>> element) {
+    if (element == null) return JsonValue.NULL;
+    return Json
+        .createObjectBuilder()
+        .add("type", "real")
+        .add("segments", serializeIterable(ResponseSerializers::serializeRealProfileSegment, element))
+        .build();
+  }
+
   public static JsonValue serializeSimulationResults(final SimulationResults results, final Map<String, List<Violation>> violations) {
     return Json
         .createObjectBuilder()
         .add("start", serializeTimestamp(results.startTime))
+        .add("discreteProfiles", serializeMap(
+            elements -> serializeDiscreteProfile(elements),
+            results.discreteProfiles))
+        .add("realProfiles", serializeMap(
+            elements -> serializeRealProfile(elements),
+            results.realProfiles))
         .add("resources", serializeMap(
             elements -> serializeIterable(ResponseSerializers::serializeSample, elements),
             results.resourceSamples))
