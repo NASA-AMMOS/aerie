@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 record PlanDatasetRecord(int plan_id, int dataset_id) {}
 
@@ -317,6 +318,7 @@ class DatabaseTests {
   int activityId;
   int simulationTemplateId;
   int simulationId;
+  int datasetId;
   PlanDatasetRecord planDatasetRecord;
 
   @BeforeEach
@@ -328,6 +330,7 @@ class DatabaseTests {
     simulationTemplateId = insertSimulationTemplate(missionModelId);
     simulationId = insertSimulation(simulationTemplateId, planId);
     planDatasetRecord = insertPlanDataset(planId);
+    datasetId = insertDataset();
   }
 
   @AfterEach
@@ -759,6 +762,202 @@ class DatabaseTests {
         );
         res.next();
         assertEquals(0, res.getInt(1));
+      }
+    }
+  }
+
+  @Nested
+  class DatasetTriggers {
+    @Test
+    void shouldCreatePartitionsOnDatasetInsert() throws SQLException {
+      try (final var statement = connection.createStatement()) {
+        final var lastDatasetId = statement.executeQuery(
+            """
+                SELECT id FROM dataset
+                ORDER BY id DESC
+                LIMIT 1;"""
+        );
+        lastDatasetId.next();
+        final var lastDatasetIdValue = lastDatasetId.getInt("id");
+        lastDatasetId.close();
+
+        try (final var res = statement.executeQuery(
+            """
+                SELECT EXISTS(
+                  SELECT FROM information_schema.tables
+                  WHERE table_schema = 'public'
+                  AND table_name = 'profile_segment_%s'
+                );"""
+                .formatted(lastDatasetIdValue + 1)
+        )) {
+          res.next();
+          assertFalse(res.getBoolean("exists"));
+        }
+
+        try (final var res = statement.executeQuery(
+            """
+                SELECT EXISTS(
+                  SELECT FROM information_schema.tables
+                  WHERE table_schema = 'public'
+                  AND table_name = 'span_%s'
+                );"""
+                .formatted(lastDatasetIdValue + 1)
+        )) {
+          res.next();
+          assertFalse(res.getBoolean("exists"));
+        }
+
+        try (final var res = statement.executeQuery(
+            """
+                SELECT EXISTS(
+                  SELECT FROM information_schema.tables
+                  WHERE table_schema = 'public'
+                  AND table_name = 'event_%s'
+                );"""
+                .formatted(lastDatasetIdValue + 1)
+        )) {
+          res.next();
+          assertFalse(res.getBoolean("exists"));
+        }
+
+        insertDataset();
+
+        try (final var res = statement.executeQuery(
+            """
+                SELECT EXISTS(
+                  SELECT FROM information_schema.tables
+                  WHERE table_schema = 'public'
+                  AND table_name = 'profile_segment_%s'
+                );"""
+                .formatted(lastDatasetIdValue + 1)
+        )) {
+          res.next();
+          assertTrue(res.getBoolean("exists"));
+        }
+
+        try (final var res = statement.executeQuery(
+            """
+                SELECT EXISTS(
+                  SELECT FROM information_schema.tables
+                  WHERE table_schema = 'public'
+                  AND table_name = 'span_%s'
+                );"""
+                .formatted(lastDatasetIdValue + 1)
+        )) {
+          res.next();
+          assertTrue(res.getBoolean("exists"));
+        }
+
+        try (final var res = statement.executeQuery(
+            """
+                SELECT EXISTS(
+                  SELECT FROM information_schema.tables
+                  WHERE table_schema = 'public'
+                  AND table_name = 'event_%s'
+                );"""
+                .formatted(lastDatasetIdValue + 1)
+        )) {
+          res.next();
+          assertTrue(res.getBoolean("exists"));
+        }
+      }
+    }
+
+    @Test
+    void shouldDeletePartitionsOnDatasetDelete() throws SQLException {
+      try (final var statement = connection.createStatement()) {
+        try (final var res = statement.executeQuery(
+            """
+                SELECT EXISTS(
+                  SELECT FROM information_schema.tables
+                  WHERE table_schema = 'public'
+                  AND table_name = 'profile_segment_%s'
+                );"""
+                .formatted(datasetId)
+        )
+        ) {
+          res.next();
+          assertTrue(res.getBoolean("exists"));
+        }
+
+        try (final var res = statement.executeQuery(
+            """
+                SELECT EXISTS(
+                  SELECT FROM information_schema.tables
+                  WHERE table_schema = 'public'
+                  AND table_name = 'span_%s'
+                );"""
+                .formatted(datasetId)
+        )
+        ) {
+          res.next();
+          assertTrue(res.getBoolean("exists"));
+        }
+
+        try (final var res = statement.executeQuery(
+            """
+                SELECT EXISTS(
+                  SELECT FROM information_schema.tables
+                  WHERE table_schema = 'public'
+                  AND table_name = 'event_%s'
+                );"""
+                .formatted(datasetId)
+        )
+        ) {
+          res.next();
+          assertTrue(res.getBoolean("exists"));
+        }
+
+        insertDataset();
+
+        statement.executeUpdate(
+            """
+                DELETE FROM dataset
+                WHERE id = %s;"""
+                .formatted(datasetId)
+        );
+
+        try (final var res = statement.executeQuery(
+            """
+                SELECT EXISTS(
+                  SELECT FROM information_schema.tables
+                  WHERE table_schema = 'public'
+                  AND table_name = 'profile_segment_%s'
+                );"""
+                .formatted(datasetId)
+        )
+        ) {
+          res.next();
+          assertFalse(res.getBoolean("exists"));
+        }
+
+        try (final var res = statement.executeQuery(
+            """
+                SELECT EXISTS(
+                  SELECT FROM information_schema.tables
+                  WHERE table_schema = 'public'
+                  AND table_name = 'span_%s'
+                );"""
+                .formatted(datasetId)
+        )
+        ) {
+          res.next();
+          assertFalse(res.getBoolean("exists"));
+        }
+
+        try (final var res = statement.executeQuery(
+            """
+                SELECT EXISTS(
+                  SELECT FROM information_schema.tables
+                  WHERE table_schema = 'public'
+                  AND table_name = 'event_%s'
+                );"""
+                .formatted(datasetId)
+        )
+        ) {
+          res.next();
+          assertFalse(res.getBoolean("exists"));
+        }
       }
     }
   }
