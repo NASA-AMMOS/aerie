@@ -26,6 +26,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   CREATE DATABASE aerie_ui;
   GRANT ALL PRIVILEGES ON DATABASE aerie_ui TO aerie;
   \echo 'Done!'
+
 EOSQL
 
 export PGPASSWORD=aerie
