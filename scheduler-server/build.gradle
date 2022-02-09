@@ -24,7 +24,6 @@ dependencies {
   implementation project(':contrib')
   implementation project(':constraints')
   implementation project(':scheduler')
-  implementation project(':merlin-server')
 
   runtimeOnly project(':merlin-framework')
 

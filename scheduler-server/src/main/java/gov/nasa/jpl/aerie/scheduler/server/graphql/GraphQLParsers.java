@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.graphql;
 
 import com.impossibl.postgres.api.data.Interval;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;

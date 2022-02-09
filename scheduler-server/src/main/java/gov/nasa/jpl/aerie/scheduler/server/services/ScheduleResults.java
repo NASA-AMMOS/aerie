@@ -1,14 +1,21 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import java.util.Collection;
 import java.util.Map;
+
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.scheduler.server.models.RuleId;
 
 /**
  * summary of results from running the scheduler, including goal satisfaction metrics and changes made
- *
- * @param activityCount number of distinct activity instances in the plan (counting parents/children separately)
- * @param goalScores the satisfaction scores for each goal considered, indexed by the goal name. duplicated goal
- *     names (or goals evaluated under different criteria) will have scores overwritten in an unspecified order
+ * TODO: @param javadocs (Adrien)
  */
-public record ScheduleResults(long activityCount, Map<String, Double> goalScores) {
+public record ScheduleResults(Map<RuleId, RuleResult> ruleResults) {
 
+  public record RuleResult(
+      Collection<ActivityInstanceId> createdActivities,
+      Collection<ActivityInstanceId> satisfyingActivities,
+      boolean satisfied
+  )
+  { }
 }

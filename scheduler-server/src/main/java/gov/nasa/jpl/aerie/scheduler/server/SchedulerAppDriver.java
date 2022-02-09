@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.scheduler.server.config.JavalinLoggingState;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
 import gov.nasa.jpl.aerie.scheduler.server.http.SchedulerBindings;
 import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
+import gov.nasa.jpl.aerie.scheduler.server.services.LocalSpecificationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.SynchronousSchedulerAgent;
 import gov.nasa.jpl.aerie.scheduler.server.services.UncachedSchedulerService;
@@ -35,11 +36,12 @@ public final class SchedulerAppDriver {
 
     //create objects in each service abstraction layer (mirroring MerlinApp)
     final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI());
+    final var specificationService = new LocalSpecificationService();
     final var scheduleAgent = new SynchronousSchedulerAgent(
-        merlinService, config.missionModelJarsDir(), config.missionRuleJarPath(),
+        specificationService, merlinService, config.missionModelJarsDir(), config.missionRuleJarPath(),
         config.outputMode());
     final var schedulerService = new UncachedSchedulerService(scheduleAgent);
-    final var scheduleAction = new ScheduleAction(merlinService, schedulerService);
+    final var scheduleAction = new ScheduleAction(specificationService, schedulerService);
 
     //establish bindings to the service layers
     final var bindings = new SchedulerBindings(schedulerService, scheduleAction);

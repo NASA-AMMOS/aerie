@@ -1,10 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
-import gov.nasa.jpl.aerie.merlin.server.AerieAppDriver;
-import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
-import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulerService;
 import io.javalin.Javalin;
@@ -20,11 +17,11 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers.serializeInvalidEntityException;
-import static gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers.serializeInvalidJsonException;
+import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeInvalidEntityException;
+import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeInvalidJsonException;
 import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeException;
 import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeScheduleResultsResponse;
-import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraPlanActionP;
+import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraSpecificationActionP;
 import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
@@ -43,7 +40,7 @@ public record SchedulerBindings(SchedulerService schedulerService, ScheduleActio
     Objects.requireNonNull(scheduleAction, "scheduleAction must be non-null");
   }
 
-  private static final Logger log = Logger.getLogger(AerieAppDriver.class.getName());
+  private static final Logger log = Logger.getLogger(SchedulerBindings.class.getName());
 
   /**
    * apply all scheduler http bindings to the provided javalin server
@@ -67,10 +64,10 @@ public record SchedulerBindings(SchedulerService schedulerService, ScheduleActio
   private void schedule(final Context ctx) {
     try {
       //TODO: is plan enough to locate goal set to use, or need more args in body?
-      final var body = parseJson(ctx.body(), hasuraPlanActionP);
-      final var planId = body.input().planId();
+      final var body = parseJson(ctx.body(), hasuraSpecificationActionP);
+      final var specificationId = body.input().specificationId();
 
-      final var response = this.scheduleAction.run(planId);
+      final var response = this.scheduleAction.run(specificationId);
       ctx.result(serializeScheduleResultsResponse(response).toString());
     } catch (final IOException e) {
       log.log(Level.SEVERE, "low level input/output problem during scheduling", e);
@@ -79,7 +76,7 @@ public record SchedulerBindings(SchedulerService schedulerService, ScheduleActio
       ctx.status(400).result(serializeInvalidEntityException(ex).toString());
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(serializeInvalidJsonException(ex).toString());
-    } catch (final NoSuchPlanException ex) {
+    } catch (final NoSuchSpecificationException ex) {
       ctx.status(404).result(serializeException(ex).toString());
     }
   }
