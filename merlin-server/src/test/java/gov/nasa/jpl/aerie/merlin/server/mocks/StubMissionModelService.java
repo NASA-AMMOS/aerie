@@ -137,6 +137,13 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
+  public List<String> validateModelArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
+  throws LocalMissionModelService.MissionModelLoadException
+  {
+    return List.of();
+  }
+
+  @Override
   public List<Parameter> getModelParameters(final String missionModelId) {
     return List.of();
   }

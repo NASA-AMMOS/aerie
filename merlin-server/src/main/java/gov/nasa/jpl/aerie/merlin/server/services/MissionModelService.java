@@ -38,6 +38,12 @@ public interface MissionModelService {
     UnconstructableActivityInstanceException,
     MissingArgumentException;
 
+  List<String> validateModelArguments(String missionModelId, Map<String, SerializedValue> arguments)
+  throws NoSuchMissionModelException,
+    LocalMissionModelService.MissionModelLoadException,
+    UnconstructableMissionModelConfigurationException,
+    UnconfigurableMissionModelException;
+
   List<Parameter> getModelParameters(String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoader.MissionModelLoadException;
 

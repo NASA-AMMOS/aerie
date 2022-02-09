@@ -133,6 +133,23 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
+  public List<String> validateModelArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
+  throws NoSuchMissionModelException,
+         MissionModelLoadException,
+         UnconstructableMissionModelConfigurationException,
+         UnconfigurableMissionModelException
+  {
+    try {
+      return this.loadConfiguredMissionModel(missionModelId)
+                 .validateConfiguration(arguments);
+    } catch (final MissionModelFacade.UnconfigurableMissionModelException ex) {
+      throw new UnconfigurableMissionModelException(ex);
+    } catch (final MissionModelFacade.UnconstructableMissionModelConfigurationException ex) {
+      throw new UnconstructableMissionModelConfigurationException(ex);
+    }
+  }
+
+  @Override
   public List<Parameter> getModelParameters(final String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
