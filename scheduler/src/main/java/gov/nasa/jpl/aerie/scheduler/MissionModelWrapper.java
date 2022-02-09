@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.List;
 
@@ -45,8 +44,10 @@ public class MissionModelWrapper {
     //add all activity types known to aerie to scheduler index
     //TODO: reduce duplicate activity type abstractions between aerie and scheduler
     if( missionModel != null ) {
-      missionModel.getTaskSpecificationTypes().keySet().stream()
-                  .map(ActivityType::new).forEach(this::add);
+      for(var taskType : missionModel.getTaskSpecificationTypes().entrySet()){
+        this.add(new ActivityType(taskType.getKey(), taskType.getValue()));
+      }
+
     }
   }
 
@@ -58,23 +59,8 @@ public class MissionModelWrapper {
     this(null, null);
   }
 
-  public ExternalState<Integer> getIntState(String name){
-    return simFacade.getIntResource(name);
-  }
-
-  public ExternalState<Duration> getDurState(String name){
-    return simFacade.getDurResource(name);
-  }
-
-  public ExternalState<Double> getDoubleState(String name){
-    return simFacade.getDoubleResource(name);
-  }
-  public ExternalState<Boolean> getBoolState(String name){
-    return simFacade.getBooleanResource(name);
-  }
-
-  public ExternalState<String> getStringState(String name){
-    return simFacade.getStringResource(name);
+  public ExternalState getResource(String name){
+    return simFacade.getResource(name);
   }
 
   public MissionModel<?> getMissionModel(){
@@ -83,17 +69,6 @@ public class MissionModelWrapper {
 
   public SimulationFacade getSimFacade(){
     return simFacade;
-  }
-
-  /**
-   * adds a new state definition to the mission model
-   *
-   * @param stateDef IN the state definition to add to the mission model,
-   *     which must not already have a state definition with matching
-   *     identifier
-   * @param <T> the value type of the state
-   */
-  public <T extends Comparable<T>> void add(StateDefinition<T> stateDef) {
   }
 
   public PlanningHorizon getPlanningHorizon(){
@@ -157,12 +132,12 @@ public class MissionModelWrapper {
   /**
    * activity type definitions in the mission model, indexed by name
    */
-  private java.util.Map<String, ActivityType> actTypeByName
+  private final java.util.Map<String, ActivityType> actTypeByName
       = new java.util.HashMap<>();
 
   /**
    * global constraints in the mission model, indexed by name
    */
-  private List<GlobalConstraint> globalConstraints
+  private final List<GlobalConstraint> globalConstraints
       = new java.util.LinkedList<>();
 }

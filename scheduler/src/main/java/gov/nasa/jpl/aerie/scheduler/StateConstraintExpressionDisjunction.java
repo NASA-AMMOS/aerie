@@ -17,7 +17,7 @@ public class StateConstraintExpressionDisjunction extends StateConstraintExpress
   public StateConstraintExpressionDisjunction(List<StateConstraintExpression> constraints, String name) {
     super(null, name);
 
-    disjunction = new LinkedList<StateConstraintExpression>(constraints);
+    disjunction = new LinkedList<>(constraints);
     cache = new ValidityCache() {
       @Override
       public Windows fetchValue(Plan plan, Windows intervals) {
@@ -27,11 +27,11 @@ public class StateConstraintExpressionDisjunction extends StateConstraintExpress
   }
 
 
-  public static boolean ACTIVATE_CACHE = false;
+  public final static boolean ACTIVATE_CACHE = false;
 
-  private List<StateConstraintExpression> disjunction;
+  private final List<StateConstraintExpression> disjunction;
 
-  private ValidityCache cache;
+  private final ValidityCache cache;
 
   public Windows findWindowsStates(Plan plan, Windows windows) {
     Windows disjunctionTimeWindows = new Windows();

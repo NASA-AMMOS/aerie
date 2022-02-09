@@ -6,10 +6,10 @@ import java.util.List;
 public class ActivityExpressionDisjunction extends ActivityExpression {
 
 
-  List<ActivityExpression> actExpressions;
+  final List<ActivityExpression> actExpressions;
 
   protected ActivityExpressionDisjunction(List<ActivityExpression> actExpressions) {
-    this.actExpressions = new ArrayList<ActivityExpression>(actExpressions);
+    this.actExpressions = new ArrayList<>(actExpressions);
   }
 
 
@@ -43,9 +43,9 @@ public class ActivityExpressionDisjunction extends ActivityExpression {
       endsIn = template.endRange;
       durationIn = template.durationRange;
       startsOrEndsIn = template.startOrEndRange;
-      nameMatches = (template.nameRE != null) ? template.nameRE.pattern() : null;
-      parameters = template.parameters;
+      arguments = template.arguments;
       exprs = template.actExpressions;
+      variableArguments = template.variableArguments;
       return getThis();
     }
 
@@ -59,11 +59,10 @@ public class ActivityExpressionDisjunction extends ActivityExpression {
 
     @Override
     public ActivityExpressionDisjunction build() {
-      ActivityExpressionDisjunction dis = new ActivityExpressionDisjunction(exprs);
-      return dis;
+      return new ActivityExpressionDisjunction(exprs);
     }
 
-    List<ActivityExpression> exprs = new ArrayList<ActivityExpression>();
+    List<ActivityExpression> exprs = new ArrayList<>();
 
     public OrBuilder or(ActivityExpression expr) {
       exprs.add(expr);

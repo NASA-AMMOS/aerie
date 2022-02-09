@@ -1,20 +1,25 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.PathValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.json.JSONObject;
 
+import java.nio.file.Path;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class DemuxJson implements ValueSchema.Visitor<Object> {
-  String paramName;
-  JSONObject params;
+public class DemuxJson implements ValueSchema.Visitor<SerializedValue> {
+  final String paramName;
+  final JSONObject params;
 
   public DemuxJson(String paramName, JSONObject params){
     this.paramName = paramName;
@@ -22,66 +27,65 @@ public class DemuxJson implements ValueSchema.Visitor<Object> {
   }
 
   @Override
-  public Object onReal() {
-    return params.getDouble(paramName);
+  public SerializedValue onReal() {
+    return SerializedValue.of(params.getDouble(paramName));
   }
 
   @Override
-  public Object onInt() {
-    return params.getInt(paramName);
+  public SerializedValue onInt() {
+    return SerializedValue.of(params.getInt(paramName));
   }
 
   @Override
-  public Object onBoolean() {
-    return params.getBoolean(paramName);
+  public SerializedValue onBoolean() {
+    return SerializedValue.of(params.getBoolean(paramName));
   }
 
   @Override
-  public Object onString() {
-    return params.getString(paramName);
+  public SerializedValue onString() {
+    return SerializedValue.of(params.getString(paramName));
   }
 
   @Override
-  public Object onDuration() {
-    return Duration.of(params.getLong(paramName), Duration.MICROSECOND);
+  public SerializedValue onDuration() {
+    return new DurationValueMapper().serializeValue(Duration.of(params.getLong(paramName), Duration.MICROSECOND));
 
   }
 
   @Override
-  public Object onPath() {
-    return params.getString(paramName);
+  public SerializedValue onPath() {
+    return new PathValueMapper().serializeValue(Path.of(params.getString(paramName)));
   }
 
   @Override
-  public Object onSeries(ValueSchema value) {
+  public SerializedValue onSeries(ValueSchema value) {
     var array = params.getJSONArray(paramName);
-    Object[] ret = new Object[array.length()];
-
+    List<SerializedValue> ret = new ArrayList<>();
     for(int i = 0; i < array.length(); i++){
       final var map = new HashMap<>();
       map.put(String.valueOf(i),array.get(i));
       final var tmp = new JSONObject(map);
       final var demux = new DemuxJson(String.valueOf(i), tmp);
-      ret[i] = value.match(demux);
+      ret.add(value.match(demux));
     }
-    return ret;
+    return SerializedValue.of(ret);
   }
 
   @Override
-  public Object onStruct(Map<String, ValueSchema> value) {
-    Map<String, Object> ret = new HashMap<>();
+  public SerializedValue onStruct(Map<String, ValueSchema> value) {
+    Map<String, SerializedValue> ret = new HashMap<>();
     var struct = params.getJSONObject(paramName);
     for(var sub:value.keySet()){
       var valueSchema = value.get(sub);
       var demux = new DemuxJson(sub, struct);
       ret.put(sub, valueSchema.match(demux));
     }
-    return ret;
+    return SerializedValue.of(ret);
   }
 
   @Override
-  public Object onVariant(List<ValueSchema.Variant> variants) {
-    return params.getString(paramName);
+  public SerializedValue onVariant(List<ValueSchema.Variant> variants) {
+    return SerializedValue.of(params.getString(paramName));
   }
 
 

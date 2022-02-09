@@ -5,8 +5,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 public class DurationExpressionMinus implements DurationExpression{
 
-  DurationExpression expr1;
-  DurationExpression expr2;
+  final DurationExpression expr1;
+  final DurationExpression expr2;
 
   public DurationExpressionMinus(DurationExpression expr1, DurationExpression expr2){
     this.expr1 = expr1;

@@ -16,7 +16,7 @@ import java.util.List;
 // output: ......[======]........................[=====].......
 public class FilterSequenceMinGapBefore implements TimeWindowsFilter {
 
-  private Duration delay;
+  private final Duration delay;
 
   public FilterSequenceMinGapBefore(Duration delay) {
     this.delay = delay;
@@ -26,10 +26,9 @@ public class FilterSequenceMinGapBefore implements TimeWindowsFilter {
   public Windows filter(Plan plan, Windows windows) {
     Window before = null;
     List<Window> filtered = new ArrayList<>();
-    var windowsToFilter = windows;
-    if (windowsToFilter.size() > 0) {
-      filtered.add(windowsToFilter.iterator().next());
-      for (var range : windowsToFilter) {
+    if (windows.size() > 0) {
+      filtered.add(windows.iterator().next());
+      for (var range : windows) {
         if (before != null) {
           if (range.start.minus(before.end).compareTo(delay) >= 0) {
             filtered.add(range);

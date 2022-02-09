@@ -1,7 +1,11 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import java.util.HashMap;
-import java.util.Map;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -28,6 +32,16 @@ public class ActivityType {
     this.name = name;
   }
 
+  /**
+   * ctor creates a new empty activity type container
+   *
+   * @param name IN the identifier of the activity type
+   */
+  public ActivityType(String name, TaskSpecType<?, ?, ?> specType) {
+    checkNotNull(name, "creating activity type with null name");
+    this.name = name;
+    this.specType = specType;
+  }
 
   /**
    * ctor creates a new empty activity type container
@@ -51,13 +65,6 @@ public class ActivityType {
     return name;
   }
 
-  public void setParameter(String name, Object value) {
-    checkNotNull(name, "setting parameter with null name");
-    checkNotNull(value, "setting parameter with null value");
-    parameters.put(name, value);
-  }
-
-
   /**
    * fetches the set of constraints required by instances of this activity type
    *
@@ -72,19 +79,49 @@ public class ActivityType {
     return activityConstraints;
   }
 
-  public Map<String, Object> getParameters() {
-    return parameters;
+  public TaskSpecType<?, ?, ?> getSpecType(){
+    return specType;
+  }
+
+  public boolean isParamLegal(String name){
+    if(specType!= null){
+      var paramSpec = getParameterSpecification(specType.getParameters(), name);
+      return paramSpec != null;
+    }
+    return true;
+  }
+
+  public static Parameter getParameterSpecification(List<Parameter> params, String name) {
+    var parameterSpecifications = params.stream()
+        .filter(var -> var.name().equals(name))
+        .collect(Collectors.toList());
+    if(parameterSpecifications.isEmpty()){
+      return null;
+    }
+    assert(parameterSpecifications.size()==1);
+    return parameterSpecifications.get(0);
+  }
+
+
+  @Override
+  public boolean equals(final Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    ActivityType that = (ActivityType) o;
+    return Objects.equals(name, that.name)
+           && Objects.equals(activityConstraints, that.activityConstraints)
+           && Objects.equals(specType, that.specType);
   }
 
   /**
    * the identifier associated with this activity type
    */
-  String name;
+  final String name;
   /**
    * a list of constraints associated to this activity type
    */
   StateConstraintExpression activityConstraints;
 
-  Map<String, Object> parameters = new HashMap<String, Object>();
+  TaskSpecType<?, ?, ?> specType;
 
 }

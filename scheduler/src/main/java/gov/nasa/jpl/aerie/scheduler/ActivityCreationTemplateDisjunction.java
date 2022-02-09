@@ -12,7 +12,7 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
 
   protected ActivityCreationTemplateDisjunction(List<ActivityCreationTemplate> acts) {
     assert (acts.size() > 0);
-    this.acts = new ArrayList<ActivityCreationTemplate>(acts);
+    this.acts = new ArrayList<>(acts);
   }
 
   @Override
@@ -47,9 +47,9 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
    */
   @Override
   public @NotNull
-  ActivityInstance createActivity(String name, Windows windows, boolean instantiateVariableParameters) {
+  ActivityInstance createActivity(String name, Windows windows, boolean instantiateVariableArguments) {
     //TODO: returns first ACT of disjunction, change it
-    return acts.get(0).createActivity(name, windows, instantiateVariableParameters);
+    return acts.get(0).createActivity(name, windows, instantiateVariableArguments);
 
   }
 
@@ -103,8 +103,7 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
       endsIn = template.endRange;
       durationIn = template.durationRange;
       startsOrEndsIn = template.startOrEndRange;
-      nameMatches = (template.nameRE != null) ? template.nameRE.pattern() : null;
-      parameters = template.parameters;
+      arguments = template.arguments;
       exprs = template.acts;
       return getThis();
     }
@@ -143,28 +142,20 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
           //}
           expr.startOrEndRange = startsOrEndsIn;
         }
-        if (nameMatches != null) {
-          //if(expr.nameRE!=null){
-          //    throw new IllegalArgumentException("Overdefined activity expression");
-          // }
-          throw new IllegalArgumentException("Todo");
-
-        }
-        if (parameters.size() > 0) {
+        if (arguments.size() > 0) {
           // if(expr.parameters.size()>0){
           //    throw new IllegalArgumentException("Overdefined activity expression");
           //}
-          expr.parameters = parameters;
+          expr.arguments = arguments;
         }
       }
 
-      ActivityCreationTemplateDisjunction dis = new ActivityCreationTemplateDisjunction(exprs);
-      return dis;
+      return new ActivityCreationTemplateDisjunction(exprs);
     }
 
     protected boolean orBuilder = false;
 
-    List<ActivityCreationTemplate> exprs = new ArrayList<ActivityCreationTemplate>();
+    List<ActivityCreationTemplate> exprs = new ArrayList<>();
 
     public OrBuilder or(ActivityCreationTemplate expr) {
       exprs.add(expr);

@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -34,9 +35,9 @@ public class AerieControllerTest {
     //adding the activity type to the mission model wrapper is necessary.
     //Activity must have the same name as in the mission model
     missionModel.add(actType);
-    var actinstance = new ActivityInstance("act1",actType , Duration.of(1, Duration.MINUTE),
+    var actinstance = new ActivityInstance(actType , Duration.of(1, Duration.MINUTE),
                                            Duration.of(1,  Duration.MINUTE));
-    actinstance.addParameter("setNewSSATime", true);
+    actinstance.addArgument("setNewSSATime", SerializedValue.of(true));
     controller.sendActivityInstance(localPlan, actinstance);
 
     Plan fetchedPlan = controller.fetchPlan(controller.getPlanId(localPlan));

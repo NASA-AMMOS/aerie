@@ -14,8 +14,8 @@ public class TransformWithReset implements TimeWindowsTransformer {
     this.resetExpr = reset;
   }
 
-  TimeWindowsTransformer transform;
-  TimeRangeExpression resetExpr;
+  private final TimeWindowsTransformer transform;
+  private final TimeRangeExpression resetExpr;
 
   @Override
   public Windows transformWindows(Plan plan, Windows windowsToTransform) {

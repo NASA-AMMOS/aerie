@@ -18,7 +18,6 @@ import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
-import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
@@ -27,14 +26,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * Class mocking the behavior of an externally defined resource and implementing ExternalState interface
- *
- * @param <T> the type of the variable managed by the resource
  */
-public class SimResource<T extends Comparable<T>> implements
-    ExternalState<T>
+public class SimResource implements
+    ExternalState
 {
 
   /** the identifier of this resource for use in properly querying the simulation results */
@@ -43,13 +41,7 @@ public class SimResource<T extends Comparable<T>> implements
   /** reference to simulation results that contextualize queries to this resource */
   private SimulationResults simResults;
 
-  /** the scheduler time stamp at the beginning of the horizon, used to contextualize offset-duration results */
-  private Duration horizonStart;
-
-  /** handles conversions between SerializedValue storage type and the desired in-core data type */
-  ValueMapper<T> valueMapper;
-
-  TreeMap<Window, T> values;
+  TreeMap<Window, SerializedValue> values;
 
   public boolean isEmpty() {
     return simResults == null
@@ -62,24 +54,24 @@ public class SimResource<T extends Comparable<T>> implements
     }
   }
 
+  final static Supplier<RuntimeException> exceptionType =
+      () -> new UnsupportedOperationException("aerie inequality constraints only work with real-valued resources");
+
   public void initFromSimRes(
       String name,
-      ValueMapper<T> valueMapper,
       SimulationResults simResults,
-      List<Pair<Duration, T>> fileValues,
+      List<Pair<Duration, SerializedValue>> fileValues,
       Duration planningHorizonStart)
   {
     this.name = name;
-    this.valueMapper = valueMapper;
     this.simResults = simResults;
-    this.horizonStart = planningHorizonStart;
 
     values = new TreeMap<>();
     Duration start = null;
-    T val;
-    T lastVal = null;
+    SerializedValue val;
+    SerializedValue lastVal = null;
     int i = 0;
-    for (Pair<Duration, T> entry : fileValues) {
+    for (Pair<Duration, SerializedValue> entry : fileValues) {
       i++;
       val = entry.getValue();
 
@@ -108,7 +100,7 @@ public class SimResource<T extends Comparable<T>> implements
     return outWindows;
   }
 
-  public T getValueAtTime(Duration t) {
+  public SerializedValue getValueAtTime(Duration t) {
     failIfEmpty();
     final var queryT = t;
 
@@ -123,11 +115,7 @@ public class SimResource<T extends Comparable<T>> implements
       final var matchPiece = Lists.reverse(profile.profilePieces).stream()
                                   .filter(containsQueryTimeP).findFirst();
       final var dblVal = matchPiece.map(piece -> piece.valueAt(queryT)).orElse(null);
-      //TODO: better type handling from profiles (maybe type vars?)
-      //queries on real profiles can only ever return doubles anyway (but what about SimResource<Float>?)
-      @SuppressWarnings("unchecked")
-      final var castVal = (T) dblVal;
-      return castVal;
+      return SerializedValue.of(dblVal);
     } else if (this.simResults.discreteProfiles.containsKey(this.name)) {
       //TODO: improve the profile data structure to allow fast time-keyed query
       //TODO: improve Window to allow querying containment in interval directly
@@ -137,109 +125,72 @@ public class SimResource<T extends Comparable<T>> implements
           -> !Window.intersect(piece.window, Window.at(queryT)).isEmpty();
       final var matchPiece = Lists.reverse(profile.profilePieces).stream()
                                   .filter(containsQueryTimeP).findFirst();
-      return matchPiece.map(piece -> valueMapper.deserializeValue(piece.value).getSuccessOrThrow()).orElse(null);
+      return matchPiece.map(piece -> piece.value).orElse(null);
     } else {
       return null;
     }
   }
 
-  public Windows whenValueBetween(T inf, T sup, Windows windows) {
+  public Windows whenValueBetween(SerializedValue inf, SerializedValue sup, Windows windows) {
     failIfEmpty();
 
     //special case doubles are the only aerie types that can be compared with inequality constraints
-    if (inf instanceof Double) {
-      final var gteConstraint = new GreaterThanOrEqual(new RealResource(this.name), new RealValue((Double) inf));
-      final var lteConstraint = new LessThanOrEqual(new RealResource(this.name), new RealValue((Double) sup));
+      final var gteConstraint = new GreaterThanOrEqual(new RealResource(this.name), new RealValue(inf.asReal().orElseThrow(exceptionType)));
+      final var lteConstraint = new LessThanOrEqual(new RealResource(this.name), new RealValue(sup.asReal().orElseThrow(exceptionType)));
       final var constraint = new And(gteConstraint, lteConstraint);
       final var satisfied = constraint.evaluate(this.simResults);
       return convertToSchedulerWindows(satisfied, windows);
-    } else {
-      throw new UnsupportedOperationException("aerie inequality constraints only work with real-valued resources");
-    }
+
   }
 
-  public Windows whenValueBelow(T val, Windows windows) {
+  public Windows whenValueBelow(SerializedValue val, Windows windows) {
     failIfEmpty();
-
     //special case doubles are the only aerie types that can be compared with inequality constraints
-    if (val instanceof Double) {
-      final var constraint = new LessThan(new RealResource(this.name), new RealValue((Double) val));
+      final var constraint = new LessThan(new RealResource(this.name), new RealValue(val.asReal().orElseThrow(exceptionType)));
       final var satisfied = constraint.evaluate(this.simResults);
       return convertToSchedulerWindows(satisfied, windows);
-    } else {
-      throw new UnsupportedOperationException("aerie inequality constraints only work with real-valued resources");
-    }
   }
 
-  public Windows whenValueAbove(T val, Windows windows) {
+  public Windows whenValueAbove(SerializedValue val, Windows windows) {
     failIfEmpty();
-
     //special case doubles are the only aerie types that can be compared with inequality constraints
-    if (val instanceof Double) {
-      final var constraint = new GreaterThan(new RealResource(this.name), new RealValue((Double) val));
-      final var satisfied = constraint.evaluate(this.simResults);
-      return convertToSchedulerWindows(satisfied, windows);
-    } else {
-      throw new UnsupportedOperationException("aerie inequality constraints only work with real-valued resources");
-    }
+    final var constraint = new GreaterThan(new RealResource(this.name), new RealValue(val.asReal().orElseThrow(exceptionType)));
+    final var satisfied = constraint.evaluate(this.simResults);
+    return convertToSchedulerWindows(satisfied, windows);
   }
 
-  public Windows whenValueEqual(T val, Windows windows) {
+  public Windows whenValueEqual(SerializedValue val, Windows windows) {
     failIfEmpty();
-
+    var asReal = val.asReal();
     Expression<Windows> constraint;
-    if (val instanceof Double || val instanceof Float) {
+    if (asReal.isPresent()) {
       //aeire discrete double resources can be promoted to real resources even if discrete, so just do that for all doubles
-      final var dblVal = ((Number) val).doubleValue();
+      final var dblVal = asReal.get();
       constraint = new Equal<>(new RealResource(this.name), new RealValue(dblVal));
     } else {
       //everything else is handled as a discrete resource
-      //TODO: improve type multiplexing (type vars? or just unify type handling with aerie)
-      if (val instanceof Boolean) {
-        final var serVal = SerializedValue.of((Boolean) val);
-        constraint = new Equal<>(new DiscreteResource(this.name), new DiscreteValue(serVal));
-      } else if (val instanceof Long || val instanceof Integer) {
-        final var serVal = SerializedValue.of(((Number) val).longValue());
-        constraint = new Equal<>(new DiscreteResource(this.name), new DiscreteValue(serVal));
-      } else if (val instanceof String) {
-        final var serVal = SerializedValue.of((String) val);
-        constraint = new Equal<>(new DiscreteResource(this.name), new DiscreteValue(serVal));
-      } else {
-        throw new UnsupportedOperationException("unrecognized type for aerie discrete resource equality constraint");
-      }
+        constraint = new Equal<>(new DiscreteResource(this.name), new DiscreteValue(val));
     }
     final var satisfied = constraint.evaluate(this.simResults);
     return convertToSchedulerWindows(satisfied, windows);
   }
 
   @Override
-  public Map<Window, T> getTimeline(Windows timeDomain) {
+  public Map<Window, SerializedValue> getTimeline(Windows timeDomain) {
     return values;
   }
 
   @Override
-  public Windows whenValueNotEqual(T val, Windows windows) {
+  public Windows whenValueNotEqual(SerializedValue val, Windows windows) {
 
     Expression<Windows> constraint;
-    if (val instanceof Double || val instanceof Float) {
+    var asReal = val.asReal();
+    if (asReal.isPresent()) {
       //aeire discrete double resources can be promoted to real resources even if discrete, so just do that for all doubles
-      final var dblVal = ((Number) val).doubleValue();
-      constraint = new NotEqual<>(new RealResource(this.name), new RealValue(dblVal));
+      constraint = new NotEqual<>(new RealResource(this.name), new RealValue(asReal.get()));
     } else {
       //everything else is handled as a discrete resource
-      //TODO: improve type multiplexing (type vars? or just unify type handling with aerie)
-      if (val instanceof Boolean) {
-        final var serVal = SerializedValue.of((Boolean) val);
-        constraint = new NotEqual<>(new DiscreteResource(this.name), new DiscreteValue(serVal));
-      } else if (val instanceof Long || val instanceof Integer) {
-        final var serVal = SerializedValue.of(((Number) val).longValue());
-        constraint = new NotEqual<>(new DiscreteResource(this.name), new DiscreteValue(serVal));
-      } else if (val instanceof String) {
-        final var serVal = SerializedValue.of((String) val);
-        constraint = new NotEqual<>(new DiscreteResource(this.name), new DiscreteValue(serVal));
-      } else {
-        throw new UnsupportedOperationException("unrecognized type for aerie discrete resource inequality constraint");
-      }
+        constraint = new NotEqual<>(new DiscreteResource(this.name), new DiscreteValue(val));
     }
     final var satisfied = constraint.evaluate(this.simResults);
     return convertToSchedulerWindows(satisfied, windows);

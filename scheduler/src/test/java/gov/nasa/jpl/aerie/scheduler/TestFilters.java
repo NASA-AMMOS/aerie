@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -23,13 +24,13 @@ public class TestFilters {
     smallState2.draw();
 
     StateConstraintExpression ste = new StateConstraintExpression.Builder()
-        .equal(smallState1, true)
+        .equal(smallState1, SerializedValue.of(true))
         .build();
 
     StateConstraintExpression ste2 = new StateConstraintExpression.Builder()
         .andBuilder()
-        .equal(smallState1, true)
-        .equal(smallState2, true)
+        .equal(smallState1, SerializedValue.of(true))
+        .equal(smallState2, SerializedValue.of(true))
         .build();
 
     TimeRangeExpression tre = new TimeRangeExpression.Builder()
@@ -56,10 +57,11 @@ public class TestFilters {
 
   }
 
-  public class SmallState1 extends MockState<Boolean> {
+  public static class SmallState1 extends MockState<Boolean> {
 
     public SmallState1(Window horizon) {
-      values = new LinkedHashMap<Window, Boolean>() {{
+      type = SupportedTypes.BOOLEAN;
+      values = new LinkedHashMap<>() {{
         put(Window.betweenClosedOpen(horizon.start, Duration.of(20, Duration.SECONDS)), true);
         put(Window.betweenClosedOpen(Duration.of(20, Duration.SECONDS), Duration.of(25, Duration.SECONDS)), false);
         put(Window.betweenClosedOpen(Duration.of(25, Duration.SECONDS), horizon.end), true);
@@ -82,10 +84,11 @@ public class TestFilters {
     System.out.println();
   }
 
-  public class SmallState2 extends MockState<Boolean> {
+  public static class SmallState2 extends MockState<Boolean> {
 
     public SmallState2(Window horizon) {
-      values = new LinkedHashMap<Window, Boolean>() {{
+      type = SupportedTypes.BOOLEAN;
+      values = new LinkedHashMap<>() {{
         put(Window.betweenClosedOpen(horizon.start, Duration.of(2, Duration.SECONDS)), true);
         put(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(3, Duration.SECONDS)), false);
         put(Window.betweenClosedOpen(Duration.of(4, Duration.SECONDS), Duration.of(6, Duration.SECONDS)), true);
@@ -129,7 +132,7 @@ public class TestFilters {
     Window r5 = Window.betweenClosedOpen(Duration.of(11, Duration.SECONDS), Duration.of(15, Duration.SECONDS));
     Window r7 = Window.betweenClosedOpen(Duration.of(18, Duration.SECONDS), Duration.of(22, Duration.SECONDS));
 
-    List<Window> ranges = new ArrayList<Window>();
+    List<Window> ranges = new ArrayList<>();
     ranges.add(r1);
     ranges.add(r2);
     ranges.add(r3);

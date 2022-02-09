@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -64,20 +65,21 @@ public class ActivityExpression {
   public abstract static class AbstractBuilder<B extends AbstractBuilder<B, AT>, AT extends ActivityExpression> {
 
 
-    Map<String, Object> parameters = new HashMap<String, Object>();
+    Map<String, SerializedValue> arguments = new HashMap<>();
+    Map<String, VariableArgumentComputer> variableArguments = new HashMap<>();
 
-    public <T> B withParameter(String param, QueriableState<T> state, TimeExpression timeToQuery) {
-      parameters.put(param, new StateQueryParam<T>(state, timeToQuery));
+    public B withArgument(String argument, QueriableState state, TimeExpression timeToQuery) {
+      variableArguments.put(argument, new StateQueryParam(state, timeToQuery));
       return getThis();
     }
 
-    public <T> B withParameter(String param, QueriableState<T> state) {
-      parameters.put(param, new StateQueryParam<T>(state, TimeExpression.atStart()));
+    public B withArgument(String argument, QueriableState state) {
+      variableArguments.put(argument, new StateQueryParam(state, TimeExpression.atStart()));
       return getThis();
     }
 
-    public B withParameter(String param, Object val) {
-      parameters.put(param, val);
+    public B withArgument(String argument, SerializedValue val) {
+      arguments.put(argument, val);
       return getThis();
     }
 
@@ -206,23 +208,6 @@ public class ActivityExpression {
     protected @Nullable Window durationIn;
 
     /**
-     * requires activities have instance name matching given regular expression
-     *
-     * the regular expression semantics is as for java.util.regex.Pattern
-     *
-     * @param pattern IN the regular expression for the allowed activity
-     *     instance names, or null if no specific name pattern is required
-     * @return the same builder object updated with new criteria
-     */
-    public @NotNull
-    B nameMatches(@Nullable String pattern) {
-      this.nameMatches = pattern;
-      return getThis();
-    }
-
-    protected @Nullable String nameMatches;
-
-    /**
      * bootstraps a new query builder based on existing template
      *
      * the new builder may then be modified without impacting the existing
@@ -257,10 +242,6 @@ public class ActivityExpression {
 
       if (existingAct.getDuration() != null) {
         durationIn = Window.at(existingAct.getDuration());
-      }
-
-      if (existingAct.getName() != null) {
-        nameMatches = existingAct.getName();
       }
 
       //FINISH: extract all param values as == criteria
@@ -320,9 +301,8 @@ public class ActivityExpression {
       endsIn = template.endRange;
       durationIn = template.durationRange;
       startsOrEndsIn = template.startOrEndRange;
-      nameMatches = (template.nameRE != null) ? template.nameRE.pattern() : null;
-      parameters = template.parameters;
-
+      arguments = template.arguments;
+      variableArguments = template.variableArguments;
       return getThis();
     }
 
@@ -334,10 +314,8 @@ public class ActivityExpression {
       template.durationRange = durationIn;
       template.startOrEndRange = startsOrEndsIn;
       template.startOrEndRangeW = startsOrEndsInW;
-      template.nameRE = (nameMatches != null)
-          ? java.util.regex.Pattern.compile(nameMatches) : null;
-
-      template.parameters = parameters;
+      template.arguments = arguments;
+      template.variableArguments = variableArguments;
       return template;
     }
 
@@ -461,7 +439,8 @@ public class ActivityExpression {
   }
 
 
-  Map<String, Object> parameters = new HashMap<String, Object>();
+  Map<String, SerializedValue> arguments = new HashMap<>();
+  Map<String, VariableArgumentComputer> variableArguments = new HashMap<>();
 
   /**
    * determines if the given activity matches all criteria of this template
@@ -509,29 +488,34 @@ public class ActivityExpression {
       match = (dur != null) && durationRange.contains(dur);
     }
 
-    if (match && nameRE != null) {
-      final var name = act.getName();
-      match = nameRE.matcher(name).matches();
+    //activity must have all instantiated arguments of template to be compatible
+    if (match && arguments != null) {
+      Map<String, SerializedValue> actInstanceArguments = act.getArguments();
+      for (var param : arguments.entrySet()) {
+        if (actInstanceArguments.containsKey(param.getKey())) {
+          match = actInstanceArguments.get(param.getKey()).equals(param.getValue());
+        }
+        if (!match) {
+          break;
+        }
+      }
     }
+    if(match && variableArguments != null){
+      Map<String, VariableArgumentComputer> actVariableParams = act.getVariableArguments();
+      for (var templateVariableArgument : variableArguments.entrySet()) {
+        var templateParamName = templateVariableArgument.getKey();
+        var templateParamValue = templateVariableArgument.getValue();
 
-    if (match && parameters != null) {
-      Map<String, Object> params = act.getParameters();
-      for (var param : parameters.entrySet()) {
-        if (params.containsKey(param.getKey())) {
-
-          if (param.getValue() instanceof StateQueryParam) {
-            var sqp =(StateQueryParam) param.getValue();
-            var timeOfQuery = sqp.timeExpr.computeTime(null,Window.between(act.getStartTime(), act.getEndTime()));
-            if(!timeOfQuery.isSingleton()){
-              throw new RuntimeException("TimeExpression must return Singleton Window for StateQuery parameters");
-            }
-            match = params
-                .get(param.getKey())
-                .equals(sqp.state.getValueAtTime(timeOfQuery.start));
-          }else {
-            match = params.get(param.getKey()).equals(param.getValue());
-          }
-
+        if (actVariableParams.containsKey(templateParamName)) {
+          //if the variable argument is formally defined
+          //we check on the equality between expression definitions
+          match = actVariableParams.get(templateParamName).equals(templateParamValue);
+        } else if(act.getArguments().containsKey(templateParamName)){
+            //if the variable argument has been instantiated (which is always the case for instances coming from the
+            //simulation), we check that the value would correspond
+            //TODO: value computed at the start time of the activity, per the current behavior of ActivityCreationTemplate/ActivityInstance
+            // but should be different and more specialized
+            match = ActivityInstance.getValue(templateParamValue, act.getStartTime()).equals(act.getArguments().get(templateParamName));
         }
         if (!match) {
           break;

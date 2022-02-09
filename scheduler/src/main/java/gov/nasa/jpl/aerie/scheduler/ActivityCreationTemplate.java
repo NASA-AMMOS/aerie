@@ -3,8 +3,6 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.scheduler.aerie.AerieActivityInstance;
-import gov.nasa.jpl.aerie.scheduler.aerie.AerieActivityType;
 
 /**
  * criteria used to identify create activity instances in scheduling goals
@@ -91,8 +89,8 @@ public class ActivityCreationTemplate extends ActivityExpression {
 
     protected DurationExpression parametricDur;
 
-    public Builder duration(@NotNull ExternalState<Duration> state, TimeExpression expr){
-      this.parametricDur = new DurationExpressionState(new StateQueryParam<>(state, expr));
+    public Builder duration(@NotNull ExternalState state, TimeExpression expr){
+      this.parametricDur = new DurationExpressionState(new StateQueryParam(state, expr));
       return this;
     }
 
@@ -108,8 +106,8 @@ public class ActivityCreationTemplate extends ActivityExpression {
       endsIn = template.endRange;
       durationIn = template.durationRange;
       startsOrEndsIn = template.startOrEndRange;
-      nameMatches = (template.nameRE != null) ? template.nameRE.pattern() : null;
-      parameters = template.parameters;
+      arguments = template.arguments;
+      variableArguments = template.variableArguments;
       parametricDur = template.parametricDur;
       return getThis();
     }
@@ -126,8 +124,6 @@ public class ActivityCreationTemplate extends ActivityExpression {
       template.startRange = startsIn;
       template.endRange = endsIn;
       template.startOrEndRange = startsOrEndsIn;
-      template.nameRE = (nameMatches != null)
-          ? java.util.regex.Pattern.compile(nameMatches) : null;
       if(parametricDur!=null){
         if(durationIn!= null){
           throw new RuntimeException("Cannot specify two different types of durations");
@@ -137,15 +133,13 @@ public class ActivityCreationTemplate extends ActivityExpression {
       template.type = type;
 
       if (durationIn != null) {
-        if(parametricDur!= null){
-          throw new RuntimeException("Cannot specify two different types of durations");
-        }
         template.durationRange = durationIn;
       }
       //REVIEW: probably want to store permissible rane separate from creation
       //        default value
 
-      template.parameters = parameters;
+      template.arguments = arguments;
+      template.variableArguments = variableArguments;
       return template;
     }
 
@@ -190,12 +184,12 @@ public class ActivityCreationTemplate extends ActivityExpression {
    * @return
    */
   public @NotNull
-  ActivityInstance createActivity(String name, Windows windows, boolean instantiateVariableParameters) {
+  ActivityInstance createActivity(String name, Windows windows, boolean instantiateVariableArguments) {
     //REVIEW: how to properly export any flexibility to instance?
 
     for (var window : windows) {
       //success = STNProcess(window);
-      var act = createInstanceForReal(name, window, instantiateVariableParameters);
+      var act = createInstanceForReal(name, window, instantiateVariableArguments);
       if (act!=null) {
         return act;
       }
@@ -204,14 +198,10 @@ public class ActivityCreationTemplate extends ActivityExpression {
 
   }
 
-  private ActivityInstance createInstanceForReal(String name, Window window, boolean instantiateVariableParameters) {
-    final ActivityInstance act;
-    if (type instanceof AerieActivityType) {
-      act = new AerieActivityInstance(name, (AerieActivityType) type);
-    } else {
-      act = new ActivityInstance(name, type);
-    }
-
+  private ActivityInstance createInstanceForReal(String name, Window window, boolean instantiateVariableArguments) {
+    final ActivityInstance act = new ActivityInstance(type);
+    act.setArguments(arguments);
+    act.setVariableArguments(variableArguments);
     TaskNetwork tw = new TaskNetwork();
     TaskNetworkAdapter tnw = new TaskNetworkAdapter(tw);
     tnw.addAct(name);
@@ -248,14 +238,9 @@ public class ActivityCreationTemplate extends ActivityExpression {
       }
     }
 
-    for (var param : parameters.entrySet()) {
-      if (param.getValue() instanceof ExternalState && instantiateVariableParameters) {
-        act.instantiateVariableParameter(param.getKey());
-      } else if(param.getValue() instanceof StateQueryParam && instantiateVariableParameters) {
-        act.instantiateVariableParameter(param.getKey());
-      } else{
-        //if not variable OR variable and not to be instantiated
-        act.addParameter(param.getKey(), param.getValue());
+    for (var param : variableArguments.entrySet()) {
+      if (instantiateVariableArguments) {
+        act.instantiateVariableArgument(param.getKey());
       }
     }
     return act;

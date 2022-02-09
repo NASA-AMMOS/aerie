@@ -113,34 +113,31 @@ public class TimeRangeExpression {
   protected List<TimeRangeExpression> timeRangeExpressions;
   protected List<Object> filtersAndTransformers;
   protected List<StateConstraintExpression> stateExpr;
-  protected List<ExternalState<?>> constantsStates;
+  protected List<ExternalState> constantsStates;
   private ActivityExpression actTemplate;
 
   //TODO:unused now, not sure it is useful
   protected Range<Time> horizon;
 
-  public static TimeRangeExpression constantValuesOf(ExternalState<?> sce) {
-    TimeRangeExpression tre = new Builder().ofEachValue(sce).build();
-    return tre;
+  public static TimeRangeExpression constantValuesOf(ExternalState sce) {
+    return new Builder().ofEachValue(sce).build();
   }
 
   public static TimeRangeExpression of(StateConstraintExpression sce) {
-    TimeRangeExpression tre = new Builder().from(sce).build();
-    return tre;
+    return new Builder().from(sce).build();
   }
 
   public static TimeRangeExpression of(Windows wins) {
-    TimeRangeExpression tre = new Builder().from(wins).build();
-    return tre;
+    return new Builder().from(wins).build();
   }
 
   public static class Builder {
-    List<Object> filtersAndTransformers = new ArrayList<Object>();
-    List<StateConstraintExpression> stateExpr = new ArrayList<StateConstraintExpression>();
-    List<ExternalState<?>> constantsStates = new ArrayList<ExternalState<?>>();
-    List<TimeRangeExpression> timeRangeExpressions = new ArrayList<TimeRangeExpression>();
+    final List<Object> filtersAndTransformers = new ArrayList<>();
+    final List<StateConstraintExpression> stateExpr = new ArrayList<>();
+    final List<ExternalState> constantsStates = new ArrayList<>();
+    final List<TimeRangeExpression> timeRangeExpressions = new ArrayList<>();
 
-    List<Windows> constantWin = new ArrayList<Windows>();
+    final List<Windows> constantWin = new ArrayList<>();
 
     Range<Time> horizon = null;
     private ActivityExpression actTemplate;
@@ -207,7 +204,7 @@ public class TimeRangeExpression {
      * @param <T> x
      * @return x
      */
-    public <T> Builder ofEachValue(ExternalState<T> state) {
+    public <T> Builder ofEachValue(ExternalState state) {
       this.constantsStates.add(state);
       return getThis();
 

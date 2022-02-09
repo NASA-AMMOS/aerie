@@ -24,7 +24,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
      * instances that must exist to satisfy this goal. the activities are not
      * immediately inserted in the plan. partial satisfaction is possible,
      * using the heuristic that more matching activities is always preferable
-     * to fewer. individual instances must match exactly (all parameters)
+     * to fewer. individual instances must match exactly (all arguments)
      *
      * the procedure may recommend creation of a list of activities all at
      * once, or may make repeated incremental recommendations for single
@@ -95,7 +95,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
    * collects conflicts where the external procedural generator would like to
    * create an activity instance but an exactly matching one does not exist in
    * the plan (and should probably be created). The matching is strict: all
-   * parameters must be identical.
+   * arguments must be identical.
    */
   public Collection<Conflict> getConflicts(Plan plan) {
     final var conflicts = new java.util.LinkedList<Conflict>();
@@ -107,12 +107,11 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
     //walk each requested act and try to find an exact match in the plan
     for (final var requestedAct : requestedActs) {
 
-      //use a strict matching based on all parameters of the instance
+      //use a strict matching based on all arguments of the instance
       //(including exact start time, but not name)
       //REVIEW: should strict name also match? but what if uuid names?
       final var satisfyingActSearch = new ActivityExpression.Builder()
           .basedOn(requestedAct)
-          .nameMatches(null)
           .build();
       final var matchingActs = plan.find(satisfyingActSearch);
 
@@ -144,7 +143,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
    * instances that must exist to satisfy this goal. the activities are not
    * immediately inserted in the plan. partial satisfaction is possible,
    * using the heuristic that more matching activities is always preferable
-   * to fewer. individual instances must match exactly (all parameters)
+   * to fewer. individual instances must match exactly (all arguments)
    *
    * the procedure may recommend creation of a list of activities all at
    * once, or may make repeated incremental recommendations for single

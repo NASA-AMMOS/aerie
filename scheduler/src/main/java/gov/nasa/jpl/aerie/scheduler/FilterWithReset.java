@@ -15,8 +15,8 @@ public class FilterWithReset implements TimeWindowsFilter {
     this.resetExpr = reset;
   }
 
-  TimeWindowsFilter filter;
-  TimeRangeExpression resetExpr;
+  final TimeWindowsFilter filter;
+  final TimeRangeExpression resetExpr;
 
   @Override
   public Windows filter(Plan plan, Windows windowsToFilter) {

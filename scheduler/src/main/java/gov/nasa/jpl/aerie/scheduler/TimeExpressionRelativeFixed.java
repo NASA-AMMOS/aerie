@@ -7,9 +7,9 @@ import java.util.Map;
 
 public class TimeExpressionRelativeFixed extends TimeExpression {
 
-  protected TimeAnchor anchor;
+  protected final TimeAnchor anchor;
   protected boolean fixed = true;
-  protected String name;
+  protected final String name;
 
   public TimeExpressionRelativeFixed(TimeAnchor anchor, boolean fixed, String name) {
     this.fixed = fixed;

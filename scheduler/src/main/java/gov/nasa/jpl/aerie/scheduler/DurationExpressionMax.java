@@ -7,7 +7,7 @@ import java.util.List;
 
 public class DurationExpressionMax implements DurationExpression{
 
-  List<DurationExpression> exprs;
+  final List<DurationExpression> exprs;
 
   public DurationExpressionMax(DurationExpression... exprs){
     this.exprs = List.of(exprs);

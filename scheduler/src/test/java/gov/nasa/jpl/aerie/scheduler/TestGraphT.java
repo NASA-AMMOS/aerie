@@ -51,7 +51,7 @@ public class TestGraphT {
 
 
     SimpleDirectedWeightedGraph<String, DefaultWeightedEdge> g =
-        new SimpleDirectedWeightedGraph<String, DefaultWeightedEdge>(DefaultWeightedEdge.class);
+        new SimpleDirectedWeightedGraph<>(DefaultWeightedEdge.class);
     g.addVertex("o");
     g.addVertex("b");
     g.addVertex("e");
@@ -76,7 +76,7 @@ public class TestGraphT {
 
     try {
       BellmanFordShortestPath<String, DefaultWeightedEdge> algo =
-          new BellmanFordShortestPath<String, DefaultWeightedEdge>(g);
+          new BellmanFordShortestPath<>(g);
       System.out.println(algo.getPathWeight("o", "b"));
       System.out.println(algo.getPathWeight("b", "o"));
 

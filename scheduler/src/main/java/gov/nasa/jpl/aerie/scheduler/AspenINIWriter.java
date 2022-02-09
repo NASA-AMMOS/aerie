@@ -25,7 +25,7 @@ public class AspenINIWriter {
   /**
    * the controlling configuration for the serializer
    */
-  private HuginnConfiguration config;
+  final private HuginnConfiguration config;
 
   /**
    * the output stream to use for the aspen model
@@ -57,7 +57,7 @@ public class AspenINIWriter {
 
     for (final var act : plan.getActivitiesByTime()) {
       final var dur = act.getDuration() == null ? Duration.of(1, Duration.SECONDS) : act.getDuration();
-      ini.println(act.getType().getName() + " " + act.getName().replace('-', '_') + " {");
+      ini.println(act.getType().getName() + " " + act.getId() + " {");
       ini.println("  start_time = " + act.getStartTime().toString() + ";");
       ini.println("  duration = " + dur.in(Duration.MILLISECOND) / 1000 + ";");
       ini.println("};");

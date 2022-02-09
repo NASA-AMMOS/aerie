@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,12 +9,12 @@ import java.util.List;
 public class StateConstraintExpressionEqualSet extends StateConstraintExpression {
 
 
-  StateConstraintExpressionDisjunction sced;
-  ExternalState<?> state;
+  protected final StateConstraintExpressionDisjunction sced;
+  protected final ExternalState state;
 
-  public <T extends Comparable<T>> StateConstraintExpressionEqualSet(ExternalState<T> state, List<T> values) {
+  public <T extends Comparable<T>> StateConstraintExpressionEqualSet(ExternalState state, List<SerializedValue> values) {
     super(null);
-    List<StateConstraintExpression> list = new ArrayList<StateConstraintExpression>();
+    List<StateConstraintExpression> list = new ArrayList<>();
     for (var value : values) {
       var ec = StateConstraintExpression.buildEqualConstraint(state, value);
       list.add(new StateConstraintExpression(ec));
@@ -22,7 +23,7 @@ public class StateConstraintExpressionEqualSet extends StateConstraintExpression
     this.sced = new StateConstraintExpressionDisjunction(list);
   }
 
-  public ExternalState<?> getState() {
+  public ExternalState getState() {
     return state;
   }
 

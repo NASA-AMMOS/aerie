@@ -345,7 +345,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
       if (act.getDuration() != null) {
         requestSB.append(argFormat.formatted("duration", getGraphQLValueString(act.getDuration())));
       }
-      for (final var arg : act.getParameters().entrySet()) {
+      for (final var arg : act.getArguments().entrySet()) {
         final var name = arg.getKey();
         var value = getGraphQLValueString(arg.getValue());
         requestSB.append(argFormat.formatted(name, value));

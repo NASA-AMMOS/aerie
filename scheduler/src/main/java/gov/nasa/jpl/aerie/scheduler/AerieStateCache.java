@@ -9,14 +9,14 @@ public class AerieStateCache {
 
   private static final Duration MAX_DIST = Duration.duration(500, Duration.MILLISECOND);
 
-  String stateName;
-  Class<?> type;
-  TreeMap<Duration, Object> timeValue;
+  final String stateName;
+  final Class<?> type;
+  final TreeMap<Duration, Object> timeValue;
 
   public AerieStateCache(String name, Class<?> type) {
     this.type = type;
     this.stateName = name;
-    this.timeValue = new TreeMap<Duration, Object>();
+    this.timeValue = new TreeMap<>();
   }
 
   public void setValue(Duration t, Object val) {

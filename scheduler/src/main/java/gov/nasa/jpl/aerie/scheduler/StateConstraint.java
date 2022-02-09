@@ -1,19 +1,20 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class StateConstraint<T extends Comparable<T>> {
+public abstract class StateConstraint {
   /**
    * List of values used to define the constraint
    */
-  List<T> valueDefinition;
+  List<SerializedValue> valueDefinition;
   /**
    * State to which the constraint refers to
    */
-  ExternalState<T> state;
+  ExternalState state;
 
   /**
    * Value cache for the constraint preventing from querying distant state if value has already been queried
@@ -27,7 +28,7 @@ public abstract class StateConstraint<T extends Comparable<T>> {
   /**
    * Static boolean allowing to enable caching or not
    */
-  public static boolean ACTIVATE_CACHE = false;
+  public static final boolean ACTIVATE_CACHE = false;
 
   protected Windows timeDomain;
 
@@ -60,16 +61,16 @@ public abstract class StateConstraint<T extends Comparable<T>> {
   }
 
 
-  protected void setDomainUnary(T value) {
-    this.valueDefinition = new ArrayList<T>();
+  protected void setDomainUnary(SerializedValue value) {
+    this.valueDefinition = new ArrayList<>();
     this.valueDefinition.add(value);
   }
 
-  protected void setValueDefinition(List<T> values) {
+  protected void setValueDefinition(List<SerializedValue> values) {
     this.valueDefinition = values;
   }
 
-  protected void setState(ExternalState<T> state) {
+  protected void setState(ExternalState state) {
     this.state = state;
   }
 

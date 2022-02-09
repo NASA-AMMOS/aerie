@@ -1,26 +1,28 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import com.google.common.collect.RangeMap;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+
+import java.util.Map;
 
 /**
  * A state proxy is a state allowing to map values from another state (T) to a user-defined domain (X)
  */
-public class StateProxy<T extends Comparable<T>, X> implements QueriableState<X> {
+public class StateProxy implements QueriableState {
 
-  private QueriableState<T> state;
+  private final QueriableState state;
 
-  private RangeMap<T, X> proxyValues;
+  private final Map<SerializedValue, SerializedValue> proxyValues;
 
 
-  public StateProxy(QueriableState<T> state, RangeMap<T, X> proxyValues) {
+  public StateProxy(QueriableState state, Map<SerializedValue, SerializedValue> proxyValues) {
     this.state = state;
     this.proxyValues = proxyValues;
   }
 
-  public X lookup(Duration time) {
-    T val = state.getValueAtTime(time);
-    X proxy = proxyValues.get(val);
+  public SerializedValue lookup(Duration time) {
+    var val = state.getValueAtTime(time);
+    var proxy = proxyValues.get(val);
     if (proxy == null) {
       throw new IllegalArgumentException("mapping is not complete");
     }
@@ -29,7 +31,7 @@ public class StateProxy<T extends Comparable<T>, X> implements QueriableState<X>
 
 
   @Override
-  public X getValueAtTime(Duration t) {
+  public SerializedValue getValueAtTime(Duration t) {
     return lookup(t);
   }
 }

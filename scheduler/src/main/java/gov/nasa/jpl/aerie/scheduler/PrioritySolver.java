@@ -89,7 +89,13 @@ public class PrioritySolver implements Solver {
 
     for(var act: acts){
       //if some parameters are left uninstantiated, this is the last moment to do it
-      act.instantiateVariableParameters();
+      act.instantiateVariableArguments();
+      var duration = act.getDuration();
+      if(duration != null && duration.longerThan(this.config.getHorizon().getEndAerie())){
+        System.out.println("Activity " + act.toString() + " is planned to finish after the end of the planning horizon, not simulating. Extend the planning horizon.");
+        allGood = false;
+        break;
+      }
       plan.add(act);
       if(checkSimBeforeInsertingActivities) {
         getSimFacade().simulatePlan(plan);
@@ -127,9 +133,7 @@ public class PrioritySolver implements Solver {
     problem.getInitialPlan().getActivitiesByTime().stream()
       .filter( act -> (act.getStartTime()==null)
                || config.getHorizon().contains( act.getStartTime() ) )
-      .forEach( act->{
-        checkAndInsertAct(act);
-      } );
+      .forEach(this::checkAndInsertAct);
     this.checkSimBeforeInsertingActivities = prevCheckFlag;
 
     evaluation = new Evaluation();
@@ -204,7 +208,7 @@ public class PrioritySolver implements Solver {
     //create queue container using comparator and pre-sized for all goals
     final var capacity = rawGoals.size();
     assert capacity >= 0;
-    final var goalQ = new java.util.PriorityQueue<Goal>(
+    final var goalQ = new java.util.PriorityQueue<>(
         (capacity == 0) ? 1 : capacity, //NB: can't use zero pre-size capacity
         goalSort
     );
@@ -458,7 +462,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
     //prune based on constraints on goal and activity type (mutex, state,
     //event, etc)
     //TODO: move this into polymorphic method. don't want to be demuxing types
-    Collection<StateConstraintExpression> stateConstraints = new LinkedList<StateConstraintExpression>();
+    Collection<StateConstraintExpression> stateConstraints = new LinkedList<>();
 
     //add all goal constraints
     StateConstraintExpression goalConstraints = goal.getStateConstraints();
@@ -467,8 +471,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
     if (goalConstraints != null) {
       stateConstraints.add(goalConstraints);
     }
-    if (missing instanceof MissingActivityInstanceConflict) {
-      final var missingInstance = (MissingActivityInstanceConflict) missing;
+    if (missing instanceof final MissingActivityInstanceConflict missingInstance) {
       final var act = missingInstance.getInstance();
       actType = act.getType();
       StateConstraintExpression c = act.getType().getStateConstraints();
@@ -497,15 +500,13 @@ private void satisfyOptionGoal(OptionGoal goal) {
     if (!startWindows.isEmpty()) {
       //TODO: move this into a polymorphic method? definitely don't want to be
       //demuxing on all the conflict types here
-      if (missing instanceof MissingActivityInstanceConflict) {
+      if (missing instanceof final MissingActivityInstanceConflict missingInstance) {
         //FINISH: clean this up code dupl re windows etc
-        final var missingInstance = (MissingActivityInstanceConflict) missing;
         final var act = missingInstance.getInstance();
         newActs.add(new ActivityInstance(act));
 //        final var windows = createWindows( act, startWindows );
 //        newActs.addAll( windows );
-      } else if (missing instanceof MissingActivityTemplateConflict) {
-        final var missingTemplate = (MissingActivityTemplateConflict) missing;
+      } else if (missing instanceof final MissingActivityTemplateConflict missingTemplate) {
         //select the "best" time among the possibilities, and latest among ties
         //REVIEW: currently not handling preferences / ranked windows
         final var startT = startWindows.minTimePoint();
@@ -535,7 +536,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
   }
 
   private List<ActivityInstance> processConflict(MissingActivityInstanceConflict c, Windows startWindows) {
-    List<ActivityInstance> instances = new ArrayList<ActivityInstance>();
+    List<ActivityInstance> instances = new ArrayList<>();
     //FINISH: clean this up code dupl re windows etc
     final var act = c.getInstance();
     instances.add(new ActivityInstance(act));
@@ -546,7 +547,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
 
 
   private List<ActivityInstance> processConflict(MissingActivityTemplateConflict c, Windows startWindows) {
-    List<ActivityInstance> instances = new ArrayList<ActivityInstance>();
+    List<ActivityInstance> instances = new ArrayList<>();
 
     //select the "best" time among the possibilities, and latest among ties
     //REVIEW: currently not handling preferences / ranked windows
@@ -604,8 +605,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
 
       //base window act name on notional act name and index
       //REVIEW: windows should be able to exist absent a notional act
-      final var windowName = notionalAct.getName() + "_window" + windowIdx;
-      final var windowAct = new ActivityInstance(windowName, windowActType);
+      final var windowAct = new ActivityInstance(windowActType);
 
       //align window with span of valid start times
       windowAct.setStartTime(startRange.start);
@@ -688,14 +688,14 @@ private void satisfyOptionGoal(OptionGoal goal) {
    *
    * remains constant throughout solver lifetime
    */
-  HuginnConfiguration config;
+  final HuginnConfiguration config;
 
   /**
    * description of the planning problem to solve
    *
    * remains constant throughout solver lifetime
    */
-  Problem problem;
+  final Problem problem;
 
   /**
    * the single-shot priority-ordered greedy solution devised by the solver

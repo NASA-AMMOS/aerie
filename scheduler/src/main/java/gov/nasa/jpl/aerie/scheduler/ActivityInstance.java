@@ -3,13 +3,14 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * descriptor of a specific execution of a mission behavior
@@ -20,13 +21,12 @@ public class ActivityInstance {
   /**
    * creates a new unscheduled activity instance of specified type
    *
-   * @param name IN the human legible name of the activity instance
    * @param type IN the datatype signature of and behavior descriptor invoked
    *     by this activity instance
    */
   //TODO: reconsider unscheduled activity instances
-  public ActivityInstance(String name, ActivityType type) {
-    this.name = name;
+  public ActivityInstance(ActivityType type) {
+    this.id = new SchedulingActivityInstanceId(uniqueId.getAndIncrement());
     this.type = type;
     //TODO: should guess duration from activity type bounds
   }
@@ -34,13 +34,12 @@ public class ActivityInstance {
   /**
    * creates a new activity instance of specified type
    *
-   * @param name IN the human legible name of the activity instance
    * @param type IN the datatype signature of and behavior descriptor invoked
    *     by this activity instance
    * @param start IN the time at which the activity is scheduled
    */
-  public ActivityInstance(String name, ActivityType type, Duration start) {
-    this(name, type);
+  public ActivityInstance(ActivityType type, Duration start) {
+    this(type);
     this.startTime = start;
     //TODO: should guess duration from activity type bounds
   }
@@ -48,14 +47,13 @@ public class ActivityInstance {
   /**
    * creates a new activity instance of specified type
    *
-   * @param name IN the human legible name of the activity instance
    * @param type IN the datatype signature of and behavior descriptor invoked
    *     by this activity instance
    * @param start IN the time at which the activity is scheduled
    * @param duration IN the duration that the activity lasts for
    */
-  public ActivityInstance(String name, ActivityType type, Duration start, Duration duration) {
-    this(name, type, start);
+  public ActivityInstance(ActivityType type, Duration start, Duration duration) {
+    this(type, start);
     if (duration.isNegative()) {
       throw new RuntimeException("Negative duration");
     }
@@ -63,17 +61,17 @@ public class ActivityInstance {
   }
 
   /**
-   * create an activity instance based on the provided one
+   * create an activity instance based on the provided one (but adifferent id)
    *
    * @param o IN the activity instance to copy from
    */
   public ActivityInstance(ActivityInstance o) {
-    this.name = o.name; //TODO: names should probably not be replicated
+    this.id = new SchedulingActivityInstanceId(uniqueId.getAndIncrement());
     this.type = o.type;
     this.startTime = o.startTime;
     this.duration = o.duration;
-    this.parameters = o.parameters;
-
+    this.arguments = o.arguments;
+    this.variableArguments = o.variableArguments;
     if (duration.isNegative()) {
       throw new RuntimeException("Negative duration");
     }
@@ -87,12 +85,7 @@ public class ActivityInstance {
    */
   public static ActivityInstance getActWithEarliestEndTtime(List<ActivityInstance> acts) {
     if (acts.size() > 0) {
-      Collections.sort(acts, new Comparator<ActivityInstance>() {
-        @Override
-        public int compare(ActivityInstance u1, ActivityInstance u2) {
-          return u1.getEndTime().compareTo(u2.getEndTime());
-        }
-      });
+      acts.sort(Comparator.comparing(ActivityInstance::getEndTime));
 
       return acts.get(0);
     }
@@ -106,12 +99,7 @@ public class ActivityInstance {
    */
   public static ActivityInstance getActWithLatestEndTtime(List<ActivityInstance> acts) {
     if (acts.size() > 0) {
-      Collections.sort(acts, new Comparator<ActivityInstance>() {
-        @Override
-        public int compare(ActivityInstance u1, ActivityInstance u2) {
-          return u1.getEndTime().compareTo(u2.getEndTime());
-        }
-      });
+      acts.sort(Comparator.comparing(ActivityInstance::getEndTime));
 
       return acts.get(acts.size() - 1);
     }
@@ -125,12 +113,7 @@ public class ActivityInstance {
    */
   public static ActivityInstance getActWithEarliestStartTtime(List<ActivityInstance> acts) {
     if (acts.size() > 0) {
-      Collections.sort(acts, new Comparator<ActivityInstance>() {
-        @Override
-        public int compare(ActivityInstance u1, ActivityInstance u2) {
-          return u1.getStartTime().compareTo(u2.getStartTime());
-        }
-      });
+      acts.sort(Comparator.comparing(ActivityInstance::getStartTime));
 
       return acts.get(0);
     }
@@ -144,12 +127,7 @@ public class ActivityInstance {
    */
   public static ActivityInstance getActWithLatestStartTtime(List<ActivityInstance> acts) {
     if (acts.size() > 0) {
-      Collections.sort(acts, new Comparator<ActivityInstance>() {
-        @Override
-        public int compare(ActivityInstance u1, ActivityInstance u2) {
-          return u1.getStartTime().compareTo(u2.getStartTime());
-        }
-      });
+      acts.sort(Comparator.comparing(ActivityInstance::getStartTime));
 
       return acts.get(acts.size() - 1);
     }
@@ -205,8 +183,8 @@ public class ActivityInstance {
    *
    * @return a human-legible identifier for this activity instance
    */
-  public String getName() {
-    return this.name;
+  public SchedulingActivityInstanceId getId() {
+    return this.id;
   }
 
   /**
@@ -219,11 +197,11 @@ public class ActivityInstance {
   }
 
   public String toString() {
-    return "[" + this.type.getName() + ","+ this.name + "," + this.getStartTime() + "," + this.getEndTime() + "]";
+    return "[" + this.type.getName() + ","+ this.id + "," + this.getStartTime() + "," + this.getEndTime() + "]";
   }
 
   /**
-   * Checks equality but in name
+   * Checks equality but not in name
    * @param that the other activity instance to compare to
    * @return true if they are equal in properties, false otherwise
    */
@@ -231,7 +209,8 @@ public class ActivityInstance {
     return type.equals(that.type)
            && duration.isEqualTo(that.duration)
            && startTime.isEqualTo(that.startTime)
-           && parameters.equals(that.parameters);
+           && arguments.equals(that.arguments)
+           && variableArguments.equals(variableArguments);
   }
 
   @Override
@@ -239,73 +218,73 @@ public class ActivityInstance {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     ActivityInstance that = (ActivityInstance) o;
-    return name.equals(that.name)
-           && type.equals(that.type)
+    return Objects.equals(id, that.id)
+           && Objects.equals(type,that.type)
            && duration.isEqualTo(that.duration)
            && startTime.isEqualTo(that.startTime)
-           && parameters.equals(that.parameters);
-/* TODO: should handle parameters too!
-    return Objects.equals(this.name, that.name)
-           && Objects.equals(this.type,that.type)
-           && Objects.equals(this.startTime, that.startTime)
-           && Objects.equals(this.duration, that.duration)
-           && Objects.equals(this.parameters, that.parameters);
- */
+           && Objects.equals(arguments, that.arguments)
+           && Objects.equals(variableArguments, that.variableArguments);
   }
 
-  public void instantiateVariableParameters(){
-    for (var param : parameters.entrySet()) {
-      if(isVariableParameter(param.getValue())){
-        instantiateVariableParameter(param.getKey());
+  public void instantiateVariableArguments(){
+    for (var arg : variableArguments.entrySet()) {
+      if(!isVariableArgumentInstantiated(arg.getKey())) {
+        instantiateVariableArgument(arg.getKey());
       }
     }
   }
 
-  /*Default policy is to query at activity start
-  * TODO: kind of defeats the purpose of an expression ?
+  boolean isVariableArgumentInstantiated(String name){
+    if(!variableArguments.containsKey(name)){
+      throw new IllegalStateException(name + " is not a variable argument");
+    }
+    return arguments.containsKey(name);
+  }
+
+  /*
+  * Default policy is to query at activity start
+  * TODO: kind of defeats the purpose of an expression
   * */
-  public void instantiateVariableParameter(String name) {
-    instantiateVariableParameter(name, getStartTime());
+  public void instantiateVariableArgument(String name) {
+    instantiateVariableArgument(name, getStartTime());
   }
 
-  public boolean isVariableParameter(Object paramValue){
-    return (paramValue instanceof ExternalState) || (paramValue instanceof StateQueryParam);
+  public static SerializedValue getValue(VariableArgumentComputer computer, Duration time){
+    if (computer instanceof QueriableState state) {
+      return state.getValueAtTime(time);
+    } else if(computer instanceof StateQueryParam state) {
+      return state.getValue(null, Window.at(time));
+    } else{
+      throw new IllegalArgumentException("Variable argument specification not supported");
+    }
   }
 
-  public void instantiateVariableParameter(String name, Duration time){
-    var paramValue = parameters.get(name);
-    if(paramValue==null){
-      throw new IllegalArgumentException("Unknown parameter "+name);
+  public SerializedValue getInstantiatedArgumentValue(String name, Duration time){
+    var argumentValue = variableArguments.get(name);
+    if(argumentValue==null){
+      throw new IllegalArgumentException("Unknown argument "+ name);
     }
-    if(!isVariableParameter(paramValue)){
-      throw new IllegalArgumentException("Parameter "+name + " is not variable");
-    }
-    if (paramValue instanceof ExternalState) {
-      @SuppressWarnings("unchecked")
-      var state = (ExternalState<?>) paramValue;
-      addParameter(name, state.getValueAtTime(time));
-    } else if(paramValue instanceof StateQueryParam) {
-      var state = (StateQueryParam) paramValue;
-      addParameter(name, state.getValue(null, Window.at(time)));
-    }
+    return getValue(argumentValue, time);
+  }
+
+  public void instantiateVariableArgument(String name, Duration time){
+    addArgument(name, getInstantiatedArgumentValue(name, time));
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, type, duration, startTime);
-//TODO: should handle parameters too!
-//    return Objects.hash(name, type, duration, startTime, parameters);
+    return Objects.hash(id, type, duration, startTime, arguments, variableArguments);
   }
 
   /**
-   * the human-legible identifier of the activity instance
+   * unique id
    */
-  private String name;
+  private final SchedulingActivityInstanceId id;
 
   /**
    * the descriptor for the behavior invoked by this activity instance
    */
-  private ActivityType type;
+  private final ActivityType type;
 
   /**
    * the length of time this activity instances lasts for after its start
@@ -318,36 +297,66 @@ public class ActivityInstance {
   private Duration startTime;
 
   /**
-   * adds a parameter to the activity instance
+   * adds an argument to the activity instance
    *
-   * @param name name of the parameter
-   * @param param value of the parameter
+   * @param argument specification. must be identical as the one defined in the model
+   * @param param value of the argument
    */
-  public void addParameter(String name, Object param) {
-    parameters.put(name, param);
+  public void addArgument(String argument, SerializedValue param) {
+    assert(type.isParamLegal(argument));
+    arguments.put(argument, param);
+  }
+
+  public void addVariableArgument(String name, VariableArgumentComputer variableArgumentComputer) {
+    assert(type.isParamLegal(name));
+    variableArguments.put(name, variableArgumentComputer);
   }
 
   /**
-   * Sets all the parameters of the activity instance
+   * gets all the variable arguments of the activity instance
    *
-   * @param params a name/value map of parameters
+   * @return a name/value map of arguments for this instance
    */
-  public void setParameters(Map<String, Object> params) {
-    this.parameters = params;
+  public Map<String, VariableArgumentComputer> getVariableArguments() {
+    return variableArguments;
+  }
+
+
+  /**
+   * Sets all the arguments of the activity instance
+   *
+   * @param arguments a name/value map of arguments
+   */
+  public void setArguments(Map<String, SerializedValue> arguments) {
+    this.arguments = arguments;
+  }
+  /**
+   * Sets all the variable arguments of the activity instance
+   *
+   * @param variableArguments a name/value map of arguments
+   */
+  public void setVariableArguments(Map<String, VariableArgumentComputer> variableArguments) {
+    this.variableArguments = variableArguments;
   }
 
   /**
-   * gets all the parameters of the activity instance
+   * gets all the arguments of the activity instance
    *
-   * @return a name/value map of parameters for this instance
+   * @return a name/value map of arguments for this instance
    */
-  public Map<String, Object> getParameters() {
-    return parameters;
+  public Map<String, SerializedValue> getArguments() {
+    return arguments;
   }
 
   /**
-   * Parameters are stored in a String/Object hashmap.
+   * arguments are stored in a String/Object hashmap.
    */
-  private Map<String, Object> parameters = new HashMap<String, Object>();
+  private Map<String, SerializedValue> arguments = new HashMap<>();
+  /**
+   * uninstantiated arguments
+   */
+  private Map<String, VariableArgumentComputer> variableArguments = new HashMap<>();
 
+
+  private static final AtomicLong uniqueId = new AtomicLong();
 }
