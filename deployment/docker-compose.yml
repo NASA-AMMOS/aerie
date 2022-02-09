@@ -9,6 +9,7 @@ services:
       GQL_API_URL: http://localhost:8080/v1/graphql
       PORT: 9000
       POSTGRES_AERIE_MERLIN_DB: aerie_merlin
+      POSTGRES_AERIE_SCHED_DB: aerie_sched
       POSTGRES_AERIE_UI_DB: aerie_ui
       POSTGRES_HOST: postgres
       POSTGRES_PASSWORD: aerie
@@ -76,13 +77,14 @@ services:
     depends_on: ["postgres"]
     environment:
       AERIE_MERLIN_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_merlin
+      AERIE_SCHED_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_sched
       AERIE_UI_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_ui
       HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
       HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_hasura
       HASURA_GRAPHQL_METADATA_DIR: /hasura-metadata
-    image: "hasura/graphql-engine:v2.0.10.cli-migrations-v3"
+    image: "hasura/graphql-engine:v2.2.0.cli-migrations-v3"
     ports: ["8080:8080"]
     restart: always
     volumes:
