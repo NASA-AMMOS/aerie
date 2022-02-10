@@ -49,11 +49,12 @@ public class SchedulerParsers {
    * @return a parser that accepts hasura action / session details along with specified input type into a tuple
    *     of the form (name,input,session) ready for application of a mapping
    */
-  private static <I> JsonParser<Pair<Pair<String, I>, HasuraAction.Session>> hasuraActionP(final JsonParser<I> inputP) {
+  private static <I> JsonParser<Pair<Pair<Pair<String, I>, HasuraAction.Session>, String>> hasuraActionP(final JsonParser<I> inputP) {
     return productP
         .field("action", productP.field("name", stringP))
         .field("input", inputP)
-        .field("session_variables", hasuraActionSessionP);
+        .field("session_variables", hasuraActionSessionP)
+        .field("request_query", stringP);
   }
 
   /**
@@ -62,6 +63,6 @@ public class SchedulerParsers {
   public static final JsonParser<HasuraAction<HasuraAction.SpecificationInput>> hasuraSpecificationActionP
       = hasuraActionP(productP.field("specificationId", specificationIdP))
       .map(Iso.of(
-          untuple((name, specificationId, session) -> new HasuraAction<>(name, new HasuraAction.SpecificationInput(specificationId), session)),
-          action -> tuple(action.name(), action.input().specificationId(), action.session())));
+          untuple((name, specificationId, session, requestQuery) -> new HasuraAction<>(name, new HasuraAction.SpecificationInput(specificationId), session)),
+          action -> tuple(action.name(), action.input().specificationId(), action.session(), "")));
 }

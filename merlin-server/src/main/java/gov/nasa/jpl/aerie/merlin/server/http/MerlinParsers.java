@@ -89,24 +89,25 @@ public abstract class MerlinParsers {
           untuple((role, userId) -> new HasuraAction.Session(role, userId.orElse(""))),
           $ -> tuple($.hasuraRole(), Optional.ofNullable($.hasuraUserId()))));
 
-  private static <S> JsonParser<Pair<Pair<String, S>, HasuraAction.Session>> hasuraActionP(final JsonParser<S> inputP) {
+  private static <I> JsonParser<Pair<Pair<Pair<String, I>, HasuraAction.Session>, String>> hasuraActionP(final JsonParser<I> inputP) {
     return productP
-        .  field("action", productP.field("name", stringP))
-        .  field("input", inputP)
-        .  field("session_variables", hasuraActionSessionP);
+        .field("action", productP.field("name", stringP))
+        .field("input", inputP)
+        .field("session_variables", hasuraActionSessionP)
+        .field("request_query", stringP);
   }
 
   public static final JsonParser<HasuraAction<HasuraAction.MissionModelInput>> hasuraMissionModelActionP
       = hasuraActionP(productP.field("missionModelId", stringP))
       . map(Iso.of(
-          untuple((name, missionModelId, session) -> new HasuraAction<>(name, new HasuraAction.MissionModelInput(missionModelId), session)),
-          $ -> tuple($.name(), $.input().missionModelId(), $.session())));
+          untuple((name, missionModelId, session, requestQuery) -> new HasuraAction<>(name, new HasuraAction.MissionModelInput(missionModelId), session)),
+          $ -> tuple($.name(), $.input().missionModelId(), $.session(), "")));
 
   public static final JsonParser<HasuraAction<HasuraAction.PlanInput>> hasuraPlanActionP
       = hasuraActionP(productP.field("planId", planIdP))
       . map(Iso.of(
-          untuple((name, planId, session) -> new HasuraAction<>(name, new HasuraAction.PlanInput(planId), session)),
-          $ -> tuple($.name(), $.input().planId(), $.session())));
+          untuple((name, planId, session, requestQuery) -> new HasuraAction<>(name, new HasuraAction.PlanInput(planId), session)),
+          $ -> tuple($.name(), $.input().planId(), $.session(), "")));
 
   public static final JsonParser<HasuraMissionModelEvent> hasuraMissionModelEventTriggerP
       = productP
@@ -136,8 +137,8 @@ public abstract class MerlinParsers {
   public static final JsonParser<HasuraAction<HasuraAction.MissionModelArgumentsInput>> hasuraMissionModelArgumentsActionP
       = hasuraActionP(hasuraMissionModelArgumentsInputP)
       .map(Iso.of(
-          untuple(HasuraAction::new),
-          $ -> tuple($.name(), $.input(), $.session())));
+          untuple((name, input, session, requestQuery) -> new HasuraAction<>(name, input, session)),
+          $ -> tuple($.name(), $.input(), $.session(), "")));
 
   private static final JsonParser<HasuraAction.ActivityInput> hasuraActivityInputP
       = productP
@@ -151,8 +152,8 @@ public abstract class MerlinParsers {
   public static final JsonParser<HasuraAction<HasuraAction.ActivityInput>> hasuraActivityActionP
       = hasuraActionP(hasuraActivityInputP)
       . map(Iso.of(
-          untuple(HasuraAction::new),
-          $ -> tuple($.name(), $.input(), $.session())));
+          untuple((name, input, session, requestQuery) -> new HasuraAction<>(name, input, session)),
+          $ -> tuple($.name(), $.input(), $.session(), "")));
 
   public static final JsonParser<HasuraAction.UploadExternalDatasetInput> hasuraUploadExternalDatasetActionP
       = productP
@@ -167,6 +168,6 @@ public abstract class MerlinParsers {
   public static final JsonParser<HasuraAction<HasuraAction.UploadExternalDatasetInput>> hasuraExternalDatasetActionP
       = hasuraActionP(hasuraUploadExternalDatasetActionP)
       . map(Iso.of(
-          untuple(HasuraAction::new),
-          $ -> tuple($.name(), $.input(), $.session())));
+          untuple((name, input, session, requestQuery) -> new HasuraAction<>(name, input, session)),
+          $ -> tuple($.name(), $.input(), $.session(), "")));
 }
