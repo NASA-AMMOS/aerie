@@ -10,7 +10,7 @@ public class MerlInsightRulesTest {
   @BeforeEach
   void setUp(){
     planningHorizon = new PlanningHorizon(new Time(0), new Time(48*3600));
-    aerieLanderMissionModel = MerlinSightTestUtility.getMerlinSightMissionModel();
+    MissionModel<?> aerieLanderMissionModel = MerlinSightTestUtility.getMerlinSightMissionModel();
     rules = new MerlInsightRules(aerieLanderMissionModel, planningHorizon);
     rules.getSimulationFacade().simulatePlan(makeEmptyPlan());
     plan = makeEmptyPlan();
@@ -18,7 +18,6 @@ public class MerlInsightRulesTest {
     smallProblem = new Problem(aerieLanderMissionModel, planningHorizon);
   }
 
-  private MissionModel<?> aerieLanderMissionModel;
   private PlanningHorizon planningHorizon;
   private MerlInsightRules rules;
   private AerieController controller;

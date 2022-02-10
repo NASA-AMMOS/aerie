@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
  */
 public interface TimeWindowsFilter {
 
-  public Windows filter(Plan plan, Windows windowsToFilter);
+  Windows filter(Plan plan, Windows windowsToFilter);
 
 
 }

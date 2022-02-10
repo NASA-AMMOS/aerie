@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 public class AerieControllerTest {
   private final PlanningHorizon horizon = new PlanningHorizon(new Time(0), new Time(100000));
   private final MissionModel<?> missionModel = MerlinSightTestUtility.getMerlinSightMissionModel();
+  private final String URL_AERIE = MerlinSightTestUtility.LOCAL_AERIE;
+  private final int MISSION_MODEL_ID = MerlinSightTestUtility.latest;
   private final Problem problem = new Problem(missionModel, horizon);
   /**
    * This test is here as a demonstration of how the AerieController can be used

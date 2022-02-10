@@ -28,6 +28,7 @@ import java.net.URLConnection;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -68,7 +69,6 @@ public class AerieController {
   private String username = null;
   private String password = null;
   private String authorizationHeader = null;
-  private final boolean isSessionAlive = true;
 
 
   public AerieController(
@@ -151,7 +151,8 @@ public class AerieController {
   protected boolean isSessionAlive() {
     SessionAliveRequest sar = new SessionAliveRequest();
     postRequest(sar);
-    return this.isSessionAlive;
+    boolean isSessionAlive = true;
+    return isSessionAlive;
   }
 
   private boolean currentlyTryingToConnect = false;
@@ -211,9 +212,7 @@ public class AerieController {
     HttpResponse<InputStream> response = null;
     try {
       response = client.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (InterruptedException e) {
+    } catch (IOException | InterruptedException e) {
       e.printStackTrace();
     }
     assert response != null;
@@ -223,7 +222,7 @@ public class AerieController {
     } else {
       try {
         GZIPInputStream body = new GZIPInputStream(response.body());
-        Reader reader = new InputStreamReader(body, "UTF-8");
+        Reader reader = new InputStreamReader(body, StandardCharsets.UTF_8);
         Writer writer = new StringWriter();
         char[] buffer = new char[10240];
         int length = 0;
@@ -298,7 +297,6 @@ public class AerieController {
       ret = false;
       System.out.println("Plan have never been sent to Aerie");
     } else {
-      var simulationValueCache = stateCaches.get(plan);
       SimulatePlanRequest spr = new SimulatePlanRequest(plan);
       ret = postRequest(spr);
     }
@@ -331,8 +329,6 @@ public class AerieController {
       ret = false;
     }
 
-    //StateTypesRequest str = new StateTypesRequest(plan);
-    //ret = postRequest(str);
     planStartTimes.put(plan, horizonBegin);
     return ret;
   }
@@ -355,16 +351,10 @@ public class AerieController {
         boolean res = postRequest(actInstRequest);
         if (!res) {
           ret = false;
-          //delete all activities and plan
-          //  DeletePlanRequest delPlanReq = new DeletePlanRequest(plan);
-          //   postRequest(delPlanReq);
           break;
         }
       }
     }
-
-    //StateTypesRequest str = new StateTypesRequest(plan);
-    //ret = postRequest(str);
     planStartTimes.put(plan, horizonBegin);
 
     return ret;
@@ -484,7 +474,7 @@ public class AerieController {
   private ActivityInstance jsonToInstance(JSONObject jsonActivity) {
     String type = jsonActivity.getString("type");
     if(!activityTypes.containsKey(type)){
-      throw new IllegalArgumentException("Activity type found in JSON object has not been not been found. Inconsistency between mission model used by scheduler server and merlin server ? ");
+      throw new IllegalArgumentException("Activity type found in JSON object after request to merlin server has not been found in types extracted from mission model. Probable inconsistency between mission model used by scheduler server and merlin server.");
     }
     var schedulerActType = activityTypes.get(type);
     ActivityInstance act = new ActivityInstance(schedulerActType);
@@ -512,7 +502,7 @@ public class AerieController {
     return act;
   }
 
-  protected class PlanIdRequest extends GraphRequest {
+  protected static class PlanIdRequest extends GraphRequest {
 
     public String getRequest() {
       return "query { plan { id} } ";
@@ -557,7 +547,7 @@ public class AerieController {
     @Override
     public boolean handleResponse(JSONObject response) {
 
-      var map = stateTypes.computeIfAbsent(plan, k -> new HashMap<String, Class<?>>());
+      var map = stateTypes.computeIfAbsent(plan, k -> new HashMap<>());
 
 
       JSONObject data = (JSONObject) response.get("data");
@@ -595,7 +585,7 @@ public class AerieController {
     }
   }
 
-  protected class LogoutRequest extends GraphRequest {
+  protected static class LogoutRequest extends GraphRequest {
 
     public String getRequest() {
       return "mutation { logout { message success }}";
@@ -607,7 +597,7 @@ public class AerieController {
     }
   }
 
-  protected class DeleteMissionModel extends GraphRequest {
+  protected static class DeleteMissionModel extends GraphRequest {
 
     final String delete;
 
@@ -629,7 +619,7 @@ public class AerieController {
 
   }
 
-  protected class GetAllMissionModelsId extends GraphRequest {
+  protected static class GetAllMissionModelsId extends GraphRequest {
 
 
     public String getRequest() {
@@ -653,7 +643,7 @@ public class AerieController {
   }
 
 
-  protected class SessionAliveRequest extends GraphRequest {
+  protected static class SessionAliveRequest extends GraphRequest {
 
     public String getRequest() {
       return "query { session { message success }}";
@@ -719,7 +709,7 @@ public class AerieController {
 
     @Override
     public boolean handleResponse(JSONObject response) {
-      int id = ((JSONObject) (((JSONObject) response.get("data")).get("delete_plan_by_pk"))).getInt("id");
+      Long id = ((JSONObject) (((JSONObject) response.get("data")).get("delete_plan_by_pk"))).getLong("id");
       if (planIds.containsValue(id)) {
         planIds.values().remove(id);
       }
@@ -782,7 +772,7 @@ public class AerieController {
 
       Long planid = getPlanId(plan);
 
-      if (DEBUG != true && planid == null) {
+      if (!DEBUG && planid == null) {
         throw new RuntimeException("plan request has to be sent before adding activity instances");
       }
 
@@ -794,18 +784,15 @@ public class AerieController {
 
 
       if (instance.getDuration() != null) {
-        sbParams.append("duration :" + (instance
-            .getDuration()
-            .in(gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND)) + ",");
+        sbParams.append("duration :").append(instance
+                                                 .getDuration()
+                                                 .in(Duration.MICROSECOND)).append(",");
         atLeastOne = true;
       }
       for (Map.Entry<String, SerializedValue> entry : instance.getArguments().entrySet()) {
         atLeastOne = true;
         String fakeParamName = entry.getKey();
-        sbParams.append(fakeParamName
-                        + ":"
-                        + getGraphlqlVersionOfParameter(entry.getValue())
-                        + ",");
+        sbParams.append(fakeParamName).append(":").append(getGraphlqlVersionOfParameter(entry.getValue())).append(",");
 
       }
 

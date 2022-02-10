@@ -107,7 +107,7 @@ public class StateConstraintExpression {
     }
 
     public Builder equal(List<? extends ExternalState> states, SerializedValue value) {
-      if (forAll == false) {
+      if (!forAll) {
         throw new IllegalArgumentException("forAll() should have been used before");
       } else {
         for (ExternalState state : states) {
@@ -133,7 +133,7 @@ public class StateConstraintExpression {
     }
 
     public Builder notEqual(List<? extends ExternalState> states, SerializedValue value) {
-      if (forAll == false) {
+      if (!forAll) {
         throw new IllegalArgumentException("forAll() should have been used before");
       } else {
         for (ExternalState state : states) {

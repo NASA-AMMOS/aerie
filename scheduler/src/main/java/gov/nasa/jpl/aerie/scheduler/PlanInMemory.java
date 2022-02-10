@@ -99,7 +99,6 @@ public class PlanInMemory implements Plan {
     final var orderedActs = new java.util.LinkedList<ActivityInstance>();
 
     //NB: tree map ensures that values are in key order, but still need to flatten
-    assert actsByTime instanceof java.util.TreeMap;
     for (final var actsAtT : actsByTime.values()) {
       assert actsAtT != null;
       orderedActs.addAll(actsAtT);

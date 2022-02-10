@@ -35,7 +35,7 @@ public class MissingActivityInstanceConflict extends MissingActivityConflict {
   @Override
   public String toString() {
     if (this.instance != null) {
-      return "Conflict : missing activity instance " + this.instance.toString();
+      return "Conflict : missing activity instance " + this.instance;
     }
     return "Empty conflict";
   }

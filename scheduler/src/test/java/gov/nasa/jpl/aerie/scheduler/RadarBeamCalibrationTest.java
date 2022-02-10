@@ -65,7 +65,7 @@ public class RadarBeamCalibrationTest {
     FIRSTFLYBY,
     SECONDFLYBY,
     THIRDFLYBY,
-    NOFLYBY;
+    NOFLYBY
   }
 
 

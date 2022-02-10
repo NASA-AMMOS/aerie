@@ -214,8 +214,6 @@ public record SynchronousSchedulerAgent(
 
       final var aerieModel = MissionModelLoader.loadMissionModel(
           missionConfig, modelJarPath, plan.modelName(), plan.modelVersion());
-
-      //TODO: unify model access patterns to avoid disparate wrappers/facades
       return aerieModel;
     } catch (MissionModelLoader.MissionModelLoadException e) {
       throw new ResultsProtocolFailure(e);
@@ -232,7 +230,6 @@ public record SynchronousSchedulerAgent(
    * @throws ResultsProtocolFailure when the plan could not be stored to aerie, the target plan revision has
    *     changed, or aerie could not be reached
    */
-  //TODO: remove mission model from signature: isn't really required (just passed to allow ctor of AerieController)
   private void storeFinalPlan(final PlanMetadata planMetadata, final Plan newPlan) {
     try {
       switch (this.outputMode) {

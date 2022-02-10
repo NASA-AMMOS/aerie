@@ -201,8 +201,6 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         } else {
           conflicts.add(new MissingActivityInstanceConflict(this, act));
         }
-        //  conflicts.add( new MissingActivityTemplateConflict(
-        //          this, TimeWindows.of( startTimeRange ) ) );
       } else {
         //REVIEW: will need to record associations to check for joint/sole ownership,
         //        but that assignment will itself be a combinatoric problem

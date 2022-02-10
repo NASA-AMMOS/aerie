@@ -113,39 +113,21 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
     public ActivityCreationTemplateDisjunction build() {
       for (var expr : exprs) {
         if (type != null) {
-          //if(expr.type!=null){
-          //    throw new IllegalArgumentException("Overdefined activity expression");
-          // }
           expr.type = type;
         }
         if (startsIn != null) {
-          //if(expr.startRange!=null){
-          //    throw new IllegalArgumentException("Overdefined activity expression");
-          // }
           expr.startRange = startsIn;
         }
         if (endsIn != null) {
-          //if(expr.endRange!=null){
-          //     throw new IllegalArgumentException("Overdefined activity expression");
-          // }
           expr.endRange = endsIn;
         }
         if (durationIn != null) {
-          //if(expr.durationRange!=null){
-          //     throw new IllegalArgumentException("Overdefined activity expression");
-          // }
           expr.durationRange = durationIn;
         }
         if (startsOrEndsIn != null) {
-          //if(expr.startOrEndRange!=null){
-          //    throw new IllegalArgumentException("Overdefined activity expression");
-          //}
           expr.startOrEndRange = startsOrEndsIn;
         }
         if (arguments.size() > 0) {
-          // if(expr.parameters.size()>0){
-          //    throw new IllegalArgumentException("Overdefined activity expression");
-          //}
           expr.arguments = arguments;
         }
       }

@@ -89,7 +89,8 @@ public class PrioritySolver implements Solver {
       act.instantiateVariableArguments();
       var duration = act.getDuration();
       if(duration != null && duration.longerThan(this.config.getHorizon().getEndAerie())){
-        System.out.println("Activity " + act.toString() + " is planned to finish after the end of the planning horizon, not simulating. Extend the planning horizon.");
+        System.out.println("Activity " + act
+                           + " is planned to finish after the end of the planning horizon, not simulating. Extend the planning horizon.");
         allGood = false;
         break;
       }
@@ -98,7 +99,7 @@ public class PrioritySolver implements Solver {
         simulationFacade.simulatePlan(plan);
         var simDur = simulationFacade.getActivityDuration(act);
         if (simDur == null) {
-          System.out.println("Activity " + act.toString() + " could not be simulated");
+          System.out.println("Activity " + act + " could not be simulated");
           allGood = false;
           break;
         }
@@ -106,7 +107,8 @@ public class PrioritySolver implements Solver {
           act.setDuration(simDur);
         } else if (simDur.compareTo(act.getDuration()) != 0) {
           allGood = false;
-          System.out.println("When simulated, activity " + act.toString() + " has a different duration than expected (exp=" + act.getDuration() + ", real=" + simDur + ")");
+          System.out.println("When simulated, activity " + act
+                             + " has a different duration than expected (exp=" + act.getDuration() + ", real=" + simDur + ")");
           break;
         }
       }

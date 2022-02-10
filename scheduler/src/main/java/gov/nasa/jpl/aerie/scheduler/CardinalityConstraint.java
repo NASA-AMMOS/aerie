@@ -173,12 +173,10 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
     intersect.intersectWith(this.interval);
     if (!intersect.isEmpty()) {
       final var allActs = getAllActs(plan, intersect);
-      if (allActs.size() < max) {
-        return windows;
-      } else {
+      if (allActs.size() >= max) {
         windows.subtractAll(intersect);
-        return windows;
       }
+      return windows;
     } else {
       return windows;
     }

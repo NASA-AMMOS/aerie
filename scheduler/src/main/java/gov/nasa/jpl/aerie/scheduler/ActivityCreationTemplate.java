@@ -165,8 +165,6 @@ public class ActivityCreationTemplate extends ActivityExpression {
         throw new IllegalArgumentException(
             "activity creation template requires non-null activity type");
       }
-      //if( duration == null ) { throw new IllegalArgumentException(
-      //    "activity creation template requires non-null duration range" ); }
       final var template = new ActivityCreationTemplate();
       fill(template);
       return template;

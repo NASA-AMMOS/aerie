@@ -281,7 +281,7 @@ public class TestStateConstraints {
    */
   public enum OrbitPhasesEnum {
     NOTENCOUNTER,
-    ENCOUNTER;
+    ENCOUNTER
   }
 
   @Test

@@ -87,12 +87,12 @@ public class Range<T extends Comparable<T>> implements Comparable<Range<T>> {
   /**
    * the inclusive lower bound of the range
    */
-  private T minimum;
+  private final T minimum;
 
   /**
    * the inclusive upper bound of the range
    */
-  private T maximum;
+  private final T maximum;
 
   /**
    * fetch the inclusive lower bound of the range
@@ -203,12 +203,11 @@ public class Range<T extends Comparable<T>> implements Comparable<Range<T>> {
   /**
    * return a range enveloping the two passed ranges
    *
-   * @param <T> the value type of the ranges
    * @param range1 the first range to consider
    * @param range2 the second range to consider
    * @return a range enveloping the two passed ranges
    */
-  public <T extends Comparable<T>> Range<T> envelop(@NotNull Range<T> range1, @NotNull Range<T> range2) {
+  public Range<T> envelop(@NotNull Range<T> range1, @NotNull Range<T> range2) {
     return new Range<>(
         Collections.min(Arrays.asList(range1.getMinimum(), range2.getMinimum())),
         Collections.max(Arrays.asList(range1.getMaximum(), range2.getMaximum())));

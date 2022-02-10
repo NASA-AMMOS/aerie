@@ -163,7 +163,25 @@ public class ActivityInstance {
   }
 
   public Duration getEndTime() {
+    if(!hasDuration()){
+      throw new IllegalStateException("Cannot compute end time: activity instance does not have a duration yet");
+    }
+    if(!hasStartTime()){
+      throw new IllegalStateException("Cannot compute end time: activity instance does not have a start time yet");
+    }
     return this.startTime.plus(this.duration);
+  }
+
+  public boolean hasEndTime(){
+    return (hasStartTime() && hasDuration());
+  }
+
+  public boolean hasDuration(){
+    return (this.duration != null);
+  }
+
+  public boolean hasStartTime(){
+    return (this.startTime != null);
   }
 
   /**

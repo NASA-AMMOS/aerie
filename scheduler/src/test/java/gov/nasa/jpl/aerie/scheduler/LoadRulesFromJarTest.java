@@ -8,7 +8,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 
 public class LoadRulesFromJarTest {
-  private final String nameJar = "merlinsight-rules.jar";
 
   /**
    * This test needs the merlinsight-rules.jar to be in the test resources folder
@@ -25,9 +24,10 @@ public class LoadRulesFromJarTest {
   throws ClassNotFoundException, IOException, InvocationTargetException, InstantiationException
   {
     var horizon = new PlanningHorizon(new Time(0), new Time(10000));
+    final String nameJar = "merlinsight-rules.jar";
     var path = LoadRulesFromJarTest.class.getClassLoader().getResource(nameJar).getPath();
     //this mimics what would happen when the scheduler is triggered
-    Collection<Problem> inst = JarClassLoader.loadProblemsFromJar(path, MerlinSightTestUtility.getMerlinSightMissionModel(horizon));
+    Collection<Problem> inst = JarClassLoader.loadProblemsFromJar(path, MerlinSightTestUtility.getMerlinSightMissionModel());
     assert(inst.size()==1);
     var item = inst.iterator().next();
     var goals = item.getGoals();
