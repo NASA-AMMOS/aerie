@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -138,10 +139,11 @@ public class TestStateConstraints {
         .forEach(approachStateConstraint1)
         .owned(ChildCustody.Jointly)
         .startsAt(TimeAnchor.START)
-        .withPriority(7.0)
+        //.withPriority(7.0)
         .build();
 
-    this.problem.add(cg);
+    Problem problem = new Problem(null, horizon);
+    problem.addAll(List.of(cg));
     HuginnConfiguration huginn = new HuginnConfiguration();
     final var solver = new PrioritySolver(huginn, this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
@@ -188,10 +190,11 @@ public class TestStateConstraints {
         .attachStateConstraint(approachStateConstraint)
         .generateWith(fixedGenerator)
         .owned(ChildCustody.Jointly)
-        .withPriority(7.0)
+        //.withPriority(7.0)
         .build();
 
-    this.problem.add(proceduralGoalWithConstraints);
+    Problem problem = new Problem(null, horizon);
+    problem.addAll(List.of(proceduralGoalWithConstraints));
     HuginnConfiguration huginn = new HuginnConfiguration();
     final var solver = new PrioritySolver(huginn, this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
@@ -265,10 +268,11 @@ public class TestStateConstraints {
         .forAllTimeIn(horizon.getHor())
         .generateWith(fixedGenerator)
         .owned(ChildCustody.Jointly)
-        .withPriority(7.0)
+        //.withPriority(7.0)
         .build();
 
-    this.problem.add(proceduralgoalwithoutconstraints);
+    Problem problem = new Problem(null, horizon);
+    problem.addAll(List.of(proceduralgoalwithoutconstraints));
     HuginnConfiguration huginn = new HuginnConfiguration();
     final var solver = new PrioritySolver(huginn, this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
@@ -305,10 +309,11 @@ public class TestStateConstraints {
         .forEach(tre)
         .owned(ChildCustody.Jointly)
         .startsAt(TimeAnchor.START)
-        .withPriority(7.0)
+        //.withPriority(7.0)
         .build();
 
-    this.problem.add(cg);
+    Problem problem = new Problem(null, horizon);
+    problem.addAll(List.of(cg));
     HuginnConfiguration huginn = new HuginnConfiguration();
     final var solver = new PrioritySolver(huginn, this.problem);
     final var plan = solver.getNextSolution().orElseThrow();

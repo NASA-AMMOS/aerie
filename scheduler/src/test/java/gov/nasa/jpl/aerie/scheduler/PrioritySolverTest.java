@@ -34,7 +34,7 @@ public class PrioritySolverTest {
     final var plan = solver.getNextSolution();
 
     assertThat(plan).isPresent();
-    assertThat(plan.get().getEvaluations()).containsExactly(new Evaluation());
+    assertThat(plan.get().getEvaluation()).isEqualTo(new Evaluation());
     assertThat(plan.get().getActivitiesByTime()).isEmpty();
   }
 
@@ -159,8 +159,8 @@ public class PrioritySolverTest {
 
     final var plan = solver.getNextSolution().orElseThrow();
 
-    assertThat(plan.getEvaluations()).hasSize(1);
-    final var eval = plan.getEvaluations().stream().findFirst().orElseThrow().forGoal(goal);
+    assertThat(plan.getEvaluation()).isNotNull();
+    final var eval = plan.getEvaluation().forGoal(goal);
     assertThat(eval).isNotNull();
     assertThat(eval.getAssociatedActivities())
         .comparingElementsUsing(equalExceptInName)

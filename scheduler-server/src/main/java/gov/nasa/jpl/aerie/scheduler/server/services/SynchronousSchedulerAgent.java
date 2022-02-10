@@ -254,15 +254,7 @@ public record SynchronousSchedulerAgent(
    */
   private ScheduleResults collectResults(final Plan plan) {
     final var activityCount = plan.getActivities().size();
-
-    final var goalScores = plan
-        .getEvaluations()
-        .stream().flatMap(eval -> eval.getGoalEvaluations().entrySet().stream())
-        .collect(Collectors.toMap(
-            e -> e.getKey().getName(), //create score map keyed by goal name
-            e -> e.getValue().getScore(),
-            (a, b) -> a)); //just replace any duplicate goal name scores
-
+    //TODO: complete stub
     return new ScheduleResults(Map.of()); // TODO Adrien: complete this stubbed instance
   }
 

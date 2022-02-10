@@ -91,6 +91,6 @@ public interface Plan {
    *
    * @return container of all evaluations posted to the plan
    */
-  java.util.Collection<Evaluation> getEvaluations();
+  Evaluation getEvaluation();
 
 }
