@@ -128,18 +128,18 @@ public final class SchedulerAppDriver {
    */
   private static AppConfiguration loadConfiguration() {
     return new AppConfiguration(
-        Integer.parseInt(getEnv("SCHED_PORT", "27193")),
-        Boolean.parseBoolean(getEnv("SCHED_LOGGING", "true")) ? JavalinLoggingState.Enabled : JavalinLoggingState.Disabled,
-        Path.of(getEnv("SCHED_LOCAL_STORE", "/usr/src/app/sched_file_store")),
-        new PostgresStore(getEnv("SCHED_DB_TYPE", "postgres"),
-                          getEnv("SCHED_DB_USER", "aerie"),
-                          Integer.parseInt(getEnv("SCHED_DB_PORT", "5432")),
-                          getEnv("SCHED_DB_PASSWORD", "aerie"),
-                          getEnv("SCHED_DB", "aerie_scheduler")),
+        Integer.parseInt(getEnv("SCHEDULER_PORT", "27193")),
+        Boolean.parseBoolean(getEnv("SCHEDULER_LOGGING", "true")) ? JavalinLoggingState.Enabled : JavalinLoggingState.Disabled,
+        Path.of(getEnv("SCHEDULER_LOCAL_STORE", "/usr/src/app/scheduler_file_store")),
+        new PostgresStore(getEnv("SCHEDULER_DB_TYPE", "postgres"),
+                          getEnv("SCHEDULER_DB_USER", "aerie"),
+                          Integer.parseInt(getEnv("SCHEDULER_DB_PORT", "5432")),
+                          getEnv("SCHEDULER_DB_PASSWORD", "aerie"),
+                          getEnv("SCHEDULER_DB", "aerie_scheduler")),
         URI.create(getEnv("MERLIN_GRAPHQL_URL", "http://localhost:8080/v1/graphql")),
         Path.of(getEnv("MERLIN_LOCAL_STORE", "/usr/src/app/merlin_file_store")),
-        Path.of(getEnv("SCHED_RULES_JAR", "/usr/src/app/merlin_file_store/sched_rules.jar")),
-        PlanOutputMode.valueOf((getEnv("SCHED_OUTPUT_MODE", "CreateNewOutputPlan")))
+        Path.of(getEnv("SCHEDULER_RULES_JAR", "/usr/src/app/merlin_file_store/scheduler_rules.jar")),
+        PlanOutputMode.valueOf((getEnv("SCHEDULER_OUTPUT_MODE", "CreateNewOutputPlan")))
     );
   }
 }

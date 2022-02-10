@@ -9,7 +9,7 @@ services:
       GQL_API_URL: http://localhost:8080/v1/graphql
       PORT: 9000
       POSTGRES_AERIE_MERLIN_DB: aerie_merlin
-      POSTGRES_AERIE_SCHED_DB: aerie_scheduler
+      POSTGRES_AERIE_SCHEDULER_DB: aerie_scheduler
       POSTGRES_AERIE_UI_DB: aerie_ui
       POSTGRES_HOST: postgres
       POSTGRES_PASSWORD: aerie
@@ -49,16 +49,16 @@ services:
     environment:
       MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
       MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
-      SCHED_DB: "aerie_scheduler"
-      SCHED_DB_PASSWORD: "aerie"
-      SCHED_DB_PORT: 5432
-      SCHED_DB_SERVER: "postgres"
-      SCHED_DB_USER: "aerie"
-      SCHED_LOCAL_STORE: /usr/src/app/sched_file_store
-      SCHED_LOGGING: "true"
-      SCHED_OUTPUT_MODE: UpdateInputPlanWithNewActivities
-      SCHED_PORT: 27193
-      SCHED_RULES_JAR: /usr/src/app/merlin_file_store/sched_rules.jar
+      SCHEDULER_DB: "aerie_scheduler"
+      SCHEDULER_DB_PASSWORD: "aerie"
+      SCHEDULER_DB_PORT: 5432
+      SCHEDULER_DB_SERVER: "postgres"
+      SCHEDULER_DB_USER: "aerie"
+      SCHEDULER_LOCAL_STORE: /usr/src/app/scheduler_file_store
+      SCHEDULER_LOGGING: "true"
+      SCHEDULER_OUTPUT_MODE: UpdateInputPlanWithNewActivities
+      SCHEDULER_PORT: 27193
+      SCHEDULER_RULES_JAR: /usr/src/app/merlin_file_store/scheduler_rules.jar
     image: aerie_scheduler
     ports: ["27193:27193"]
     restart: always
@@ -83,7 +83,7 @@ services:
     depends_on: ["postgres"]
     environment:
       AERIE_MERLIN_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_merlin
-      AERIE_SCHED_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_scheduler
+      AERIE_SCHEDULER_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_scheduler
       AERIE_UI_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_ui
       HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
