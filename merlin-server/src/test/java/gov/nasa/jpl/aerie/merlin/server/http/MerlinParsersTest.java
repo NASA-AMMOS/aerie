@@ -105,6 +105,7 @@ public final class MerlinParsersTest {
               .createObjectBuilder()
               .add("x-hasura-role", "admin")
               .build())
+          .add("request_query", "query { someValue }")
           .build();
 
       final var expected = new HasuraAction<>(
@@ -131,6 +132,7 @@ public final class MerlinParsersTest {
               .add("x-hasura-role", "admin")
               .add("x-hasura-user-id", "userId")
               .build())
+          .add("request_query", "query { someValue }")
           .build();
 
       final var expected = new HasuraAction<>(
