@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.scheduler.server.remotes.ResultsCellRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresSpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresResultsCellRepository;
+import gov.nasa.jpl.aerie.scheduler.server.services.CachedSchedulerService;
 import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
 import gov.nasa.jpl.aerie.scheduler.server.services.LocalSpecificationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
@@ -53,7 +54,7 @@ public final class SchedulerAppDriver {
     final var specificationService = new LocalSpecificationService(stores.specifications());
     final var scheduleAgent = new SynchronousSchedulerAgent(specificationService, merlinService,
         config.merlinFileStore(), config.missionRuleJarPath(), config.outputMode());
-    final var schedulerService = new UncachedSchedulerService(stores.results(), scheduleAgent);
+    final var schedulerService = new CachedSchedulerService(stores.results(), scheduleAgent);
     final var scheduleAction = new ScheduleAction(specificationService, schedulerService);
 
     //establish bindings to the service layers
