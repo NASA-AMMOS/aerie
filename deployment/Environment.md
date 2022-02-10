@@ -18,7 +18,7 @@ This document provides detailed information about environment variables for each
 | `GQL_API_URL`              | URL of GraphQL API for the GraphQL Playground.                         | `string` | http://localhost:8080/v1/graphql               |
 | `PORT`                     | Port the Gateway server listens on.                                    | `number` | 9000                                           |
 | `POSTGRES_AERIE_MERLIN_DB` | Name of Merlin Postgres database.                                      | `string` | aerie_merlin                                   |
-| `POSTGRES_AERIE_SCHED_DB`  | Name of scheduler Postgres database.                                   | `string` | aerie_sched                                    |
+| `POSTGRES_AERIE_SCHED_DB`  | Name of scheduler Postgres database.                                   | `string` | aerie_scheduler                                |
 | `POSTGRES_AERIE_UI_DB`     | Name of UI Postgres database.                                          | `string` | aerie_ui                                       |
 | `POSTGRES_HOST`            | Hostname of Postgres instance.                                         | `string` | localhost                                      |
 | `POSTGRES_PASSWORD`        | Password of Postgres instance.                                         | `string` | aerie                                          |
@@ -39,11 +39,11 @@ This document provides detailed information about environment variables for each
 
 ## Hasura
 
-| Name                        | Description                             | Type     | Default                                           |
-| --------------------------- | --------------------------------------- | -------- | ------------------------------------------------- |
-| `AERIE_MERLIN_DATABASE_URL` | Url of the Merlin Postgres database.    | `string` | postgres://aerie:aerie@postgres:5432/aerie_merlin |
-| `AERIE_SCHED_DATABASE_URL`  | Url of the scheduler Postgres database. | `string` | postgres://aerie:aerie@postgres:5432/aerie_sched  |
-| `AERIE_UI_DATABASE_URL`     | Url of the UI Postgres database         | `string` | postgres://aerie:aerie@postgres:5432/aerie_ui     |
+| Name                        | Description                             | Type     | Default                                              |
+| --------------------------- | --------------------------------------- | -------- | ---------------------------------------------------- |
+| `AERIE_MERLIN_DATABASE_URL` | Url of the Merlin Postgres database.    | `string` | postgres://aerie:aerie@postgres:5432/aerie_merlin    |
+| `AERIE_SCHED_DATABASE_URL`  | Url of the scheduler Postgres database. | `string` | postgres://aerie:aerie@postgres:5432/aerie_scheduler |
+| `AERIE_UI_DATABASE_URL`     | Url of the UI Postgres database         | `string` | postgres://aerie:aerie@postgres:5432/aerie_ui        |
 
 Additionally, Hasura provides documentation on it's own environment variables you can use to fine-tune your deployment:
 
@@ -73,7 +73,7 @@ The default Aerie deployment uses the default Postgres environment. See the [Doc
 | -------------------- | --------------------------------------------------------------------- | -------- | ---------------------------------------------- |
 | `MERLIN_GRAPHQL_URL` | URI of the Merlin graphql interface to call                           | `string` | http://hasura:8080/v1/graphql                  |
 | `MERLIN_LOCAL_STORE` | Local storage for Merlin in the container (for backdoor jar access)   | `string` | /usr/src/app/merlin_file_store                 |
-| `SCHED_DB`           | The DB for scheduler                                                  | `string` | aerie_sched                                    |
+| `SCHED_DB`           | The DB for scheduler                                                  | `string` | aerie_scheduler                                |
 | `SCHED_DB_PASSWORD`  | Password of the DB instance                                           | `string` | aerie                                          |
 | `SCHED_DB_PORT`      | The DB instance port number that scheduler will connect with          | `number` | 5432                                           |
 | `SCHED_DB_SERVER`    | The DB instance that scheduler will connect with                      | `string` | postgres                                       |

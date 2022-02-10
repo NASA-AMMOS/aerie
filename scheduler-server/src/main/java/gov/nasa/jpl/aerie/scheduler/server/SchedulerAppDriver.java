@@ -135,7 +135,7 @@ public final class SchedulerAppDriver {
                           getEnv("SCHED_DB_USER", "aerie"),
                           Integer.parseInt(getEnv("SCHED_DB_PORT", "5432")),
                           getEnv("SCHED_DB_PASSWORD", "aerie"),
-                          getEnv("SCHED_DB", "aerie_sched")),
+                          getEnv("SCHED_DB", "aerie_scheduler")),
         URI.create(getEnv("MERLIN_GRAPHQL_URL", "http://localhost:8080/v1/graphql")),
         Path.of(getEnv("MERLIN_LOCAL_STORE", "/usr/src/app/merlin_file_store")),
         Path.of(getEnv("SCHED_RULES_JAR", "/usr/src/app/merlin_file_store/sched_rules.jar")),

@@ -9,7 +9,7 @@ services:
       GQL_API_URL: http://localhost:8080/v1/graphql
       PORT: 9000
       POSTGRES_AERIE_MERLIN_DB: aerie_merlin
-      POSTGRES_AERIE_SCHED_DB: aerie_sched
+      POSTGRES_AERIE_SCHED_DB: aerie_scheduler
       POSTGRES_AERIE_UI_DB: aerie_ui
       POSTGRES_HOST: postgres
       POSTGRES_PASSWORD: aerie
@@ -43,7 +43,7 @@ services:
     environment:
       MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
       MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
-      SCHED_DB: "aerie_sched"
+      SCHED_DB: "aerie_scheduler"
       SCHED_DB_PASSWORD: "aerie"
       SCHED_DB_PORT: 5432
       SCHED_DB_SERVER: "postgres"
@@ -77,7 +77,7 @@ services:
     depends_on: ["postgres"]
     environment:
       AERIE_MERLIN_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_merlin
-      AERIE_SCHED_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_sched
+      AERIE_SCHED_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_scheduler
       AERIE_UI_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_ui
       HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
