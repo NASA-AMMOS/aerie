@@ -1,23 +1,25 @@
-package gov.nasa.jpl.aerie.scheduler.server.services;
+package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
+
+import javax.sql.DataSource;
 
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
+import gov.nasa.jpl.aerie.scheduler.server.services.RevisionData;
 
-public record LocalSpecificationService(SpecificationRepository specificationRepository) implements SpecificationService {
+public record PostgresSpecificationRepository(DataSource dataSource) implements SpecificationRepository {
+
   @Override
   public Specification getSpecification(final SpecificationId specificationId) throws NoSuchSpecificationException
   {
-    // TODO needs to be implemented
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(); // TODO stubbed method must be implemented
   }
 
   @Override
   public RevisionData getSpecificationRevisionData(final SpecificationId specificationId)
   throws NoSuchSpecificationException
   {
-    // TODO needs to be implemented
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(); // TODO stubbed method must be implemented
   }
 }

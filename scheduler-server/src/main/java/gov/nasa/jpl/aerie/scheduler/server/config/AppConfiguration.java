@@ -18,6 +18,8 @@ import java.util.Objects;
 public record AppConfiguration(
     int httpPort,
     JavalinLoggingState javalinLogging,
+    Path schedFileStore,
+    Store store,
     URI merlinGraphqlURI,
     Path merlinFileStore,
     Path missionRuleJarPath,
@@ -26,21 +28,12 @@ public record AppConfiguration(
 {
   public AppConfiguration {
     Objects.requireNonNull(javalinLogging);
+    Objects.requireNonNull(schedFileStore);
+    Objects.requireNonNull(store);
     Objects.requireNonNull(merlinGraphqlURI);
     Objects.requireNonNull(merlinFileStore);
     Objects.requireNonNull(missionRuleJarPath);
     Objects.requireNonNull(outputMode);
     //NB: ok if the merlin file store not created yet at app init; just needs to exist by first use
   }
-
-  /**
-   * @return path to the mounted merlin file store subdirectory that houses mission model jar files
-   */
-  public Path missionModelJarsDir() {
-    //TODO: some cross-module synchronization of these magic path terms (if this backdoor persists)
-    //NB: merlin seems to not actually use the .resolve("jars") subpath despite its mention in merlin...AppConfiguration
-    //    (ref PostgresMissionModelRepository where the jar prefix path is hardcoded to just "merlin_file_store")
-    return merlinFileStore;
-  }
-
 }

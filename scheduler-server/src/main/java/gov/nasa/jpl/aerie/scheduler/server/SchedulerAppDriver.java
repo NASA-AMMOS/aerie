@@ -1,14 +1,27 @@
 package gov.nasa.jpl.aerie.scheduler.server;
 
+import com.impossibl.postgres.jdbc.PGDataSource;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import gov.nasa.jpl.aerie.scheduler.server.config.InMemoryStore;
+import gov.nasa.jpl.aerie.scheduler.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.scheduler.server.config.AppConfiguration;
 import gov.nasa.jpl.aerie.scheduler.server.config.JavalinLoggingState;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
+import gov.nasa.jpl.aerie.scheduler.server.config.Store;
 import gov.nasa.jpl.aerie.scheduler.server.http.SchedulerBindings;
+import gov.nasa.jpl.aerie.scheduler.server.mocks.InMemorySpecificationRepository;
+import gov.nasa.jpl.aerie.scheduler.server.mocks.InMemoryResultsCellRepository;
+import gov.nasa.jpl.aerie.scheduler.server.remotes.ResultsCellRepository;
+import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
+import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresSpecificationRepository;
+import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresResultsCellRepository;
 import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
 import gov.nasa.jpl.aerie.scheduler.server.services.LocalSpecificationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.SynchronousSchedulerAgent;
 import gov.nasa.jpl.aerie.scheduler.server.services.UncachedSchedulerService;
+import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
 
 import java.net.URI;
@@ -33,14 +46,14 @@ public final class SchedulerAppDriver {
   public static void main(final String[] args) {
     //load the service configuration options
     final var config = loadConfiguration();
+    final var stores = loadStores(config);
 
     //create objects in each service abstraction layer (mirroring MerlinApp)
     final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI());
-    final var specificationService = new LocalSpecificationService();
-    final var scheduleAgent = new SynchronousSchedulerAgent(
-        specificationService, merlinService, config.missionModelJarsDir(), config.missionRuleJarPath(),
-        config.outputMode());
-    final var schedulerService = new UncachedSchedulerService(scheduleAgent);
+    final var specificationService = new LocalSpecificationService(stores.specifications());
+    final var scheduleAgent = new SynchronousSchedulerAgent(specificationService, merlinService,
+        config.merlinFileStore(), config.missionRuleJarPath(), config.outputMode());
+    final var schedulerService = new UncachedSchedulerService(stores.results(), scheduleAgent);
     final var scheduleAction = new ScheduleAction(specificationService, schedulerService);
 
     //establish bindings to the service layers
@@ -61,23 +74,36 @@ public final class SchedulerAppDriver {
     javalin.start(config.httpPort());
   }
 
-  /**
-   * collects configuration options from the environment
-   *
-   * any options not specified in the input stream fall back to the hard-coded defaults here
-   *
-   * @return a complete configuration object reflecting choices elected in the environment or the defaults
-   */
-  private static AppConfiguration loadConfiguration() {
-    return new AppConfiguration(
-        Integer.parseInt(getEnvOrFallback("SCHED_PORT", "27193")),
-        Boolean.parseBoolean(getEnvOrFallback("SCHED_LOGGING", "true")) ?
-            JavalinLoggingState.Enabled : JavalinLoggingState.Disabled,
-        URI.create(getEnvOrFallback("MERLIN_GRAPHQL_URL", "http://localhost:8080/v1/graphql")),
-        Path.of(getEnvOrFallback("MERLIN_LOCAL_STORE", "/usr/src/app/merlin_file_store")),
-        Path.of(getEnvOrFallback("SCHED_RULES_JAR", "/usr/src/app/merlin_file_store/sched_rules.jar")),
-        PlanOutputMode.valueOf((getEnvOrFallback("SCHED_OUTPUT_MODE", "CreateNewOutputPlan")))
-    );
+  private record Stores(SpecificationRepository specifications, ResultsCellRepository results) { }
+
+  private static Stores loadStores(final AppConfiguration config) {
+    final var store = config.store();
+    if (store instanceof final PostgresStore pgStore) {
+      final var pgDataSource = new PGDataSource();
+      pgDataSource.setServerName(pgStore.server());
+      pgDataSource.setPortNumber(pgStore.port());
+      pgDataSource.setDatabaseName(pgStore.database());
+      pgDataSource.setApplicationName("Scheduler Server");
+
+      final var hikariConfig = new HikariConfig();
+      hikariConfig.setUsername(pgStore.user());
+      hikariConfig.setPassword(pgStore.password());
+      hikariConfig.setDataSource(pgDataSource);
+
+      final var hikariDataSource = new HikariDataSource(hikariConfig);
+
+      return new Stores(
+          new PostgresSpecificationRepository(hikariDataSource),
+          new PostgresResultsCellRepository(hikariDataSource));
+    } else if (store instanceof InMemoryStore) {
+      final var inMemorySchedulerRepository = new InMemorySpecificationRepository();
+      return new Stores(
+          inMemorySchedulerRepository,
+          new InMemoryResultsCellRepository(inMemorySchedulerRepository));
+
+    } else {
+      throw new UnexpectedSubtypeError(Store.class, store);
+    }
   }
 
   /**
@@ -88,9 +114,32 @@ public final class SchedulerAppDriver {
    * @return the value of the requested environment variable if it exists in the environment (even if it is the empty
    *     string), otherwise the specified fallback value
    */
-  private static String getEnvOrFallback(final String key, final String fallback) {
+  private static String getEnv(final String key, final String fallback) {
     final var env = System.getenv(key);
     return env == null ? fallback : env;
   }
 
+  /**
+   * collects configuration options from the environment
+   *
+   * any options not specified in the input stream fall back to the hard-coded defaults here
+   *
+   * @return a complete configuration object reflecting choices elected in the environment or the defaults
+   */
+  private static AppConfiguration loadConfiguration() {
+    return new AppConfiguration(
+        Integer.parseInt(getEnv("SCHEDULER_PORT", "27193")),
+        Boolean.parseBoolean(getEnv("SCHEDULER_LOGGING", "true")) ? JavalinLoggingState.Enabled : JavalinLoggingState.Disabled,
+        Path.of(getEnv("SCHEDULER_LOCAL_STORE", "/usr/src/app/scheduler_file_store")),
+        new PostgresStore(getEnv("SCHEDULER_DB_TYPE", "postgres"),
+                          getEnv("SCHEDULER_DB_USER", "aerie"),
+                          Integer.parseInt(getEnv("SCHEDULER_DB_PORT", "5432")),
+                          getEnv("SCHEDULER_DB_PASSWORD", "aerie"),
+                          getEnv("SCHEDULER_DB", "aerie_scheduler")),
+        URI.create(getEnv("MERLIN_GRAPHQL_URL", "http://localhost:8080/v1/graphql")),
+        Path.of(getEnv("MERLIN_LOCAL_STORE", "/usr/src/app/merlin_file_store")),
+        Path.of(getEnv("SCHEDULER_RULES_JAR", "/usr/src/app/merlin_file_store/scheduler_rules.jar")),
+        PlanOutputMode.valueOf((getEnv("SCHEDULER_OUTPUT_MODE", "CreateNewOutputPlan")))
+    );
+  }
 }
