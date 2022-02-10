@@ -1,7 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * description of how well a plan satisfies its goals
@@ -14,9 +17,28 @@ import java.util.Objects;
 public class Evaluation {
 
   /**
+   * the set of all per-goal evaluations
+   */
+  protected final java.util.HashMap<Goal, GoalEvaluation> goalEvals = new java.util.HashMap<>();
+
+  /**
    * description of the satisfaction of a single goal in isolation
    */
   public static class GoalEvaluation {
+    /**
+     * a map associating each activity that contributed to the goal to a boolean stating whether the goal created it or not
+     */
+    protected final java.util.Map<ActivityInstance, Boolean> acts = new java.util.HashMap<>();
+
+    /**
+     * the numeric evaluation score for the goal
+     */
+    protected double score = 0.0;
+
+    /**
+     * the number of conflicts originally detected
+     */
+    protected Integer nbConflictsDetected = null;
 
     /**
      * sets the numeric score for the evaluation of the goal
@@ -36,27 +58,39 @@ public class Evaluation {
      */
     public double getScore() { return score; }
 
-    /**
-     * the numeric evaluation score for the goal
-     */
-    protected double score = 0.0;
+    public void setNbConflictsDetected(final int nbConflictsDetected) {
+      this.nbConflictsDetected = nbConflictsDetected;
+    }
+
+    public Optional<Integer> getNbConflictsDetected() {
+      if(nbConflictsDetected == null){
+        return Optional.empty();
+      }
+      return Optional.of(nbConflictsDetected);
+    }
 
     /**
      * flags given activity as contributing to the goal's (dis)satisfaction
      *
      * @param act IN the activity instance that contributed to the goal's
      *     evaluation
+     * @param createdByThisGoal IN a boolean stating whether the instance has been created by this goal or not
      */
-    public void associate(ActivityInstance act) { acts.add(act); }
+    public void associate(ActivityInstance act, boolean createdByThisGoal) { acts.put(act, createdByThisGoal);}
 
     /**
      * flags all given activities as contributing to the goal's (dis)satisfaction
      *
      * @param acts IN container of activities that contributed to the goal's
      *     evaluation
+     * @param createdByThisGoal IN a boolean stating whether the instance has been created by this goal or not
      */
-    public void associate(java.util.Collection<ActivityInstance> acts) {
-      this.acts.addAll(acts);
+    public void associate(java.util.Collection<ActivityInstance> acts, boolean createdByThisGoal) {
+      acts.forEach((a)->this.acts.put(a, createdByThisGoal));
+    }
+
+    public void removeAssociation(java.util.Collection<ActivityInstance> acts){
+      acts.forEach((a)->this.acts.remove(a));
     }
 
     /**
@@ -65,13 +99,18 @@ public class Evaluation {
      * @return the set of all activities that contributed to the evaluation
      */
     public java.util.Collection<ActivityInstance> getAssociatedActivities() {
-      return java.util.Collections.unmodifiableSet(acts);
+      return java.util.Collections.unmodifiableSet(acts.keySet());
     }
-
     /**
-     * the set of all activities that contributed to the evaluation
+     * fetches the set of all activities that this goal inserted in the plan
+     *
+     * @return the set of all activities that this goal inserted in the plan
      */
-    protected final java.util.Set<ActivityInstance> acts = new java.util.HashSet<>();
+    public java.util.Collection<ActivityInstance> getInsertedActivities() {
+      return java.util.Collections.unmodifiableSet(acts.entrySet().stream().filter((a)-> a.getValue().equals(true)).map(
+          Map.Entry::getKey).collect(
+          Collectors.toSet()));
+    }
 
   }
 
@@ -104,11 +143,6 @@ public class Evaluation {
    */
   public java.util.Map<Goal,GoalEvaluation> getGoalEvaluations() { return Collections.unmodifiableMap(goalEvals); }
 
-  /**
-   * the set of all per-goal evaluations
-   */
-  protected final java.util.HashMap<Goal, GoalEvaluation> goalEvals = new java.util.HashMap<>();
-
   @Override
   public boolean equals(final Object o) {
     if (this == o) return true;
@@ -122,6 +156,23 @@ public class Evaluation {
     return Objects.hash(goalEvals);
   }
 
+  boolean canAssociateMoreToCreatorOf(ActivityInstance instance){
+    Goal creator = getGoalCreator(instance);
+    if(creator instanceof ActivityExistentialGoal activityExistentialCreator) {
+      //we can piggyback
+      return activityExistentialCreator.childCustody == ChildCustody.Jointly;
+    }
+    return true;
+  }
+
+  Goal getGoalCreator(ActivityInstance instance){
+    for(var goalEval : goalEvals.entrySet()){
+      if(goalEval.getValue().getInsertedActivities().contains(instance)){
+        return goalEval.getKey();
+      }
+    }
+    throw new IllegalStateException("No goal is referenced as creator for activity " + instance) ;
+  }
 
 }
 
