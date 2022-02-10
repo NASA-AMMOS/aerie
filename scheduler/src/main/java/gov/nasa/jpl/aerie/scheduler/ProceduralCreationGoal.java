@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Function;
 
@@ -115,14 +116,37 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
           .build();
       final var matchingActs = plan.find(satisfyingActSearch);
 
-      //generate a conflict if no matching acts found
-      if (matchingActs.isEmpty()) {
-        conflicts.add(new MissingActivityInstanceConflict(
-            this, requestedAct));
-        //REVIEW: pass the requested instance to conflict or otherwise cache it
-        //        for the imminent request to create it in the plan
+      var missingActAssociations = new ArrayList<ActivityInstance>();
+      var planEvaluation = plan.getEvaluation();
+      var associatedActivitiesToThisGoal = planEvaluation.forGoal(this).getAssociatedActivities();
+      var alreadyOneActivityAssociated = false;
+      for(var act : matchingActs){
+        //has already been associated to this goal
+        if(associatedActivitiesToThisGoal.contains(act)){
+          alreadyOneActivityAssociated = true;
+          break;
+        }
       }
-
+      if(!alreadyOneActivityAssociated){
+        //fetch all activities that can be associated, scheduler will make a choice
+        for(var act : matchingActs){
+          if(planEvaluation.canAssociateMoreToCreatorOf(act)){
+            missingActAssociations.add(act);
+          }
+        }
+      }
+      //adding appropriate conflicts
+      if(!alreadyOneActivityAssociated) {
+        //generate a conflict if no matching acts found
+        if (matchingActs.isEmpty()) {
+          conflicts.add(new MissingActivityInstanceConflict(
+              this, requestedAct));
+          //REVIEW: pass the requested instance to conflict or otherwise cache it
+          //        for the imminent request to create it in the plan
+        } else {
+          conflicts.add(new MissingAssociationConflict(this, missingActAssociations));
+        }
+      }
     }//for(requestedAct)
 
     return conflicts;

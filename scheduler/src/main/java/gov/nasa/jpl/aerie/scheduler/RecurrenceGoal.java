@@ -4,6 +4,8 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
+import java.util.List;
+
 /**
  * describes the desired recurrence of an activity every time period
  */
@@ -125,10 +127,12 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
         conflicts.addAll(makeRecurrenceConflicts(prevStartT, actStartT, plan));
 
       } else {
-        //REVIEW: will need to record associations to check for joint/sole
-        //        ownership, but that assignment will itself be combinatoric
-        //REVIEW: should record determined associations more permanently, eg
-        //        for UI
+        /*TODO: right now, we associate with all the activities that are satisfying but we should aim for the minimum
+        set which itself is a combinatoric problem */
+        var planEval = plan.getEvaluation();
+        if(!planEval.forGoal(this).getAssociatedActivities().contains(act) && planEval.canAssociateMoreToCreatorOf(act)) {
+          conflicts.add(new MissingAssociationConflict(this, List.of(act)));
+        }
       }
 
       prevStartT = actStartT;

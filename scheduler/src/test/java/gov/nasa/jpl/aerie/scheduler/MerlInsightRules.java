@@ -110,6 +110,7 @@ public class MerlInsightRules extends Problem {
         .withPriority(10)
         .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
         .generateWith((plan) -> turnONFFMonitoring)
+        .owned(ChildCustody.Jointly)
         .build();
     goals.add(pro);
 
@@ -132,6 +133,7 @@ public class MerlInsightRules extends Problem {
         .attachStateConstraint(sce)
         .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
         .thereExistsOne(HP3Acts)
+        .owned(ChildCustody.Jointly)
         .build();
     goals.add(goal1a);
 
@@ -152,6 +154,7 @@ public class MerlInsightRules extends Problem {
         .withPriority(8)
         .thereExistsOne(HP3Acts)
         .attachStateConstraint(sce)
+        .owned(ChildCustody.Jointly)
         .duration(Window.between(Duration.of(3, Duration.HOUR), Duration.MAX_VALUE))
         .build();
 

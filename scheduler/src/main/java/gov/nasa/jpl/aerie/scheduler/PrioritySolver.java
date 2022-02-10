@@ -393,6 +393,26 @@ private void satisfyOptionGoal(OptionGoal goal) {
               //    at next constraint query, if relevant
             }
           }
+        } else if(missing instanceof MissingAssociationConflict missingAssociationConflict){
+          var actToChooseFrom = missingAssociationConflict.getActivityInstancesToChooseFrom();
+          //no act type constraint to consider as the activities have been scheduled
+          //no global constraint for the same reason above mentioned
+          //only the target goal state constraints to consider
+          for(var act : actToChooseFrom){
+            var actWindow = new Windows();
+            actWindow.add(Window.between(act.getStartTime(), act.getEndTime()));
+            var stateConstraints = goal.getStateConstraints();
+            var narrowed = actWindow;
+            if(stateConstraints!= null) {
+              narrowed = narrowByStateConstraints(actWindow, List.of(stateConstraints));
+            }
+            if(narrowed.includes(actWindow)){
+              //decision-making here, we choose the first satisfying activity
+              evaluation.forGoal(goal).associate(act, false);
+              madeProgress = true;
+              break;
+            }
+          }
         }
       }//for(missing)
 
