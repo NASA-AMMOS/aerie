@@ -60,7 +60,7 @@ public class SimulationFacadeTest {
 
   @BeforeEach
   public void setUp() {
-    missionModel = SimulationUtility.getMissionModel();
+    missionModel = SimulationUtility.getBananaMissionModel();
     wrappedMissionModel = new MissionModelWrapper(missionModel, horizon);
     facade = new SimulationFacade(horizon, missionModel);
   }

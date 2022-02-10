@@ -128,6 +128,10 @@ public final class SimulationDriver {
     }
   }
 
+  public static ControlTask buildPlanTask(Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule){
+    return new ControlTask(schedule);
+  }
+
   private static final class ControlTask implements Task<Unit> {
     private final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule;
 
