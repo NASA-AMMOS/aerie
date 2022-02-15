@@ -1,8 +1,8 @@
 plugins {
-    id 'com.github.ben-manes.versions' version '0.42.0'
+  id 'com.github.ben-manes.versions' version '0.42.0'
 }
 
-allprojects {
+subprojects {
   apply plugin: 'com.github.ben-manes.versions'
 
   repositories {
@@ -14,13 +14,11 @@ allprojects {
   group = 'gov.nasa.jpl.aerie'
   version = '0.10.0-SNAPSHOT'
 
-  gradle.projectsEvaluated {
-    tasks.withType(JavaCompile) {
-      options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
-      options.encoding = 'UTF-8'
-    }
-    tasks.withType(Javadoc) {
-      options.encoding = 'UTF-8'
-    }
+  tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+    options.encoding = 'UTF-8'
+  }
+  tasks.withType(Javadoc) {
+    options.encoding = 'UTF-8'
   }
 }
