@@ -15,9 +15,10 @@ subprojects {
   version = '0.10.0-SNAPSHOT'
 
   tasks.withType(JavaCompile) {
-    options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
+    options.compilerArgs << '-Xlint:deprecation' << '-Xlint:unchecked'
     options.encoding = 'UTF-8'
   }
+
   tasks.withType(Javadoc) {
     options.encoding = 'UTF-8'
   }
