@@ -48,7 +48,7 @@ public final class MerlinBindingsTest {
       config.registerPlugin(new MerlinBindings(missionModelApp, planApp, simulationAction));
     });
 
-    SERVER.start();
+    SERVER.start(54321); // Use likely unused port to avoid clash with any currently hosted port 80 services
   }
 
   @AfterAll
