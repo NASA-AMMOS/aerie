@@ -35,6 +35,7 @@
 /nbbuild/
 /nbdist/
 /nbproject/private/
+node_modules
 
 # Ignore any SQL files copied from build tasks
 deployment/postgres-init-db/sql/**/*.sql
