@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -119,7 +119,7 @@ public final class LocalMissionModelService implements MissionModelService {
   throws NoSuchMissionModelException,
          NoSuchActivityTypeException,
          UnconstructableActivityInstanceException,
-         MissingArgumentException,
+         MissingArgumentsException,
          MissionModelLoadException
   {
     try {
@@ -159,7 +159,7 @@ public final class LocalMissionModelService implements MissionModelService {
   @Override
   public Map<String, SerializedValue> getModelEffectiveArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
-         MissingArgumentException,
+         MissingArgumentsException,
          MissionModelLoadException,
          UnconstructableMissionModelConfigurationException,
          UnconfigurableMissionModelException
