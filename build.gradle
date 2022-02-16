@@ -2,6 +2,13 @@ plugins {
   id 'com.github.ben-manes.versions' version '0.42.0'
 }
 
+task archiveDeployment(type: Tar) {
+  destinationDirectory = file('.')
+  archiveFileName = 'deployment.tar'
+  into 'deployment'
+  from 'deployment'
+}
+
 // Add `distributeSql` task to all subprojects with `sql/` child directory
 configure(subprojects.findAll { it.projectDir.toPath().resolve('sql').toFile().exists() }) {
   // Specify only subprojects with `processResources` tasks,

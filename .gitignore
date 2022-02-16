@@ -25,6 +25,7 @@
 ### Build ###
 .m2
 *.local
+*.tar
 *.tar.gz
 /.buckd/
 /.nb-gradle/
@@ -36,7 +37,7 @@
 /nbproject/private/
 
 # Ignore any SQL files copied from build tasks
-deployment/postgres-init-db/sql/*/*.sql
+deployment/postgres-init-db/sql/**/*.sql
 !deployment/postgres-init-db/sql/ui/init.sql
 !deployment/postgres-init-db/sql/ui/tables/view.sql
 
