@@ -209,7 +209,7 @@ public final class MerlinBindings implements Plugin {
       ctx.result(ResponseSerializers.serializeEffectiveArgumentMap(arguments).toString());
     } catch (final MissingArgumentsException ex) {
       ctx.status(200)
-         .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
+         .result(ResponseSerializers.serializeMissingArgumentsException(ex).toString());
     } catch (final MissionModelService.UnconfigurableMissionModelException | MissionModelService.UnconstructableMissionModelConfigurationException ex) {
       ctx.status(400)
          .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
@@ -237,7 +237,7 @@ public final class MerlinBindings implements Plugin {
       ctx.result(ResponseSerializers.serializeEffectiveArgumentMap(arguments).toString());
     } catch (final MissingArgumentsException ex) {
       ctx.status(200)
-         .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
+         .result(ResponseSerializers.serializeMissingArgumentsException(ex).toString());
     } catch (final MissionModelService.NoSuchActivityTypeException | MissionModelService.UnconstructableActivityInstanceException ex) {
       ctx.status(400)
          .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
