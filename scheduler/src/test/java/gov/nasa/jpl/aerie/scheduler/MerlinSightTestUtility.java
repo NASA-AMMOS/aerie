@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class MerlinSightTestUtility {
 
   public static MissionModelWrapper getMerlinSightMissionModel(final PlanningHorizon horizon){
     final var builder = new MissionModelBuilder();
-    final var configuration = new gov.nasa.jpl.aerielander.mappers.config.ConfigurationValueMapper().serializeValue(gov.nasa.jpl.aerielander.config.Configuration.defaultConfiguration());
+    final var configuration = SerializedValue.of(new gov.nasa.jpl.aerielander.generated.config.ConfigurationMapper().getArguments(gov.nasa.jpl.aerielander.config.Configuration.defaultConfiguration()));
     final var factory = new gov.nasa.jpl.aerielander.generated.GeneratedMissionModelFactory();
     final var model = factory.instantiate(configuration, builder);
     final var mission = builder.build(model, factory.getTaskSpecTypes());
