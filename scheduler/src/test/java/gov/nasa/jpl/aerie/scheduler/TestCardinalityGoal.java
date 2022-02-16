@@ -9,6 +9,19 @@ import java.util.List;
 
 public class TestCardinalityGoal {
 
+@Test
+public void minimalDef(){
+  CardinalityGoal goal = new CardinalityGoal.Builder()
+      .inPeriod(ActivityExpression.ofType(new ActivityType("")))
+      .thereExistsOne(new ActivityCreationTemplate.Builder()
+                          .ofType(new ActivityType(""))
+                          .build())
+      .named("TestCardGoal")
+      .forAllTimeIn(Window.at(Duration.SECONDS))
+      .owned(ChildCustody.Jointly)
+      .build();
+
+}
 
   @Test
   public void testone() {
@@ -31,13 +44,13 @@ public class TestCardinalityGoal {
         .named("TestCardGoal")
         .forAllTimeIn(period)
         .owned(ChildCustody.Jointly)
-        .withPriority(7.0)
+        //.withPriority(7.0)
 
         .build();
 
     Problem problem = new Problem(null, null);
 
-    problem.add(goal);
+    problem.setGoals(List.of(goal));
 
     HuginnConfiguration huginn = new HuginnConfiguration();
     final var solver = new PrioritySolver(huginn, problem);
@@ -76,13 +89,13 @@ public class TestCardinalityGoal {
         .named("TestCardGoal")
         .forAllTimeIn(period)
         .owned(ChildCustody.Jointly)
-        .withPriority(7.0)
+        //.withPriority(7.0)
 
         .build();
 
     Problem problem = new Problem(null, null);
 
-    problem.add(goal);
+    problem.setGoals(List.of(goal));
 
     HuginnConfiguration huginn = new HuginnConfiguration();
     final var solver = new PrioritySolver(huginn, problem);

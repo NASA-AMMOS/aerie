@@ -142,8 +142,7 @@ public class TestStateConstraints {
         //.withPriority(7.0)
         .build();
 
-    Problem problem = new Problem(null, horizon);
-    problem.addAll(List.of(cg));
+    problem.setGoals(List.of(cg));
     HuginnConfiguration huginn = new HuginnConfiguration();
     final var solver = new PrioritySolver(huginn, this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
@@ -193,8 +192,7 @@ public class TestStateConstraints {
         //.withPriority(7.0)
         .build();
 
-    Problem problem = new Problem(null, horizon);
-    problem.addAll(List.of(proceduralGoalWithConstraints));
+    problem.setGoals(List.of(proceduralGoalWithConstraints));
     HuginnConfiguration huginn = new HuginnConfiguration();
     final var solver = new PrioritySolver(huginn, this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
@@ -271,10 +269,9 @@ public class TestStateConstraints {
         //.withPriority(7.0)
         .build();
 
-    Problem problem = new Problem(null, horizon);
-    problem.addAll(List.of(proceduralgoalwithoutconstraints));
+    problem.setGoals(List.of(proceduralgoalwithoutconstraints));
     HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, this.problem);
+    final var solver = new PrioritySolver(huginn, problem);
     final var plan = solver.getNextSolution().orElseThrow();
     assert (TestUtility.containsExactlyActivity(plan, act1));
     assert (TestUtility.doesNotContainActivity(plan, act2));
@@ -312,8 +309,7 @@ public class TestStateConstraints {
         //.withPriority(7.0)
         .build();
 
-    Problem problem = new Problem(null, horizon);
-    problem.addAll(List.of(cg));
+    problem.setGoals(List.of(cg));
     HuginnConfiguration huginn = new HuginnConfiguration();
     final var solver = new PrioritySolver(huginn, this.problem);
     final var plan = solver.getNextSolution().orElseThrow();

@@ -192,29 +192,17 @@ public class PrioritySolver implements Solver {
    * @return a descending-priority ordered queue of goals from the input
    *     problem, ready for processing
    */
-  private java.util.PriorityQueue<Goal> getGoalQueue() {
+  private LinkedList<Goal> getGoalQueue() {
     assert problem != null;
     final var rawGoals = problem.getGoals();
     assert rawGoals != null;
 
-    //order goals in descending priority order, breaking ties by id (NB: java
-    //PriorityQueues already put the maximal element at the polling head, so
-    //no reverse is needed)
-    final var goalSort = java.util.Comparator
-        .comparingDouble(Goal::getPriority).reversed()
-        .thenComparing(Goal::getName);
-    assert goalSort != null;
-
     //create queue container using comparator and pre-sized for all goals
     final var capacity = rawGoals.size();
     assert capacity >= 0;
-    final var goalQ = new java.util.PriorityQueue<>(
-        (capacity == 0) ? 1 : capacity, //NB: can't use zero pre-size capacity
-        goalSort
-    );
 
     //fill the comparator-imbued container with goals to get sorted queue
-    goalQ.addAll(rawGoals);
+    final var goalQ = new LinkedList<>(rawGoals);
     assert goalQ.size() == rawGoals.size();
 
     return goalQ;
@@ -246,8 +234,9 @@ private void satisfyOptionGoal(OptionGoal goal) {
           var aggregatedActivities = new ArrayList<ActivityInstance>();
           aggregatedActivities.addAll(associatedActivities);
           aggregatedActivities.addAll(insertedActivities);
-          if (aggregatedActivities.size() > 0 && (goal.optimizer.isBetterThanCurrent(new ArrayList<>(
-              aggregatedActivities)) || currentSatisfiedGoal == null)) {
+          if (aggregatedActivities.size() > 0 &&
+              (goal.optimizer.isBetterThanCurrent(aggregatedActivities) ||
+               currentSatisfiedGoal == null)) {
             actsToInsert = insertedActivities;
             actsToAssociateWith = associatedActivities;
             currentSatisfiedGoal = subgoal;
@@ -259,7 +248,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
       if (currentSatisfiedGoal != null) {
         for(var act: actsToAssociateWith){
           //we do not care about ownership here as it is not really a piggyback but just the validation of the supergoal
-          evaluation.forGoal(goal).associate(actsToInsert, false);
+          evaluation.forGoal(goal).associate(act, false);
         }
         if(checkAndInsertActs(actsToInsert)) {
           for(var act: actsToInsert){

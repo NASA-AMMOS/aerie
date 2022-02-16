@@ -3,6 +3,9 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
 public class TestRecurrenceGoal {
 
   @Test
@@ -21,7 +24,7 @@ public class TestRecurrenceGoal {
 
     Problem problem = new Problem(null, planningHorizon);
 
-    problem.add(goal);
+    problem.setGoals(List.of(goal));
 
     HuginnConfiguration huginn = new HuginnConfiguration();
     final var solver = new PrioritySolver(huginn, problem);
