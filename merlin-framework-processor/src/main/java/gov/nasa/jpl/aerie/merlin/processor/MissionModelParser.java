@@ -354,12 +354,15 @@ import java.util.function.Predicate;
 
       if (!(element instanceof ExecutableElement executableElement)) continue;
 
+      final var durationTypeAnnotation = element.getAnnotation(ActivityType.ControllableDuration.class);
+      final var durationParameter = Optional.ofNullable(durationTypeAnnotation).map(ActivityType.ControllableDuration::parameterName);
+
       final var returnType = executableElement.getReturnType();
       final var nonVoidReturnType = returnType.getKind() == TypeKind.VOID
           ? Optional.<TypeMirror>empty()
           : Optional.of(returnType);
 
-      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value(), nonVoidReturnType));
+      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value(), nonVoidReturnType, durationParameter));
     }
 
     return Optional.empty();

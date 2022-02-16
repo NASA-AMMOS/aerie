@@ -308,10 +308,14 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 activityTypeRecord ->
                                     CodeBlock
                                         .builder()
-                                        .addStatement("result.put(\"$L\", $T.$L())",
+                                        .addStatement("result.put(\"$L\", $T.$L)",
                                                       activityTypeRecord.name(),
                                                       DurationType.class,
-                                                      "uncontrollable"))
+                                                      activityTypeRecord
+                                                          .effectModel()
+                                                          .flatMap(EffectModelRecord::durationParameter)
+                                                          .map(durationParameter -> CodeBlock.of("controllable(\"$L\")", durationParameter))
+                                                          .orElse(CodeBlock.of("uncontrollable()"))))
                             .reduce((x, y) -> x.add("$L", y.build()))
                             .orElse(CodeBlock.builder()).build())
                     .addStatement("return result")
