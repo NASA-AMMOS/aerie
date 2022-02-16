@@ -1,10 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import java.util.Collection;
-import java.util.Map;
-
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
+
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * summary of results from running the scheduler, including goal satisfaction metrics and changes made

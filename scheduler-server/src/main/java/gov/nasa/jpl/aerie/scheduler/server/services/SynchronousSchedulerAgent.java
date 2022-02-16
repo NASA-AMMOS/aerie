@@ -1,26 +1,37 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
+import gov.nasa.jpl.aerie.scheduler.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.Goal;
 import gov.nasa.jpl.aerie.scheduler.HuginnConfiguration;
 import gov.nasa.jpl.aerie.scheduler.JarClassLoader;
 import gov.nasa.jpl.aerie.scheduler.Plan;
+import gov.nasa.jpl.aerie.scheduler.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.PrioritySolver;
 import gov.nasa.jpl.aerie.scheduler.Problem;
 import gov.nasa.jpl.aerie.scheduler.Solver;
+import gov.nasa.jpl.aerie.scheduler.Time;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.ResultsProtocolFailure;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
+import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
+import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,7 +42,7 @@ import java.util.stream.Collectors;
  *
  * @param merlinService interface for querying plan details from merlin
  * @param modelJarsDir path to parent directory for mission model jars (interim backdoor jar file access)
- * @param rulesJarPath path to jar file to load scheduling rules from (interim solution for user input rules)
+ * @param goalsJarPath path to jar file to load scheduling goals from (interim solution for user input goals)
  * @param outputMode how the scheduling output should be returned to aerie (eg overwrite or new container)
  */
 //TODO: will eventually need scheduling goal service arg to pull goals from scheduler's own data store
@@ -39,7 +50,7 @@ public record SynchronousSchedulerAgent(
     SpecificationService specificationService,
     GraphQLMerlinService merlinService,
     Path modelJarsDir,
-    Path rulesJarPath,
+    Path goalsJarPath,
     PlanOutputMode outputMode
 )
     implements SchedulerAgent
@@ -47,7 +58,7 @@ public record SynchronousSchedulerAgent(
   public SynchronousSchedulerAgent {
     Objects.requireNonNull(merlinService);
     Objects.requireNonNull(modelJarsDir);
-    Objects.requireNonNull(rulesJarPath);
+    Objects.requireNonNull(goalsJarPath);
   }
 
   /**
@@ -64,32 +75,111 @@ public record SynchronousSchedulerAgent(
     try {
       //confirm requested plan to schedule from/into still exists at targeted version (request could be stale)
       //TODO: maybe some kind of high level db transaction wrapping entire read/update of target plan revision
-      ensureRequestIsCurrent(request);
 
-      // TODO Adrien: complete this stubbed block
-//      //create scheduler problem seeded with initial plan
-//      final var problem = createProblem(planMetadata);
-//      final var scheduler = createScheduler(planMetadata, problem);
-//
-//      //run the scheduler to find a solution to the posed problem, if any
-//      final var solutionPlan = scheduler.getNextSolution().orElseThrow(
-//          () -> new ResultsProtocolFailure("scheduler returned no solution"));
-//
-//      //store the solution plan back into merlin (and reconfirm no intervening mods!)
-//      //TODO: make revision confirmation atomic part of plan mutation (plan might have been modified during scheduling!)
-//      ensureRequestIsCurrent(request);
-//      storeFinalPlan(planMetadata, problem.getMissionModel(), solutionPlan);
-//
-//      //collect results and notify subscribers of success
-//      final var results = collectResults(solutionPlan);
-//      writer.succeedWith(results);
-      writer.failWith("Not yet implemented"); // TODO Adrien: complete this stubbed block
+      // TODO: Remove workaround function wrapper once goals are read from database
+      final var specificationWithoutGoals = specificationService.getSpecification(request.specificationId());
+      final var planMetadata = merlinService.getPlanMetadata(specificationWithoutGoals.planId());
+      final var specificationWithGoals = loadSpecificationGoalsFromJAR(specificationWithoutGoals, planMetadata);
+      ensureRequestIsCurrent(request);
+      ensurePlanRevisionMatch(specificationWithGoals,planMetadata.planRev());
+      //create scheduler problem seeded with initial plan
+      final var mission = loadMissionModel(planMetadata);
+      var planningHorizon = new PlanningHorizon(Time.fromInstant(specificationWithGoals.horizonStartTimestamp().toInstant()),Time.fromInstant(specificationWithGoals.horizonEndTimestamp().toInstant())) ;
+      final var problem = new Problem(mission, planningHorizon);
+      //seed the problem with the initial plan contents
+      problem.setInitialPlan(loadInitialPlan(planMetadata, problem));
+
+      //apply constraints/goals to the problem
+      loadConstraints(planMetadata, mission).forEach(problem::add);
+      var orderedGoals = specificationWithGoals.goalsByPriority().stream().map(GoalRecord::definition).collect(Collectors.toList());
+      problem.setGoals(orderedGoals);
+      var goals = specificationWithGoals.goalsByPriority().stream().collect(Collectors.toMap(GoalRecord::definition, GoalRecord::id));
+
+      final var scheduler = createScheduler(planMetadata,problem);
+      //run the scheduler to find a solution to the posed problem, if any
+      final var solutionPlan = scheduler.getNextSolution().orElseThrow(
+          () -> new ResultsProtocolFailure("scheduler returned no solution"));
+
+      //store the solution plan back into merlin (and reconfirm no intervening mods!)
+      //TODO: make revision confirmation atomic part of plan mutation (plan might have been modified during scheduling!)
+      ensurePlanRevisionMatch(specificationWithGoals, getMerlinPlanRev(specificationWithGoals.planId()));
+      var instancesToIds = storeFinalPlan(planMetadata, solutionPlan);
+
+      //collect results and notify subscribers of success
+      final var results = collectResults(solutionPlan,instancesToIds, goals);
+      writer.succeedWith(results);
     } catch (final ResultsProtocolFailure | NoSuchSpecificationException e) {
       //unwrap failure message from any anticipated exceptions and forward to subscribers
+      writer.failWith(e.getMessage());
+
+      // TODO: Remove this catch for the workaround that loads goals from a JAR once
+      //       we are reading goals from the database
+    } catch (final NoSuchPlanException | IOException | NoSuchGoalDefinitionException e) {
       writer.failWith(e.getMessage());
     }
   }
 
+  // TODO: Remove this when removing the workaround for loading Goals from a JAR
+  private final class NoSuchGoalDefinitionException extends Exception {
+    public NoSuchGoalDefinitionException(final GoalId goalId, final String name) {
+      super(String.format("Goal definition for goal name '%s' with ID '%d' not found", name, goalId.id()));
+    }
+  }
+
+  /** WORKAROUND
+   * This function serves as a workaround to load a specification's set of goals from a JAR
+   * instead of the database. When we are able to read goals from the database, this function
+   * should be replaced by a simple call to the specification service's getSpecification function
+   * @param dbLoadedSpec - The specification as loaded from the database with empty goal definitions
+   * @return An identical specification with goal definitions added (loaded from a JAR)
+   */
+  private Specification loadSpecificationGoalsFromJAR(final Specification dbLoadedSpec, final PlanMetadata planMetadata)
+  throws NoSuchPlanException, IOException, NoSuchGoalDefinitionException {
+    final var missionModel = loadMissionModel(planMetadata);
+    final var jarGoals = loadGoals(missionModel);
+
+    final var loadedGoals = new ArrayList<GoalRecord>(dbLoadedSpec.goalsByPriority().size());
+    for (final var dbGoal : dbLoadedSpec.goalsByPriority()) {
+      boolean definitionFound = false;
+      for (final var jarGoal : jarGoals) {
+        if (dbGoal.definition().getName().equals(jarGoal.getName())) {
+          loadedGoals.add(new GoalRecord(dbGoal.id(), jarGoal));
+          break;
+        }
+      }
+      if (!definitionFound) throw new NoSuchGoalDefinitionException(dbGoal.id(), dbGoal.definition().getName());
+    }
+
+    return new Specification(
+        dbLoadedSpec.planId(),
+        dbLoadedSpec.planRevision(),
+        loadedGoals,
+        dbLoadedSpec.horizonStartTimestamp(),
+        dbLoadedSpec.horizonEndTimestamp(),
+        dbLoadedSpec.simulationArguments()
+    );
+  }
+
+  private void ensurePlanRevisionMatch(final Specification specification, final long actualPlanRev) {
+    if (actualPlanRev != specification.planRevision()) {
+      throw new ResultsProtocolFailure("plan with id %s at revision %d is no longer at revision %d".formatted(
+          specification.planId(), actualPlanRev, specification.planRevision()));
+    }
+  }
+  /**
+   * fetch just the current revision number of the target plan from aerie services
+   *
+   * @param planId identifier of the target plan to load metadata for
+   * @return the current revision number of the target plan according to a fresh query
+   * @throws ResultsProtocolFailure when the requested plan cannot be found, or aerie could not be reached
+   */
+  private long getMerlinPlanRev(final PlanId planId) {
+    try {
+      return merlinService.getPlanRevision(planId);
+    } catch (NoSuchPlanException | IOException e) {
+      throw new ResultsProtocolFailure(e);
+    }
+  }
   /**
    * confirms that specification revision still matches that expected by the scheduling request
    *
@@ -102,25 +192,6 @@ public record SynchronousSchedulerAgent(
       throw new ResultsProtocolFailure("schedule specification with id %s is stale: %s".formatted(
           request.specificationId(), failure));
     }
-  }
-
-  /**
-   * creates a fully specified scheduler problem statement based on target merlin plan
-   *
-   * @param planMetadata metadata of the plan container to load from
-   * @return a problem specification ready for passing to the scheduler
-   */
-  private Problem createProblem(final PlanMetadata planMetadata) {
-    final var missionModel = loadMissionModel(planMetadata);
-    final var problem = new Problem(missionModel, planMetadata.horizon());
-    //seed the problem with the initial plan contents
-    problem.setInitialPlan(loadInitialPlan(planMetadata, problem));
-
-    //apply constraints/goals to the problem
-    loadConstraints(planMetadata, missionModel).forEach(problem::add);
-    loadGoals(planMetadata, missionModel).forEach(problem::add);
-
-    return problem;
   }
 
   /**
@@ -143,18 +214,19 @@ public record SynchronousSchedulerAgent(
   /**
    * collects the scheduling goals that apply to the current scheduling run on the target plan
    *
-   * @param planMetadata details of the plan container whose associated goals should be collected
    * @param missionModel the mission model that the plan adheres to, possibly associating additional relevant goals
    * @return the list of goals relevant to the target plan
    * @throws ResultsProtocolFailure when the goals could not be loaded, or the goal data store could not be reached
    */
-  private List<Goal> loadGoals(final PlanMetadata planMetadata, final MissionModel<?> missionModel) {
+  private List<Goal> loadGoals(final MissionModel<?> missionModel) {
     //TODO: is the plan and mission model enough to find the relevant goals? (eg what about sandbox goals?)
-    //TODO: somehow apply user control over which scheduling rules to actually run vs just check
+    //TODO: somehow apply user control over which scheduling goals to actually run vs just check
     //TODO: load scheduling goals from scheduler data store into problem
     try {
+      //TODO : when goals are effectively loaded into databse: take goals text and translate them to goal
       //for v0.10.0, load all hardcoded scheduling goals from a jar into the problem
-      final var problems = JarClassLoader.loadProblemsFromJar(this.rulesJarPath.toString(), missionModel);
+      final var problems = JarClassLoader.loadProblemsFromJar(this.goalsJarPath.toString(), missionModel);
+      // goals are associated with
       return problems.stream().map(Problem::getGoals).flatMap(Collection::stream).collect(Collectors.toList());
     } catch (IOException | ClassNotFoundException | InvocationTargetException | InstantiationException e) {
       //TODO: class-loader related exceptions will not be relevant once interim jar-based rule loading is replaced
@@ -230,11 +302,15 @@ public record SynchronousSchedulerAgent(
    * @throws ResultsProtocolFailure when the plan could not be stored to aerie, the target plan revision has
    *     changed, or aerie could not be reached
    */
-  private void storeFinalPlan(final PlanMetadata planMetadata, final Plan newPlan) {
+  private Map<ActivityInstance, ActivityInstanceId> storeFinalPlan(final PlanMetadata planMetadata, final Plan newPlan) {
     try {
       switch (this.outputMode) {
-        case CreateNewOutputPlan -> merlinService.createNewPlanWithActivities(planMetadata, newPlan);
-        case UpdateInputPlanWithNewActivities -> merlinService.updatePlanActivities(planMetadata.planId(), newPlan);
+        case CreateNewOutputPlan -> {
+          return merlinService.createNewPlanWithActivities(planMetadata, newPlan).getValue();
+        }
+        case UpdateInputPlanWithNewActivities -> {
+          return merlinService.updatePlanActivities(planMetadata.planId(), newPlan);
+        }
         default -> throw new IllegalArgumentException("unsupported scheduler output mode " + this.outputMode);
       }
     } catch (Exception e) {
@@ -252,10 +328,16 @@ public record SynchronousSchedulerAgent(
    * @param plan the target plan after the scheduling run has completed
    * @return summary of the state of the plan after scheduling ran; eg goal success metrics, associated instances, etc
    */
-  private ScheduleResults collectResults(final Plan plan) {
-    final var activityCount = plan.getActivities().size();
-    //TODO: complete stub
-    return new ScheduleResults(Map.of()); // TODO Adrien: complete this stubbed instance
+  private ScheduleResults collectResults(final Plan plan, final Map<ActivityInstance, ActivityInstanceId> instancesToIds, Map<Goal, GoalId> goalsToIds) {
+    Map<GoalId, ScheduleResults.GoalResult> goalResults = new HashMap<>();
+      for (var goalEval : plan.getEvaluation().getGoalEvaluations().entrySet()) {
+        var goalId = goalsToIds.get(goalEval.getKey());
+        var goalResult = new ScheduleResults.GoalResult(goalEval.getValue().getInsertedActivities().stream().map(instancesToIds::get).collect(Collectors.toList()),
+                                                        goalEval.getValue().getAssociatedActivities().stream().map(instancesToIds::get).collect(Collectors.toList()),
+                                                        goalEval.getValue().getScore() >=0);
+        goalResults.put(goalId, goalResult);
+      }
+    return new ScheduleResults(goalResults);
   }
 
 }
