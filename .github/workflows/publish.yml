@@ -72,6 +72,14 @@ jobs:
           labels: ${{ steps.aerieScheduler.outputs.labels }}
       # Publish via Gradle.
       - name: Publish Package
-        run: gradle publish
+        run: ./gradlew publish
         env:
           GITHUB_TOKEN: ${{ github.token }}
+      # Publish deployment via action artifact uploader.
+      - name: Create deployment archive
+        run: ./gradlew archiveDeployment
+      - name: Publish deployment
+        uses: actions/upload-artifact@v2
+        with:
+          name: Deployment
+          path: deployment.tar
