@@ -5,7 +5,6 @@ plugins {
 java {
   toolchain {
     languageVersion = JavaLanguageVersion.of(17)
-    vendor = JvmVendorSpec.ADOPTOPENJDK
   }
 }
 
@@ -23,23 +22,24 @@ sourceSets {
   }
 }
 
-def nameMerlinSightJar = "merlinsight-rules.jar"
-def testResourceDir = "src/test/resources"
-task merlinsightjar(type: Jar, dependsOn: compileTestJava)  {
-    from sourceSets.test.output
-    include 'gov/nasa/jpl/aerie/scheduler/MerlInsightRules.class'
-    archiveFileName = nameMerlinSightJar
+def nameMerlinSightJar = 'merlinsight-rules.jar'
+def testResourceDir = 'src/test/resources'
+
+task merlinsightJar(type: Jar, dependsOn: compileTestJava)  {
+  from sourceSets.test.output
+  include 'gov/nasa/jpl/aerie/scheduler/MerlInsightRules.class'
+  archiveFileName = nameMerlinSightJar
 }
 
-task copyJarToRes(type: Copy, dependsOn: merlinsightjar) {
-    from merlinsightjar
-    into testResourceDir
+task copyJarToRes(type: Copy, dependsOn: merlinsightJar) {
+  from merlinsightJar
+  into testResourceDir
 }
 
-test.dependsOn copyJarToRes,merlinsightjar
+test.dependsOn copyJarToRes, merlinsightJar
 
 clean.doFirst {
-  delete testResourceDir+"/"+nameMerlinSightJar
+  delete testResourceDir+'/'+nameMerlinSightJar
 }
 
 test {

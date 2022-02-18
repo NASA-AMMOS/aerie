@@ -1,8 +1,39 @@
 plugins {
-    id 'com.github.ben-manes.versions' version '0.39.0'
+  id 'com.github.ben-manes.versions' version '0.42.0'
 }
 
-allprojects {
+task archiveDeployment(type: Tar) {
+  destinationDirectory = file('.')
+  archiveFileName = 'deployment.tar'
+  into 'deployment'
+  from 'deployment'
+}
+
+// Add `distributeSql` task to all subprojects with `sql/` child directory
+configure(subprojects.findAll { it.projectDir.toPath().resolve('sql').toFile().exists() }) {
+  // Specify only subprojects with `processResources` tasks,
+  // otherwise Gradle cannot see `processResources` as a valid task
+  ['java', 'com.github.node-gradle.node'].each { pluginId ->
+    plugins.withId(pluginId) {
+
+    task distributeSql {
+      copy {
+        into "$rootDir/deployment/postgres-init-db/sql"
+        from fileTree(dir: 'sql', include: '**/*.sql')
+      }
+    }
+
+    // Distribute SQL prior to any resource processing.
+    // This ensures `test` and `build` tasks will distribute SQL
+    processResources.dependsOn distributeSql
+
+    // Distribute SQL prior to creating deployment archive
+    archiveDeployment.dependsOn distributeSql
+    }
+  }
+}
+
+subprojects {
   apply plugin: 'com.github.ben-manes.versions'
 
   repositories {
@@ -14,13 +45,12 @@ allprojects {
   group = 'gov.nasa.jpl.aerie'
   version = '0.10.0-SNAPSHOT'
 
-  gradle.projectsEvaluated {
-    tasks.withType(JavaCompile) {
-      options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
-      options.encoding = 'UTF-8'
-    }
-    tasks.withType(Javadoc) {
-      options.encoding = 'UTF-8'
-    }
+  tasks.withType(JavaCompile) {
+    options.compilerArgs << '-Xlint:deprecation' << '-Xlint:unchecked'
+    options.encoding = 'UTF-8'
+  }
+
+  tasks.withType(Javadoc) {
+    options.encoding = 'UTF-8'
   }
 }
