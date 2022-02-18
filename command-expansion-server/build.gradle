@@ -18,11 +18,11 @@ task build(type: NpmTask) {
   args = ['run', 'build']
 }
 
-task test(type: NpmTask) {
-  dependsOn processResources
-  dependsOn npmInstall
-  args = ['run', 'test']
-}
+//task test(type: NpmTask) {
+//  dependsOn processResources
+//  dependsOn npmInstall
+//  args = ['run', 'test']
+//}
 
 task clean(type: Delete) {
   delete 'build', 'node_modules', 'package-lock.json'
