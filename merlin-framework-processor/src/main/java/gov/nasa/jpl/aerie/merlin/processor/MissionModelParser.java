@@ -13,8 +13,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
-
-import org.apache.commons.lang3.tuple.Pair;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -246,6 +245,12 @@ import java.util.function.Predicate;
     final var parameters = this.getExportParameters(activityTypeElement);
     final var effectModel = this.getActivityEffectModel(activityTypeElement);
 
+    final var durationParameterName = effectModel.flatMap(EffectModelRecord::durationParameter);
+    if (durationParameterName.isPresent()) {
+      validateControllableDurationParameter(name, parameters, durationParameterName.get());
+    }
+
+
     /*
     The following parameter was created as a result of AERIE-1295/1296/1297 on JIRA
     In order to allow for optional/required parameters, the processor
@@ -258,6 +263,37 @@ import java.util.function.Predicate;
     final var defaultsStyle = this.getExportDefaultsStyle(activityTypeElement);
 
     return new ActivityTypeRecord(name, activityTypeElement, parameters, validations, mapper, defaultsStyle, effectModel);
+  }
+
+  private void validateControllableDurationParameter(
+      final String activityName,
+      final List<ParameterRecord> parameters,
+      final String durationParameterName)
+  throws InvalidMissionModelException
+  {
+    final var durationParameterRecord = lookupParameterByName(parameters, durationParameterName);
+    if (durationParameterRecord.isEmpty()) {
+      throw new InvalidMissionModelException(
+          "In activity " + activityName + ", \"" + durationParameterName + "\"" +
+          " is declared as the ControllableDuration parameter, but there is no parameter with that name");
+    }
+    final var record = durationParameterRecord.get();
+    if (!this.typeUtils.isSameType(record.type, this.elementUtils.getTypeElement(Duration.class.getName()).asType())) {
+      throw new InvalidMissionModelException(
+          "In activity " + activityName +
+          ", parameter \"" + record.name + "\"" +
+          " is declared as the ControllableDuration parameter, but does not have type " + Duration.class.getName() + "." +
+          " Instead, it has type " + record.type);
+    }
+  }
+
+  private static Optional<ParameterRecord> lookupParameterByName(final Iterable<ParameterRecord> parameters, final String name) {
+    for (final var param : parameters) {
+      if (param.name.equals(name)) {
+        return Optional.of(param);
+      }
+    }
+    return Optional.empty();
   }
 
   private ExportDefaultsStyle getExportDefaultsStyle(final TypeElement exportTypeElement)
