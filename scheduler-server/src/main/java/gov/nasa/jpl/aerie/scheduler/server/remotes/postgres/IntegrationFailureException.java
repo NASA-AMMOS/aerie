@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 public abstract sealed class IntegrationFailureException
     extends RuntimeException
-    permits DatabaseException, FailedInsertException
+    permits DatabaseException, FailedInsertException, FailedUpdateException
 {
   public IntegrationFailureException() {}
 
