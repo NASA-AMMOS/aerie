@@ -1,0 +1,3 @@
+table:
+  name: scheduling_goal_analysis_satisfying_activities
+  schema: public

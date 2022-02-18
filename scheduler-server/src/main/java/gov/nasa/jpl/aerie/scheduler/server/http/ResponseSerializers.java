@@ -71,24 +71,24 @@ public class ResponseSerializers {
   public static JsonValue serializeScheduleResults(final ScheduleResults results)
   {
     return serializeMap(
-        ResponseSerializers::serializeRuleResult,
-        results.ruleResults()
+        ResponseSerializers::serializeGoalResult,
+        results.goalResults()
             .entrySet()
             .stream()
             .collect(
                 Collectors.toMap(e -> Long.toString(e.getKey().id()), Map.Entry::getValue)));
   }
 
-  private static JsonValue serializeRuleResult(final ScheduleResults.RuleResult ruleResult) {
+  private static JsonValue serializeGoalResult(final ScheduleResults.GoalResult goalResult) {
     return Json
         .createObjectBuilder()
         .add("createdActivities", serializeIterable(
             id -> Json.createValue(id.id()),
-            ruleResult.createdActivities()))
+            goalResult.createdActivities()))
         .add("satisfyingActivities", serializeIterable(
             id -> Json.createValue(id.id()),
-            ruleResult.satisfyingActivities()))
-        .add("createdActivities", ruleResult.satisfied())
+            goalResult.satisfyingActivities()))
+        .add("createdActivities", goalResult.satisfied())
         .build();
   }
 

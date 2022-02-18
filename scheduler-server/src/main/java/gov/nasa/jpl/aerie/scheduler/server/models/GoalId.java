@@ -1,3 +1,3 @@
 package gov.nasa.jpl.aerie.scheduler.server.models;
 
-public record RuleId(long id) { }
+public record GoalId(long id) { }
