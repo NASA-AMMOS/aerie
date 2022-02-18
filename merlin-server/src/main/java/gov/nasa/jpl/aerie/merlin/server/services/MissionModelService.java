@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -34,9 +34,9 @@ public interface MissionModelService {
 
   Map<String, SerializedValue> getActivityEffectiveArguments(String missionModelId, SerializedActivity activity)
   throws NoSuchMissionModelException,
-    NoSuchActivityTypeException,
-    UnconstructableActivityInstanceException,
-    MissingArgumentException;
+         NoSuchActivityTypeException,
+         UnconstructableActivityInstanceException,
+         MissingArgumentsException;
 
   List<String> validateModelArguments(String missionModelId, Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
@@ -49,10 +49,10 @@ public interface MissionModelService {
 
   Map<String, SerializedValue> getModelEffectiveArguments(String missionModelId, Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
-    MissingArgumentException,
     LocalMissionModelService.MissionModelLoadException,
     UnconstructableMissionModelConfigurationException,
-    UnconfigurableMissionModelException;
+    UnconfigurableMissionModelException,
+    MissingArgumentsException;
 
   SimulationResults runSimulation(CreateSimulationMessage message)
           throws NoSuchMissionModelException, MissionModelFacade.NoSuchActivityTypeException;

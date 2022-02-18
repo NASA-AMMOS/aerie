@@ -9,7 +9,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -65,7 +65,7 @@ public final class MissionModelFacade {
   {
     try {
       return specType.getValidationFailures(specType.instantiate(arguments));
-    } catch (final TaskSpecType.UnconstructableTaskSpecException e) {
+    } catch (final TaskSpecType.UnconstructableTaskSpecException | MissingArgumentsException e) {
       throw new UnconstructableActivityInstanceException(
           "Unknown failure when deserializing activity -- do the parameters match the schema?",
           e);
@@ -75,7 +75,7 @@ public final class MissionModelFacade {
   public Map<String, SerializedValue> getActivityEffectiveArguments(
       final String typeName,
       final Map<String, SerializedValue> arguments)
-  throws NoSuchActivityTypeException, UnconstructableActivityInstanceException, MissingArgumentException
+  throws NoSuchActivityTypeException, UnconstructableActivityInstanceException, MissingArgumentsException
   {
     final var specType = Optional
         .ofNullable(this.missionModel.getTaskSpecificationTypes().get(typeName))
@@ -87,7 +87,7 @@ public final class MissionModelFacade {
   private static <Specification, Return> Map<String, SerializedValue> getActivityEffectiveArguments(
       final TaskSpecType<?, Specification, Return> specType,
       final Map<String, SerializedValue> arguments)
-  throws UnconstructableActivityInstanceException, MissingArgumentException
+  throws UnconstructableActivityInstanceException, MissingArgumentsException
   {
     try {
       final var activity = specType.instantiate(arguments);
@@ -115,7 +115,7 @@ public final class MissionModelFacade {
   {
     try {
       return configurationType.getValidationFailures(configurationType.instantiate(arguments));
-    } catch (final ConfigurationType.UnconstructableConfigurationException e) {
+    } catch (final ConfigurationType.UnconstructableConfigurationException | MissingArgumentsException e) {
       throw new UnconstructableMissionModelConfigurationException(
           "Unknown failure when deserializing configuration -- do the parameters match the schema?",
           e);
@@ -124,7 +124,7 @@ public final class MissionModelFacade {
 
   /** Get mission model configuration effective arguments. */
   public Map<String, SerializedValue> getEffectiveArguments(final Map<String, SerializedValue> arguments)
-  throws UnconfigurableMissionModelException, MissingArgumentException, UnconstructableMissionModelConfigurationException
+  throws UnconfigurableMissionModelException, MissingArgumentsException, UnconstructableMissionModelConfigurationException
   {
     final var configType = this.missionModel.getConfigurationType()
         .orElseThrow(UnconfigurableMissionModelException::new);
@@ -134,7 +134,7 @@ public final class MissionModelFacade {
   private static <Config> Map<String, SerializedValue> getEffectiveArguments(
       final ConfigurationType<Config> configurationType,
       final Map<String, SerializedValue> arguments)
-  throws MissingArgumentException, UnconstructableMissionModelConfigurationException
+  throws MissingArgumentsException, UnconstructableMissionModelConfigurationException
   {
     try {
       final var config = configurationType.instantiate(arguments);

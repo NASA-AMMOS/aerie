@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -281,6 +282,26 @@ public final class ResponseSerializers {
                  .add("success", JsonValue.TRUE)
                  .build();
     }
+  }
+
+  public static JsonValue serializeMissingArgumentsException(final MissingArgumentsException ex) {
+    return Json.createObjectBuilder()
+               .add("success", JsonValue.FALSE)
+               .add("errors", serializeMap(arg -> serializeMissingArgument(ex.containerName, ex.metaName, arg), ex.missingArguments.stream().collect(Collectors.toMap(
+                   MissingArgumentsException.MissingArgument::parameterName,
+                   $ -> $))))
+               .add("arguments", serializeMap(ResponseSerializers::serializeArgument, ex.providedArguments.stream().collect(Collectors.toMap(
+                   MissingArgumentsException.ProvidedArgument::parameterName,
+                   MissingArgumentsException.ProvidedArgument::serializedValue))))
+               .build();
+  }
+
+  private static JsonValue serializeMissingArgument(final String containerName, final String metaName, final MissingArgumentsException.MissingArgument argument) {
+    return Json.createObjectBuilder()
+               .add("schema", serializeValueSchema(argument.schema()))
+               .add("message", "Required argument for %s \"%s\" not provided: \"%s\" of type %s"
+                   .formatted(metaName, containerName, argument.parameterName(), argument.schema()))
+               .build();
   }
 
   public static JsonValue serializeJsonParsingException(final JsonParsingException ex) {

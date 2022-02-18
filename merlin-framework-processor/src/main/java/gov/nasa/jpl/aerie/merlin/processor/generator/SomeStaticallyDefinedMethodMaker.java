@@ -8,6 +8,7 @@ import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -32,7 +33,8 @@ import java.util.stream.Collectors;
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
         .returns(TypeName.get(exportType.declaration().asType()))
-        .addException(instantiationExceptionClass)
+        .addException(unconstructableInstantiateException)
+        .addException(MissingArgumentsException.class)
         .addParameter(
             ParameterizedTypeName.get(
                 java.util.Map.class,
@@ -83,7 +85,7 @@ import java.util.stream.Collectors;
                         parameter.name,
                         parameter.name,
                         "entry",
-                        instantiationExceptionClass)
+                        unconstructableInstantiateException)
                     .addStatement("break")
                     .unindent())
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -95,14 +97,14 @@ import java.util.stream.Collectors;
                 .indent()
                 .addStatement(
                     "throw new $T()",
-                    instantiationExceptionClass)
+                    unconstructableInstantiateException)
                 .unindent()
                 .build())
         .endControlFlow()
         .endControlFlow().addCode("\n");
     }
 
-    methodBuilder = makeArgumentPresentCheck(methodBuilder).addCode("\n");
+    methodBuilder = makeArgumentsPresentCheck(methodBuilder).addCode("\n");
 
     // Add return statement with instantiation of class with parameters
     methodBuilder = methodBuilder.addStatement(

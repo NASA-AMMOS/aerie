@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
@@ -207,9 +207,9 @@ public final class MerlinBindings implements Plugin {
       final var arguments = this.missionModelService.getModelEffectiveArguments(missionModelId, input.arguments());
 
       ctx.result(ResponseSerializers.serializeEffectiveArgumentMap(arguments).toString());
-    } catch (final MissingArgumentException ex) {
+    } catch (final MissingArgumentsException ex) {
       ctx.status(200)
-         .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
+         .result(ResponseSerializers.serializeMissingArgumentsException(ex).toString());
     } catch (final MissionModelService.UnconfigurableMissionModelException | MissionModelService.UnconstructableMissionModelConfigurationException ex) {
       ctx.status(400)
          .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
@@ -235,9 +235,9 @@ public final class MerlinBindings implements Plugin {
       final var arguments = this.missionModelService.getActivityEffectiveArguments(missionModelId, serializedActivity);
 
       ctx.result(ResponseSerializers.serializeEffectiveArgumentMap(arguments).toString());
-    } catch (final MissingArgumentException ex) {
+    } catch (final MissingArgumentsException ex) {
       ctx.status(200)
-         .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
+         .result(ResponseSerializers.serializeMissingArgumentsException(ex).toString());
     } catch (final MissionModelService.NoSuchActivityTypeException | MissionModelService.UnconstructableActivityInstanceException ex) {
       ctx.status(400)
          .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());

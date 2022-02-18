@@ -5,15 +5,11 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,7 +27,8 @@ import java.util.Optional;
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
         .returns(TypeName.get(exportType.declaration().asType()))
-        .addException(instantiationExceptionClass)
+        .addException(unconstructableInstantiateException)
+        .addException(MissingArgumentsException.class)
         .addParameter(
             ParameterizedTypeName.get(
                 java.util.Map.class,
@@ -76,7 +73,7 @@ import java.util.Optional;
                         parameter.name,
                         parameter.name,
                         "entry",
-                        instantiationExceptionClass)
+                        unconstructableInstantiateException)
                     .addStatement("break")
                     .unindent())
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -88,13 +85,13 @@ import java.util.Optional;
                 .indent()
                 .addStatement(
                     "throw new $T()",
-                    instantiationExceptionClass)
+                    unconstructableInstantiateException)
                 .unindent()
                 .build())
         .endControlFlow()
         .endControlFlow().addCode("\n");
 
-    methodBuilder = makeArgumentPresentCheck(methodBuilder).addCode("\n").addStatement("return template");
+    methodBuilder = makeArgumentsPresentCheck(methodBuilder).addCode("\n").addStatement("return template");
 
     return methodBuilder.build();
   }

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol.model;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -13,7 +14,7 @@ public interface TaskSpecType<Model, Specification, Return> {
   List<String> getRequiredParameters();
 
   Specification instantiate(Map<String, SerializedValue> arguments)
-  throws UnconstructableTaskSpecException;
+  throws UnconstructableTaskSpecException, MissingArgumentsException;
 
   Map<String, SerializedValue> getArguments(Specification taskSpec);
   List<String> getValidationFailures(Specification taskSpec);
@@ -22,5 +23,5 @@ public interface TaskSpecType<Model, Specification, Return> {
   ValueSchema getReturnValueSchema();
   SerializedValue serializeReturnValue(Return returnValue);
 
-  class UnconstructableTaskSpecException extends Exception {}
+  final class UnconstructableTaskSpecException extends Exception {}
 }
