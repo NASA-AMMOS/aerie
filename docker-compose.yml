@@ -102,6 +102,7 @@ services:
     environment:
       AERIE_MERLIN_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_merlin
       AERIE_SCHEDULER_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_scheduler
+      AERIE_COMMANDING_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_commanding
       AERIE_UI_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_ui
       HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"

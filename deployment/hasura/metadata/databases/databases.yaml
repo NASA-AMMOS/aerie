@@ -16,3 +16,12 @@
       isolation_level: read-committed
       use_prepared_statements: false
   tables: "!include AerieScheduler/tables/tables.yaml"
+- name: AerieCommanding
+  kind: postgres
+  configuration:
+    connection_info:
+      database_url:
+        from_env: AERIE_COMMANDING_DATABASE_URL
+      isolation_level: read-committed
+      use_prepared_statements: false
+  tables: "!include AerieCommanding/tables/tables.yaml"

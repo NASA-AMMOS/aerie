@@ -1,0 +1,3 @@
+table:
+  name: activity_instance_commands
+  schema: public
