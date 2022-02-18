@@ -1,7 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchRequestException;
-import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -12,11 +10,14 @@ import java.util.Optional;
 /*package-local*/ final class GetRequestAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
     select
-      req.analysis_id
-    from scheduling_request as req
-      where
-        req.specification_id = ? and
-        req.specification_revision = ?
+      r.analysis_id,
+      r.status,
+      r.failure_reason,
+      r.canceled
+    from scheduling_request as r
+    where
+      r.specification_id = ? and
+      r.specification_revision = ?
     """;
 
   private final PreparedStatement statement;
@@ -35,12 +36,18 @@ import java.util.Optional;
     final var resultSet = this.statement.executeQuery();
     if (!resultSet.next()) return Optional.empty();
 
-    final var analysisId = resultSet.getLong(1);
+    final var analysisId = resultSet.getLong("analysis_id");
+    final var status = resultSet.getString("status");
+    final var failureReason = resultSet.getString("failure_reason");
+    final var canceled = resultSet.getBoolean("canceled");
 
     return Optional.of(new RequestRecord(
         specificationId,
         analysisId,
-        specificationRevision));
+        specificationRevision,
+        status,
+        failureReason,
+        canceled));
   }
 
   @Override
