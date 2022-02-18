@@ -28,7 +28,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final var spec = getSpecification(connection, specificationId);
       final var request = createRequest(connection, spec);
 
-      return new PostgresResultsCell(this.dataSource, request);
+      return new PostgresResultsCell(
+          this.dataSource,
+          new SpecificationId(request.specificationId()),
+          request.specificationRevision(),
+          request.analysisId());
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get schedule specification", ex);
     } catch (final NoSuchSpecificationException ex) {
@@ -43,7 +47,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final var spec = getSpecification(connection, specificationId);
       final var request = getRequest(connection, specificationId, spec.revision());
 
-      return Optional.of(new PostgresResultsCell(this.dataSource, request));
+      return Optional.of(new PostgresResultsCell(
+          this.dataSource,
+          new SpecificationId(request.specificationId()),
+          request.specificationRevision(),
+          request.analysisId()));
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get schedule specification", ex);
     } catch (final NoSuchSpecificationException | NoSuchRequestException ex) {
@@ -58,7 +66,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       throw new Error("Unable to deallocate results cell of unknown type");
     }
     try (final var connection = this.dataSource.getConnection()) {
-      deleteRequest(connection, cell.request);
+      deleteRequest(connection, cell.specId, cell.specRevision);
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to delete scheduling request", ex);
     }
@@ -96,23 +104,30 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
   private static void deleteRequest(
       final Connection connection,
-      final RequestRecord requestRecord
+      final SpecificationId specId,
+      final long specRevision
   ) throws SQLException {
     try (final var deleteRequestAction = new DeleteRequestAction(connection)) {
-      deleteRequestAction.apply(requestRecord.specificationId(), requestRecord.analysisId());
+      deleteRequestAction.apply(specId.id(), specRevision);
     }
   }
 
   public static final class PostgresResultsCell implements ResultsProtocol.OwnerRole {
     private final DataSource dataSource;
-    private final RequestRecord request;
+    private final SpecificationId specId;
+    private final long specRevision;
+    private final long analysisId;
 
     public PostgresResultsCell(
         final DataSource dataSource,
-        final RequestRecord request
+        final SpecificationId specId,
+        final long specRevision,
+        final long analysisId
     ) {
       this.dataSource = dataSource;
-      this.request = request;
+      this.specId = specId;
+      this.specRevision = specRevision;
+      this.analysisId = analysisId;
     }
 
     @Override
