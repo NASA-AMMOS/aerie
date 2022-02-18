@@ -11,40 +11,32 @@ task archiveDeployment(type: Tar) {
 
 // Add `distributeSql` task to all subprojects with `sql/` child directory
 configure(subprojects.findAll { it.projectDir.toPath().resolve('sql').toFile().exists() }) { sp ->
-  // Specify only subprojects with `processResources` tasks,
-  // otherwise Gradle cannot see `processResources` as a valid task
-  ['java', 'com.github.node-gradle.node'].each { pluginId ->
-    plugins.withId(pluginId) {
 
-      task distributeSql(type: Copy) {
-        into "$rootDir/deployment/postgres-init-db/sql"
-        from fileTree(dir: "${sp.projectDir}/sql", include: '**/*.sql')
-      }
+  // Distribute SQL as part of resource processing
+  task distributeSql(type: Copy, dependsOn: 'processResources') {
+    into "$rootDir/deployment/postgres-init-db/sql"
+    from fileTree(dir: "${sp.projectDir}/sql", include: '**/*.sql')
+  }
 
-      task undoDistributeSql(type: Delete) {
-        file("${sp.projectDir}/sql").list().each {
-          delete "$rootDir/deployment/postgres-init-db/sql/$it"
-        }
-      }
-
-      // Distribute SQL prior to any resource processing.
-      // This ensures `test` and `build` tasks will distribute SQL
-      processResources.dependsOn distributeSql
-
-      // Distribute SQL prior to creating deployment archive
-      archiveDeployment.dependsOn distributeSql
-
-      // Remove distributed SQL as part of `clean` task
-      clean.dependsOn undoDistributeSql
+  // Remove distributed SQL as part of `clean` task
+  task undoDistributeSql(type: Delete) {
+    file("${sp.projectDir}/sql").list().each {
+      delete "$rootDir/deployment/postgres-init-db/sql/$it"
     }
   }
+
+  // Remove distributed SQL as part of `clean` tasks
+  tasks.findAll { it.name == 'clean' }.each { t -> t.dependsOn undoDistributeSql }
+
+  // Distribute SQL prior to creating deployment archive
+  archiveDeployment.dependsOn distributeSql
 }
 
 subprojects {
   apply plugin: 'com.github.ben-manes.versions'
 
   repositories {
-    // Search the local filesystem before attempting remote repositories.
+    // Search the local filesystem before attempting remote repositories
     flatDir { dirs "$rootDir/third-party" }
     mavenCentral()
   }
