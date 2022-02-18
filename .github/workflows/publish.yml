@@ -38,6 +38,8 @@ jobs:
           reporter: java-junit
       - name: Assemble
         run: ./gradlew assemble
+      - name: Assemble Node Project
+        run: ./gradlew command-expansion-server:build
       - name: Login to the Container Registry
         uses: docker/login-action@v1
         with:
@@ -70,6 +72,19 @@ jobs:
           push: true
           tags: ${{ steps.aerieScheduler.outputs.tags }}
           labels: ${{ steps.aerieScheduler.outputs.labels }}
+      # Build aerie-commanding Docker artifacts.
+      - name: Extract metadata (tags, labels) for aerie-commanding Docker image
+          id: aerieCommanding
+          uses: docker/metadata-action@v3
+          with:
+            images: ${{ env.REGISTRY }}/nasa-ammos/aerie-commanding
+      - name: Build and push aerie-commanding Docker image
+          uses: docker/build-push-action@v2
+          with:
+            context: ./command-expansion-server
+            push: true
+            tags: ${{ steps.aerieCommanding.outputs.tags }}
+            labels: ${{ steps.aerieCommanding.outputs.labels }}
       # Publish via Gradle.
       - name: Publish Package
         run: ./gradlew publish

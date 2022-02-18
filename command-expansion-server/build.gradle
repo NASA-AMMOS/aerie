@@ -1,0 +1,29 @@
+plugins {
+  id 'com.github.node-gradle.node' version '3.1.1'
+}
+
+node {
+  version = '16.4.0'
+  npmVersion = '8.5.0'
+  download = true
+}
+
+task processResources {
+  // Currently does nothing, exists as a hook for `distributeSql`
+}
+
+task build(type: NpmTask) {
+  dependsOn processResources
+  dependsOn npmInstall
+  args = ['run', 'build']
+}
+
+//task test(type: NpmTask) {
+//  dependsOn processResources
+//  dependsOn npmInstall
+//  args = ['run', 'test']
+//}
+
+task clean(type: Delete) {
+  delete 'build', 'node_modules', 'package-lock.json'
+}

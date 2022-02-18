@@ -64,6 +64,24 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store
+  aerie_commanding:
+    build:
+      context: ./command-expansion-server
+      dockerfile: Dockerfile
+    container_name: aerie_commanding
+    depends_on: [ "postgres" ]
+    environment:
+      MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
+      COMMANDING_SERVER_PORT : 3000
+      COMMANDING_DB: "aerie_expansion"
+      COMMANDING_DB_PASSWORD: "aerie"
+      COMMANDING_DB_PORT: 5432
+      COMMANDING_DB_SERVER: "postgres"
+      COMMANDING_DB_USER: "aerie"
+      COMMANDING_LOCAL_STORE: /usr/src/app/commanding_file_store
+    image: aerie_commanding
+    ports: [ "3000:3000" ]
+    restart: always
   aerie_ui:
     container_name: aerie_ui
     depends_on: ["postgres"]
