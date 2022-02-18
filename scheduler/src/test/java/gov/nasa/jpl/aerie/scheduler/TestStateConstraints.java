@@ -27,18 +27,18 @@ public class TestStateConstraints {
   private final AltitudeIntegerState altitudeIntegerState = new AltitudeIntegerState(horizon);
   private final EncounterEnumState encounterEnumState = new EncounterEnumState(horizon);
 
-  private MissionModelWrapper missionModel;
+  private Problem problem;
   private Plan plan;
 
   @BeforeEach
   public void setUp() {
-    missionModel = new MissionModelWrapper();
-    plan = new PlanInMemory(missionModel);
+    problem = new Problem(null, horizon);
+    plan = new PlanInMemory();
   }
 
   @AfterEach
   public void tearDown() {
-    missionModel = null;
+    problem = null;
     plan = null;
   }
 
@@ -141,10 +141,9 @@ public class TestStateConstraints {
         .withPriority(7.0)
         .build();
 
-    Problem problem = new Problem(missionModel);
-    problem.add(cg);
+    this.problem.add(cg);
     HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, problem);
+    final var solver = new PrioritySolver(huginn, this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
 
     Windows windows1 = new Windows( horizon.getHor());
@@ -192,10 +191,9 @@ public class TestStateConstraints {
         .withPriority(7.0)
         .build();
 
-    Problem problem = new Problem(missionModel);
-    problem.add(proceduralGoalWithConstraints);
+    this.problem.add(proceduralGoalWithConstraints);
     HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, problem);
+    final var solver = new PrioritySolver(huginn, this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
 
 
@@ -270,10 +268,9 @@ public class TestStateConstraints {
         .withPriority(7.0)
         .build();
 
-    Problem problem = new Problem(missionModel);
-    problem.add(proceduralgoalwithoutconstraints);
+    this.problem.add(proceduralgoalwithoutconstraints);
     HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, problem);
+    final var solver = new PrioritySolver(huginn, this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
     assert (TestUtility.containsExactlyActivity(plan, act1));
     assert (TestUtility.doesNotContainActivity(plan, act2));
@@ -284,7 +281,7 @@ public class TestStateConstraints {
    */
   public enum OrbitPhasesEnum {
     NOTENCOUNTER,
-    ENCOUNTER;
+    ENCOUNTER
   }
 
   @Test
@@ -311,10 +308,9 @@ public class TestStateConstraints {
         .withPriority(7.0)
         .build();
 
-    Problem problem = new Problem(missionModel);
-    problem.add(cg);
+    this.problem.add(cg);
     HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, problem);
+    final var solver = new PrioritySolver(huginn, this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
     assert(TestUtility.activityStartingAtTime(plan, horizon.getHor().start, activityTypeImage));
     assert(TestUtility.activityStartingAtTime(plan, Time.fromString("2025-180T00:00:00.000",horizon), activityTypeImage));

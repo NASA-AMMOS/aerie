@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -13,11 +14,11 @@ import java.util.stream.Collectors;
  */
 public class NAryMutexConstraint extends GlobalConstraintWithIntrospection {
 
-  Set<ActivityExpression> actTypes;
+  Set<ActivityExpression> activityExpressions;
 
   public static NAryMutexConstraint buildMutexConstraint(List<ActivityExpression> actTypes) {
     NAryMutexConstraint mc = new NAryMutexConstraint();
-    mc.actTypes = new HashSet<>(actTypes);
+    mc.activityExpressions = new HashSet<>(actTypes);
     return mc;
   }
 
@@ -35,11 +36,9 @@ public class NAryMutexConstraint extends GlobalConstraintWithIntrospection {
 
   private Windows findWindows(Plan plan, Windows windows, ActivityType actToBeScheduled) {
     Windows validWindows = new Windows(windows);
-    for (var type : actTypes) {
-      if (!type.equals(actToBeScheduled)) {
-        //final var actSearch = ;
-
-        final var acts = new java.util.LinkedList<>(plan.find(type));
+    for (var expression : activityExpressions) {
+      if (!expression.type.equals(actToBeScheduled)) {
+        final var acts = new LinkedList<>(plan.find(expression));
 
         List<Window> rangesActs = acts
             .stream()

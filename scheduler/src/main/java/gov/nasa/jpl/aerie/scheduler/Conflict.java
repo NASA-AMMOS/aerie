@@ -53,7 +53,7 @@ public abstract class Conflict {
    *
    * used to hint at how to best solve the conflict
    */
-  private Goal goal;
+  private final Goal goal;
 
 
 }

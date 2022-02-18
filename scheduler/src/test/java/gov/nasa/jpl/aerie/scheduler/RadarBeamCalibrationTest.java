@@ -19,18 +19,18 @@ public class RadarBeamCalibrationTest {
   private final AltitudeAboveMoon altitudeAboveMoon = new AltitudeAboveMoon(horizon);
   private final FlybyEnumState flybyEnumState = new FlybyEnumState(horizon);
 
-  private MissionModelWrapper missionModel;
+  private Problem problem;
   private Plan plan;
 
   @BeforeEach
   public void setUp() {
-    missionModel = new MissionModelWrapper();
-    plan = new PlanInMemory(missionModel);
+    problem = new Problem(null, horizon);
+    plan = new PlanInMemory();
   }
 
   @AfterEach
   public void tearDown() {
-    missionModel = null;
+    problem = null;
     plan = null;
   }
 
@@ -65,7 +65,7 @@ public class RadarBeamCalibrationTest {
     FIRSTFLYBY,
     SECONDFLYBY,
     THIRDFLYBY,
-    NOFLYBY;
+    NOFLYBY
   }
 
 

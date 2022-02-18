@@ -13,7 +13,9 @@ public class AspenINIWriter {
    * @param config IN the controlling configuration for the output operations
    */
   public AspenINIWriter(HuginnConfiguration config) {
-    this.config = config;
+    /**
+     * the controlling configuration for the serializer
+     */
     try {
       this.mdl = new java.io.PrintStream(config.getOutputStem() + ".mdl");
       this.ini = new java.io.PrintStream(config.getOutputStem() + ".ini");
@@ -23,19 +25,14 @@ public class AspenINIWriter {
   }
 
   /**
-   * the controlling configuration for the serializer
-   */
-  final private HuginnConfiguration config;
-
-  /**
    * the output stream to use for the aspen model
    */
-  private java.io.PrintStream mdl;
+  private final java.io.PrintStream mdl;
 
   /**
    * the output stream to use for the aspen initialization
    */
-  private java.io.PrintStream ini;
+  private final java.io.PrintStream ini;
 
   /**
    * serialize the entire plan to aspen outputs

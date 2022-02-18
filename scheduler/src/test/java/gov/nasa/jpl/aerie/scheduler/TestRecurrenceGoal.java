@@ -8,6 +8,7 @@ public class TestRecurrenceGoal {
   @Test
   public void testRecurrence() {
     var actType = new ActivityType("RecGoalActType");
+    var planningHorizon = new PlanningHorizon(new Time(0),new Time(20));
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(20, Duration.SECONDS)))
@@ -18,8 +19,7 @@ public class TestRecurrenceGoal {
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
         .build();
 
-    MissionModelWrapper missionModel = new MissionModelWrapper();
-    Problem problem = new Problem(missionModel);
+    Problem problem = new Problem(null, planningHorizon);
 
     problem.add(goal);
 

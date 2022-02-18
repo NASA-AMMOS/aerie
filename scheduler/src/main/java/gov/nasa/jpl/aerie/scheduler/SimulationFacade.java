@@ -7,13 +7,13 @@ import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -24,10 +24,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
@@ -37,6 +35,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
  * Includes : (1) providing resulting resource values to scheduler constructs
  * (2) providing durations of activity instances
  */
+@SuppressWarnings("UnnecessaryToStringCall")
 public class SimulationFacade {
 
   // Resource feeders, mapping resource names to their corresponding resource accessor resulting from simulation results
@@ -46,12 +45,6 @@ public class SimulationFacade {
 
   // planning horizon
   private final PlanningHorizon planningHorizon;
-
-  // maps resource names to their local type
-  private Map<String, String> nameToType;
-
-  // stores the names of resources unsupported by the simulation facade due to type conversion
-  private final Set<String> unsupportedResources = new HashSet<>();
 
   //simulation results from the last simulation, as output directly by simulation driver
   private SimulationResults lastSimDriverResults;
@@ -97,11 +90,11 @@ public class SimulationFacade {
     } else {
       if(lastSimDriverResults.unfinishedActivities.get(planActInstanceIdToSimulationActInstanceId.get(activityInstance.getId())) != null){
         System.out.println("Activity "
-                           + activityInstance.toString()
+                           + activityInstance
                            + " has not finished, check planning horizon ?");
       } else{
         System.out.println("Simulation has been launched but activity with name= "
-                           + activityInstance.toString()
+                           + activityInstance
                            + " has not been found");
       }
     }
@@ -124,7 +117,7 @@ public class SimulationFacade {
     for (final var act : actsInPlan) {
 
       Map<String, SerializedValue> params = new HashMap<>();
-      act.getArguments().forEach((name, value) -> params.put(name, value));
+      params.putAll(act.getArguments());
       if(act.getDuration()!= null) {
         params.put("duration", new DurationValueMapper().serializeValue(act.getDuration()));
       } else{
@@ -178,7 +171,7 @@ public class SimulationFacade {
         results);
 
     final var sc = getResourceSchemas();
-    nameToType = new HashMap<>();
+    // maps resource names to their local type
 
     for (final var schema : sc.entrySet()) {
       if (!resources.containsKey(schema.getKey())) {
@@ -188,14 +181,11 @@ public class SimulationFacade {
 
     for (final var entry : results.resourceSamples.entrySet()) {
       final var name = entry.getKey();
-      final var type = nameToType.get(entry.getKey());
-      if (!unsupportedResources.contains(name)) {
-        getResource(name).initFromSimRes(
-            name,
-            lastConstraintModelResults,
-            entry.getValue(),
-            this.planningHorizon.getStartAerie());
-      }
+      getResource(name).initFromSimRes(
+          name,
+          lastConstraintModelResults,
+          entry.getValue(),
+          this.planningHorizon.getStartAerie());
     }
   }
 

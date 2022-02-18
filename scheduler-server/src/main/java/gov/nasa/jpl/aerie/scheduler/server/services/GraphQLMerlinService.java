@@ -10,9 +10,9 @@ import gov.nasa.jpl.aerie.scheduler.server.http.SerializedValueJsonParser;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.AerieController;
-import gov.nasa.jpl.aerie.scheduler.MissionModelWrapper;
 import gov.nasa.jpl.aerie.scheduler.Plan;
 import gov.nasa.jpl.aerie.scheduler.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.Problem;
 import gov.nasa.jpl.aerie.scheduler.Time;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 
@@ -177,12 +177,12 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    * {@inheritDoc}
    */
   @Override
-  public Plan getPlanActivities(final PlanMetadata planMetadata, final MissionModelWrapper mission)
+  public Plan getPlanActivities(final PlanMetadata planMetadata, final Problem problem)
   throws IOException, NoSuchPlanException
   {
     //thanks to AMaillard for already having these handy!
     final var controller = new AerieController(
-        this.merlinGraphqlURI.toString(), (int) planMetadata.modelId(), planMetadata.horizon(), mission);
+        this.merlinGraphqlURI.toString(), (int) planMetadata.modelId(), planMetadata.horizon(), problem.getActivityTypes());
     return controller.fetchPlan(planMetadata.planId().id());
   }
 

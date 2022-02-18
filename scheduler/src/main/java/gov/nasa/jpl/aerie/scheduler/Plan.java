@@ -9,13 +9,6 @@ package gov.nasa.jpl.aerie.scheduler;
 public interface Plan {
 
   /**
-   * returns the mission model that the plan is based on
-   *
-   * @return the mission model that the plan is based on
-   */
-  MissionModelWrapper getMissionModel();
-
-  /**
    * adds the given activity instances to the scheduled plan solution
    *
    * the provided instances must have start times specified

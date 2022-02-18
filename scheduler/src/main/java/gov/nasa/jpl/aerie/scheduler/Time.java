@@ -282,11 +282,7 @@ public static boolean isPositiveOverflowAdd(Duration t1, Duration t2){
 }
 
 public static boolean isPositiveOverflowMinus(Duration t1, Duration t2){
-  if(t1.isPositive() && t2.isNegative() || t1.isNegative() && t2.isPositive()){
-    return true;
-  } else {
-    return false;
-  }
+  return t1.isPositive() && t2.isNegative() || t1.isNegative() && t2.isPositive();
 }
 
   public static Duration performOperation(Operator op, Duration t1, Duration d) {

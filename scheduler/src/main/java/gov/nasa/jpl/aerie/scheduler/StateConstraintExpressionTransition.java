@@ -5,8 +5,8 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 public class StateConstraintExpressionTransition extends StateConstraintExpression {
 
-  private StateConstraintExpressionEqualSet from;
-  private StateConstraintExpressionEqualSet to;
+  private final StateConstraintExpressionEqualSet from;
+  private final StateConstraintExpressionEqualSet to;
 
   public StateConstraintExpressionTransition(
       StateConstraintExpressionEqualSet from,

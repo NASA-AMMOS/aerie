@@ -16,7 +16,6 @@ public class TestOrderingConstraints {
       Time.fromString("2025-001T00:00:00.000"),
       Time.fromString("2027-001T00:00:00.000"));
 
-  private MissionModelWrapper missionModel;
   private Plan plan;
   private HuginnConfiguration huginnConfiguration;
   private static final PlanningHorizon h = new PlanningHorizon(new Time(0), new Time(15));
@@ -35,15 +34,13 @@ public class TestOrderingConstraints {
 
   @BeforeEach
   public void setUp() {
-    missionModel = new MissionModelWrapper();
-    plan = new PlanInMemory(missionModel);
+    plan = new PlanInMemory();
     huginnConfiguration = new HuginnConfiguration();
     huginnConfiguration.setHorizon(h);
   }
 
   @AfterEach
   public void tearDown() {
-    missionModel = null;
     plan = null;
   }
 

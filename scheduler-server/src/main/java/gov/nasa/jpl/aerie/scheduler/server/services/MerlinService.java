@@ -1,11 +1,11 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.scheduler.Plan;
+import gov.nasa.jpl.aerie.scheduler.Problem;
+import gov.nasa.jpl.aerie.scheduler.Time;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
-import gov.nasa.jpl.aerie.scheduler.MissionModelWrapper;
-import gov.nasa.jpl.aerie.scheduler.Plan;
-import gov.nasa.jpl.aerie.scheduler.Time;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 
 import java.io.IOException;
@@ -41,7 +41,7 @@ public interface MerlinService {
    * @return a newly allocated snapshot of the plan contents
    * @throws NoSuchPlanException when the plan container does not exist in aerie
    */
-  Plan getPlanActivities(final PlanMetadata planMetadata, final MissionModelWrapper mission)
+  Plan getPlanActivities(final PlanMetadata planMetadata, final Problem mission)
   throws IOException, NoSuchPlanException;
 
   /**

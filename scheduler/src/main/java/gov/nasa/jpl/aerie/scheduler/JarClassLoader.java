@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
@@ -12,7 +14,7 @@ import java.util.jar.JarFile;
 
 public class JarClassLoader {
 
-  public static Collection<Problem> loadProblemsFromJar(String pathToJar, MissionModelWrapper missionModel)
+  public static Collection<Problem> loadProblemsFromJar(String pathToJar, MissionModel<?> missionModel)
   throws IOException, ClassNotFoundException, InvocationTargetException, InstantiationException
   {
     try {
