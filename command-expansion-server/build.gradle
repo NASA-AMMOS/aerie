@@ -18,10 +18,8 @@ task assemble(type: NpmTask) {
   args = ['run', 'build']
 }
 
-task build(type: NpmTask) {
-  dependsOn processResources
-  dependsOn npmInstall
-  args = ['run', 'build']
+task build {
+  dependsOn assemble
 }
 
 //task test(type: NpmTask) {
