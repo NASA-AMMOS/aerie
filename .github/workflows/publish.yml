@@ -38,8 +38,6 @@ jobs:
           reporter: java-junit
       - name: Assemble
         run: ./gradlew assemble
-      - name: Assemble Node Project
-        run: ./gradlew command-expansion-server:build
       - name: Login to the Container Registry
         uses: docker/login-action@v1
         with:

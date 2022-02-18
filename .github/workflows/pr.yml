@@ -22,5 +22,3 @@ jobs:
         run: ./gradlew test
       - name: Assemble
         run: ./gradlew assemble
-      - name: Assemble Node Project
-        run: ./gradlew command-expansion-server:build

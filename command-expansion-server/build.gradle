@@ -12,6 +12,12 @@ task processResources {
   // Currently does nothing, exists as a hook for `distributeSql`
 }
 
+task assemble(type: NpmTask) {
+  dependsOn processResources
+  dependsOn npmInstall
+  args = ['run', 'build']
+}
+
 task build(type: NpmTask) {
   dependsOn processResources
   dependsOn npmInstall
