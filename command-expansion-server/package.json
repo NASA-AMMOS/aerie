@@ -5,9 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "npx tsc;",
-    "start": "npm run build; node ./build/app.js",
-    "debug": "npm run build; node --inspect=0.0.0.0:9229 ./build/app.js",
+    "build": "tsc;",
+    "start": "node ./build/app.js",
+    "debug": "node --inspect=0.0.0.0:9229 ./build/app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
