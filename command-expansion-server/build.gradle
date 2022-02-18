@@ -29,5 +29,5 @@ task build {
 //}
 
 task clean(type: Delete) {
-  delete 'build', 'node_modules', 'package-lock.json'
+  delete 'build', 'node_modules'
 }
