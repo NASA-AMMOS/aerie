@@ -519,100 +519,10 @@ private void satisfyOptionGoal(OptionGoal goal) {
             goal.getName() + "_" + java.util.UUID.randomUUID());
         if (act != null) {
           newActs.add(act);
-
-          //create a matching "window" for the activity
-          //REVIEW: won't need windows for all activities; how to tell?
-          //REVIEW: what if windows for multiple conflict instances overlap?
-          //REVIEW: should this be full windows or just start windows?
-//          final var windows = createWindows( act, startWindows );
-//          newActs.addAll( windows );
         }//if(act)
       }
 
     }//if(startWindows)
-
-    return newActs;
-  }
-
-  private List<ActivityInstance> processConflict(MissingActivityInstanceConflict c, Windows startWindows) {
-    List<ActivityInstance> instances = new ArrayList<>();
-    //FINISH: clean this up code dupl re windows etc
-    final var act = c.getInstance();
-    instances.add(new ActivityInstance(act));
-    final var windows = createWindows(act, startWindows);
-    instances.addAll(windows);
-    return instances;
-  }
-
-
-  private List<ActivityInstance> processConflict(MissingActivityTemplateConflict c, Windows startWindows) {
-    List<ActivityInstance> instances = new ArrayList<>();
-
-    //select the "best" time among the possibilities, and latest among ties
-    //REVIEW: currently not handling preferences / ranked windows
-    final var startT = startWindows.maxTimePoint();
-    if(startT.isPresent()) {
-
-      //create the new activity instance (but don't place in schedule)
-      //REVIEW: not yet handling multiple activities at a time
-      final var act = c.getGoal().createActivity();
-      if (act != null) {
-        act.setStartTime(startT.get());
-        instances.add(act);
-
-        //create a matching "window" for the activity
-        //REVIEW: won't need windows for all activities; how to tell?
-        //REVIEW: what if windows for multiple conflict instances overlap?
-        //REVIEW: should this be full windows or just start windows?
-        final var windows = createWindows(act, startWindows);
-        instances.addAll(windows);
-      }//if(act)
-    }
-    return instances;
-  }
-
-
-  /**
-   * creates windows around the specified notional activity
-   *
-   * does not add them to the schedule
-   *
-   * @param notionalAct IN the notional activity that was created within
-   *     the windows
-   * @param startWindows IN the time ranges that were calculated as valid
-   *     starting times for the notional activity instance
-   * @return a set of activity instances corresponding to each valid
-   *     range of start times for the notional activity
-   */
-  private Collection<ActivityInstance> createWindows(
-      ActivityInstance notionalAct,
-      Windows startWindows
-  )
-  {
-    assert notionalAct != null;
-    assert startWindows != null;
-    final var newActs = new LinkedList<ActivityInstance>();
-
-    //find the window act type
-    //REVIEW: can cache this
-    final var windowActType = this.problem.getActivityType("Window");
-    assert windowActType != null;
-
-    //create an indexed window act for each of the possible time ranges
-    int windowIdx = 0;
-    for (final var startRange : startWindows) {
-
-      //base window act name on notional act name and index
-      //REVIEW: windows should be able to exist absent a notional act
-      final var windowAct = new ActivityInstance(windowActType);
-
-      //align window with span of valid start times
-      windowAct.setStartTime(startRange.start);
-      windowAct.setDuration(startRange.duration());
-
-      newActs.add(windowAct);
-      windowIdx += 1;
-    }//for(startRange)
 
     return newActs;
   }
