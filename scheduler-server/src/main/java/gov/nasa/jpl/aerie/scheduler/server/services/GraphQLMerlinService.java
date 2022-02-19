@@ -1,20 +1,23 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.json.BasicParsers;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
-import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
-import gov.nasa.jpl.aerie.scheduler.server.http.SerializedValueJsonParser;
-import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
-import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
+import gov.nasa.jpl.aerie.scheduler.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.AerieController;
 import gov.nasa.jpl.aerie.scheduler.Plan;
 import gov.nasa.jpl.aerie.scheduler.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.Problem;
 import gov.nasa.jpl.aerie.scheduler.Time;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
+import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
+import gov.nasa.jpl.aerie.scheduler.server.http.SerializedValueJsonParser;
+import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
+import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.JsonException;
@@ -28,6 +31,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -201,9 +205,10 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
 
   /**
    * {@inheritDoc}
+   * @return
    */
   @Override
-  public PlanId createNewPlanWithActivities(final PlanMetadata planMetadata, final Plan plan)
+  public Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivities(final PlanMetadata planMetadata, final Plan plan)
   throws IOException, NoSuchPlanException
   {
     final var planName = getNextPlanName();
@@ -212,8 +217,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
         planMetadata.horizon().getStartHuginn(), planMetadata.horizon().getEndAerie());
     //create sim storage space since doesn't happen automatically (else breaks further queries)
     createSimulationForPlan(planId);
-    createAllPlanActivities(planId, plan);
-    return planId;
+    Map<ActivityInstance, ActivityInstanceId> activityToId = createAllPlanActivities(planId, plan);
+
+    return Pair.of(planId, activityToId);
   }
 
   /**
@@ -265,15 +271,16 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
 
   /**
    * {@inheritDoc}
+   * @return
    */
   @Override
-  public void updatePlanActivities(final PlanId planId, final Plan plan) throws IOException, NoSuchPlanException
+  public Map<ActivityInstance, ActivityInstanceId> updatePlanActivities(final PlanId planId, final Plan plan) throws IOException, NoSuchPlanException
   {
     //TODO: (api violation) currently clearing and repopulating plan; but loses existing activity instance ids!
     //TODO: (perf improvement) calculate or cache plan diffs during sched and then upload to aerie in batch here
     //TODO: (defensive) should combine all mutations into one graphql transaction to avoid intermediate mods
     clearPlanActivities(planId);
-    createAllPlanActivities(planId, plan);
+    return createAllPlanActivities(planId, plan);
   }
 
   /**
@@ -326,12 +333,13 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
 
   /**
    * {@inheritDoc}
+   * @return
    */
   @Override
-  public void createAllPlanActivities(final PlanId planId, final Plan plan) throws IOException, NoSuchPlanException {
+  public Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(final PlanId planId, final Plan plan) throws IOException, NoSuchPlanException {
     ensurePlanExists(planId);
     final var requestPre = "mutation createAllPlanActivities { insert_activity( objects: [";
-    final var requestPost = "] ) { affected_rows } }";
+    final var requestPost = "] ) { returning { id } affected_rows } }";
     final var actPre = "{ plan_id: %d type: \"%s\" start_offset: \"%s\" arguments: {";
     final var actPost = "} }";
     final var argFormat = "%s: %s ";
@@ -340,7 +348,11 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
     //TODO: (optimization) could use a lazy evaluating stream of strings to avoid large set of strings in memory
     //TODO: (defensive) should sanitize all strings uses as keys/values to avoid injection attacks
     final var requestSB = new StringBuilder().append(requestPre);
-    for (final var act : plan.getActivities()) {
+
+    Map<ActivityInstance, ActivityInstanceId> instanceToInstanceId = new HashMap<>();
+    var orderedActivities = plan.getActivities().stream().toList();
+
+    for (final var act : orderedActivities) {
       requestSB.append(actPre.formatted(planId, act.getType().getName(), act.getStartTime().toString()));
       if (act.getDuration() != null) {
         requestSB.append(argFormat.formatted("duration", getGraphQLValueString(act.getDuration())));
@@ -362,9 +374,16 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
       if (numCreated != plan.getActivities().size()) {
         throw new NoSuchPlanException(planId);
       }
+      var ids = response
+          .getJsonObject("data").getJsonObject("insert_activity").getJsonArray("returning");
+      //make sure we associate the right id with the right activity
+      for(int i = 0; i < ids.size(); i++) {
+        instanceToInstanceId.put(orderedActivities.get(i), new ActivityInstanceId(ids.getInt(i)));
+      }
     } catch (ClassCastException | ArithmeticException e) {
       throw new NoSuchPlanException(planId);
     }
+    return instanceToInstanceId;
   }
 
   /**

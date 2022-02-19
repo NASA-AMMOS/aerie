@@ -3,6 +3,8 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
+import java.util.ArrayList;
+
 /**
  * describes the desired coexistence of an activity with another
  */
@@ -182,29 +184,51 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       }
       final var existingActs = plan.find(temp);
 
-      //TODO: enforcement of Solely custody strategy
+      var missingActAssociations = new ArrayList<ActivityInstance>();
+      var planEvaluation = plan.getEvaluation();
+      var associatedActivitiesToThisGoal = planEvaluation.forGoal(this).getAssociatedActivities();
+      var alreadyOneActivityAssociated = false;
+      for(var act : existingActs){
+        //has already been associated to this goal
+        if(associatedActivitiesToThisGoal.contains(act)){
+          alreadyOneActivityAssociated = true;
+          break;
+        }
+      }
+      if(!alreadyOneActivityAssociated){
+        for(var act : existingActs){
+          if(planEvaluation.canAssociateMoreToCreatorOf(act)){
+            missingActAssociations.add(act);
+          }
+        }
+      }
 
-      //create conflict if no matching target activity found
-      if (existingActs.isEmpty()) {
-        final var actName = getName() + "_" + java.util.UUID.randomUUID();
-        ActivityInstance act;
-        var stateConstraints = getStateConstraints();
-        var temporalContext = new Windows(this.temporalContext);
-        if (getStateConstraints() != null) {
-          var valid = stateConstraints.findWindows(plan,temporalContext);
-          act = temp.createActivity(actName, valid, false);
+      if (!alreadyOneActivityAssociated) {
+        //create conflict if no matching target activity found
+        if (existingActs.isEmpty()) {
+          final var actName = getName() + "_" + java.util.UUID.randomUUID();
+          ActivityInstance act;
+          var stateConstraints = getStateConstraints();
+          var temporalContext = new Windows(this.temporalContext);
+          if (getStateConstraints() != null) {
+            var valid = stateConstraints.findWindows(plan, temporalContext);
+            act = temp.createActivity(actName, valid, false);
+          } else {
+            act = temp.createActivity(actName, temporalContext, false);
+          }
+          if (act == null) {
+            conflicts.add(new UnsatisfiableMissingActivityConflict(this));
+          } else {
+            conflicts.add(new MissingActivityInstanceConflict(this, act));
+          }
+          //  conflicts.add( new MissingActivityTemplateConflict(
+          //          this, TimeWindows.of( startTimeRange ) ) );
         } else {
-          act = temp.createActivity(actName, temporalContext, false);
+          conflicts.add(new MissingAssociationConflict(this, missingActAssociations));
+          //REVIEW: will need to record associations to check for joint/sole ownership,
+          //        but that assignment will itself be a combinatoric problem
+          //REVIEW: should record determined associations more permanent, eg for UI
         }
-        if (act == null) {
-          conflicts.add(new UnsatisfiableMissingActivityConflict(this));
-        } else {
-          conflicts.add(new MissingActivityInstanceConflict(this, act));
-        }
-      } else {
-        //REVIEW: will need to record associations to check for joint/sole ownership,
-        //        but that assignment will itself be a combinatoric problem
-        //REVIEW: should record determined associations more permanent, eg for UI
       }
 
     }//for(anchorAct)

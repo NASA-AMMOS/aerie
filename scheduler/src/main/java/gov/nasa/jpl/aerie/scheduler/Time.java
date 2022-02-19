@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -171,6 +172,10 @@ public class Time implements Comparable<Time> {
    */
   public java.time.Instant toInstant() {
     return java.time.Instant.ofEpochMilli((long) (jplET_s * 1000.0));
+  }
+
+  public static Time fromInstant(Instant instant){
+    return new Time(instant.toEpochMilli()/1000.0);
   }
 
   /**

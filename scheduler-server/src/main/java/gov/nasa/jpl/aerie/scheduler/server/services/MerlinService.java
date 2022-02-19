@@ -1,14 +1,18 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.scheduler.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.Plan;
 import gov.nasa.jpl.aerie.scheduler.Problem;
 import gov.nasa.jpl.aerie.scheduler.Time;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * interface for retrieving / storing details to merlin
@@ -54,7 +58,7 @@ public interface MerlinService {
    * @return the database id of the newly created aerie plan container
    * @throws NoSuchPlanException when the plan container could not be found in aerie after creation
    */
-  PlanId createNewPlanWithActivities(final PlanMetadata planMetadata, final Plan plan)
+  Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivities(final PlanMetadata planMetadata, final Plan plan)
   throws IOException, NoSuchPlanException;
 
   /**
@@ -89,8 +93,9 @@ public interface MerlinService {
    * @param planId aerie database identifier of the target plan to synchronize into
    * @param plan plan with all activity instances that should be stored to target merlin plan container
    * @throws NoSuchPlanException when the plan container does not exist in aerie
+   * @return
    */
-  void updatePlanActivities(final PlanId planId, final Plan plan) throws IOException, NoSuchPlanException;
+  Map<ActivityInstance, ActivityInstanceId> updatePlanActivities(final PlanId planId, final Plan plan) throws IOException, NoSuchPlanException;
 
   /**
    * confirms that the specified plan exists in the aerie database, throwing exception if not
@@ -121,8 +126,9 @@ public interface MerlinService {
    * @param planId the database id of the plan container to populate with new activity instances
    * @param plan the plan from which to copy all activity instances into aerie
    * @throws NoSuchPlanException when the plan container does not exist in aerie
+   * @return
    */
-  void createAllPlanActivities(final PlanId planId, final Plan plan) throws IOException, NoSuchPlanException;
+  Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(final PlanId planId, final Plan plan) throws IOException, NoSuchPlanException;
 
 
 }

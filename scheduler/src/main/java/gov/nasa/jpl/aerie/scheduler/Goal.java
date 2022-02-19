@@ -55,25 +55,6 @@ public class Goal {
     protected String name;
 
     /**
-     * sets the priority rank of the goal with respect to other goals
-     *
-     * more important goals have larger positive priority
-     *
-     * this specifier is optional (the default is 0.0). it replaces any
-     * previous specification.
-     *
-     * @param priority IN the new priority rank to assign to this goal
-     * @return this builder, ready for additional specification
-     */
-    //TODO: externalize prioritization from goal specification
-    public T withPriority(double priority) {
-      this.priority = priority;
-      return getThis();
-    }
-
-    protected double priority = 0.0;
-
-    /**
      * sets the beginning of the time interval over which the goal is relevant
      *
      * this specifier is required unless a forAllTimeIn() is specified. it
@@ -184,8 +165,6 @@ public class Goal {
       }
       goal.name = name;
 
-      goal.priority = priority;
-
       goal.partialSatisfaction = true;
 
       goal.stateConstraints = null;
@@ -226,28 +205,6 @@ public class Goal {
    */
   public String getName() {
     return name;
-  }
-
-  /**
-   * assigns the priority rank of the goal with respect to other goals
-   *
-   * more important goals have larger positive priority
-   *
-   * @param newPriority IN the new priority rank to assign to this goal
-   */
-  public void setPriority(double newPriority) {
-    priority = newPriority;
-  }
-
-  /**
-   * fetches the priority rank of the goal with respect to other goals
-   *
-   * more important goals have larger positive priority
-   *
-   * @return the priority rank of the goal with respect to other goals
-   */
-  public double getPriority() {
-    return priority;
   }
 
   /**
@@ -303,13 +260,6 @@ public class Goal {
    * never null
    */
   protected String name;
-
-  /**
-   * the priority rank of the goal with respect to other goals
-   *
-   * more important goals have larger positive priority
-   */
-  protected double priority = 0.0;
 
   /**
    * the contiguous range of time over which the goal applies

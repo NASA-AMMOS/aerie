@@ -5,10 +5,13 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 public class MerlInsightRules extends Problem {
 
@@ -22,16 +25,17 @@ public class MerlInsightRules extends Problem {
   }
 
   @Override
-  public java.util.Collection<Goal> getGoals() {
-    Collection<Goal> goals = new ArrayList<>();
-    goals.add(generateDSNVisibilityAllocationGoal());
-    goals.addAll(getFirstRuleGoals());
-    goals.addAll(getSecondRuleGoals());
-    goals.addAll(getThirdRuleGoals());
-    return goals;
+  public List<Goal> getGoals() {
+    SortedMap<Integer, Goal> goals = new TreeMap<>(Collections.reverseOrder());
+    var dsnVisibilities = generateDSNVisibilityAllocationGoal();
+    goals.put(dsnVisibilities.getKey(), dsnVisibilities.getValue());
+    goals.putAll(getFirstRuleGoals());
+    goals.putAll(getSecondRuleGoals());
+    goals.putAll(getThirdRuleGoals());
+    return new ArrayList<>(goals.values());
   }
 
-  public Goal generateDSNVisibilityAllocationGoal(){
+  public Pair<Integer, Goal> generateDSNVisibilityAllocationGoal(){
     var actType1 = getActivityType("AllocateDSNStation");
     var actType2 = getActivityType("SetDSNStationVisibility");
     final var period = Duration.of(8, Duration.HOURS);
@@ -69,18 +73,17 @@ public class MerlInsightRules extends Problem {
 
     ProceduralCreationGoal dsnGoal = new ProceduralCreationGoal.Builder()
         .named("Schedule DSN contacts for initial setup")
-        .withPriority(50)
-        .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
+        .forAllTimeIn(planningHorizon.getHor())
         .generateWith((plan) -> actList)
         .build();
 
-    return dsnGoal;
+    return Pair.of(50,dsnGoal);
   }
 
 
-  public Collection<Goal> getFirstRuleGoals(){
+  public SortedMap<Integer, Goal> getFirstRuleGoals(){
 
-    List<Goal> goals = new ArrayList<>();
+    var goals = new TreeMap<Integer, Goal>(Collections.reverseOrder());
 
   /**
    *
@@ -107,11 +110,11 @@ public class MerlInsightRules extends Problem {
                              Duration.of(1,Duration.MINUTE)));
     ProceduralCreationGoal pro = new ProceduralCreationGoal.Builder()
         .named("TurnOnAndOFFMonitoring")
-        .withPriority(10)
-        .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
+        .forAllTimeIn(planningHorizon.getHor())
         .generateWith((plan) -> turnONFFMonitoring)
+        .owned(ChildCustody.Jointly)
         .build();
-    goals.add(pro);
+    goals.put(10, pro);
 
     var sce = new StateConstraintExpression.Builder()
         .equal(getResource("/hp3/ssaState"), SerializedValue.of("Monitoring"))
@@ -127,13 +130,13 @@ public class MerlInsightRules extends Problem {
 
     RecurrenceGoal goal1a = new RecurrenceGoal.Builder()
         .named("1a")
-        .withPriority(9)
         .repeatingEvery(Duration.of(60, Duration.MINUTE))
         .attachStateConstraint(sce)
         .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
         .thereExistsOne(HP3Acts)
+        .owned(ChildCustody.Jointly)
         .build();
-    goals.add(goal1a);
+    goals.put(9,goal1a);
 
 
     /*
@@ -147,21 +150,21 @@ public class MerlInsightRules extends Problem {
 
     CardinalityGoal goal1c = new CardinalityGoal.Builder()
         .named("1c")
-        .inPeriod(new TimeRangeExpression.Builder().from(new Windows(DEFAULT_PLANNING_HORIZON.getHor())).build())
-        .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
-        .withPriority(8)
+        .inPeriod(new TimeRangeExpression.Builder().from(new Windows(planningHorizon.getHor())).build())
+        .forAllTimeIn(planningHorizon.getHor())
         .thereExistsOne(HP3Acts)
         .attachStateConstraint(sce)
+        .owned(ChildCustody.Jointly)
         .duration(Window.between(Duration.of(3, Duration.HOUR), Duration.MAX_VALUE))
         .build();
 
-    goals.add(goal1c);
+    goals.put(8,goal1c);
     return goals;
   }
 
 
-  public Collection<Goal> getSecondRuleGoals(){
-    var goals = new ArrayList<Goal>();
+  public SortedMap<Integer, Goal> getSecondRuleGoals(){
+    var goals = new TreeMap<Integer,Goal>(Collections.reverseOrder());
 
   /**
    *
@@ -187,13 +190,11 @@ public class MerlInsightRules extends Problem {
 
   ProceduralCreationGoal goal2a = new ProceduralCreationGoal.Builder()
       .named("SchedIDAMoveArm")
-      .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
-      .withPriority(10)
-      .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
+      .forAllTimeIn(planningHorizon.getHor())
       .generateWith((plan) -> List.of(new ActivityInstance(actTypeIDAMoveArm,stMoveArm, duroveArm)))
       .build();
 
-  goals.add(goal2a);
+  goals.put(30, goal2a);
 
   /*
    * Rule 2b: pick up the device from its stowed location
@@ -211,10 +212,9 @@ public class MerlInsightRules extends Problem {
                           .duration(Duration.of(20, Duration.MINUTE))
                           .build())
       .forEach(ActivityExpression.ofType(actTypeIDAMoveArm))
-      .withPriority(9)
       .startsAt(TimeAnchor.END)
       .build();
-    goals.add(goal2b);
+    goals.put(29,goal2b);
 
   /*
    * Rule 2c: relocate the device from its stowed location to the target location
@@ -229,10 +229,9 @@ public class MerlInsightRules extends Problem {
                           .duration(Duration.of(1, Duration.HOUR))
                           .build())
       .forEach(ActivityExpression.ofType(atGrapple))
-      .withPriority(8)
       .startsAt(TimeAnchor.END)
       .build();
-  goals.add(goal2c);
+  goals.put(28, goal2c);
 
   /*
    * Rule 2d: release the device at its target location
@@ -253,11 +252,10 @@ public class MerlInsightRules extends Problem {
                             .duration(Duration.of(20, Duration.MINUTE))
                             .build())
         .forEach(secondIdaMoveArm)
-        .withPriority(7)
         .startsAt(TimeAnchor.END)
         .build();
 
-    goals.add(goal2d);
+    goals.put(27,goal2d);
 
 
   /*
@@ -286,11 +284,10 @@ public class MerlInsightRules extends Problem {
                           .duration(Duration.of(3, Duration.MINUTE))
                           .build())
       .forEach(enveloppeAllGrappleMove)
-      .withPriority(6)
       .endsBefore(TimeExpression.offsetByBeforeStart(Duration.of(30, Duration.MINUTE)))
       .build();
 
-  goals.add(goal2e);
+  goals.put(26,goal2e);
 
 
   /*
@@ -311,11 +308,10 @@ public class MerlInsightRules extends Problem {
                           .duration(Duration.of(3, Duration.MINUTE))
                           .build())
       .forEach(enveloppeAllGrappleMove)
-      .withPriority(6)
       .startsAfterEnd()
       .build();
 
-  goals.add(goal2f);
+  goals.put(25,goal2f);
 
   /*
    * Rule 2g: image from arm just before each grapple operation
@@ -337,11 +333,10 @@ public class MerlInsightRules extends Problem {
                           .withArgument("compQuality", SerializedValue.of(97))
                           .build())
       .forEach(ActivityExpression.ofType(atGrapple))
-      .withPriority(6)
       .endsAt(TimeAnchor.START)
       .build();
 
-  goals.add(goal2g);
+  goals.put(24,goal2g);
 
 
   /*
@@ -360,11 +355,10 @@ public class MerlInsightRules extends Problem {
                           .withArgument("compQuality", SerializedValue.of(97))
                           .build())
       .forEach(ActivityExpression.ofType(atGrapple))
-      .withPriority(6)
       .startsAt(TimeAnchor.END)
       .build();
 
-  goals.add(goal2h);
+  goals.put(23,goal2h);
 
 
   /*
@@ -394,11 +388,10 @@ public class MerlInsightRules extends Problem {
                           .duration(Duration.of(15, Duration.MINUTE))
                           .build())
       .forEach(enveloppeAllIDCImage)
-      .withPriority(5)
       .endsBefore(TimeExpression.offsetByBeforeStart(Duration.of(30, Duration.MINUTE)))
       .build();
 
-  goals.add(goal2i);
+  goals.put(22,goal2i);
 
 
   /*
@@ -420,11 +413,10 @@ public class MerlInsightRules extends Problem {
                           .duration(Duration.of(15, Duration.MINUTE))
                           .build())
       .forEach(enveloppeAllIDCImage)
-      .withPriority(5)
       .startsAfterEnd()
       .build();
 
-  goals.add(goal2j);
+  goals.put(21, goal2j);
 
   /*
    * Rule 2k: image stowed device in context before pickup
@@ -451,11 +443,10 @@ public class MerlInsightRules extends Problem {
                           .withArgument("compQuality", SerializedValue.of(95))
                           .build())
       .forEach(firstIdaMoveArm)
-      .withPriority(4)
       .endsAt(TimeAnchor.START)
       .build();
 
-  goals.add(goal2k);
+  goals.put(20,goal2k);
 
 
   /*
@@ -475,11 +466,10 @@ public class MerlInsightRules extends Problem {
                           .withArgument("compQuality", SerializedValue.of(95))
                           .build())
       .forEach(secondIdaMoveArm)
-      .withPriority(4)
       .startsAt(TimeExpression.offsetByAfterEnd(Duration.of(2, Duration.MINUTE)))
       .build();
 
-  goals.add(goal2l);
+  goals.put(19,goal2l);
 
   /*
    * Rule 2m: preheat for ICC image
@@ -503,11 +493,10 @@ public class MerlInsightRules extends Problem {
                           .duration(Duration.of(15, Duration.MINUTE))
                           .build())
       .forEach(firstICCImages)
-      .withPriority(4)
       .endsAt(TimeAnchor.START)
       .build();
 
-  goals.add(goal2m);
+  goals.put(18, goal2m);
 
 
   /*
@@ -533,16 +522,15 @@ public class MerlInsightRules extends Problem {
                           .duration(Duration.of(10, Duration.SECONDS))
                           .build())
       .forEach(lastICCImages)
-      .withPriority(4)
       .endsAfterEnd()
       .build();
 
-  goals.add(goal2n);
+  goals.put(17, goal2n);
   return goals;
 }
-  public Collection<Goal> getThirdRuleGoals(){
+  public SortedMap<Integer, Goal> getThirdRuleGoals(){
 
-    var goals = new ArrayList<Goal>();
+    var goals = new TreeMap<Integer, Goal>(Collections.reverseOrder());
 
     //the dsn visibility activities from generateDSNVisibilityAllocationGoal are required for the following goals
 
@@ -607,14 +595,13 @@ public class MerlInsightRules extends Problem {
                           .ofType(actTypeXbandActive)
                           .build())
       .forEach(expr)
-      .withPriority(7)
       .startsAt(TimeExpression.offsetByAfterStart(prepDur))
       .durationIn(DurationExpressions.max(
           DurationExpressions.constant(Duration.of(2, Duration.HOUR)),
           DurationExpressions.windowDuration().minus(DurationExpressions.constant(cleanupDur)).minus(DurationExpressions.constant(prepDur))))
       .build();
 
-    goals.add(goal3a);
+    goals.put(37, goal3a);
 
   /*
    * Rule 3b: comm prep
@@ -638,11 +625,10 @@ public class MerlInsightRules extends Problem {
                             .duration(prepDur)
                             .build())
         .forEach(ActivityExpression.ofType(actTypeXbandActive))
-        .withPriority(6)
         .endsAt(TimeAnchor.START)
         .build();
 
-    goals.add(goal3b);
+    goals.put(36, goal3b);
 
   /*
    * Rule 3c: comm cleanup
@@ -666,11 +652,10 @@ public class MerlInsightRules extends Problem {
                             .duration(cleanupDur)
                             .build())
         .forEach(ActivityExpression.ofType(actTypeXbandActive))
-        .withPriority(6)
         .startsAt(TimeAnchor.END)
         .build();
 
-    goals.add(goal3c);
+    goals.put(35,goal3c);
   /*
    * Rule 3d: comm summary wrapper
    - schedule XBandCommND activity
@@ -709,12 +694,11 @@ public class MerlInsightRules extends Problem {
                             .withArgument("xbandAntSel", SerializedValue.of("EAST_MGA"))
                             .build())
         .forEach(tre2)
-        .withPriority(3)
         .startsAt(TimeAnchor.START)
         .endsAt(TimeAnchor.END)
         .build();
 
-    goals.add(goal3d);
+    goals.put(33, goal3d);
     return(goals);
   }
 

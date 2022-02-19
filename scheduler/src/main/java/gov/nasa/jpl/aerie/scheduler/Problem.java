@@ -4,6 +4,9 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * description of a planning problem to be solved
@@ -33,6 +36,7 @@ public class Problem {
   /**
    * container of all goals in the problem, indexed by name
    */
+  protected final List<Goal> goalsOrderedByPriority = new ArrayList<>();
   private final java.util.HashMap<String, Goal> goalsByName = new java.util.HashMap<>();
 
   /**
@@ -103,29 +107,9 @@ public class Problem {
     initialPlan = plan;
   }
 
-  public void addAll(Collection<Goal> goals){
-    for(var goal:goals){
-      add(goal);
-    }
-  }
-
-  /**
-   * adds a new goal to the problem specification
-   *
-   * @param goal IN the new goal to add to the problem
-   */
-  public void add(Goal goal) {
-    if (goal == null) {
-      throw new IllegalArgumentException(
-          "inserting null goal into problem");
-    }
-    final var goalName = goal.getName();
-    assert goalName != null;
-    if (goalsByName.containsKey(goalName)) {
-      throw new IllegalArgumentException(
-          "inserting goal with duplicate name=" + goalName + " into problem");
-    }
-    goalsByName.put(goalName, goal);
+  public void setGoals(List<Goal> goals){
+    goalsOrderedByPriority.clear();
+    goalsOrderedByPriority.addAll(goals);
   }
 
   /**
@@ -138,8 +122,8 @@ public class Problem {
    *
    * @return an un-modifiable container of the goals requested for this plan
    */
-  public java.util.Collection<Goal> getGoals() {
-    return java.util.Collections.unmodifiableCollection(goalsByName.values());
+  public List<Goal> getGoals() {
+    return Collections.unmodifiableList(goalsOrderedByPriority);
   }
 
   private void failIfActivityTypeAbsent(String name){

@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -191,29 +192,17 @@ public class PrioritySolver implements Solver {
    * @return a descending-priority ordered queue of goals from the input
    *     problem, ready for processing
    */
-  private java.util.PriorityQueue<Goal> getGoalQueue() {
+  private LinkedList<Goal> getGoalQueue() {
     assert problem != null;
     final var rawGoals = problem.getGoals();
     assert rawGoals != null;
 
-    //order goals in descending priority order, breaking ties by id (NB: java
-    //PriorityQueues already put the maximal element at the polling head, so
-    //no reverse is needed)
-    final var goalSort = java.util.Comparator
-        .comparingDouble(Goal::getPriority).reversed()
-        .thenComparing(Goal::getName);
-    assert goalSort != null;
-
     //create queue container using comparator and pre-sized for all goals
     final var capacity = rawGoals.size();
     assert capacity >= 0;
-    final var goalQ = new java.util.PriorityQueue<>(
-        (capacity == 0) ? 1 : capacity, //NB: can't use zero pre-size capacity
-        goalSort
-    );
 
     //fill the comparator-imbued container with goals to get sorted queue
-    goalQ.addAll(rawGoals);
+    final var goalQ = new LinkedList<>(rawGoals);
     assert goalQ.size() == rawGoals.size();
 
     return goalQ;
@@ -236,23 +225,40 @@ private void satisfyOptionGoal(OptionGoal goal) {
       //try to satisfy all and see what is best
       Goal currentSatisfiedGoal = null;
       Collection<ActivityInstance> actsToInsert = null;
+      Collection<ActivityInstance> actsToAssociateWith = null;
       for (var subgoal : goal.getSubgoals()) {
         satisfyGoal(subgoal);
-        var listOfActivitiesInserted = evaluation.forGoal(subgoal).getAssociatedActivities();
-        if (listOfActivitiesInserted.size()>0 &&( goal.optimizer.isBetterThanCurrent(new ArrayList<>(listOfActivitiesInserted))
-                || currentSatisfiedGoal == null )) {
-          actsToInsert = listOfActivitiesInserted;
-          currentSatisfiedGoal = subgoal;
+        if(evaluation.forGoal(subgoal).getScore() == 0 || subgoal.isPartiallySatisfiable()) {
+          var associatedActivities = evaluation.forGoal(subgoal).getAssociatedActivities();
+          var insertedActivities = evaluation.forGoal(subgoal).getInsertedActivities();
+          var aggregatedActivities = new ArrayList<ActivityInstance>();
+          aggregatedActivities.addAll(associatedActivities);
+          aggregatedActivities.addAll(insertedActivities);
+          if (aggregatedActivities.size() > 0 &&
+              (goal.optimizer.isBetterThanCurrent(aggregatedActivities) ||
+               currentSatisfiedGoal == null)) {
+            actsToInsert = insertedActivities;
+            actsToAssociateWith = associatedActivities;
+            currentSatisfiedGoal = subgoal;
+          }
         }
-        plan.remove(evaluation.forGoal(subgoal).getAssociatedActivities());
-        //TODO: a score equal to 0 is perfect for this notation so we want to do something else probably
-        evaluation.forGoal(subgoal).setScore(0);
+        rollback(subgoal);
       }
       //we should have the best solution
       if (currentSatisfiedGoal != null) {
+        for(var act: actsToAssociateWith){
+          //we do not care about ownership here as it is not really a piggyback but just the validation of the supergoal
+          evaluation.forGoal(goal).associate(act, false);
+        }
         if(checkAndInsertActs(actsToInsert)) {
-          evaluation.forGoal(currentSatisfiedGoal).associate(actsToInsert);
+          for(var act: actsToInsert){
+            evaluation.forGoal(goal).associate(act, false);
+          }
           evaluation.forGoal(goal).setScore(0);
+        } else{
+          //this should not happen because we have already tried to insert the same set of activities in the plan and it
+          //did not failed
+          throw new IllegalStateException("Had satisfied subgoal but (1) simulation or (2) association with supergoal failed");
         }
       } else {
         //number of subgoals needed to achieve supergoal
@@ -260,18 +266,17 @@ private void satisfyOptionGoal(OptionGoal goal) {
       }
     } else {
       //just satisfy any goal
-      //must be completely satisfied
-      Collection<ActivityInstance> actsToInsert = null;
       for (var subgoal : goal.getSubgoals()) {
         satisfyGoal(subgoal);
-        actsToInsert = evaluation.forGoal(subgoal).getAssociatedActivities();
-        if (evaluation.forGoal(subgoal).getScore() == 0) {
+        //if partially satisfiability
+        if (evaluation.forGoal(subgoal).getScore() == 0 || subgoal.isPartiallySatisfiable()) {
+          //decision-making here : we stop at the first subgoal satisfied
+          evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false);
+          evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), false);
+          evaluation.forGoal(goal).setScore(0);
           break;
         }
       }
-      evaluation.forGoal(goal).associate(actsToInsert);
-      evaluation.forGoal(goal).setScore(0);
-
       }
     } else {
       throw new IllegalArgumentException(
@@ -280,6 +285,15 @@ private void satisfyOptionGoal(OptionGoal goal) {
 
   }
 
+  private void rollback(Goal goal){
+    var evalForGoal = evaluation.forGoal(goal);
+    var associatedActivities = evalForGoal.getAssociatedActivities();
+    var insertedActivities = evalForGoal.getInsertedActivities();
+    plan.remove(insertedActivities);
+    evalForGoal.removeAssociation(associatedActivities);
+    evalForGoal.removeAssociation(insertedActivities);
+    evalForGoal.setScore(-(evalForGoal.getNbConflictsDetected().get()));
+  }
 
   private void satisfyCompositeGoal(CompositeAndGoal goal) {
     assert goal != null;
@@ -298,11 +312,13 @@ private void satisfyOptionGoal(OptionGoal goal) {
     if (failed) {
       //remove all activities
       for (var subgoal : goal.getSubgoals()) {
-        // TODO:for now, already present activity satisfying the goal are not cross referenced.
-        // If it becomes the case with multiple ownerships, will need to modify how acts are removed from the plan
-        plan.remove(evaluation.forGoal(subgoal).getAssociatedActivities());
-        //TODO: a score equal to 0 is perfect for this notation so we want to do something else probably
-        evaluation.forGoal(subgoal).setScore(0);
+        rollback(subgoal);
+      }
+    } else{
+      for(var subgoal : goal.getSubgoals()) {
+        evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false);
+        evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), false);
+        evaluation.forGoal(goal).setScore(0);
       }
     }
 
@@ -338,6 +354,8 @@ private void satisfyOptionGoal(OptionGoal goal) {
 
     //continue creating activities as long as goal wants more and we can do so
     var missingConflicts = getMissingConflicts(goal);
+    //setting the number of conflicts detected at first evaluation, will be used at backtracking
+    evaluation.forGoal(goal).setNbConflictsDetected(missingConflicts.size());
     assert missingConflicts != null;
     boolean madeProgress = true;
     while (!missingConflicts.isEmpty() && madeProgress) {
@@ -357,11 +375,31 @@ private void satisfyOptionGoal(OptionGoal goal) {
             if(actsCanBeInserted){
               madeProgress = true;
 
-              evaluation.forGoal(goal).associate(acts);
+              evaluation.forGoal(goal).associate(acts, true);
               //REVIEW: really association should be via the goal's own query...
 
               //NB: repropagation of new activity effects occurs on demand
               //    at next constraint query, if relevant
+            }
+          }
+        } else if(missing instanceof MissingAssociationConflict missingAssociationConflict){
+          var actToChooseFrom = missingAssociationConflict.getActivityInstancesToChooseFrom();
+          //no act type constraint to consider as the activities have been scheduled
+          //no global constraint for the same reason above mentioned
+          //only the target goal state constraints to consider
+          for(var act : actToChooseFrom){
+            var actWindow = new Windows();
+            actWindow.add(Window.between(act.getStartTime(), act.getEndTime()));
+            var stateConstraints = goal.getStateConstraints();
+            var narrowed = actWindow;
+            if(stateConstraints!= null) {
+              narrowed = narrowByStateConstraints(actWindow, List.of(stateConstraints));
+            }
+            if(narrowed.includes(actWindow)){
+              //decision-making here, we choose the first satisfying activity
+              evaluation.forGoal(goal).associate(act, false);
+              madeProgress = true;
+              break;
             }
           }
         }
@@ -372,7 +410,11 @@ private void satisfyOptionGoal(OptionGoal goal) {
       }
     }//while(missingConflicts&&madeProgress)
 
-    evaluation.forGoal(goal).setScore(-missingConflicts.size());
+    if(missingConflicts.size() > 0 && !goal.isPartiallySatisfiable()){
+      rollback(goal);
+    } else{
+      evaluation.forGoal(goal).setScore(-missingConflicts.size());
+    }
   }
 
   /**
@@ -587,6 +629,10 @@ private void satisfyOptionGoal(OptionGoal goal) {
     System.out.println("Remaining conflicts for goals ");
     for (var goalEval : evaluation.getGoals()) {
       System.out.println(goalEval.name + " -> " + evaluation.forGoal(goalEval).score);
+      System.out.println("Activities created by this goal:"+  evaluation.forGoal(goalEval).getInsertedActivities().stream().map(ActivityInstance::toString).collect(
+          Collectors.joining(" ")));
+      System.out.println("Activities associated to this goal:"+  evaluation.forGoal(goalEval).getAssociatedActivities().stream().map(ActivityInstance::toString).collect(
+          Collectors.joining(" ")));
     }
   }
 

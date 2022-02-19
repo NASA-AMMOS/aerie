@@ -5,6 +5,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+
 public class MerlInsightRulesTest {
 
   @BeforeEach
@@ -46,19 +48,21 @@ public class MerlInsightRulesTest {
 
   @Test
   public void firstRule() {
-    smallProblem.addAll(rules.getFirstRuleGoals());
+    smallProblem.setGoals(new ArrayList<>(rules.getFirstRuleGoals().values()));
     schedule();
   }
   @Test
   public void secondRule() {
-    smallProblem.addAll(rules.getSecondRuleGoals());
+    smallProblem.setGoals(new ArrayList<>(rules.getSecondRuleGoals().values()));
     schedule();
   }
 
   @Test
   public void thirdRule() {
-    smallProblem.add(rules.generateDSNVisibilityAllocationGoal());
-    smallProblem.addAll(rules.getThirdRuleGoals());
+    var goals = new ArrayList<Goal>();
+    goals.add(rules.generateDSNVisibilityAllocationGoal().getValue());
+    goals.addAll(rules.getThirdRuleGoals().values());
+    smallProblem.setGoals(goals);
     schedule();
   }
 

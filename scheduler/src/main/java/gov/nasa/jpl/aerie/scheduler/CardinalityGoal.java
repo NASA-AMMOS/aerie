@@ -143,10 +143,15 @@ public class CardinalityGoal extends ActivityTemplateGoal {
     final var acts = new LinkedList<>(plan.find(actTB));
     acts.sort(Comparator.comparing(ActivityInstance::getStartTime));
 
-    int nbActs = acts.size();
+    int nbActs = 0;
     Duration total = Duration.ZERO;
+    var planEvaluation = plan.getEvaluation();
+    var associatedActivitiesToThisGoal = planEvaluation.forGoal(this).getAssociatedActivities();
     for (var act : acts) {
-      total = total.plus(act.getDuration());
+      if(planEvaluation.canAssociateMoreToCreatorOf(act) || associatedActivitiesToThisGoal.contains(act)) {
+        total = total.plus(act.getDuration());
+        nbActs++;
+      }
     }
 
     StateConstraintExpression actConstraints = this.getActivityStateConstraints();
@@ -162,7 +167,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
         //not enough duration
         //conflicts.add(new DurationTooSmallConflict(this, getTemporalContext(), this.durationRange, total));
       } else if (total.compareTo(this.durationRange.end) > 0) {
-        throw new IllegalArgumentException("Need to decrease duration of activities from the plan, impossible");
+        throw new IllegalArgumentException("Need to decrease duration of activities from the plan, impossible because scheduler cannot remove activities");
         //too much duration
         //conflicts.add(new DurationTooBigConflict(this, getTemporalContext(), this.durationRange, total));
 
@@ -173,24 +178,32 @@ public class CardinalityGoal extends ActivityTemplateGoal {
         // not enough occurrence
         //conflicts.add(new NotEnoughOccurrencesConflict(this, getTemporalContext(), this.occurrenceRange, nbActs));
 
-
         nbToSchedule = this.occurrenceRange.getMinimum() - nbActs;
-
-
       } else if (nbActs > this.occurrenceRange.getMaximum()) {
         throw new IllegalArgumentException("Need to remove activities from the plan, impossible");
         //too much occurrences
         //conflicts.add(new TooManyOccurrencesConflict(this, getTemporalContext(), this.occurrenceRange,nbActs));
       }
-
     }
+
+    //at this point, have thrown exception if not satisfiable
+    //TODO:should not throw an exception but something more of an explanation
+    //compute the missing association conflicts
+    for(var act:acts){
+      if(!associatedActivitiesToThisGoal.contains(act) && planEvaluation.canAssociateMoreToCreatorOf(act)){
+        //they ALL have to be associated
+        conflicts.add(new MissingAssociationConflict(this, List.of(act)));
+      }
+    }
+
     if(this.desiredActTemplate.parametricDur!= null){
-      return uncontrollableGetConflictsDurAndOccur(plan,durToSchedule,nbToSchedule);
+      conflicts.addAll(uncontrollableGetConflictsDurAndOccur(plan,durToSchedule,nbToSchedule));
     } else if(this.desiredActTemplate.durationRange!= null){
-      return controllableGetConflictsDurAndOccur(plan, durToSchedule, nbToSchedule);
+      conflicts.addAll(controllableGetConflictsDurAndOccur(plan, durToSchedule, nbToSchedule));
     } else{
       throw new RuntimeException("Must provide duration");
     }
+    return conflicts;
   }
 
 

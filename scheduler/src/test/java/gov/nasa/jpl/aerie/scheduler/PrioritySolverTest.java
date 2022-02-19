@@ -2,8 +2,10 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import com.google.common.testing.NullPointerTester;
 import com.google.common.truth.Correspondence;
-import org.junit.jupiter.api.Test;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
 import java.util.Objects;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -34,7 +36,7 @@ public class PrioritySolverTest {
     final var plan = solver.getNextSolution();
 
     assertThat(plan).isPresent();
-    assertThat(plan.get().getEvaluations()).containsExactly(new Evaluation());
+    assertThat(plan.get().getEvaluation()).isEqualTo(new Evaluation());
     assertThat(plan.get().getActivitiesByTime()).isEmpty();
   }
 
@@ -135,7 +137,7 @@ public class PrioritySolverTest {
         .generateWith((plan) -> expectedPlan.getActivitiesByTime())
         .forAllTimeIn(h.getHor())
         .build();
-    problem.add(goal);
+    problem.setGoals(List.of(goal));
     final var solver = makeProblemSolver(problem);
 
     final var plan = solver.getNextSolution().orElseThrow();
@@ -154,13 +156,13 @@ public class PrioritySolverTest {
         .generateWith((plan) -> expectedPlan.getActivitiesByTime())
         .forAllTimeIn(h.getHor())
         .build();
-    problem.add(goal);
+    problem.setGoals(List.of(goal));
     final var solver = makeProblemSolver(problem);
 
     final var plan = solver.getNextSolution().orElseThrow();
 
-    assertThat(plan.getEvaluations()).hasSize(1);
-    final var eval = plan.getEvaluations().stream().findFirst().orElseThrow().forGoal(goal);
+    assertThat(plan.getEvaluation()).isNotNull();
+    final var eval = plan.getEvaluation().forGoal(goal);
     assertThat(eval).isNotNull();
     assertThat(eval.getAssociatedActivities())
         .comparingElementsUsing(equalExceptInName)
@@ -179,7 +181,7 @@ public class PrioritySolverTest {
                             .duration(d1min)
                             .build())
         .build();
-    problem.add(goal);
+    problem.setGoals(List.of(goal));
     final var solver = makeProblemSolver(problem);
 
     final var plan = solver.getNextSolution().orElseThrow();
@@ -213,7 +215,7 @@ public class PrioritySolverTest {
                             .build())
         .startsAt(TimeAnchor.START)
         .build();
-    problem.add(goal);
+    problem.setGoals(List.of(goal));
     final var solver = makeProblemSolver(problem);
 
     final var plan = solver.getNextSolution().orElseThrow();

@@ -172,15 +172,15 @@ public class PlanInMemory implements Plan {
    */
   @Override
   public void addEvaluation(Evaluation eval) {
-    evals.add(eval);
+    evaluation = eval;
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public Collection<Evaluation> getEvaluations() {
-    return java.util.Collections.unmodifiableCollection(evals);
+  public Evaluation getEvaluation() {
+    return evaluation;
   }
 
   /**
@@ -188,7 +188,7 @@ public class PlanInMemory implements Plan {
    *
    * note that different solvers may evaluate the same plan differently
    */
-  protected final java.util.List<Evaluation> evals = new java.util.LinkedList<>();
+  protected Evaluation evaluation;
 
 
 }
