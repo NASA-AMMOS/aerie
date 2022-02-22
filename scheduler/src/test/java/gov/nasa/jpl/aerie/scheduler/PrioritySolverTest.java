@@ -13,7 +13,7 @@ import static com.google.common.truth.Truth8.assertThat;
 
 public class PrioritySolverTest {
   private static PrioritySolver makeEmptyProblemSolver() {
-    return new PrioritySolver(new HuginnConfiguration(), new Problem(null,h));
+    return new PrioritySolver(new HuginnConfiguration(), new Problem(null, h, null));
   }
 
   private static PrioritySolver makeProblemSolver(Problem problem) {
@@ -22,7 +22,7 @@ public class PrioritySolverTest {
 
   @Test
   public void ctor_onEmptyProblemWorks() {
-    new PrioritySolver(new HuginnConfiguration(), new Problem(null,h));
+    new PrioritySolver(new HuginnConfiguration(), new Problem(null,h, null));
   }
 
   @Test
@@ -51,7 +51,7 @@ public class PrioritySolverTest {
 
   //test mission with two primitive activity types
   private static Problem makeTestMissionAB() {
-    final var mission = new Problem(null, h);
+    final var mission = new Problem(null, h, null);
     final var actA = new ActivityType("A");
     mission.add(actA);
     final var actB = new ActivityType("B");
@@ -70,7 +70,7 @@ public class PrioritySolverTest {
 
   private static final NullPointerTester NULL_POINTER_TESTER = new NullPointerTester()
       .setDefault(HuginnConfiguration.class, new HuginnConfiguration())
-      .setDefault(Problem.class, new Problem(null,h));
+      .setDefault(Problem.class, new Problem(null, h, null));
 
 
   private static PlanInMemory makePlanA012(Problem problem) {

@@ -33,7 +33,7 @@ public final class MissionModelLoader {
         return loadMissionModel(missionModelConfig, factory, builder);
     }
 
-    private static <Model>
+    public static <Model>
     MissionModel<Model> loadMissionModel(
         final SerializedValue missionModelConfig,
         final MissionModelFactory<Model> factory,

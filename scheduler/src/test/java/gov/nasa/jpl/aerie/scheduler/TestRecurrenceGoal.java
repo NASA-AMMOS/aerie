@@ -22,7 +22,7 @@ public class TestRecurrenceGoal {
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
         .build();
 
-    Problem problem = new Problem(null, planningHorizon);
+    Problem problem = new Problem(null, planningHorizon, null);
 
     problem.setGoals(List.of(goal));
 

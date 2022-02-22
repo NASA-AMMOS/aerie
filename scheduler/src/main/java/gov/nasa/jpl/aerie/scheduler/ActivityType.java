@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 
 import java.util.List;
@@ -38,6 +39,11 @@ public class ActivityType {
   private final TaskSpecType<?, ?, ?> specType;
 
   /**
+   * describes the level of control that the scheduler has over the duration of this activity
+   */
+  private final DurationType durationType;
+
+  /**
    * ctor creates a new empty activity type container
    *
    * @param name IN the identifier of the activity type
@@ -47,6 +53,7 @@ public class ActivityType {
     this.name = name;
     this.activityConstraints = null;
     this.specType = null;
+    this.durationType = DurationType.uncontrollable();
   }
 
   /**
@@ -54,11 +61,12 @@ public class ActivityType {
    *
    * @param name IN the identifier of the activity type
    */
-  public ActivityType(final String name, final TaskSpecType<?, ?, ?> specType) {
+  public ActivityType(final String name, final TaskSpecType<?, ?, ?> specType, final DurationType durationType) {
     checkNotNull(name, "creating activity type with null name");
     this.name = name;
     this.activityConstraints = null;
     this.specType = specType;
+    this.durationType = durationType;
   }
 
   /**
@@ -73,6 +81,7 @@ public class ActivityType {
     this.name = name;
     this.activityConstraints = constraints;
     this.specType = null;
+    this.durationType = DurationType.uncontrollable();
   }
 
   static Parameter getParameterSpecification(final List<Parameter> params, final String name) {
@@ -111,6 +120,10 @@ public class ActivityType {
 
   TaskSpecType<?, ?, ?> getSpecType(){
     return this.specType;
+  }
+
+  DurationType getDurationType(){
+    return this.durationType;
   }
 
   boolean isParamLegal(final String name){

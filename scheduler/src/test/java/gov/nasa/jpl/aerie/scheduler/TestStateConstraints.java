@@ -33,7 +33,7 @@ public class TestStateConstraints {
 
   @BeforeEach
   public void setUp() {
-    problem = new Problem(null, horizon);
+    problem = new Problem(null, horizon, null);
     plan = new PlanInMemory();
   }
 

@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
@@ -17,11 +18,11 @@ public class MerlInsightRules extends Problem {
 
   static final PlanningHorizon DEFAULT_PLANNING_HORIZON = new PlanningHorizon(new Time(0), new Time(48 * 3600));
 
-  public MerlInsightRules(MissionModel<?> missionModel) {
-    super(missionModel, DEFAULT_PLANNING_HORIZON);
+  public MerlInsightRules(MissionModel<?> missionModel, SchedulerModel schedulerModel) {
+    super(missionModel, DEFAULT_PLANNING_HORIZON, schedulerModel);
   }
-  public MerlInsightRules(MissionModel<?> missionModel, PlanningHorizon planningHorizon) {
-    super(missionModel, planningHorizon);
+  public MerlInsightRules(MissionModel<?> missionModel, PlanningHorizon planningHorizon, SchedulerModel schedulerModel) {
+    super(missionModel, planningHorizon, schedulerModel);
   }
 
   @Override

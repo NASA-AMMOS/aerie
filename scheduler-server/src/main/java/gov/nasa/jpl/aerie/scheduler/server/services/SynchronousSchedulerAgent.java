@@ -90,7 +90,7 @@ public record SynchronousSchedulerAgent(
       //create scheduler problem seeded with initial plan
       final var schedulerMissionModel = loadMissionModel(planMetadata);
       var planningHorizon = new PlanningHorizon(Time.fromInstant(specificationWithGoals.horizonStartTimestamp().toInstant()),Time.fromInstant(specificationWithGoals.horizonEndTimestamp().toInstant())) ;
-      final var problem = new Problem(schedulerMissionModel.missionModel(), planningHorizon);
+      final var problem = new Problem(schedulerMissionModel.missionModel(), planningHorizon, schedulerMissionModel.schedulerModel());
       //seed the problem with the initial plan contents
       problem.setInitialPlan(loadInitialPlan(planMetadata, problem));
 
