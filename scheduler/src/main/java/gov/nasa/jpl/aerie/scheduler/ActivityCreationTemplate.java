@@ -196,47 +196,46 @@ public class ActivityCreationTemplate extends ActivityExpression {
 
   }
 
-  private ActivityInstance createInstanceForReal(String name, Window window, boolean instantiateVariableArguments) {
-    final ActivityInstance act = new ActivityInstance(type);
-    act.setArguments(arguments);
-    act.setVariableArguments(variableArguments);
-    TaskNetwork tw = new TaskNetwork();
-    TaskNetworkAdapter tnw = new TaskNetworkAdapter(tw);
+  private ActivityInstance createInstanceForReal(final String name, final Window window, final boolean instantiateVariableArguments) {
+    final var act = new ActivityInstance(this.type);
+    act.setArguments(this.arguments);
+    act.setVariableArguments(this.variableArguments);
+    final var tnw = new TaskNetworkAdapter(new TaskNetwork());
     tnw.addAct(name);
-    if(window != null){
-      tnw.addEnveloppe(name,"window", window.start, window.end);
+    if (window != null) {
+      tnw.addEnveloppe(name, "window", window.start, window.end);
     }
-    if (startRange != null){
-      tnw.addStartInterval(name, startRange.start, startRange.end);
+    if (this.startRange != null) {
+      tnw.addStartInterval(name, this.startRange.start, this.startRange.end);
     }
-    if (endRange != null){
-      tnw.addEndInterval(name, endRange.start, endRange.end);
+    if (this.endRange != null) {
+      tnw.addEndInterval(name, this.endRange.start, this.endRange.end);
     }
-    if(durationRange!=null){
-      tnw.addDurationInterval(name, durationRange.start, durationRange.end);
+    if (this.durationRange != null) {
+      tnw.addDurationInterval(name, this.durationRange.start, this.durationRange.end);
     }
-    var success = tnw.solveConstraints();
-    if(!success){
+    final var success = tnw.solveConstraints();
+    if (!success) {
       System.out.println("Inconsistent temporal constraints, returning empty activity");
       return null;
     }
-    var solved = tnw.getAllData(name);
+    final var solved = tnw.getAllData(name);
     //select earliest start time
-    var earliestStart= solved.start().start;
+    final var earliestStart = solved.start().start;
     act.setStartTime(earliestStart);
-    if(parametricDur==null) {
+    if (this.parametricDur == null) {
       //select smallest duration
       act.setDuration(solved.duration().start);
-    } else{
-      var computedDur = parametricDur.compute(Window.between(earliestStart, earliestStart));
-      if(solved.duration().contains(computedDur)){
+    } else {
+      final var computedDur = this.parametricDur.compute(Window.between(earliestStart, earliestStart));
+      if (solved.duration().contains(computedDur)) {
         act.setDuration(computedDur);
-      } else{
+      } else {
         throw new IllegalArgumentException("Parametric duration is incompatible with temporal constraints");
       }
     }
 
-    for (var param : variableArguments.entrySet()) {
+    for (final var param : this.variableArguments.entrySet()) {
       if (instantiateVariableArguments) {
         act.instantiateVariableArgument(param.getKey());
       }
