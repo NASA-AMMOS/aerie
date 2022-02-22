@@ -15,6 +15,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -116,18 +117,24 @@ public class SimulationFacade {
 
     for (final var act : actsInPlan) {
 
-      Map<String, SerializedValue> params = new HashMap<>();
-      params.putAll(act.getArguments());
-      if(act.getDuration()!= null) {
-        params.put("duration", new DurationValueMapper().serializeValue(act.getDuration()));
+      final var arguments = new HashMap<>(act.getArguments());
+      if(act.getDuration() != null) {
+        final var durationType = act.getType().getDurationType();
+        if (durationType instanceof DurationType.Controllable d) {
+          arguments.put(d.parameterName(), new DurationValueMapper().serializeValue(act.getDuration()));
+        } else if (durationType instanceof DurationType.Uncontrollable) {
+          System.out.println("Warning : activity instance has a specified duration, but the activity type's duration is uncontrollable");
+        } else {
+          throw new Error("Unhandled variant of DurationType: " + durationType);
+        }
       } else{
-        System.out.println("Warning : activity has no duration parameter");
+        System.out.println("Warning : activity instance has unspecified duration");
       }
       var activityIdSim = new ActivityInstanceId(counter++);
       planActInstanceIdToSimulationActInstanceId.put(act.getId(), activityIdSim);
       schedule.put(activityIdSim, Pair.of(
           act.getStartTime(),
-          new SerializedActivity(act.getType().getName(), params)));
+          new SerializedActivity(act.getType().getName(), arguments)));
     }
 
     final var simulationDuration = planningHorizon.getAerieHorizonDuration();
