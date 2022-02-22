@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler;
 import com.google.common.testing.NullPointerTester;
 import com.google.common.truth.Correspondence;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -52,9 +53,9 @@ public class PrioritySolverTest {
   //test mission with two primitive activity types
   private static Problem makeTestMissionAB() {
     final var mission = new Problem(null, h, null);
-    final var actA = new ActivityType("A");
+    final var actA = new ActivityType("A", null, DurationType.controllable("duration"));
     mission.add(actA);
-    final var actB = new ActivityType("B");
+    final var actB = new ActivityType("B", null, DurationType.controllable("duration"));
     mission.add(actB);
     return mission;
   }
