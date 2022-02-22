@@ -23,6 +23,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class ActivityType {
 
   /**
+   * the identifier associated with this activity type
+   */
+  final String name;
+
+  /**
+   * a list of constraints associated to this activity type
+   */
+  StateConstraintExpression activityConstraints;
+
+  /**
+   * the information required to simulate this activity type
+   */
+  TaskSpecType<?, ?, ?> specType;
+
+  /**
    * ctor creates a new empty activity type container
    *
    * @param name IN the identifier of the activity type
@@ -55,6 +70,16 @@ public class ActivityType {
     this.activityConstraints = constraints;
   }
 
+  public static Parameter getParameterSpecification(List<Parameter> params, String name) {
+    var parameterSpecifications = params.stream()
+        .filter(var -> var.name().equals(name))
+        .collect(Collectors.toList());
+    if(parameterSpecifications.isEmpty()){
+      return null;
+    }
+    assert(parameterSpecifications.size()==1);
+    return parameterSpecifications.get(0);
+  }
 
   /**
    * fetches the identifier associated with this activity type
@@ -91,18 +116,6 @@ public class ActivityType {
     return true;
   }
 
-  public static Parameter getParameterSpecification(List<Parameter> params, String name) {
-    var parameterSpecifications = params.stream()
-        .filter(var -> var.name().equals(name))
-        .collect(Collectors.toList());
-    if(parameterSpecifications.isEmpty()){
-      return null;
-    }
-    assert(parameterSpecifications.size()==1);
-    return parameterSpecifications.get(0);
-  }
-
-
   @Override
   public boolean equals(final Object o) {
     if (this == o) return true;
@@ -112,16 +125,5 @@ public class ActivityType {
            && Objects.equals(activityConstraints, that.activityConstraints)
            && Objects.equals(specType, that.specType);
   }
-
-  /**
-   * the identifier associated with this activity type
-   */
-  final String name;
-  /**
-   * a list of constraints associated to this activity type
-   */
-  StateConstraintExpression activityConstraints;
-
-  TaskSpecType<?, ?, ?> specType;
 
 }
