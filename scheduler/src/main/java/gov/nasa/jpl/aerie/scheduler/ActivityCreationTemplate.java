@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 
 /**
  * criteria used to identify create activity instances in scheduling goals
@@ -120,26 +121,26 @@ public class ActivityCreationTemplate extends ActivityExpression {
       return this;
     }
 
-    protected ActivityCreationTemplate fill(ActivityCreationTemplate template) {
-      template.startRange = startsIn;
-      template.endRange = endsIn;
-      template.startOrEndRange = startsOrEndsIn;
-      if(parametricDur!=null){
-        if(durationIn!= null){
+    protected ActivityCreationTemplate fill(final ActivityCreationTemplate template) {
+      template.startRange = this.startsIn;
+      template.endRange = this.endsIn;
+      template.startOrEndRange = this.startsOrEndsIn;
+      if (this.parametricDur != null){
+        if (this.durationIn != null){
           throw new RuntimeException("Cannot specify two different types of durations");
         }
-        template.parametricDur = parametricDur;
+        template.parametricDur = this.parametricDur;
       }
-      template.type = type;
+      template.type = this.type;
 
-      if (durationIn != null) {
-        template.durationRange = durationIn;
+      if (this.durationIn != null) {
+        template.durationRange = this.durationIn;
       }
       //REVIEW: probably want to store permissible rane separate from creation
       //        default value
 
-      template.arguments = arguments;
-      template.variableArguments = variableArguments;
+      template.arguments = this.arguments;
+      template.variableArguments = this.variableArguments;
       return template;
     }
 
