@@ -34,7 +34,7 @@ public class IncrementalSimulationTest {
     assert(simResults.realProfiles.get("/utcClock").get(0).getLeft().isEqualTo(endOfLastAct));
     /*ensures that when current simulation results cover more than the asked period and that nothing has happened
     between two requests, the same results are returned*/
-    var simResults2 = incrementalSimulationDriver.getSimulationResultsUntil(Duration.of(7,SECONDS));
+    var simResults2 = incrementalSimulationDriver.getSimulationResultsUpTo(Duration.of(7,SECONDS));
     assert(Objects.equals(simResults, simResults2));
   }
 
