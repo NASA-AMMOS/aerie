@@ -48,6 +48,12 @@ type Query {
   ): ValidationResponse
 }
 
+type Query {
+  schedule(
+    specificationId: Int!
+  ): SchedulingResponse
+}
+
 enum MerlinSimulationStatus {
   complete
   failed
@@ -80,6 +86,17 @@ type AddExternalDatasetResponse {
   datasetId: Int!
 }
 
+type SchedulingResponse {
+  status: SchedulingStatus!
+  reason: SchedulingFailureReason
+}
+
+enum SchedulingStatus {
+  complete
+  failed
+  incomplete
+}
+
 scalar ResourceSchema
 
 scalar MerlinSimulationResults
@@ -91,3 +108,5 @@ scalar ModelArguments
 scalar ActivityArguments
 
 scalar ProfileSet
+
+scalar SchedulingFailureReason
