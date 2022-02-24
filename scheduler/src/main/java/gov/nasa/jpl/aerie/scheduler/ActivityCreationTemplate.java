@@ -141,19 +141,16 @@ public class ActivityCreationTemplate extends ActivityExpression {
         if (this.parametricDur != null) {
           throw new RuntimeException("Cannot define parametric duration on activity of type "
                                      + this.type.getName()
-
                                      + " because its DurationType is Uncontrollable");
         }
         if (this.durationIn != null) {
           throw new RuntimeException("Cannot constrain duration on activity of type "
                                      + this.type.getName()
-
                                      + " because its DurationType is Uncontrollable");
         }
         if (this.endsIn != null) {
           throw new RuntimeException("Cannot constrain end time of an activity of type "
                                      + this.type.getName()
-
                                      + " because its DurationType is Uncontrollable");
         }
       }

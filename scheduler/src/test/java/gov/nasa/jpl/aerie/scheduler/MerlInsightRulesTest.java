@@ -18,7 +18,7 @@ public class MerlInsightRulesTest {
     rules.getSimulationFacade().simulatePlan(makeEmptyPlan());
     plan = makeEmptyPlan();
     controller = new AerieController(MerlinSightTestUtility.LOCAL_AERIE, MerlinSightTestUtility.latest, false, planningHorizon, rules.getActivityTypes());
-    smallProblem = new Problem(aerieLanderMissionModel, planningHorizon, aerieLanderSchedulerModel);
+    smallProblem = new Problem(aerieLanderMissionModel, planningHorizon, aerieLanderSchedulerModel, rules.getSimulationFacade());
   }
 
   private PlanningHorizon planningHorizon;

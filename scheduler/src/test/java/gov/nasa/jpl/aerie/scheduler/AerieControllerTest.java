@@ -13,7 +13,10 @@ public class AerieControllerTest {
   private final SchedulerModel schedulerModel = MerlinSightTestUtility.getMerlinSightSchedulerModel();
   private final String URL_AERIE = MerlinSightTestUtility.LOCAL_AERIE;
   private final int MISSION_MODEL_ID = MerlinSightTestUtility.latest;
-  private final Problem problem = new Problem(missionModel, horizon, schedulerModel);
+  private final Problem problem = new Problem(missionModel,
+                                              horizon,
+                                              new SimulationFacade(horizon, missionModel),
+                                              schedulerModel);
   /**
    * This test is here as a demonstration of how the AerieController can be used
    * Disabled because you need a local aerie

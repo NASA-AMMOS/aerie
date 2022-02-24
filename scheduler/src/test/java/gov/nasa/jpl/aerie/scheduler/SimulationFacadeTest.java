@@ -62,8 +62,8 @@ public class SimulationFacadeTest {
   public void setUp() {
     missionModel = SimulationUtility.getBananaMissionModel();
     final var schedulerModel = SimulationUtility.getBananaSchedulerModel();
-    problem = new Problem(missionModel, horizon, schedulerModel);
     facade = new SimulationFacade(horizon, missionModel);
+    problem = new Problem(missionModel, horizon, facade, schedulerModel);
   }
 
   @AfterEach
