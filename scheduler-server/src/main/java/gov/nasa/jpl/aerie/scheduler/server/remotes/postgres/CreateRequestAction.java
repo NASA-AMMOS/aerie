@@ -8,7 +8,7 @@ import java.sql.SQLException;
 
 /*package-local*/ final class CreateRequestAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-      insert into scheduling_request (spec_id, spec_revision)
+      insert into scheduling_request (specification_id, specification_revision)
       values (?, ?)
       returning analysis_id
     """;
