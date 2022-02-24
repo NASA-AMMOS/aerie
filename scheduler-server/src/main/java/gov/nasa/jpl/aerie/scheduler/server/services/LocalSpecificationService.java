@@ -9,15 +9,13 @@ public record LocalSpecificationService(SpecificationRepository specificationRep
   @Override
   public Specification getSpecification(final SpecificationId specificationId) throws NoSuchSpecificationException
   {
-    // TODO needs to be implemented
-    throw new UnsupportedOperationException();
+    return specificationRepository.getSpecification(specificationId);
   }
 
   @Override
   public RevisionData getSpecificationRevisionData(final SpecificationId specificationId)
   throws NoSuchSpecificationException
   {
-    // TODO needs to be implemented
-    throw new UnsupportedOperationException();
+    return specificationRepository.getSpecificationRevisionData(specificationId);
   }
 }
