@@ -37,6 +37,8 @@ dependencies {
   implementation 'com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9'
   implementation 'com.zaxxer:HikariCP:5.0.0'
 
+  implementation 'org.openjdk.nashorn:nashorn-core:15.3'
+
   testImplementation project(':examples:foo-missionmodel')
   testImplementation project(':merlin-framework')
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
