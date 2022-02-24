@@ -36,8 +36,19 @@ import java.util.Optional;
     final var resultSet = this.statement.executeQuery();
     if (!resultSet.next()) return Optional.empty();
 
+    final RequestRecord.Status status;
+    try {
+      status = RequestRecord.Status.fromString(resultSet.getString("status"));
+    } catch (final RequestRecord.Status.InvalidRequestStatusException ex) {
+      throw new Error(
+          String.format(
+              "Scheduling request for specification with ID %d and revision %d has invalid state %s",
+              specificationId,
+              specificationRevision,
+              ex.invalidStatus));
+    }
+
     final var analysisId = resultSet.getLong("analysis_id");
-    final var status = resultSet.getString("status");
     final var failureReason = resultSet.getString("failure_reason");
     final var canceled = resultSet.getBoolean("canceled");
 

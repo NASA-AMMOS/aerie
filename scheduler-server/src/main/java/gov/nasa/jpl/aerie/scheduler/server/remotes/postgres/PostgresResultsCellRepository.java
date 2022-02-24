@@ -139,7 +139,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       setRequestStateAction.apply(
           specId.id(),
           specRevision,
-          "failed",
+          RequestRecord.Status.FAILED,
           reason);
     }
   }
@@ -156,7 +156,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       setRequestStateAction.apply(
           specId.id(),
           specRevision,
-          "success",
+          RequestRecord.Status.SUCCESS,
           null);
     }
   }
@@ -237,10 +237,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       try (final var connection = dataSource.getConnection()) {
         final var request = getRequest(connection, specId, specRevision);
         return switch(request.status()) {
-          case "incomplete" -> new ResultsProtocol.State.Incomplete();
-          case "failed" -> new ResultsProtocol.State.Failed(request.failureReason());
-          case "success" -> new ResultsProtocol.State.Success(getResults(connection, request.analysisId()));
-          default -> throw new Error(String.format("Unexpected scheduling request state: %s", request.status()));
+          case INCOMPLETE -> new ResultsProtocol.State.Incomplete();
+          case FAILED -> new ResultsProtocol.State.Failed(request.failureReason());
+          case SUCCESS -> new ResultsProtocol.State.Success(getResults(connection, request.analysisId()));
         };
       } catch (final NoSuchRequestException ex) {
         throw new Error("Scheduling request no longer exists");

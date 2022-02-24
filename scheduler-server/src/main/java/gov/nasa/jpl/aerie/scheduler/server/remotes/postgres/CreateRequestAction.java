@@ -30,8 +30,14 @@ import java.sql.SQLException;
     final var result = this.statement.executeQuery();
     if (!result.next()) throw new FailedInsertException("scheduling_request");
 
+    final RequestRecord.Status status;
+    try {
+      status = RequestRecord.Status.fromString(result.getString("status"));
+    } catch (final RequestRecord.Status.InvalidRequestStatusException ex) {
+      throw new Error("Scheduling request initialized with invalid state.");
+    }
+
     final var analysis_id = result.getLong("analysis_id");
-    final var status = result.getString("status");
     final var failureReason = result.getString("failure_reason");
     final var canceled = result.getBoolean("canceled");
 

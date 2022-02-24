@@ -26,10 +26,10 @@ import java.sql.SQLException;
   public void apply(
       final long specificationid,
       final long specificationRevision,
-      final String status,
+      final RequestRecord.Status status,
       final String failureReason
   ) throws SQLException {
-    this.statement.setString(1, status);
+    this.statement.setString(1, status.label);
     this.statement.setString(2, failureReason);
     this.statement.setLong(3, specificationid);
     this.statement.setLong(4, specificationRevision);
