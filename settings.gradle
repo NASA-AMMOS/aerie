@@ -23,6 +23,9 @@ include 'scheduler'
 // DB tests
 include 'db-tests'
 
+// API tests
+include 'api-tests'
+
 // Example mission models
 include 'examples:banananation'
 include 'examples:foo-missionmodel'
