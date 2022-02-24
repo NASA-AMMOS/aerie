@@ -1,0 +1,3 @@
+table:
+  name: command_dictionary
+  schema: public

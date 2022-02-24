@@ -26,6 +26,12 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   CREATE DATABASE aerie_ui;
   GRANT ALL PRIVILEGES ON DATABASE aerie_ui TO aerie;
   \echo 'Done!'
+
+  \echo 'Initializing aerie_commanding database...'
+  CREATE DATABASE aerie_commanding;
+  GRANT ALL PRIVILEGES ON DATABASE aerie_ui TO aerie;
+  \echo 'Done!'
+
 EOSQL
 
 export PGPASSWORD=aerie
@@ -45,5 +51,11 @@ EOSQL
 psql -v ON_ERROR_STOP=1 --username "aerie" --dbname "aerie_ui" <<-EOSQL
   \echo 'Initializing aerie_ui database objects...'
   \ir /docker-entrypoint-initdb.d/sql/ui/init.sql
+  \echo 'Done!'
+EOSQL
+
+psql -v ON_ERROR_STOP=1 --username "aerie" --dbname "aerie_commanding" <<-EOSQL
+  \echo 'Initializing aerie_commanding database objects...'
+  \ir /docker-entrypoint-initdb.d/sql/commanding/init.sql
   \echo 'Done!'
 EOSQL
