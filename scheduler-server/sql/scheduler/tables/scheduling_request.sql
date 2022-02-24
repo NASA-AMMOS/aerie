@@ -1,8 +1,10 @@
+create type status_t as enum('incomplete', 'failed', 'success');
+
 create table scheduling_request (
   specification_id     integer not null,
   analysis_id integer not null,
 
-  status text not null default 'incomplete',
+  status status_t not null default 'incomplete',
   failure_reason text null,
   canceled boolean not null default false,
 
