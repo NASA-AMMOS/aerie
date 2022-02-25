@@ -10,21 +10,27 @@ import static org.junit.jupiter.api.Assertions.*;
 class TypescriptExecutionServiceTest {
 
   @Test
-  void testExecuteTypescript_1() throws ScriptException {
-    final var res = TypescriptExecutionService.executeTypescript("function goal(){ return {abc: \"def\"} }");
-    assertEquals(new TypescriptExecutionService.GoalDefinition("abc", "def"), res);
+  void testExecuteTypescript_1() throws TypescriptExecutionService.TypescriptExecutionException,
+                                        TypescriptExecutionService.TypescriptCompilationException
+  {
+    final var res = TypescriptExecutionService.executeTypescript("function goal(){ return {abc: \"def\"} }; JSON.stringify(goal())");
+    assertEquals("{\"abc\":\"def\"}", res);
   }
 
   @Test
-  void testExecuteTypescript_2() throws ScriptException {
-    final var res = TypescriptExecutionService.executeTypescript("function goal(){ return {abc: \"xyz\"} }");
-    assertEquals(new TypescriptExecutionService.GoalDefinition("abc", "xyz"), res);
+  void testExecuteTypescript_2() throws TypescriptExecutionService.TypescriptExecutionException,
+                                        TypescriptExecutionService.TypescriptCompilationException
+  {
+    final var res = TypescriptExecutionService.executeTypescript("function goal(){ return {abc: \"xyz\"} }; JSON.stringify(goal())");
+    assertEquals("{\"abc\":\"xyz\"}", res);
   }
 
   @Test
-  void testTypescriptExecution() throws ScriptException {
-    final var res = TypescriptExecutionService.executeTypescript("function goal(){ const abc = \"ghi\"\nreturn {abc} }");
-    assertEquals(new TypescriptExecutionService.GoalDefinition("abc", "ghi"), res);
+  void testTypescriptExecution() throws TypescriptExecutionService.TypescriptExecutionException,
+                                        TypescriptExecutionService.TypescriptCompilationException
+  {
+    final var res = TypescriptExecutionService.executeTypescript("function goal(){ const abc = \"ghi\"\nreturn {abc} }; JSON.stringify(goal())");
+    assertEquals("{\"abc\":\"ghi\"}", res);
   }
 
   @Disabled
@@ -32,8 +38,10 @@ class TypescriptExecutionServiceTest {
   /*
    * TODO: Rather than depend on the function being called goal, it would be better to allow the user to specify a function as a default export.
    */
-  void testTypescriptModule() throws ScriptException {
+  void testTypescriptModule() throws TypescriptExecutionService.TypescriptExecutionException,
+                                     TypescriptExecutionService.TypescriptCompilationException
+  {
     final var res = TypescriptExecutionService.executeTypescript("export default function goal(){ const abc = \"ghi\"\nreturn {abc} }");
-    assertEquals(new TypescriptExecutionService.GoalDefinition("abc", "ghi"), res);
+    assertEquals(new SchedulingGoalDSLCompilationService.GoalDefinition("abc", "ghi"), res);
   }
 }
