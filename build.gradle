@@ -56,7 +56,8 @@ subprojects {
   }
 
   group = 'gov.nasa.jpl.aerie'
-  version = '0.10.0-SNAPSHOT'
+  def hash = 'git rev-parse --short HEAD'.execute().text.trim()
+  version = "0.10.0-SNAPSHOT-$hash"
 
   tasks.withType(JavaCompile) {
     options.compilerArgs << '-Xlint:deprecation' << '-Xlint:unchecked'
