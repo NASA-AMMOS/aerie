@@ -22,7 +22,7 @@ public class SchedulingGoalDSLCompilationService {
               GoalDefinition::value));
 
   public static GoalDefinition compileSchedulingGoalDSL(final String goalTypescript) throws SchedulingGoalDSLCompilationException {
-    final var preface = "declare function goal(): {abc: string}\n";
+    final var preface = "function goal(): {abc: string}\n";
     final var epilogue = "\nJSON.stringify(goal())";
 
     final var executionResult = executeTypescript(preface, goalTypescript, epilogue);

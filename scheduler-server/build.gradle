@@ -1,6 +1,7 @@
 plugins {
   id 'java'
   id 'application'
+  id 'com.github.node-gradle.node' version '3.1.1'
 }
 
 java {
@@ -9,8 +10,36 @@ java {
   }
 }
 
+node {
+  nodeProjectDir = file("${project.projectDir.toPath().resolve("scheduling-dsl-compiler")}")
+  download = true
+}
+
+task assembleSchedulingDSLCompiler(type: NpmTask) {
+  dependsOn processResources
+  dependsOn npmInstall
+  args = ['run', 'build']
+  inputs.files('package.json', 'package-lock.json', 'tsconfig.json')
+  inputs.dir('src')
+}
+
+assemble {
+  dependsOn assembleSchedulingDSLCompiler
+}
+
 test {
+  dependsOn(assembleSchedulingDSLCompiler)
+  dependsOn()
   useJUnitPlatform()
+  def nodeDir = new ByteArrayOutputStream()
+  exec{
+    commandLine "ls", projectDir.toPath().resolve(".gradle/nodejs")
+    standardOutput = nodeDir;
+    ignoreExitValue true
+  }
+
+  environment "PATH", "$System.env.PATH" + System.getProperty("path.separator") + projectDir.toPath().resolve(".gradle/nodejs").resolve("$nodeDir".trim()).resolve("bin")
+  environment "SCHEDULING_DSL_COMPILER_PATH", projectDir.toPath().resolve('scheduling-dsl-compiler/dist/main.js')
 }
 
 application {
@@ -48,5 +77,3 @@ dependencies {
   testImplementation 'javax.json.bind:javax.json.bind-api:1.0'
   testImplementation 'org.glassfish:javax.json:1.1.4'
 }
-
-

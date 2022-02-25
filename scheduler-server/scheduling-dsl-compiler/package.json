@@ -1,0 +1,17 @@
+{
+  "name": "typescript-compiler",
+  "version": "1.0.0",
+  "description": "Typescript compiler for the scheduling server",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "dependencies": {
+    "typescript": "^4.5.5"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.21"
+  }
+}
