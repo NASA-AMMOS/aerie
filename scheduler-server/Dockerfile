@@ -11,8 +11,6 @@ ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 RUN node --version
 RUN npm --version
 
-RUN npm install --global typescript
-
 COPY build/distributions/*.tar /usr/src/app/server.tar
 RUN cd /usr/src/app && tar --strip-components 1 -xf server.tar
 

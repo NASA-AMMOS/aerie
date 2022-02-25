@@ -67,13 +67,16 @@ public class TypescriptExecutionService {
   private static void runTypescriptCompiler(final String temporaryTypescriptFilename, final String outfile)
   throws IOException, InterruptedException, TypescriptCompilationException
   {
+    final var schedulingDslCompilerPath = System.getenv("SCHEDULING_DSL_COMPILER_PATH");
+    System.out.println("SCHEDULING_DSL_COMPILER_PATH: " + schedulingDslCompilerPath);
     final var rt = Runtime.getRuntime();
-    final var commands = new String[] {"tsc", temporaryTypescriptFilename, "--outfile", outfile};
+    final var commands = new String[] {"node", schedulingDslCompilerPath, temporaryTypescriptFilename, "--outfile", outfile};
     final var pr = rt.exec(commands);
-    final var stdError = new BufferedReader(new InputStreamReader(pr.getInputStream()));
     final var i = pr.waitFor();
+    final var console = bufferedReaderToString(pr.errorReader()) + bufferedReaderToString(pr.inputReader());
+    System.out.println(console);
     if (i != 0) {
-      throw new TypescriptCompilationException(bufferedReaderToString(stdError));
+      throw new TypescriptCompilationException(console);
     }
   }
 
