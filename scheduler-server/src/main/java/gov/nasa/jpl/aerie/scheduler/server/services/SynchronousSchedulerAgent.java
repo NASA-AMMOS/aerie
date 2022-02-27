@@ -140,10 +140,11 @@ public record SynchronousSchedulerAgent(
 
     final var loadedGoals = new ArrayList<GoalRecord>(dbLoadedSpec.goalsByPriority().size());
     for (final var dbGoal : dbLoadedSpec.goalsByPriority()) {
-      boolean definitionFound = false;
+      var definitionFound = false;
       for (final var jarGoal : jarGoals) {
         if (dbGoal.definition().getName().equals(jarGoal.getName())) {
           loadedGoals.add(new GoalRecord(dbGoal.id(), jarGoal));
+          definitionFound = true;
           break;
         }
       }
