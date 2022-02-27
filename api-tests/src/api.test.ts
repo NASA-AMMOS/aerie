@@ -235,7 +235,7 @@ async function insertSchedulingGoal(model_id: number, definition: string, ssoTok
   //TODO iron out whether definition is a string or a jsonb
   const response = await query(
       `
-mutation MakeSchedulingGoal($definition: jsonb, $model_id: Int) {
+mutation MakeSchedulingGoal($definition: String, $model_id: Int) {
   insert_scheduling_goal_one(object: {definition: $definition, model_id: $model_id}) {
     id
   }
