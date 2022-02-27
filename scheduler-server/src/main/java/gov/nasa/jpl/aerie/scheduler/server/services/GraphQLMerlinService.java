@@ -353,7 +353,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
     var orderedActivities = plan.getActivities().stream().toList();
 
     for (final var act : orderedActivities) {
-      requestSB.append(actPre.formatted(planId, act.getType().getName(), act.getStartTime().toString()));
+      requestSB.append(actPre.formatted(planId.id(), act.getType().getName(), act.getStartTime().toString()));
       if (act.getDuration() != null) {
         requestSB.append(argFormat.formatted("duration", getGraphQLValueString(act.getDuration())));
       }
