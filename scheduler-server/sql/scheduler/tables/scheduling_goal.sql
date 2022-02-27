@@ -1,7 +1,7 @@
 create table scheduling_goal (
   id integer generated always as identity,
   revision integer not null default 0,
-  definition jsonb not null,
+  definition text not null,
 
   model_id integer not null,
   description text null,
@@ -21,7 +21,7 @@ comment on column scheduling_goal.id is e''
 comment on column scheduling_goal.revision is e''
   'A monotonic clock that ticks for every change to this scheduling goal.';
 comment on column scheduling_goal.definition is e''
-  'A JSON representation of this goal''s structure';
+  'The source code for a Typescript module defining this scheduling goal';
 comment on column scheduling_goal.model_id is e''
   'The mission model used to which this scheduling goal is associated.';
 comment on column scheduling_goal.description is e''
