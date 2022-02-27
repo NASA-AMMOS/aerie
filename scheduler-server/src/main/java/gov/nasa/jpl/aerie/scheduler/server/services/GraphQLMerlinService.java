@@ -100,7 +100,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   @Override
   public long getPlanRevision(final PlanId planId) throws IOException, NoSuchPlanException {
     final var request = "query getPlanRevision { plan_by_pk( id: %s ) { revision } }"
-        .formatted(planId);
+        .formatted(planId.id());
     final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(planId));
     try {
       return response.getJsonObject("data").getJsonObject("plan_by_pk").getJsonNumber("revision").longValueExact();
