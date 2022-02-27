@@ -290,7 +290,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   public void ensurePlanExists(final PlanId planId) throws IOException, NoSuchPlanException {
     final Supplier<NoSuchPlanException> exceptionFactory = () -> new NoSuchPlanException(planId);
     final var request = "query ensurePlanExists { plan_by_pk( id: %s ) { id } }"
-        .formatted(planId);
+        .formatted(planId.id());
     final var response = postRequest(request).orElseThrow(exceptionFactory);
     try {
       final var id =
