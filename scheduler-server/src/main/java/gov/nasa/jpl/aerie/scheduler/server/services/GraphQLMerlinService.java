@@ -126,7 +126,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
         + "  } "
         + "  simulations(limit:1, order_by:{revision:desc} ) { arguments }"
         + "} }"
-    ).formatted(planId);
+    ).formatted(planId.id());
     final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(planId));
     try {
       //TODO: elevate and then leverage existing MerlinParsers (after updating them to match current db!)
