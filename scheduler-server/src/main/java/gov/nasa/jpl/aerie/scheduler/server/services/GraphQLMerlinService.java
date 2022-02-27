@@ -378,7 +378,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
           .getJsonObject("data").getJsonObject("insert_activity").getJsonArray("returning");
       //make sure we associate the right id with the right activity
       for(int i = 0; i < ids.size(); i++) {
-        instanceToInstanceId.put(orderedActivities.get(i), new ActivityInstanceId(ids.getInt(i)));
+        instanceToInstanceId.put(orderedActivities.get(i), new ActivityInstanceId(ids.getJsonObject(i).getInt("id")));
       }
     } catch (ClassCastException | ArithmeticException e) {
       throw new NoSuchPlanException(planId);
