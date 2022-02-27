@@ -300,7 +300,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
               .getJsonObject("plan_by_pk")
               .getJsonNumber("id")
               .longValueExact());
-      if (id.equals(planId)) {
+      if (!id.equals(planId)) {
         throw exceptionFactory.get();
       }
     } catch (ClassCastException | ArithmeticException e) {
