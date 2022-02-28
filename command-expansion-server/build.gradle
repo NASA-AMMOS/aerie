@@ -8,9 +8,6 @@ node {
   download = true
 }
 
-task processResources {
-  // Currently does nothing, exists as a hook for `distributeSql`
-}
 
 task assemble(type: NpmTask) {
   dependsOn processResources
@@ -29,5 +26,6 @@ task build {
 //}
 
 task clean(type: Delete) {
+  dependsOn undoDistributeSql
   delete 'build', 'node_modules'
 }
