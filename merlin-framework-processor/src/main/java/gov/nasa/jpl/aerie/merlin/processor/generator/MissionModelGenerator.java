@@ -133,7 +133,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             .addSuperinterface(
                 ParameterizedTypeName.get(
                     ClassName.get(MissionModelFactory.class),
-                    ClassName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class),
+                    missionModel.getTypesName(),
                     missionModel.modelConfigurationType
                         .map($ -> ClassName.get($.declaration()))
                         .orElse(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class)),
@@ -153,14 +153,11 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 ClassName.get(missionModel.topLevelModel))),
                         "registrar",
                         Modifier.FINAL)
-                    .returns(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class))
+                    .returns(missionModel.getTypesName())
                     .addStatement(
-                        "$T.activityTypes.forEach($L::registerDirectiveType)",
+                        "return $T.register($L)",
                         missionModel.getTypesName(),
                         "registrar")
-                    .addStatement(
-                        "return $T.VOID",
-                        ClassName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class))
                     .build())
             .addMethod(
                 MethodSpec
@@ -183,7 +180,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
                     .addParameter(
-                        TypeName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class),
+                        missionModel.getTypesName(),
                         "registry",
                         Modifier.FINAL)
                     .addParameter(
