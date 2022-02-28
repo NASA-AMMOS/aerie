@@ -36,7 +36,7 @@ public final class MissionModelTest {
     private static MissionModelFacade makeMissionModel(final MissionModelBuilder builder, final SerializedValue config) {
         final var factory = new GeneratedMissionModelFactory();
         final var model = factory.instantiate(config, builder);
-        return new MissionModelFacade(builder.build(model, factory.getTaskSpecTypes()));
+        return new MissionModelFacade(builder.build(model, factory.getConfigurationType(), factory.getTaskSpecTypes()));
     }
 
     @AfterEach
