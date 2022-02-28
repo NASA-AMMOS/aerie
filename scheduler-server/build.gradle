@@ -23,8 +23,17 @@ task assembleSchedulingDSLCompiler(type: NpmTask) {
   inputs.dir('src')
 }
 
+task generateASTJsonSchema(type: NpmTask) {
+  dependsOn processResources
+  dependsOn npmInstall
+  args = ['run', 'generate-ast-schema']
+  inputs.files('package.json', 'package-lock.json', 'tsconfig.json')
+  inputs.dir('src')
+}
+
 assemble {
   dependsOn assembleSchedulingDSLCompiler
+  dependsOn generateASTJsonSchema
 }
 
 test {
@@ -39,7 +48,7 @@ test {
   }
 
   environment "PATH", "$System.env.PATH" + System.getProperty("path.separator") + projectDir.toPath().resolve(".gradle/nodejs").resolve("$nodeDir".trim()).resolve("bin")
-  environment "SCHEDULING_DSL_COMPILER_PATH", projectDir.toPath().resolve('scheduling-dsl-compiler/dist/main.js')
+  environment "SCHEDULING_DSL_COMPILER_PATH", projectDir.toPath().resolve('scheduling-dsl-compiler/build/main.js')
 }
 
 application {
