@@ -20,11 +20,12 @@ import gov.nasa.jpl.aerie.scheduler.server.services.CachedSchedulerService;
 import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
 import gov.nasa.jpl.aerie.scheduler.server.services.LocalSpecificationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
+import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingGoalDSLCompilationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.SynchronousSchedulerAgent;
-import gov.nasa.jpl.aerie.scheduler.server.services.UncachedSchedulerService;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 
@@ -47,7 +48,17 @@ public final class SchedulerAppDriver {
   public static void main(final String[] args) {
     //load the service configuration options
     final var config = loadConfiguration();
-    final var stores = loadStores(config);
+
+    final SchedulingGoalDSLCompilationService schedulingGoalDSLCompilationService;
+    try {
+      schedulingGoalDSLCompilationService = new SchedulingGoalDSLCompilationService();
+    } catch (SchedulingGoalDSLCompilationService.SchedulingGoalDSLCompilationException | IOException e) {
+      throw new Error("Failed to start SchedulingGoalDSLCompilationService", e);
+    }
+
+    Runtime.getRuntime().addShutdownHook(new Thread(schedulingGoalDSLCompilationService::close));
+
+    final var stores = loadStores(config, schedulingGoalDSLCompilationService);
 
     //create objects in each service abstraction layer (mirroring MerlinApp)
     final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI());
@@ -77,7 +88,9 @@ public final class SchedulerAppDriver {
 
   private record Stores(SpecificationRepository specifications, ResultsCellRepository results) { }
 
-  private static Stores loadStores(final AppConfiguration config) {
+  private static Stores loadStores(
+      final AppConfiguration config,
+      final SchedulingGoalDSLCompilationService schedulingGoalDSLCompilationService) {
     final var store = config.store();
     if (store instanceof final PostgresStore pgStore) {
       final var pgDataSource = new PGDataSource();
@@ -94,7 +107,7 @@ public final class SchedulerAppDriver {
       final var hikariDataSource = new HikariDataSource(hikariConfig);
 
       return new Stores(
-          new PostgresSpecificationRepository(hikariDataSource),
+          new PostgresSpecificationRepository(hikariDataSource, schedulingGoalDSLCompilationService),
           new PostgresResultsCellRepository(hikariDataSource));
     } else if (store instanceof InMemoryStore) {
       final var inMemorySchedulerRepository = new InMemorySpecificationRepository();

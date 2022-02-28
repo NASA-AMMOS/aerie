@@ -15,16 +15,20 @@ import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.services.RevisionData;
+import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingGoalDSLCompilationService;
 
 import javax.sql.DataSource;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.stream.Collectors;
 
 public final class PostgresSpecificationRepository implements SpecificationRepository {
   private final DataSource dataSource;
+  private final SchedulingGoalDSLCompilationService schedulingGoalDSLCompilationService;
 
-  public PostgresSpecificationRepository(final DataSource dataSource) {
+  public PostgresSpecificationRepository(final DataSource dataSource, final SchedulingGoalDSLCompilationService schedulingGoalDSLCompilationService) {
     this.dataSource = dataSource;
+    this.schedulingGoalDSLCompilationService = schedulingGoalDSLCompilationService;
   }
 
   @Override
@@ -40,7 +44,7 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
         final var goals = getSpecificationGoalsAction
             .get(specificationId.id())
             .stream()
-            .map(PostgresSpecificationRepository::buildGoalRecord)
+            .map((PostgresGoalRecord pgGoal) -> buildGoalRecord(pgGoal, this.schedulingGoalDSLCompilationService))
             .collect(Collectors.toList());
 
         return new Specification(
@@ -75,24 +79,38 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
     }
   }
 
-  private static GoalRecord buildGoalRecord(final PostgresGoalRecord pgGoal) {
+  private static GoalRecord buildGoalRecord(final PostgresGoalRecord pgGoal, final SchedulingGoalDSLCompilationService schedulingGoalDSLCompilationService) {
+    final SchedulingGoalDSLCompilationService.GoalDefinition goalDefinition;
+    try {
+       goalDefinition = schedulingGoalDSLCompilationService.compileSchedulingGoalDSL(
+          pgGoal.definition(),
+          "goals don't have names?");
+    } catch (SchedulingGoalDSLCompilationService.SchedulingGoalDSLCompilationException | IOException e) {
+      e.printStackTrace();
+      throw new Error("");
+    }
     final var goalId = new GoalId(pgGoal.id());
 
+    final var goal = goalOfGoalDefinition(goalDefinition, pgGoal.definition());
+
+    return new GoalRecord(goalId, goal);
+  }
+
+  private static CardinalityGoal goalOfGoalDefinition(final SchedulingGoalDSLCompilationService.GoalDefinition goalDefinition, String merlinsightRuleName) {
     // TODO: WORKAROUND
     //       At this time we are unable to pull goal definitions from postgres
     //       As a workaround we are providing goal IDs and names and the
     //       scheduler agent will load the actual goal definitions from a JAR by name
-    final var goalDefinition = new CardinalityGoal.Builder()
+    final var goal = new CardinalityGoal.Builder()
         .inPeriod(ActivityExpression.ofType(new ActivityType("")))
         .thereExistsOne(
             new ActivityCreationTemplate.Builder()
                 .ofType(new ActivityType(""))
                 .build())
-        .named(pgGoal.definition())
+        .named(merlinsightRuleName)
         .forAllTimeIn(Window.at(Duration.SECONDS))
         .owned(ChildCustody.Jointly)
         .build();
-
-    return new GoalRecord(goalId, goalDefinition);
+    return goal;
   }
 }

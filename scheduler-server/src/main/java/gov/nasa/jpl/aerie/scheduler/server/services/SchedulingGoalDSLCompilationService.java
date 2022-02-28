@@ -49,7 +49,7 @@ public class SchedulingGoalDSLCompilationService {
     this.nodeProcess.destroy();
   }
 
-  record GoalDefinition(String kind, WindowExpression windowExpression, ActivityTemplate activityTemplate, List<Integer> rangeToGenerate) {}
+  public record GoalDefinition(String kind, WindowExpression windowExpression, ActivityTemplate activityTemplate, List<Integer> rangeToGenerate) {}
 
   record WindowExpression(String kind) {}
   record ActivityTemplate(String name, String activityType, Map<String, SerializedValue> arguments) {}
@@ -148,8 +148,6 @@ public class SchedulingGoalDSLCompilationService {
   private record ActivityTypeCode(String declaration, String implementation) {}
 
   private static ActivityTypeCode getActivityTypeInformation(ActivityType activityType) {
-    // TODO handle args
-
     return new ActivityTypeCode(
         String.format("interface %s extends ActivityTemplate {}\n", activityType.name()),
         String.format("""
