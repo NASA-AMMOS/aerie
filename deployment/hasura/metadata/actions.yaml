@@ -15,6 +15,10 @@ actions:
   definition:
     kind: ""
     handler: http://aerie_merlin:27183/resourceTypes
+- name: schedule
+  definition:
+    kind: ""
+    handler: http://aerie_scheduler:27193/schedule
 - name: simulate
   definition:
     kind: ""
@@ -30,6 +34,17 @@ actions:
 custom_types:
   enums:
   - name: MerlinSimulationStatus
+    values:
+    - description: null
+      is_deprecated: null
+      value: complete
+    - description: null
+      is_deprecated: null
+      value: failed
+    - description: null
+      is_deprecated: null
+      value: incomplete
+  - name: SchedulingStatus
     values:
     - description: null
       is_deprecated: null
