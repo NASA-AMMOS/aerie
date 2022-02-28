@@ -27,7 +27,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
@@ -261,16 +260,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     "model",
                                     "executor")
                                 .build()))
-                    .build())
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("getParameters")
-                    .addModifiers(Modifier.PUBLIC)
-                    .addAnnotation(Override.class)
-                    .returns(ParameterizedTypeName.get(List.class, Parameter.class))
-                    .addStatement(
-                        "return getConfigurationType().map(configType -> configType.getParameters()).orElseGet(() -> $T.of())",
-                        List.class)
                     .build())
             .build();
 
