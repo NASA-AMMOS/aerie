@@ -142,9 +142,9 @@ public final class MissionModelFacade {
   }
 
   public static final class Unconfigured<Model> {
-    private final MissionModelFactory<Model> factory;
+    private final MissionModelFactory<?, Model> factory;
 
-    public Unconfigured(final MissionModelFactory<Model> factory) {
+    public Unconfigured(final MissionModelFactory<?, Model> factory) {
       this.factory = factory;
     }
 

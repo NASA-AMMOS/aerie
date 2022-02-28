@@ -133,6 +133,9 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             .addSuperinterface(
                 ParameterizedTypeName.get(
                     ClassName.get(MissionModelFactory.class),
+                    missionModel.modelConfigurationType
+                        .map($ -> ClassName.get($.declaration()))
+                        .orElse(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class)),
                     ParameterizedTypeName.get(
                         ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                         ClassName.get(missionModel.topLevelModel))))
