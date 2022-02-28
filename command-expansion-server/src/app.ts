@@ -47,29 +47,29 @@ app.put("/dictionary", async (req, res) => {
       returning id;
     `;
 
-    const { rowCount, rows } = await db.query(sqlExpression, [
+    const { rows } = await db.query(sqlExpression, [
       path,
       parsedDictionary.header.mission_name,
       parsedDictionary.header.version,
     ]);
 
-    const [row] = rows;
-    const id = row ? row.id : null;
 
-    if (rowCount > 0) {
-      res.status(200).json({
-        id: id,
-      });
-    } else {
+
+    if (rows.length < 0) {
+      console.error(`POST /dictionary: No command dictionary was updated in the database`);
       res.status(500).send(`POST /dictionary: No command dictionary was updated in the database`);
+      return;
     }
+    const id = rows[0];
+    res.status(200).json({ id });
+    return;
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).send(`POST /dictionary Command Dictionary upload failed: \n${err}`);
+    return;
   }
 });
 
 app.listen(PORT, () => {
   console.log(`connected to port ${PORT}`);
-  //main();
 });
