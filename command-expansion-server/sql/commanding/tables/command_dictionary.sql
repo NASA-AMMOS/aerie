@@ -6,7 +6,8 @@ create table command_dictionary (
   version text not null,
 
   constraint command_dictionary_primary_key
-      primary key (id)
+      primary key (id),
+  constraint pair unique (mission,version)
 );
 
 comment on table command_dictionary is e''
