@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 public interface TaskSpecType<Model, Specification, Return> {
-  String getName();
   List<Parameter> getParameters();
   List<String> getRequiredParameters();
 

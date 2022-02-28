@@ -593,7 +593,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             MethodSpec
                 .methodBuilder("getName")
                 .addModifiers(Modifier.PUBLIC)
-                .addAnnotation(Override.class)
                 .returns(String.class)
                 .addStatement("return $S", exportType.name())
                 .build())

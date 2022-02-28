@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 public interface ConfigurationType<Config> {
-  String getName();
   List<Parameter> getParameters();
   List<String> getRequiredParameters();
 
