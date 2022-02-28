@@ -133,12 +133,35 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             .addSuperinterface(
                 ParameterizedTypeName.get(
                     ClassName.get(MissionModelFactory.class),
+                    ClassName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class),
                     missionModel.modelConfigurationType
                         .map($ -> ClassName.get($.declaration()))
                         .orElse(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class)),
                     ParameterizedTypeName.get(
                         ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                         ClassName.get(missionModel.topLevelModel))))
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("buildRegistry")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addAnnotation(Override.class)
+                    .addParameter(
+                        ParameterizedTypeName.get(
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeRegistrar.class),
+                            ParameterizedTypeName.get(
+                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                                ClassName.get(missionModel.topLevelModel))),
+                        "registrar",
+                        Modifier.FINAL)
+                    .returns(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class))
+                    .addStatement(
+                        "$T.activityTypes.forEach($L::registerDirectiveType)",
+                        missionModel.getTypesName(),
+                        "registrar")
+                    .addStatement(
+                        "return $T.VOID",
+                        ClassName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class))
+                    .build())
             .addMethod(
                 MethodSpec
                     .methodBuilder("getConfigurationType")

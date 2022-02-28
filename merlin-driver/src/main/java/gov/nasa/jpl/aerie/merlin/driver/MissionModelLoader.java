@@ -17,7 +17,7 @@ import java.nio.file.Path;
 import java.util.jar.JarFile;
 
 public final class MissionModelLoader {
-    public static MissionModelFactory<?, ?> loadMissionModelFactory(final Path path, final String name, final String version)
+    public static MissionModelFactory<?, ?, ?> loadMissionModelFactory(final Path path, final String name, final String version)
         throws MissionModelLoadException
     {
         final var service = loadMissionModelProvider(path, name, version);
@@ -33,10 +33,10 @@ public final class MissionModelLoader {
         return loadMissionModel(missionModelConfig, factory, builder);
     }
 
-    private static <Config, Model>
+    private static <Registry, Config, Model>
     MissionModel<Model> loadMissionModel(
         final SerializedValue missionModelConfig,
-        final MissionModelFactory<Config, Model> factory,
+        final MissionModelFactory<Registry, Config, Model> factory,
         final MissionModelBuilder builder
     ) {
         try {
