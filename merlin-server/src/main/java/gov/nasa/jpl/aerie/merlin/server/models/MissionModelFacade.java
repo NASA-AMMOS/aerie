@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
@@ -143,16 +144,18 @@ public final class MissionModelFacade {
 
   public static final class Unconfigured<Model> {
     private final MissionModelFactory<?, ?, Model> factory;
+    private final DirectiveTypeRegistry<?, Model> registry;
 
     public Unconfigured(final MissionModelFactory<?, ?, Model> factory) {
       this.factory = factory;
+      this.registry = DirectiveTypeRegistry.extract(this.factory);
     }
 
     public Map<String, ActivityType> getActivityTypes()
     throws MissionModelFacade.MissionModelContractException
     {
       final var activityTypes = new HashMap<String, ActivityType>();
-      factory.getTaskSpecTypes().forEach((name, specType) -> {
+      this.registry.taskSpecTypes().forEach((name, specType) -> {
         activityTypes.put(name, new ActivityType(name, specType.getParameters(), specType.getRequiredParameters(), specType.getReturnValueSchema()));
       });
       return activityTypes;
@@ -162,7 +165,7 @@ public final class MissionModelFacade {
     throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.MissionModelContractException
     {
       final var specType = Optional
-          .ofNullable(factory.getTaskSpecTypes().get(typeName))
+          .ofNullable(this.registry.taskSpecTypes().get(typeName))
           .orElseThrow(MissionModelFacade.NoSuchActivityTypeException::new);
 
       return new ActivityType(typeName, specType.getParameters(), specType.getRequiredParameters(), specType.getReturnValueSchema());

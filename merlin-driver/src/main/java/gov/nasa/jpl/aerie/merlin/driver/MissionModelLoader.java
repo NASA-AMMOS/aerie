@@ -44,8 +44,9 @@ public final class MissionModelLoader {
                 missionModelConfig.asMap().orElseThrow(ConfigurationType.UnconstructableConfigurationException::new);
 
             final var config = factory.getConfigurationType().instantiate(serializedConfigMap);
+            final var registry = DirectiveTypeRegistry.extract(factory);
             final var model = factory.instantiate(config, builder);
-            return builder.build(model, factory.getConfigurationType(), factory.getTaskSpecTypes());
+            return builder.build(model, factory.getConfigurationType(), registry.taskSpecTypes());
         } catch (final ConfigurationType.UnconstructableConfigurationException ex) {
             throw new MissionModelInstantiationException(ex);
         }

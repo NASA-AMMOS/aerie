@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.models;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
 import gov.nasa.jpl.aerie.foomissionmodel.Configuration;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
+import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.framework.VoidEnum;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
@@ -33,8 +34,9 @@ public final class MissionModelTest {
 
     private static MissionModelFacade makeMissionModel(final MissionModelBuilder builder, final Configuration config) {
         final var factory = new GeneratedMissionModelFactory();
+        final var registry = DirectiveTypeRegistry.extract(factory);
         final var model = factory.instantiate(config, builder);
-        return new MissionModelFacade(builder.build(model, factory.getConfigurationType(), factory.getTaskSpecTypes()));
+        return new MissionModelFacade(builder.build(model, factory.getConfigurationType(), registry.taskSpecTypes()));
     }
 
     @AfterEach

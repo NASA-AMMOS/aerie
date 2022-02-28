@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.foomissionmodel;
 
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
@@ -29,8 +30,9 @@ public class SimulateMapSchedule {
   private static MissionModel<RootModel<Mission>>
   makeMissionModel(final MissionModelBuilder builder, final Configuration config) {
     final var factory = new GeneratedMissionModelFactory();
+    final var registry = DirectiveTypeRegistry.extract(factory);
     final var model = factory.instantiate(config, builder);
-    return builder.build(model, factory.getConfigurationType(), factory.getTaskSpecTypes());
+    return builder.build(model, factory.getConfigurationType(), registry.taskSpecTypes());
   }
 
   private static
