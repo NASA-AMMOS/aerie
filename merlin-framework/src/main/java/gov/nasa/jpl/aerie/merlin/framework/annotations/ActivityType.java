@@ -15,7 +15,7 @@ public @interface ActivityType {
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.TYPE)
   @interface WithMapper {
-    Class<? extends ActivityMapper<?>> value();
+    Class<? extends ActivityMapper<?, ?, ?>> value();
   }
 
   enum Executor { Threaded, Replaying }
