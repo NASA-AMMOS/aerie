@@ -426,6 +426,8 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
   public JavaFile generateActivityTypes(final MissionModelRecord missionModel) {
     final var typeName = missionModel.getTypesName();
 
+    // Unfortunately, JavaPoet 1.13.0 doesn't support generating Java 16 record definitions,
+    // so we have to do the hard work of generating fields and a constructor ourselves.
     final var typeSpec =
         TypeSpec
             .classBuilder(typeName)
@@ -435,6 +437,86 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
                     .build())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+            .addFields(
+                missionModel.activityTypes
+                    .stream()
+                    .map(activityType -> FieldSpec
+                        .builder(
+                            ParameterizedTypeName.get(
+                                ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId.class),
+                                ClassName.get(activityType.declaration()),
+                                activityType
+                                    .effectModel()
+                                    .flatMap(EffectModelRecord::returnType)
+                                    .map(TypeName::get)
+                                    .orElse(TypeName.get(VoidEnum.class))
+                                    .box()),
+                            activityType.declaration().getQualifiedName().toString().replace(".", "_"),
+                            Modifier.PUBLIC, Modifier.FINAL)
+                        .build())
+                    .toList())
+            .addMethod(
+                MethodSpec
+                    .constructorBuilder()
+                    .addModifiers(Modifier.PUBLIC)
+                    .addParameters(
+                        missionModel.activityTypes
+                            .stream()
+                            .map(activityType -> ParameterSpec
+                                .builder(
+                                    ParameterizedTypeName.get(
+                                        ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId.class),
+                                        ClassName.get(activityType.declaration()),
+                                        activityType
+                                            .effectModel()
+                                            .flatMap(EffectModelRecord::returnType)
+                                            .map(TypeName::get)
+                                            .orElse(TypeName.get(VoidEnum.class))
+                                            .box()),
+                                    activityType.declaration().getQualifiedName().toString().replace(".", "_"),
+                                    Modifier.FINAL)
+                                .build())
+                            .toList())
+                    .addCode(
+                        missionModel.activityTypes
+                            .stream()
+                            .map(activityType -> CodeBlock
+                                .builder()
+                                .addStatement(
+                                    "this.$L = $L",
+                                    activityType.declaration().getQualifiedName().toString().replace(".", "_"),
+                                    activityType.declaration().getQualifiedName().toString().replace(".", "_")))
+                            .reduce((x, y) -> x.add(y.build()))
+                            .orElse(CodeBlock.builder())
+                            .build())
+                    .build())
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("register")
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                    .addParameter(
+                        ParameterizedTypeName.get(
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeRegistrar.class),
+                            ParameterizedTypeName.get(
+                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                                ClassName.get(missionModel.topLevelModel))),
+                        "registrar",
+                        Modifier.FINAL)
+                    .returns(typeName)
+                    .addStatement(
+                        "return new $T(\n$L)",
+                        typeName,
+                        missionModel.activityTypes
+                            .stream()
+                            .map(activityType -> CodeBlock.builder().add(
+                                "$L.registerDirectiveType($S, new $T())",
+                                "registrar",
+                                activityType.name(),
+                                activityType.mapper().name))
+                            .reduce((x, y) -> x.add(",\n$L", y.build()))
+                            .orElse(CodeBlock.builder())
+                            .build())
+                    .build())
             .addField(
                 FieldSpec
                     .builder(
