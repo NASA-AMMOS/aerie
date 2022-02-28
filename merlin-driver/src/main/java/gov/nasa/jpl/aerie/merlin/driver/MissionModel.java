@@ -61,7 +61,7 @@ public final class MissionModel<Model> {
   public Directive<Model, ?, ?> instantiateDirective(final SerializedActivity specification)
   throws TaskSpecType.UnconstructableTaskSpecException
   {
-    return Directive.instantiate(this.taskSpecTypes.get(specification.getTypeName()), specification.getArguments());
+    return Directive.instantiate(this.taskSpecTypes.get(specification.getTypeName()), specification);
   }
 
   public Task<Unit> getDaemon() {
