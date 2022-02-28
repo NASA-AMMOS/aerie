@@ -16,7 +16,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
 
 public final class MissionModel<Model> {
@@ -25,7 +24,7 @@ public final class MissionModel<Model> {
   private final Map<String, Resource<?>> resources;
   private final List<SerializableTopic<?>> topics;
   private final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes;
-  private final Optional<ConfigurationType<?>> configurationType;
+  private final ConfigurationType<?> configurationType;
   private final List<Initializer.TaskFactory<?>> daemons;
 
   public MissionModel(
@@ -34,7 +33,7 @@ public final class MissionModel<Model> {
       final Map<String, Resource<?>> resources,
       final List<SerializableTopic<?>> topics,
       final List<Initializer.TaskFactory<?>> daemons,
-      final Optional<ConfigurationType<?>> configurationType,
+      final ConfigurationType<?> configurationType,
       final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes)
   {
     this.model = Objects.requireNonNull(model);
@@ -50,7 +49,7 @@ public final class MissionModel<Model> {
     return this.model;
   }
 
-  public Optional<ConfigurationType<?>> getConfigurationType() {
+  public ConfigurationType<?> getConfigurationType() {
     return this.configurationType;
   }
 

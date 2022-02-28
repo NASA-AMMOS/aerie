@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 
 public final class MissionModelBuilder implements Initializer {
@@ -158,7 +157,7 @@ public final class MissionModelBuilder implements Initializer {
           this.resources,
           this.topics,
           this.daemons,
-          Optional.ofNullable(configurationType),
+          configurationType,
           taskSpecTypes);
 
       MissionModelBuilder.this.state = new BuiltState();
