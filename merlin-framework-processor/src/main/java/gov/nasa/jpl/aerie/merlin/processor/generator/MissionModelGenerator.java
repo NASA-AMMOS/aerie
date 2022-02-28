@@ -589,13 +589,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         .build())
                 .addCode(computedAttributesCodeBlocks.map(ComputedAttributesCodeBlocks::fieldInit).orElse(CodeBlock.of("")))
                 .build())
-        .addMethod(
-            MethodSpec
-                .methodBuilder("getName")
-                .addModifiers(Modifier.PUBLIC)
-                .returns(String.class)
-                .addStatement("return $S", exportType.name())
-                .build())
         .addMethod(mapperMethodMaker.makeGetRequiredParametersMethod())
         .addMethod(mapperMethodMaker.makeGetParametersMethod())
         .addMethod(mapperMethodMaker.makeGetArgumentsMethod())
@@ -653,6 +646,13 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
     return generateCommonMapperMethods(missionModel, activityType).map(typeSpec -> typeSpec.toBuilder()
         .addMethod(makeGetReturnValueSchemaMethod())
         .addMethod(makeSerializeReturnValueMethod(activityType))
+        .addMethod(
+            MethodSpec
+                .methodBuilder("getName")
+                .addModifiers(Modifier.PUBLIC)
+                .returns(String.class)
+                .addStatement("return $S", activityType.name())
+                .build())
         .addMethod(
             MethodSpec
                 .methodBuilder("createTask")
