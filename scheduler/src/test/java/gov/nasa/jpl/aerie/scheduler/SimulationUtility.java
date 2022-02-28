@@ -14,7 +14,7 @@ public final class SimulationUtility {
   private static MissionModel<?> makeMissionModel(final MissionModelBuilder builder, final SerializedValue config) {
     final var factory = new gov.nasa.jpl.aerie.banananation.generated.GeneratedMissionModelFactory();
     final var model = factory.instantiate(config, builder);
-    return builder.build(model, factory.getTaskSpecTypes());
+    return builder.build(model, factory.getConfigurationType(), factory.getTaskSpecTypes());
   }
 
   public static MissionModel<?>
@@ -24,7 +24,7 @@ public final class SimulationUtility {
     final var factory = new gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory();
     final var builder = new MissionModelBuilder();
     final var model = factory.instantiate(serializedConfig, builder);
-    return builder.build(model, factory.getTaskSpecTypes());
+    return builder.build(model, factory.getConfigurationType(), factory.getTaskSpecTypes());
   }
 
 

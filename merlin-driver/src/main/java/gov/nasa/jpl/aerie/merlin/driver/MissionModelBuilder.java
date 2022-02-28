@@ -65,21 +65,21 @@ public final class MissionModelBuilder implements Initializer {
     return this.state.daemon(task);
   }
 
-  public MissionModelBuilder withConfigurationType(final ConfigurationType<?> configurationType) {
-    this.state = state.withConfigurationType(configurationType);
-    return this;
-  }
-
   public <Model>
-  MissionModel<Model> build(final Model model, final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes) {
-    return this.state.build(model, taskSpecTypes);
+  MissionModel<Model> build(
+      final Model model,
+      final ConfigurationType<?> configurationType,
+      final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes)
+  {
+    return this.state.build(model, configurationType, taskSpecTypes);
   }
 
   private interface MissionModelBuilderState extends Initializer {
-    MissionModelBuilderState withConfigurationType(ConfigurationType<?> configurationType);
-
-    <Model>
-    MissionModel<Model> build(Model model, Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes);
+    <Model> MissionModel<Model>
+    build(
+        Model model,
+        ConfigurationType<?> configurationType,
+        Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes);
   }
 
   private final class UnbuiltState implements MissionModelBuilderState {
@@ -88,8 +88,6 @@ public final class MissionModelBuilder implements Initializer {
     private final Map<String, Resource<?>> resources = new HashMap<>();
     private final List<TaskFactory<?>> daemons = new ArrayList<>();
     private final List<MissionModel.SerializableTopic<?>> topics = new ArrayList<>();
-
-    private ConfigurationType<?> configurationType;
 
     @Override
     public <CellType> CellType getInitialState(
@@ -148,14 +146,12 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
-    public MissionModelBuilderState withConfigurationType(final ConfigurationType<?> configurationType) {
-      this.configurationType = configurationType;
-      return this;
-    }
-
-    @Override
     public <Model>
-    MissionModel<Model> build(final Model model, final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes) {
+    MissionModel<Model> build(
+        final Model model,
+        final ConfigurationType<?> configurationType,
+        final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes)
+    {
       final var missionModel = new MissionModel<>(
           model,
           this.initialCells,
@@ -211,13 +207,12 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
-    public MissionModelBuilderState withConfigurationType(final ConfigurationType<?> configurationType) {
-      throw new IllegalStateException("Configuration type cannot be assigned after the schema is built");
-    }
-
-    @Override
     public <Model>
-    MissionModel<Model> build(final Model model, final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes) {
+    MissionModel<Model> build(
+        final Model model,
+        final ConfigurationType<?> configurationType,
+        final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes)
+    {
       throw new IllegalStateException("Cannot build a builder multiple times");
     }
   }
