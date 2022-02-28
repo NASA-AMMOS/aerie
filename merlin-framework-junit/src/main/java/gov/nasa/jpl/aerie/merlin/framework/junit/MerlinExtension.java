@@ -113,7 +113,7 @@ public final class MerlinExtension<Registry, Model> implements BeforeAllCallback
     public MissionModelBuilder builder;
     public MerlinTestContext<Registry, Model> context;
 
-    public MissionModel<RootModel<Model>> missionModel = null;
+    public MissionModel<RootModel<Registry, Model>> missionModel = null;
 
     public State(final MissionModelBuilder builder) {
       this.builder = Objects.requireNonNull(builder);

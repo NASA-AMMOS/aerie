@@ -6,7 +6,7 @@ import java.util.concurrent.Executors;
 /**
  * The top-level mission model managed by the Merlin framework.
  */
-public record RootModel<Model>(Model model, ExecutorService executor) implements AutoCloseable {
+public record RootModel<Registry, Model>(Model model, ExecutorService executor) implements AutoCloseable {
   public RootModel {}
 
   public static ExecutorService makeExecutorService() {

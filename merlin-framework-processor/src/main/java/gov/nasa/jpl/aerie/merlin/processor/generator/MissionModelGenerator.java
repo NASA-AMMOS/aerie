@@ -139,6 +139,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         .orElse(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class)),
                     ParameterizedTypeName.get(
                         ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                        missionModel.getTypesName(),
                         ClassName.get(missionModel.topLevelModel))))
             .addMethod(
                 MethodSpec
@@ -150,6 +151,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeRegistrar.class),
                             ParameterizedTypeName.get(
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                                missionModel.getTypesName(),
                                 ClassName.get(missionModel.topLevelModel))),
                         "registrar",
                         Modifier.FINAL)
@@ -196,6 +198,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .returns(
                         ParameterizedTypeName.get(
                             ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                            missionModel.getTypesName(),
                             ClassName.get(missionModel.topLevelModel)))
                     .addStatement(
                         "final var $L = new $T($L)",
@@ -224,9 +227,8 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 ClassName.get(missionModel.topLevelModel),
                                 "registrar"))
                     .addStatement(
-                        "return new $T<$T>($L, $L)",
+                        "return new $T<>($L, $L)",
                         gov.nasa.jpl.aerie.merlin.framework.RootModel.class,
-                        ClassName.get(missionModel.topLevelModel),
                         "model",
                         "executor")
                     .build())
@@ -483,6 +485,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeRegistrar.class),
                             ParameterizedTypeName.get(
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                                missionModel.getTypesName(),
                                 ClassName.get(missionModel.topLevelModel))),
                         "registrar",
                         Modifier.FINAL)
@@ -510,6 +513,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
                                 ParameterizedTypeName.get(
                                     ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                                    missionModel.getTypesName(),
                                     ClassName.get(missionModel.topLevelModel)),
                                 WildcardTypeName.subtypeOf(Object.class),
                                 WildcardTypeName.subtypeOf(Object.class))),
@@ -535,6 +539,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
                                 ParameterizedTypeName.get(
                                     ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                                    missionModel.getTypesName(),
                                     ClassName.get(missionModel.topLevelModel)),
                                 WildcardTypeName.subtypeOf(Object.class),
                                 WildcardTypeName.subtypeOf(Object.class))),
@@ -578,6 +583,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
           ClassName.get(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper.class),
           ParameterizedTypeName.get(
               ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+              missionModel.getTypesName(),
               ClassName.get(missionModel.topLevelModel)),
           ClassName.get(exportType.declaration()),
           computedAttributesCodeBlocks.get().typeName().box());
@@ -724,6 +730,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                 .addParameter(
                     ParameterizedTypeName.get(
                         ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                        missionModel.getTypesName(),
                         ClassName.get(missionModel.topLevelModel)),
                     "model",
                     Modifier.FINAL)
