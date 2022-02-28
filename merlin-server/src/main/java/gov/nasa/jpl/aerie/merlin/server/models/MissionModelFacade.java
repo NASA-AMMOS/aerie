@@ -174,7 +174,7 @@ public final class MissionModelFacade {
     }
 
     public List<Parameter> getParameters() {
-      return this.factory.getConfigurationType().map(ConfigurationType::getParameters).orElseGet(List::of);
+      return this.factory.getConfigurationType().getParameters();
     }
   }
 
