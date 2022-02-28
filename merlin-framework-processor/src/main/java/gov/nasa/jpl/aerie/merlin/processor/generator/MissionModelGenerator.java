@@ -142,22 +142,13 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
                     .returns(ParameterizedTypeName.get(
-                        ClassName.get(Optional.class),
-                        ParameterizedTypeName.get(
-                            ClassName.get(ConfigurationType.class),
-                            WildcardTypeName.subtypeOf(Object.class))))
-                    .addCode(
+                        ClassName.get(ConfigurationType.class),
+                        WildcardTypeName.subtypeOf(Object.class)))
+                    .addStatement(
+                        "return new $T()",
                         missionModel.modelConfigurationType
-                            .map(configType -> CodeBlock.builder() // If configuration is provided
-                                .addStatement(
-                                    "return $T.of(new $T())",
-                                    Optional.class,
-                                    configType.mapper().name))
-                            .orElseGet(() -> CodeBlock.builder() // If configuration is not provided
-                                .addStatement(
-                                    "return $T.empty()",
-                                    Optional.class))
-                        .build())
+                            .map(configType -> configType.mapper().name)
+                            .orElse(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.EmptyConfigurationType.class)))
                 .build())
             .addMethod(
                 MethodSpec

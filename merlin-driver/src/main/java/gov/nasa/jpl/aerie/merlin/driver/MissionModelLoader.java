@@ -39,9 +39,8 @@ public final class MissionModelLoader {
         final MissionModelBuilder builder
     ) {
         final var model = factory.instantiate(missionModelConfig, builder);
-        return factory.getConfigurationType()
-            .map(builder::withConfigurationType)
-            .orElse(builder)
+        return builder
+            .withConfigurationType(factory.getConfigurationType())
             .build(model, factory.getTaskSpecTypes());
     }
 
