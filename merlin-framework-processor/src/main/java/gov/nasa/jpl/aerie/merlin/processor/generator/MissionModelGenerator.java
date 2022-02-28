@@ -141,9 +141,10 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .methodBuilder("getConfigurationType")
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
-                    .returns(ParameterizedTypeName.get(
-                        ClassName.get(ConfigurationType.class),
-                        WildcardTypeName.subtypeOf(Object.class)))
+                    .returns(
+                        missionModel.modelConfigurationType
+                            .map(configType -> configType.mapper().name)
+                            .orElse(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.EmptyConfigurationType.class)))
                     .addStatement(
                         "return new $T()",
                         missionModel.modelConfigurationType
