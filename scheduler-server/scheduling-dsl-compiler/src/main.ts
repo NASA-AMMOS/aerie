@@ -1,33 +1,27 @@
-import * as fs from "fs";
-import ts from "typescript";
+import Piscina from 'piscina';
+import * as AST from './libs/scheduler-ast.js';
 
 async function main() {
-  const args = process.argv.slice(2)
-  const inFile = args[0]
-  console.assert(args[1] === "--outfile")
-  const outFile = args[2]
-  let compilerOptions = {
-    module: ts.ModuleKind.CommonJS,
-    target: ts.ScriptTarget.ES5,
-    sourceMap: true,
-  };
-  const transpiledProgram = ts.createProgram([inFile], compilerOptions);
-  const allDiagnostics = [
-    ...transpiledProgram.getSyntacticDiagnostics(),
-    ...transpiledProgram.getSemanticDiagnostics(),
-    ...transpiledProgram.getGlobalDiagnostics(),
-    ...transpiledProgram.getDeclarationDiagnostics(),
-    ...transpiledProgram.getOptionsDiagnostics(),
-    ...transpiledProgram.getConfigFileParsingDiagnostics()
-  ]
-  for (const diagnostic of allDiagnostics) {
-    console.log(`error TS${diagnostic.code}: ${diagnostic.messageText}`)
-  }
-  if (allDiagnostics.length > 0) {
-    process.exit(1)
-  }
-  const source = await fs.promises.readFile(inFile, 'utf8');
-  await fs.promises.writeFile(outFile, ts.transpileModule(source, {compilerOptions}).outputText)
+
+  const workerUrl = new URL('./worker.js', import.meta.url);
+
+  const piscina = new Piscina({
+    filename: workerUrl.href,
+  });
+
+  process.stdin.on("data", async (data: Buffer) => {
+    try {
+      const { source, filename } = JSON.parse(data.toString()) as { source: string, filename: string };
+      const result = await piscina.run({
+        source,
+        filename,
+      }) as Promise<{ ast: AST.GoalSpecifier }>;
+      process.stdout.write(JSON.stringify(result));
+    } catch (error: any) {
+      process.stderr.write(error.message + '\n');
+    }
+  });
+
 }
 
 void main();
