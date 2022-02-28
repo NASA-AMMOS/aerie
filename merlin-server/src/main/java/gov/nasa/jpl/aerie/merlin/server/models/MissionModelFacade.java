@@ -102,10 +102,7 @@ public final class MissionModelFacade {
   public List<String> validateConfiguration(final Map<String, SerializedValue> arguments)
   throws UnconfigurableMissionModelException, UnconstructableMissionModelConfigurationException
   {
-    final var configType = this.missionModel.getConfigurationType()
-        .orElseThrow(UnconfigurableMissionModelException::new);
-
-    return getValidationFailures(configType, arguments);
+    return getValidationFailures(this.missionModel.getConfigurationType(), arguments);
   }
 
   private <Config> List<String> getValidationFailures(
@@ -126,9 +123,7 @@ public final class MissionModelFacade {
   public Map<String, SerializedValue> getEffectiveArguments(final Map<String, SerializedValue> arguments)
   throws UnconfigurableMissionModelException, MissingArgumentsException, UnconstructableMissionModelConfigurationException
   {
-    final var configType = this.missionModel.getConfigurationType()
-        .orElseThrow(UnconfigurableMissionModelException::new);
-    return getEffectiveArguments(configType, arguments);
+    return getEffectiveArguments(this.missionModel.getConfigurationType(), arguments);
   }
 
   private static <Config> Map<String, SerializedValue> getEffectiveArguments(
