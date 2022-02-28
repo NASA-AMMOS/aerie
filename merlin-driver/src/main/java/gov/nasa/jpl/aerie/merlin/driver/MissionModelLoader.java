@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
+import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -38,8 +39,16 @@ public final class MissionModelLoader {
         final MissionModelFactory<Config, Model> factory,
         final MissionModelBuilder builder
     ) {
-        final var model = factory.instantiate(missionModelConfig, builder);
-        return builder.build(model, factory.getConfigurationType(), factory.getTaskSpecTypes());
+        try {
+            final var serializedConfigMap =
+                missionModelConfig.asMap().orElseThrow(ConfigurationType.UnconstructableConfigurationException::new);
+
+            final var config = factory.getConfigurationType().instantiate(serializedConfigMap);
+            final var model = factory.instantiate(config, builder);
+            return builder.build(model, factory.getConfigurationType(), factory.getTaskSpecTypes());
+        } catch (final ConfigurationType.UnconstructableConfigurationException ex) {
+            throw new MissionModelInstantiationException(ex);
+        }
     }
 
     public static MerlinPlugin loadMissionModelProvider(final Path path, final String name, final String version)
@@ -116,6 +125,12 @@ public final class MissionModelLoader {
                     name,
                     version),
                 cause);
+        }
+    }
+
+    public static final class MissionModelInstantiationException extends RuntimeException {
+        public MissionModelInstantiationException(final Throwable cause) {
+            super(cause);
         }
     }
 }

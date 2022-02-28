@@ -21,7 +21,6 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ConfigurationTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
@@ -177,7 +176,9 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
                     .addParameter(
-                        TypeName.get(gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class),
+                        missionModel.modelConfigurationType
+                            .map($ -> ClassName.get($.declaration()))
+                            .orElse(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class)),
                         "configuration",
                         Modifier.FINAL)
                     .addParameter(
@@ -188,7 +189,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         ParameterizedTypeName.get(
                             ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                             ClassName.get(missionModel.topLevelModel)))
-                    .addException(MissionModelFactory.MissionModelInstantiationException.class)
                     .addStatement(
                         "final var $L = new $T($L)",
                         "registrar",
@@ -199,61 +199,28 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         "executor",
                         gov.nasa.jpl.aerie.merlin.framework.RootModel.class)
                     .addCode("\n")
-                    .addCode(
-                        missionModel.modelConfigurationType
-                            .map(configType -> CodeBlock // If configuration is provided
-                                .builder()
-                                .beginControlFlow("try")
-                                .addStatement(
-                                    "final var $L = $L.asMap().orElseThrow(() -> new $T())",
-                                    "serializedArguments",
-                                    "configuration",
-                                    ConfigurationType.UnconstructableConfigurationException.class)
-                                .addStatement(
-                                    "final var $L = new $L().instantiate($L)",
-                                    "deserializedConfig",
-                                    configType.mapper().name,
-                                    "serializedArguments")
-                                .addStatement(
-                                    "final var $L = $T.initializing($L, $L, () -> new $T($L, $L))",
-                                    "model",
-                                    gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
-                                    "executor",
-                                    "builder",
-                                    ClassName.get(missionModel.topLevelModel),
-                                    "registrar",
-                                    "deserializedConfig")
-                                .addStatement(
-                                    "return new $T<$T>($L, $L)",
-                                    gov.nasa.jpl.aerie.merlin.framework.RootModel.class,
-                                    ClassName.get(missionModel.topLevelModel),
-                                    "model",
-                                    "executor")
-                                .nextControlFlow(
-                                    "catch (final $T ex)",
-                                    ConfigurationType.UnconstructableConfigurationException.class)
-                                .addStatement(
-                                    "throw new $T(ex)",
-                                    MissionModelFactory.MissionModelInstantiationException.class)
-                                .endControlFlow()
-                                .build())
-                            .orElseGet(() -> CodeBlock // If configuration is not provided
-                                .builder()
-                                .addStatement(
-                                    "final var $L = $T.initializing($L, $L, () -> new $T($L))",
-                                    "model",
-                                    gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
-                                    "executor",
-                                    "builder",
-                                    ClassName.get(missionModel.topLevelModel),
-                                    "registrar")
-                                .addStatement(
-                                    "return new $T<$T>($L, $L)",
-                                    gov.nasa.jpl.aerie.merlin.framework.RootModel.class,
-                                    ClassName.get(missionModel.topLevelModel),
-                                    "model",
-                                    "executor")
-                                .build()))
+                    .addStatement(
+                        "final var $L = $T.initializing($L, $L, () -> $L)",
+                        "model",
+                        gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
+                        "executor",
+                        "builder",
+                        (missionModel.modelConfigurationType.isPresent())
+                            ? CodeBlock.of(
+                                "new $T($L, $L)",
+                                ClassName.get(missionModel.topLevelModel),
+                                "registrar",
+                                "configuration")
+                            : CodeBlock.of(
+                                "new $T($L))",
+                                ClassName.get(missionModel.topLevelModel),
+                                "registrar"))
+                    .addStatement(
+                        "return new $T<$T>($L, $L)",
+                        gov.nasa.jpl.aerie.merlin.framework.RootModel.class,
+                        ClassName.get(missionModel.topLevelModel),
+                        "model",
+                        "executor")
                     .build())
             .build();
 

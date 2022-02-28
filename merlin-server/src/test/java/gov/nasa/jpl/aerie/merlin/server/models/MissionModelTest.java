@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.server.models;
 
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
 import gov.nasa.jpl.aerie.foomissionmodel.Configuration;
-import gov.nasa.jpl.aerie.foomissionmodel.generated.ConfigurationMapper;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.framework.VoidEnum;
@@ -28,12 +27,11 @@ public final class MissionModelTest {
     @BeforeEach
     public void initialize() throws MissionModelFacade.MissionModelContractException {
         final var configuration = new Configuration();
-        final var serializedConfig = SerializedValue.of(new ConfigurationMapper().getArguments(configuration));
-        this.missionModel = makeMissionModel(new MissionModelBuilder(), serializedConfig);
+        this.missionModel = makeMissionModel(new MissionModelBuilder(), configuration);
         this.unconfiguredMissionModel = new MissionModelFacade.Unconfigured<>(new GeneratedMissionModelFactory());
     }
 
-    private static MissionModelFacade makeMissionModel(final MissionModelBuilder builder, final SerializedValue config) {
+    private static MissionModelFacade makeMissionModel(final MissionModelBuilder builder, final Configuration config) {
         final var factory = new GeneratedMissionModelFactory();
         final var model = factory.instantiate(config, builder);
         return new MissionModelFacade(builder.build(model, factory.getConfigurationType(), factory.getTaskSpecTypes()));
