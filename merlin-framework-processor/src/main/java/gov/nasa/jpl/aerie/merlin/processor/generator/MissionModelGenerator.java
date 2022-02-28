@@ -666,14 +666,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         .build())
                 .addCode(computedAttributesCodeBlocks.map(ComputedAttributesCodeBlocks::fieldInit).orElse(CodeBlock.of("")))
                 .build())
-        .addMethod(
-            MethodSpec
-                .methodBuilder("getName")
-                .addModifiers(Modifier.PUBLIC)
-                .addAnnotation(Override.class)
-                .returns(String.class)
-                .addStatement("return $S", exportType.name())
-                .build())
         .addMethod(mapperMethodMaker.makeGetRequiredParametersMethod())
         .addMethod(mapperMethodMaker.makeGetParametersMethod())
         .addMethod(mapperMethodMaker.makeGetArgumentsMethod())

@@ -698,7 +698,7 @@ public final class SimulationEngine implements AutoCloseable {
       final var directiveTypeId = (DirectiveTypeRegistry.DirectiveTypeId<Input, Output>) rawDirectiveTypeId;
 
       final var directiveType = this.model.getDirectiveTypes().lookup(directiveTypeId);
-      final var directive = new Directive<>(directiveType, input);
+      final var directive = new Directive<>(directiveType, directiveTypeId.name, input);
 
       final var task = TaskId.generate();
       SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state));

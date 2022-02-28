@@ -10,11 +10,6 @@ import java.util.Map;
 
 public final class EmptyConfigurationType implements ConfigurationType<VoidEnum> {
   @Override
-  public String getName() {
-    return "empty";
-  }
-
-  @Override
   public List<Parameter> getParameters() {
     return List.of();
   }
