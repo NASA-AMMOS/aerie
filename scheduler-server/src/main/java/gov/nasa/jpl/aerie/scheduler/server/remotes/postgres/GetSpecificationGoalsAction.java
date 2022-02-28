@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -20,8 +19,8 @@ import java.util.List;
             g.definition,
             g.revision
           from scheduling_specification_goals as s
-            left join scheduling_goals as g
-            on s.goal_id = g.id ),
+            left join scheduling_goal as g
+            on s.goal_id = g.id )
     select
       g.goal_id,
       g.definition,

@@ -4,15 +4,19 @@ import javax.sql.DataSource;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Optional;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchRequestException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.ResultsCellRepository;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
-import org.apache.commons.lang3.NotImplementedException;
+import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults.GoalResult;
 
 public final class PostgresResultsCellRepository implements ResultsCellRepository {
   private final DataSource dataSource;
@@ -28,7 +32,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final var spec = getSpecification(connection, specificationId);
       final var request = createRequest(connection, spec);
 
-      return new PostgresResultsCell(this.dataSource, request);
+      return new PostgresResultsCell(
+          this.dataSource,
+          new SpecificationId(request.specificationId()),
+          request.specificationRevision(),
+          request.analysisId());
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get schedule specification", ex);
     } catch (final NoSuchSpecificationException ex) {
@@ -43,7 +51,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final var spec = getSpecification(connection, specificationId);
       final var request = getRequest(connection, specificationId, spec.revision());
 
-      return Optional.of(new PostgresResultsCell(this.dataSource, request));
+      return Optional.of(new PostgresResultsCell(
+          this.dataSource,
+          new SpecificationId(request.specificationId()),
+          request.specificationRevision(),
+          request.analysisId()));
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get schedule specification", ex);
     } catch (final NoSuchSpecificationException | NoSuchRequestException ex) {
@@ -58,7 +70,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       throw new Error("Unable to deallocate results cell of unknown type");
     }
     try (final var connection = this.dataSource.getConnection()) {
-      deleteRequest(connection, cell.request);
+      deleteRequest(connection, cell.specId, cell.specRevision);
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to delete scheduling request", ex);
     }
@@ -96,53 +108,184 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
   private static void deleteRequest(
       final Connection connection,
-      final RequestRecord requestRecord
+      final SpecificationId specId,
+      final long specRevision
   ) throws SQLException {
     try (final var deleteRequestAction = new DeleteRequestAction(connection)) {
-      deleteRequestAction.apply(requestRecord.specificationId(), requestRecord.analysisId());
+      deleteRequestAction.apply(specId.id(), specRevision);
+    }
+  }
+
+  private static void cancelRequest(
+      final Connection connection,
+      final SpecificationId specId,
+      final long specRevision
+  ) throws SQLException, NoSuchRequestException
+  {
+    try (final var cancelSchedulingRequestAction = new CancelSchedulingRequestAction(connection)) {
+      cancelSchedulingRequestAction.apply(specId.id(), specRevision);
+    } catch (final FailedUpdateException ex) {
+      throw new NoSuchRequestException(specId, specRevision);
+    }
+  }
+
+  private static void failRequest(
+       final Connection connection,
+       final SpecificationId specId,
+       final long specRevision,
+       final String reason
+  ) throws SQLException {
+    try (final var setRequestStateAction = new SetRequestStateAction(connection)) {
+      setRequestStateAction.apply(
+          specId.id(),
+          specRevision,
+          RequestRecord.Status.FAILED,
+          reason);
+    }
+  }
+
+  private static void succeedRequest(
+      final Connection connection,
+      final SpecificationId specId,
+      final long specRevision,
+      final long analysisId,
+      final ScheduleResults results
+  ) throws SQLException {
+    postResults(connection, analysisId, results);
+    try (final var setRequestStateAction = new SetRequestStateAction(connection)) {
+      setRequestStateAction.apply(
+          specId.id(),
+          specRevision,
+          RequestRecord.Status.SUCCESS,
+          null);
+    }
+  }
+
+  private static void postResults(
+      final Connection connection,
+      final long analysisId,
+      final ScheduleResults results
+  ) throws SQLException {
+    final var numGoals = results.goalResults().size();
+    final var goalSatisfaction = new HashMap<GoalId, Boolean>(numGoals);
+    final var createdActivities = new HashMap<GoalId, Collection<ActivityInstanceId>>(numGoals);
+    final var satisfyingActivities = new HashMap<GoalId, Collection<ActivityInstanceId>>(numGoals);
+
+    results.goalResults().forEach((goalId, result) -> {
+      goalSatisfaction.put(goalId, result.satisfied());
+      createdActivities.put(goalId, result.createdActivities());
+      satisfyingActivities.put(goalId, result.satisfyingActivities());
+    });
+
+    try (
+        final var insertGoalSatisfactionAction = new InsertGoalSatisfactionAction(connection);
+        final var insertCreatedActivitiesAction = new InsertCreatedActivitiesAction(connection);
+        final var insertSatisfyingActivitiesAction = new InsertSatisfyingActivitiesAction(connection)
+    ) {
+      insertGoalSatisfactionAction.apply(analysisId, goalSatisfaction);
+      insertCreatedActivitiesAction.apply(analysisId, createdActivities);
+      insertSatisfyingActivitiesAction.apply(analysisId, satisfyingActivities);
+    }
+  }
+
+  private static ScheduleResults getResults(
+      final Connection connection,
+      final long analysisId
+  ) throws SQLException {
+    try (
+        final var getGoalSatisfactionAction = new GetGoalSatisfactionAction(connection);
+        final var getCreatedActivitiesAction = new GetCreatedActivitiesAction(connection);
+        final var getSatisfyingActivitiesAction = new GetSatisfyingActivitiesAction(connection)
+    ) {
+      final var goalSatisfaction = getGoalSatisfactionAction.get(analysisId);
+      final var createdActivities = getCreatedActivitiesAction.get(analysisId);
+      final var satisfyingActivities = getSatisfyingActivitiesAction.get(analysisId);
+
+      final var goalResults = new HashMap<GoalId, GoalResult>(goalSatisfaction.size());
+      for (final var goalId : goalSatisfaction.keySet()) {
+        goalResults.put(goalId, new GoalResult(
+            createdActivities.get(goalId),
+            satisfyingActivities.get(goalId),
+            goalSatisfaction.get(goalId)
+        ));
+      }
+
+      return new ScheduleResults(goalResults);
     }
   }
 
   public static final class PostgresResultsCell implements ResultsProtocol.OwnerRole {
     private final DataSource dataSource;
-    private final RequestRecord request;
+    private final SpecificationId specId;
+    private final long specRevision;
+    private final long analysisId;
 
     public PostgresResultsCell(
         final DataSource dataSource,
-        final RequestRecord request
+        final SpecificationId specId,
+        final long specRevision,
+        final long analysisId
     ) {
       this.dataSource = dataSource;
-      this.request = request;
+      this.specId = specId;
+      this.specRevision = specRevision;
+      this.analysisId = analysisId;
     }
 
     @Override
     public ResultsProtocol.State get() {
-      // TODO
-      throw new NotImplementedException("PostgresResultsCell not yet implemented");
+      try (final var connection = dataSource.getConnection()) {
+        final var request = getRequest(connection, specId, specRevision);
+        return switch(request.status()) {
+          case INCOMPLETE -> new ResultsProtocol.State.Incomplete();
+          case FAILED -> new ResultsProtocol.State.Failed(request.failureReason());
+          case SUCCESS -> new ResultsProtocol.State.Success(getResults(connection, request.analysisId()));
+        };
+      } catch (final NoSuchRequestException ex) {
+        throw new Error("Scheduling request no longer exists");
+      } catch(final SQLException ex) {
+        throw new DatabaseException("Failed to get scheduling request status", ex);
+      }
     }
 
     @Override
     public void cancel() {
-      // TODO
-      throw new NotImplementedException("PostgresResultsCell not yet implemented");
+      try (final var connection = dataSource.getConnection()) {
+        cancelRequest(connection, specId, specRevision);
+      } catch (final NoSuchRequestException ex) {
+        throw new Error("Scheduling request no longer exists");
+      } catch(final SQLException ex) {
+        throw new DatabaseException("Failed to cancel scheduling request", ex);
+      }
     }
 
     @Override
     public boolean isCanceled() {
-      // TODO
-      throw new NotImplementedException("PostgresResultsCell not yet implemented");
+      try (final var connection = dataSource.getConnection()) {
+        return getRequest(connection, specId, specRevision).canceled();
+      } catch (final NoSuchRequestException ex) {
+        throw new Error("Scheduling request no longer exists");
+      } catch(final SQLException ex) {
+        throw new DatabaseException("Failed to determine if scheduling request is canceled", ex);
+      }
     }
 
     @Override
     public void succeedWith(final ScheduleResults results) {
-      // TODO
-      throw new NotImplementedException("PostgresResultsCell not yet implemented");
+      try (final var connection = dataSource.getConnection()) {
+        succeedRequest(connection, specId, specRevision, analysisId, results);
+      } catch (final SQLException ex) {
+        throw new DatabaseException("Failed to update scheduling request state", ex);
+      }
     }
 
     @Override
     public void failWith(final String reason) {
-      // TODO
-      throw new NotImplementedException("PostgresResultsCell not yet implemented");
+      try (final var connection = dataSource.getConnection()) {
+        failRequest(connection, specId, specRevision, reason);
+      } catch (final SQLException ex) {
+        throw new DatabaseException("Failed to update scheduling request state", ex);
+      }
     }
   }
 }

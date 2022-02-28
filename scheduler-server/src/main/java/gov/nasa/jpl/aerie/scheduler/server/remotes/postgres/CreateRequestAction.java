@@ -8,9 +8,13 @@ import java.sql.SQLException;
 
 /*package-local*/ final class CreateRequestAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-      insert into scheduling_request (spec_id, spec_revision)
+      insert into scheduling_request (specification_id, specification_revision)
       values (?, ?)
-      returning analysis_id
+      returning
+        analysis_id,
+        status,
+        failure_reason,
+        canceled
     """;
 
   private final PreparedStatement statement;
@@ -26,12 +30,24 @@ import java.sql.SQLException;
     final var result = this.statement.executeQuery();
     if (!result.next()) throw new FailedInsertException("scheduling_request");
 
-    final var analysis_id = result.getLong(1);
+    final RequestRecord.Status status;
+    try {
+      status = RequestRecord.Status.fromString(result.getString("status"));
+    } catch (final RequestRecord.Status.InvalidRequestStatusException ex) {
+      throw new Error("Scheduling request initialized with invalid state.");
+    }
+
+    final var analysis_id = result.getLong("analysis_id");
+    final var failureReason = result.getString("failure_reason");
+    final var canceled = result.getBoolean("canceled");
 
     return new RequestRecord(
         specification.id(),
         analysis_id,
-        specification.revision()
+        specification.revision(),
+        status,
+        failureReason,
+        canceled
     );
   }
 
