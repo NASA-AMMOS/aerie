@@ -179,23 +179,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                 .build())
             .addMethod(
                 MethodSpec
-                    .methodBuilder("getTaskSpecTypes")
-                    .addModifiers(Modifier.PUBLIC)
-                    .addAnnotation(Override.class)
-                    .returns(ParameterizedTypeName.get(
-                        ClassName.get(Map.class),
-                        ClassName.get(String.class),
-                        ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
-                            ParameterizedTypeName.get(
-                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                                ClassName.get(missionModel.topLevelModel)),
-                            WildcardTypeName.subtypeOf(Object.class),
-                            WildcardTypeName.subtypeOf(Object.class))))
-                    .addStatement("return $T.activityTypes", missionModel.getTypesName())
-                    .build())
-            .addMethod(
-                MethodSpec
                     .methodBuilder("instantiate")
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
