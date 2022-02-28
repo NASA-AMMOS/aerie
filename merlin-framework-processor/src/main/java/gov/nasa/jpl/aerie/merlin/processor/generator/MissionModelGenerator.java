@@ -535,7 +535,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
         return Optional.empty();
       }
       superInterface = ParameterizedTypeName.get(
-          ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
+          ClassName.get(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper.class),
           ParameterizedTypeName.get(
               ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
               ClassName.get(missionModel.topLevelModel)),
