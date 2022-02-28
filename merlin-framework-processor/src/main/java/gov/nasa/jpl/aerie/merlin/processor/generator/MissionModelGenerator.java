@@ -152,7 +152,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         missionModel.modelConfigurationType
                             .map(configType -> CodeBlock.builder() // If configuration is provided
                                 .addStatement(
-                                    "return $T.of(new $L())",
+                                    "return $T.of(new $T())",
                                     Optional.class,
                                     configType.mapper().name))
                             .orElseGet(() -> CodeBlock.builder() // If configuration is not provided
