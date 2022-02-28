@@ -5,8 +5,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
 
-public interface MissionModelFactory<Model> {
-  ConfigurationType<?> getConfigurationType();
+public interface MissionModelFactory<Config, Model> {
+  ConfigurationType<Config> getConfigurationType();
   Map<String, TaskSpecType<Model, ?, ?>> getTaskSpecTypes();
   Model instantiate(SerializedValue configuration, Initializer builder) throws MissionModelInstantiationException;
 
