@@ -1,11 +1,15 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,60 +28,82 @@ class SchedulingGoalDSLCompilationServiceTests {
 
   @Test
   void testSchedulingDSL_basic()
-  throws SchedulingGoalDSLCompilationService.SchedulingGoalDSLCompilationException, IOException
+  throws IOException, SchedulingGoalDSLCompilationService.SchedulingGoalDSLCompilationException
   {
-    final var goalDefinition = schedulingGoalDSLCompilationService.compileSchedulingGoalDSL(
+    final SchedulingGoalDSLCompilationService.GoalDefinition actualGoalDefinition;
+    actualGoalDefinition = schedulingGoalDSLCompilationService.compileSchedulingGoalDSL(
         """
-                export default function goal() {
-                  let abc = "hello world"
-
-                  for (var i = 0; i < 100; i++) {
-                    abc = "hello world " + i
-                  }
-
-                  return { abc }
+                export default function myGoal() {
+                  return Goal.ActivityRecurrenceGoal({
+                    windowSet: WindowSet.entirePlanWindow,
+                    activityTemplate: ActivityTemplates.PeelBanana('some goal', { peelDirection: 'fromStem' }),
+                    rangeToGenerate: [1,1]
+                  })
                 }
             """, "goalfile");
-    assertEquals(new SchedulingGoalDSLCompilationService.GoalDefinition("abc", "hello world 99"), goalDefinition);
+    final var expectedGoalDefinition = new SchedulingGoalDSLCompilationService.GoalDefinition(
+        "ActivityRecurrenceGoal",
+        new SchedulingGoalDSLCompilationService.WindowExpression("ConstraintOperatorEntirePlanWindow"),
+        new SchedulingGoalDSLCompilationService.ActivityTemplate(
+            "some goal",
+            "PeelBanana",
+            Map.of(
+                "peelDirection",
+                SerializedValue.of("fromStem"))),
+        List.of(1, 1));
+    assertEquals(expectedGoalDefinition, actualGoalDefinition);
   }
 
   @Test
   void testSchedulingDSL_helper_function()
   throws SchedulingGoalDSLCompilationService.SchedulingGoalDSLCompilationException, IOException
   {
-    final var goalDefinition = schedulingGoalDSLCompilationService.compileSchedulingGoalDSL(
+    final SchedulingGoalDSLCompilationService.GoalDefinition actualGoalDefinition;
+    actualGoalDefinition = schedulingGoalDSLCompilationService.compileSchedulingGoalDSL(
         """
-                export default function goal() {
-                  let abc = "hello world"
-
-                  abc = helper(abc)
-
-                  return { abc }
+                export default function myGoal() {
+                  return myHelper(ActivityTemplates.PeelBanana('some goal', { peelDirection: 'fromStem' }))
                 }
-                function helper(x: string) {
-                  let abc = x;
-                  for (var i = 0; i < 50; i++) {
-                    abc = "hello world " + i
-                  }
-                  return abc
+                function myHelper(activityTemplate) {
+                  return Goal.ActivityRecurrenceGoal({
+                    windowSet: WindowSet.entirePlanWindow,
+                    activityTemplate,
+                    rangeToGenerate: [1,1]
+                  })
                 }
-            """, "goalfile_with_helper");
-    assertEquals(new SchedulingGoalDSLCompilationService.GoalDefinition("abc", "hello world 49"), goalDefinition);
+            """, "goalfile");
+    final var expectedGoalDefinition = new SchedulingGoalDSLCompilationService.GoalDefinition(
+        "ActivityRecurrenceGoal",
+        new SchedulingGoalDSLCompilationService.WindowExpression("ConstraintOperatorEntirePlanWindow"),
+        new SchedulingGoalDSLCompilationService.ActivityTemplate(
+            "some goal",
+            "PeelBanana",
+            Map.of(
+                "peelDirection",
+                SerializedValue.of("fromStem"))),
+        List.of(1, 1));
+    assertEquals(expectedGoalDefinition, actualGoalDefinition);
   }
 
   @Test
-  void testSchedulingDSL_type_error() {
+  void testSchedulingDSL_variable_not_defined() {
     try {
       schedulingGoalDSLCompilationService.compileSchedulingGoalDSL(
           """
-                  export default function goal() {
-                    let abc = "hello world" - 2  // this should be a type error
-                    return { abc }
-                  }
+                export default function myGoal() {
+                  const x = "hello world" - 2
+                  return myHelper(ActivityTemplates.PeelBanana('some goal', { peelDirection: 'fromStem' }))
+                }
+                function myHelper(activityTemplate) {
+                  return Goal.ActivityRecurrenceGoal({
+                    windowSet: x,
+                    activityTemplate,
+                    rangeToGenerate: [1,1]
+                  })
+                }
               """, "goalfile_with_type_error");
     } catch (SchedulingGoalDSLCompilationService.SchedulingGoalDSLCompilationException | IOException e) {
-      final var expectedError =
-          "error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.";
+      final var expectedError = "x is not defined";
       assertTrue(e.getMessage().contains(expectedError), "Exception should contain " + expectedError + ", but was " + e.getMessage());
       return;
     }
@@ -85,13 +111,14 @@ class SchedulingGoalDSLCompilationServiceTests {
   }
 
   @Test
+  @Disabled("We haven't figured out how to handle this case yet")
   void testSchedulingDSL_wrong_return_type() {
     try {
       schedulingGoalDSLCompilationService.compileSchedulingGoalDSL(
           """
-                  export default function goal() {
-                    return 5
-                  }
+                export default function myGoal() {
+                  return 5
+                }
               """, "goalfile_with_wrong_return_type");
     } catch (SchedulingGoalDSLCompilationService.SchedulingGoalDSLCompilationException | IOException e) {
       final var expectedError =
