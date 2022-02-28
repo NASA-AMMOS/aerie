@@ -482,9 +482,9 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         missionModel.activityTypes
                             .stream()
                             .map(activityType -> CodeBlock.builder().add(
-                                "$T.entry(new $T().getName(), new $T())",
+                                "$T.entry($S, new $T())",
                                 Map.class,
-                                activityType.mapper().name,
+                                activityType.name(),
                                 activityType.mapper().name))
                             .reduce((x, y) -> x.add(",\n$L", y.build()))
                             .orElse(CodeBlock.builder())
