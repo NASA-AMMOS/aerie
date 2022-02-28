@@ -14,7 +14,6 @@ import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.jar.JarFile;
-import java.util.stream.Collectors;
 
 public final class MissionModelLoader {
     public static MissionModelFactory<?> loadMissionModelFactory(final Path path, final String name, final String version)
@@ -84,7 +83,7 @@ public final class MissionModelLoader {
 
             final var classPathList = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))
                 .lines()
-                .collect(Collectors.toList());
+                .toList();
 
             if (classPathList.size() != 1) {
                 throw new MissionModelLoadException(jarPath, name, version);
