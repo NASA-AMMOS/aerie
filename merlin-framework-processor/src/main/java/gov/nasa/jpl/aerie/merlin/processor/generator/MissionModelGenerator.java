@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Auto-generates Java source files from mission model metamodels. */
 public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Messager messager) {
@@ -349,7 +350,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             .addMethods(
                 missionModel.activityTypes
                     .stream()
-                    .flatMap(entry -> List
+                    .flatMap(entry -> Stream
                         .of(
                             MethodSpec
                                 .methodBuilder("spawn")
@@ -437,8 +438,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     "$T.waitFor(spawn($L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "activity")
-                                .build())
-                        .stream())
+                                .build()))
                     .collect(Collectors.toList()))
             .build();
 
