@@ -16,9 +16,9 @@ async function main() {
         source,
         filename,
       }) as Promise<{ ast: AST.GoalSpecifier }>;
-      process.stdout.write(JSON.stringify(result));
+      process.stdout.write("success\n" + JSON.stringify(result) + "\n");
     } catch (error: any) {
-      process.stderr.write(error.message + '\n');
+      process.stdout.write("error\n" + error.message + '\n');
     }
   });
 
