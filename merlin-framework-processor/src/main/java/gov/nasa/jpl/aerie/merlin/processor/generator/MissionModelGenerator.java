@@ -465,30 +465,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                 FieldSpec
                     .builder(
                         ParameterizedTypeName.get(
-                            ClassName.get(List.class),
-                            ParameterizedTypeName.get(
-                                ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
-                                ParameterizedTypeName.get(
-                                    ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                                    ClassName.get(missionModel.topLevelModel)),
-                                WildcardTypeName.subtypeOf(Object.class),
-                                WildcardTypeName.subtypeOf(Object.class))),
-                        "activityTypeList",
-                        Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
-                    .initializer(
-                        "$T.of($>$>\n$L$<$<)",
-                        List.class,
-                        missionModel.activityTypes
-                            .stream()
-                            .map(activityType -> CodeBlock.builder().add("new $T()", activityType.mapper().name))
-                            .reduce((x, y) -> x.add(",\n$L", y.build()))
-                            .orElse(CodeBlock.builder())
-                            .build())
-                    .build())
-            .addField(
-                FieldSpec
-                    .builder(
-                        ParameterizedTypeName.get(
                             ClassName.get(Map.class),
                             ClassName.get(String.class),
                             ParameterizedTypeName.get(
@@ -501,9 +477,18 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         "activityTypes",
                         Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                     .initializer(
-                        "$L.stream().collect($T.toMap($$ -> $$.getName(), $$ -> $$));",
-                        "activityTypeList",
-                        java.util.stream.Collectors.class)
+                        "$T.ofEntries($>$>\n$L$<$<)",
+                        Map.class,
+                        missionModel.activityTypes
+                            .stream()
+                            .map(activityType -> CodeBlock.builder().add(
+                                "$T.entry(new $T().getName(), new $T())",
+                                Map.class,
+                                activityType.mapper().name,
+                                activityType.mapper().name))
+                            .reduce((x, y) -> x.add(",\n$L", y.build()))
+                            .orElse(CodeBlock.builder())
+                            .build())
                     .build())
             .build();
 
