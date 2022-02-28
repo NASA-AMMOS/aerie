@@ -30,7 +30,7 @@ public class MerlinSightTestUtility {
     final var configuration = gov.nasa.jpl.aerielander.config.Configuration.defaultConfiguration();
     final var factory = new gov.nasa.jpl.aerielander.generated.GeneratedMissionModelFactory();
     final var registry = DirectiveTypeRegistry.extract(factory);
-    final var model = factory.instantiate(configuration, builder);
+    final var model = factory.instantiate(registry.registry(), configuration, builder);
     final var mission = builder.build(model, factory.getConfigurationType(), registry.taskSpecTypes());
     return mission;
    //return null;

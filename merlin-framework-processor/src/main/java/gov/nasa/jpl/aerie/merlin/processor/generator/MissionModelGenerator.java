@@ -183,6 +183,10 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
                     .addParameter(
+                        TypeName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class),
+                        "registry",
+                        Modifier.FINAL)
+                    .addParameter(
                         missionModel.modelConfigurationType
                             .map($ -> ClassName.get($.declaration()))
                             .orElse(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class)),
