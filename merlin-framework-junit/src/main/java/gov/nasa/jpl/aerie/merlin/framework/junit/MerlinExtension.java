@@ -139,7 +139,7 @@ public final class MerlinExtension<Registry, Model> implements BeforeAllCallback
       }
 
       this.missionModel = this.builder.build(
-          new RootModel<>(this.context.model(), executor),
+          new RootModel<>(this.context.model(), this.context.activityTypes().registry(), executor),
           new EmptyConfigurationType(),
           this.context.activityTypes());
 

@@ -227,9 +227,10 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 ClassName.get(missionModel.topLevelModel),
                                 "registrar"))
                     .addStatement(
-                        "return new $T<>($L, $L)",
+                        "return new $T<>($L, $L, $L)",
                         gov.nasa.jpl.aerie.merlin.framework.RootModel.class,
                         "model",
+                        "registry",
                         "executor")
                     .build())
             .build();
