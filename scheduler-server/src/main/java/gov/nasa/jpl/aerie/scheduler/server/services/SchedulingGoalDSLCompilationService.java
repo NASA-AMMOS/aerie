@@ -3,8 +3,10 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import javax.json.Json;
@@ -12,6 +14,8 @@ import javax.json.stream.JsonParsingException;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -77,7 +81,7 @@ public class SchedulingGoalDSLCompilationService {
   /**
    * NOTE: This method is not re-entrant (assumes only one call to this method is running at any given time)
    */
-  public GoalDefinition compileSchedulingGoalDSL(final String goalTypescript, final String goalName)
+  public GoalDefinition compileSchedulingGoalDSL(final String goalTypescript, final String goalName) //, /* Something about misson model*/)
   throws SchedulingGoalDSLCompilationException, IOException
   {
     /*
@@ -111,6 +115,72 @@ public class SchedulingGoalDSLCompilationService {
 
     // Status was neither failure nor success, the protocol has been violated.
     throw new Error("scheduling dsl compiler returned unexpected status: " + status);
+  }
+
+  record ActivityType(String name, Map<String, ValueSchema> parameters) {}
+  record ResourceType(String name, String type, ValueSchema schema) {}
+  record MissionModelTypes(Collection<ActivityType> activityTypes, Collection<ResourceType> resourceTypes) {}
+
+  // /subsystem/field/id
+
+//  public MissionModelTypes queryActivityTypesAndResourceTypes(long missionModelId) {
+//
+//  }
+
+  public static String generateTypescriptTypesFromMissionModel(MissionModelTypes missionModelTypes) {
+    // Generate stuff
+    final var activityTypeCodes = new ArrayList<ActivityTypeCode>();
+    for (final var activityType : missionModelTypes.activityTypes()) {
+      activityTypeCodes.add(getActivityTypeInformation(activityType));
+    }
+    var result = "/** Start Codegen */\n";
+    for (final var activityTypeCode : activityTypeCodes) {
+      result += activityTypeCode.declaration();
+    }
+    result += "export const ActivityTemplates = {\n";
+    for (final var activityTypeCode : activityTypeCodes) {
+      result += activityTypeCode.implementation();
+    }
+    result += "}\n/** End Codegen */";
+    return result;
+  }
+
+  private record ActivityTypeCode(String declaration, String implementation) {}
+
+  private static ActivityTypeCode getActivityTypeInformation(ActivityType activityType) {
+    // TODO handle args
+
+    return new ActivityTypeCode(
+        String.format("interface %s extends ActivityTemplate {}\n", activityType.name()),
+        String.format("""
+          %s: function %s(
+            name: string,
+            parameters: {
+            %s
+            }): %s {
+            return {
+              name,
+              activityType: '%s',
+              parameters: args,
+            };
+          },
+        """, activityType.name(), activityType.name(), generateActivityParameterTypes(activityType).indent(2), activityType.name(), activityType.name())
+    );
+  }
+
+  @NotNull
+  private static String generateActivityParameterTypes(final ActivityType activityType) {
+    var result = new ArrayList<>();
+    for (final var param : activityType.parameters().entrySet()) {
+      final var name = param.getKey();
+      final var valueSchema = param.getValue();
+      result.add(String.format("%s: %s,", name, valueSchemaToTypescripType(valueSchema)));
+    }
+    return String.join("\n", result.toArray(new String[0]));
+  }
+
+  private static String valueSchemaToTypescripType(ValueSchema valueSchema) {
+    return "SOMESTATICVALUE";
   }
 
   private static <T> T parseJson(final String jsonStr, final JsonParser<T> parser) throws InvalidJsonException, InvalidEntityException {

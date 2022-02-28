@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SchedulingGoalDSLCompilationServiceTests {
   SchedulingGoalDSLCompilationService schedulingGoalDSLCompilationService;
+
   @BeforeAll
   void setUp() throws SchedulingGoalDSLCompilationService.SchedulingGoalDSLCompilationException, IOException {
     schedulingGoalDSLCompilationService = new SchedulingGoalDSLCompilationService();
@@ -104,7 +106,9 @@ class SchedulingGoalDSLCompilationServiceTests {
               """, "goalfile_with_type_error");
     } catch (SchedulingGoalDSLCompilationService.SchedulingGoalDSLCompilationException | IOException e) {
       final var expectedError = "x is not defined";
-      assertTrue(e.getMessage().contains(expectedError), "Exception should contain " + expectedError + ", but was " + e.getMessage());
+      assertTrue(
+          e.getMessage().contains(expectedError),
+          "Exception should contain " + expectedError + ", but was " + e.getMessage());
       return;
     }
     fail("Did not throw CompilationException");
@@ -123,9 +127,35 @@ class SchedulingGoalDSLCompilationServiceTests {
     } catch (SchedulingGoalDSLCompilationService.SchedulingGoalDSLCompilationException | IOException e) {
       final var expectedError =
           "error TS2394: This overload signature is not compatible with its implementation signature";
-      assertTrue(e.getMessage().contains(expectedError), "Exception should contain " + expectedError + ", but was " + e.getMessage());
+      assertTrue(
+          e.getMessage().contains(expectedError),
+          "Exception should contain " + expectedError + ", but was " + e.getMessage());
       return;
     }
     fail("Did not throw CompilationException");
+  }
+
+  @Test
+  void testCodeGen() {
+    assertEquals(
+        "fred",
+        SchedulingGoalDSLCompilationService.
+            generateTypescriptTypesFromMissionModel(
+                new SchedulingGoalDSLCompilationService.MissionModelTypes(
+                    List.of(new SchedulingGoalDSLCompilationService.ActivityType(
+                        "PeelBanana",
+                        Map.of(
+                            "peelDirection",
+                            ValueSchema.ofVariant(List.of(
+                                new ValueSchema.Variant(
+                                    "fromTip", "fromTip"
+                                ),
+                                new ValueSchema.Variant(
+                                    "fromStem",
+                                    "fromStem"))),
+                            "duration",
+                            ValueSchema.INT))),
+                    null
+                )));
   }
 }
