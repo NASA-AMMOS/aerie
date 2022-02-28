@@ -16,7 +16,11 @@ async function main() {
         source,
         filename,
       }) as Promise<{ ast: AST.GoalSpecifier }>;
-      process.stdout.write("success\n" + JSON.stringify(result) + "\n");
+      let stringified = JSON.stringify(result);
+      if (stringified === undefined) {
+        throw Error(result + " was not JSON serializable")
+      }
+      process.stdout.write("success\n" + stringified + "\n");
     } catch (error: any) {
       process.stdout.write("error\n" + error.message + '\n');
     }
