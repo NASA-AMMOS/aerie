@@ -79,7 +79,7 @@ public final class SimulationEngine implements AutoCloseable {
       directive = model.instantiateDirective(input);
     } catch (final TaskSpecType.UnconstructableTaskSpecException ex) {
       // TODO: Provide more information about the failure.
-      this.tasks.put(task, new ExecutionState.IllegalSource());
+      this.tasks.put(task, new ExecutionState.IllegalSource<>());
 
       return task;
     }
