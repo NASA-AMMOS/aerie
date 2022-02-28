@@ -74,6 +74,9 @@ public class SchedulingGoalDSLCompilationService {
 
   // {"kind":"ActivityRecurrenceGoal","windows":{"kind":"ConstraintOperatorEntirePlanWindow"},"activityTemplate":{"name":"some goal","activityType":"PeelBanana","arguments":{"peelDirection":"fromStem"}},"rangeToGenerate":[1,1]}
 
+  /**
+   * NOTE: This method is not re-entrant (assumes only one call to this method is running at any given time)
+   */
   public GoalDefinition compileSchedulingGoalDSL(final String goalTypescript, final String goalName)
   throws SchedulingGoalDSLCompilationException, IOException
   {
