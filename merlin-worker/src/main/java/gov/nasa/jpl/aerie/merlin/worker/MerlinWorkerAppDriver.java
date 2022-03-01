@@ -62,10 +62,21 @@ public final class MerlinWorkerAppDriver {
       final var planId = new PlanId(notification.planId());
       final var datasetId = notification.datasetId();
 
-      System.out.println(String.format("Received simulation notification for plan Id: %s and data set Id: %s",
-                                       planId,
-                                       datasetId));
+      final Optional<ResultsProtocol.OwnerRole> owner = stores.results().claim(planId, datasetId);
+      if (owner.isEmpty()) continue;
 
+      final var revisionData = new PostgresPlanRevisionData(
+          notification.modelRevision(),
+          notification.planRevision(),
+          notification.simulationRevision(),
+          notification.simulationTemplateRevision());
+      final ResultsProtocol.WriterRole writer = owner.get();
+      try {
+        simulationAgent.simulate(planId, revisionData, writer);
+      } catch (final Throwable ex) {
+        ex.printStackTrace(System.err);
+        writer.failWith(ex.getMessage());
+      }
     }
   }
 

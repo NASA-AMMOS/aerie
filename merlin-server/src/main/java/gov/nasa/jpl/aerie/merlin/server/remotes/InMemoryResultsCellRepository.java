@@ -33,6 +33,11 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
   }
 
   @Override
+  public Optional<ResultsProtocol.OwnerRole> claim(final PlanId planId, final Long datasetId) {
+    return Optional.empty();
+  }
+
+  @Override
   public Optional<ResultsProtocol.ReaderRole> lookup(final PlanId planId) {
     try {
       final var planRevision = planRepository.getPlanRevision(planId);

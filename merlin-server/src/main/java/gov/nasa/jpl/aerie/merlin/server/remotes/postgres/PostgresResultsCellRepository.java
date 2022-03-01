@@ -17,6 +17,8 @@ import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -30,6 +32,8 @@ import java.util.SortedMap;
 import java.util.stream.Collectors;
 
 public final class PostgresResultsCellRepository implements ResultsCellRepository {
+  private static final Logger logger = LoggerFactory.getLogger(PostgresResultsCellRepository.class);
+
   private final DataSource dataSource;
 
   public PostgresResultsCellRepository(final DataSource dataSource) {
@@ -67,6 +71,46 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       throw new DatabaseException("Failed to allocation simulation cell", ex);
     } catch (final NoSuchPlanException ex) {
       throw new Error("Cannot allocate simulation cell for nonexistent plan", ex);
+    }
+  }
+
+  /**
+   * Claim a simulation
+   *
+   * <p>
+   * For the case where the return value is empty, the simulation is already claimed. All other exceptions are
+   * unexpected and result in an {@link Error} being raised.
+   * </p>
+   *
+   * @param planId a plan identifier
+   * @param datasetId the identifier of a dataset record
+   * @return cell (handle) {@link ResultsProtocol.OwnerRole} to the claimed simulation wrapped in {@link Optional}
+   */
+  @Override
+  public Optional<ResultsProtocol.OwnerRole> claim(final PlanId planId, final Long datasetId) {
+    try (final var connection = this.dataSource.getConnection()) {
+      claimSimulationDataset(connection, datasetId);
+      logger.info("Claimed simulation with datatset id {}", datasetId);
+
+      final var planStart = getPlan(connection, planId).startTime();
+
+      final var simulation$ = getSimulation(connection, planId);
+      if (simulation$.isEmpty()) {
+        return Optional.empty();
+      }
+      final var simulation = simulation$.get();
+
+      return Optional.of(new PostgresResultsCell(
+          this.dataSource,
+          simulation,
+          datasetId,
+          planStart));
+    } catch(UnclaimableSimulationException ex) {
+      return Optional.empty();
+    } catch (final NoSuchPlanException ex) {
+      throw new Error(String.format("Cannot process simulation for nonexistent plan %s%n", planId), ex);
+    } catch(final SQLException | DatabaseException ex) {
+      throw new Error(ex.getMessage());
     }
   }
 
@@ -167,6 +211,40 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           simulation.id(),
           planStart,
           simulationStart);
+    }
+  }
+  /**
+   * Claim a simulation dataset, throwing an {@link UnclaimableSimulationException} if the dataset is already claimed.
+   *
+   * <p>
+   *   The method can be unsuccessful in claiming a simulation in two ways. The first is that an
+   *   {@link UnclaimableSimulationException} is thrown if the simulation is already claimed. The second is that
+   *   there has been an SQL error resulting in {@link DatabaseException}.
+   * </p>
+   *
+   * @param  connection an SQL database connection
+   * @param  datasetId the identifier of a dataset record
+   */
+  private static void claimSimulationDataset(
+      final Connection connection,
+      final long datasetId
+  ) throws SQLException, UnclaimableSimulationException
+  {
+    try (final var claimSimulationAction = new ClaimSimulationAction(connection)) {
+        claimSimulationAction.apply(datasetId);
+    }
+
+    try (final var transactionContext = new TransactionContext(connection)) {
+      final var createSimulationDatasetPartitionsAction = new CreateProfileSegmentPartitionAction(connection);
+      final var createSpanPartitionAction = new CreateSpanPartitionAction(connection);
+      final var createEventPartitionAction = new CreateEventPartitionAction(connection);
+
+      createSimulationDatasetPartitionsAction.apply(datasetId);
+      createSpanPartitionAction.apply(datasetId);
+      createEventPartitionAction.apply(datasetId);
+      transactionContext.commit();
+    } catch (final SQLException ex) {
+      throw new DatabaseException(String.format("Failed to create partitions for simulation dataset id %s", datasetId), ex);
     }
   }
 

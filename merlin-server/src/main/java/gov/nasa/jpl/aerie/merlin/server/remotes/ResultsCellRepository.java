@@ -8,6 +8,8 @@ import java.util.Optional;
 public interface ResultsCellRepository {
   ResultsProtocol.OwnerRole allocate(PlanId planId);
 
+  Optional<ResultsProtocol.OwnerRole> claim(PlanId planId, Long datasetId);
+
   Optional<ResultsProtocol.ReaderRole> lookup(PlanId planId);
 
   void deallocate(ResultsProtocol.OwnerRole resultsCell);
