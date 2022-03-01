@@ -1,11 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
+import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
@@ -16,19 +15,11 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
-import static gov.nasa.jpl.aerie.scheduler.server.http.SerializedValueJsonParser.serializedValueP;
 
 public class SchedulingGoalDSLCompilationService {
 
@@ -51,39 +42,12 @@ public class SchedulingGoalDSLCompilationService {
     this.nodeProcess.destroy();
   }
 
-  public record GoalDefinition(String kind, WindowExpression windowExpression, ActivityTemplate activityTemplate, List<Integer> rangeToGenerate) {}
-
-  record WindowExpression(String kind) {}
-  record ActivityTemplate(String name, String activityType, Map<String, SerializedValue> arguments) {}
-
-  private static final JsonParser<WindowExpression> windowsP =
-      productP
-          .field("kind", stringP)
-          .map(Iso.of(WindowExpression::new, WindowExpression::kind));
-
-  private static final JsonParser<ActivityTemplate> activityTemplateP =
-      productP
-          .field("name", stringP)
-          .field("activityType", stringP)
-          .field("arguments", mapP(serializedValueP))
-              .map(Iso.of(untuple(ActivityTemplate::new),
-                          $ -> tuple($.name(), $.activityType(), $.arguments())));
-
-  private static final JsonParser<GoalDefinition> schedulingJsonP =
-      productP
-          .field("kind", stringP)
-          .field("windows", windowsP)
-          .field("activityTemplate", activityTemplateP)
-          .field("rangeToGenerate", listP(intP))
-          .map(Iso.of(untuple(GoalDefinition::new),
-              goalDefinition -> tuple(goalDefinition.kind(), goalDefinition.windowExpression(), goalDefinition.activityTemplate(), goalDefinition.rangeToGenerate())));
-
   // {"kind":"ActivityRecurrenceGoal","windows":{"kind":"ConstraintOperatorEntirePlanWindow"},"activityTemplate":{"name":"some goal","activityType":"PeelBanana","arguments":{"peelDirection":"fromStem"}},"rangeToGenerate":[1,1]}
 
   /**
    * NOTE: This method is not re-entrant (assumes only one call to this method is running at any given time)
    */
-  public GoalDefinition compileSchedulingGoalDSL(final String goalTypescript, final String goalName) //, /* Something about misson model*/)
+  public SchedulingDSL.GoalSpecifier compileSchedulingGoalDSL(final String goalTypescript, final String goalName) //, /* Something about misson model*/)
   throws SchedulingGoalDSLCompilationException, IOException
   {
     /*
@@ -109,7 +73,7 @@ public class SchedulingGoalDSLCompilationService {
     if (status.equals("success")) {
       final var output = outputReader.readLine();
       try {
-        return parseJson(output, schedulingJsonP);
+        return parseJson(output, SchedulingDSL.schedulingJsonP);
       } catch (InvalidJsonException | InvalidEntityException e) {
         throw new SchedulingGoalDSLCompilationException("Could not parse JSON returned from typescript: ", e);
       }

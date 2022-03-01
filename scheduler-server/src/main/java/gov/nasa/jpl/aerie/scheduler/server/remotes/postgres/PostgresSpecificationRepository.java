@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationExcepti
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
+import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
@@ -80,9 +81,9 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
   }
 
   private static GoalRecord buildGoalRecord(final PostgresGoalRecord pgGoal, final SchedulingGoalDSLCompilationService schedulingGoalDSLCompilationService) {
-    final SchedulingGoalDSLCompilationService.GoalDefinition goalDefinition;
+    final SchedulingDSL.GoalSpecifier.GoalDefinition goalDefinition;
     try {
-       goalDefinition = schedulingGoalDSLCompilationService.compileSchedulingGoalDSL(
+       goalDefinition = (SchedulingDSL.GoalSpecifier.GoalDefinition) schedulingGoalDSLCompilationService.compileSchedulingGoalDSL(
           pgGoal.definition(),
           "goals don't have names?");
     } catch (SchedulingGoalDSLCompilationService.SchedulingGoalDSLCompilationException | IOException e) {
@@ -91,17 +92,22 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
     }
     final var goalId = new GoalId(pgGoal.id());
 
-    final var goal = goalOfGoalDefinition(goalDefinition, pgGoal.definition());
+    final var goal = goalOfGoalSpecifier(goalDefinition, pgGoal.definition());
 
     return new GoalRecord(goalId, goal);
   }
 
-  private static CardinalityGoal goalOfGoalDefinition(final SchedulingGoalDSLCompilationService.GoalDefinition goalDefinition, String merlinsightRuleName) {
+  private static CardinalityGoal goalOfGoalSpecifier(final SchedulingDSL.GoalSpecifier goalSpecifier, String merlinsightRuleName) {
     // TODO: WORKAROUND
     //       At this time we are unable to pull goal definitions from postgres
     //       As a workaround we are providing goal IDs and names and the
     //       scheduler agent will load the actual goal definitions from a JAR by name
-    final var goal = new CardinalityGoal.Builder()
+
+//    return switch(goalSpecifier.kind()) {
+//      "Recurrence" -> new RecurrenceGoal.Builder().repeatingEvery(goalSpecifier.interval()).thereExistsOne(goalSpecifier.activityTemplate());
+//    }
+
+    return new CardinalityGoal.Builder()
         .inPeriod(ActivityExpression.ofType(new ActivityType("")))
         .thereExistsOne(
             new ActivityCreationTemplate.Builder()
@@ -111,6 +117,5 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
         .forAllTimeIn(Window.at(Duration.SECONDS))
         .owned(ChildCustody.Jointly)
         .build();
-    return goal;
   }
 }

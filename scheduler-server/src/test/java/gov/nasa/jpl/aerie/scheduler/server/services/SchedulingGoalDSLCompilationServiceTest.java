@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
@@ -32,8 +33,8 @@ class SchedulingGoalDSLCompilationServiceTests {
   void testSchedulingDSL_basic()
   throws IOException, SchedulingGoalDSLCompilationService.SchedulingGoalDSLCompilationException
   {
-    final SchedulingGoalDSLCompilationService.GoalDefinition actualGoalDefinition;
-    actualGoalDefinition = schedulingGoalDSLCompilationService.compileSchedulingGoalDSL(
+    final SchedulingDSL.GoalSpecifier.GoalDefinition actualGoalDefinition;
+    actualGoalDefinition = (SchedulingDSL.GoalSpecifier.GoalDefinition) schedulingGoalDSLCompilationService.compileSchedulingGoalDSL(
         """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
@@ -43,10 +44,10 @@ class SchedulingGoalDSLCompilationServiceTests {
                   })
                 }
             """, "goalfile");
-    final var expectedGoalDefinition = new SchedulingGoalDSLCompilationService.GoalDefinition(
-        "ActivityRecurrenceGoal",
-        new SchedulingGoalDSLCompilationService.WindowExpression("ConstraintOperatorEntirePlanWindow"),
-        new SchedulingGoalDSLCompilationService.ActivityTemplate(
+    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.GoalDefinition(
+        SchedulingDSL.GoalKinds.ActivityRecurrenceGoal,
+        new SchedulingDSL.WindowSetSpecifier.ConstraintOperatorEntirePlanWindow(),
+        new SchedulingDSL.ActivityTemplate(
             "some goal",
             "PeelBanana",
             Map.of(
@@ -60,8 +61,8 @@ class SchedulingGoalDSLCompilationServiceTests {
   void testSchedulingDSL_helper_function()
   throws SchedulingGoalDSLCompilationService.SchedulingGoalDSLCompilationException, IOException
   {
-    final SchedulingGoalDSLCompilationService.GoalDefinition actualGoalDefinition;
-    actualGoalDefinition = schedulingGoalDSLCompilationService.compileSchedulingGoalDSL(
+    final SchedulingDSL.GoalSpecifier.GoalDefinition actualGoalDefinition;
+    actualGoalDefinition = (SchedulingDSL.GoalSpecifier.GoalDefinition) schedulingGoalDSLCompilationService.compileSchedulingGoalDSL(
         """
                 export default function myGoal() {
                   return myHelper(ActivityTemplates.PeelBanana('some goal', { peelDirection: 'fromStem' }))
@@ -74,10 +75,10 @@ class SchedulingGoalDSLCompilationServiceTests {
                   })
                 }
             """, "goalfile");
-    final var expectedGoalDefinition = new SchedulingGoalDSLCompilationService.GoalDefinition(
-        "ActivityRecurrenceGoal",
-        new SchedulingGoalDSLCompilationService.WindowExpression("ConstraintOperatorEntirePlanWindow"),
-        new SchedulingGoalDSLCompilationService.ActivityTemplate(
+    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.GoalDefinition(
+        SchedulingDSL.GoalKinds.ActivityRecurrenceGoal,
+        new SchedulingDSL.WindowSetSpecifier.ConstraintOperatorEntirePlanWindow(),
+        new SchedulingDSL.ActivityTemplate(
             "some goal",
             "PeelBanana",
             Map.of(
