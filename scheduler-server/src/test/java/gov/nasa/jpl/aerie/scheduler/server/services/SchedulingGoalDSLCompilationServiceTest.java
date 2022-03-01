@@ -138,7 +138,30 @@ class SchedulingGoalDSLCompilationServiceTests {
   @Test
   void testCodeGen() {
     assertEquals(
-        "fred",
+        "/** Start Codegen */\n"
+        + "interface PeelBanana extends ActivityTemplate {}\n"
+        + "export const ActivityTemplates = {\n"
+        + "  PeelBanana: function PeelBanana(\n"
+        + "    name: string,\n"
+        + "    parameters: {\n"
+        + "      duration: Duration,\n"
+        + "  fancy: {\n"
+        + "    subfield1: string,\n"
+        + "    subfield2: {\n"
+        + "      subsubfield1: Double,\n"
+        + "    }[],\n"
+        + "  },\n"
+        + "  peelDirection: \"fromTip\" | \"fromStem\",\n"
+        + "\n"
+        + "    }): PeelBanana {\n"
+        + "    return {\n"
+        + "      name,\n"
+        + "      activityType: 'PeelBanana',\n"
+        + "      parameters: args,\n"
+        + "    };\n"
+        + "  },\n"
+        + "}\n"
+        + "/** End Codegen */",
         SchedulingGoalDSLCompilationService.
             generateTypescriptTypesFromMissionModel(
                 new SchedulingGoalDSLCompilationService.MissionModelTypes(
@@ -154,7 +177,12 @@ class SchedulingGoalDSLCompilationServiceTests {
                                     "fromStem",
                                     "fromStem"))),
                             "duration",
-                            ValueSchema.INT))),
+                            ValueSchema.DURATION,
+                            "fancy",
+                            ValueSchema.ofStruct(Map.of(
+                                "subfield1", ValueSchema.STRING,
+                                "subfield2", ValueSchema.ofSeries(ValueSchema.ofStruct(Map.of("subsubfield1", ValueSchema.REAL)))
+                            ))))),
                     null
                 )));
   }

@@ -16,8 +16,10 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
@@ -169,16 +171,68 @@ public class SchedulingGoalDSLCompilationService {
   @NotNull
   private static String generateActivityParameterTypes(final ActivityType activityType) {
     var result = new ArrayList<>();
-    for (final var param : activityType.parameters().entrySet()) {
+    for (final var param : activityType.parameters().entrySet().stream().sorted(Map.Entry.comparingByKey()).toList()) {
       final var name = param.getKey();
       final var valueSchema = param.getValue();
-      result.add(String.format("%s: %s,", name, valueSchemaToTypescripType(valueSchema)));
+      result.add(String.format("%s: %s,", name, valueSchemaToTypescriptType(valueSchema)));
     }
     return String.join("\n", result.toArray(new String[0]));
   }
 
-  private static String valueSchemaToTypescripType(ValueSchema valueSchema) {
-    return "SOMESTATICVALUE";
+  private static String valueSchemaToTypescriptType(final ValueSchema valueSchema) {
+    return valueSchema.match(new ValueSchema.Visitor<String>() {
+      @Override
+      public String onReal() {
+        return "Double";
+      }
+
+      @Override
+      public String onInt() {
+        return "Integer";
+      }
+
+      @Override
+      public String onBoolean() {
+        return "boolean";
+      }
+
+      @Override
+      public String onString() {
+        return "string";
+      }
+
+      @Override
+      public String onDuration() {
+        return "Duration";
+      }
+
+      @Override
+      public String onPath() {
+        return "string";
+      }
+
+      @Override
+      public String onSeries(final ValueSchema value) {
+        return String.format("%s[]", valueSchemaToTypescriptType(value));
+      }
+
+      @Override
+      public String onStruct(final Map<String, ValueSchema> value) {
+        var result = "{\n";
+        final var entries = new ArrayList<>(value.entrySet());
+        entries.sort(Map.Entry.comparingByKey());
+        for (final var entry : entries) {
+          result += String.format("%s: %s,\n", entry.getKey(), valueSchemaToTypescriptType(entry.getValue())).indent(2);
+        }
+        result += "}";
+        return result;
+      }
+
+      @Override
+      public String onVariant(final List<ValueSchema.Variant> variants) {
+        return String.join(" | ", variants.stream().map(variant -> "\"" + variant.label() + "\"").toList());
+      }
+    });
   }
 
   private static <T> T parseJson(final String jsonStr, final JsonParser<T> parser) throws InvalidJsonException, InvalidEntityException {
