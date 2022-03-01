@@ -34,26 +34,24 @@ app.put("/dictionary", async (req, res) => {
     console.log(`Dictionary received`);
     const parsedDictionary = ampcs.parse(dictionary);
     console.log(
-      `Dictionary parsed - version: ${parsedDictionary.header.version}, mission: ${parsedDictionary.header.mission_name}`
+        `Dictionary parsed - version: ${parsedDictionary.header.version}, mission: ${parsedDictionary.header.mission_name}`
     );
-    const path = await Promise.resolve(processDictionary(parsedDictionary));
+    const path = await processDictionary(parsedDictionary);
     console.log(`command-lib generated - path: ${path}`);
 
     const sqlExpression = `
       insert into command_dictionary (command_types, mission, version)
       values ($1, $2, $3)
       on conflict (mission, version) do update
-      set command_types = $1
+        set command_types = $1
       returning id;
     `;
 
-    const { rows } = await db.query(sqlExpression, [
+    const {rows} = await db.query(sqlExpression, [
       path,
       parsedDictionary.header.mission_name,
       parsedDictionary.header.version,
     ]);
-
-
 
     if (rows.length < 0) {
       console.error(`POST /dictionary: No command dictionary was updated in the database`);
@@ -61,13 +59,64 @@ app.put("/dictionary", async (req, res) => {
       return;
     }
     const id = rows[0];
-    res.status(200).json({ id });
+    res.status(200).json({id});
     return;
   } catch (err) {
     console.error(err);
     res.status(500).send(`POST /dictionary Command Dictionary upload failed: \n${err}`);
     return;
   }
+});
+
+app.put('/expansion/:activityTypeName', upload.any(), async (req, res) => {
+  // Pull existing expanded commands for an activity instance of an expansion run
+  res.status(501).send('PUT /expansion: Not implemented');
+  return;
+});
+
+app.put('/expansion-set', async (req, res) => {
+  // Insert an expansion set into the db
+  res.status(501).send('PUT /expansion-set: Not implemented');
+  return;
+});
+
+app.get('/command-types/:dictionaryId', async (req, res) => {
+  // Pull existing command types for the dictionary id
+  res.status(501).send('GET /command-types: Not implemented');
+  return;
+});
+
+app.get('/activity-types/:missionModelId/:activityTypeName', async (req, res) => {
+  // Generate activity types for the mission model and activity type name
+  res.status(501).send('GET /activity-types: Not implemented');
+  return;
+});
+
+app.get('/commands/:expansionRunId/:activityInstanceId', async (req, res) => {
+  // Pull existing expanded commands for an activity instance of an expansion run
+  res.status(501).send('GET /commands: Not implemented');
+  return;
+});
+
+app.post('/expand-activity-instance/:simulationId/:expansionConfigId', async (req, res) => {
+  // Parallel([
+    // Get activity instances from simulation
+    // Get expansion config by id
+  // ])
+  // Get command dictionary id from expansion config
+  // Get expansion ids from expansion config
+  // Get mission model id from simulation
+  // Parallel([
+    // Get command types by command dictionary id
+    // Get expansions by ids
+  // ])
+  // For each activity instance in the plan
+  //   If the activity instance has an expansion in the expansion config
+  //     Get the activity types by mission model id and activity type name
+  //     Execute expansion using the command types, activity types, and activity instance
+  //     Store resulting commands in db
+  res.status(501).send('POST /expand-activity-instance: Not implemented');
+  return;
 });
 
 app.listen(PORT, () => {

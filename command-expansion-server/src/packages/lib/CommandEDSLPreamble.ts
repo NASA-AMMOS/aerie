@@ -40,6 +40,8 @@ export class Command<A extends ArgType[] | {[argName: string]: any} = [] | {}> {
 }
 type Arrayable<T> = T | Arrayable<T>[];
 
+export type ExpansionReturn = Arrayable<Command>;
+
 declare global {
   type Context = {
     warn(message: string): void;
