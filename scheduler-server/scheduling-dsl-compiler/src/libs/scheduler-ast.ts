@@ -233,7 +233,7 @@ export interface ActivityRecurrenceGoal {
   kind: 'ActivityRecurrenceGoal',
   windows: WindowSetSpecifier,
   activityTemplate: ActivityTemplate,
-  rangeToGenerate: [Integer, Integer],
+  interval: Integer,
 }
 
 export interface CoexistenceGoal {

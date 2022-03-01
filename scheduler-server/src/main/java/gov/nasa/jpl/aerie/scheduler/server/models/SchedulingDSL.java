@@ -1,8 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.server.models;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.Unit;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.List;
@@ -13,6 +15,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.enumP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
@@ -81,22 +84,27 @@ public class SchedulingDSL {
               $ -> tuple($.name(), $.activityType(), $.arguments())));
 
 
+  public static final JsonParser<Duration> durationP
+      = longP
+      . map(Iso.of(
+          microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
+          duration -> duration.in(Duration.MICROSECONDS)));
 
   private static final JsonParser<GoalSpecifier.GoalDefinition> goalDefinitionP =
       productP
           .field("kind", enumP(GoalKinds.class, Enum::name))
           .field("windows", windowSetSpecifierP)
           .field("activityTemplate", activityTemplateP)
-          .field("rangeToGenerate", listP(intP))
+          .field("interval", durationP)
           .map(Iso.of(
               untuple(GoalSpecifier.GoalDefinition::new),
               goalDefinition -> tuple(
                   goalDefinition.kind(),
                   goalDefinition.windowSetSpecifier(),
                   goalDefinition.activityTemplate(),
-                  goalDefinition.rangeToGenerate())));
+                  goalDefinition.interval())));
 
-  private static JsonParser<GoalSpecifier.GoalAnd> goalAndF(JsonParser<GoalSpecifier> goalSpecifierP) {
+  private static JsonParser<GoalSpecifier.GoalAnd> goalAndF(final JsonParser<GoalSpecifier> goalSpecifierP) {
     return productP
         .field("kind", literalP("GoalAnd"))
         .field("goals", listP(goalSpecifierP))
@@ -104,7 +112,7 @@ public class SchedulingDSL {
                     $ -> tuple(Unit.UNIT, $.goals())));
   }
 
-  private static JsonParser<GoalSpecifier.GoalOr> goalOrF(JsonParser<GoalSpecifier> goalSpecifierP) {
+  private static JsonParser<GoalSpecifier.GoalOr> goalOrF(final JsonParser<GoalSpecifier> goalSpecifierP) {
     return productP
         .field("kind", literalP("GoalOr"))
         .field("goals", listP(goalSpecifierP))
@@ -129,8 +137,9 @@ public class SchedulingDSL {
         GoalKinds kind,
         WindowSetSpecifier windowSetSpecifier,
         ActivityTemplate activityTemplate,
-        List<Integer> rangeToGenerate
-    ) implements GoalSpecifier {}
+        Duration interval
+    ) implements GoalSpecifier {
+    }
     record GoalAnd(List<GoalSpecifier> goals) implements GoalSpecifier {}
     record GoalOr(List<GoalSpecifier> goals) implements GoalSpecifier {}
   }

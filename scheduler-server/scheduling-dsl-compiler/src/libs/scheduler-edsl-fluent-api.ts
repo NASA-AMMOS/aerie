@@ -301,12 +301,12 @@ export class Goal {
     });
   }
 
-  public static ActivityRecurrenceGoal(opts: { windowSet: WindowSet, activityTemplate: ActivityTemplate, rangeToGenerate: [AST.Integer, AST.Integer] }): ActivityRecurrenceGoal {
+  public static ActivityRecurrenceGoal(opts: { windowSet: WindowSet, activityTemplate: ActivityTemplate, interval: AST.Integer }): ActivityRecurrenceGoal {
     return Goal.new({
       kind: 'ActivityRecurrenceGoal',
       windows: opts.windowSet[GET_INTERNAL_SYMBOL],
       activityTemplate: opts.activityTemplate,
-      rangeToGenerate: opts.rangeToGenerate,
+      interval: opts.interval,
     });
   }
 }

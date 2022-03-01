@@ -1,12 +1,12 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.ActivityCreationTemplate;
-import gov.nasa.jpl.aerie.scheduler.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.CardinalityGoal;
-import gov.nasa.jpl.aerie.scheduler.ChildCustody;
+import gov.nasa.jpl.aerie.scheduler.CompositeAndGoal;
+import gov.nasa.jpl.aerie.scheduler.Goal;
+import gov.nasa.jpl.aerie.scheduler.OptionGoal;
+import gov.nasa.jpl.aerie.scheduler.RecurrenceGoal;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
@@ -97,25 +97,42 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
     return new GoalRecord(goalId, goal);
   }
 
-  private static CardinalityGoal goalOfGoalSpecifier(final SchedulingDSL.GoalSpecifier goalSpecifier, String merlinsightRuleName) {
-    // TODO: WORKAROUND
-    //       At this time we are unable to pull goal definitions from postgres
-    //       As a workaround we are providing goal IDs and names and the
-    //       scheduler agent will load the actual goal definitions from a JAR by name
+  private static Goal goalOfGoalSpecifier(final SchedulingDSL.GoalSpecifier goalSpecifier, final String merlinsightRuleName) {
+    if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalDefinition g) {
+      return goalOfGoalDefinition(g);
+    } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalAnd g) {
+      var builder = new CompositeAndGoal.Builder();
+      for (final var subGoalSpecifier : g.goals()) {
+        builder = builder.and(goalOfGoalSpecifier(subGoalSpecifier, merlinsightRuleName));
+      }
+      return builder.build();
+    } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalOr g) {
+      var builder = new OptionGoal.Builder();
+      for (final var subGoalSpecifier : g.goals()) {
+        builder = builder.or(goalOfGoalSpecifier(subGoalSpecifier, merlinsightRuleName));
+      }
+      return builder.build();
+    } else {
+      throw new Error("Unhandled variant of GoalSpecifier:" + goalSpecifier);
+    }
+  }
 
-//    return switch(goalSpecifier.kind()) {
-//      "Recurrence" -> new RecurrenceGoal.Builder().repeatingEvery(goalSpecifier.interval()).thereExistsOne(goalSpecifier.activityTemplate());
-//    }
+  private static Goal goalOfGoalDefinition(final SchedulingDSL.GoalSpecifier.GoalDefinition goalDefinition) {
+    return switch(goalDefinition.kind()) {
+      case ActivityRecurrenceGoal -> new RecurrenceGoal.Builder()
+          .repeatingEvery(goalDefinition.interval())
+          .thereExistsOne(makeActivityTemplate(goalDefinition))
+          .build();
+    };
+  }
 
-    return new CardinalityGoal.Builder()
-        .inPeriod(ActivityExpression.ofType(new ActivityType("")))
-        .thereExistsOne(
-            new ActivityCreationTemplate.Builder()
-                .ofType(new ActivityType(""))
-                .build())
-        .named(merlinsightRuleName)
-        .forAllTimeIn(Window.at(Duration.SECONDS))
-        .owned(ChildCustody.Jointly)
-        .build();
+  private static ActivityCreationTemplate makeActivityTemplate(final SchedulingDSL.GoalSpecifier.GoalDefinition goalDefinition) {
+    final var activityTemplate = goalDefinition.activityTemplate();
+    var builder = new ActivityCreationTemplate.Builder()
+        .ofType(new ActivityType(activityTemplate.activityType()));
+    for (final var argument : activityTemplate.arguments().entrySet()) {
+      builder = builder.withArgument(argument.getKey(), argument.getValue());
+    }
+    return builder.build();
   }
 }

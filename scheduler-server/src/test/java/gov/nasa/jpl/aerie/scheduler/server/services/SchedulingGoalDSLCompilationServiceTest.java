@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
@@ -40,7 +41,7 @@ class SchedulingGoalDSLCompilationServiceTests {
                   return Goal.ActivityRecurrenceGoal({
                     windowSet: WindowSet.entirePlanWindow,
                     activityTemplate: ActivityTemplates.PeelBanana('some goal', { peelDirection: 'fromStem' }),
-                    rangeToGenerate: [1,1]
+                    interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
                   })
                 }
             """, "goalfile");
@@ -53,7 +54,7 @@ class SchedulingGoalDSLCompilationServiceTests {
             Map.of(
                 "peelDirection",
                 SerializedValue.of("fromStem"))),
-        List.of(1, 1));
+        Duration.HOUR);
     assertEquals(expectedGoalDefinition, actualGoalDefinition);
   }
 
@@ -71,7 +72,7 @@ class SchedulingGoalDSLCompilationServiceTests {
                   return Goal.ActivityRecurrenceGoal({
                     windowSet: WindowSet.entirePlanWindow,
                     activityTemplate,
-                    rangeToGenerate: [1,1]
+                    interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
                   })
                 }
             """, "goalfile");
@@ -84,7 +85,7 @@ class SchedulingGoalDSLCompilationServiceTests {
             Map.of(
                 "peelDirection",
                 SerializedValue.of("fromStem"))),
-        List.of(1, 1));
+        Duration.HOUR);
     assertEquals(expectedGoalDefinition, actualGoalDefinition);
   }
 
@@ -101,7 +102,7 @@ class SchedulingGoalDSLCompilationServiceTests {
                   return Goal.ActivityRecurrenceGoal({
                     windowSet: x,
                     activityTemplate,
-                    rangeToGenerate: [1,1]
+                    interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
                   })
                 }
               """, "goalfile_with_type_error");
