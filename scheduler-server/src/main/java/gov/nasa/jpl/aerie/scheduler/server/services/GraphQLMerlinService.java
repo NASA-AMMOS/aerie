@@ -100,7 +100,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   @Override
   public long getPlanRevision(final PlanId planId) throws IOException, NoSuchPlanException {
     final var request = "query getPlanRevision { plan_by_pk( id: %s ) { revision } }"
-        .formatted(planId);
+        .formatted(planId.id());
     final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(planId));
     try {
       return response.getJsonObject("data").getJsonObject("plan_by_pk").getJsonNumber("revision").longValueExact();
@@ -126,7 +126,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
         + "  } "
         + "  simulations(limit:1, order_by:{revision:desc} ) { arguments }"
         + "} }"
-    ).formatted(planId);
+    ).formatted(planId.id());
     final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(planId));
     try {
       //TODO: elevate and then leverage existing MerlinParsers (after updating them to match current db!)
@@ -290,7 +290,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   public void ensurePlanExists(final PlanId planId) throws IOException, NoSuchPlanException {
     final Supplier<NoSuchPlanException> exceptionFactory = () -> new NoSuchPlanException(planId);
     final var request = "query ensurePlanExists { plan_by_pk( id: %s ) { id } }"
-        .formatted(planId);
+        .formatted(planId.id());
     final var response = postRequest(request).orElseThrow(exceptionFactory);
     try {
       final var id =
@@ -300,7 +300,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
               .getJsonObject("plan_by_pk")
               .getJsonNumber("id")
               .longValueExact());
-      if (id.equals(planId)) {
+      if (!id.equals(planId)) {
         throw exceptionFactory.get();
       }
     } catch (ClassCastException | ArithmeticException e) {
@@ -353,7 +353,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
     var orderedActivities = plan.getActivities().stream().toList();
 
     for (final var act : orderedActivities) {
-      requestSB.append(actPre.formatted(planId, act.getType().getName(), act.getStartTime().toString()));
+      requestSB.append(actPre.formatted(planId.id(), act.getType().getName(), act.getStartTime().toString()));
       if (act.getDuration() != null) {
         requestSB.append(argFormat.formatted("duration", getGraphQLValueString(act.getDuration())));
       }
@@ -378,7 +378,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
           .getJsonObject("data").getJsonObject("insert_activity").getJsonArray("returning");
       //make sure we associate the right id with the right activity
       for(int i = 0; i < ids.size(); i++) {
-        instanceToInstanceId.put(orderedActivities.get(i), new ActivityInstanceId(ids.getInt(i)));
+        instanceToInstanceId.put(orderedActivities.get(i), new ActivityInstanceId(ids.getJsonObject(i).getInt("id")));
       }
     } catch (ClassCastException | ArithmeticException e) {
       throw new NoSuchPlanException(planId);
