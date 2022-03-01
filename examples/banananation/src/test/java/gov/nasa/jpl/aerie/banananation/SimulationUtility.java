@@ -27,7 +27,7 @@ public final class SimulationUtility {
 
   public static SimulationResults
   simulate(final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule, final Duration simulationDuration) {
-    final var dataPath = Path.of(SimulationUtility.class.getClassLoader().getResource("data/lorem_ipsum.txt").getPath());
+    final var dataPath = Path.of(SimulationUtility.class.getResource("data/lorem_ipsum.txt").getPath());
     final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath);
     final var serializedConfig = SerializedValue.of(new ConfigurationMapper().getArguments(config));
     final var missionModel = makeMissionModel(new MissionModelBuilder(), serializedConfig);
