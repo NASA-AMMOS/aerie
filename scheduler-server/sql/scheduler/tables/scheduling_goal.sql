@@ -1,6 +1,7 @@
 create table scheduling_goal (
   id integer generated always as identity,
   revision integer not null default 0,
+  name text not null,
   definition text not null,
 
   model_id integer not null,
@@ -24,8 +25,10 @@ comment on column scheduling_goal.definition is e''
   'The source code for a Typescript module defining this scheduling goal';
 comment on column scheduling_goal.model_id is e''
   'The mission model used to which this scheduling goal is associated.';
+comment on column scheduling_goal.name is e''
+  'A short human readable name for this goal';
 comment on column scheduling_goal.description is e''
-  'A text description of this scheduling goal.';
+  'A longer text description of this scheduling goal.';
 comment on column scheduling_goal.author is e''
   'The original user who authored this scheduling goal.';
 comment on column scheduling_goal.last_modified_by is e''
