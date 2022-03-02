@@ -22,7 +22,6 @@ import gov.nasa.jpl.aerie.scheduler.server.services.LocalSpecificationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingDSLCompilationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.SynchronousSchedulerAgent;
-import gov.nasa.jpl.aerie.scheduler.server.services.UncachedSchedulerService;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
 
@@ -59,7 +58,7 @@ public final class SchedulerAppDriver {
 
     Runtime.getRuntime().addShutdownHook(new Thread(schedulingDSLCompilationService::close));
 
-    final var stores = loadStores(config);
+    final var stores = loadStores(config, schedulingDSLCompilationService);
 
     //create objects in each service abstraction layer (mirroring MerlinApp)
     final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI());
@@ -89,7 +88,9 @@ public final class SchedulerAppDriver {
 
   private record Stores(SpecificationRepository specifications, ResultsCellRepository results) { }
 
-  private static Stores loadStores(final AppConfiguration config) {
+  private static Stores loadStores(
+      final AppConfiguration config,
+      final SchedulingDSLCompilationService schedulingDSLCompilationService) {
     final var store = config.store();
     if (store instanceof final PostgresStore pgStore) {
       final var pgDataSource = new PGDataSource();
@@ -106,7 +107,7 @@ public final class SchedulerAppDriver {
       final var hikariDataSource = new HikariDataSource(hikariConfig);
 
       return new Stores(
-          new PostgresSpecificationRepository(hikariDataSource),
+          new PostgresSpecificationRepository(hikariDataSource, schedulingDSLCompilationService),
           new PostgresResultsCellRepository(hikariDataSource));
     } else if (store instanceof InMemoryStore) {
       final var inMemorySchedulerRepository = new InMemorySpecificationRepository();

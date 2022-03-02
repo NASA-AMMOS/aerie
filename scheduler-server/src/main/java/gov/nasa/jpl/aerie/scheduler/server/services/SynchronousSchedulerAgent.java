@@ -77,9 +77,9 @@ public record SynchronousSchedulerAgent(
       //TODO: maybe some kind of high level db transaction wrapping entire read/update of target plan revision
 
       // TODO: Remove workaround function wrapper once goals are read from database
-      final var specificationWithoutGoals = specificationService.getSpecification(request.specificationId());
-      final var planMetadata = merlinService.getPlanMetadata(specificationWithoutGoals.planId());
-      final var specificationWithGoals = loadSpecificationGoalsFromJAR(specificationWithoutGoals, planMetadata);
+      final var specificationWithGoals = specificationService.getSpecification(request.specificationId());
+      final var planMetadata = merlinService.getPlanMetadata(specificationWithGoals.planId());
+//      final var specificationWithGoals = loadSpecificationGoalsFromJAR(specificationWithoutGoals, planMetadata);
       ensureRequestIsCurrent(request);
       ensurePlanRevisionMatch(specificationWithGoals,planMetadata.planRev());
       //create scheduler problem seeded with initial plan
@@ -114,7 +114,7 @@ public record SynchronousSchedulerAgent(
 
       // TODO: Remove this catch for the workaround that loads goals from a JAR once
       //       we are reading goals from the database
-    } catch (final NoSuchPlanException | IOException | NoSuchGoalDefinitionException e) {
+    } catch (final NoSuchPlanException | IOException e) {
       writer.failWith(e.getMessage());
     }
   }
