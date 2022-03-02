@@ -2,7 +2,7 @@
   "name": "aerie-command",
   "version": "1.0.0",
   "description": "command service for AERIE",
-  "main": "index.js",
+  "main": "build/app.js",
   "type": "module",
   "scripts": {
     "build": "tsc;",
@@ -17,6 +17,7 @@
     "@microsoft/tsdoc": "^0.13.2",
     "express": "^4.17.2",
     "graphql": "^16.3.0",
+    "graphql-request": "^4.0.0",
     "multer": "^1.4.4",
     "pg": "^8.7.3",
     "piscina": "^3.2.0",
