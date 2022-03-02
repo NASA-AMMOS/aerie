@@ -17,7 +17,7 @@ Before you can deploy Aerie, you must install and configure the following produc
 
 ## Environment Variables
 
-Each container has environment variables that can be used to fine-tune your deployment. See the [environment variable documentation](./Environment.md) for the complete set of variables. See the example [docker-compose.yml](./docker-compose.yml) file for examples on how to set the environment variables.
+Each container has environment variables that can be used to fine-tune your deployment. See the [environment variable documentation](./Environment.md) for the complete set of variables. See the example [docker-compose.yml](./docker-compose.yml) file for examples on how to set the environment variables. **We highly recommend changing the default environment variable passwords before deploying Aerie**.
 
 ## Starting the Services
 

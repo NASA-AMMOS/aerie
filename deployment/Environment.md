@@ -11,25 +11,22 @@ This document provides detailed information about environment variables for each
 
 ## Aerie Gateway
 
-| Name                          | Description                                                            | Type     | Default                                        |
-| ----------------------------- | ---------------------------------------------------------------------- | -------- | ---------------------------------------------- |
-| `AUTH_TYPE`                   | Mode of authentication. Set to `none` to fully disable authentication. | `string` | cam                                            |
-| `AUTH_URL`                    | URL of authentication API for the given `AUTH_TYPE`.                   | `string` | https://atb-ocio-12b.jpl.nasa.gov:8443/cam-api |
-| `GQL_API_URL`                 | URL of GraphQL API for the GraphQL Playground.                         | `string` | http://localhost:8080/v1/graphql               |
-| `PORT`                        | Port the Gateway server listens on.                                    | `number` | 9000                                           |
-| `POSTGRES_AERIE_MERLIN_DB`    | Name of Merlin Postgres database.                                      | `string` | aerie_merlin                                   |
-| `POSTGRES_AERIE_SCHEDULER_DB` | Name of scheduler Postgres database.                                   | `string` | aerie_scheduler                                |
-| `POSTGRES_AERIE_UI_DB`        | Name of UI Postgres database.                                          | `string` | aerie_ui                                       |
-| `POSTGRES_HOST`               | Hostname of Postgres instance.                                         | `string` | localhost                                      |
-| `POSTGRES_PASSWORD`           | Password of Postgres instance.                                         | `string` | aerie                                          |
-| `POSTGRES_PORT`               | Port of Postgres instance.                                             | `number` | 5432                                           |
-| `POSTGRES_USER`               | User of Postgres instance.                                             | `string` | aerie                                          |
+| Name                          | Description                                    | Type     | Default                          |
+| ----------------------------- | ---------------------------------------------- | -------- | -------------------------------- |
+| `GQL_API_URL`                 | URL of GraphQL API for the GraphQL Playground. | `string` | http://localhost:8080/v1/graphql |
+| `PORT`                        | Port the Gateway server listens on.            | `number` | 9000                             |
+| `POSTGRES_AERIE_MERLIN_DB`    | Name of Merlin Postgres database.              | `string` | aerie_merlin                     |
+| `POSTGRES_AERIE_SCHEDULER_DB` | Name of scheduler Postgres database.           | `string` | aerie_scheduler                  |
+| `POSTGRES_AERIE_UI_DB`        | Name of UI Postgres database.                  | `string` | aerie_ui                         |
+| `POSTGRES_HOST`               | Hostname of Postgres instance.                 | `string` | localhost                        |
+| `POSTGRES_PASSWORD`           | Password of Postgres instance.                 | `string` | aerie                            |
+| `POSTGRES_PORT`               | Port of Postgres instance.                     | `number` | 5432                             |
+| `POSTGRES_USER`               | User of Postgres instance.                     | `string` | aerie                            |
 
 ## Aerie UI
 
 | Name                   | Description                                                                    | Type     | Default                          |
 | ---------------------- | ------------------------------------------------------------------------------ | -------- | -------------------------------- |
-| `AUTH_TYPE`            | Mode of authentication. Set to `none` to fully disable authentication.         | `string` | cam                              |
 | `GATEWAY_CLIENT_URL`   | Url of the Gateway as called from the client (i.e. web browser)                | `string` | http://localhost:9000            |
 | `GATEWAY_SERVER_URL`   | Url of the Gateway as called from the server (i.e. Node.js container)          | `string` | http://localhost:9000            |
 | `HASURA_CLIENT_URL`    | Url of Hasura as called from the client (i.e. web browser)                     | `string` | http://localhost:8080/v1/graphql |
@@ -69,17 +66,17 @@ The default Aerie deployment uses the default Postgres environment. See the [Doc
 
 ## Scheduler
 
-| Name                     | Description                                                           | Type     | Default                                           |
-| --------------------     | --------------------------------------------------------------------- | -------- | ------------------------------------------------- |
-| `MERLIN_GRAPHQL_URL`     | URI of the Merlin graphql interface to call                           | `string` | http://hasura:8080/v1/graphql                     |
-| `MERLIN_LOCAL_STORE`     | Local storage for Merlin in the container (for backdoor jar access)   | `string` | /usr/src/app/merlin_file_store                    |
-| `SCHEDULER_DB`           | The DB for scheduler                                                  | `string` | aerie_scheduler                                   |
-| `SCHEDULER_DB_PASSWORD`  | Password of the DB instance                                           | `string` | aerie                                             |
-| `SCHEDULER_DB_PORT`      | The DB instance port number that scheduler will connect with          | `number` | 5432                                              |
-| `SCHEDULER_DB_SERVER`    | The DB instance that scheduler will connect with                      | `string` | postgres                                          |
-| `SCHEDULER_DB_USER`      | Username of the DB instance                                           | `string` | aerie                                             |
-| `SCHEDULER_LOCAL_STORE`  | Local storage for scheduler in the container                          | `string` | /usr/src/app/scheduler_file_store                 |
-| `SCHEDULER_LOGGING`      | Whether or not you want Javalin to log server information             | `string` | true                                              |
-| `SCHEDULER_OUTPUT_MODE`  | how scheduler output is sent back to aerie                            | `string` | UpdateInputPlanWithNewActivities                  |
-| `SCHEDULER_PORT`         | Port number for the scheduler server                                  | `number` | 27193                                             |
-| `SCHEDULER_RULES_JAR`    | Jar file to load scheduling rules from (until user input to database) | `string` | /usr/src/app/merlin_file_store/scheduler_rules.jar |
+| Name                    | Description                                                           | Type     | Default                                            |
+| ----------------------- | --------------------------------------------------------------------- | -------- | -------------------------------------------------- |
+| `MERLIN_GRAPHQL_URL`    | URI of the Merlin graphql interface to call                           | `string` | http://hasura:8080/v1/graphql                      |
+| `MERLIN_LOCAL_STORE`    | Local storage for Merlin in the container (for backdoor jar access)   | `string` | /usr/src/app/merlin_file_store                     |
+| `SCHEDULER_DB`          | The DB for scheduler                                                  | `string` | aerie_scheduler                                    |
+| `SCHEDULER_DB_PASSWORD` | Password of the DB instance                                           | `string` | aerie                                              |
+| `SCHEDULER_DB_PORT`     | The DB instance port number that scheduler will connect with          | `number` | 5432                                               |
+| `SCHEDULER_DB_SERVER`   | The DB instance that scheduler will connect with                      | `string` | postgres                                           |
+| `SCHEDULER_DB_USER`     | Username of the DB instance                                           | `string` | aerie                                              |
+| `SCHEDULER_LOCAL_STORE` | Local storage for scheduler in the container                          | `string` | /usr/src/app/scheduler_file_store                  |
+| `SCHEDULER_LOGGING`     | Whether or not you want Javalin to log server information             | `string` | true                                               |
+| `SCHEDULER_OUTPUT_MODE` | how scheduler output is sent back to aerie                            | `string` | UpdateInputPlanWithNewActivities                   |
+| `SCHEDULER_PORT`        | Port number for the scheduler server                                  | `number` | 27193                                              |
+| `SCHEDULER_RULES_JAR`   | Jar file to load scheduling rules from (until user input to database) | `string` | /usr/src/app/merlin_file_store/scheduler_rules.jar |
