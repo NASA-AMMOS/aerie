@@ -390,7 +390,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   }
 
   @Override
-  public SchedulingDSLCompilationService.MissionModelTypes getMissionModelTypes(final PlanId planId)
+  public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final PlanId planId)
   throws IOException
   {
     final var request = """
@@ -406,7 +406,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
         }
         """.formatted(planId.id());
     final var response = postRequest(request).get();
-    final var activityTypes = new ArrayList<SchedulingDSLCompilationService.ActivityType>();
+    final var activityTypes = new ArrayList<TypescriptCodeGenerationService.ActivityType>();
     final var activityTypesJsonArray =
         response.getJsonObject("data")
                 .getJsonObject("plan_by_pk")
@@ -426,9 +426,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
                         .getJsonObject("schema"))
                 .getSuccessOrThrow());
       }
-      activityTypes.add(new SchedulingDSLCompilationService.ActivityType(activityTypeJson.asJsonObject().getString("name"), parameters));
+      activityTypes.add(new TypescriptCodeGenerationService.ActivityType(activityTypeJson.asJsonObject().getString("name"), parameters));
     }
-    return new SchedulingDSLCompilationService.MissionModelTypes(activityTypes, List.of());
+    return new TypescriptCodeGenerationService.MissionModelTypes(activityTypes, List.of());
   }
 
   /**
