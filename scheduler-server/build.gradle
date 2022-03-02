@@ -39,7 +39,16 @@ assemble {
 }
 
 test {
+  dependsOn(assembleSchedulingDSLCompiler)
   useJUnitPlatform()
+
+  // Add node bin directory to PATH, helps CI/CD services without node installed
+  projectDir.toPath().resolve('.gradle/nodejs').toFile().listFiles().each {
+    environment 'PATH', "${System.env.PATH}${System.getProperty('path.separator')}$it/bin"
+  }
+
+  environment "SCHEDULING_DSL_COMPILER_ROOT", projectDir.toPath().resolve('scheduling-dsl-compiler')
+  environment "SCHEDULING_DSL_COMPILER_COMMAND", './build/main.js'
 }
 
 application {
