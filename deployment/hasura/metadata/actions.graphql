@@ -6,6 +6,13 @@ type Mutation {
   ): AddExternalDatasetResponse
 }
 
+type Mutation {
+  uploadDictionary(dictionary: String!): CommandDictionaryResponse
+}
+type CommandDictionaryResponse {
+  id: Int!
+}
+
 type Query {
   getModelEffectiveArguments(
     missionModelId: ID!
@@ -110,3 +117,4 @@ scalar ActivityArguments
 scalar ProfileSet
 
 scalar SchedulingFailureReason
+
