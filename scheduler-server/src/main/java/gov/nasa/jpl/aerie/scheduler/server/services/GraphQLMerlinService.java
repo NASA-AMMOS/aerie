@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.json.BasicParsers;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.AerieController;
 import gov.nasa.jpl.aerie.scheduler.Plan;
@@ -31,6 +32,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,7 @@ import java.util.zip.GZIPInputStream;
 
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLInterval;
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLTimestamp;
+import static gov.nasa.jpl.aerie.scheduler.server.http.ValueSchemaJsonParser.valueSchemaP;
 
 /**
  * {@inheritDoc}
@@ -384,6 +387,48 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
       throw new NoSuchPlanException(planId);
     }
     return instanceToInstanceId;
+  }
+
+  @Override
+  public SchedulingDSLCompilationService.MissionModelTypes getMissionModelTypes(final PlanId planId)
+  throws IOException
+  {
+    final var request = """
+        query GetActivityTypesForPlan {
+          plan_by_pk(id: %d) {
+            mission_model {
+              activity_types {
+                name
+                parameters
+              }
+            }
+          }
+        }
+        """.formatted(planId.id());
+    final var response = postRequest(request).get();
+    final var activityTypes = new ArrayList<SchedulingDSLCompilationService.ActivityType>();
+    final var activityTypesJsonArray =
+        response.getJsonObject("data")
+                .getJsonObject("plan_by_pk")
+                .getJsonObject("mission_model")
+                .getJsonArray("activity_types");
+    for (final var activityTypeJson : activityTypesJsonArray) {
+      final var parametersJson = activityTypeJson.asJsonObject().getJsonObject("parameters");
+      final var parameters = new HashMap<String, ValueSchema>();
+      for (final var parameterJson : parametersJson.entrySet()) {
+        parameters.put(
+            parameterJson.getKey(),
+            valueSchemaP
+                .parse(
+                    parameterJson
+                        .getValue()
+                        .asJsonObject()
+                        .getJsonObject("schema"))
+                .getSuccessOrThrow());
+      }
+      activityTypes.add(new SchedulingDSLCompilationService.ActivityType(activityTypeJson.asJsonObject().getString("name"), parameters));
+    }
+    return new SchedulingDSLCompilationService.MissionModelTypes(activityTypes, List.of());
   }
 
   /**
