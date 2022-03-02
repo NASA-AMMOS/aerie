@@ -1,6 +1,7 @@
-import type { Pool, PoolConfig } from "pg";
-import pg from "pg";
-import { getEnv } from "../../env.js";
+import util from 'util';
+
+import { default as pg, Pool, PoolConfig} from 'pg';
+import { getEnv } from '../../env.js';
 
 const { Pool: DbPool } = pg;
 
@@ -29,8 +30,7 @@ export class DbExpansion {
         user,
       };
 
-      console.log(`Postgres Config:`);
-      console.log(config);
+      console.log(`Postgres Config:\n${util.formatWithOptions({depth: Infinity}, config)}`);
 
       DbExpansion.pool = new DbPool(config);
     } catch (error) {

@@ -50,7 +50,7 @@ app.put("/dictionary", async (req, res) => {
       RETURNING id;
     `;
 
-    const {rows} = await db.query(sqlExpression, [
+    const {rows} = await db.query<{id: string}>(sqlExpression, [
       commandTypesPath,
       parsedDictionary.header.mission_name,
       parsedDictionary.header.version,
@@ -65,11 +65,89 @@ app.put("/dictionary", async (req, res) => {
 });
 
 app.put('/expansion/:activityTypeName', upload.any(), async (req, res) => {
-  // Pull existing expanded commands for an activity instance of an expansion run
-  res.status(501).send('PUT /expansion: Not implemented');
+  const [file] = req.files as Express.Multer.File[];
+
+  // TODO: Check that the activity type name is valid with GraphQL API
+  console.log(`Expansion logic received`);
+
+  const sqlExpression = `
+    INSERT INTO expansion_rules (activity_type, expansion_logic)
+    VALUES ($1, $2)
+    RETURNING id;
+  `;
+
+  const {rows} = await db.query(sqlExpression, [
+    req.params.activityTypeName,
+    file.path,
+  ]);
+
+  if (rows.length < 1) {
+    console.error(`PUT /expansion: No expansion was updated in the database`);
+    res.contentType('json').status(500).send(`PUT /expansion: No expansion was updated in the database`);
+    return;
+  }
+  const id = rows[0].id;
+  console.log(`PUT /expansion: Updated expansion in the database: id=${id}`);
+  res.contentType('json').status(200).send(JSON.stringify({id}));
   return;
 });
 
+app.put('/expansion/:activityTypeName', upload.any(), async (req, res) => {
+  const [file] = req.files as Express.Multer.File[];
+
+  // TODO: Check that the activity type name is valid with GraphQL API
+  console.log(`Expansion logic received`);
+
+  const sqlExpression = `
+    INSERT INTO expansion_rules (activity_type, expansion_logic)
+    VALUES ($1, $2)
+    RETURNING id;
+  `;
+
+  const { rows } = await db.query(sqlExpression, [
+    req.params.activityTypeName,
+    file.path,
+  ]);
+
+  if (rows.length < 1) {
+    console.error(`PUT /expansion: No expansion was updated in the database`);
+    res.contentType('json').status(500).send(`PUT /expansion: No expansion was updated in the database`);
+    return;
+  }
+
+  const id = rows[0].id;
+  console.log(`PUT /expansion: Updated expansion in the database: id=${id}`);
+  res.contentType('json').status(200).send(JSON.stringify({ id }));
+  return;
+});
+
+app.get('/expansion/:expansionId', async (req, res) => {
+  const expansionId = req.params.expansionId;
+
+  const sqlExpression = `
+    SELECT expansion_logic
+    FROM expansion_rules
+    WHERE id = $1;
+  `;
+
+  const { rows } = await db.query(sqlExpression, [
+    expansionId,
+  ]);
+
+  if (rows.length < 1) {
+    console.error(`GET /expansion: No expansion with id: ${expansionId}`);
+    res.contentType('json').status(500).send(`GET /expansion: No expansion with id: ${expansionId}`);
+    return;
+  }
+
+  const expansionLogic = await fs.promises.readFile(rows[0].expansion_logic, 'utf-8');
+
+  console.log(`GET /expansion: Retrieved expansion from database: id=${expansionId}`);
+  res.contentType('text').status(200).send(expansionLogic);
+  return;
+});
+
+const expansionConfigValidator = ajv.compile(expansionSetSchema);
 app.put('/expansion-set', async (req, res) => {
   // Insert an expansion set into the db
   res.status(501).send('PUT /expansion-set: Not implemented');
