@@ -3,8 +3,8 @@ import ts from 'typescript';
 import {SourceMapConsumer} from 'source-map';
 import * as schedulerApi from './libs/scheduler-edsl-fluent-api.js';
 
-export default async function executeSourceCode(opts: { source: string, filename: string }) {
-  const transpiledSource = ts.transpileModule(opts.source, {
+export default async function executeSourceCode(opts: { source: string, filename: string, generatedCode: string }) {
+  const transpiledSource = ts.transpileModule(opts.generatedCode + "\n" + opts.source, {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
       target: ts.ScriptTarget.ESNext,

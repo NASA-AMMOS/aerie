@@ -9,10 +9,11 @@ process.on('uncaughtException', (err) => {
 
 async function handleRequest(data: Buffer) {
   try {
-    const { source, filename } = JSON.parse(data.toString()) as { source: string, filename: string };
+    const { source, filename, generatedCode } = JSON.parse(data.toString()) as { source: string, filename: string, generatedCode: string };
     const result = await executeSourceCode({
       source,
-      filename
+      filename,
+      generatedCode
     })
     const stringified = JSON.stringify(result);
     if (stringified === undefined) {
