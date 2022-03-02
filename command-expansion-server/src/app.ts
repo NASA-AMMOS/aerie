@@ -1,9 +1,11 @@
 import fs from 'fs';
+import util from 'util';
 
+import Ajv from 'ajv';
 import express, {Application, Request, Response} from 'express';
-import bodyParser from 'body-parser';
 import {GraphQLClient} from 'graphql-request';
 import multer from 'multer';
+import bodyParser from 'body-parser';
 import * as ampcs from '@gov.nasa.jpl.aerie/ampcs';
 
 import {getEnv} from './env.js';
@@ -11,13 +13,18 @@ import {DbExpansion} from './packages/db/db.js';
 import {processDictionary} from './packages/lib/CommandTypeCodegen.js';
 import {getCommandTypes} from './getCommandTypes.js';
 import {getActivityTypes} from './getActivityTypes.js';
+import {expansionSetSchema} from './packages/schemas/expansion-set.js';
+import {findDuplicates} from './utils/findDuplicates.js';
+
+const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
+
 const app: Application = express();
 
 app.use(bodyParser.json({ limit: "25mb" }));
 app.use(bodyParser.urlencoded({ limit: "25mb", extended: true }));
 app.use(express.json());
 
-const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
+const ajv = new Ajv();
 
 DbExpansion.init();
 const db = DbExpansion.getDb();
@@ -30,65 +37,37 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.put("/dictionary", async (req, res) => {
-    let dictionary: string = req.body.input.dictionary;
+  let dictionary: string = req.body.input.dictionary;
 
-    // un-stringify the xml
-    dictionary = dictionary.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&quot;", '"');
-    console.log(`Dictionary received`);
-    const parsedDictionary = ampcs.parse(dictionary);
-    console.log(
-      `Dictionary parsed - version: ${parsedDictionary.header.version}, mission: ${parsedDictionary.header.mission_name}`
-    );
-    const commandTypesPath = await processDictionary(parsedDictionary);
-    console.log(`command-lib generated - path: ${commandTypesPath}`);
-
-    const sqlExpression = `
-      INSERT INTO command_dictionary (command_types, mission, version)
-      VALUES ($1, $2, $3)
-      ON CONFLICT (mission, version) DO UPDATE
-        SET command_types = $1
-      RETURNING id;
-    `;
-
-    const {rows} = await db.query<{id: string}>(sqlExpression, [
-      commandTypesPath,
-      parsedDictionary.header.mission_name,
-      parsedDictionary.header.version,
-    ]);
-
-    if (rows.length < 0) {
-      throw new Error(`POST /dictionary: No command dictionary was updated in the database`);
-    }
-    const id = rows[0];
-    res.status(200).json({id});
-    return;
-});
-
-app.put('/expansion/:activityTypeName', upload.any(), async (req, res) => {
-  const [file] = req.files as Express.Multer.File[];
-
-  // TODO: Check that the activity type name is valid with GraphQL API
-  console.log(`Expansion logic received`);
+  // un-stringify the xml
+  dictionary = dictionary.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&quot;", '"');
+  console.log(`Dictionary received`);
+  const parsedDictionary = ampcs.parse(dictionary);
+  console.log(
+    `Dictionary parsed - version: ${parsedDictionary.header.version}, mission: ${parsedDictionary.header.mission_name}`
+  );
+  const commandTypesPath = await processDictionary(parsedDictionary);
+  console.log(`command-lib generated - path: ${commandTypesPath}`);
 
   const sqlExpression = `
-    INSERT INTO expansion_rules (activity_type, expansion_logic)
-    VALUES ($1, $2)
+    INSERT INTO command_dictionary (command_types, mission, version)
+    VALUES ($1, $2, $3)
+    ON CONFLICT (mission, version) DO UPDATE
+      SET command_types = $1
     RETURNING id;
   `;
 
-  const {rows} = await db.query(sqlExpression, [
-    req.params.activityTypeName,
-    file.path,
+  const {rows} = await db.query<{id: string}>(sqlExpression, [
+    commandTypesPath,
+    parsedDictionary.header.mission_name,
+    parsedDictionary.header.version,
   ]);
 
-  if (rows.length < 1) {
-    console.error(`PUT /expansion: No expansion was updated in the database`);
-    res.contentType('json').status(500).send(`PUT /expansion: No expansion was updated in the database`);
-    return;
+  if (rows.length < 0) {
+    throw new Error(`POST /dictionary: No command dictionary was updated in the database`);
   }
-  const id = rows[0].id;
-  console.log(`PUT /expansion: Updated expansion in the database: id=${id}`);
-  res.contentType('json').status(200).send(JSON.stringify({id}));
+  const id = rows[0];
+  res.status(200).json({id});
   return;
 });
 
@@ -149,8 +128,60 @@ app.get('/expansion/:expansionId', async (req, res) => {
 
 const expansionConfigValidator = ajv.compile(expansionSetSchema);
 app.put('/expansion-set', async (req, res) => {
-  // Insert an expansion set into the db
-  res.status(501).send('PUT /expansion-set: Not implemented');
+  const { body } = req;
+  if (!expansionConfigValidator(body)) {
+    res.status(400).send(`PUT /expansion-set: Invalid request body: ${JSON.stringify(body)}\n${util.formatWithOptions({ depth: Infinity}, expansionConfigValidator.errors)}`);
+    return;
+  }
+  const commandDictionaryId = body.commandDictionaryId;
+  const expansionIds = body.expansionIds;
+  const missionModelId = body.missionModelId;
+
+  const { rows: expansionRulesRows } = await db.query(`
+    SELECT activity_type, id
+    FROM expansion_rules
+    WHERE id = ANY($1);
+  `, [
+      expansionIds,
+  ]);
+
+  const duplicates = findDuplicates(expansionRulesRows, expansionRule => expansionRule.activity_type);
+
+  if (duplicates.length > 0) {
+    const duplicateStrings: string[] = [];
+    const reportedDuplicates = new Set<string>();
+    for (const duplicate of duplicates) {
+      if (reportedDuplicates.has(duplicate.activity_type)) {
+        continue;
+      }
+      const duplicateIds = duplicates.filter(dupe => dupe.activity_type === duplicate.activity_type).map(dupe => dupe.id)
+      duplicateStrings.push(`Duplicate expansion rule for activity type: ${duplicate.activity_type} (expansion ids: ${duplicateIds.join(', ')})`);
+      reportedDuplicates.add(duplicate.activity_type);
+    }
+    res.status(400).send(`PUT /expansion-set:\n\t${duplicateStrings.join('\n\t')}`);
+    return;
+  }
+
+  const { rows } = await db.query(`
+    WITH expansion_set_id AS (
+      INSERT INTO expansion_set (command_dict_id, mission_model_id)
+      VALUES (${commandDictionaryId}, ${missionModelId})
+      RETURNING id
+    )
+    INSERT INTO expansion_set_to_rule (set_id, rule_id)
+    VALUES
+      ${expansionIds.map(expansionId => `((SELECT id FROM expansion_set_id), ${expansionId})`).join(',\n      ')}
+    RETURNING (SELECT id FROM expansion_set_id);
+  `);
+
+  if (rows.length < 1) {
+    console.error(`PUT /expansion-set: No expansion set was inserted in the database`);
+    res.contentType('json').status(500).send(`PUT /expansion-set: No expansion set was inserted in the database`);
+    return;
+  }
+  const id = rows[0].id;
+  console.log(`PUT /expansion-set: Updated expansion set in the database: id=${id}`);
+  res.contentType('json').status(200).send(JSON.stringify({ id }));
   return;
 });
 
