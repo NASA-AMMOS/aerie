@@ -9,6 +9,7 @@ import * as ampcs from '@gov.nasa.jpl.aerie/ampcs';
 import {getEnv} from './env.js';
 import {DbExpansion} from './packages/db/db.js';
 import {processDictionary} from './packages/lib/CommandTypeCodegen.js';
+import {getCommandTypes} from './getCommandTypes.js';
 const app: Application = express();
 
 app.use(bodyParser.json({ limit: "25mb" }));
@@ -82,8 +83,8 @@ app.put('/expansion-set', async (req, res) => {
 });
 
 app.get('/command-types/:dictionaryId', async (req, res) => {
-  // Pull existing command types for the dictionary id
-  res.status(501).send('GET /command-types: Not implemented');
+  const commandTypes = await getCommandTypes(db, req.params.dictionaryId);
+  res.contentType('text').status(200).send(commandTypes);
   return;
 });
 

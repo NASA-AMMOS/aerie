@@ -43,10 +43,7 @@ type Arrayable<T> = T | Arrayable<T>[];
 export type ExpansionReturn = Arrayable<Command>;
 
 declare global {
-  type Context = {
-    warn(message: string): void;
-    someAsyncDataLoader(): Promise<number>;
-  }
+  type Context = {}
 
   type ExpansionReturn = Arrayable<Command>;
 
