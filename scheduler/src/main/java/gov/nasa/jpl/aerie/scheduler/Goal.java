@@ -159,10 +159,6 @@ public class Goal {
      * @return the provided goal object with details filled in
      */
     protected Goal fill(Goal goal) {
-      if (name == null) {
-        throw new IllegalArgumentException(
-            "creating goal requires non-null name");
-      }
       goal.name = name;
 
       goal.partialSatisfaction = true;

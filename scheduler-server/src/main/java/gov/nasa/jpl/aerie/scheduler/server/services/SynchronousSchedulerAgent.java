@@ -25,6 +25,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
+import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresSpecificationRepository;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -77,9 +78,9 @@ public record SynchronousSchedulerAgent(
       //TODO: maybe some kind of high level db transaction wrapping entire read/update of target plan revision
 
       // TODO: Remove workaround function wrapper once goals are read from database
-      final var specificationWithoutGoals = specificationService.getSpecification(request.specificationId());
-      final var planMetadata = merlinService.getPlanMetadata(specificationWithoutGoals.planId());
-      final var specificationWithGoals = loadSpecificationGoalsFromJAR(specificationWithoutGoals, planMetadata);
+      final var specificationWithGoals = specificationService.getSpecification(request.specificationId());
+      final var planMetadata = merlinService.getPlanMetadata(specificationWithGoals.planId());
+//      final var specificationWithGoals = loadSpecificationGoalsFromJAR(specificationWithoutGoals, planMetadata);
       ensureRequestIsCurrent(request);
       ensurePlanRevisionMatch(specificationWithGoals,planMetadata.planRev());
       //create scheduler problem seeded with initial plan
@@ -108,13 +109,13 @@ public record SynchronousSchedulerAgent(
       //collect results and notify subscribers of success
       final var results = collectResults(solutionPlan,instancesToIds, goals);
       writer.succeedWith(results);
-    } catch (final ResultsProtocolFailure | NoSuchSpecificationException e) {
+    } catch (final ResultsProtocolFailure | NoSuchSpecificationException | PostgresSpecificationRepository.GoalBuildFailureException e) {
       //unwrap failure message from any anticipated exceptions and forward to subscribers
       writer.failWith(e.getMessage());
 
       // TODO: Remove this catch for the workaround that loads goals from a JAR once
       //       we are reading goals from the database
-    } catch (final NoSuchPlanException | IOException | NoSuchGoalDefinitionException e) {
+    } catch (final NoSuchPlanException | IOException e) {
       writer.failWith(e.getMessage());
     }
   }

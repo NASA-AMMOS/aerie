@@ -4,10 +4,12 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationExcepti
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
+import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresSpecificationRepository;
 
 public record LocalSpecificationService(SpecificationRepository specificationRepository) implements SpecificationService {
   @Override
-  public Specification getSpecification(final SpecificationId specificationId) throws NoSuchSpecificationException
+  public Specification getSpecification(final SpecificationId specificationId)
+  throws NoSuchSpecificationException, PostgresSpecificationRepository.GoalBuildFailureException
   {
     return specificationRepository.getSpecification(specificationId);
   }
