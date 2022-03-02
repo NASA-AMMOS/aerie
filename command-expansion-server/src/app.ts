@@ -1,13 +1,14 @@
-import express, { Application, Request, Response } from "express";
-import bodyParser from "body-parser";
+import fs from 'fs';
 
-import { getEnv } from "./env.js";
-import { DbExpansion } from "./packages/db/db.js";
-import multer from "multer";
-import fs from "fs";
-import * as ampcs from "@gov.nasa.jpl.aerie/ampcs";
-import { processDictionary } from "./packages/lib/CommandTypeCodegen.js";
 
+import express, {Application, Request, Response} from 'express';
+import bodyParser from 'body-parser';
+import multer from 'multer';
+import * as ampcs from '@gov.nasa.jpl.aerie/ampcs';
+
+import {getEnv} from './env.js';
+import {DbExpansion} from './packages/db/db.js';
+import {processDictionary} from './packages/lib/CommandTypeCodegen.js';
 const app: Application = express();
 
 app.use(bodyParser.json({ limit: "25mb" }));
@@ -19,10 +20,10 @@ const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
 DbExpansion.init();
 const db = DbExpansion.getDb();
 
-const upload = multer({ dest: "uploads/" });
+const upload = multer({ dest: 'uploads/' });
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Aerie Command Service");
+app.get('/', (req: Request, res: Response) => {
+  res.send('Aerie Command Service');
 });
 
 app.put("/dictionary", async (req, res) => {
@@ -36,19 +37,19 @@ app.put("/dictionary", async (req, res) => {
     console.log(
         `Dictionary parsed - version: ${parsedDictionary.header.version}, mission: ${parsedDictionary.header.mission_name}`
     );
-    const path = await processDictionary(parsedDictionary);
-    console.log(`command-lib generated - path: ${path}`);
+    const commandTypesPath = await processDictionary(parsedDictionary);
+    console.log(`command-lib generated - path: ${commandTypesPath}`);
 
     const sqlExpression = `
-      insert into command_dictionary (command_types, mission, version)
-      values ($1, $2, $3)
-      on conflict (mission, version) do update
-        set command_types = $1
-      returning id;
+      INSERT INTO command_dictionary (command_types, mission, version)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (mission, version) DO UPDATE
+        SET command_types = $1
+      RETURNING id;
     `;
 
     const {rows} = await db.query(sqlExpression, [
-      path,
+      commandTypesPath,
       parsedDictionary.header.mission_name,
       parsedDictionary.header.version,
     ]);
