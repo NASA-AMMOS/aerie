@@ -36,11 +36,13 @@ configure(subprojects.findAll { it.projectDir.toPath().resolve('sql').toFile().e
 
   // For all Node subprojects
   sp.plugins.withId('com.github.node-gradle.node') {
-    // Distribute SQL as part of resource processing
-    tasks.create('processResources')
-    tasks.findAll { it.name == 'processResources' }.each { it.dependsOn distributeSql }
-    // Remove distributed SQL as part of `clean` tasks
-    // 'clean' is not visible here, use the subproject .gradle 'clean' task
+    if (!sp.projectDir.toString().contains('scheduler-server')) { // scheduler-server is both a java and a node project
+      // Distribute SQL as part of resource processing
+      tasks.create('processResources')
+      tasks.findAll { it.name == 'processResources' }.each { it.dependsOn distributeSql }
+      // Remove distributed SQL as part of `clean` tasks
+      // 'clean' is not visible here, use the subproject .gradle 'clean' task
+    }
   }
 
   // Distribute SQL prior to creating deployment archive

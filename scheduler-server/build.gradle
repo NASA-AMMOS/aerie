@@ -1,12 +1,41 @@
 plugins {
   id 'java'
   id 'application'
+  id 'com.github.node-gradle.node' version '3.1.1'
 }
 
 java {
   toolchain {
     languageVersion = JavaLanguageVersion.of(17)
   }
+}
+
+node {
+  nodeProjectDir = file("${project.projectDir.toPath().resolve("scheduling-dsl-compiler")}")
+  version = '16.4.0'
+  npmVersion = '8.5.0'
+  download = true
+}
+
+task assembleSchedulingDSLCompiler(type: NpmTask) {
+  dependsOn processResources
+  dependsOn npmInstall
+  args = ['run', 'build']
+  inputs.files('package.json', 'package-lock.json', 'tsconfig.json')
+  inputs.dir('src')
+}
+
+task generateASTJsonSchema(type: NpmTask) {
+  dependsOn processResources
+  dependsOn npmInstall
+  args = ['run', 'generate-ast-schema']
+  inputs.files('package.json', 'package-lock.json', 'tsconfig.json')
+  inputs.dir('src')
+}
+
+assemble {
+  dependsOn assembleSchedulingDSLCompiler
+  dependsOn generateASTJsonSchema
 }
 
 test {
