@@ -1,8 +1,8 @@
 import fs from 'fs';
 
-
 import express, {Application, Request, Response} from 'express';
 import bodyParser from 'body-parser';
+import {GraphQLClient} from 'graphql-request';
 import multer from 'multer';
 import * as ampcs from '@gov.nasa.jpl.aerie/ampcs';
 
@@ -10,6 +10,7 @@ import {getEnv} from './env.js';
 import {DbExpansion} from './packages/db/db.js';
 import {processDictionary} from './packages/lib/CommandTypeCodegen.js';
 import {getCommandTypes} from './getCommandTypes.js';
+import {getActivityTypes} from './getActivityTypes.js';
 const app: Application = express();
 
 app.use(bodyParser.json({ limit: "25mb" }));
@@ -20,6 +21,7 @@ const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
 
 DbExpansion.init();
 const db = DbExpansion.getDb();
+const graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL);
 
 const upload = multer({ dest: 'uploads/' });
 
@@ -28,7 +30,6 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.put("/dictionary", async (req, res) => {
-  try {
     let dictionary: string = req.body.input.dictionary;
 
     // un-stringify the xml
@@ -36,7 +37,7 @@ app.put("/dictionary", async (req, res) => {
     console.log(`Dictionary received`);
     const parsedDictionary = ampcs.parse(dictionary);
     console.log(
-        `Dictionary parsed - version: ${parsedDictionary.header.version}, mission: ${parsedDictionary.header.mission_name}`
+      `Dictionary parsed - version: ${parsedDictionary.header.version}, mission: ${parsedDictionary.header.mission_name}`
     );
     const commandTypesPath = await processDictionary(parsedDictionary);
     console.log(`command-lib generated - path: ${commandTypesPath}`);
@@ -56,18 +57,11 @@ app.put("/dictionary", async (req, res) => {
     ]);
 
     if (rows.length < 0) {
-      console.error(`POST /dictionary: No command dictionary was updated in the database`);
-      res.status(500).send(`POST /dictionary: No command dictionary was updated in the database`);
-      return;
+      throw new Error(`POST /dictionary: No command dictionary was updated in the database`);
     }
     const id = rows[0];
     res.status(200).json({id});
     return;
-  } catch (err) {
-    console.error(err);
-    res.status(500).send(`POST /dictionary Command Dictionary upload failed: \n${err}`);
-    return;
-  }
 });
 
 app.put('/expansion/:activityTypeName', upload.any(), async (req, res) => {
@@ -89,8 +83,8 @@ app.get('/command-types/:dictionaryId', async (req, res) => {
 });
 
 app.get('/activity-types/:missionModelId/:activityTypeName', async (req, res) => {
-  // Generate activity types for the mission model and activity type name
-  res.status(501).send('GET /activity-types: Not implemented');
+  const activityTypes = await getActivityTypes(graphqlClient, req.params.missionModelId, req.params.activityTypeName);
+  res.contentType('text').status(200).send(activityTypes);
   return;
 });
 
