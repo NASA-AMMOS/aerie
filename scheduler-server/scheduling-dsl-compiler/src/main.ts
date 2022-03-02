@@ -30,10 +30,11 @@ async function main() {
         process.stdout.write("pong\n");
         return
       }
-      const { source, filename } = JSON.parse(data.toString()) as { source: string, filename: string };
+      const { source, filename, generatedCode } = JSON.parse(data.toString()) as { source: string, filename: string, generatedCode: string };
       const result = await piscina.run({
         source,
         filename,
+        generatedCode
       }) as Promise<{ ast: AST.GoalSpecifier }>;
       let stringified = JSON.stringify(result);
       if (stringified === undefined) {

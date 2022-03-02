@@ -40,11 +40,15 @@ public class SchedulingDSLCompilationService {
   public SchedulingDSL.GoalSpecifier compileSchedulingGoalDSL(final String goalTypescript, final String goalName)
   throws SchedulingDSLCompilationException
   {
+    final var generatedCode = JSONObject.quote("""
+      const SAMPLE_TYPESCRIPT_CODE = "Hello world"
+    """);
+
     /*
     * PROTOCOL:
     *   denote this java program as JAVA, and the node subprocess as NODE
     *
-    *   JAVA -- stdin --> NODE: { "source": "sourcecode", "filename": "goalname" } \n
+    *   JAVA -- stdin --> NODE: { "source": "sourcecode", "filename": "goalname", "generatedCode": "generatedcode" } \n
     *   NODE -- stdout --> JAVA: one of "success\n" or "error\n"
     *   NODE -- stdout --> JAVA: payload associated with success or failure, must be exactly one line terminated with \n
     * */
@@ -52,7 +56,7 @@ public class SchedulingDSLCompilationService {
     final var outputReader = this.nodeProcess.inputReader();
     final var quotedGoalTypescript = JSONObject.quote(goalTypescript); // adds extra quotes to start and end
     try {
-      inputWriter.write("{ \"source\": " + quotedGoalTypescript + ", \"filename\": \"" + goalName + "\" }\n");
+      inputWriter.write("{ \"source\": " + quotedGoalTypescript + ", \"filename\": \"" + goalName + "\", \"generatedCode\": " + generatedCode + " }\n");
       inputWriter.flush();
       final var status = outputReader.readLine();
       if ("error".equals(status)) {
