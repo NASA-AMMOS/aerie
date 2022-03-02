@@ -33,13 +33,16 @@ public class SchedulingGoalDSLCompilationService {
     try {
       this.nodeProcess.getInputStream();
       this.nodeProcess.getOutputStream();
+      System.out.println("Started node subprocess");
     } catch (Exception e) {
       throw new SchedulingGoalDSLCompilationException("Could not create node subprocess: ", e);
     }
   }
 
   public void close() {
+    System.out.println("Stopping node subprocess...");
     this.nodeProcess.destroy();
+    System.out.println("Stopped node subprocess");
   }
 
   // {"kind":"ActivityRecurrenceGoal","windows":{"kind":"ConstraintOperatorEntirePlanWindow"},"activityTemplate":{"name":"some goal","activityType":"PeelBanana","arguments":{"peelDirection":"fromStem"}},"rangeToGenerate":[1,1]}

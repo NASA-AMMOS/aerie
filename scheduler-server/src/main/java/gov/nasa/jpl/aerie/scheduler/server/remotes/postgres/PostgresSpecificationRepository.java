@@ -1,12 +1,14 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.ActivityType;
-import gov.nasa.jpl.aerie.scheduler.CardinalityGoal;
 import gov.nasa.jpl.aerie.scheduler.CompositeAndGoal;
 import gov.nasa.jpl.aerie.scheduler.Goal;
 import gov.nasa.jpl.aerie.scheduler.OptionGoal;
+import gov.nasa.jpl.aerie.scheduler.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.RecurrenceGoal;
+import gov.nasa.jpl.aerie.scheduler.Time;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
@@ -14,6 +16,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
+import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.services.RevisionData;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingGoalDSLCompilationService;
@@ -45,7 +48,7 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
         final var goals = getSpecificationGoalsAction
             .get(specificationId.id())
             .stream()
-            .map((PostgresGoalRecord pgGoal) -> buildGoalRecord(pgGoal, this.schedulingGoalDSLCompilationService))
+            .map((PostgresGoalRecord pgGoal) -> buildGoalRecord(pgGoal, specificationRecord.horizonStartTimestamp(), specificationRecord.horizonEndTimestamp(), this.schedulingGoalDSLCompilationService))
             .collect(Collectors.toList());
 
         return new Specification(
@@ -80,10 +83,14 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
     }
   }
 
-  private static GoalRecord buildGoalRecord(final PostgresGoalRecord pgGoal, final SchedulingGoalDSLCompilationService schedulingGoalDSLCompilationService) {
-    final SchedulingDSL.GoalSpecifier.GoalDefinition goalDefinition;
+  private static GoalRecord buildGoalRecord(
+      final PostgresGoalRecord pgGoal,
+      final Timestamp horizonStartTimestamp,
+      final Timestamp horizonEndTimestamp,
+      final SchedulingGoalDSLCompilationService schedulingGoalDSLCompilationService) {
+    final SchedulingDSL.GoalSpecifier goalSpecifier;
     try {
-       goalDefinition = (SchedulingDSL.GoalSpecifier.GoalDefinition) schedulingGoalDSLCompilationService.compileSchedulingGoalDSL(
+       goalSpecifier = schedulingGoalDSLCompilationService.compileSchedulingGoalDSL(
           pgGoal.definition(),
           "goals don't have names?");
     } catch (SchedulingGoalDSLCompilationService.SchedulingGoalDSLCompilationException | IOException e) {
@@ -92,24 +99,33 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
     }
     final var goalId = new GoalId(pgGoal.id());
 
-    final var goal = goalOfGoalSpecifier(goalDefinition, pgGoal.definition());
+    final var goal = goalOfGoalSpecifier(goalSpecifier, horizonStartTimestamp, horizonEndTimestamp);
 
     return new GoalRecord(goalId, goal);
   }
 
-  private static Goal goalOfGoalSpecifier(final SchedulingDSL.GoalSpecifier goalSpecifier, final String merlinsightRuleName) {
+  private static Goal goalOfGoalSpecifier(
+      final SchedulingDSL.GoalSpecifier goalSpecifier,
+      final Timestamp horizonStartTimestamp,
+      final Timestamp horizonEndTimestamp) {
     if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalDefinition g) {
-      return goalOfGoalDefinition(g);
+      return goalOfGoalDefinition(g, horizonStartTimestamp, horizonEndTimestamp);
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalAnd g) {
       var builder = new CompositeAndGoal.Builder();
       for (final var subGoalSpecifier : g.goals()) {
-        builder = builder.and(goalOfGoalSpecifier(subGoalSpecifier, merlinsightRuleName));
+        builder = builder.and(goalOfGoalSpecifier(subGoalSpecifier,
+                                                  horizonStartTimestamp,
+                                                  horizonEndTimestamp
+        ));
       }
       return builder.build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalOr g) {
       var builder = new OptionGoal.Builder();
       for (final var subGoalSpecifier : g.goals()) {
-        builder = builder.or(goalOfGoalSpecifier(subGoalSpecifier, merlinsightRuleName));
+        builder = builder.or(goalOfGoalSpecifier(subGoalSpecifier,
+                                                 horizonStartTimestamp,
+                                                 horizonEndTimestamp
+        ));
       }
       return builder.build();
     } else {
@@ -117,9 +133,16 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
     }
   }
 
-  private static Goal goalOfGoalDefinition(final SchedulingDSL.GoalSpecifier.GoalDefinition goalDefinition) {
+  private static Goal goalOfGoalDefinition(
+      final SchedulingDSL.GoalSpecifier.GoalDefinition goalDefinition,
+      final Timestamp horizonStartTimestamp,
+      final Timestamp horizonEndTimestamp) {
+    final var hor = new PlanningHorizon(
+        Time.fromString(horizonStartTimestamp.toString()),
+        Time.fromString(horizonEndTimestamp.toString())).getHor();
     return switch(goalDefinition.kind()) {
       case ActivityRecurrenceGoal -> new RecurrenceGoal.Builder()
+          .forAllTimeIn(hor)
           .repeatingEvery(goalDefinition.interval())
           .thereExistsOne(makeActivityTemplate(goalDefinition))
           .build();
@@ -133,6 +156,7 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
     for (final var argument : activityTemplate.arguments().entrySet()) {
       builder = builder.withArgument(argument.getKey(), argument.getValue());
     }
+    builder = builder.duration(Duration.ZERO);
     return builder.build();
   }
 }
