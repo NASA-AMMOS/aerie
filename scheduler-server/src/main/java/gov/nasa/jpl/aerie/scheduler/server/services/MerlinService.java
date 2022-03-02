@@ -130,5 +130,7 @@ public interface MerlinService {
    */
   Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(final PlanId planId, final Plan plan) throws IOException, NoSuchPlanException;
 
+  TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final PlanId missionModelId) throws IOException;
+
 
 }
