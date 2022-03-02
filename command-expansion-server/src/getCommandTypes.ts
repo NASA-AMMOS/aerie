@@ -1,6 +1,6 @@
-import type {Pool} from "pg";
-import fs from "fs";
-import { ErrorWithStatusCode } from "./packages/utils/ErrorWithStatusCode";
+import type {Pool} from 'pg';
+import fs from 'fs';
+import { ErrorWithStatusCode } from './packages/utils/ErrorWithStatusCode.js';
 
 export async function getCommandTypes(db: Pool, dictionaryId: string): Promise<string> {
   const sqlExpression = `
