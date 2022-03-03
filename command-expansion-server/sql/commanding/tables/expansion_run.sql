@@ -17,4 +17,4 @@ comment on column expansion_run.id is e''
 comment on column expansion_run.dataset_id is e''
   'The dataset id used to generate this expansion run.';
 comment on column expansion_run.expansion_set_id is e''
-  'The command dictionary, mission model, and expansion set';
+  'The command dictionary, mission model, and expansion set id.';
