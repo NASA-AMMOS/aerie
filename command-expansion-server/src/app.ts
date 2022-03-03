@@ -100,7 +100,7 @@ app.put('/expansion/:activityTypeName', upload.any(), async (req, res) => {
   return;
 });
 
-app.get('/expansion/:expansionId', async (req, res) => {
+app.get('/expansion/:expansionId(\\d+)', async (req, res) => {
   const expansionId = req.params.expansionId;
 
   const sqlExpression = `
@@ -185,19 +185,19 @@ app.put('/expansion-set', async (req, res) => {
   return;
 });
 
-app.get('/command-types/:dictionaryId', async (req, res) => {
-  const commandTypes = await getCommandTypes(db, req.params.dictionaryId);
+app.get('/command-types/:dictionaryId(\\d+)', async (req, res) => {
+  const commandTypes = await getCommandTypes(db, parseInt(req.params.dictionaryId, 10));
   res.contentType('text').status(200).send(commandTypes);
   return;
 });
 
-app.get('/activity-types/:missionModelId/:activityTypeName', async (req, res) => {
-  const activityTypes = await getActivityTypes(graphqlClient, req.params.missionModelId, req.params.activityTypeName);
+app.get('/activity-types/:missionModelId(\\d+)/:activityTypeName', async (req, res) => {
+  const activityTypes = await getActivityTypes(graphqlClient, parseInt(req.params.missionModelId, 10), req.params.activityTypeName);
   res.contentType('text').status(200).send(activityTypes);
   return;
 });
 
-app.get('/commands/:expansionRunId/:activityInstanceId', async (req, res) => {
+app.get('/commands/:expansionRunId(\\d+)/:activityInstanceId(\\d+)', async (req, res) => {
   // Pull existing expanded commands for an activity instance of an expansion run
   res.status(501).send('GET /commands: Not implemented');
   return;
