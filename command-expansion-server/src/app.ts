@@ -6,6 +6,7 @@ import express, {Application, Request, Response} from 'express';
 import {GraphQLClient} from 'graphql-request';
 import multer from 'multer';
 import bodyParser from 'body-parser';
+import Piscina from 'piscina';
 import * as ampcs from '@gov.nasa.jpl.aerie/ampcs';
 
 import {getEnv} from './env.js';
@@ -13,8 +14,13 @@ import {DbExpansion} from './db/db.js';
 import {processDictionary} from './lib/CommandTypeCodegen.js';
 import {getCommandTypes} from './getCommandTypes.js';
 import {getActivityTypes} from './getActivityTypes.js';
+import {expansionSetSchema} from './schemas/expansion-set.js';
 import {ErrorWithStatusCode} from './utils/ErrorWithStatusCode.js';
-import {expansionSetSchema} from './packages/schemas/expansion-set.js';
+import {getActivityInstancesAndModelIdFromSimulationId} from './getActivityInstancesAndModelIdFromSimulationId.js';
+import {getExpansionSet} from './getExpansionSet.js';
+import {isRejected, isResolved} from './utils/typeguards.js';
+import {Command} from './lib/CommandEDSLPreamble.js';
+import {InheritedError} from './utils/InheritedError.js';
 import {findDuplicates} from './utils/findDuplicates.js';
 
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
@@ -30,6 +36,11 @@ const ajv = new Ajv();
 DbExpansion.init();
 const db = DbExpansion.getDb();
 const graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL);
+
+
+const piscina = new Piscina({
+  filename: new URL('./worker.js', import.meta.url).href,
+});
 
 const upload = multer({ dest: 'uploads/' });
 
@@ -194,24 +205,85 @@ app.get('/commands/:expansionRunId(\\d+)/:activityInstanceId(\\d+)', async (req,
   return;
 });
 
-app.post('/expand-activity-instance/:simulationId/:expansionConfigId', async (req, res) => {
-  // Parallel([
-    // Get activity instances from simulation
-    // Get expansion config by id
-  // ])
-  // Get command dictionary id from expansion config
-  // Get expansion ids from expansion config
-  // Get mission model id from simulation
-  // Parallel([
-    // Get command types by command dictionary id
-    // Get expansions by ids
-  // ])
-  // For each activity instance in the plan
-  //   If the activity instance has an expansion in the expansion config
-  //     Get the activity types by mission model id and activity type name
-  //     Execute expansion using the command types, activity types, and activity instance
-  //     Store resulting commands in db
-  res.status(501).send('POST /expand-activity-instance: Not implemented');
+app.post('/expand-all-activity-instances/:simulationId(\\d+)/:expansionSetId(\\d+)', async (req, res) => {
+  const simulationId = parseInt(req.params.simulationId, 10);
+  const expansionSetId = parseInt(req.params.expansionSetId, 10);
+
+  const [
+    { missionModelId: simulationMissionModelId, activityInstances},
+    { commandDictionaryId, missionModelId: expansionSetMissionModelId, expansionMap },
+  ] = await Promise.all([
+    getActivityInstancesAndModelIdFromSimulationId(graphqlClient, simulationId),
+    getExpansionSet(db, expansionSetId),
+  ]);
+
+  if (simulationMissionModelId !== expansionSetMissionModelId) {
+    throw new Error(`POST /expand-all-activity-instances: Attempting to expand and activity instance from a simulation with a different mission model (${simulationMissionModelId}) than the specified expansion set (${expansionSetMissionModelId})`);
+  }
+  const missionModelId = simulationMissionModelId;
+
+  const commandTypes = await getCommandTypes(db, commandDictionaryId);
+
+  const activityInstanceCommandPromiseSettledResult = await Promise.allSettled(activityInstances.map(async (activityInstance) => {
+    const expansionLogic = expansionMap[activityInstance.type];
+    if (expansionLogic !== undefined) {
+      try {
+        const result: { commands: ReturnType<Command['toSeqJson']>[]} = await piscina.run({
+          expansionLogic: expansionLogic,
+          activityTypeName: activityInstance.type,
+          commandTypes,
+          activityTypes: await getActivityTypes(graphqlClient, missionModelId, activityInstance.type),
+          activityInstance,
+        })
+        return {
+          activityInstanceId: activityInstance.id,
+          commands: result.commands
+        };
+      } catch(e: any) {
+        throw new InheritedError(`Failed to expand activity instance: id=${activityInstance.id}`, e);
+      }
+    }
+    return {
+      activityInstanceId: activityInstance.id,
+      commands: null,
+    };
+  }));
+
+  console.log(activityInstanceCommandPromiseSettledResult);
+
+  const resolvedActivityInstanceCommands = activityInstanceCommandPromiseSettledResult.filter(isResolved);
+  const rejectedActivityInstanceCommands = activityInstanceCommandPromiseSettledResult.filter(isRejected);
+
+  const activityInstanceCommands = resolvedActivityInstanceCommands
+      .map(({ value }) => value)
+      .filter(activityInstanceCommand => activityInstanceCommand.commands !== null);
+
+  const activityInstanceErrors = rejectedActivityInstanceCommands
+      .map(({ reason }) => reason);
+
+  const sqlExpression = `
+    WITH expansion_run_id AS (
+      INSERT INTO expansion_run (simulation_id, expansion_set_id)
+        VALUES (${simulationId}, ${expansionSetId})
+        RETURNING id
+    )
+    INSERT INTO activity_instance_commands (expansion_run_id, activity_instance_id, commands)
+    VALUES
+    ${activityInstanceCommands.map(activityInstanceCommands => `((SELECT id FROM expansion_run_id), ${activityInstanceCommands.activityInstanceId}, '${JSON.stringify(activityInstanceCommands.commands)}')`).join(',\n      ')}
+    RETURNING (SELECT id FROM expansion_run_id);
+  `;
+
+  const { rows } = await db.query(sqlExpression);
+
+  if (rows.length < 1) {
+    throw new Error(`PUT /expand-all-activity-instances: Failure to store expansion run in database`);
+  }
+  const expansionRunId = rows[0].id;
+
+  res.status(200).send(JSON.stringify({
+    expansionRunId,
+    errors: activityInstanceErrors,
+  }));
   return;
 });
 
