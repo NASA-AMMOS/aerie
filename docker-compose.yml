@@ -67,7 +67,7 @@ services:
   aerie_commanding:
     build:
       context: ./command-expansion-server
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: aerie_commanding
     depends_on: [ "postgres" ]
     environment:
@@ -83,6 +83,7 @@ services:
     ports: [ "3000:3000" ]
     restart: always
     volumes:
+      - ./command-expansion-server:/app:cached
       - aerie_file_store:/usr/src/app/commanding_file_store
   aerie_ui:
     container_name: aerie_ui
