@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.scheduler.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.Plan;
 import gov.nasa.jpl.aerie.scheduler.Problem;
 import gov.nasa.jpl.aerie.scheduler.Time;
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
@@ -21,12 +20,14 @@ import org.junit.jupiter.api.TestInstance;
 import java.io.IOException;
 import java.util.Map;
 
+import static gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationServiceTest.MISSION_MODEL_TYPES;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SchedulingDSLCompilationServiceTests {
+  private static final PlanId PLAN_ID = new PlanId(1L);
   SchedulingDSLCompilationService schedulingDSLCompilationService;
 
   @BeforeAll
@@ -96,7 +97,7 @@ class SchedulingDSLCompilationServiceTests {
       @Override
       public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final PlanId missionModelId)
       {
-        return null;
+        return MISSION_MODEL_TYPES;
       }
     }));
   }
@@ -112,7 +113,7 @@ class SchedulingDSLCompilationServiceTests {
   {
     final SchedulingDSL.GoalSpecifier.GoalDefinition actualGoalDefinition;
     actualGoalDefinition = (SchedulingDSL.GoalSpecifier.GoalDefinition) schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        """
+        PLAN_ID, """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
                     activityTemplate: {
@@ -144,7 +145,7 @@ class SchedulingDSLCompilationServiceTests {
   {
     final SchedulingDSL.GoalSpecifier.GoalDefinition actualGoalDefinition;
     actualGoalDefinition = (SchedulingDSL.GoalSpecifier.GoalDefinition) schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        """
+        PLAN_ID, """
                 export default function myGoal() {
                   return myHelper({
                     name: "MyActivity",
@@ -177,7 +178,7 @@ class SchedulingDSLCompilationServiceTests {
   void testSchedulingDSL_variable_not_defined() {
     try {
       schedulingDSLCompilationService.compileSchedulingGoalDSL(
-          """
+          PLAN_ID, """
                 export default function myGoal() {
                   const x = "hello world" - 2
                   return myHelper({
@@ -211,7 +212,7 @@ class SchedulingDSLCompilationServiceTests {
   void testSchedulingDSL_wrong_return_type() {
     try {
       schedulingDSLCompilationService.compileSchedulingGoalDSL(
-          """
+          PLAN_ID, """
                 export default function myGoal() {
                   return 5
                 }
