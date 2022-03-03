@@ -4,7 +4,7 @@ create table activity_instance_commands (
   expansion_run_id integer not null,
 
   constraint activity_instance_primary_key
-    primary key (activity_instance_id),
+    primary key (activity_instance_id, expansion_run_id),
 
   foreign key (expansion_run_id)
   references expansion_run (id)
