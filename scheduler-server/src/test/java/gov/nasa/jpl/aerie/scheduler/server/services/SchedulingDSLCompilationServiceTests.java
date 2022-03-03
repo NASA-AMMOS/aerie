@@ -1,8 +1,17 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.scheduler.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.Plan;
+import gov.nasa.jpl.aerie.scheduler.Problem;
+import gov.nasa.jpl.aerie.scheduler.Time;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
+import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
@@ -22,7 +31,74 @@ class SchedulingDSLCompilationServiceTests {
 
   @BeforeAll
   void setUp() throws SchedulingDSLCompilationService.SchedulingDSLCompilationException, IOException {
-    schedulingDSLCompilationService = new SchedulingDSLCompilationService();
+    schedulingDSLCompilationService = new SchedulingDSLCompilationService(new TypescriptCodeGenerationService(new MerlinService() {
+      @Override
+      public long getPlanRevision(final PlanId planId) {
+        return 0;
+      }
+
+      @Override
+      public PlanMetadata getPlanMetadata(final PlanId planId) {
+        return null;
+      }
+
+      @Override
+      public Plan getPlanActivities(final PlanMetadata planMetadata, final Problem mission)
+      {
+        return null;
+      }
+
+      @Override
+      public Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivities(
+          final PlanMetadata planMetadata,
+          final Plan plan)
+      {
+        return null;
+      }
+
+      @Override
+      public PlanId createEmptyPlan(
+          final String name,
+          final long modelId,
+          final Time startTime,
+          final Duration duration)
+      {
+        return null;
+      }
+
+      @Override
+      public void createSimulationForPlan(final PlanId planId) {
+
+      }
+
+      @Override
+      public Map<ActivityInstance, ActivityInstanceId> updatePlanActivities(final PlanId planId, final Plan plan)
+      {
+        return null;
+      }
+
+      @Override
+      public void ensurePlanExists(final PlanId planId) {
+
+      }
+
+      @Override
+      public void clearPlanActivities(final PlanId planId) {
+
+      }
+
+      @Override
+      public Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(final PlanId planId, final Plan plan)
+      {
+        return null;
+      }
+
+      @Override
+      public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final PlanId missionModelId)
+      {
+        return null;
+      }
+    }));
   }
 
   @AfterAll
