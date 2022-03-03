@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.scheduler.RecurrenceGoal;
 import gov.nasa.jpl.aerie.scheduler.Time;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
+import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingDSLCompilationService;
@@ -19,6 +20,7 @@ import java.io.IOException;
 
 public class GoalBuilder {
   static GoalRecord buildGoalRecord(
+      final PlanId planId,
       final PostgresGoalRecord pgGoal,
       final Timestamp horizonStartTimestamp,
       final Timestamp horizonEndTimestamp,
@@ -27,6 +29,7 @@ public class GoalBuilder {
     final SchedulingDSL.GoalSpecifier goalSpecifier;
     try {
       goalSpecifier = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+          planId,
           pgGoal.definition(),
           "goals don't have names?");
     } catch (SchedulingDSLCompilationService.SchedulingDSLCompilationException | IOException e) {
