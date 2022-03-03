@@ -2,14 +2,13 @@ import type {Pool} from 'pg';
 import fs from 'fs';
 import { ErrorWithStatusCode } from './packages/utils/ErrorWithStatusCode.js';
 
-export async function getCommandTypes(db: Pool, dictionaryId: string): Promise<string> {
-  const sqlExpression = `
+export async function getCommandTypes(db: Pool, dictionaryId: number): Promise<string> {
+
+  const {rowCount, rows} = await db.query(`
     SELECT command_types
     FROM command_dictionary
     WHERE id = $1;
-  `;
-
-  const {rowCount, rows} = await db.query(sqlExpression, [
+  `, [
     dictionaryId
   ]);
 
