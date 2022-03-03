@@ -2,7 +2,7 @@ import fs from 'fs';
 import util from 'util';
 
 import Ajv from 'ajv';
-import express, {Application, Request, Response} from 'express';
+import express, {Application, NextFunction, Request, Response} from 'express';
 import {GraphQLClient} from 'graphql-request';
 import multer from 'multer';
 import bodyParser from 'body-parser';
@@ -281,6 +281,11 @@ app.post('/expand-all-activity-instances/:simulationId(\\d+)/:expansionSetId(\\d
     errors: activityInstanceErrors,
   }));
   return;
+});
+
+app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+  console.error(err)
+  res.status(500).send(err.message)
 });
 
 app.listen(PORT, () => {
