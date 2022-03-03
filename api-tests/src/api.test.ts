@@ -17,20 +17,18 @@ interface MissionModelMetadata {
 }
 
 async function main() {
-  let pathToAerieLanderMissionModelJar = "/Users/dailis/projects/AERIE/aerie/aerielander/build/libs/aerielander-0.10.0-SNAPSHOT.jar"
-  let pathToAerieLanderRulesJar = "/Users/dailis/projects/AERIE/aerie/scheduler/src/test/resources/merlinsight-rules.jar"
+  let pathToBanananationMissionModelJar = "/Users/dailis/projects/AERIE/aerie/examples/banananation/build/libs/banananation-0.10.0-SNAPSHOT-365598d7f.jar"
 
   const ssoToken = await login("USERNAME", "PASSWORD")  // TODO find a way that doesn't require hard-coding username and password
 
-  await testSchedulerWorkflow(pathToAerieLanderMissionModelJar, pathToAerieLanderRulesJar, ssoToken)
+  await testSchedulerWorkflow(pathToBanananationMissionModelJar, ssoToken)
 }
 
 /**
  * This test is considered successful if it completes without throwing an Error
  */
-async function testSchedulerWorkflow(pathToAerieLanderMissionModelJar: string, pathToAerieLanderRulesJar: string, ssoToken: string) {
-  await uploadFile(pathToAerieLanderRulesJar, "scheduler_rules.jar", ssoToken)
-  let missionModelMetadata = {mission: "aerielander", name: "aerielander", version: "1"}
+async function testSchedulerWorkflow(pathToAerieLanderMissionModelJar: string, ssoToken: string) {
+  let missionModelMetadata = {mission: "banananation", name: "banananation", version: "1"}
   const missionModelId = await ensureMissionModelHasBeenUploaded(missionModelMetadata, ssoToken, pathToAerieLanderMissionModelJar)
 
   const planStartTimestamp = "2021-001T00:00:00.000"
@@ -38,10 +36,19 @@ async function testSchedulerWorkflow(pathToAerieLanderMissionModelJar: string, p
 
   const planId = await createPlan(missionModelId, await generateUniquePlanName(ssoToken), planStartTimestamp, planEndTimestamp, ssoToken)
   await insertActivity(planId, getPostgresIntervalString(planStartTimestamp, "2021-002T00:00:00.000"),
-      "HP3TemP",
+      "BiteBanana",
       {},
       ssoToken)
-  const goalId = await insertSchedulingGoal(missionModelId, "Schedule DSN contacts for initial setup", ssoToken)
+  const goalId = await insertSchedulingGoal("my first scheduling goal!", missionModelId, `
+
+  export default function myGoal() {
+    return Goal.ActivityRecurrenceGoal({
+      activityTemplate: ActivityTemplates.PeelBanana('some goal', { peelDirection: 'fromStem' }),
+      interval: 12 * 60 * 60 * 1000 * 1000 // 1 day in microseconds
+    })
+  }
+
+  `, ssoToken)
   const planRevision = await getPlanRevision(planId, ssoToken)
   const specificationId = await insertSchedulingSpecification(planId, planRevision, planStartTimestamp, planEndTimestamp, {}, ssoToken)
   const affectedRows = await setSchedulingSpecificationGoals(specificationId, [goalId], ssoToken)
@@ -231,17 +238,17 @@ async function insertActivity(plan_id: number, start_offset: string, type: strin
   return response["createActivity"]["id"]
 }
 
-async function insertSchedulingGoal(model_id: number, definition: string, ssoToken: string) {
-  //TODO iron out whether definition is a string or a jsonb
+async function insertSchedulingGoal(name: string, model_id: number, definition: string, ssoToken: string) {
   const response = await query(
       `
-mutation MakeSchedulingGoal($definition: String, $model_id: Int) {
-  insert_scheduling_goal_one(object: {definition: $definition, model_id: $model_id}) {
+mutation MakeSchedulingGoal($name: String, $definition: String, $model_id: Int) {
+  insert_scheduling_goal_one(object: {name: $name, definition: $definition, model_id: $model_id}) {
     id
   }
 }
 `,
       {
+        "name": name,
         "definition": definition,
         "model_id": model_id
       }, ssoToken) as { insert_scheduling_goal_one: { id: number } }
