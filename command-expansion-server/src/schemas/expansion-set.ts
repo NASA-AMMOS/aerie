@@ -1,22 +1,22 @@
 import {JSONSchemaType} from "ajv";
 
 export const expansionSetSchema: JSONSchemaType<{
-  commandDictionaryId: string,
-  missionModelId: string,
-  expansionIds: string[],
+  commandDictionaryId: number,
+  missionModelId: number,
+  expansionIds: number[],
 }> = {
   type: 'object',
   properties: {
     commandDictionaryId: {
-      type: 'string',
+      type: 'integer',
     },
     missionModelId: {
-      type: 'string',
+      type: 'integer',
     },
     expansionIds: {
       type: 'array',
       items: {
-        type: 'string',
+        type: 'integer',
       },
       minItems: 1,
     },

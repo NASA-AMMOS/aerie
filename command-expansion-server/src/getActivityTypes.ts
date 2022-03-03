@@ -1,6 +1,6 @@
 import {GraphQLClient} from 'graphql-request';
 
-export async function getActivityTypes(graphqlClient: GraphQLClient, missionModelId: string, activityTypeName: string) {
+export async function getActivityTypes(graphqlClient: GraphQLClient, missionModelId: number, activityTypeName: string): Promise<string> {
   // Stubbed out here
   const activityTypes = `
     declare global {

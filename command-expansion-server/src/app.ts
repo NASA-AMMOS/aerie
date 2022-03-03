@@ -13,6 +13,7 @@ import {DbExpansion} from './packages/db/db.js';
 import {processDictionary} from './packages/lib/CommandTypeCodegen.js';
 import {getCommandTypes} from './getCommandTypes.js';
 import {getActivityTypes} from './getActivityTypes.js';
+import {ErrorWithStatusCode} from './utils/ErrorWithStatusCode.js';
 import {expansionSetSchema} from './packages/schemas/expansion-set.js';
 import {findDuplicates} from './utils/findDuplicates.js';
 
@@ -77,21 +78,17 @@ app.put('/expansion/:activityTypeName', upload.any(), async (req, res) => {
   // TODO: Check that the activity type name is valid with GraphQL API
   console.log(`Expansion logic received`);
 
-  const sqlExpression = `
+  const { rows } = await db.query(`
     INSERT INTO expansion_rules (activity_type, expansion_logic)
     VALUES ($1, $2)
     RETURNING id;
-  `;
-
-  const { rows } = await db.query(sqlExpression, [
+  `, [
     req.params.activityTypeName,
     file.path,
   ]);
 
   if (rows.length < 1) {
-    console.error(`PUT /expansion: No expansion was updated in the database`);
-    res.contentType('json').status(500).send(`PUT /expansion: No expansion was updated in the database`);
-    return;
+    throw new Error(`PUT /expansion: No expansion was updated in the database`);
   }
 
   const id = rows[0].id;
@@ -103,20 +100,16 @@ app.put('/expansion/:activityTypeName', upload.any(), async (req, res) => {
 app.get('/expansion/:expansionId(\\d+)', async (req, res) => {
   const expansionId = req.params.expansionId;
 
-  const sqlExpression = `
+  const { rows } = await db.query(`
     SELECT expansion_logic
     FROM expansion_rules
     WHERE id = $1;
-  `;
-
-  const { rows } = await db.query(sqlExpression, [
+  `, [
     expansionId,
   ]);
 
   if (rows.length < 1) {
-    console.error(`GET /expansion: No expansion with id: ${expansionId}`);
-    res.contentType('json').status(500).send(`GET /expansion: No expansion with id: ${expansionId}`);
-    return;
+    throw new ErrorWithStatusCode(`GET /expansion: No expansion with id: ${expansionId}`, 404);
   }
 
   const expansionLogic = await fs.promises.readFile(rows[0].expansion_logic, 'utf-8');
@@ -175,9 +168,7 @@ app.put('/expansion-set', async (req, res) => {
   `);
 
   if (rows.length < 1) {
-    console.error(`PUT /expansion-set: No expansion set was inserted in the database`);
-    res.contentType('json').status(500).send(`PUT /expansion-set: No expansion set was inserted in the database`);
-    return;
+    throw new Error(`PUT /expansion-set: No expansion set was inserted in the database`);
   }
   const id = rows[0].id;
   console.log(`PUT /expansion-set: Updated expansion set in the database: id=${id}`);
