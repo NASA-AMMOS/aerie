@@ -13,6 +13,12 @@ public class TypescriptCodeGenerationService {
   public record ResourceType(String name, String type, ValueSchema schema) {}
   public record MissionModelTypes(Collection<ActivityType> activityTypes, Collection<ResourceType> resourceTypes) {}
 
+  private final MerlinService merlinService;
+
+  public TypescriptCodeGenerationService(MerlinService merlinService) {
+    this.merlinService = merlinService;
+  }
+
   public static String generateTypescriptTypesFromMissionModel(final MissionModelTypes missionModelTypes) {
     var indentLevel = 0;
     final var activityTypeCodes = new ArrayList<ActivityTypeCode>();

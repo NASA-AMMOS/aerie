@@ -17,8 +17,10 @@ import java.util.Objects;
 public class SchedulingDSLCompilationService {
 
   private final Process nodeProcess;
+  private final TypescriptCodeGenerationService typescriptCodeGenerationService;
 
-  public SchedulingDSLCompilationService() throws SchedulingDSLCompilationException, IOException {
+  public SchedulingDSLCompilationService(final TypescriptCodeGenerationService typescriptCodeGenerationService) throws SchedulingDSLCompilationException, IOException {
+    this.typescriptCodeGenerationService = typescriptCodeGenerationService;
     final var schedulingDslCompilerRoot = System.getenv("SCHEDULING_DSL_COMPILER_ROOT");
     final var schedulingDslCompilerCommand = System.getenv("SCHEDULING_DSL_COMPILER_COMMAND");
     this.nodeProcess = new ProcessBuilder("node", schedulingDslCompilerCommand)
