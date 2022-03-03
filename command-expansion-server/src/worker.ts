@@ -7,21 +7,22 @@ import type {Command} from './lib/CommandEDSLPreamble.js';
 type ActivityInstance = {[key: string]: any};
 
 export default async function executeCommandExpansion(opts: {
-  source: string,
-  filename: string,
-  missionModelId: string,
-  commandLibraryId: string,
+  expansionLogic: string,
+  activityTypeName: string,
+  commandTypes: string,
+  activityTypes: string,
+  activityInstance: ActivityInstance,
 }): Promise<{
-  commands: Command[]
+  commands: ReturnType<Command['toSeqJson']>[]
 }> {
 
-  // TODO: Pull this dynamically
-
-  const harnessedCode = `${opts.source}
-
+  const harnessedCode = `${opts.expansionLogic}
+${opts.commandTypes}
+${opts.activityTypes}
 (async function (): Promise<Command> {
   return exports.default($$props, $$context);
 })()`;
+
   const transpiledSource = ts.transpileModule(harnessedCode, {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
@@ -31,7 +32,7 @@ export default async function executeCommandExpansion(opts: {
   });
   const sourceMapPromise = await new SourceMapConsumer(transpiledSource.sourceMapText as string);
   Error.prepareStackTrace = (error: Error, stack: NodeJS.CallSite[]) => {
-    const stackWithoutHarness = stack.filter(callsite => callsite.getFileName()?.endsWith(opts.filename))
+    const stackWithoutHarness = stack.filter(callsite => callsite.getFileName()?.endsWith(opts.activityTypeName))
       .filter(callsite => {
         const mappedLocation = sourceMapPromise.originalPositionFor({
           line: callsite.getLineNumber()!,
@@ -56,26 +57,21 @@ export default async function executeCommandExpansion(opts: {
     return error.name + ': ' + error.message + '\n' + stackMessage;
   };
 
-  const activityInstance: ActivityInstance = {
-  };
-
-  let result = (await vm.runInNewContext(harnessedCode, {
+  let result: Command[] | Command = (await vm.runInNewContext(transpiledSource.outputText, {
     exports: {},
     $$props: {
-      activityInstance,
+      activityInstance: opts.activityInstance,
     },
     $$context: {
     },
   }, {
-    filename: opts.filename,
+    filename: opts.activityTypeName,
     timeout: 10000,
   }));
 
-  if (Array.isArray(result)) {
-    result = result.flat(Infinity);
-  }
-
   return {
-    commands: Array.isArray(result) ? result : [result],
+    commands: Array.isArray(result)
+        ? result.flat(Infinity).map(command => command.toSeqJson())
+        : [result.toSeqJson()],
   }
 }
