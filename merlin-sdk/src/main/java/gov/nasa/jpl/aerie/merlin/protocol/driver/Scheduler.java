@@ -11,5 +11,8 @@ public interface Scheduler {
   <Event> void emit(Event event, Query<? super Event, ?> query);
 
   <Return> String spawn(Task<Return> task);
+
+  <Input, Output> String spawn(DirectiveTypeId<Input, Output> directiveType, Input input, Task<Output> task);
+
   String spawn(String type, Map<String, SerializedValue> arguments);
 }
