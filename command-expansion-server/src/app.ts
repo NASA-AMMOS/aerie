@@ -285,7 +285,7 @@ app.post('/expand-all-activity-instances/:simulationId(\\d+)/:expansionSetId(\\d
 
 app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
   console.error(err)
-  res.status(500).send(err.message)
+  res.status(err.status ?? err.statusCode ?? 500).send(err.message)
 });
 
 app.listen(PORT, () => {
