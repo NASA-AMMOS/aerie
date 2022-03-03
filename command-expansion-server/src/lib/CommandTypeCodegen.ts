@@ -4,7 +4,7 @@
 import * as ampcs from '@gov.nasa.jpl.aerie/ampcs';
 import fs from 'fs';
 import reservedWords from 'reserved-words';
-import { getEnv } from '../../env.js';
+import { getEnv } from '../env.js';
 
 
 const typescriptReservedWords = ['boolean', 'string', 'number'];
