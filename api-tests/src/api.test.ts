@@ -3,6 +3,8 @@ import fetch, {Response} from 'node-fetch'
 import {FormData} from 'formdata-polyfill/esm.min.js'
 import {DateTime} from 'luxon'
 import assert from "assert"
+import * as path from 'path'
+import * as fs from 'fs'
 
 const API_URL = "http://localhost"
 const GRAPHQL_API_URL = API_URL + ":8080/v1/graphql"
@@ -17,9 +19,15 @@ interface MissionModelMetadata {
 }
 
 async function main() {
-  let pathToBanananationMissionModelJar = "/Users/dailis/projects/AERIE/aerie/examples/banananation/build/libs/banananation-0.10.0-SNAPSHOT-365598d7f.jar"
+  const ssoToken = await loadSSOToken()
 
-  const ssoToken = await login("USERNAME", "PASSWORD")  // TODO find a way that doesn't require hard-coding username and password
+  const libsDir = path.join(process.env.AERIE_ROOT as string, "examples/banananation/build/libs")
+  const candidateBananaNationJars = fs.readdirSync(libsDir).filter(fn => fn.endsWith('.jar'));
+
+  const pathToBanananationMissionModelJar = path.join(libsDir, candidateBananaNationJars[0]);
+  if (candidateBananaNationJars.length > 1) {
+    console.warn("Multiple banananation jars to choose from. Choosing " + pathToBanananationMissionModelJar)
+  }
 
   await testSchedulerWorkflow(pathToBanananationMissionModelJar, ssoToken)
 }
@@ -54,6 +62,27 @@ async function testSchedulerWorkflow(pathToAerieLanderMissionModelJar: string, s
   const affectedRows = await setSchedulingSpecificationGoals(specificationId, [goalId], ssoToken)
   assert(affectedRows === 1)
   await triggerSchedulingRun(specificationId, ssoToken)
+}
+
+async function loadSSOToken() {
+  let ssoTokenFile: string
+  try {
+    ssoTokenFile = (await fs.promises.readFile(path.join(process.env.AERIE_ROOT as string, "api-tests/.ssotoken"))).toString()
+  } catch (e) {
+    throw Error("No ./api-tests/.ssotoken file found. Run ./api-tests/login.sh and try again.")
+  }
+  let ssoToken;
+  try {
+    ssoToken = JSON.parse(ssoTokenFile.toString())["ssoToken"]
+  } catch (e) {
+    throw Error("./api-tests/.ssotoken file is corrupted. Run ./api-tests/login.sh and try again.")
+  }
+  try {
+    await checkMissionModelExists({mission: "lorem", name: "ipsum", "version": "1"}, ssoToken)
+  } catch (e) {
+    throw Error("sso token has expired. Run ./api-tests/login.sh then try again.")
+  }
+  return ssoToken
 }
 
 async function login(username: string, password: string): Promise<string> {
