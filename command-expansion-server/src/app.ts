@@ -9,8 +9,8 @@ import bodyParser from 'body-parser';
 import * as ampcs from '@gov.nasa.jpl.aerie/ampcs';
 
 import {getEnv} from './env.js';
-import {DbExpansion} from './packages/db/db.js';
-import {processDictionary} from './packages/lib/CommandTypeCodegen.js';
+import {DbExpansion} from './db/db.js';
+import {processDictionary} from './lib/CommandTypeCodegen.js';
 import {getCommandTypes} from './getCommandTypes.js';
 import {getActivityTypes} from './getActivityTypes.js';
 import {ErrorWithStatusCode} from './utils/ErrorWithStatusCode.js';

@@ -1,7 +1,7 @@
 import vm from 'vm';
 import ts from 'typescript';
 import {SourceMapConsumer} from 'source-map';
-import type {Command} from './packages/lib/CommandEDSLPreamble';
+import type {Command} from './lib/CommandEDSLPreamble.js';
 
 // TODO: Replace with something more informative
 type ActivityInstance = {[key: string]: any};

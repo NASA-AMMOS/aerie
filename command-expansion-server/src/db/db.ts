@@ -1,7 +1,7 @@
 import util from 'util';
 
 import { default as pg, Pool, PoolConfig} from 'pg';
-import { getEnv } from '../../env.js';
+import { getEnv } from '../env.js';
 
 const { Pool: DbPool } = pg;
 
