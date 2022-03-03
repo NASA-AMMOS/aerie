@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
@@ -11,7 +12,9 @@ import javax.json.stream.JsonParsingException;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public class SchedulingDSLCompilationService {
 
