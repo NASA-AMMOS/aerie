@@ -172,8 +172,7 @@ app.put('/expansion-set', async (req, res) => {
       VALUES (${commandDictionaryId}, ${missionModelId})
       RETURNING id
     )
-    INSERT INTO expansion_set_to_rule (set_id, rule_id)
-    VALUES
+    INSERT INTO expansion_set_to_rule (set_id, rule_id) VALUES
       ${expansionIds.map(expansionId => `((SELECT id FROM expansion_set_id), ${expansionId})`).join(',\n      ')}
     RETURNING (SELECT id FROM expansion_set_id);
   `);
@@ -267,9 +266,8 @@ app.post('/expand-all-activity-instances/:simulationId(\\d+)/:expansionSetId(\\d
         VALUES (${simulationId}, ${expansionSetId})
         RETURNING id
     )
-    INSERT INTO activity_instance_commands (expansion_run_id, activity_instance_id, commands)
-    VALUES
-    ${activityInstanceCommands.map(activityInstanceCommands => `((SELECT id FROM expansion_run_id), ${activityInstanceCommands.activityInstanceId}, '${JSON.stringify(activityInstanceCommands.commands)}')`).join(',\n      ')}
+    INSERT INTO activity_instance_commands (expansion_run_id, activity_instance_id, commands) VALUES
+      ${activityInstanceCommands.map(activityInstanceCommands => `((SELECT id FROM expansion_run_id), ${activityInstanceCommands.activityInstanceId}, '${JSON.stringify(activityInstanceCommands.commands)}')`).join(',\n      ')}
     RETURNING (SELECT id FROM expansion_run_id);
   `;
 
