@@ -4,8 +4,7 @@ services:
     container_name: aerie_gateway
     depends_on: ["postgres"]
     environment:
-      AUTH_TYPE: cam
-      AUTH_URL: https://atb-ocio-12b.jpl.nasa.gov:8443/cam-api
+      AUTH_TYPE: none
       GQL_API_URL: http://localhost:8080/v1/graphql
       PORT: 9000
       POSTGRES_AERIE_MERLIN_DB: aerie_merlin
@@ -62,7 +61,7 @@ services:
     container_name: aerie_ui
     depends_on: ["postgres"]
     environment:
-      AUTH_TYPE: cam
+      AUTH_TYPE: none
       GATEWAY_CLIENT_URL: http://localhost:9000
       GATEWAY_SERVER_URL: http://aerie_gateway:9000
       HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
