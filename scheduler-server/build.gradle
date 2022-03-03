@@ -41,15 +41,12 @@ assemble {
 test {
   dependsOn(assembleSchedulingDSLCompiler)
   useJUnitPlatform()
-  def architectureSpecificDir = new ByteArrayOutputStream()
-  exec{
-    commandLine "ls", projectDir.toPath().resolve(".gradle/nodejs")
-    standardOutput = architectureSpecificDir;
-    ignoreExitValue true
+
+  // Add node bin directory to PATH, helps CI/CD services without node installed
+  projectDir.toPath().resolve('.gradle/nodejs').toFile().listFiles().each {
+    environment 'PATH', "${System.env.PATH}${System.getProperty('path.separator')}$it/bin"
   }
 
-  def nodePath = projectDir.toPath().resolve(".gradle/nodejs").resolve("$architectureSpecificDir".trim()).resolve("bin")
-  environment "PATH", "$System.env.PATH" + System.getProperty("path.separator") + nodePath
   environment "SCHEDULING_DSL_COMPILER_ROOT", projectDir.toPath().resolve('scheduling-dsl-compiler')
   environment "SCHEDULING_DSL_COMPILER_COMMAND", './build/main.js'
 }
