@@ -36,7 +36,7 @@ public final class MissionModelTest {
         final var factory = new GeneratedMissionModelFactory();
         final var registry = DirectiveTypeRegistry.extract(factory);
         final var model = factory.instantiate(registry.registry(), config, builder);
-        return new MissionModelFacade(builder.build(model, factory.getConfigurationType(), registry.taskSpecTypes()));
+        return new MissionModelFacade(builder.build(model, factory.getConfigurationType(), registry));
     }
 
     @AfterEach

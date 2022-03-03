@@ -14,7 +14,7 @@ public final class SimulationUtility {
     final var factory = new gov.nasa.jpl.aerie.banananation.generated.GeneratedMissionModelFactory();
     final var registry = DirectiveTypeRegistry.extract(factory);
     final var model = factory.instantiate(registry.registry(), config, builder);
-    return builder.build(model, factory.getConfigurationType(), registry.taskSpecTypes());
+    return builder.build(model, factory.getConfigurationType(), registry);
   }
 
   public static MissionModel<?>
@@ -24,7 +24,7 @@ public final class SimulationUtility {
     final var registry = DirectiveTypeRegistry.extract(factory);
     final var builder = new MissionModelBuilder();
     final var model = factory.instantiate(registry.registry(), conf, builder);
-    return builder.build(model, factory.getConfigurationType(), registry.taskSpecTypes());
+    return builder.build(model, factory.getConfigurationType(), registry);
   }
 
 

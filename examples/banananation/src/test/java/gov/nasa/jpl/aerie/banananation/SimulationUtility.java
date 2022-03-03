@@ -22,7 +22,7 @@ public final class SimulationUtility {
     final var registry = DirectiveTypeRegistry.extract(factory);
     // TODO: [AERIE-1516] Teardown the model to release any system resources (e.g. threads).
     final var model = factory.instantiate(registry.registry(), config, builder);
-    return builder.build(model, factory.getConfigurationType(), registry.taskSpecTypes());
+    return builder.build(model, factory.getConfigurationType(), registry);
   }
 
   public static SimulationResults

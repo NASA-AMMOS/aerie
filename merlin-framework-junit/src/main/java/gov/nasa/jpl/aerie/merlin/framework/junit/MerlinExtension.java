@@ -23,12 +23,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
-public final class MerlinExtension<Model> implements BeforeAllCallback, ParameterResolver, InvocationInterceptor, TestInstancePreDestroyCallback {
-  private State<Model> getState(final ExtensionContext context) {
+public final class MerlinExtension<Registry, Model> implements BeforeAllCallback, ParameterResolver, InvocationInterceptor, TestInstancePreDestroyCallback {
+  private State<Registry, Model> getState(final ExtensionContext context) {
     // SAFETY: This method is the only one where we store or retrieve a State,
     //   and it's always instantiated with <Model>.
     @SuppressWarnings("unchecked")
-    final var stateClass = (Class<State<Model>>) (Object) State.class;
+    final var stateClass = (Class<State<Registry, Model>>) (Object) State.class;
 
     return context
         .getStore(ExtensionContext.Namespace.create(context.getRequiredTestClass()))
@@ -51,7 +51,7 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
   }
 
   @Override
-  public MerlinTestContext<Model> resolveParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
+  public MerlinTestContext<Registry, Model> resolveParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
   throws ParameterResolutionException
   {
     final var state = this.getState(extensionContext);
@@ -109,9 +109,9 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
     state.missionModel = null;
   }
 
-  private static final class State<Model> {
+  private static final class State<Registry, Model> {
     public MissionModelBuilder builder;
-    public MerlinTestContext<Model> context;
+    public MerlinTestContext<Registry, Model> context;
 
     public MissionModel<RootModel<Model>> missionModel = null;
 

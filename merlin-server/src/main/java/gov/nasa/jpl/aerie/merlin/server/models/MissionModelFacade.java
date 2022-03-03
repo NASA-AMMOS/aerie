@@ -53,7 +53,7 @@ public final class MissionModelFacade {
   throws NoSuchActivityTypeException, UnconstructableActivityInstanceException
   {
     final var specType = Optional
-        .ofNullable(this.missionModel.getTaskSpecificationTypes().get(typeName))
+        .ofNullable(this.missionModel.getDirectiveTypes().taskSpecTypes().get(typeName))
         .orElseThrow(NoSuchActivityTypeException::new);
 
     return getValidationFailures(specType, arguments);
@@ -79,7 +79,7 @@ public final class MissionModelFacade {
   throws NoSuchActivityTypeException, UnconstructableActivityInstanceException, MissingArgumentsException
   {
     final var specType = Optional
-        .ofNullable(this.missionModel.getTaskSpecificationTypes().get(typeName))
+        .ofNullable(this.missionModel.getDirectiveTypes().taskSpecTypes().get(typeName))
         .orElseThrow(NoSuchActivityTypeException::new);
 
     return getActivityEffectiveArguments(specType, arguments);
