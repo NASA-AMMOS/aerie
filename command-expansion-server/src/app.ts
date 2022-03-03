@@ -26,10 +26,7 @@ import {findDuplicates} from './utils/findDuplicates.js';
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
 
 const app: Application = express();
-
-app.use(bodyParser.json({ limit: "25mb" }));
-app.use(bodyParser.urlencoded({ limit: "25mb", extended: true }));
-app.use(express.json());
+app.use(bodyParser.json());
 
 const ajv = new Ajv();
 
@@ -48,7 +45,7 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Aerie Command Service');
 });
 
-app.put("/dictionary", async (req, res) => {
+app.put('/dictionary', async (req, res) => {
   let dictionary: string = req.body.input.dictionary;
 
   // un-stringify the xml
@@ -61,15 +58,13 @@ app.put("/dictionary", async (req, res) => {
   const commandTypesPath = await processDictionary(parsedDictionary);
   console.log(`command-lib generated - path: ${commandTypesPath}`);
 
-  const sqlExpression = `
+  const {rows} = await db.query<{id: string}>(`
     INSERT INTO command_dictionary (command_types, mission, version)
     VALUES ($1, $2, $3)
     ON CONFLICT (mission, version) DO UPDATE
       SET command_types = $1
     RETURNING id;
-  `;
-
-  const {rows} = await db.query<{id: string}>(sqlExpression, [
+  `, [
     commandTypesPath,
     parsedDictionary.header.mission_name,
     parsedDictionary.header.version,
@@ -83,8 +78,11 @@ app.put("/dictionary", async (req, res) => {
   return;
 });
 
-app.put('/expansion/:activityTypeName', upload.any(), async (req, res) => {
-  const [file] = req.files as Express.Multer.File[];
+app.put('/expansion/:activityTypeName', upload.single('expansion'), async (req, res) => {
+  const file = req.file;
+  if (file === undefined) {
+    throw new Error('No file uploaded');
+  }
 
   // TODO: Check that the activity type name is valid with GraphQL API
   console.log(`Expansion logic received`);
