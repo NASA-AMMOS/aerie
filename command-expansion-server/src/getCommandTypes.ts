@@ -14,7 +14,7 @@ export async function getCommandTypes(db: Pool, dictionaryId: number): Promise<s
 
 
   const [row] = rows;
-  if (rowCount < 0) {
+  if (rowCount < 1) {
     throw new ErrorWithStatusCode(`No dictionary with id: ${dictionaryId}`, 404);
   }
   return fs.promises.readFile(row.command_types, 'utf8');
