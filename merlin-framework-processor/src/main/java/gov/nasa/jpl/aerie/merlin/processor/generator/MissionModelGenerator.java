@@ -12,6 +12,8 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.WildcardTypeName;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
+import gov.nasa.jpl.aerie.merlin.framework.RootModel;
+import gov.nasa.jpl.aerie.merlin.framework.Scoped;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.VoidEnum;
 import gov.nasa.jpl.aerie.merlin.processor.MissionModelProcessor;
@@ -307,6 +309,19 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .build())
             .addModifiers(Modifier.PUBLIC)
             .superclass(gov.nasa.jpl.aerie.merlin.framework.ModelActions.class)
+            .addField(
+                FieldSpec
+                    .builder(
+                        ParameterizedTypeName.get(
+                            ClassName.get(Scoped.class),
+                            ParameterizedTypeName.get(
+                                ClassName.get(RootModel.class),
+                                missionModel.getTypesName(),
+                                ClassName.get(missionModel.topLevelModel))),
+                        "model",
+                        Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                    .initializer("$T.create()", Scoped.class)
+                    .build())
             .addMethod(MethodSpec.constructorBuilder().addModifiers(Modifier.PRIVATE).build())
             .addMethods(
                 missionModel.activityTypes
@@ -744,12 +759,14 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         .map(effectModel -> CodeBlock
                               .builder()
                               .addStatement(
-                                  "return $T.$L(() -> $L.$L($L.model())).create($L.executor())",
+                                  "return $T\n.$L(() -> {$>\ntry (final var restore = $T.model.set($L)) {$>\n$L.$L($L.model());$<\n}$<\n})\n.create($L.executor())",
                                   gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                   switch (effectModel.executor()) {
                                     case Threaded -> "threaded";
                                     case Replaying -> "replaying";
                                   },
+                                  missionModel.getActivityActionsName(),
+                                  "model",
                                   "activity",
                                   effectModel.methodName(),
                                   "model",
