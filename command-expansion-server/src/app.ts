@@ -8,11 +8,10 @@ import { processDictionary } from "./packages/lib/CommandTypeCodegen.js";
 
 const app: Application = express();
 
-app.use(bodyParser.json({ limit: "25mb" }));
-app.use(bodyParser.urlencoded({ limit: "25mb", extended: true }));
-app.use(express.json());
-
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
+
+const app: Application = express();
+app.use(bodyParser.json({ limit: '25mb' }));
 
 DbExpansion.init();
 const db = DbExpansion.getDb();
@@ -23,17 +22,16 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.put("/dictionary", async (req, res) => {
-  let dictionary: string = req.body.input.dictionary;
+  const dictionary = Buffer.from(req.body.input.dictionary, 'base64').toString();
 
-  // un-stringify the xml
-  dictionary = dictionary.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&quot;", '"');
+
   console.log(`Dictionary received`);
   const parsedDictionary = ampcs.parse(dictionary);
   console.log(
     `Dictionary parsed - version: ${parsedDictionary.header.version}, mission: ${parsedDictionary.header.mission_name}`
   );
-  const path = await Promise.resolve(processDictionary(parsedDictionary));
-  console.log(`command-lib generated - path: ${path}`);
+  const commandDictionaryPath = await processDictionary(parsedDictionary);
+  console.log(`command-lib generated - path: ${commandDictionaryPath}`);
 
   const sqlExpression = `
     insert into command_dictionary (command_types, mission, version)
@@ -44,7 +42,7 @@ app.put("/dictionary", async (req, res) => {
   `;
 
   const { rows } = await db.query(sqlExpression, [
-    path,
+    commandDictionaryPath,
     parsedDictionary.header.mission_name,
     parsedDictionary.header.version,
   ]);
@@ -56,7 +54,7 @@ app.put("/dictionary", async (req, res) => {
     res.status(500).send(`POST /dictionary: No command dictionary was updated in the database`);
     return;
   }
-  const id = rows[0];
+  const id = rows[0].id;
   res.status(200).json({ id });
   return;
 });
