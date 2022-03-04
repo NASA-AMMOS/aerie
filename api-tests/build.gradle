@@ -26,7 +26,7 @@ task clean(type: Delete) {
   delete 'build', 'node_modules'
 }
 
-task test(type: NpmTask) {
+task run(type: NpmTask) {
   dependsOn npmInstall
   dependsOn ":examples:banananation:assemble"
   args = ['run', 'test']
