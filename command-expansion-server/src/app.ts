@@ -1,6 +1,9 @@
+import util from "util";
+
 import express, { Application, Request, Response, NextFunction } from "express";
 import bodyParser from "body-parser";
 import { GraphQLClient } from "graphql-request";
+import Ajv from "ajv";
 
 import { getEnv } from "./env.js";
 import { DbExpansion } from "./packages/db/db.js";
@@ -9,15 +12,19 @@ import { processDictionary } from "./packages/lib/CommandTypeCodegen.js";
 import { getActivityTypescript } from "./getActivityTypescript.js";
 import { getCommandTypescriptTypes } from "./getCommandTypescriptTypes.js";
 import { ErrorWithStatusCode } from "./utils/ErrorWithStatusCode.js";
+import { expansionSetSchema } from "./schemas/expansion-set.js";
 
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
 
 const app: Application = express();
-app.use(bodyParser.json({ limit: '25mb' }));
+app.use(bodyParser.json({ limit: "25mb" }));
 
 DbExpansion.init();
 const db = DbExpansion.getDb();
 const graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL);
+
+const ajv = new Ajv();
+const expansionConfigValidator = ajv.compile(expansionSetSchema);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Aerie Command Service");
@@ -60,18 +67,18 @@ app.post("/put-dictionary", async (req, res) => {
   return;
 });
 
-app.post('/put-expansion', async (req, res) => {
+app.post("/put-expansion", async (req, res) => {
   const activityTypeName = req.body.input.activityTypeName as string;
   const expansionLogicBase64 = req.body.input.expansionLogic as string;
 
-  const { rows } = await db.query(`
+  const { rows } = await db.query(
+    `
     INSERT INTO expansion_rules (activity_type, expansion_logic)
     VALUES ($1, $2)
     RETURNING id;
-  `, [
-    activityTypeName,
-    expansionLogicBase64,
-  ]);
+  `,
+    [activityTypeName, expansionLogicBase64]
+  );
 
   if (rows.length < 1) {
     throw new Error(`POST /put-expansion: No expansion was updated in the database`);
@@ -83,8 +90,38 @@ app.post('/put-expansion', async (req, res) => {
   return;
 });
 
-app.put('/expansion-set', async (req, res) => {
-  res.status(501).send('PUT /expansion-set: Not implemented');
+app.post("/put-expansion-set", async (req, res) => {
+  if (!expansionConfigValidator(req.body.input)) {
+    res.status(400).json({
+      message: `PUT /expansion-set: Invalid request body: ${JSON.stringify(req.body.input)}\n${util.formatWithOptions(
+        { depth: Infinity },
+        expansionConfigValidator.errors
+      )}`,
+    });
+    return;
+  }
+
+  const { commandDictionaryId, missionModelId, expansionIds } = req.body.input;
+
+  const { rows } = await db.query(`
+    WITH expansion_set_id AS (
+      INSERT INTO expansion_set (command_dict_id, mission_model_id)
+      VALUES (${commandDictionaryId}, ${missionModelId})
+      RETURNING id
+    )
+    INSERT INTO expansion_set_to_rule (set_id, rule_id) VALUES
+      ${expansionIds
+        .map((expansionId: number) => `((SELECT id FROM expansion_set_id), ${expansionId})`)
+        .join(",\n      ")}
+    RETURNING (SELECT id FROM expansion_set_id);
+  `);
+
+  if (rows.length < 1) {
+    throw new Error(`PUT /expansion-set: No expansion set was inserted in the database`);
+  }
+  const id = rows[0].id;
+  console.log(`PUT /expansion-set: Updated expansion set in the database: id=${id}`);
+  res.status(200).json({ expansionSetID: id });
   return;
 });
 
@@ -114,12 +151,12 @@ app.post("/get-activity-typescript", async (req, res) => {
 
 app.get("/commands/:expansionRunId(\\d+)/:activityInstanceId(\\d+)", async (req, res) => {
   // Pull existing expanded commands for an activity instance of an expansion run
-  res.status(501).send('GET /commands: Not implemented');
+  res.status(501).send("GET /commands: Not implemented");
   return;
 });
 
-app.post('/expand-all-activity-instances/:simulationId(\\d+)/:expansionSetId(\\d+)', async (req, res) => {
-  res.status(501).send('POST /expand-all-activity-instances: Not implemented');
+app.post("/expand-all-activity-instances/:simulationId(\\d+)/:expansionSetId(\\d+)", async (req, res) => {
+  res.status(501).send("POST /expand-all-activity-instances: Not implemented");
   return;
 });
 
