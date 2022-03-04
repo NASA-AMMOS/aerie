@@ -11,7 +11,7 @@
 | Name    | Version          | Notes        | Download             |
 | ------- | ---------------- | ------------ | -------------------- |
 | OpenJDK | Temurin 17 (LTS) | HotSpot JVM  | https://adoptium.net |
-| Gradle  | 7.2              | Build system | https://gradle.org   |
+| Gradle  | 7.4              | Build system | https://gradle.org   |
 
 ### Testing
 
