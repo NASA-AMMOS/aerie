@@ -46,26 +46,83 @@ async function testSchedulerWorkflow(getPathToAerieLanderMissionModelJar: () => 
   const planEndTimestamp = "2021-005T00:00:00.000"
 
   const planId = await createPlan(missionModelId, await generateUniquePlanName(ssoToken), planStartTimestamp, planEndTimestamp, ssoToken)
-  await insertActivity(planId, getPostgresIntervalString(planStartTimestamp, "2021-002T00:00:00.000"),
-      "BiteBanana",
-      {},
-      ssoToken)
-  const goalId = await insertSchedulingGoal("my first scheduling goal!", missionModelId, `
 
-  export default function myGoal() {
-    return Goal.ActivityRecurrenceGoal({
-      activityTemplate: ActivityTemplates.PeelBanana('some goal', { peelDirection: 'fromStem' }),
-      interval: 12 * 60 * 60 * 1000 * 1000 // 1 day in microseconds
-    })
-  }
+  const initialActivities = [
+    {
+      start_offset: Duration.hours(24),
+      type: "BiteBanana",
+      args: {}
+    }
+  ]
 
-  `, ssoToken)
+  const activityIds = await Promise.all(initialActivities.map(activityDefinition => insertActivity(planId, activityDefinition, ssoToken)))
+
+  const schedulingGoals = [
+    {
+      name: "my first scheduling goal!",
+      definition: `
+        export default function myGoal() {
+          return Goal.ActivityRecurrenceGoal({
+            activityTemplate: ActivityTemplates.PeelBanana('some goal', { peelDirection: 'fromStem' }),
+            interval: 12 * 60 * 60 * 1000 * 1000 // 1 day in microseconds
+          })
+        }`
+    },
+    {
+      name: "my second scheduling goal should be a no-op",
+      definition: `
+        export default function myGoal() {
+          return Goal.ActivityRecurrenceGoal({
+            activityTemplate: ActivityTemplates.PeelBanana('some goal', { peelDirection: 'fromStem' }),
+            interval: 12 * 60 * 60 * 1000 * 1000 // 1 day in microseconds
+          })
+        }`
+    }
+  ]
+
+  const goalIds = await Promise.all(
+      schedulingGoals
+          .map(goal => insertSchedulingGoal(goal.name, missionModelId, goal.definition, ssoToken)));
+
   const planRevision = await getPlanRevision(planId, ssoToken)
   const specificationId = await insertSchedulingSpecification(planId, planRevision, planStartTimestamp, planEndTimestamp, {}, ssoToken)
-  const affectedRows = await setSchedulingSpecificationGoals(specificationId, [goalId], ssoToken)
-  assert(affectedRows === 1)
+  const affectedRows = await setSchedulingSpecificationGoals(specificationId, goalIds, ssoToken)
+  assert(affectedRows === goalIds.length)
   await triggerSchedulingRun(specificationId, ssoToken)
+
+  const finalActivities: [number, ActivityDefinition][] = await getPlan(planId, ssoToken);
+
+  initialActivities.forEach((activityDefinition, i) => {
+    const correspondingActivities = finalActivities.filter(([id, finalActivityDefinition]) =>
+        finalActivityDefinition.start_offset === activityDefinition.start_offset
+        && finalActivityDefinition.type == activityDefinition.type)
+    assert(correspondingActivities.length >= 1, `No corresponding activity found with type ${activityDefinition.type} and start_offset ${Duration.toString(activityDefinition.start_offset)}`)
+  })
+
+  console.log("Passed checks for initial plan activity types and start offsets")
+
+  try {
+    assertInitialActivitiesMatchByIdAndArgs(initialActivities, activityIds, finalActivities);
+    console.log("Passed checks for initial plan activity ids and arguments")
+  } catch (e) {
+    console.log("Failed checks for initial plan activity ids and arguments")
+  }
 }
+
+function assertInitialActivitiesMatchByIdAndArgs(initialActivities: { args: {}; start_offset: number; type: string }[], activityIds: number[], finalActivities: [number, ActivityDefinition][]) {
+  initialActivities.forEach((activityDefinition, i) => {
+    const activityId = activityIds[i]
+    const correspondingActivities = finalActivities.filter(([id, finalActivityDefinition]) => id === activityId)
+    assert(correspondingActivities.length >= 1, `No corresponding activity found with id ${activityId}`)
+    assert(correspondingActivities.length <= 1, `${correspondingActivities.length} activities found with id ${activityId}`)
+    const correspondingActivity = correspondingActivities[0][1];
+    assert(activityDefinition.type === correspondingActivity.type)
+    assert(activityDefinition.start_offset == correspondingActivity.start_offset)
+    assert(activityDefinition.args == correspondingActivity.args)
+  })
+}
+
+
 
 async function loadSSOToken() {
   const ssoTokenFilePath = path.join(process.env.AERIE_ROOT as string, "api-tests/.ssotoken");
@@ -200,7 +257,7 @@ async function generateUniquePlanName(ssoToken: string) {
   let i = 0
   let newPlanName
   while (true) {
-    newPlanName = `my_plan_${i}`
+    newPlanName = `my_plan_${i.toString().padStart(3, "0")}`
     if (!takenNames.includes(newPlanName)) {
       break
     }
@@ -250,7 +307,13 @@ async function createPlan(missionModelId: number, planName: string, startTimesta
   return planId
 }
 
-async function insertActivity(plan_id: number, start_offset: string, type: string, args: object, ssoToken: string) {
+interface ActivityDefinition {
+  start_offset: Duration,
+  type: string,
+  args: object,
+}
+
+async function insertActivity(plan_id: number, activityDefinition: ActivityDefinition, ssoToken: string) {
   const response = (await query(`
      mutation CreateActivity($activity: activity_insert_input!) {
       createActivity: insert_activity_one(object: $activity) {
@@ -261,9 +324,9 @@ async function insertActivity(plan_id: number, start_offset: string, type: strin
       {
         "activity": {
           "plan_id": plan_id,
-          "start_offset": start_offset,
-          "type": type,
-          "arguments": args
+          "start_offset": Duration.toString(activityDefinition.start_offset),
+          "type": activityDefinition.type,
+          "arguments": activityDefinition.args
         }
       },
       ssoToken
@@ -370,6 +433,24 @@ query TriggerSchedulingRun($spec_id:Int!) {
     throw Error(JSON.stringify(response))
   }
   console.log(response)
+}
+
+async function getPlan(planId: number, ssoToken: string): Promise<[number, ActivityDefinition][]> {
+  const response = await query(`
+  query GetPlan($plan_id:Int!) {
+    plan_by_pk(id: $plan_id) {
+      activities {
+        id
+        start_offset
+        type
+        arguments
+      }
+    }
+  }`, {
+    plan_id: planId
+  }, ssoToken) as {plan_by_pk: {activities: {id: number, start_offset: string, type: string, "arguments": object}[]}}
+  return response["plan_by_pk"]["activities"]
+      .map(x => [x.id, {start_offset: Duration.ofString(x.start_offset), type: x.type, args: x["arguments"]}])
 }
 
 type Duration = number
