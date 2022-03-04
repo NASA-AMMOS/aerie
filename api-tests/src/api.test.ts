@@ -24,20 +24,23 @@ async function main() {
   const libsDir = path.join(process.env.AERIE_ROOT as string, "examples/banananation/build/libs")
   const candidateBananaNationJars = fs.readdirSync(libsDir).filter(fn => fn.endsWith('.jar'));
 
-  const pathToBanananationMissionModelJar = path.join(libsDir, candidateBananaNationJars[0]);
-  if (candidateBananaNationJars.length > 1) {
-    console.warn("Multiple banananation jars to choose from. Choosing " + pathToBanananationMissionModelJar)
+  function getPathToBanananationMissionModelJar() {
+    const pathToBanananationMissionModelJar = path.join(libsDir, candidateBananaNationJars[0]);
+    if (candidateBananaNationJars.length > 1) {
+      console.warn("Multiple banananation jars to choose from. Choosing " + pathToBanananationMissionModelJar)
+    }
+    return pathToBanananationMissionModelJar;
   }
 
-  await testSchedulerWorkflow(pathToBanananationMissionModelJar, ssoToken)
+  await testSchedulerWorkflow(getPathToBanananationMissionModelJar, ssoToken)
 }
 
 /**
  * This test is considered successful if it completes without throwing an Error
  */
-async function testSchedulerWorkflow(pathToAerieLanderMissionModelJar: string, ssoToken: string) {
+async function testSchedulerWorkflow(getPathToAerieLanderMissionModelJar: () => string, ssoToken: string) {
   let missionModelMetadata = {mission: "banananation", name: "banananation", version: "1"}
-  const missionModelId = await ensureMissionModelHasBeenUploaded(missionModelMetadata, ssoToken, pathToAerieLanderMissionModelJar)
+  const missionModelId = await ensureMissionModelHasBeenUploaded(missionModelMetadata, ssoToken, getPathToAerieLanderMissionModelJar)
 
   const planStartTimestamp = "2021-001T00:00:00.000"
   const planEndTimestamp = "2021-005T00:00:00.000"
@@ -121,7 +124,7 @@ async function uploadFile(filepath: string, filename: string, ssoToken: string):
   return json["id"]
 }
 
-async function ensureMissionModelHasBeenUploaded(missionModelMetadata: { mission: string, name: string, version: string }, ssoToken: string, pathToJar: string) {
+async function ensureMissionModelHasBeenUploaded(missionModelMetadata: { mission: string, name: string, version: string }, ssoToken: string, getPathToJar: () => string) {
   let missionModelId
   const modelIds = await checkMissionModelExists(missionModelMetadata, ssoToken)
   if (modelIds.length > 0) {
@@ -129,7 +132,7 @@ async function ensureMissionModelHasBeenUploaded(missionModelMetadata: { mission
     console.log("Using existing mission model jar with id " + missionModelId)
   } else {
     console.log("Uploading mission model jar")
-    const jarId = await uploadFile(pathToJar, "aerielander-0.10.0-SNAPSHOT.jar", ssoToken)
+    const jarId = await uploadFile(getPathToJar(), "api-tests-mission-model.jar", ssoToken)
     const response = await query(
         `
           mutation CreateModel($model: mission_model_insert_input!) {
