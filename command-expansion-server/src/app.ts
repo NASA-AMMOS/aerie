@@ -5,11 +5,12 @@ import { getEnv } from "./env.js";
 import { DbExpansion } from "./packages/db/db.js";
 import * as ampcs from "@nasa-jpl/aerie-ampcs";
 import { processDictionary } from "./packages/lib/CommandTypeCodegen.js";
+import { ErrorWithStatusCode } from "./utils/ErrorWithStatusCode.js";
 
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
 
 const app: Application = express();
-app.use(bodyParser.json({ limit: "25mb" }));
+app.use(bodyParser.json({ limit: '25mb' }));
 
 DbExpansion.init();
 const db = DbExpansion.getDb();
@@ -32,12 +33,12 @@ app.post("/dictionary", async (req, res) => {
   console.log(`command-lib generated - path: ${commandDictionaryPath}`);
 
   const sqlExpression = `
-      insert into command_dictionary (command_types, mission, version)
-      values ($1, $2, $3)
-      on conflict (mission, version) do update
-      set command_types = $1
-      returning id;
-    `;
+    insert into command_dictionary (command_types, mission, version)
+    values ($1, $2, $3)
+    on conflict (mission, version) do update
+    set command_types = $1
+    returning id;
+  `;
 
   const { rows } = await db.query(sqlExpression, [
     commandDictionaryPath,
@@ -47,48 +48,80 @@ app.post("/dictionary", async (req, res) => {
 
   if (rows.length < 0) {
     console.error(`POST /dictionary: No command dictionary was updated in the database`);
-    res.status(400).json({ message: `POST /dictionary: No command dictionary was updated in the database` });
-  } else {
-    const id = rows[0].id;
-    res.status(200).json({ id });
+    res.status(500).send(`POST /dictionary: No command dictionary was updated in the database`);
+    return;
   }
+  const id = rows[0].id;
+  res.status(200).json({ id });
   return;
 });
 
-app.put("/expansion/:activityTypeName", async (req, res) => {
-  res.status(501).send("PUT /expansion: Not implemented");
+app.put('/expansion/:activityTypeName', async (req, res) => {
+  const expansionLogic = Buffer.from(req.body.input.expansion, 'base64').toString();
+
+  const { rows } = await db.query(`
+    INSERT INTO expansion_rules (activity_type, expansion_logic)
+    VALUES ($1, $2)
+    RETURNING id;
+  `, [
+    req.params.activityTypeName,
+    expansionLogic,
+  ]);
+
+  if (rows.length < 1) {
+    throw new Error(`PUT /expansion: No expansion was updated in the database`);
+  }
+
+  const id = rows[0].id;
+  console.log(`PUT /expansion: Updated expansion in the database: id=${id}`);
+  res.status(200).json({ id });
   return;
 });
 
-app.get("/expansion/:expansionId(\\d+)", async (req, res) => {
-  res.status(501).send("GET /expansion: Not implemented");
+app.get('/expansion/:expansionId(\\d+)', async (req, res) => {
+  const expansionId = req.params.expansionId;
+
+  const { rows } = await db.query(`
+    SELECT expansion_logic
+    FROM expansion_rules
+    WHERE id = $1;
+  `, [
+    expansionId,
+  ]);
+
+  if (rows.length < 1) {
+    throw new ErrorWithStatusCode(`GET /expansion: No expansion with id=${expansionId}`, 404);
+  }
+
+  console.log(`GET /expansion: Retrieved expansion from database: id=${expansionId}`);
+  res.contentType('text').status(200).send(rows[0].expansion_logic);
   return;
 });
 
-app.put("/expansion-set", async (req, res) => {
-  res.status(501).send("PUT /expansion-set: Not implemented");
+app.put('/expansion-set', async (req, res) => {
+  res.status(501).send('PUT /expansion-set: Not implemented');
+    return;
+});
+
+app.get('/command-types/:dictionaryId(\\d+)', async (req, res) => {
+  res.status(501).send('GET /command-types: Not implemented');
   return;
 });
 
-app.get("/command-types/:dictionaryId(\\d+)", async (req, res) => {
-  res.status(501).send("GET /command-types: Not implemented");
+app.get('/activity-types/:missionModelId(\\d+)/:activityTypeName', async (req, res) => {
+  res.status(501).send('GET /activity-types: Not implemented');
   return;
 });
 
-app.get("/activity-types/:missionModelId(\\d+)/:activityTypeName", async (req, res) => {
-  res.status(501).send("GET /activity-types: Not implemented");
-  return;
-});
-
-app.get("/commands/:expansionRunId(\\d+)/:activityInstanceId(\\d+)", async (req, res) => {
+app.get('/commands/:expansionRunId(\\d+)/:activityInstanceId(\\d+)', async (req, res) => {
   // Pull existing expanded commands for an activity instance of an expansion run
-  res.status(501).send("GET /commands: Not implemented");
+  res.status(501).send('GET /commands: Not implemented');
   return;
 });
 
-app.post("/expand-all-activity-instances/:simulationId(\\d+)/:expansionSetId(\\d+)", async (req, res) => {
-  res.status(501).send("POST /expand-all-activity-instances: Not implemented");
-  return;
+app.post('/expand-all-activity-instances/:simulationId(\\d+)/:expansionSetId(\\d+)', async (req, res) => {
+    res.status(501).send('POST /expand-all-activity-instances: Not implemented');
+    return;
 });
 
 app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
