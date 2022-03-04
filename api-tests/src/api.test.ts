@@ -207,6 +207,8 @@ async function ensureMissionModelHasBeenUploaded(missionModelMetadata: { mission
         ssoToken) as { createModel: { id: number } }
     missionModelId = response["createModel"]["id"]
     console.log("Using newly uploaded mission model jar with id " + missionModelId)
+    console.log("Sleeping 2 seconds to allow time to generate activity types")
+    await new Promise(r => setTimeout(r, 2000));
   }
   return missionModelId
 }
