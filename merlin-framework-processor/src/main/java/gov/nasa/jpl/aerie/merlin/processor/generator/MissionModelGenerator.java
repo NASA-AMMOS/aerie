@@ -337,14 +337,30 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     "activity",
                                     Modifier.FINAL)
                                 .addStatement(
+                                    "final var $L = $T.$L.get()",
+                                    "model",
+                                    typeName,
+                                    "model")
+                                .addStatement(
+                                    "final var $L = $L.registry()",
+                                    "registry",
+                                    "model")
+                                .addStatement(
+                                    "final var $L = $L.$L",
+                                    "id",
+                                    "registry",
+                                    entry.declaration().getQualifiedName().toString().replace(".", "_"))
+                                .addStatement(
                                     "final var $L = new $T()",
                                     "mapper",
                                     entry.mapper().name)
                                 .addStatement(
-                                    "return $T.spawn($L.getName(), $L.getArguments($L))",
+                                    "return $T.spawn($L, $L, $L.createTask($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
+                                    "id",
+                                    "activity",
                                     "mapper",
-                                    "mapper",
+                                    "model",
                                     "activity")
                                 .build(),
                             MethodSpec
@@ -363,15 +379,31 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     "activity",
                                     Modifier.FINAL)
                                 .addStatement(
+                                    "final var $L = $T.$L.get()",
+                                    "model",
+                                    typeName,
+                                    "model")
+                                .addStatement(
+                                    "final var $L = $L.registry()",
+                                    "registry",
+                                    "model")
+                                .addStatement(
+                                    "final var $L = $L.$L",
+                                    "id",
+                                    "registry",
+                                    entry.declaration().getQualifiedName().toString().replace(".", "_"))
+                                .addStatement(
                                     "final var $L = new $T()",
                                     "mapper",
                                     entry.mapper().name)
                                 .addStatement(
-                                    "return $T.defer($L, $L.getName(), $L.getArguments($L))",
+                                    "return $T.defer($L, $L, $L, $L.createTask($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "duration",
+                                    "id",
+                                    "activity",
                                     "mapper",
-                                    "mapper",
+                                    "model",
                                     "activity")
                                 .build(),
                             MethodSpec

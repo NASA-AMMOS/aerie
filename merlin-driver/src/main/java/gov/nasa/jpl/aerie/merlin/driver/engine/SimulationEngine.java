@@ -709,16 +709,6 @@ public final class SimulationEngine implements AutoCloseable {
 
       return task.id();
     }
-
-    @Override
-    public String spawn(final String type, final Map<String, SerializedValue> arguments) {
-      final var task = initiateTaskFromInput(this.model, new SerializedActivity(type, arguments));
-      SimulationEngine.this.taskParent.put(task, this.activeTask);
-      SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
-      this.frame.signal(JobId.forTask(task));
-
-      return task.id();
-    }
   }
 
   /** A representation of a job processable by the {@link SimulationEngine}. */

@@ -4,11 +4,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.Map;
 import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -40,11 +38,6 @@ public final class ThreadedTaskTest {
           final Input input,
           final Task<Output> task)
       {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public String spawn(final String type, final Map<String, SerializedValue> arguments) {
         throw new UnsupportedOperationException();
       }
     };

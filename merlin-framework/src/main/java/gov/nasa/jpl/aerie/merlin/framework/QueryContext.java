@@ -1,13 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
+import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
-import java.util.Map;
 import java.util.function.Function;
 
 public final class QueryContext implements Context {
@@ -48,7 +48,8 @@ public final class QueryContext implements Context {
   }
 
   @Override
-  public String spawn(final String type, final Map<String, SerializedValue> arguments) {
+  public <Input, Output>
+  String spawn(final DirectiveTypeId<Input, Output> id, final Input input, final Task<Output> task) {
     throw new IllegalStateException("Cannot schedule activities in a query-only context");
   }
 
