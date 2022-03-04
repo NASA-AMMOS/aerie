@@ -3,7 +3,7 @@ import bodyParser from "body-parser";
 
 import { getEnv } from "./env.js";
 import { DbExpansion } from "./packages/db/db.js";
-import * as ampcs from "@gov.nasa.jpl.aerie/ampcs";
+import * as ampcs from "@nasa-jpl/aerie-ampcs";
 import { processDictionary } from "./packages/lib/CommandTypeCodegen.js";
 
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
