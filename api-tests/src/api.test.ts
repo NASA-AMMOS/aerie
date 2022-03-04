@@ -68,9 +68,10 @@ async function testSchedulerWorkflow(getPathToAerieLanderMissionModelJar: () => 
 }
 
 async function loadSSOToken() {
+  const ssoTokenFilePath = path.join(process.env.AERIE_ROOT as string, "api-tests/.ssotoken");
   let ssoTokenFile: string
   try {
-    ssoTokenFile = (await fs.promises.readFile(path.join(process.env.AERIE_ROOT as string, "api-tests/.ssotoken"))).toString()
+    ssoTokenFile = (await fs.promises.readFile(ssoTokenFilePath)).toString()
   } catch (e) {
     throw Error("No ./api-tests/.ssotoken file found. Run ./api-tests/login.sh and try again.")
   }
@@ -81,7 +82,7 @@ async function loadSSOToken() {
     throw Error("./api-tests/.ssotoken file is corrupted. Run ./api-tests/login.sh and try again.")
   }
   try {
-    await checkMissionModelExists({mission: "lorem", name: "ipsum", "version": "1"}, ssoToken)
+    await uploadFile(ssoTokenFilePath, "test-auth.txt", ssoToken)
   } catch (e) {
     throw Error("sso token has expired. Run ./api-tests/login.sh then try again.")
   }
