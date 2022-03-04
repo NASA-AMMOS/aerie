@@ -3,6 +3,10 @@ actions:
   definition:
     kind: synchronous
     handler: http://aerie_merlin:27183/addExternalDataset
+- name: uploadDictionary
+  definition:
+    kind: synchronous
+    handler: http://aerie_commanding:3000/dictionary
 - name: getModelEffectiveArguments
   definition:
     kind: ""
