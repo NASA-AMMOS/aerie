@@ -199,18 +199,15 @@ function versionBuilder(dictionary: ampcs.CommandDictionary) {
 }
 
 export async function processDictionary(dictionary: ampcs.CommandDictionary) {
-  const prefaceUrl = new URL("../../../data/preface.txt", import.meta.url);
+  const prefaceUrl = new URL("./CommandEDSLPreface.ts", import.meta.url);
   const folder = `${getEnv().STORAGE}/${dictionary.header.mission_name.toLowerCase()}/`;
   const fileName = `command_lib.${dictionary.header.version}.ts`;
-  const prefaceString = await Promise.all([fs.promises.readFile(prefaceUrl.pathname, "utf8")]);
+  const prefaceString = await fs.promises.readFile(prefaceUrl.pathname, "utf8");
 
   const { values, declarations } = generateTypescriptCode(dictionary); //update sql table store seprate
 
   await fs.promises.mkdir(folder, { recursive: true });
 
-  return await Promise.resolve([
-    fs.promises.writeFile(folder + fileName, prefaceString + declarations + values, { flag: "w" }),
-  ]).then(() => {
-    return folder + fileName;
-  });
+  await fs.promises.writeFile(folder + fileName, prefaceString + declarations + values, { flag: "w" });
+  return folder + fileName;
 }
