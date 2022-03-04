@@ -6,8 +6,6 @@ import { DbExpansion } from "./packages/db/db.js";
 import * as ampcs from "@gov.nasa.jpl.aerie/ampcs";
 import { processDictionary } from "./packages/lib/CommandTypeCodegen.js";
 
-const app: Application = express();
-
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
 
 const app: Application = express();
