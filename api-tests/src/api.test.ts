@@ -67,16 +67,6 @@ async function testSchedulerWorkflow(getPathToAerieLanderMissionModelJar: () => 
             interval: 12 * 60 * 60 * 1000 * 1000 // 1 day in microseconds
           })
         }`
-    },
-    {
-      name: "my second scheduling goal should be a no-op",
-      definition: `
-        export default function myGoal() {
-          return Goal.ActivityRecurrenceGoal({
-            activityTemplate: ActivityTemplates.PeelBanana('some goal', { peelDirection: 'fromStem' }),
-            interval: 12 * 60 * 60 * 1000 * 1000 // 1 day in microseconds
-          })
-        }`
     }
   ]
 
