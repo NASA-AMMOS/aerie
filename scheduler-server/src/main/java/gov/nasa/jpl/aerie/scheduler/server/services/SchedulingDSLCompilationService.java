@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
+import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import org.json.JSONObject;
 
@@ -43,12 +44,10 @@ public class SchedulingDSLCompilationService {
   /**
    * NOTE: This method is not re-entrant (assumes only one call to this method is running at any given time)
    */
-  public SchedulingDSL.GoalSpecifier compileSchedulingGoalDSL(final String goalTypescript, final String goalName)
+  public SchedulingDSL.GoalSpecifier compileSchedulingGoalDSL(final PlanId planId, final String goalTypescript, final String goalName)
   throws SchedulingDSLCompilationException
   {
-    final var generatedCode = JSONObject.quote("""
-      const SAMPLE_TYPESCRIPT_CODE = "Hello world"
-    """);
+    final var generatedCode = JSONObject.quote(this.typescriptCodeGenerationService.generateTypescriptTypesForPlan(planId));
 
     /*
     * PROTOCOL:

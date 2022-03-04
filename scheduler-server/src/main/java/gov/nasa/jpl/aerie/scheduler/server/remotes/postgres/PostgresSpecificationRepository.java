@@ -34,10 +34,12 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
         final var specificationRecord = getSpecificationAction
             .get(specificationId.id())
             .orElseThrow(() -> new NoSuchSpecificationException(specificationId));
+        final var planId = new PlanId(specificationRecord.planId());
         final var goals = getSpecificationGoalsAction
             .get(specificationId.id())
             .stream()
             .map((PostgresGoalRecord pgGoal) -> GoalBuilder.buildGoalRecord(
+                planId,
                 pgGoal,
                 specificationRecord.horizonStartTimestamp(),
                 specificationRecord.horizonEndTimestamp(),
@@ -58,7 +60,7 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
         }
 
         return new Specification(
-            new PlanId(specificationRecord.planId()),
+            planId,
             specificationRecord.planRevision(),
             goals
                 .stream()

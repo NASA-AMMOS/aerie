@@ -2,7 +2,9 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
+import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -15,10 +17,17 @@ public class TypescriptCodeGenerationService {
 
   private final MerlinService merlinService;
 
-  public TypescriptCodeGenerationService(MerlinService merlinService) {
+  public TypescriptCodeGenerationService(final MerlinService merlinService) {
     this.merlinService = merlinService;
   }
 
+  public String generateTypescriptTypesForPlan(final PlanId planId) {
+    try {
+      return generateTypescriptTypesFromMissionModel(this.merlinService.getMissionModelTypes(planId));
+    } catch (IOException e) {
+      throw new Error("Could not fetch mission model types", e);
+    }
+  }
   public static String generateTypescriptTypesFromMissionModel(final MissionModelTypes missionModelTypes) {
     var indentLevel = 0;
     final var activityTypeCodes = new ArrayList<ActivityTypeCode>();
