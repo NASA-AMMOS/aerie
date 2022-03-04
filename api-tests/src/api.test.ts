@@ -372,6 +372,38 @@ query TriggerSchedulingRun($spec_id:Int!) {
   console.log(response)
 }
 
+type Duration = number
+const Duration = {
+  microseconds: (n: number): Duration => n,
+  milliseconds: (n: number): Duration => n * Duration.microseconds(1000),
+  seconds: (n: number): Duration => n * Duration.milliseconds(1000),
+  minutes: (n: number): Duration => n * Duration.seconds(60),
+  hours: (n: number): Duration => n * Duration.minutes(60),
+  toString: (duration: Duration) => {
+    let remainingDuration = duration
+    const hours = `${Math.floor(remainingDuration / Duration.hours(1))}`.padStart(2, "0")
+    remainingDuration = remainingDuration % Duration.hours(1)
+    const minutes = `${Math.floor(remainingDuration / Duration.minutes(1))}`.padStart(2, "0")
+    remainingDuration = remainingDuration % Duration.minutes(1)
+    const seconds = `${Math.floor(remainingDuration / Duration.seconds(1))}`.padStart(2, "0")
+    remainingDuration = remainingDuration % Duration.seconds(1)
+    const milliseconds = `${Math.floor(remainingDuration / Duration.milliseconds(1))}`.padStart(3, "0")
+    return `${hours}:${minutes}:${seconds}.${milliseconds}`
+  },
+  ofString: (s: string) => {
+    const splitString = s.split(".")
+    let milliseconds = "000"
+    if (splitString.length == 2) {
+      milliseconds = splitString[1].padEnd(3, "0").substr(0, 3)
+    }
+    const [hours, minutes, seconds] = splitString[0].split(":")
+    return Duration.hours(parseInt(hours)) +
+        Duration.minutes(parseInt(minutes)) +
+        Duration.seconds(parseInt(seconds)) +
+        Duration.milliseconds(parseInt(milliseconds))
+  }
+}
+
 function getPostgresIntervalString(startTime: string, endTime: string): string {
   // Constructs a PostgresQL interval from two stringified datetimes
   const fmt = `yyyy-ooo'T'HH:mm:ss'.'SSS`
