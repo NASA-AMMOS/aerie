@@ -351,9 +351,10 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     "registry",
                                     entry.declaration().getQualifiedName().toString().replace(".", "_"))
                                 .addStatement(
-                                    "final var $L = new $T()",
+                                    "final var $L = $T.$L",
                                     "mapper",
-                                    entry.mapper().name)
+                                    missionModel.getTypesName(),
+                                    entry.mapper().name.canonicalName().replace(".", "_"))
                                 .addStatement(
                                     "return $T.spawn($L, $L, $L.createTask($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
@@ -393,9 +394,10 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     "registry",
                                     entry.declaration().getQualifiedName().toString().replace(".", "_"))
                                 .addStatement(
-                                    "final var $L = new $T()",
+                                    "final var $L = $T.$L",
                                     "mapper",
-                                    entry.mapper().name)
+                                    missionModel.getTypesName(),
+                                    entry.mapper().name.canonicalName().replace(".", "_"))
                                 .addStatement(
                                     "return $T.defer($L, $L, $L, $L.createTask($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
@@ -489,6 +491,17 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             Modifier.PUBLIC, Modifier.FINAL)
                         .build())
                     .toList())
+            .addFields(
+                missionModel.activityTypes
+                    .stream()
+                    .map(activityType -> FieldSpec
+                        .builder(
+                            activityType.mapper().name,
+                            activityType.mapper().name.canonicalName().replace(".", "_"),
+                            Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                        .initializer("new $T()", activityType.mapper().name)
+                        .build())
+                    .toList())
             .addMethod(
                 MethodSpec
                     .constructorBuilder()
@@ -544,10 +557,11 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         missionModel.activityTypes
                             .stream()
                             .map(activityType -> CodeBlock.builder().add(
-                                "$L.registerDirectiveType($S, new $T())",
+                                "$L.registerDirectiveType($S, $T.$L)",
                                 "registrar",
                                 activityType.name(),
-                                activityType.mapper().name))
+                                typeName,
+                                activityType.mapper().name.canonicalName().replace(".", "_")))
                             .reduce((x, y) -> x.add(",\n$L", y.build()))
                             .orElse(CodeBlock.builder())
                             .build())
