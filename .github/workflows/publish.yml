@@ -9,6 +9,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
 
 jobs:
   publish:
@@ -85,7 +86,7 @@ jobs:
           labels: ${{ steps.aerieCommanding.outputs.labels }}
       # Publish via Gradle.
       - name: Publish Package
-        run: ./gradlew publish
+        run: ./gradlew publish -Pversion.isRelease=$IS_RELEASE
         env:
           GITHUB_TOKEN: ${{ github.token }}
       # Publish deployment via action artifact uploader.
