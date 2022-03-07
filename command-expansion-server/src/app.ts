@@ -47,9 +47,12 @@ app.post("/dictionary", async (req, res) => {
 
   if (rows.length < 0) {
     console.error(`POST /dictionary: No command dictionary was updated in the database`);
+    res.status(400).json({ message: `POST /dictionary: No command dictionary was updated in the database` });
+  } else {
+    const id = rows[0].id;
+    res.status(200).json({ id });
   }
-  const id = rows[0].id;
-  res.status(200).json({ id });
+  return;
 });
 
 app.put("/expansion/:activityTypeName", async (req, res) => {
