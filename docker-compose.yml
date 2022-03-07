@@ -57,8 +57,9 @@ services:
       MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
       MERLIN_LOGGING: "true"
       MERLIN_PORT: 27183
+      JAVA_OPTS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
     image: aerie_merlin
-    ports: ["27183:27183"]
+    ports: ["27183:27183", "5005:5005"]
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store
@@ -81,8 +82,9 @@ services:
       SCHEDULER_OUTPUT_MODE: UpdateInputPlanWithNewActivities
       SCHEDULER_PORT: 27193
       SCHEDULER_RULES_JAR: /usr/src/app/merlin_file_store/scheduler_rules.jar
+      JAVA_OPTS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
     image: aerie_scheduler
-    ports: ["27193:27193"]
+    ports: ["27193:27193", "5006:5005"]
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store
