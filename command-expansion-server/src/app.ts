@@ -7,6 +7,7 @@ import { DbExpansion } from "./packages/db/db.js";
 import * as ampcs from "@nasa-jpl/aerie-ampcs";
 import { processDictionary } from "./packages/lib/CommandTypeCodegen.js";
 import { getActivityTypescript } from "./getActivityTypescript.js";
+import { getCommandTypescriptTypes } from "./getCommandTypescriptTypes.js";
 
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
 
@@ -73,8 +74,15 @@ app.put("/expansion-set", async (req, res) => {
   return;
 });
 
-app.get("/command-types/:dictionaryId(\\d+)", async (req, res) => {
-  res.status(501).send("GET /command-types: Not implemented");
+app.post("/get-command-typescript", async (req, res) => {
+  const commandDictionaryId: string = req.body.input.commandDictionaryId;
+  const commandTypescript = await getCommandTypescriptTypes(db, parseInt(commandDictionaryId, 10));
+  const commandTypescriptBase64 = Buffer.from(commandTypescript).toString("base64");
+
+  res.status(200).json({
+    typescript: commandTypescriptBase64,
+  });
+
   return;
 });
 
