@@ -5,9 +5,9 @@ create table command_dictionary (
   mission text not null,
   version text not null,
 
-  constraint command_dictionary_primary_key
+  constraint command_dictionary_synthetic_key
       primary key (id),
-  constraint pair unique (mission,version)
+  constraint command_dictionary_natural_key unique (mission,version)
 );
 
 comment on table command_dictionary is e''
