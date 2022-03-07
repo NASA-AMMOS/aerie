@@ -27,5 +27,5 @@ task build {
 
 task clean(type: Delete) {
   dependsOn undoDistributeSql
-  delete 'build', 'node_modules'
+  delete 'build'
 }
