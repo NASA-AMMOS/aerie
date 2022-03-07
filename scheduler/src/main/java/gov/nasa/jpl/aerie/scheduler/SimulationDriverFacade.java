@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class SimulationDriverFacade {
 
@@ -26,7 +27,7 @@ public class SimulationDriverFacade {
     driver.simulateActivity(activity,startTime, activityId);
   }
 
-  public Duration getActivityDuration(String activityName){
+  public Optional<Duration> getActivityDuration(String activityName){
     var activityId = activityNameToActivityId.get(activityName);
     return driver.getActivityDuration(activityId);
   }

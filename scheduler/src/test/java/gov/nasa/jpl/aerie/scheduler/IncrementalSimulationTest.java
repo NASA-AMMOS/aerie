@@ -42,8 +42,9 @@ public class IncrementalSimulationTest {
   public void durationTest(){
     var act1Dur = incrementalSimulationDriver.getActivityDuration("first");
     var act2Dur = incrementalSimulationDriver.getActivityDuration("second");
-    assert(act1Dur.isEqualTo(Duration.of(1, SECONDS)));
-    assert(act2Dur.isEqualTo(Duration.of(1, SECONDS)));
+    assert(act1Dur.isPresent() && act2Dur.isPresent());
+    assert(act1Dur.get().isEqualTo(Duration.of(1, SECONDS)));
+    assert(act2Dur.get().isEqualTo(Duration.of(1, SECONDS)));
   }
 
   private ArrayList<TestSimulatedActivity> getActivities(){

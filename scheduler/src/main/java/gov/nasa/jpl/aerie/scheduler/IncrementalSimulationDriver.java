@@ -206,7 +206,7 @@ public class IncrementalSimulationDriver {
    * @param activityInstanceId the activity id
    * @return its duration if the activity has been simulated and has finished simulating, an IllegalArgumentException otherwise
    */
-  public Duration getActivityDuration(ActivityInstanceId activityInstanceId){
+  public Optional<Duration> getActivityDuration(ActivityInstanceId activityInstanceId){
     return engine.getTaskDuration(plannedDirectiveToTask.get(activityInstanceId));
   }
 
