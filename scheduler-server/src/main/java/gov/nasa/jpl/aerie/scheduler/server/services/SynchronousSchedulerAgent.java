@@ -8,7 +8,6 @@ import gov.nasa.jpl.aerie.scheduler.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.Goal;
 import gov.nasa.jpl.aerie.scheduler.HuginnConfiguration;
-import gov.nasa.jpl.aerie.scheduler.JarClassLoader;
 import gov.nasa.jpl.aerie.scheduler.Plan;
 import gov.nasa.jpl.aerie.scheduler.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.PrioritySolver;
@@ -29,10 +28,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresSpecificationRepository;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,10 +74,8 @@ public record SynchronousSchedulerAgent(
       //confirm requested plan to schedule from/into still exists at targeted version (request could be stale)
       //TODO: maybe some kind of high level db transaction wrapping entire read/update of target plan revision
 
-      // TODO: Remove workaround function wrapper once goals are read from database
       final var specificationWithGoals = specificationService.getSpecification(request.specificationId());
       final var planMetadata = merlinService.getPlanMetadata(specificationWithGoals.planId());
-//      final var specificationWithGoals = loadSpecificationGoalsFromJAR(specificationWithoutGoals, planMetadata);
       ensureRequestIsCurrent(request);
       ensurePlanRevisionMatch(specificationWithGoals,planMetadata.planRev());
       //create scheduler problem seeded with initial plan
@@ -114,53 +108,9 @@ public record SynchronousSchedulerAgent(
       //unwrap failure message from any anticipated exceptions and forward to subscribers
       writer.failWith(e.getMessage());
 
-      // TODO: Remove this catch for the workaround that loads goals from a JAR once
-      //       we are reading goals from the database
     } catch (final NoSuchPlanException | IOException e) {
       writer.failWith(e.getMessage());
     }
-  }
-
-  // TODO: Remove this when removing the workaround for loading Goals from a JAR
-  private final class NoSuchGoalDefinitionException extends Exception {
-    public NoSuchGoalDefinitionException(final GoalId goalId, final String name) {
-      super(String.format("Goal definition for goal name '%s' with ID '%d' not found", name, goalId.id()));
-    }
-  }
-
-  /** WORKAROUND
-   * This function serves as a workaround to load a specification's set of goals from a JAR
-   * instead of the database. When we are able to read goals from the database, this function
-   * should be replaced by a simple call to the specification service's getSpecification function
-   * @param dbLoadedSpec - The specification as loaded from the database with empty goal definitions
-   * @return An identical specification with goal definitions added (loaded from a JAR)
-   */
-  private Specification loadSpecificationGoalsFromJAR(final Specification dbLoadedSpec, final PlanMetadata planMetadata)
-  throws NoSuchPlanException, IOException, NoSuchGoalDefinitionException {
-    final var missionModel = loadMissionModel(planMetadata);
-    final var jarGoals = loadGoals(missionModel);
-
-    final var loadedGoals = new ArrayList<GoalRecord>(dbLoadedSpec.goalsByPriority().size());
-    for (final var dbGoal : dbLoadedSpec.goalsByPriority()) {
-      var definitionFound = false;
-      for (final var jarGoal : jarGoals) {
-        if (dbGoal.definition().getName().equals(jarGoal.getName())) {
-          loadedGoals.add(new GoalRecord(dbGoal.id(), jarGoal));
-          definitionFound = true;
-          break;
-        }
-      }
-      if (!definitionFound) throw new NoSuchGoalDefinitionException(dbGoal.id(), dbGoal.definition().getName());
-    }
-
-    return new Specification(
-        dbLoadedSpec.planId(),
-        dbLoadedSpec.planRevision(),
-        loadedGoals,
-        dbLoadedSpec.horizonStartTimestamp(),
-        dbLoadedSpec.horizonEndTimestamp(),
-        dbLoadedSpec.simulationArguments()
-    );
   }
 
   private void ensurePlanRevisionMatch(final Specification specification, final long actualPlanRev) {
@@ -212,29 +162,6 @@ public record SynchronousSchedulerAgent(
     //TODO: load activity type constraints from somewhere (scheduler store? mission model?)
     //TODO: somehow apply user control over which constraints to enforce during scheduling
     return List.of();
-  }
-
-  /**
-   * collects the scheduling goals that apply to the current scheduling run on the target plan
-   *
-   * @param missionModel the mission model that the plan adheres to, possibly associating additional relevant goals
-   * @return the list of goals relevant to the target plan
-   * @throws ResultsProtocolFailure when the goals could not be loaded, or the goal data store could not be reached
-   */
-  private List<Goal> loadGoals(final MissionModel<?> missionModel) {
-    //TODO: is the plan and mission model enough to find the relevant goals? (eg what about sandbox goals?)
-    //TODO: somehow apply user control over which scheduling goals to actually run vs just check
-    //TODO: load scheduling goals from scheduler data store into problem
-    try {
-      //TODO : when goals are effectively loaded into databse: take goals text and translate them to goal
-      //for v0.10.0, load all hardcoded scheduling goals from a jar into the problem
-      final var problems = JarClassLoader.loadProblemsFromJar(this.goalsJarPath.toString(), missionModel);
-      // goals are associated with
-      return problems.stream().map(Problem::getGoals).flatMap(Collection::stream).collect(Collectors.toList());
-    } catch (IOException | ClassNotFoundException | InvocationTargetException | InstantiationException e) {
-      //TODO: class-loader related exceptions will not be relevant once interim jar-based rule loading is replaced
-      throw new ResultsProtocolFailure(e);
-    }
   }
 
   /**
