@@ -35,6 +35,7 @@ public class SimResource implements
     ExternalState
 {
 
+  private final SimulationFacade facade;
   /** the identifier of this resource for use in properly querying the simulation results */
   private String name;
 
@@ -42,6 +43,10 @@ public class SimResource implements
   private SimulationResults simResults;
 
   TreeMap<Window, SerializedValue> values;
+
+  public SimResource(SimulationFacade facade){
+    this.facade = facade;
+  }
 
   public boolean isEmpty() {
     return simResults == null
