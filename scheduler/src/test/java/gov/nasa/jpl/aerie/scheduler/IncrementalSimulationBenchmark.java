@@ -37,7 +37,7 @@ public class IncrementalSimulationBenchmark {
       var act = new IncrementalSimulationTest.TestSimulatedActivity(
           cur,
           new SerializedActivity("BasicActivity", Map.of()),
-          String.valueOf(cur.in(MICROSECONDS)));
+          new ActivityInstanceId(cur.in(MICROSECONDS)));
       acts.add(act);
     }
     return acts;
@@ -52,7 +52,7 @@ public class IncrementalSimulationBenchmark {
     final var alreadyIn = new HashMap<ActivityInstanceId, Pair<Duration, SerializedActivity>>();
     //builds incrementally long plans and simulates them
     for(var act:acts){
-      alreadyIn.put(new ActivityInstanceId(Long.parseLong(act.name())), Pair.of(act.start(), act.activity()));
+      alreadyIn.put(act.id(), Pair.of(act.start(), act.activity()));
       final var task = SimulationDriver.buildPlanTask(alreadyIn);
       final var start = System.nanoTime();
       SimulationDriver.simulateTask(fooMissionModel, task);
@@ -66,12 +66,12 @@ public class IncrementalSimulationBenchmark {
   private static void benchmarkIncrementalSimulationDriver(){
     final var acts = getActivities();
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    final SimulationDriverFacade incrementalSimulationDriver = new SimulationDriverFacade(new IncrementalSimulationDriver(fooMissionModel));
+    final var incrementalSimulationDriver = new IncrementalSimulationDriver(fooMissionModel);
     int i = 0;
     var sum = 0.;
     for(var act : acts) {
       final var start = System.nanoTime();
-      incrementalSimulationDriver.simulateActivity(act.activity(), act.name(), act.start());
+      incrementalSimulationDriver.simulateActivity(act.activity(), act.start(), act.id());
       final var dur = System.nanoTime() - start;
       sum += dur;
       final var curMean = sum / (++i);
