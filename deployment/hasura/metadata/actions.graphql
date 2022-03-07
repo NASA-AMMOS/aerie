@@ -9,9 +9,6 @@ type Mutation {
 type Mutation {
   uploadDictionary(dictionary: String!): CommandDictionaryResponse
 }
-type CommandDictionaryResponse {
-  id: Int!
-}
 
 type Query {
   getModelEffectiveArguments(
@@ -96,6 +93,10 @@ type AddExternalDatasetResponse {
 type SchedulingResponse {
   status: SchedulingStatus!
   reason: SchedulingFailureReason
+}
+
+type CommandDictionaryResponse {
+  id: Int!
 }
 
 enum SchedulingStatus {
