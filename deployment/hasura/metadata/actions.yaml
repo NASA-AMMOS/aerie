@@ -6,7 +6,7 @@ actions:
 - name: uploadDictionary
   definition:
     kind: synchronous
-    handler: http://aerie_commanding:3000/dictionary
+    handler: http://aerie_commanding:3000/put-dictionary
 - name: getModelEffectiveArguments
   definition:
     kind: ""
@@ -18,7 +18,7 @@ actions:
 - name: getActivityTypeScript
   definition:
     kind: ""
-    handler: http://aerie_commanding:3000/activity-typescript
+    handler: http://aerie_commanding:3000/get-activity-typescript
 - name: resourceTypes
   definition:
     kind: ""
