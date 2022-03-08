@@ -11,6 +11,10 @@ actions:
     definition:
       kind: synchronous
       handler: http://aerie_commanding:3000/put-expansion
+  - name: createExpansionSet
+    definition:
+      kind: synchronous
+      handler: http://aerie_commanding:3000/put-expansion-set
   - name: getModelEffectiveArguments
     definition:
       kind: ""
