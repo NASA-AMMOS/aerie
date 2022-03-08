@@ -27,3 +27,14 @@ array_relationships:
       table:
         name: simulation
         schema: public
+remote_relationships:
+- name: scheduling_specifications
+  definition:
+    to_source: 
+      relationship_type: array
+      source: AerieScheduler
+      table:
+        schema: public
+        name: scheduling_specification
+      field_mapping:
+        id: plan_id
