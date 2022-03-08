@@ -1,79 +1,83 @@
 actions:
-- name: addExternalDataset
-  definition:
-    kind: synchronous
-    handler: http://aerie_merlin:27183/addExternalDataset
-- name: uploadDictionary
-  definition:
-    kind: synchronous
-    handler: http://aerie_commanding:3000/put-dictionary
-- name: getModelEffectiveArguments
-  definition:
-    kind: ""
-    handler: http://aerie_merlin:27183/getModelEffectiveArguments
-- name: getActivityEffectiveArguments
-  definition:
-    kind: ""
-    handler: http://aerie_merlin:27183/getActivityEffectiveArguments
-- name: getActivityTypeScript
-  definition:
-    kind: ""
-    handler: http://aerie_commanding:3000/get-activity-typescript
-- name: resourceTypes
-  definition:
-    kind: ""
-    handler: http://aerie_merlin:27183/resourceTypes
-- name: schedule
-  definition:
-    kind: ""
-    handler: http://aerie_scheduler:27193/schedule
-- name: simulate
-  definition:
-    kind: ""
-    handler: http://aerie_merlin:27183/getSimulationResults
-- name: validateActivityArguments
-  definition:
-    kind: ""
-    handler: http://aerie_merlin:27183/validateActivityArguments
-- name: validateModelArguments
-  definition:
-    kind: ""
-    handler: http://aerie_merlin:27183/validateModelArguments
+  - name: addExternalDataset
+    definition:
+      kind: synchronous
+      handler: http://aerie_merlin:27183/addExternalDataset
+  - name: uploadDictionary
+    definition:
+      kind: synchronous
+      handler: http://aerie_commanding:3000/put-dictionary
+  - name: getModelEffectiveArguments
+    definition:
+      kind: ""
+      handler: http://aerie_merlin:27183/getModelEffectiveArguments
+  - name: getActivityEffectiveArguments
+    definition:
+      kind: ""
+      handler: http://aerie_merlin:27183/getActivityEffectiveArguments
+  - name: getActivityTypeScript
+    definition:
+      kind: ""
+      handler: http://aerie_commanding:3000/get-activity-typescript
+  - name: getCommandTypeScript
+    definition:
+      kind: ""
+      handler: http://aerie_commanding:3000/get-command-typescript
+  - name: resourceTypes
+    definition:
+      kind: ""
+      handler: http://aerie_merlin:27183/resourceTypes
+  - name: schedule
+    definition:
+      kind: ""
+      handler: http://aerie_scheduler:27193/schedule
+  - name: simulate
+    definition:
+      kind: ""
+      handler: http://aerie_merlin:27183/getSimulationResults
+  - name: validateActivityArguments
+    definition:
+      kind: ""
+      handler: http://aerie_merlin:27183/validateActivityArguments
+  - name: validateModelArguments
+    definition:
+      kind: ""
+      handler: http://aerie_merlin:27183/validateModelArguments
 custom_types:
   enums:
-  - name: MerlinSimulationStatus
-    values:
-    - description: null
-      is_deprecated: null
-      value: complete
-    - description: null
-      is_deprecated: null
-      value: failed
-    - description: null
-      is_deprecated: null
-      value: incomplete
-  - name: SchedulingStatus
-    values:
-    - description: null
-      is_deprecated: null
-      value: complete
-    - description: null
-      is_deprecated: null
-      value: failed
-    - description: null
-      is_deprecated: null
-      value: incomplete
+    - name: MerlinSimulationStatus
+      values:
+        - description: null
+          is_deprecated: null
+          value: complete
+        - description: null
+          is_deprecated: null
+          value: failed
+        - description: null
+          is_deprecated: null
+          value: incomplete
+    - name: SchedulingStatus
+      values:
+        - description: null
+          is_deprecated: null
+          value: complete
+        - description: null
+          is_deprecated: null
+          value: failed
+        - description: null
+          is_deprecated: null
+          value: incomplete
   input_objects: []
   objects:
-  - name: ResourceType
-  - name: MerlinSimulationResponse
-  - name: ValidationResponse
-  - name: EffectiveArgumentsResponse
-  - name: AddExternalDatasetResponse
+    - name: ResourceType
+    - name: MerlinSimulationResponse
+    - name: ValidationResponse
+    - name: EffectiveArgumentsResponse
+    - name: AddExternalDatasetResponse
   scalars:
-  - name: ResourceSchema
-  - name: MerlinSimulationResults
-  - name: MerlinSimulationFailureReason
-  - name: ModelArguments
-  - name: ActivityArguments
-  - name: ProfileSet
+    - name: ResourceSchema
+    - name: MerlinSimulationResults
+    - name: MerlinSimulationFailureReason
+    - name: ModelArguments
+    - name: ActivityArguments
+    - name: ProfileSet
