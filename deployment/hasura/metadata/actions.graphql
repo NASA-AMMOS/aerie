@@ -32,10 +32,6 @@ type Query {
   ): TypeScriptResponse
 }
 
-type TypeScriptResponse {
-  typescript: String!
-}
-
 type Query {
   resourceTypes(
     missionModelId: ID!
@@ -108,6 +104,10 @@ type SchedulingResponse {
 
 type CommandDictionaryResponse {
   id: Int!
+}
+
+type TypeScriptResponse {
+  typescript: String!
 }
 
 enum SchedulingStatus {
