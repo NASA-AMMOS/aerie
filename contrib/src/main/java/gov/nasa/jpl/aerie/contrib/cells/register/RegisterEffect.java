@@ -54,7 +54,7 @@ public final class RegisterEffect<T> {
         // The suffix is a pure conflict, and the prefix performed a valid write.
         return new RegisterEffect<>(prefix.newValue, suffix.conflicted);
       } else {
-        // Both suffix and prefix are pure conflicts, so the suffix dominates the prefix.
+        // The suffix is a pure conflict, and the prefix performs no write, so the suffix dominates the prefix.
         return suffix;
       }
     }
