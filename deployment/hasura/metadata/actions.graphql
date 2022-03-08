@@ -26,6 +26,17 @@ type Query {
 }
 
 type Query {
+  getActivityTypeScript(
+    missionModelId: ID!
+    activityTypeName: String!
+  ): TypeScriptResponse
+}
+
+type TypeScriptResponse {
+  typescript: String!
+}
+
+type Query {
   resourceTypes(
     missionModelId: ID!
   ): [ResourceType!]!

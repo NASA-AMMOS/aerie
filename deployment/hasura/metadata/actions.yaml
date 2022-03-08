@@ -15,6 +15,10 @@ actions:
   definition:
     kind: ""
     handler: http://aerie_merlin:27183/getActivityEffectiveArguments
+- name: getActivityTypeScript
+  definition:
+    kind: ""
+    handler: http://aerie_commanding:3000/activity-typescript
 - name: resourceTypes
   definition:
     kind: ""
