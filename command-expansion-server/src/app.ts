@@ -21,7 +21,7 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Aerie Command Service");
 });
 
-app.post("/dictionary", async (req, res) => {
+app.post("/put-dictionary", async (req, res) => {
   const base64Dictionary: string = req.body.input.dictionary;
   const dictionary = Buffer.from(base64Dictionary, "base64").toString("utf8");
   console.log(`Dictionary received`);
@@ -78,7 +78,7 @@ app.get("/command-types/:dictionaryId(\\d+)", async (req, res) => {
   return;
 });
 
-app.post("/activity-typescript", async (req, res) => {
+app.post("/get-activity-typescript", async (req, res) => {
   const missionModelId = req.body.input.missionModelId as string;
   const activityTypeName = req.body.input.activityTypeName as string;
 
