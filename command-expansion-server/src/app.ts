@@ -1,10 +1,12 @@
 import express, { Application, Request, Response, NextFunction } from "express";
 import bodyParser from "body-parser";
+import { GraphQLClient } from "graphql-request";
 
 import { getEnv } from "./env.js";
 import { DbExpansion } from "./packages/db/db.js";
 import * as ampcs from "@nasa-jpl/aerie-ampcs";
 import { processDictionary } from "./packages/lib/CommandTypeCodegen.js";
+import { getActivityTypescript } from "./getActivityTypescript.js";
 
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
 
@@ -13,6 +15,7 @@ app.use(bodyParser.json({ limit: "25mb" }));
 
 DbExpansion.init();
 const db = DbExpansion.getDb();
+const graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Aerie Command Service");
@@ -75,8 +78,16 @@ app.get("/command-types/:dictionaryId(\\d+)", async (req, res) => {
   return;
 });
 
-app.get("/activity-types/:missionModelId(\\d+)/:activityTypeName", async (req, res) => {
-  res.status(501).send("GET /activity-types: Not implemented");
+app.post("/activity-typescript", async (req, res) => {
+  const missionModelId = req.body.input.missionModelId as string;
+  const activityTypeName = req.body.input.activityTypeName as string;
+
+  const activityTypescript = await getActivityTypescript(graphqlClient, parseInt(missionModelId, 10), activityTypeName);
+  const activityTypescriptBase64 = Buffer.from(activityTypescript).toString("base64");
+
+  res.status(200).json({
+    typescript: activityTypescriptBase64,
+  });
   return;
 });
 
