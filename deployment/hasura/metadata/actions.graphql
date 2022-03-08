@@ -26,6 +26,13 @@ type Query {
 }
 
 type Query {
+  getActivityTypeScript(
+    missionModelId: ID!
+    activityTypeName: String!
+  ): TypeScriptResponse
+}
+
+type Query {
   resourceTypes(
     missionModelId: ID!
   ): [ResourceType!]!
@@ -97,6 +104,10 @@ type SchedulingResponse {
 
 type CommandDictionaryResponse {
   id: Int!
+}
+
+type TypeScriptResponse {
+  typescript: String!
 }
 
 enum SchedulingStatus {

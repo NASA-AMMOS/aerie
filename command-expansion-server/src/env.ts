@@ -1,4 +1,5 @@
 export type Env = {
+  MERLIN_GRAPHQL_URL: string;
   PORT: string;
   POSTGRES_AERIE_EXPANSION_DB: string;
   POSTGRES_HOST: string;
@@ -9,6 +10,7 @@ export type Env = {
 };
 
 export const defaultEnv: Env = {
+  MERLIN_GRAPHQL_URL: 'http://hasura:8080/v1/graphql',
   PORT: "3000",
   POSTGRES_AERIE_EXPANSION_DB: "aerie_commanding",
   POSTGRES_HOST: "localhost",
@@ -21,14 +23,16 @@ export const defaultEnv: Env = {
 export function getEnv(): Env {
   const { env } = process;
 
-  const PORT = env["COMMANDING_SERVER_PORT"] ?? defaultEnv.PORT;
-  const POSTGRES_AERIE_EXPANSION_DB = env["COMMANDING_DB"] ?? defaultEnv.POSTGRES_AERIE_EXPANSION_DB;
-  const POSTGRES_HOST = env["COMMANDING_DB_SERVER"] ?? defaultEnv.POSTGRES_HOST;
-  const POSTGRES_PASSWORD = env["COMMANDING_DB_PASSWORD"] ?? defaultEnv.POSTGRES_PASSWORD;
-  const POSTGRES_PORT = env["COMMANDING_DB_PORT"] ?? defaultEnv.POSTGRES_PORT;
-  const POSTGRES_USER = env["COMMANDING_DB_USER"] ?? defaultEnv.POSTGRES_USER;
-  const STORAGE = env["COMMANDING_LOCAL_STORE"] ?? defaultEnv.STORAGE;
+  const MERLIN_GRAPHQL_URL = env.MERLIN_GRAPHQL_URL ?? defaultEnv.MERLIN_GRAPHQL_URL;
+  const PORT = env.COMMANDING_SERVER_PORT ?? defaultEnv.PORT;
+  const POSTGRES_AERIE_EXPANSION_DB = env.COMMANDING_DB ?? defaultEnv.POSTGRES_AERIE_EXPANSION_DB;
+  const POSTGRES_HOST = env.COMMANDING_DB_SERVER ?? defaultEnv.POSTGRES_HOST;
+  const POSTGRES_PASSWORD = env.COMMANDING_DB_PASSWORD ?? defaultEnv.POSTGRES_PASSWORD;
+  const POSTGRES_PORT = env.COMMANDING_DB_PORT ?? defaultEnv.POSTGRES_PORT;
+  const POSTGRES_USER = env.COMMANDING_DB_USER ?? defaultEnv.POSTGRES_USER;
+  const STORAGE = env.COMMANDING_LOCAL_STORE ?? defaultEnv.STORAGE;
   return {
+    MERLIN_GRAPHQL_URL,
     PORT,
     POSTGRES_AERIE_EXPANSION_DB,
     POSTGRES_HOST,
