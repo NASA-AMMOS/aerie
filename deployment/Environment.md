@@ -50,15 +50,15 @@ Additionally, Hasura provides documentation on it's own environment variables yo
 ## Merlin
 
 | Name                 | Description                                               | Type     | Default                        |
-| -------------------- | --------------------------------------------------------- | -------- | ------------------------------ |
+|----------------------|-----------------------------------------------------------| -------- | ------------------------------ |
 | `MERLIN_PORT`        | Port number for the Merlin server                         | `number` | 27183                          |
 | `MERLIN_LOCAL_STORE` | Local storage for Merlin in the container                 | `string` | /usr/src/app/merlin_file_store |
-| `MERLIN_LOGGING`     | Whether or not you want Javalin to log server information | `string` | true                           |
 | `MERLIN_DB_SERVER`   | The DB instance that Merlin will connect with             | `string` | postgres                       |
 | `MERLIN_DB_PORT`     | The DB instance port number that Merlin will connect with | `number` | 5432                           |
 | `MERLIN_DB_USER`     | Username of the DB instance                               | `string` | aerie                          |
 | `MERLIN_DB_PASSWORD` | Password of the DB instance                               | `string` | aerie                          |
 | `MERLIN_DB`          | The DB for Merlin.                                        | `string` | aerie_merlin                   |
+| `JAVA_OPTS`          | Configuration for Merlin's logging level and output file  | `string` | aerie_merlin                   |
 
 ## Postgres
 
