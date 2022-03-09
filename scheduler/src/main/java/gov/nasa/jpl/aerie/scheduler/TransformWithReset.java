@@ -28,7 +28,6 @@ public class TransformWithReset implements TimeWindowsTransformer {
       var resetPeriods = resetExpr.computeRange(plan, Windows.forever());
 
       for (var window : resetPeriods) {
-        //System.out.println("RESET " + window);
         // get windows to filter that are completely contained in reset period
         Windows cur = windowsToTransform.subsetContained(window);
         if (!cur.isEmpty()) {
@@ -43,7 +42,6 @@ public class TransformWithReset implements TimeWindowsTransformer {
       }
     }
 
-    //System.out.println(ret);
     return ret;
   }
 

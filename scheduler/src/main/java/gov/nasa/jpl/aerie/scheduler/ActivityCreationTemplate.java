@@ -4,6 +4,8 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * criteria used to identify create activity instances in scheduling goals
@@ -22,6 +24,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
  * first order logic predicate clauses used in building up scheduling rules
  */
 public class ActivityCreationTemplate extends ActivityExpression {
+
+  private static final Logger logger = LoggerFactory.getLogger(ActivityCreationTemplate.class);
+
 
   /**
    * ctor is private to prevent inconsistent construction
@@ -239,7 +244,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
     }
     final var success = tnw.solveConstraints();
     if (!success) {
-      System.out.println("Inconsistent temporal constraints, returning empty activity");
+      logger.warn("Inconsistent temporal constraints, returning empty activity");
       return null;
     }
     final var solved = tnw.getAllData(name);

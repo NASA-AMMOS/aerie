@@ -6,6 +6,8 @@ import org.jgrapht.alg.shortestpath.BellmanFordShortestPath;
 import org.jgrapht.alg.shortestpath.NegativeCycleDetectedException;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.builder.GraphTypeBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Representation of a simple temporal network (Dechter, Meiri, and Pearl, 1991).
@@ -22,9 +24,11 @@ import org.jgrapht.graph.builder.GraphTypeBuilder;
  */
 public class STN {
 
+  private static final Logger logger = LoggerFactory.getLogger(STN.class);
+
   public void print(){
     for(var edge :graph.edgeSet()){
-      System.out.println(edge.toString() + " "+graph.getEdgeWeight(edge));
+      logger.info(edge.toString() + " "+graph.getEdgeWeight(edge));
     }  }
   private final Graph<String, DefaultWeightedEdge> graph;
 
@@ -92,8 +96,8 @@ public class STN {
       var a = algo.getPaths(graph.vertexSet().iterator().next());
       ret = true;
     } catch (NegativeCycleDetectedException e) {
-      System.out.println("Negative cycle ");
-      e.printStackTrace();
+      logger.error("Negative cycle ");
+      StackTraceLogger.log(e, logger);
     }
     latestComputation = algo;
     return ret;

@@ -310,7 +310,6 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       }
     }
 
-    //System.out.println(instancesCreated);
     return conflicts;
   }
 
@@ -449,7 +448,6 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       }
     }
 
-    //System.out.println(instancesCreated);
     return conflicts;
   }
 

@@ -2,6 +2,8 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -11,6 +13,8 @@ import java.util.List;
  * Class describing a constraint on a generic state and providing methods to create all state constraints
  */
 public class StateConstraintExpression {
+
+  private static final Logger logger = LoggerFactory.getLogger(StateConstraintExpression.class);
 
   enum BuilderType {
     OR,
@@ -33,7 +37,7 @@ public class StateConstraintExpression {
    */
   public Windows findWindows(Plan plan, Windows windows) {
     Windows tw = sc.findWindows(plan, windows);
-    System.out.println(name + ' ' + tw);
+    logger.info(name + ' ' + tw);
     return new Windows(tw);
   }
 

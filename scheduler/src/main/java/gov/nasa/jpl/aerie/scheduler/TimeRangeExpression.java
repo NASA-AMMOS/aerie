@@ -89,7 +89,6 @@ public class TimeRangeExpression {
         break;
       }
     }
-    //out.println(name + " -> " + inter);
 
     return inter;
 
