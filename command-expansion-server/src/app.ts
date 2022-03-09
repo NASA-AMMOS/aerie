@@ -102,19 +102,23 @@ app.post("/put-expansion-set", async (req, res) => {
   }
 
   const { commandDictionaryId, missionModelId, expansionIds } = req.body.input;
-
   const { rows } = await db.query(`
     WITH expansion_set_id AS (
       INSERT INTO expansion_set (command_dict_id, mission_model_id)
-      VALUES (${commandDictionaryId}, ${missionModelId})
-      RETURNING id
+        VALUES ($1, $2)
+        RETURNING id
     )
-    INSERT INTO expansion_set_to_rule (set_id, rule_id) VALUES
-      ${expansionIds
-        .map((expansionId: number) => `((SELECT id FROM expansion_set_id), ${expansionId})`)
-        .join(",\n      ")}
+    INSERT INTO expansion_set_to_rule (set_id, rule_id)
+      SELECT * FROM unnest(
+        array_fill((SELECT id FROM expansion_set_id), ARRAY[array_length($3::int[], 1)]),
+        $3::int[]
+      )
     RETURNING (SELECT id FROM expansion_set_id);
-  `);
+  `, [
+    commandDictionaryId,
+    missionModelId,
+    expansionIds,
+  ]);
 
   if (rows.length < 1) {
     throw new Error(`PUT /expansion-set: No expansion set was inserted in the database`);
