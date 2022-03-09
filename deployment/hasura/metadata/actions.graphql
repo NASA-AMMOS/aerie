@@ -33,6 +33,11 @@ type Query {
 }
 
 type Query {
+  getCommandTypeScript(
+  commandDictionaryId: ID!): TypeScriptResponse
+}
+
+type Query {
   resourceTypes(
     missionModelId: ID!
   ): [ResourceType!]!
@@ -129,4 +134,3 @@ scalar ActivityArguments
 scalar ProfileSet
 
 scalar SchedulingFailureReason
-
