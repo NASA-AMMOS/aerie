@@ -68,8 +68,6 @@ services:
       GATEWAY_SERVER_URL: http://aerie_gateway:9000
       HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
       HASURA_SERVER_URL: http://hasura:8080/v1/graphql
-      SCHEDULER_CLIENT_URL: http://localhost:27193
-      SCHEDULER_SERVER_URL: http://scheduler:27193
     image: "ghcr.io/nasa-ammos/aerie-ui:latest"
     ports: ["80:80"]
     restart: always
