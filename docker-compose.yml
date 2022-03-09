@@ -84,7 +84,10 @@ services:
       SCHEDULER_OUTPUT_MODE: UpdateInputPlanWithNewActivities
       SCHEDULER_PORT: 27193
       SCHEDULER_RULES_JAR: /usr/src/app/merlin_file_store/scheduler_rules.jar
-      JAVA_OPTS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+      JAVA_OPTS: >
+        -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+        -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO
+        -Dorg.slf4j.simpleLogger.logFile=System.err
     image: aerie_scheduler
     ports: ["27193:27193", "5006:5005"]
     restart: always
