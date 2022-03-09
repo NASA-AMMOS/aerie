@@ -10,6 +10,13 @@ type Mutation {
   uploadDictionary(dictionary: String!): CommandDictionaryResponse
 }
 
+type Mutation {
+  addCommandExpansionTypeScript(
+    activityTypeName: String!
+    expansionLogic: String!
+  ): AddCommandExpansionResponse
+}
+
 type Query {
   getModelEffectiveArguments(
     missionModelId: ID!
@@ -115,6 +122,10 @@ type SchedulingResponse {
 
 type CommandDictionaryResponse {
   id: Int!
+}
+
+type AddCommandExpansionResponse {
+  expansionId: Int!
 }
 
 type TypeScriptResponse {

@@ -7,6 +7,10 @@ actions:
     definition:
       kind: synchronous
       handler: http://aerie_commanding:3000/put-dictionary
+  - name: addCommandExpansionTypeScript
+    definition:
+      kind: synchronous
+      handler: http://aerie_commanding:3000/put-expansion
   - name: getModelEffectiveArguments
     definition:
       kind: ""
@@ -76,6 +80,7 @@ custom_types:
     - name: AddExternalDatasetResponse
     - name: SchedulingResponse
     - name: CommandDictionaryResponse
+    - name: AddCommandExpansionResponse
     - name: TypeScriptResponse
   scalars:
     - name: ResourceSchema
