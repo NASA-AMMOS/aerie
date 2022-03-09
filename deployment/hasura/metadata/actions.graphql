@@ -44,6 +44,12 @@ type Query {
 }
 
 type Query {
+  schedule(
+    specificationId: Int!
+  ): SchedulingResponse
+}
+
+type Query {
   simulate(
     planId: Int!
   ): MerlinSimulationResponse
@@ -64,13 +70,13 @@ type Query {
   ): ValidationResponse
 }
 
-type Query {
-  schedule(
-    specificationId: Int!
-  ): SchedulingResponse
+enum MerlinSimulationStatus {
+  complete
+  failed
+  incomplete
 }
 
-enum MerlinSimulationStatus {
+enum SchedulingStatus {
   complete
   failed
   incomplete
@@ -113,12 +119,6 @@ type CommandDictionaryResponse {
 
 type TypeScriptResponse {
   typescript: String!
-}
-
-enum SchedulingStatus {
-  complete
-  failed
-  incomplete
 }
 
 scalar ResourceSchema
