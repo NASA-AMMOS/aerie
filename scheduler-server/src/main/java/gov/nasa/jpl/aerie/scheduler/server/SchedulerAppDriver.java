@@ -19,12 +19,15 @@ import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresResultsCellR
 import gov.nasa.jpl.aerie.scheduler.server.services.CachedSchedulerService;
 import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
 import gov.nasa.jpl.aerie.scheduler.server.services.LocalSpecificationService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
+import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingDSLCompilationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.SynchronousSchedulerAgent;
-import gov.nasa.jpl.aerie.scheduler.server.services.UncachedSchedulerService;
+import gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 
@@ -47,10 +50,22 @@ public final class SchedulerAppDriver {
   public static void main(final String[] args) {
     //load the service configuration options
     final var config = loadConfiguration();
-    final var stores = loadStores(config);
+
+    final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI());
+    final var typescriptCodeGenerationService = new TypescriptCodeGenerationService(merlinService);
+
+    final SchedulingDSLCompilationService schedulingDSLCompilationService;
+    try {
+      schedulingDSLCompilationService = new SchedulingDSLCompilationService(typescriptCodeGenerationService);
+    } catch (SchedulingDSLCompilationService.SchedulingDSLCompilationException | IOException e) {
+      throw new Error("Failed to start SchedulingDSLCompilationService", e);
+    }
+
+    Runtime.getRuntime().addShutdownHook(new Thread(schedulingDSLCompilationService::close));
+
+    final var stores = loadStores(config, schedulingDSLCompilationService);
 
     //create objects in each service abstraction layer (mirroring MerlinApp)
-    final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI());
     final var specificationService = new LocalSpecificationService(stores.specifications());
     final var scheduleAgent = new SynchronousSchedulerAgent(specificationService, merlinService,
         config.merlinFileStore(), config.missionRuleJarPath(), config.outputMode());
@@ -77,7 +92,9 @@ public final class SchedulerAppDriver {
 
   private record Stores(SpecificationRepository specifications, ResultsCellRepository results) { }
 
-  private static Stores loadStores(final AppConfiguration config) {
+  private static Stores loadStores(
+      final AppConfiguration config,
+      final SchedulingDSLCompilationService schedulingDSLCompilationService) {
     final var store = config.store();
     if (store instanceof final PostgresStore pgStore) {
       final var pgDataSource = new PGDataSource();
@@ -94,7 +111,7 @@ public final class SchedulerAppDriver {
       final var hikariDataSource = new HikariDataSource(hikariConfig);
 
       return new Stores(
-          new PostgresSpecificationRepository(hikariDataSource),
+          new PostgresSpecificationRepository(hikariDataSource, schedulingDSLCompilationService),
           new PostgresResultsCellRepository(hikariDataSource));
     } else if (store instanceof InMemoryStore) {
       final var inMemorySchedulerRepository = new InMemorySpecificationRepository();

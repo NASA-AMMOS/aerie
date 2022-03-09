@@ -16,6 +16,7 @@ import java.util.List;
             s.specification_id,
             s.goal_id,
             s.priority,
+            g.name,
             g.definition,
             g.revision
           from scheduling_specification_goals as s
@@ -23,6 +24,7 @@ import java.util.List;
             on s.goal_id = g.id )
     select
       g.goal_id,
+      g.name,
       g.definition,
       g.revision
     from goals as g
@@ -44,8 +46,9 @@ import java.util.List;
     while (resultSet.next()) {
       final var id = resultSet.getLong("goal_id");
       final var revision = resultSet.getLong("revision");
+      final var name = resultSet.getString("name");
       final var definition = resultSet.getString("definition");
-      goals.add(new PostgresGoalRecord(id, revision, definition));
+      goals.add(new PostgresGoalRecord(id, revision, name, definition));
     }
 
     return goals;
