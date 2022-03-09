@@ -108,7 +108,7 @@ public record SynchronousSchedulerAgent(
       //unwrap failure message from any anticipated exceptions and forward to subscribers
       writer.failWith(e.getMessage());
 
-    } catch (final NoSuchPlanException | IOException e) {
+    } catch (final NoSuchPlanException | IOException | MerlinService.MerlinServiceException e) {
       writer.failWith(e.getMessage());
     }
   }
@@ -129,7 +129,7 @@ public record SynchronousSchedulerAgent(
   private long getMerlinPlanRev(final PlanId planId) {
     try {
       return merlinService.getPlanRevision(planId);
-    } catch (NoSuchPlanException | IOException e) {
+    } catch (NoSuchPlanException | IOException | MerlinService.MerlinServiceException e) {
       throw new ResultsProtocolFailure(e);
     }
   }

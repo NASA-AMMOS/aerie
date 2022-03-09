@@ -24,7 +24,7 @@ public class TypescriptCodeGenerationService {
   public String generateTypescriptTypesForPlan(final PlanId planId) {
     try {
       return generateTypescriptTypesFromMissionModel(this.merlinService.getMissionModelTypes(planId));
-    } catch (IOException e) {
+    } catch (MerlinService.MerlinServiceException | IOException e) {
       throw new Error("Could not fetch mission model types", e);
     }
   }
