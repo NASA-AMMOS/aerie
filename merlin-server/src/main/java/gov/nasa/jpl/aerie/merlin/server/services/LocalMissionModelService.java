@@ -17,7 +17,9 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implements the missionModel service {@link MissionModelService} interface on a set of local domain objects.
@@ -27,7 +29,7 @@ import java.util.logging.Logger;
  * connected mission model repository.
  */
 public final class LocalMissionModelService implements MissionModelService {
-  private static final Logger log = Logger.getLogger(LocalMissionModelService.class.getName());
+  private static final Logger log = LoggerFactory.getLogger(LocalMissionModelService.class);
 
   private final Path missionModelDataPath;
   private final MissionModelRepository missionModelRepository;
@@ -187,7 +189,7 @@ public final class LocalMissionModelService implements MissionModelService {
   {
     final var config = message.configuration();
     if (config.isEmpty()) {
-      log.warning(
+      log.warn(
           "No mission model configuration defined for mission model. Simulations will receive an empty set of configuration arguments.");
     }
 

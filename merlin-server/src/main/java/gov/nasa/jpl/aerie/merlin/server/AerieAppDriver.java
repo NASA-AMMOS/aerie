@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfiguration;
 import gov.nasa.jpl.aerie.merlin.server.config.InMemoryStore;
-import gov.nasa.jpl.aerie.merlin.server.config.JavalinLoggingState;
 import gov.nasa.jpl.aerie.merlin.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.merlin.server.config.Store;
 import gov.nasa.jpl.aerie.merlin.server.http.LocalAppExceptionBindings;
@@ -29,11 +28,11 @@ import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
+import org.slf4j.LoggerFactory;
+
 import java.nio.file.Path;
-import java.util.logging.Logger;
 
 public final class AerieAppDriver {
-  private static final Logger log = Logger.getLogger(AerieAppDriver.class.getName());
 
   public static void main(final String[] args) {
     // Fetch application configuration properties.
@@ -53,7 +52,7 @@ public final class AerieAppDriver {
     // Configure an HTTP server.
     final var javalin = Javalin.create(config -> {
       config.showJavalinBanner = false;
-      if (configuration.javalinLogging().isEnabled()) config.enableDevLogging();
+      if (configuration.enableJavalinDevLogging()) config.enableDevLogging();
       config.enableCorsForAllOrigins();
       config.registerPlugin(merlinBindings);
       config.registerPlugin(new LocalAppExceptionBindings());
@@ -105,9 +104,10 @@ public final class AerieAppDriver {
   }
 
   private static AppConfiguration loadConfiguration() {
+    final var logger = LoggerFactory.getLogger(AerieAppDriver.class);
     return new AppConfiguration(
         Integer.parseInt(getEnv("MERLIN_PORT","27183")),
-        Boolean.parseBoolean(getEnv("MERLIN_LOGGING","true")) ? JavalinLoggingState.Enabled : JavalinLoggingState.Disabled,
+        logger.isDebugEnabled(),
         Path.of(getEnv("MERLIN_LOCAL_STORE","/usr/src/app/merlin_file_store")),
         new PostgresStore(getEnv("MERLIN_DB_TYPE","postgres"),
                           getEnv("MERLIN_DB_USER","aerie"),
