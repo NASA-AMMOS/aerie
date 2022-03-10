@@ -7,6 +7,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -18,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -44,6 +47,8 @@ import java.util.zip.ZipException;
  *
  */
 public class AerieController {
+
+  private static final Logger logger = LoggerFactory.getLogger(AerieController.class);
 
   private static final boolean DEBUG = true;
   private static final String IT_PLAN_BASENAME = "Plan_";
@@ -191,7 +196,7 @@ public class AerieController {
     JSONObject jsonObj = new JSONObject();
     jsonObj.put("query", jsonString);
 
-    System.out.println(jsonString);
+    logger.debug(jsonString);
 
     HttpClient client = HttpClient.newHttpClient();
     HttpRequest.Builder httpRequestBuilder = HttpRequest.newBuilder()
@@ -213,10 +218,10 @@ public class AerieController {
     try {
       response = client.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
     } catch (IOException | InterruptedException e) {
-      e.printStackTrace();
+      StackTraceLogger.log(e, logger);
     }
     assert response != null;
-    System.out.println(response.statusCode());
+    logger.info("Response code: " + response.statusCode());
     if (response.statusCode() != 200) {
       return false;
     } else {
@@ -230,18 +235,18 @@ public class AerieController {
           writer.write(buffer, 0, length);
         }
         String bodystr = writer.toString();
-        System.out.println(bodystr);
+        logger.info(bodystr);
         JSONObject json = new JSONObject(bodystr);
         return request.handleResponse(json);
       } catch (ZipException e) {
         //probably not in GZIP format
-        e.printStackTrace();
+        StackTraceLogger.log(e, logger);
         String result = new BufferedReader(new InputStreamReader(response.body()))
             .lines().collect(Collectors.joining("\n"));
-        System.out.println(result);
+        logger.error("Response body: " + result);
         return false;
       } catch (IOException e) {
-        e.printStackTrace();
+        StackTraceLogger.log(e, logger);
         return false;
       }
     }
@@ -270,7 +275,7 @@ public class AerieController {
     boolean ret = true;
     if (planIds.get(plan) == null) {
       ret = false;
-      System.out.println("Plan has never been sent to Aerie");
+      logger.warn("Plan has never been sent to Aerie");
     } else {
       DeletePlanRequest deletePlanRequest = new DeletePlanRequest(plan);
       ret = postRequest(deletePlanRequest);
@@ -283,7 +288,7 @@ public class AerieController {
     boolean ret = true;
     if (planIds.get(plan) == null || activityInstancesIds.get(act) == null) {
       ret = false;
-      System.out.println("Plan or act have never been sent to Aerie");
+      logger.error("Plan or act have never been sent to Aerie");
     } else {
       UpdateInstanceRequest updateActivityInstanceRequest = new UpdateInstanceRequest(act, plan);
       ret = postRequest(updateActivityInstanceRequest);
@@ -295,7 +300,7 @@ public class AerieController {
     boolean ret = true;
     if (planIds.get(plan) == null) {
       ret = false;
-      System.out.println("Plan have never been sent to Aerie");
+      logger.error("Plan have never been sent to Aerie");
     } else {
       SimulatePlanRequest spr = new SimulatePlanRequest(plan);
       ret = postRequest(spr);
@@ -307,7 +312,7 @@ public class AerieController {
     boolean ret = true;
     if (planIds.get(plan) == null || activityInstancesIds.get(act) == null) {
       ret = false;
-      System.out.println("Plan or act have never been sent to Aerie");
+      logger.warn("Plan or act have never been sent to Aerie");
     } else {
       DeleteActivityInstanceRequest deleteActivityInstanceRequest = new DeleteActivityInstanceRequest(act, plan);
       ret = postRequest(deleteActivityInstanceRequest);
@@ -374,7 +379,7 @@ public class AerieController {
     //NB: it appears this code is out of date with the available hasura db mutations!
     //TODO: more efficient if we could do a batch-update/insert of all acts at once
     if (planIds.get(plan) == null) {
-      System.out.println("Plan has never been sent to Aerie");
+      logger.error("Plan has never been sent to Aerie");
       return false;
     } else {
       for (final var act : plan.getActivities()) {
@@ -420,9 +425,7 @@ public class AerieController {
           }
         }
       } else {
-
-
-        System.out.println("Required state with name " + nameState + " has been found in the definition");
+        logger.error("Required state with name " + nameState + " has NOT been found in the definition");
       }
 
     }

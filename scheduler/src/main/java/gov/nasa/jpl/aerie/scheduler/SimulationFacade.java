@@ -20,6 +20,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -38,6 +40,8 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
  */
 @SuppressWarnings("UnnecessaryToStringCall")
 public class SimulationFacade {
+
+  private static final Logger logger = LoggerFactory.getLogger(SimulationFacade.class);
 
   // Resource feeders, mapping resource names to their corresponding resource accessor resulting from simulation results
   private final Map<String, SimResource> resources;
@@ -83,18 +87,18 @@ public class SimulationFacade {
    */
   public Duration getActivityDuration(ActivityInstance activityInstance) {
     if (lastSimDriverResults == null) {
-      System.out.println("You need to simulate before requesting activity duration");
+      logger.error("You need to simulate before requesting activity duration");
     }
     final var simAct = lastSimDriverResults.simulatedActivities.get(planActInstanceIdToSimulationActInstanceId.get(activityInstance.getId()));
     if (simAct != null) {
       return simAct.duration;
     } else {
       if(lastSimDriverResults.unfinishedActivities.get(planActInstanceIdToSimulationActInstanceId.get(activityInstance.getId())) != null){
-        System.out.println("Activity "
+        logger.error("Activity "
                            + activityInstance
                            + " has not finished, check planning horizon ?");
       } else{
-        System.out.println("Simulation has been launched but activity with name= "
+        logger.error("Simulation has been launched but activity with name= "
                            + activityInstance
                            + " has not been found");
       }
@@ -123,12 +127,12 @@ public class SimulationFacade {
         if (durationType instanceof DurationType.Controllable d) {
           arguments.put(d.parameterName(), new DurationValueMapper().serializeValue(act.getDuration()));
         } else if (durationType instanceof DurationType.Uncontrollable) {
-          System.out.println("Warning : activity instance has a specified duration, but the activity type's duration is uncontrollable");
+          logger.warn("Activity instance has a specified duration, but the activity type's duration is uncontrollable");
         } else {
           throw new Error("Unhandled variant of DurationType: " + durationType);
         }
       } else{
-        System.out.println("Warning : activity instance has unspecified duration");
+        logger.warn("Activity instance has unspecified duration");
       }
       var activityIdSim = new ActivityInstanceId(counter++);
       planActInstanceIdToSimulationActInstanceId.put(act.getId(), activityIdSim);

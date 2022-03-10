@@ -30,7 +30,7 @@ This document provides detailed information about environment variables for each
 
 | Name                 | Description                                               | Type     | Default                        |
 | -------------------- | --------------------------------------------------------- | -------- | ------------------------------ |
-| `JAVA_OPTS`          | Configuration for Merlin's logging level and output file  | `string` | none                           |
+| `JAVA_OPTS`          | Configuration for Merlin's logging level and output file  | `string` | log level: warn. output: stderr|
 | `MERLIN_PORT`        | Port number for the Merlin server                         | `number` | 27183                          |
 | `MERLIN_LOCAL_STORE` | Local storage for Merlin in the container                 | `string` | /usr/src/app/merlin_file_store |
 | `MERLIN_DB_SERVER`   | The DB instance that Merlin will connect with             | `string` | postgres                       |
@@ -42,7 +42,8 @@ This document provides detailed information about environment variables for each
 ## Aerie Scheduler
 
 | Name                    | Description                                                           | Type     | Default                                            |
-| ----------------------- | --------------------------------------------------------------------- | -------- | -------------------------------------------------- |
+|-------------------------|-----------------------------------------------------------------------| -------- |----------------------------------------------------|
+| `JAVA_OPTS`             | Configuration for the scheduler's logging level and output file       | `string` | log level: warn. output: stderr                    |
 | `MERLIN_GRAPHQL_URL`    | URI of the Merlin graphql interface to call                           | `string` | http://hasura:8080/v1/graphql                      |
 | `MERLIN_LOCAL_STORE`    | Local storage for Merlin in the container (for backdoor jar access)   | `string` | /usr/src/app/merlin_file_store                     |
 | `SCHEDULER_DB`          | The DB for scheduler                                                  | `string` | aerie_scheduler                                    |

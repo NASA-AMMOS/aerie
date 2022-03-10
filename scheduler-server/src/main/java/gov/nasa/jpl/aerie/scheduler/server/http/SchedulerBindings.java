@@ -7,6 +7,8 @@ import gov.nasa.jpl.aerie.scheduler.server.services.SchedulerService;
 import io.javalin.Javalin;
 import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.json.Json;
 import javax.json.stream.JsonParsingException;
@@ -14,8 +16,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeInvalidEntityException;
 import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeInvalidJsonException;
@@ -40,7 +40,7 @@ public record SchedulerBindings(SchedulerService schedulerService, ScheduleActio
     Objects.requireNonNull(scheduleAction, "scheduleAction must be non-null");
   }
 
-  private static final Logger log = Logger.getLogger(SchedulerBindings.class.getName());
+  private static final Logger log = LoggerFactory.getLogger(SchedulerBindings.class);
 
   /**
    * apply all scheduler http bindings to the provided javalin server
@@ -70,7 +70,7 @@ public record SchedulerBindings(SchedulerService schedulerService, ScheduleActio
       final var response = this.scheduleAction.run(specificationId);
       ctx.result(serializeScheduleResultsResponse(response).toString());
     } catch (final IOException e) {
-      log.log(Level.SEVERE, "low level input/output problem during scheduling", e);
+      log.error("low level input/output problem during scheduling", e);
       ctx.status(500).result(serializeException(e).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(serializeInvalidEntityException(ex).toString());

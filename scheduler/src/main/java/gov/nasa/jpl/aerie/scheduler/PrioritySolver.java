@@ -2,6 +2,8 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,6 +22,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * (note that there are many other possible scheduling algorithms!)
  */
 public class PrioritySolver implements Solver {
+
+  private static final Logger logger = LoggerFactory.getLogger(PrioritySolver.class);
 
   /**
    * create a new greedy solver for the specified input planning problem
@@ -90,7 +94,7 @@ public class PrioritySolver implements Solver {
       act.instantiateVariableArguments();
       var duration = act.getDuration();
       if(duration != null && duration.longerThan(this.config.getHorizon().getEndAerie())){
-        System.out.println("Activity " + act
+        logger.warn("Activity " + act
                            + " is planned to finish after the end of the planning horizon, not simulating. Extend the planning horizon.");
         allGood = false;
         break;
@@ -100,7 +104,7 @@ public class PrioritySolver implements Solver {
         simulationFacade.simulatePlan(plan);
         var simDur = simulationFacade.getActivityDuration(act);
         if (simDur == null) {
-          System.out.println("Activity " + act + " could not be simulated");
+          logger.error("Activity " + act + " could not be simulated");
           allGood = false;
           break;
         }
@@ -108,7 +112,7 @@ public class PrioritySolver implements Solver {
           act.setDuration(simDur);
         } else if (simDur.compareTo(act.getDuration()) != 0) {
           allGood = false;
-          System.out.println("When simulated, activity " + act
+          logger.error("When simulated, activity " + act
                              + " has a different duration than expected (exp=" + act.getDuration() + ", real=" + simDur + ")");
           break;
         }
@@ -626,12 +630,12 @@ private void satisfyOptionGoal(OptionGoal goal) {
   }
 
   public void printEvaluation() {
-    System.out.println("Remaining conflicts for goals ");
+    logger.warn("Remaining conflicts for goals ");
     for (var goalEval : evaluation.getGoals()) {
-      System.out.println(goalEval.name + " -> " + evaluation.forGoal(goalEval).score);
-      System.out.println("Activities created by this goal:"+  evaluation.forGoal(goalEval).getInsertedActivities().stream().map(ActivityInstance::toString).collect(
+      logger.warn(goalEval.name + " -> " + evaluation.forGoal(goalEval).score);
+      logger.warn("Activities created by this goal:"+  evaluation.forGoal(goalEval).getInsertedActivities().stream().map(ActivityInstance::toString).collect(
           Collectors.joining(" ")));
-      System.out.println("Activities associated to this goal:"+  evaluation.forGoal(goalEval).getAssociatedActivities().stream().map(ActivityInstance::toString).collect(
+      logger.warn("Activities associated to this goal:"+  evaluation.forGoal(goalEval).getAssociatedActivities().stream().map(ActivityInstance::toString).collect(
           Collectors.joining(" ")));
     }
   }

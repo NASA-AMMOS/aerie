@@ -57,9 +57,9 @@ dependencies {
   implementation 'org.json:json:20211205'
   implementation 'org.jfree:jfreechart:1.5.3'
   implementation 'com.google.code.gson:gson:2.8.9'
-  implementation 'it.univr.di:CSTNU:3.6'
   implementation 'org.jgrapht:jgrapht-core:1.5.1'
   implementation 'org.jheaps:jheaps:0.14'
+  implementation 'org.slf4j:slf4j-simple:1.7.26'
   implementation 'com.squareup.okio:okio:3.0.0'
   implementation 'com.squareup.okhttp3:okhttp:4.9.0'
 

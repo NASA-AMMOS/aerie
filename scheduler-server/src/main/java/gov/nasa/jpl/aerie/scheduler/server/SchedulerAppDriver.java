@@ -6,7 +6,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.scheduler.server.config.InMemoryStore;
 import gov.nasa.jpl.aerie.scheduler.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.scheduler.server.config.AppConfiguration;
-import gov.nasa.jpl.aerie.scheduler.server.config.JavalinLoggingState;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
 import gov.nasa.jpl.aerie.scheduler.server.config.Store;
 import gov.nasa.jpl.aerie.scheduler.server.http.SchedulerBindings;
@@ -26,6 +25,7 @@ import gov.nasa.jpl.aerie.scheduler.server.services.SynchronousSchedulerAgent;
 import gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -78,9 +78,7 @@ public final class SchedulerAppDriver {
     //configure the http server (the consumer lambda overlays additional config on the input javalinConfig)
     final var javalin = Javalin.create(javalinConfig -> {
       javalinConfig.showJavalinBanner = false;
-      if (config.javalinLogging() == JavalinLoggingState.Enabled) {
-        javalinConfig.enableDevLogging();
-      }
+      if (config.enableJavalinDevLogging()) javalinConfig.enableDevLogging();
       javalinConfig.enableCorsForAllOrigins(); //TODO: probably don't want literally any cross-origin request...
       javalinConfig.registerPlugin(bindings);
       //TODO: exception handling (should elevate/reuse from MerlinApp for consistency?)
@@ -145,9 +143,10 @@ public final class SchedulerAppDriver {
    * @return a complete configuration object reflecting choices elected in the environment or the defaults
    */
   private static AppConfiguration loadConfiguration() {
+    final var logger = LoggerFactory.getLogger(SchedulerAppDriver.class);
     return new AppConfiguration(
         Integer.parseInt(getEnv("SCHEDULER_PORT", "27193")),
-        Boolean.parseBoolean(getEnv("SCHEDULER_LOGGING", "true")) ? JavalinLoggingState.Enabled : JavalinLoggingState.Disabled,
+        logger.isDebugEnabled(),
         Path.of(getEnv("SCHEDULER_LOCAL_STORE", "/usr/src/app/scheduler_file_store")),
         new PostgresStore(getEnv("SCHEDULER_DB_TYPE", "postgres"),
                           getEnv("SCHEDULER_DB_USER", "aerie"),
