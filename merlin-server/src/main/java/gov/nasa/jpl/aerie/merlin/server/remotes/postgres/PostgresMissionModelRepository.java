@@ -59,7 +59,17 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   public Map<String, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getModelConstraintsAction = new GetModelConstraintsAction(connection)) {
-        return getModelConstraintsAction.get(toMissionModelId(missionModelId));
+        return getModelConstraintsAction
+            .get(toMissionModelId(missionModelId))
+            .orElseThrow(NoSuchMissionModelException::new)
+            .stream()
+            .collect(Collectors.toMap(
+                ConstraintRecord::name,
+                r -> new Constraint(
+                    r.name(),
+                    r.summary(),
+                    r.description(),
+                    r.definition())));
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(
