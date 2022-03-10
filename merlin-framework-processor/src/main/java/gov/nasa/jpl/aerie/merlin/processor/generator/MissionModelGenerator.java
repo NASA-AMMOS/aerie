@@ -10,10 +10,10 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.WildcardTypeName;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
+import gov.nasa.jpl.aerie.merlin.framework.Scoping;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.VoidEnum;
 import gov.nasa.jpl.aerie.merlin.processor.MissionModelProcessor;
@@ -37,7 +37,6 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -473,6 +472,11 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
                     .build())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+            .addSuperinterface(
+                ParameterizedTypeName.get(
+                    ClassName.get(Scoping.class),
+                    missionModel.getTypesName(),
+                    ClassName.get(missionModel.topLevelModel)))
             .addFields(
                 missionModel.activityTypes
                     .stream()
@@ -565,6 +569,23 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             .reduce((x, y) -> x.add(",\n$L", y.build()))
                             .orElse(CodeBlock.builder())
                             .build())
+                    .build())
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("contextualizeModel")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addParameter(
+                        ParameterizedTypeName.get(
+                                ClassName.get(RootModel.class),
+                                missionModel.getTypesName(),
+                                ClassName.get(missionModel.topLevelModel)),
+                        "model",
+                        Modifier.FINAL)
+                    .returns(Scoping.Undo.class)
+                    .addStatement(
+                        "return $T.model.set($L)::close",
+                        missionModel.getActivityActionsName(),
+                        "model")
                     .build())
             .build();
 
@@ -751,13 +772,20 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         .map(effectModel -> CodeBlock
                               .builder()
                               .addStatement(
-                                  "return $T\n.$L(() -> {$>\ntry (final var restore = $T.model.set($L)) {$>\n$L.$L($L.model());$<\n}$<\n})\n.create($L.executor())",
+                                  """
+                                    return $T
+                                    .$L(() -> {
+                                      try (final var restore = $L.registry().contextualizeModel($L)) {
+                                        $L.$L($L.model());
+                                      }
+                                    })
+                                    .create($L.executor())""",
                                   gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                   switch (effectModel.executor()) {
                                     case Threaded -> "threaded";
                                     case Replaying -> "replaying";
                                   },
-                                  missionModel.getActivityActionsName(),
+                                  "model",
                                   "model",
                                   "activity",
                                   effectModel.methodName(),

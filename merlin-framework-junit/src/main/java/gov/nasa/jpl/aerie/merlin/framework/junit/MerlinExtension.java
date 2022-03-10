@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.framework.InitializationContext;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
+import gov.nasa.jpl.aerie.merlin.framework.Scoping;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.DynamicTestInvocationContext;
@@ -23,7 +24,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
-public final class MerlinExtension<Registry, Model> implements BeforeAllCallback, ParameterResolver, InvocationInterceptor, TestInstancePreDestroyCallback {
+public final class MerlinExtension<Registry extends Scoping<Registry, Model>, Model>
+    implements BeforeAllCallback, ParameterResolver, InvocationInterceptor, TestInstancePreDestroyCallback
+{
   private State<Registry, Model> getState(final ExtensionContext context) {
     // SAFETY: This method is the only one where we store or retrieve a State,
     //   and it's always instantiated with <Model>.
@@ -109,11 +112,12 @@ public final class MerlinExtension<Registry, Model> implements BeforeAllCallback
     state.missionModel = null;
   }
 
-  private static final class State<Registry, Model> {
+  private static final class State<Registry extends Scoping<Registry, Model>, Model> {
     public MissionModelBuilder builder;
     public MerlinTestContext<Registry, Model> context;
 
     public MissionModel<RootModel<Registry, Model>> missionModel = null;
+    public Scoping<Registry, Model> scoping = null;
 
     public State(final MissionModelBuilder builder) {
       this.builder = Objects.requireNonNull(builder);
@@ -138,10 +142,15 @@ public final class MerlinExtension<Registry, Model> implements BeforeAllCallback
         throw ex.wrapped;
       }
 
+      final var registry = this.context.activityTypes();
+
+      this.scoping = (registry.registry() != null)
+          ? registry.registry()
+          : $ -> () -> {};
       this.missionModel = this.builder.build(
-          new RootModel<>(this.context.model(), this.context.activityTypes().registry(), executor),
+          new RootModel<>(this.context.model(), registry.registry(), executor),
           new EmptyConfigurationType(),
-          this.context.activityTypes());
+          registry);
 
       // Clear the builder; it shouldn't be used from here on, and if it is, an error should be raised.
       this.builder = null;
@@ -153,9 +162,10 @@ public final class MerlinExtension<Registry, Model> implements BeforeAllCallback
     private void simulate(final Invocation<Void> invocation) throws Throwable {
       final var completed = new Object() { boolean value = false; };
 
+      final var model = this.missionModel.getModel();
       final var task = ModelActions
           .threaded(() -> {
-            try {
+            try (final var token = this.scoping.contextualizeModel(model)) {
               invocation.proceed();
             } catch (final Throwable ex) {
               throw new WrappedException(ex);
@@ -163,7 +173,7 @@ public final class MerlinExtension<Registry, Model> implements BeforeAllCallback
               completed.value = true;
             }
           })
-          .create(this.missionModel.getModel().executor());
+          .create(model.executor());
 
       try {
         SimulationDriver.simulateTask(this.missionModel, task);

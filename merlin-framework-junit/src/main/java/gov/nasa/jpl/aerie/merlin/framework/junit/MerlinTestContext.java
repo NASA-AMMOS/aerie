@@ -6,9 +6,10 @@ import java.util.function.Function;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
+import gov.nasa.jpl.aerie.merlin.framework.Scoping;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeRegistrar;
 
-public final class MerlinTestContext<Registry, Model> {
+public final class MerlinTestContext<Registry extends Scoping<Registry, Model>, Model> {
   private final Registrar registrar;
   private Model model = null;
   private DirectiveTypeRegistry<Registry, RootModel<Registry, Model>> activityTypes = new DirectiveTypeRegistry<>(Map.of(), null);
