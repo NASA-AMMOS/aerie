@@ -7,8 +7,8 @@ import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.function.Supplier;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
 
 public final class ReplayingTask<Return> implements Task<Return> {
   private final ExecutorService executor;

@@ -1,10 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler.server.models;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+
 import java.util.List;
 import java.util.Map;
-
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.Goal;
 
 public record Specification(
     PlanId planId,

@@ -17,7 +17,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.time.Instant;
 
-import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.spawn;
 
 public final class Mission {
   // Need a way to pose constraints against activities, and generally modeling activity behavior with resources.

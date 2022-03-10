@@ -6,7 +6,6 @@ import org.intellij.lang.annotations.Language;
 
 import javax.json.Json;
 import java.io.Reader;
-import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;

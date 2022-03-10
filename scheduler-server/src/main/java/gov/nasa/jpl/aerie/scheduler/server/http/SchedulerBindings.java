@@ -17,9 +17,9 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeException;
 import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeInvalidEntityException;
 import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeInvalidJsonException;
-import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeException;
 import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeScheduleResultsResponse;
 import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraSpecificationActionP;
 import static io.javalin.apibuilder.ApiBuilder.before;

@@ -3,10 +3,8 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 

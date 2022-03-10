@@ -2,9 +2,9 @@ package gov.nasa.jpl.aerie.scheduler.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
+import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 
 import javax.json.Json;
 import javax.json.JsonValue;
