@@ -52,7 +52,31 @@ public final class PostgresPlanRepository implements PlanRepository {
   public Map<PlanId, Plan> getAllPlans() {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getAllPlansAction = new GetAllPlansAction(connection)) {
-        return getAllPlansAction.get();
+        final var planRecords = getAllPlansAction.get();
+        final var plans = new HashMap<PlanId, Plan>(planRecords.size());
+
+        for (final var record : planRecords) {
+          try {
+            final var planId = new PlanId(record.id());
+            final var activities = getPlanActivities(connection, planId);
+            final var arguments = getPlanArguments(connection, planId);
+
+            plans.put(planId, new Plan(
+                record.name(),
+                Long.toString(record.missionModelId()),
+                record.startTime(),
+                record.endTime(),
+                activities,
+                arguments
+            ));
+          } catch (final NoSuchPlanException ex) {
+            // If a plan was removed between getting its record and getting its activities, then the plan
+            // no longer exists, so it's okay to swallow the exception and continue
+            System.err.println("Plan was removed while retrieving all plans. Continuing without removed plan.");
+          }
+        }
+
+        return plans;
       }
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get all plans", ex);
@@ -62,30 +86,9 @@ public final class PostgresPlanRepository implements PlanRepository {
   @Override
   public Plan getPlan(final PlanId planId) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
-      try (
-          final var getSimulationAction = new GetSimulationAction(connection);
-          final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection);
-      ) {
         final var planRecord = getPlanRecord(connection, planId);
         final var activities = getPlanActivities(connection, planId);
-
-        final Map<String, SerializedValue> arguments = new HashMap<>();
-        final var simRecord$ = getSimulationAction.get(planId);
-
-        if (simRecord$.isPresent()) {
-          final var simRecord = simRecord$.get();
-          final var templateId$ = simRecord.simulationTemplateId();
-
-          // Apply template arguments followed by simulation arguments.
-          // Overwriting of template arguments with sim. arguments is intentional here,
-          // and the resulting set of arguments is assumed to be complete
-          if (templateId$.isPresent()) {
-            getSimulationTemplateAction.get(templateId$.get()).ifPresent(simTemplateRecord -> {
-              arguments.putAll(simTemplateRecord.arguments());
-            });
-          }
-          arguments.putAll(simRecord.arguments());
-        }
+        final var arguments = getPlanArguments(connection, planId);
 
         return new Plan(
             planRecord.name(),
@@ -95,9 +98,38 @@ public final class PostgresPlanRepository implements PlanRepository {
             activities,
             arguments
         );
-      }
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get plan", ex);
+    }
+  }
+
+  private Map<String, SerializedValue> getPlanArguments(
+      final Connection connection,
+      final PlanId planId
+  ) throws SQLException {
+    try (
+        final var getSimulationAction = new GetSimulationAction(connection);
+        final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection);
+    ) {
+      final var arguments = new HashMap<String, SerializedValue> ();
+      final var simRecord$ = getSimulationAction.get(planId);
+
+      if (simRecord$.isPresent()) {
+        final var simRecord = simRecord$.get();
+        final var templateId$ = simRecord.simulationTemplateId();
+
+        // Apply template arguments followed by simulation arguments.
+        // Overwriting of template arguments with sim. arguments is intentional here,
+        // and the resulting set of arguments is assumed to be complete
+        if (templateId$.isPresent()) {
+          getSimulationTemplateAction.get(templateId$.get()).ifPresent(simTemplateRecord -> {
+            arguments.putAll(simTemplateRecord.arguments());
+          });
+        }
+        arguments.putAll(simRecord.arguments());
+      }
+
+      return arguments;
     }
   }
 
