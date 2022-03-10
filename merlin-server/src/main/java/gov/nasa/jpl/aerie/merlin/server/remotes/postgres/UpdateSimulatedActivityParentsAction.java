@@ -1,7 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -25,14 +23,14 @@ import java.util.Map;
 
   public void apply(
       final long datasetId,
-      final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities,
-      final Map<ActivityInstanceId, Long> simIdToPgId
+      final Map<Long, SimulatedActivityRecord> simulatedActivities,
+      final Map<Long, Long> simIdToPgId
   ) throws SQLException {
     for (final var id : simulatedActivities.keySet()) {
       final var activity =  simulatedActivities.get(id);
-      if (activity.parentId == null) continue;
+      if (activity.parentId().isPresent()) continue;
 
-      this.statement.setLong(1, simIdToPgId.get(activity.parentId));
+      this.statement.setLong(1, simIdToPgId.get(activity.parentId().get()));
       this.statement.setLong(2, datasetId);
       this.statement.setLong(3, simIdToPgId.get(id));
 

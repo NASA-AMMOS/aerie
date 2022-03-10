@@ -290,7 +290,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
             record.duration(),
             record.parentId().map(pgIdToSimId::get).orElse(null),
             record.childIds().stream().map(pgIdToSimId::get).collect(Collectors.toList()),
-            record.directiveId(),
+            record.directiveId().map(ActivityInstanceId::new),
             record.computedAttributes()
         ));
       }
@@ -307,7 +307,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final var record = activityRecords.get(id);
       if (record.directiveId().isEmpty()) continue;
 
-      final var directiveId = record.directiveId().get();
+      final var directiveId = new ActivityInstanceId(record.directiveId().get());
       pgIdToSimId.put(id, directiveId);
       simIds.add(directiveId.id());
     }
@@ -408,15 +408,34 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         final var postSimulatedActivitiesAction = new PostSimulatedActivitiesAction(connection);
         final var updateSimulatedActivityParentsAction = new UpdateSimulatedActivityParentsAction(connection)
     ) {
+      final var simulatedActivityRecords = simulatedActivities
+          .entrySet()
+          .stream()
+          .collect(Collectors.toMap(
+              e -> e.getKey().id(),
+              e -> simulatedActivityToRecord(e.getValue())));
+
       final var simIdToPgId = postSimulatedActivitiesAction.apply(
           datasetId,
-          simulatedActivities,
+          simulatedActivityRecords,
           simulationStart);
       updateSimulatedActivityParentsAction.apply(
           datasetId,
-          simulatedActivities,
+          simulatedActivityRecords,
           simIdToPgId);
     }
+  }
+
+  private static SimulatedActivityRecord simulatedActivityToRecord(final SimulatedActivity activity) {
+    return new SimulatedActivityRecord(
+        activity.type,
+        activity.arguments,
+        activity.start,
+        activity.duration,
+        Optional.ofNullable(activity.parentId).map(ActivityInstanceId::id),
+        activity.childIds.stream().map(ActivityInstanceId::id).collect(Collectors.toList()),
+        activity.directiveId.map(ActivityInstanceId::id),
+        activity.computedAttributes);
   }
 
   public static final class PostgresResultsCell implements ResultsProtocol.OwnerRole {
