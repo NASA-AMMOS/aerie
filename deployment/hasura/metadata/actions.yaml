@@ -7,6 +7,10 @@ actions:
     definition:
       kind: synchronous
       handler: http://aerie_commanding:3000/put-dictionary
+  - name: addCommandExpansionTypeScript
+    definition:
+      kind: synchronous
+      handler: http://aerie_commanding:3000/put-expansion
   - name: getModelEffectiveArguments
     definition:
       kind: ""
@@ -74,6 +78,10 @@ custom_types:
     - name: ValidationResponse
     - name: EffectiveArgumentsResponse
     - name: AddExternalDatasetResponse
+    - name: SchedulingResponse
+    - name: CommandDictionaryResponse
+    - name: AddCommandExpansionResponse
+    - name: TypeScriptResponse
   scalars:
     - name: ResourceSchema
     - name: MerlinSimulationResults
@@ -81,3 +89,4 @@ custom_types:
     - name: ModelArguments
     - name: ActivityArguments
     - name: ProfileSet
+    - name: SchedulingFailureReason

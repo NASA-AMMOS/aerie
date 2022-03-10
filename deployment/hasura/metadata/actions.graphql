@@ -10,6 +10,13 @@ type Mutation {
   uploadDictionary(dictionary: String!): CommandDictionaryResponse
 }
 
+type Mutation {
+  addCommandExpansionTypeScript(
+    activityTypeName: String!
+    expansionLogic: String!
+  ): AddCommandExpansionResponse
+}
+
 type Query {
   getModelEffectiveArguments(
     missionModelId: ID!
@@ -44,6 +51,12 @@ type Query {
 }
 
 type Query {
+  schedule(
+    specificationId: Int!
+  ): SchedulingResponse
+}
+
+type Query {
   simulate(
     planId: Int!
   ): MerlinSimulationResponse
@@ -64,13 +77,13 @@ type Query {
   ): ValidationResponse
 }
 
-type Query {
-  schedule(
-    specificationId: Int!
-  ): SchedulingResponse
+enum MerlinSimulationStatus {
+  complete
+  failed
+  incomplete
 }
 
-enum MerlinSimulationStatus {
+enum SchedulingStatus {
   complete
   failed
   incomplete
@@ -111,14 +124,12 @@ type CommandDictionaryResponse {
   id: Int!
 }
 
-type TypeScriptResponse {
-  typescript: String!
+type AddCommandExpansionResponse {
+  expansionId: Int!
 }
 
-enum SchedulingStatus {
-  complete
-  failed
-  incomplete
+type TypeScriptResponse {
+  typescript: String!
 }
 
 scalar ResourceSchema
