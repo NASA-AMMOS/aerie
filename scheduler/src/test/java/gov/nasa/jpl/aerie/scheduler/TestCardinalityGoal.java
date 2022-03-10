@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -30,7 +31,7 @@ public void minimalDef(){
     var periodTre = new TimeRangeExpression.Builder()
         .from(new Windows(period))
         .build();
-    ActivityType actType = new ActivityType("CardGoalActType");
+    ActivityType actType = new ActivityType("CardGoalActType", null, DurationType.controllable("duration"));
 
 
     CardinalityGoal goal = new CardinalityGoal.Builder()
@@ -48,7 +49,7 @@ public void minimalDef(){
 
         .build();
 
-    Problem problem = new Problem(null, null);
+    Problem problem = new Problem(null, null, null);
 
     problem.setGoals(List.of(goal));
 
@@ -75,7 +76,7 @@ public void minimalDef(){
     var periodTre = new TimeRangeExpression.Builder()
         .from(new Windows(List.of(period, period2)))
         .build();
-    ActivityType actType = new ActivityType("CardGoalActType");
+    ActivityType actType = new ActivityType("CardGoalActType", null, DurationType.controllable("duration"));
 
 
     CardinalityGoal goal = new CardinalityGoal.Builder()
@@ -93,7 +94,7 @@ public void minimalDef(){
 
         .build();
 
-    Problem problem = new Problem(null, null);
+    Problem problem = new Problem(null, null, null);
 
     problem.setGoals(List.of(goal));
 

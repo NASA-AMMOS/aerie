@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +34,7 @@ public class TestStateConstraints {
 
   @BeforeEach
   public void setUp() {
-    problem = new Problem(null, horizon);
+    problem = new Problem(null, horizon, null);
     plan = new PlanInMemory();
   }
 
@@ -118,7 +119,7 @@ public class TestStateConstraints {
   public void testconstraintgoal() {
 
     final var dur = gov.nasa.jpl.aerie.merlin.protocol.types.Duration.of(1, gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR);
-    final var activityTypeImage = new ActivityType("EISImage");
+    final var activityTypeImage = new ActivityType("EISImage", null, DurationType.controllable("duration"));
 
     final var eisImageAct = new ActivityCreationTemplate.Builder()
         .ofType(activityTypeImage)
@@ -288,7 +289,7 @@ public class TestStateConstraints {
   @Test
   public void testOfEachValue(){
     final var dur = gov.nasa.jpl.aerie.merlin.protocol.types.Duration.of(1, gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR);
-    final var activityTypeImage = new ActivityType("EISImage");
+    final var activityTypeImage = new ActivityType("EISImage", null, DurationType.controllable("duration"));
 
     final var eisImageAct = new ActivityCreationTemplate.Builder()
         .ofType(activityTypeImage)

@@ -13,11 +13,12 @@ public class MerlInsightRulesTest {
   void setUp(){
     planningHorizon = new PlanningHorizon(new Time(0), new Time(48*3600));
     MissionModel<?> aerieLanderMissionModel = MerlinSightTestUtility.getMerlinSightMissionModel();
-    rules = new MerlInsightRules(aerieLanderMissionModel, planningHorizon);
+    final var aerieLanderSchedulerModel = MerlinSightTestUtility.getMerlinSightSchedulerModel();
+    rules = new MerlInsightRules(aerieLanderMissionModel, planningHorizon, aerieLanderSchedulerModel);
     rules.getSimulationFacade().simulatePlan(makeEmptyPlan());
     plan = makeEmptyPlan();
     controller = new AerieController(MerlinSightTestUtility.LOCAL_AERIE, MerlinSightTestUtility.latest, false, planningHorizon, rules.getActivityTypes());
-    smallProblem = new Problem(aerieLanderMissionModel, planningHorizon);
+    smallProblem = new Problem(aerieLanderMissionModel, planningHorizon, aerieLanderSchedulerModel);
   }
 
   private PlanningHorizon planningHorizon;

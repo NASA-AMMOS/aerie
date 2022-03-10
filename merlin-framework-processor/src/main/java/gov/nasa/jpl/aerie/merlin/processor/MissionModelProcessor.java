@@ -82,7 +82,9 @@ public final class MissionModelProcessor implements Processor {
       try {
         final var missionModelRecord = missionModelParser.parseMissionModel(packageElement);
 
-        final var generatedFiles = new ArrayList<>(List.of(missionModelGen.generateMerlinPlugin(missionModelRecord)));
+        final var generatedFiles = new ArrayList<>(List.of(
+            missionModelGen.generateMerlinPlugin(missionModelRecord),
+            missionModelGen.generateSchedulerPlugin(missionModelRecord)));
 
         missionModelRecord.modelConfigurationType
             .flatMap(configType -> missionModelGen.generateMissionModelConfigurationMapper(missionModelRecord, configType))
@@ -90,6 +92,7 @@ public final class MissionModelProcessor implements Processor {
 
         generatedFiles.addAll(List.of(
             missionModelGen.generateMissionModelFactory(missionModelRecord),
+            missionModelGen.generateSchedulerModel(missionModelRecord),
             missionModelGen.generateActivityActions(missionModelRecord),
             missionModelGen.generateActivityTypes(missionModelRecord)
         ));

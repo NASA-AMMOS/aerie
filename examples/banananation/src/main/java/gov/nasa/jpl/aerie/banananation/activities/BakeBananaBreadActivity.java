@@ -5,10 +5,9 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.WithDefaults;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Validation;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 @ActivityType("BakeBananaBread")
-public record BakeBananaBreadActivity(double temperature, int tbSugar, boolean glutenFree, Duration duration) {
+public record BakeBananaBreadActivity(double temperature, int tbSugar, boolean glutenFree) {
 
   @Validation("Temperature must be positive")
   public boolean validateTemperature() {

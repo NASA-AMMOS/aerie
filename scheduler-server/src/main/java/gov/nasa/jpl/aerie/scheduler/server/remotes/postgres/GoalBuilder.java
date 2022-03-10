@@ -99,7 +99,6 @@ public class GoalBuilder {
     for (final var argument : activityTemplate.arguments().entrySet()) {
       builder = builder.withArgument(argument.getKey(), argument.getValue());
     }
-    builder = builder.duration(Duration.ZERO);
     return builder.build();
   }
 }

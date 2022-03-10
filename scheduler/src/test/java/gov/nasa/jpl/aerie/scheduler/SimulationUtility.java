@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.banananation.Configuration;
 import gov.nasa.jpl.aerie.banananation.generated.ConfigurationMapper;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
+import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.nio.file.Path;
@@ -31,6 +32,10 @@ public final class SimulationUtility {
     final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, Path.of("/etc/hosts"));
     final var serializedConfig = SerializedValue.of(new ConfigurationMapper().getArguments(config));
     return makeMissionModel(new MissionModelBuilder(), serializedConfig);
+  }
+
+  public static SchedulerModel getBananaSchedulerModel(){
+    return new gov.nasa.jpl.aerie.banananation.generated.GeneratedSchedulerModel();
   }
 
 }

@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
+import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.List;
@@ -32,5 +33,9 @@ public class MerlinSightTestUtility {
     final var mission = builder.build(model, factory.getTaskSpecTypes());
     return mission;
    //return null;
+  }
+
+  static SchedulerModel getMerlinSightSchedulerModel() {
+    return new gov.nasa.jpl.aerielander.generated.GeneratedSchedulerModel();
   }
 }

@@ -803,7 +803,7 @@ public class AerieController {
       sbPlanRequest.append("start_offset:\"");
       sbPlanRequest.append(instance.getStartTime());
       sbPlanRequest.append("\", type:\"");
-      sbPlanRequest.append(instance.getType().name);
+      sbPlanRequest.append(instance.getType().getName());
       sbPlanRequest.append("\", plan_id:");
       sbPlanRequest.append(planid);
       sbPlanRequest.append("}){ id }}");

@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Disabled;
@@ -9,9 +10,10 @@ import org.junit.jupiter.api.Test;
 public class AerieControllerTest {
   private final PlanningHorizon horizon = new PlanningHorizon(new Time(0), new Time(100000));
   private final MissionModel<?> missionModel = MerlinSightTestUtility.getMerlinSightMissionModel();
+  private final SchedulerModel schedulerModel = MerlinSightTestUtility.getMerlinSightSchedulerModel();
   private final String URL_AERIE = MerlinSightTestUtility.LOCAL_AERIE;
   private final int MISSION_MODEL_ID = MerlinSightTestUtility.latest;
-  private final Problem problem = new Problem(missionModel, horizon);
+  private final Problem problem = new Problem(missionModel, horizon, schedulerModel);
   /**
    * This test is here as a demonstration of how the AerieController can be used
    * Disabled because you need a local aerie

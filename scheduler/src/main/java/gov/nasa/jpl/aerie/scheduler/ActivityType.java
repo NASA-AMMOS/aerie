@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 
 import java.util.List;
@@ -23,13 +24,36 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class ActivityType {
 
   /**
+   * the identifier associated with this activity type
+   */
+  private final String name;
+
+  /**
+   * a list of constraints associated to this activity type
+   */
+  private final StateConstraintExpression activityConstraints;
+
+  /**
+   * the information required to simulate this activity type
+   */
+  private final TaskSpecType<?, ?, ?> specType;
+
+  /**
+   * describes the level of control that the scheduler has over the duration of this activity
+   */
+  private final DurationType durationType;
+
+  /**
    * ctor creates a new empty activity type container
    *
    * @param name IN the identifier of the activity type
    */
-  public ActivityType(String name) {
+  public ActivityType(final String name) {
     checkNotNull(name, "creating activity type with null name");
     this.name = name;
+    this.activityConstraints = null;
+    this.specType = null;
+    this.durationType = DurationType.uncontrollable();
   }
 
   /**
@@ -37,10 +61,12 @@ public class ActivityType {
    *
    * @param name IN the identifier of the activity type
    */
-  public ActivityType(String name, TaskSpecType<?, ?, ?> specType) {
+  public ActivityType(final String name, final TaskSpecType<?, ?, ?> specType, final DurationType durationType) {
     checkNotNull(name, "creating activity type with null name");
     this.name = name;
+    this.activityConstraints = null;
     this.specType = specType;
+    this.durationType = durationType;
   }
 
   /**
@@ -49,12 +75,25 @@ public class ActivityType {
    * @param name IN the identifier of the activity type
    * @param constraints constraints for the activity type
    */
-  public ActivityType(String name, StateConstraintExpression constraints) {
-    this(name);
+  public ActivityType(final String name, final StateConstraintExpression constraints) {
+    checkNotNull(name, "creating activity type with null name");
     checkNotNull(constraints, "creating activity type with null constraints");
+    this.name = name;
     this.activityConstraints = constraints;
+    this.specType = null;
+    this.durationType = DurationType.uncontrollable();
   }
 
+  static Parameter getParameterSpecification(final List<Parameter> params, final String name) {
+    final var parameterSpecifications = params.stream()
+        .filter(var -> var.name().equals(name))
+        .collect(Collectors.toList());
+    if(parameterSpecifications.isEmpty()){
+      return null;
+    }
+    assert(parameterSpecifications.size()==1);
+    return parameterSpecifications.get(0);
+  }
 
   /**
    * fetches the identifier associated with this activity type
@@ -62,7 +101,7 @@ public class ActivityType {
    * @return the identifier associated with this activity type
    */
   public String getName() {
-    return name;
+    return this.name;
   }
 
   /**
@@ -75,53 +114,34 @@ public class ActivityType {
    *     with this activity type and inherited by all matching activity
    *     instances
    */
-  public StateConstraintExpression getStateConstraints() {
-    return activityConstraints;
+  StateConstraintExpression getStateConstraints() {
+    return this.activityConstraints;
   }
 
-  public TaskSpecType<?, ?, ?> getSpecType(){
-    return specType;
+  TaskSpecType<?, ?, ?> getSpecType(){
+    return this.specType;
   }
 
-  public boolean isParamLegal(String name){
-    if(specType!= null){
-      var paramSpec = getParameterSpecification(specType.getParameters(), name);
+  DurationType getDurationType(){
+    return this.durationType;
+  }
+
+  boolean isParamLegal(final String name){
+    if(this.specType != null){
+      final var paramSpec = getParameterSpecification(this.specType.getParameters(), name);
       return paramSpec != null;
     }
     return true;
   }
 
-  public static Parameter getParameterSpecification(List<Parameter> params, String name) {
-    var parameterSpecifications = params.stream()
-        .filter(var -> var.name().equals(name))
-        .collect(Collectors.toList());
-    if(parameterSpecifications.isEmpty()){
-      return null;
-    }
-    assert(parameterSpecifications.size()==1);
-    return parameterSpecifications.get(0);
-  }
-
-
   @Override
   public boolean equals(final Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    ActivityType that = (ActivityType) o;
-    return Objects.equals(name, that.name)
-           && Objects.equals(activityConstraints, that.activityConstraints)
-           && Objects.equals(specType, that.specType);
+    final var that = (ActivityType) o;
+    return Objects.equals(this.name, that.name)
+           && Objects.equals(this.activityConstraints, that.activityConstraints)
+           && Objects.equals(this.specType, that.specType);
   }
-
-  /**
-   * the identifier associated with this activity type
-   */
-  final String name;
-  /**
-   * a list of constraints associated to this activity type
-   */
-  StateConstraintExpression activityConstraints;
-
-  TaskSpecType<?, ?, ?> specType;
 
 }

@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -17,6 +19,11 @@ public class Problem {
    * the mission model that this problem is based on
    */
   private final MissionModel<?> missionModel;
+
+  /**
+   * The scheduler-specific aspects of the mission model
+   */
+  private final SchedulerModel schedulerModel;
 
   private final SimulationFacade simulationFacade;
 
@@ -50,14 +57,15 @@ public class Problem {
    *
    * @param mission IN the mission model that this problem is based on
    */
-  public Problem(MissionModel<?> mission, PlanningHorizon planningHorizon) {
+  public Problem(MissionModel<?> mission, PlanningHorizon planningHorizon, SchedulerModel schedulerModel) {
     this.missionModel = mission;
+    this.schedulerModel = schedulerModel;
     this.initialPlan = new PlanInMemory();
     this.planningHorizon = planningHorizon;
     //add all activity types known to aerie to scheduler index
     if( missionModel != null ) {
       for(var taskType : missionModel.getTaskSpecificationTypes().entrySet()){
-        this.add(new ActivityType(taskType.getKey(), taskType.getValue()));
+        this.add(new ActivityType(taskType.getKey(), taskType.getValue(), schedulerModel.getDurationTypes().get(taskType.getKey())));
       }
     }
     simulationFacade = new SimulationFacade(planningHorizon, missionModel);
