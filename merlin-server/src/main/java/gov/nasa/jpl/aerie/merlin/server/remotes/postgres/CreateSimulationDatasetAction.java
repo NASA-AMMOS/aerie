@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.SimulationStateRecord.Status;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -20,7 +21,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
     values(?, ?::timestamptz - ?::timestamptz)
     returning
       dataset_id,
-      state,
+      status,
       reason,
       canceled
     """;
@@ -44,10 +45,19 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 
     final var results = this.statement.executeQuery();
     if (!results.next()) throw new FailedInsertException("simulation_dataset");
+    final Status status;
+    try {
+      status = Status.fromString(results.getString(2));
+    } catch (final Status.InvalidSimulationStatusException ex) {
+      throw new Error("Simulation Dataset initialized with invalid state.");
+    }
+
     final var datasetId = results.getLong(1);
+    final var reason = results.getString(3);
+
     final var state = new SimulationStateRecord(
-        results.getString(2),
-        results.getString(3));
+        status,
+        reason);
     final var canceled = results.getBoolean(4);
 
     return new SimulationDatasetRecord(

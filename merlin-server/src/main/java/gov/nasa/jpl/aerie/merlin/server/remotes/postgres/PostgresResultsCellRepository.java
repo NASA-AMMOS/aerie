@@ -211,11 +211,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     final var record = record$.get();
 
     return Optional.of(
-        switch (record.state().state()) {
-          case "incomplete" -> new ResultsProtocol.State.Incomplete();
-          case "failed" -> new ResultsProtocol.State.Failed(record.state().reason());
-          case "success" -> new ResultsProtocol.State.Success(getSimulationResults(connection, record, planId));
-          default -> throw new Error(String.format("Unexpected simulation state %s", record.state()));
+        switch (record.state().status()) {
+          case INCOMPLETE -> new ResultsProtocol.State.Incomplete();
+          case FAILED -> new ResultsProtocol.State.Failed(record.state().reason());
+          case SUCCESS -> new ResultsProtocol.State.Success(getSimulationResults(connection, record, planId));
         });
   }
 
