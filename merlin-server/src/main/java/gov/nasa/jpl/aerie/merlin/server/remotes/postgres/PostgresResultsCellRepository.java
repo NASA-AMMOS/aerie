@@ -349,7 +349,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final PlanId planId
   ) throws SQLException, NoSuchPlanException {
     try (final var getPlanAction = new GetPlanAction(connection)) {
-      return getPlanAction.get(planId);
+      return getPlanAction
+          .get(planId.id())
+          .orElseThrow(() -> new NoSuchPlanException(planId));
     }
   }
 
