@@ -244,7 +244,17 @@ public final class PostgresPlanRepository implements PlanRepository {
   public Map<String, Constraint> getAllConstraintsInPlan(final PlanId planId) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getPlanConstraintsAction = new GetPlanConstraintsAction(connection)) {
-        return getPlanConstraintsAction.get(planId);
+        return getPlanConstraintsAction
+            .get(planId.id())
+            .orElseThrow(() -> new NoSuchPlanException(planId))
+            .stream()
+            .collect(Collectors.toMap(
+                ConstraintRecord::name,
+                r -> new Constraint(
+                    r.name(),
+                    r.summary(),
+                    r.description(),
+                    r.definition())));
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(

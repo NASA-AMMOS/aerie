@@ -1,16 +1,14 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /*package local*/ final class GetPlanConstraintsAction implements AutoCloseable {
   // We left join through the plan table in order to distinguish
@@ -30,28 +28,27 @@ import java.util.Map;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Map<String, Constraint> get(final PlanId planId)
-  throws SQLException, NoSuchPlanException
-  {
-    this.statement.setLong(1, planId.id());
+  public Optional<List<ConstraintRecord>> get(final long planId) throws SQLException {
+    this.statement.setLong(1, planId);
 
     try (final var results = this.statement.executeQuery()) {
-      if (!results.next()) throw new NoSuchPlanException(planId);
+      if (!results.next()) return Optional.empty();
 
-      final var constraints = new HashMap<String, Constraint>();
+      final var constraints = new ArrayList<ConstraintRecord>();
       do {
         if (isColumnNull(results, 1)) continue;
 
-        final var constraint = new Constraint(
+        final var constraint = new ConstraintRecord(
+            results.getLong(1),
             results.getString(2),
             results.getString(3),
             results.getString(4),
             results.getString(5));
 
-        constraints.put(constraint.name(), constraint);
+        constraints.add(constraint);
       } while (results.next());
 
-      return constraints;
+      return Optional.of(constraints);
     }
   }
 
