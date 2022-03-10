@@ -24,6 +24,9 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
+import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -46,7 +49,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
 
   /** Generate `GeneratedMerlinPlugin` class. */
   public JavaFile generateMerlinPlugin(final MissionModelRecord missionModel) {
-    final var typeName = missionModel.getPluginName();
+    final var typeName = missionModel.getMerlinPluginName();
 
     final var typeSpec =
         TypeSpec
@@ -67,6 +70,37 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addStatement(
                         "return new $T()",
                         missionModel.getFactoryName())
+                    .build())
+            .build();
+
+    return JavaFile
+        .builder(typeName.packageName(), typeSpec)
+        .skipJavaLangImports(true)
+        .build();
+  }
+
+  /** Generate `GeneratedSchedulerPlugin` class. */
+  public JavaFile generateSchedulerPlugin(final MissionModelRecord missionModel) {
+    final var typeName = missionModel.getSchedulerPluginName();
+
+    final var typeSpec =
+        TypeSpec
+            .classBuilder(typeName)
+            .addAnnotation(
+                AnnotationSpec
+                    .builder(javax.annotation.processing.Generated.class)
+                    .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
+                    .build())
+            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+            .addSuperinterface(SchedulerPlugin.class)
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("getSchedulerModel")
+                    .addAnnotation(Override.class)
+                    .addModifiers(Modifier.PUBLIC)
+                    .returns(missionModel.getSchedulerModelName())
+                    .addStatement("return new $T()",
+                                  missionModel.getSchedulerModelName())
                     .build())
             .build();
 
@@ -236,6 +270,51 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addStatement(
                         "return getConfigurationType().map(configType -> configType.getParameters()).orElseGet(() -> $T.of())",
                         List.class)
+                    .build())
+            .build();
+
+    return JavaFile
+        .builder(typeName.packageName(), typeSpec)
+        .skipJavaLangImports(true)
+        .build();
+  }
+
+  /** Generate `GeneratedSchedulerModel` class. */
+  public JavaFile generateSchedulerModel(final MissionModelRecord missionModel) {
+    final var typeName = missionModel.getSchedulerModelName();
+
+    final var typeSpec =
+        TypeSpec
+            .classBuilder(typeName)
+            .addAnnotation(
+                AnnotationSpec
+                    .builder(javax.annotation.processing.Generated.class)
+                    .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
+                    .build())
+            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+            .addSuperinterface(SchedulerModel.class)
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("getDurationTypes")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addAnnotation(Override.class)
+                    .returns(ParameterizedTypeName.get(Map.class, String.class, DurationType.class))
+                    .addStatement("final var result = new $T()", ParameterizedTypeName.get(HashMap.class, String.class, DurationType.class))
+                    .addCode(
+                        missionModel
+                            .activityTypes
+                            .stream()
+                            .map(
+                                activityTypeRecord ->
+                                    CodeBlock
+                                        .builder()
+                                        .addStatement("result.put(\"$L\", $T.$L())",
+                                                      activityTypeRecord.name(),
+                                                      DurationType.class,
+                                                      "uncontrollable"))
+                            .reduce((x, y) -> x.add("$L", y.build()))
+                            .orElse(CodeBlock.builder()).build())
+                    .addStatement("return result")
                     .build())
             .build();
 

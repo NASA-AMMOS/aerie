@@ -29,12 +29,20 @@ public final class MissionModelRecord {
     this.activityTypes = Objects.requireNonNull(activityTypes);
   }
 
-  public ClassName getPluginName() {
+  public ClassName getMerlinPluginName() {
     return ClassName.get(this.$package.getQualifiedName() + ".generated", "GeneratedMerlinPlugin");
+  }
+
+  public ClassName getSchedulerPluginName() {
+    return ClassName.get(this.$package.getQualifiedName() + ".generated", "GeneratedSchedulerPlugin");
   }
 
   public ClassName getFactoryName() {
     return ClassName.get(this.$package.getQualifiedName() + ".generated", "GeneratedMissionModelFactory");
+  }
+
+  public ClassName getSchedulerModelName() {
+    return ClassName.get(this.$package.getQualifiedName() + ".generated", "GeneratedSchedulerModel");
   }
 
   public ClassName getActivityActionsName() {
