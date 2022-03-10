@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public final class PostgresMissionModelRepository implements MissionModelRepository {
   private final Path missionModelsPath = Path.of("merlin_file_store").toAbsolutePath();
@@ -27,7 +28,13 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   public Map<String, MissionModelJar> getAllMissionModels() {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getAllMissionModelsAction = new GetAllModelsAction(connection)) {
-        return getAllMissionModelsAction.get();
+        return getAllMissionModelsAction
+            .get()
+            .entrySet()
+            .stream()
+            .collect(Collectors.toMap(
+                e -> Long.toString(e.getKey()),
+                e -> missionModelRecordToMissionModelJar(e.getValue())));
       }
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to retrieve all mission models", ex);
@@ -38,7 +45,10 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   public MissionModelJar getMissionModel(final String missionModelId) throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getMissionModelAction = new GetModelAction(connection)) {
-        return getMissionModelAction.get(toMissionModelId(missionModelId));
+        return getMissionModelAction
+            .get(toMissionModelId(missionModelId))
+            .map(PostgresMissionModelRepository::missionModelRecordToMissionModelJar)
+            .orElseThrow(NoSuchMissionModelException::new);
       }
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to retrieve mission model with id `%s`".formatted(missionModelId), ex);
@@ -159,7 +169,10 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
           final var getModelAction = new GetModelAction(connection);
           final var deleteModelAction = new DeleteModelAction(connection)
       ) {
-        final var jarPath = getModelAction.get(toMissionModelId(missionModelId)).path;
+        final var jarPath = getModelAction
+            .get(toMissionModelId(missionModelId))
+            .orElseThrow(NoSuchMissionModelException::new)
+            .path();
         deleteModelAction.apply(toMissionModelId(missionModelId));
 
         try {
@@ -181,6 +194,17 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
     } catch (final NumberFormatException ex) {
       throw new NoSuchMissionModelException();
     }
+  }
+
+  private static MissionModelJar missionModelRecordToMissionModelJar(final MissionModelRecord record) {
+    final var model = new MissionModelJar();
+    model.mission = record.mission();
+    model.name = record.name();
+    model.version = record.version();
+    model.owner = record.owner();
+    model.path = record.path();
+
+    return model;
   }
 
   private static Path getUnusedFilename(final Path base, final String preferredName) {
