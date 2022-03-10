@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;

@@ -1,17 +1,17 @@
 package gov.nasa.jpl.aerie.merlin.processor;
 
 import com.squareup.javapoet.ClassName;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ConfigurationTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportDefaultsStyle;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MapperRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ConfigurationTypeRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterValidationRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 

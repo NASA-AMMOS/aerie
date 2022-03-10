@@ -6,9 +6,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.server.models.DiscreteProfile;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.RealProfile;
-import gov.nasa.jpl.aerie.merlin.server.models.DiscreteProfile;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;

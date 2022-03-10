@@ -1,17 +1,17 @@
 package gov.nasa.jpl.aerie.banananation;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-import gov.nasa.jpl.aerie.contrib.models.counters.Counter;
 import gov.nasa.jpl.aerie.contrib.models.Register;
+import gov.nasa.jpl.aerie.contrib.models.counters.Counter;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.StringValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public final class Mission {
   public final AdditiveRegister fruit = AdditiveRegister.create(4.0);

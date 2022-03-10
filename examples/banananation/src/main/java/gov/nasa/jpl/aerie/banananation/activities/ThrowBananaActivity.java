@@ -1,11 +1,10 @@
 package gov.nasa.jpl.aerie.banananation.activities;
 
-import gov.nasa.jpl.aerie.banananation.Flag;
 import gov.nasa.jpl.aerie.banananation.Mission;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Validation;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Template;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Validation;
 
 /**
  * Throw a banana.

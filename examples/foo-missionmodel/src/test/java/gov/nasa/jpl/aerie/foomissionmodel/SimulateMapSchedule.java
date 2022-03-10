@@ -2,14 +2,13 @@ package gov.nasa.jpl.aerie.foomissionmodel;
 
 import gov.nasa.jpl.aerie.foomissionmodel.generated.ConfigurationMapper;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
-import gov.nasa.jpl.aerie.foomissionmodel.mappers.FooValueMappers;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
