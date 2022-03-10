@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
@@ -125,8 +126,21 @@ public final class PostgresPlanRepository implements PlanRepository {
   @Override
   public Map<ActivityInstanceId, ActivityInstance> getAllActivitiesInPlan(final PlanId planId) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
-      try (final var getActivitiesAction = new GetActivitiesAction(connection)) {
-        return getActivitiesAction.get(planId);
+      try (
+          final var getPlanAction = new GetPlanAction(connection);
+          final var getActivitiesAction = new GetActivitiesAction(connection)
+      ) {
+        final var planStart = getPlanAction.get(planId).startTime();
+
+        return getActivitiesAction
+            .get(planId.id())
+            .stream()
+            .collect(Collectors.toMap(
+                a -> new ActivityInstanceId(a.id()),
+                a -> new ActivityInstance(
+                    a.type(),
+                    planStart.plusMicros(a.startOffsetInMicros()),
+                    a.arguments())));
       }
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get all activities from plan", ex);
