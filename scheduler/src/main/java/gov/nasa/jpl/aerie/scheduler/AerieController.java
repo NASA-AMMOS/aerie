@@ -494,13 +494,6 @@ public class AerieController {
       act.addArgument(paramName, valueParam);
     }
     act.setStartTime(DemuxJson.fromString(start));
-    var actDurationAsParam = act.getArguments().get("duration");
-    if (actDurationAsParam != null) {
-      act.setDuration(new DurationValueMapper().deserializeValue(actDurationAsParam).getSuccessOrThrow());
-     act.getArguments().remove("duration");
-    } else {
-      act.setDuration(Duration.ZERO);
-    }
 
     return act;
   }
