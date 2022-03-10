@@ -136,9 +136,7 @@ public final class PostgresPlanRepository implements PlanRepository {
   @Override
   public long getPlanRevision(final PlanId planId) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
-      try (final var getPlanRevisionAction = new GetPlanRevisionAction(connection)) {
-        return getPlanRevisionAction.get(planId);
-      }
+      return getPlanRecord(connection, planId).revision();
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get plan revision", ex);
     }
