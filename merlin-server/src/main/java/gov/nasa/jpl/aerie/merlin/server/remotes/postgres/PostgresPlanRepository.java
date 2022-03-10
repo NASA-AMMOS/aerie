@@ -438,11 +438,13 @@ public final class PostgresPlanRepository implements PlanRepository {
       try (final var connection = this.dataSource.getConnection()) {
         try (final var updatePlanAction = new UpdatePlanAction(connection)) {
           updatePlanAction.apply(
-              this.planId,
+              this.planId.id(),
               this.name.orElse(null),
               this.startTime.orElse(null),
               this.endTime.orElse(null));
         }
+      } catch (final FailedUpdateException ex) {
+        throw new NoSuchPlanException(this.planId);
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to update a plan", ex);
       }
