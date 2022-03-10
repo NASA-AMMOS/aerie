@@ -112,7 +112,7 @@ public final class PostgresPlanRepository implements PlanRepository {
         final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection);
     ) {
       final var arguments = new HashMap<String, SerializedValue> ();
-      final var simRecord$ = getSimulationAction.get(planId);
+      final var simRecord$ = getSimulationAction.get(planId.id());
 
       if (simRecord$.isPresent()) {
         final var simRecord = simRecord$.get();

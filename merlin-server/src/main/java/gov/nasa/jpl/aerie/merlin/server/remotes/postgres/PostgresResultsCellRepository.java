@@ -118,7 +118,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   ) throws SQLException
   {
     try (final var getSimulationAction = new GetSimulationAction(connection)) {
-      return getSimulationAction.get(planId);
+      return getSimulationAction.get(planId.id());
     }
   }
 
@@ -151,7 +151,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   ) throws SQLException
   {
     try (final var createSimulationAction = new CreateSimulationAction(connection)) {
-      return createSimulationAction.apply(planId, arguments);
+      return createSimulationAction.apply(planId.id(), arguments);
     }
   }
 
@@ -422,6 +422,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   public static final class PostgresResultsCell implements ResultsProtocol.OwnerRole {
     private final DataSource dataSource;
     private final SimulationRecord simulation;
+    private final PlanId planId;
     private final long datasetId;
     private final Timestamp planStart;
 
@@ -433,6 +434,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     ) {
       this.dataSource = dataSource;
       this.simulation = simulation;
+      this.planId = new PlanId(simulation.planId());
       this.datasetId = datasetId;
       this.planStart = planStart;
     }
@@ -443,7 +445,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         return getSimulationState(
             connection,
             datasetId,
-            simulation.planId(),
+            planId,
             planStart)
             .orElseThrow(() -> new Error("Dataset corrupted"));
       } catch (final SQLException ex) {

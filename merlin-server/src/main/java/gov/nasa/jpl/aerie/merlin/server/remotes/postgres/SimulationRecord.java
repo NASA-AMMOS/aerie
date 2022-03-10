@@ -9,6 +9,6 @@ import java.util.Optional;
 public final record SimulationRecord(
     long id,
     long revision,
-    PlanId planId,
+    long planId,
     Optional<Long> simulationTemplateId,
     Map<String, SerializedValue> arguments) {}

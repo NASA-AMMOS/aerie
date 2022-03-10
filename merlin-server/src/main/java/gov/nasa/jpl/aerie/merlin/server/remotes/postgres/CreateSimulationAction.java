@@ -25,8 +25,11 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement = connection.prepareStatement(sql);
   }
 
-  public SimulationRecord apply(final PlanId planId, final Map<String, SerializedValue> arguments) throws SQLException, FailedInsertException {
-    this.statement.setLong(1, planId.id());
+  public SimulationRecord apply(
+      final long planId,
+      final Map<String, SerializedValue> arguments
+  ) throws SQLException, FailedInsertException {
+    this.statement.setLong(1, planId);
     this.statement.setString(2, simulationArgumentsP.unparse(arguments).toString());
 
     final var results = statement.executeQuery();
