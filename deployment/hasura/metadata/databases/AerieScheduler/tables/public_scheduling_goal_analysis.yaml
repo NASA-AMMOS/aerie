@@ -1,3 +1,24 @@
 table:
   name: scheduling_goal_analysis
   schema: public
+object_relationships:
+- name: request
+  using:
+    manual_configuration:
+      remote_table:
+        schema: public
+        name: scheduling_request
+      insertion_order: null
+      column_mapping:
+        analysis_id: analysis_id
+array_relationships:
+- name: satisfying_activities
+  using:
+    manual_configuration:
+      remote_table:
+        schema: public
+        name: scheduling_goal_analysis_satisfying_activities
+      insertion_order: null
+      column_mapping:
+        goal_id: goal_id
+        analysis_id: analysis_id
