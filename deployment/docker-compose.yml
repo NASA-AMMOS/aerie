@@ -6,6 +6,8 @@ services:
     environment:
       AUTH_TYPE: none
       GQL_API_URL: http://localhost:8080/v1/graphql
+      LOG_FILE: console
+      LOG_LEVEL: warn
       PORT: 9000
       POSTGRES_AERIE_MERLIN_DB: aerie_merlin
       POSTGRES_AERIE_SCHEDULER_DB: aerie_scheduler

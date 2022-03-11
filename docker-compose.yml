@@ -28,6 +28,8 @@ services:
       AUTH_TYPE: cam
       AUTH_URL: https://atb-ocio-12b.jpl.nasa.gov:8443/cam-api
       GQL_API_URL: http://localhost:8080/v1/graphql
+      LOG_FILE: console
+      LOG_LEVEL: debug
       NODE_TLS_REJECT_UNAUTHORIZED: "0"
       PORT: 9000
       POSTGRES_AERIE_MERLIN_DB: aerie_merlin
