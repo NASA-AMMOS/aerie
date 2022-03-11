@@ -1,3 +1,22 @@
 table:
   name: expansion_set_to_rule
   schema: public
+array_relationships:
+- name: expansion_sets
+  using:
+    manual_configuration:
+      remote_table:
+        name: expansion_set
+        schema: public
+      insertion_order: null
+      column_mapping:
+        set_id: id
+- name: expansion_rules
+  using:
+    manual_configuration:
+      remote_table:
+        name: expansion_rules
+        schema: public
+      insertion_order: null
+      column_mapping:
+        rule_id: id

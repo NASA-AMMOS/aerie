@@ -4,3 +4,5 @@
 - "!include public_expansion_run.yaml"
 - "!include public_expansion_set_to_rule.yaml"
 - "!include public_expansion_set.yaml"
+- "!include public_expansion_set_rule_view.yaml"
+- "!include public_rule_expansion_set_view.yaml"

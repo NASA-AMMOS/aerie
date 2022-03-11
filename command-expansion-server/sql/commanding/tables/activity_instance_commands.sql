@@ -1,5 +1,6 @@
 create table activity_instance_commands (
   activity_instance_id integer not null,
+  -- TODO: Change this to be the actual simulated instance id (span_id?)
   commands jsonb not null,
   expansion_run_id integer not null,
 

@@ -2,6 +2,7 @@ create table command_dictionary (
   id integer generated always as identity,
 
   command_types text not null,
+  -- TODO: Change command_types to command_typescript_types_fs_path
   mission text not null,
   version text not null,
 
