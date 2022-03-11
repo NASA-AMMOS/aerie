@@ -352,7 +352,7 @@ public final class PostgresPlanRepository implements PlanRepository {
       final Timestamp datasetStart
   ) throws SQLException {
     try (final var createPlanDatasetAction = new CreatePlanDatasetAction(connection)) {
-      return createPlanDatasetAction.apply(planId, planStart, datasetStart);
+      return createPlanDatasetAction.apply(planId.id(), planStart, datasetStart);
     }
   }
 
@@ -363,7 +363,7 @@ public final class PostgresPlanRepository implements PlanRepository {
       final Timestamp planStart
   ) throws SQLException {
     try (final var associatePlanDatasetAction = new AssociatePlanDatasetAction(connection)) {
-      return associatePlanDatasetAction.apply(planId, datasetId, planStart);
+      return associatePlanDatasetAction.apply(planId.id(), datasetId, planStart);
     }
   }
 
