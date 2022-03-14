@@ -1,13 +1,17 @@
-import express, {Application, NextFunction, Request, Response} from "express";
-import bodyParser from "body-parser";
-import {GraphQLClient} from "graphql-request";
-import * as ampcs from "@nasa-jpl/aerie-ampcs";
+import express, {Application, NextFunction, Request, Response} from 'express';
+import bodyParser from 'body-parser';
+import DataLoader from 'dataloader';
+import { GraphQLClient } from 'graphql-request';
+import * as ampcs from '@nasa-jpl/aerie-ampcs';
 import getLogger from "./utils/logger.js";
-import {getEnv} from "./env.js";
-import {DbExpansion} from "./db.js";
-import {processDictionary} from "./lib/CommandTypeCodegen.js";
-import {getActivityTypescript} from "./lib/getActivityTypescript.js";
-import {getCommandTypescriptTypes} from "./lib/getCommandTypescriptTypes.js";
+import { getEnv } from './env.js';
+import { DbExpansion } from './db.js';
+import { processDictionary } from './lib/codegen/CommandTypeCodegen.js';
+import { generateTypescriptForGraphQLActivitySchema } from './lib/codegen/ActivityTypescriptCodegen.js';
+import { InferredDataloader } from './lib/batchLoaders/index.js';
+import { commandDictionaryTypescriptBatchLoader } from './lib/batchLoaders/commandDictionaryTypescriptBatchLoader.js';
+import { activitySchemaBatchLoader } from './lib/batchLoaders/activitySchemaBatchLoader.js';
+import { simulatedActivityInstanceBatchLoader } from './lib/batchLoaders/simulatedActivityInstanceBatchLoader.js';
 
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
 
@@ -16,7 +20,25 @@ app.use(bodyParser.json({ limit: '25mb' }));
 
 DbExpansion.init();
 const db = DbExpansion.getDb();
-const graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL);
+
+type Context = {
+  commandTypescriptDataLoader: InferredDataloader<typeof commandDictionaryTypescriptBatchLoader>,
+  activitySchemaDataLoader: InferredDataloader<typeof activitySchemaBatchLoader>,
+  simulatedActivityInstanceDataLoader: InferredDataloader<typeof simulatedActivityInstanceBatchLoader>,
+};
+
+app.use(async(req: Request, res: Response, next: NextFunction) => {
+  const graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL);
+
+  const context: Context = {
+    commandTypescriptDataLoader: new DataLoader(commandDictionaryTypescriptBatchLoader({db})),
+    activitySchemaDataLoader: new DataLoader(activitySchemaBatchLoader({graphqlClient})),
+    simulatedActivityInstanceDataLoader: new DataLoader(simulatedActivityInstanceBatchLoader({graphqlClient})),
+  };
+
+  res.locals.context = context;
+  return next();
+});
 
 const logger = getLogger("app");
 
@@ -117,8 +139,10 @@ app.post('/put-expansion-set', async (req, res) => {
 });
 
 app.post("/get-command-typescript", async (req, res) => {
-  const commandDictionaryId: string = req.body.input.commandDictionaryId;
-  const commandTypescript = await getCommandTypescriptTypes(db, parseInt(commandDictionaryId, 10));
+  const context: Context = res.locals.context;
+
+  const commandDictionaryId = req.body.input.commandDictionaryId as number;
+  const commandTypescript = await context.commandTypescriptDataLoader.load({dictionaryId: commandDictionaryId});
   const commandTypescriptBase64 = Buffer.from(commandTypescript).toString("base64");
 
   res.status(200).json({
@@ -128,10 +152,13 @@ app.post("/get-command-typescript", async (req, res) => {
 });
 
 app.post("/get-activity-typescript", async (req, res) => {
-  const missionModelId = req.body.input.missionModelId as string;
+  const context: Context = res.locals.context;
+
+  const missionModelId = req.body.input.missionModelId as number;
   const activityTypeName = req.body.input.activityTypeName as string;
 
-  const activityTypescript = await getActivityTypescript(graphqlClient, parseInt(missionModelId, 10), activityTypeName);
+  const activitySchema = await context.activitySchemaDataLoader.load({missionModelId, activityTypeName });
+  const activityTypescript = generateTypescriptForGraphQLActivitySchema(activitySchema);
   const activityTypescriptBase64 = Buffer.from(activityTypescript).toString("base64");
 
   res.status(200).json({
