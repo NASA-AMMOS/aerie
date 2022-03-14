@@ -19,9 +19,10 @@ type Mutation {
 
 type Mutation{
   createExpansionSet (
-  commandDictionaryId: Int!,
-  missionModelId: Int!,
-  expansionIds: [Int!]): ExpansionSetResponse
+    commandDictionaryId: Int!,
+    missionModelId: Int!,
+    expansionIds: [Int!]!
+  ): ExpansionSetResponse
 }
 
 type Query {
@@ -132,7 +133,7 @@ type CommandDictionaryResponse {
 }
 
 type ExpansionSetResponse {
-  expansionSetID: Int!
+  id: Int!
 }
 
 type AddCommandExpansionResponse {

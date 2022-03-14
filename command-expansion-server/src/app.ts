@@ -1,9 +1,6 @@
-import util from "util";
-
 import express, { Application, Request, Response, NextFunction } from "express";
 import bodyParser from "body-parser";
 import { GraphQLClient } from "graphql-request";
-import Ajv from "ajv";
 
 import { getEnv } from "./env.js";
 import { DbExpansion } from "./packages/db/db.js";
@@ -11,8 +8,6 @@ import * as ampcs from "@nasa-jpl/aerie-ampcs";
 import { processDictionary } from "./packages/lib/CommandTypeCodegen.js";
 import { getActivityTypescript } from "./getActivityTypescript.js";
 import { getCommandTypescriptTypes } from "./getCommandTypescriptTypes.js";
-import { ErrorWithStatusCode } from "./utils/ErrorWithStatusCode.js";
-import { expansionSetSchema } from "./schemas/expansion-set.js";
 
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
 
@@ -22,9 +17,6 @@ app.use(bodyParser.json({ limit: "25mb" }));
 DbExpansion.init();
 const db = DbExpansion.getDb();
 const graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL);
-
-const ajv = new Ajv();
-const expansionConfigValidator = ajv.compile(expansionSetSchema);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Aerie Command Service");
@@ -91,17 +83,10 @@ app.post("/put-expansion", async (req, res) => {
 });
 
 app.post("/put-expansion-set", async (req, res) => {
-  if (!expansionConfigValidator(req.body.input)) {
-    res.status(400).json({
-      message: `PUT /expansion-set: Invalid request body: ${JSON.stringify(req.body.input)}\n${util.formatWithOptions(
-        { depth: Infinity },
-        expansionConfigValidator.errors
-      )}`,
-    });
-    return;
-  }
+  const commandDictionaryId = req.body.input.commandDictionaryId as number;
+  const missionModelId = req.body.input.missionModelId as number;
+  const expansionIds = req.body.input.expansionIds as number[];
 
-  const { commandDictionaryId, missionModelId, expansionIds } = req.body.input;
   const { rows } = await db.query(`
     WITH expansion_set_id AS (
       INSERT INTO expansion_set (command_dict_id, mission_model_id)
@@ -121,11 +106,11 @@ app.post("/put-expansion-set", async (req, res) => {
   ]);
 
   if (rows.length < 1) {
-    throw new Error(`PUT /expansion-set: No expansion set was inserted in the database`);
+    throw new Error(`PUT /put-expansion-set: No expansion set was inserted in the database`);
   }
   const id = rows[0].id;
-  console.log(`PUT /expansion-set: Updated expansion set in the database: id=${id}`);
-  res.status(200).json({ expansionSetID: id });
+  console.log(`PUT /put-expansion-set: Updated expansion set in the database: id=${id}`);
+  res.status(200).json({ id });
   return;
 });
 
