@@ -46,7 +46,7 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Aerie Command Service");
 });
 
-app.post("/put-dictionary", async (req, res) => {
+app.post('/put-dictionary', async (req, res) => {
   const base64Dictionary: string = req.body.input.dictionary;
   const dictionary = Buffer.from(base64Dictionary, "base64").toString("utf8");
   logger.info(`Dictionary received`);
@@ -138,12 +138,12 @@ app.post('/put-expansion-set', async (req, res) => {
   return;
 });
 
-app.post("/get-command-typescript", async (req, res) => {
+app.post('/get-command-typescript', async (req, res) => {
   const context: Context = res.locals.context;
 
   const commandDictionaryId = req.body.input.commandDictionaryId as number;
   const commandTypescript = await context.commandTypescriptDataLoader.load({dictionaryId: commandDictionaryId});
-  const commandTypescriptBase64 = Buffer.from(commandTypescript).toString("base64");
+  const commandTypescriptBase64 = Buffer.from(commandTypescript).toString('base64');
 
   res.status(200).json({
     typescript: commandTypescriptBase64,
@@ -151,7 +151,7 @@ app.post("/get-command-typescript", async (req, res) => {
   return;
 });
 
-app.post("/get-activity-typescript", async (req, res) => {
+app.post('/get-activity-typescript', async (req, res) => {
   const context: Context = res.locals.context;
 
   const missionModelId = req.body.input.missionModelId as number;
@@ -159,7 +159,7 @@ app.post("/get-activity-typescript", async (req, res) => {
 
   const activitySchema = await context.activitySchemaDataLoader.load({missionModelId, activityTypeName });
   const activityTypescript = generateTypescriptForGraphQLActivitySchema(activitySchema);
-  const activityTypescriptBase64 = Buffer.from(activityTypescript).toString("base64");
+  const activityTypescriptBase64 = Buffer.from(activityTypescript).toString('base64');
 
   res.status(200).json({
     typescript: activityTypescriptBase64,

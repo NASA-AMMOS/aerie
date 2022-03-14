@@ -1,7 +1,7 @@
 import type {Pool} from 'pg';
 import fs from 'fs';
 import {ErrorWithStatusCode} from '../../utils/ErrorWithStatusCode.js';
-import type {BatchLoader} from "./index.js";
+import type {BatchLoader} from './index.js';
 
 
 export const commandDictionaryTypescriptBatchLoader: BatchLoader<

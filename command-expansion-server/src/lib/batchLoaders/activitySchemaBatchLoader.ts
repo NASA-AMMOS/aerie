@@ -1,6 +1,6 @@
 import {ErrorWithStatusCode} from '../../utils/ErrorWithStatusCode.js';
-import type {BatchLoader} from "./index.js";
-import {gql, GraphQLClient} from "graphql-request";
+import type {BatchLoader} from './index.js';
+import {gql, GraphQLClient} from 'graphql-request';
 
 
 export const activitySchemaBatchLoader: BatchLoader<
@@ -43,14 +43,14 @@ export const activitySchemaBatchLoader: BatchLoader<
 }
 
 export enum SchemaTypes {
-  Int = "int",
-  Real = "real",
-  Duration = "duration",
-  Boolean = "boolean",
-  String = "string",
-  Series = "series",
-  Struct = "struct",
-  Variant = "variant",
+  Int = 'int',
+  Real = 'real',
+  Duration = 'duration',
+  Boolean = 'boolean',
+  String = 'string',
+  Series = 'series',
+  Struct = 'struct',
+  Variant = 'variant',
 }
 
 export type Schema =
