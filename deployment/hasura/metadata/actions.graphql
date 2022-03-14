@@ -17,6 +17,14 @@ type Mutation {
   ): AddCommandExpansionResponse
 }
 
+type Mutation{
+  createExpansionSet (
+    commandDictionaryId: Int!,
+    missionModelId: Int!,
+    expansionIds: [Int!]!
+  ): ExpansionSetResponse
+}
+
 type Query {
   getModelEffectiveArguments(
     missionModelId: ID!
@@ -121,6 +129,10 @@ type SchedulingResponse {
 }
 
 type CommandDictionaryResponse {
+  id: ID!
+}
+
+type ExpansionSetResponse {
   id: Int!
 }
 

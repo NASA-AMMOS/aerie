@@ -8,12 +8,11 @@ import * as ampcs from "@nasa-jpl/aerie-ampcs";
 import { processDictionary } from "./packages/lib/CommandTypeCodegen.js";
 import { getActivityTypescript } from "./getActivityTypescript.js";
 import { getCommandTypescriptTypes } from "./getCommandTypescriptTypes.js";
-import { ErrorWithStatusCode } from "./utils/ErrorWithStatusCode.js";
 
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
 
 const app: Application = express();
-app.use(bodyParser.json({ limit: '25mb' }));
+app.use(bodyParser.json({ limit: "25mb" }));
 
 DbExpansion.init();
 const db = DbExpansion.getDb();
@@ -60,18 +59,18 @@ app.post("/put-dictionary", async (req, res) => {
   return;
 });
 
-app.post('/put-expansion', async (req, res) => {
+app.post("/put-expansion", async (req, res) => {
   const activityTypeName = req.body.input.activityTypeName as string;
   const expansionLogicBase64 = req.body.input.expansionLogic as string;
 
-  const { rows } = await db.query(`
+  const { rows } = await db.query(
+    `
     INSERT INTO expansion_rules (activity_type, expansion_logic)
     VALUES ($1, $2)
     RETURNING id;
-  `, [
-    activityTypeName,
-    expansionLogicBase64,
-  ]);
+  `,
+    [activityTypeName, expansionLogicBase64]
+  );
 
   if (rows.length < 1) {
     throw new Error(`POST /put-expansion: No expansion was updated in the database`);
@@ -83,8 +82,35 @@ app.post('/put-expansion', async (req, res) => {
   return;
 });
 
-app.put('/expansion-set', async (req, res) => {
-  res.status(501).send('PUT /expansion-set: Not implemented');
+app.post("/put-expansion-set", async (req, res) => {
+  const commandDictionaryId = req.body.input.commandDictionaryId as number;
+  const missionModelId = req.body.input.missionModelId as number;
+  const expansionIds = req.body.input.expansionIds as number[];
+
+  const { rows } = await db.query(`
+    WITH expansion_set_id AS (
+      INSERT INTO expansion_set (command_dict_id, mission_model_id)
+        VALUES ($1, $2)
+        RETURNING id
+    )
+    INSERT INTO expansion_set_to_rule (set_id, rule_id)
+      SELECT * FROM unnest(
+        array_fill((SELECT id FROM expansion_set_id), ARRAY[array_length($3::int[], 1)]),
+        $3::int[]
+      )
+    RETURNING (SELECT id FROM expansion_set_id);
+  `, [
+    commandDictionaryId,
+    missionModelId,
+    expansionIds,
+  ]);
+
+  if (rows.length < 1) {
+    throw new Error(`PUT /put-expansion-set: No expansion set was inserted in the database`);
+  }
+  const id = rows[0].id;
+  console.log(`PUT /put-expansion-set: Updated expansion set in the database: id=${id}`);
+  res.status(200).json({ id });
   return;
 });
 
@@ -114,12 +140,12 @@ app.post("/get-activity-typescript", async (req, res) => {
 
 app.get("/commands/:expansionRunId(\\d+)/:activityInstanceId(\\d+)", async (req, res) => {
   // Pull existing expanded commands for an activity instance of an expansion run
-  res.status(501).send('GET /commands: Not implemented');
+  res.status(501).send("GET /commands: Not implemented");
   return;
 });
 
-app.post('/expand-all-activity-instances/:simulationId(\\d+)/:expansionSetId(\\d+)', async (req, res) => {
-  res.status(501).send('POST /expand-all-activity-instances: Not implemented');
+app.post("/expand-all-activity-instances/:simulationId(\\d+)/:expansionSetId(\\d+)", async (req, res) => {
+  res.status(501).send("POST /expand-all-activity-instances: Not implemented");
   return;
 });
 
