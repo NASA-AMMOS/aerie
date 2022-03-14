@@ -5,6 +5,8 @@ import com.impossibl.postgres.api.jdbc.PGNotificationListener;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.DatabaseException;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.ListenSimulationStatusAction;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresSimulationNotificationPayload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.json.Json;
 import javax.sql.DataSource;
@@ -15,6 +17,8 @@ import java.util.concurrent.BlockingQueue;
 import static gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresNotificationJsonParsers.postgresSimulationNotificationP;
 
 public class ListenSimulationCapability {
+  private static final Logger logger = LoggerFactory.getLogger(ListenSimulationCapability.class);
+
   private final DataSource dataSource;
   private final BlockingQueue<PostgresSimulationNotificationPayload> notificationQueue;
 
@@ -40,7 +44,7 @@ public class ListenSimulationCapability {
 
     @Override
     public void notification(int processId, String channelName, String payload){
-      System.out.println("Received PSQL Notification: " + processId + ", " + channelName + ", " + payload);
+      logger.info("Received PSQL Notification: {}, {}, {}", processId, channelName, payload);
       final var jsonValue = Json.createReader(new StringReader(payload)).readValue();
       final var notificationPayload = postgresSimulationNotificationP
           .parse(jsonValue)
