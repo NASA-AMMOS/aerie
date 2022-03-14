@@ -1,14 +1,13 @@
-import express, { Application, Request, Response, NextFunction } from "express";
+import express, {Application, NextFunction, Request, Response} from "express";
 import bodyParser from "body-parser";
-import { GraphQLClient } from "graphql-request";
-
-import { getEnv } from "./env.js";
-import { DbExpansion } from "./packages/db/db.js";
+import {GraphQLClient} from "graphql-request";
 import * as ampcs from "@nasa-jpl/aerie-ampcs";
-import { processDictionary } from "./packages/lib/CommandTypeCodegen.js";
-import { getActivityTypescript } from "./getActivityTypescript.js";
-import { getCommandTypescriptTypes } from "./getCommandTypescriptTypes.js";
 import getLogger from "./utils/logger.js";
+import {getEnv} from "./env.js";
+import {DbExpansion} from "./db.js";
+import {processDictionary} from "./lib/CommandTypeCodegen.js";
+import {getActivityTypescript} from "./lib/getActivityTypescript.js";
+import {getCommandTypescriptTypes} from "./lib/getCommandTypescriptTypes.js";
 
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
 
@@ -152,6 +151,7 @@ app.post('/expand-all-activity-instances/:simulationId(\\d+)/:expansionSetId(\\d
   return;
 });
 
+// General error handler
 app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
   logger.error(err);
   res.status(err.status ?? err.statusCode ?? 500).send(err.message);

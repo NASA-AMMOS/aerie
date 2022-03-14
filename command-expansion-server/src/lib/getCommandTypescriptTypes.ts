@@ -1,6 +1,6 @@
 import type {Pool} from 'pg';
 import fs from 'fs';
-import { ErrorWithStatusCode } from './utils/ErrorWithStatusCode.js';
+import { ErrorWithStatusCode } from '../utils/ErrorWithStatusCode.js';
 
 export async function getCommandTypescriptTypes(db: Pool, dictionaryId: number): Promise<string> {
 

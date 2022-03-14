@@ -4,7 +4,7 @@
 import type * as ampcs from "@nasa-jpl/aerie-ampcs";
 import fs from "fs";
 import reservedWords from "reserved-words";
-import { getEnv } from "../../env.js";
+import { getEnv } from "../env.js";
 
 const typescriptReservedWords = ["boolean", "string", "number"];
 
@@ -177,8 +177,8 @@ function mapArgumentType(argument: ampcs.FswCommandArgument, enumMap: ampcs.Enum
       // boolean enum shouldn't be "TRUE | FALSE" but of `boolean` type
       if (
         enumMap[argument.enum_name].values.length === 2 &&
-        enumMap[argument.enum_name].values.some(({ symbol, numeric }) => symbol.toLocaleLowerCase() === "true") &&
-        enumMap[argument.enum_name].values.some(({ symbol, numeric }) => symbol.toLocaleLowerCase() === "false")
+        enumMap[argument.enum_name].values.some(({ symbol }) => symbol.toLocaleLowerCase() === "true") &&
+        enumMap[argument.enum_name].values.some(({ symbol }) => symbol.toLocaleLowerCase() === "false")
       ) {
         return "boolean";
       } else {

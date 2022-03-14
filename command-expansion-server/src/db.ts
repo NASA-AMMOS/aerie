@@ -1,7 +1,7 @@
 import type { Pool, PoolConfig } from "pg";
 import pg from "pg";
-import { getEnv } from "../../env.js";
-import getLogger from "../../utils/logger.js";
+import getLogger from "./utils/logger.js";
+import { getEnv } from "./env.js";
 
 const { Pool: DbPool } = pg;
 
