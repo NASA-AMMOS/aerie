@@ -12,8 +12,10 @@ This document provides detailed information about environment variables for each
 ## Aerie Gateway
 
 | Name                          | Description                                                | Type     | Default                          |
-| ----------------------------- | ---------------------------------------------------------- | -------- | -------------------------------- |
+|-------------------------------|------------------------------------------------------------| -------- |----------------------------------|
 | `GQL_API_URL`                 | URL of GraphQL API for the GraphQL Playground.             | `string` | http://localhost:8080/v1/graphql |
+| `LOG_FILE`                    | Either an output filepath to log to, or 'console'.         | `string` | console                          |
+| `LOG_LEVEL`                   | Logging level for filtering logs.                          | `string` | warn                             |
 | `PORT`                        | Port the Gateway server listens on.                        | `number` | 9000                             |
 | `POSTGRES_AERIE_MERLIN_DB`    | Name of Merlin Postgres database.                          | `string` | aerie_merlin                     |
 | `POSTGRES_AERIE_SCHEDULER_DB` | Name of scheduler Postgres database.                       | `string` | aerie_scheduler                  |
