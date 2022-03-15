@@ -50,3 +50,6 @@ build
 
 # jqwik property-based testing database
 .jqwik-database
+
+# Ignore node test report
+test-report.html

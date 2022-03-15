@@ -1,11 +1,25 @@
 import { globalDeclaration, indent, interfaceDeclaration } from './CodegenHelpers.js';
 import {GraphQLActivitySchema, Schema, SchemaTypes} from '../batchLoaders/activitySchemaBatchLoader.js';
 
+const commonProperties =
+`readonly duration: Temporal.Duration;
+readonly startOffset: Temporal.Duration;`;
+
 export function generateTypescriptForGraphQLActivitySchema(activitySchema: GraphQLActivitySchema): string {
-  const propertyDeclarations = Object.entries(activitySchema.parameters)
+  const activityTypeAlias = `type ActivityType = ${activitySchema.name};`;
+
+  const activityTypeDeclaration = `readonly type: '${activitySchema.name}';`
+
+  const argumentDeclarations = Object.entries(activitySchema.parameters)
     .map(([parameterName, parameterValue]) => `readonly ${parameterName}: ${convertSchemaType(parameterValue.schema)};`)
     .join('\n');
-  const activityTypeAlias = `type ActivityType = ${activitySchema.name};`;
+
+  const argumentsDeclaration = `readonly arguments: {\n${indent(argumentDeclarations)}\n}`;
+  const computedAttributesDeclaration = `readonly computed: ${convertSchemaType(activitySchema.computed_attributes_value_schema)};`;
+
+  const attributesDeclaration = `readonly attributes: {\n${indent([argumentsDeclaration, computedAttributesDeclaration].join('\n'))}\n}`;
+
+  const propertyDeclarations = [activityTypeDeclaration, commonProperties, attributesDeclaration].join('\n');
 
   return globalDeclaration(`${interfaceDeclaration(activitySchema.name, propertyDeclarations)}\n${activityTypeAlias}`);
 }
@@ -15,8 +29,9 @@ function convertSchemaType(schema: Schema): string {
   switch (schema.type) {
     case SchemaTypes.Int:
     case SchemaTypes.Real:
-    case SchemaTypes.Duration:
       return 'number';
+    case SchemaTypes.Duration:
+      return 'Temporal.Duration';
     case SchemaTypes.Boolean:
       return 'boolean';
     case SchemaTypes.String:
@@ -30,6 +45,9 @@ function convertSchemaType(schema: Schema): string {
           .join('\n')
       );
     case SchemaTypes.Variant:
+      if (schema.variants.length === 1 && schema.variants[0].key === 'VOID') {
+        return 'null';
+      }
       return `(${schema.variants.map((variant) => `'${variant.label}'`).join(' | ')})`;
     default:
       return 'unknown';

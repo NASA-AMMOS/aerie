@@ -5,6 +5,7 @@ export default {
   testRunner: 'jest-circus/runner',
   // testRegex: "(/test/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
   testRegex: '((\\.|/)(test|spec))\\.(jsx?|tsx?)$',
+  testPathIgnorePatterns: ['/node_modules/', '/build/'],
   coverageReporters: ['html'],
   setupFiles: ['dotenv/config'],
   globalSetup: "./jestGlobalSetup.js",

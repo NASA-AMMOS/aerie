@@ -8,27 +8,25 @@ export const activitySchemaBatchLoader: BatchLoader<
     GraphQLActivitySchema,
   { graphqlClient: GraphQLClient }
 > = opts => async keys => {
-  const query = gql`
+  const {activity_type} = await opts.graphqlClient.request<{
+    activity_type: (GraphQLActivitySchema & { model_id: number })[]
+  }>(gql`
     query GetActivitySchema {
-       activity_type(where: {
-         _or: [
-           ${keys.map(key => `{
+      activity_type(where: {
+        _or: [
+          ${keys.map(key => `{
               model_id: { _eq: ${key.missionModelId} },
               name: { _eq: "${key.activityTypeName}" }
              }`).join(', ')}
-         ]
-       }) {
-         name
-         parameters
-         model_id
-       }
-     }
-  `;
-  const response = await opts.graphqlClient.request<{
-    activity_type: (GraphQLActivitySchema & { model_id: number })[]
-  }>(query);
-
-  const activity_type = response.activity_type;
+        ]
+      }) {
+        name
+        parameters
+        computed_attributes_value_schema
+        model_id
+      }
+    }
+  `);
 
   return Promise.all(keys.map(async ({ missionModelId, activityTypeName }) => {
     const activitySchema = activity_type.find(activitySchema => (
@@ -97,6 +95,7 @@ interface GraphQLActivityParameter {
 
 export interface GraphQLActivitySchema {
   name: string;
-  parameters: GraphQLActivityParameter[];
+  parameters: {[key: string]: GraphQLActivityParameter};
   requiredParameters: string[];
+  computed_attributes_value_schema: Schema;
 }

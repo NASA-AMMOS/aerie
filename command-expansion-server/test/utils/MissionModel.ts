@@ -8,7 +8,7 @@ export async function uploadMissionModel(graphqlClient: GraphQLClient): Promise<
   /*
    * Insert a mission model
    */
-  const bananaNationMissionModelUrl = new URL('../../../examples/banananation/build/libs/banananation-0.10.0-SNAPSHOT.jar', import.meta.url);
+  const bananaNationMissionModelUrl = new URL('../inputs/banananation-0.10.0-SNAPSHOT.jar', import.meta.url);
 
   const formData = new FormData();
   formData.append('file', fs.createReadStream(bananaNationMissionModelUrl.pathname));

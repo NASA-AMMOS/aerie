@@ -1,27 +1,36 @@
-import type {Pool} from 'pg';
 import fs from 'fs';
 import {ErrorWithStatusCode} from '../../utils/ErrorWithStatusCode.js';
 import type {BatchLoader} from './index.js';
-
+import { gql, GraphQLClient } from 'graphql-request';
 
 export const commandDictionaryTypescriptBatchLoader: BatchLoader<
   { dictionaryId: number },
   string,
-  { db: Pool }
+  { graphqlClient: GraphQLClient }
 > = opts => async keys => {
-  const {rows} = await opts.db.query(`
-    SELECT id, command_types
-    FROM command_dictionary
-    WHERE id IN $1;
-  `, [
-    keys.map(key => key.dictionaryId)
-  ]);
+
+  const {command_dictionary} = await opts.graphqlClient.request<{
+    command_dictionary: {
+      id: number,
+      command_types_typescript_path: string,
+    }[]
+  }>(gql`
+    query GetCommandDictionaries($dictionaryIds: [Int!]!) {
+      command_dictionary(where: {id: {_in: $dictionaryIds}}) {
+        id
+        command_types_typescript_path
+      }
+    }
+  `, {
+    dictionaryIds: keys.map(key => key.dictionaryId)
+  });
 
   return Promise.all(keys.map(async ({ dictionaryId }) => {
-    const row = rows.find(row => row.id === dictionaryId);
-    if (row === undefined) {
+
+    const dict = command_dictionary.find( ({id}) => id.toString() === dictionaryId.toString());
+    if (dict === undefined) {
       return new ErrorWithStatusCode(`No dictionary with id: ${dictionaryId}`, 404);
     }
-    return fs.promises.readFile(row.command_types, 'utf8');
+    return fs.promises.readFile(dict.command_types_typescript_path, 'utf8');
   }));
 }

@@ -1,9 +1,12 @@
-import express, {Application, NextFunction, Request, Response} from 'express';
+import './polyfills.js';
+import express, { Application, NextFunction, Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import DataLoader from 'dataloader';
+import ts from 'typescript';
 import { GraphQLClient } from 'graphql-request';
 import * as ampcs from '@nasa-jpl/aerie-ampcs';
 import getLogger from "./utils/logger.js";
+import {executeUserCode} from '@nasa-jpl/aerie-ts-user-code-runner';
 import { getEnv } from './env.js';
 import { DbExpansion } from './db.js';
 import { processDictionary } from './lib/codegen/CommandTypeCodegen.js';
@@ -12,6 +15,10 @@ import { InferredDataloader } from './lib/batchLoaders/index.js';
 import { commandDictionaryTypescriptBatchLoader } from './lib/batchLoaders/commandDictionaryTypescriptBatchLoader.js';
 import { activitySchemaBatchLoader } from './lib/batchLoaders/activitySchemaBatchLoader.js';
 import { simulatedActivityInstanceBatchLoader } from './lib/batchLoaders/simulatedActivityInstanceBatchLoader.js';
+import { mapGraphQLActivityInstance } from './lib/mapGraphQLActivityInstance.js';
+import { isRejected } from './utils/typeguards.js';
+import {expansionSetBatchLoader} from "./lib/batchLoaders/expansionSetBatchLoader.js";
+
 
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
 
@@ -25,15 +32,17 @@ type Context = {
   commandTypescriptDataLoader: InferredDataloader<typeof commandDictionaryTypescriptBatchLoader>,
   activitySchemaDataLoader: InferredDataloader<typeof activitySchemaBatchLoader>,
   simulatedActivityInstanceDataLoader: InferredDataloader<typeof simulatedActivityInstanceBatchLoader>,
+  expansionSetDataLoader: InferredDataloader<typeof expansionSetBatchLoader>,
 };
 
 app.use(async(req: Request, res: Response, next: NextFunction) => {
   const graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL);
 
   const context: Context = {
-    commandTypescriptDataLoader: new DataLoader(commandDictionaryTypescriptBatchLoader({db})),
+    commandTypescriptDataLoader: new DataLoader(commandDictionaryTypescriptBatchLoader({graphqlClient})),
     activitySchemaDataLoader: new DataLoader(activitySchemaBatchLoader({graphqlClient})),
     simulatedActivityInstanceDataLoader: new DataLoader(simulatedActivityInstanceBatchLoader({graphqlClient})),
+    expansionSetDataLoader: new DataLoader(expansionSetBatchLoader({graphqlClient})),
   };
 
   res.locals.context = context;
@@ -167,21 +176,79 @@ app.post('/get-activity-typescript', async (req, res) => {
   return;
 });
 
-app.get("/commands/:expansionRunId(\\d+)/:activityInstanceId(\\d+)", async (req, res) => {
-  // Pull existing expanded commands for an activity instance of an expansion run
-  res.status(501).send('GET /commands: Not implemented');
-  return;
-});
+app.post('/expand-all-activity-instances', async (req, res) => {
+  const context: Context = res.locals.context;
 
-app.post('/expand-all-activity-instances/:simulationId(\\d+)/:expansionSetId(\\d+)', async (req, res) => {
-  res.status(501).send('POST /expand-all-activity-instances: Not implemented');
-  return;
+  console.log(`input = ${JSON.stringify(req.body.input)}`);
+  const expansionSetId = req.body.input.expansionSetId as number;
+  const simulationDatasetId = req.body.input.simulationDatasetId as number;
+  const commandTypes: string = '';
+
+  const expansionSet = await context.expansionSetDataLoader.load({expansionSetId});
+  const activityInstances = await context.simulatedActivityInstanceDataLoader.load({simulationDatasetId});
+  // console.log(`expansion set data = ${JSON.stringify(expansionSet)}`);
+
+  const mappedActivityInstances = await Promise.all(activityInstances.map(async activityInstance => {
+    const activitySchema = await context.activitySchemaDataLoader.load({
+      missionModelId: expansionSet.missionModel.id,
+      activityTypeName: activityInstance.type,
+    });
+    return {
+      activityTypeName: activityInstance.type,
+      instance: mapGraphQLActivityInstance(activityInstance, activitySchema),
+      schema: activitySchema,
+    };
+  }));
+
+  console.log(`Expanding ${activityInstances.length} activity instances`);
+
+  const results = await Promise.allSettled(mappedActivityInstances.map(async mappedActivityInstance => {
+    console.log(`Looking for activity type name: ${mappedActivityInstance.activityTypeName}`);
+    expansionSet.expansionRules.forEach(expansionRule => console.log(`Finding expansion rule with activity type name: ${expansionRule.activityType}`));
+    const expansion = expansionSet.expansionRules.find(expansionRule => expansionRule.activityType === mappedActivityInstance.activityTypeName);
+    if (expansion !== undefined) {
+      console.log("HIT 1");
+
+      const activityTypes = generateTypescriptForGraphQLActivitySchema(mappedActivityInstance.schema);
+      const result = await executeUserCode(
+          expansion.expansionLogic,
+          [{
+            activity: mappedActivityInstance.instance,
+          }],
+          'Command[] | Command | null',
+          ['{ activity: ActivityType }'],
+          3000,
+          [
+            ts.createSourceFile('command-types.ts', commandTypes, ts.ScriptTarget.ES2021),
+            ts.createSourceFile('activity-types.ts', activityTypes, ts.ScriptTarget.ES2021),
+          ],
+      );
+
+      console.log("HIT 2");
+      const commands = result.unwrap();
+      console.log(`commands = ${JSON.stringify(commands)}`);
+      // Store results in the database
+
+    }
+  }));
+
+  const errors = results.filter(isRejected).map(result => result.reason);
+
+  return res.json({
+    errors,
+  });
 });
 
 // General error handler
+<<<<<<< HEAD
 app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
   logger.error(err);
+=======
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error(err);
+>>>>>>> 7abed7eb2 ([WIP] Getting evaluation put together)
   res.status(err.status ?? err.statusCode ?? 500).send(err.message);
+  return next();
 });
 
 app.listen(PORT, () => {
