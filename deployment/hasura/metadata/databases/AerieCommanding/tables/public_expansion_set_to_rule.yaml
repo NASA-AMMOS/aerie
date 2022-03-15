@@ -15,7 +15,7 @@ array_relationships:
   using:
     manual_configuration:
       remote_table:
-        name: expansion_rules
+        name: expansion_rule
         schema: public
       insertion_order: null
       column_mapping:

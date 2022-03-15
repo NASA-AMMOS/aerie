@@ -1,5 +1,5 @@
 table:
-  name: expansion_rules
+  name: expansion_rule
   schema: public
 array_relationships:
 - name: expansion_sets

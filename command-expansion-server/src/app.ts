@@ -12,7 +12,7 @@ import { getCommandTypescriptTypes } from "./getCommandTypescriptTypes.js";
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
 
 const app: Application = express();
-app.use(bodyParser.json({ limit: "25mb" }));
+app.use(bodyParser.json({ limit: '25mb' }));
 
 DbExpansion.init();
 const db = DbExpansion.getDb();
@@ -59,18 +59,18 @@ app.post("/put-dictionary", async (req, res) => {
   return;
 });
 
-app.post("/put-expansion", async (req, res) => {
+app.post('/put-expansion', async (req, res) => {
   const activityTypeName = req.body.input.activityTypeName as string;
   const expansionLogicBase64 = req.body.input.expansionLogic as string;
 
-  const { rows } = await db.query(
-    `
-    INSERT INTO expansion_rules (activity_type, expansion_logic)
+  const { rows } = await db.query(`
+    INSERT INTO expansion_rule (activity_type, expansion_logic)
     VALUES ($1, $2)
     RETURNING id;
-  `,
-    [activityTypeName, expansionLogicBase64]
-  );
+  `, [
+    activityTypeName,
+    expansionLogicBase64,
+  ]);
 
   if (rows.length < 1) {
     throw new Error(`POST /put-expansion: No expansion was updated in the database`);
@@ -82,7 +82,7 @@ app.post("/put-expansion", async (req, res) => {
   return;
 });
 
-app.post("/put-expansion-set", async (req, res) => {
+app.post('/put-expansion-set', async (req, res) => {
   const commandDictionaryId = req.body.input.commandDictionaryId as number;
   const missionModelId = req.body.input.missionModelId as number;
   const expansionIds = req.body.input.expansionIds as number[];
@@ -140,12 +140,12 @@ app.post("/get-activity-typescript", async (req, res) => {
 
 app.get("/commands/:expansionRunId(\\d+)/:activityInstanceId(\\d+)", async (req, res) => {
   // Pull existing expanded commands for an activity instance of an expansion run
-  res.status(501).send("GET /commands: Not implemented");
+  res.status(501).send('GET /commands: Not implemented');
   return;
 });
 
-app.post("/expand-all-activity-instances/:simulationId(\\d+)/:expansionSetId(\\d+)", async (req, res) => {
-  res.status(501).send("POST /expand-all-activity-instances: Not implemented");
+app.post('/expand-all-activity-instances/:simulationId(\\d+)/:expansionSetId(\\d+)', async (req, res) => {
+  res.status(501).send('POST /expand-all-activity-instances: Not implemented');
   return;
 });
 
