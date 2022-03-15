@@ -36,10 +36,10 @@ app.post("/put-dictionary", async (req, res) => {
   console.log(`command-lib generated - path: ${commandDictionaryPath}`);
 
   const sqlExpression = `
-    insert into command_dictionary (command_types, mission, version)
+    insert into command_dictionary (command_types_typescript_path, mission, version)
     values ($1, $2, $3)
     on conflict (mission, version) do update
-    set command_types = $1
+    set command_types_typescript_path = $1
     returning id;
   `;
 
