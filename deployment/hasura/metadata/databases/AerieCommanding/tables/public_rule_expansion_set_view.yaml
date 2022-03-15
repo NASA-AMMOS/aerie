@@ -1,0 +1,13 @@
+table:
+  name: rule_expansion_set_view
+  schema: public
+array_relationships:
+  - name: expansion_rules
+    using:
+      manual_configuration:
+        remote_table:
+          name: expansion_rule
+          schema: public
+        insertion_order: null
+        column_mapping:
+          rule_id: id

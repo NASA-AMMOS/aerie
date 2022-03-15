@@ -1,3 +1,26 @@
 table:
   name: expansion_run
   schema: public
+object_relationships:
+- name: expansion_set
+  using:
+    foreign_key_constraint_on: expansion_set_id
+array_relationships:
+- name: activity_instance_commands
+  using:
+    foreign_key_constraint_on:
+      column: expansion_run_id
+      table:
+        name: activity_instance_commands
+        schema: public
+remote_relationships:
+  - name: simulation_dataset
+    definition:
+      to_source:
+        relationship_type: object
+        source: AerieMerlin
+        table:
+          schema: public
+          name: simulation_dataset
+        field_mapping:
+          simulation_dataset_id: id

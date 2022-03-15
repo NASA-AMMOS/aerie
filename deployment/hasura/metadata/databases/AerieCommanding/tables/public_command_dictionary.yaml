@@ -1,3 +1,11 @@
 table:
   name: command_dictionary
   schema: public
+array_relationships:
+- name: expansion_sets
+  using:
+    foreign_key_constraint_on:
+      column: command_dict_id
+      table:
+        name: expansion_set
+        schema: public
