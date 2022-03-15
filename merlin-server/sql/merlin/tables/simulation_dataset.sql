@@ -1,4 +1,5 @@
 create table simulation_dataset (
+  id integer generated always as identity,
   simulation_id integer not null,
   dataset_id integer null,
 
@@ -18,6 +19,8 @@ create table simulation_dataset (
   reason text null,
   canceled boolean not null default false,
 
+  constraint simulation_dataset_synthetic_key
+    primary key (id),
   constraint simulation_dataset_dataset_has_a_simulation
     unique (dataset_id),
   constraint simulation_dataset_references_simulation
