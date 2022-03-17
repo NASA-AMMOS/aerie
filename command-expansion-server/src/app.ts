@@ -8,6 +8,7 @@ import * as ampcs from "@nasa-jpl/aerie-ampcs";
 import { processDictionary } from "./packages/lib/CommandTypeCodegen.js";
 import { getActivityTypescript } from "./getActivityTypescript.js";
 import { getCommandTypescriptTypes } from "./getCommandTypescriptTypes.js";
+import getLogger from "./utils/logger.js";
 
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
 
@@ -18,6 +19,8 @@ DbExpansion.init();
 const db = DbExpansion.getDb();
 const graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL);
 
+const logger = getLogger("app");
+
 app.get("/", (req: Request, res: Response) => {
   res.send("Aerie Command Service");
 });
@@ -25,15 +28,15 @@ app.get("/", (req: Request, res: Response) => {
 app.post("/put-dictionary", async (req, res) => {
   const base64Dictionary: string = req.body.input.dictionary;
   const dictionary = Buffer.from(base64Dictionary, "base64").toString("utf8");
-  console.log(`Dictionary received`);
+  logger.info(`Dictionary received`);
 
   const parsedDictionary = ampcs.parse(dictionary);
-  console.log(
+  logger.info(
     `Dictionary parsed - version: ${parsedDictionary.header.version}, mission: ${parsedDictionary.header.mission_name}`
   );
 
   const commandDictionaryPath = await processDictionary(parsedDictionary);
-  console.log(`command-lib generated - path: ${commandDictionaryPath}`);
+  logger.info(`command-lib generated - path: ${commandDictionaryPath}`);
 
   const sqlExpression = `
     insert into command_dictionary (command_types_typescript_path, mission, version)
@@ -50,7 +53,7 @@ app.post("/put-dictionary", async (req, res) => {
   ]);
 
   if (rows.length < 1) {
-    console.error(`POST /dictionary: No command dictionary was updated in the database`);
+    logger.error(`POST /dictionary: No command dictionary was updated in the database`);
     res.status(500).send(`POST /dictionary: No command dictionary was updated in the database`);
     return;
   }
@@ -77,7 +80,7 @@ app.post('/put-expansion', async (req, res) => {
   }
 
   const id = rows[0].id;
-  console.log(`POST /put-expansion: Updated expansion in the database: id=${id}`);
+  logger.info(`POST /put-expansion: Updated expansion in the database: id=${id}`);
   res.status(200).json({ id });
   return;
 });
@@ -109,7 +112,7 @@ app.post('/put-expansion-set', async (req, res) => {
     throw new Error(`PUT /put-expansion-set: No expansion set was inserted in the database`);
   }
   const id = rows[0].id;
-  console.log(`PUT /put-expansion-set: Updated expansion set in the database: id=${id}`);
+  logger.info(`PUT /put-expansion-set: Updated expansion set in the database: id=${id}`);
   res.status(200).json({ id });
   return;
 });
@@ -150,10 +153,10 @@ app.post('/expand-all-activity-instances/:simulationId(\\d+)/:expansionSetId(\\d
 });
 
 app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
-  console.error(err);
+  logger.error(err);
   res.status(err.status ?? err.statusCode ?? 500).send(err.message);
 });
 
 app.listen(PORT, () => {
-  console.log(`connected to port ${PORT}`);
+  logger.info(`connected to port ${PORT}`);
 });
