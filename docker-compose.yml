@@ -7,6 +7,8 @@ services:
     container_name: aerie_commanding
     depends_on: ["postgres"]
     environment:
+      LOG_FILE: console
+      LOG_LEVEL: debug
       MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
       COMMANDING_SERVER_PORT: 3000
       COMMANDING_DB: aerie_commanding
