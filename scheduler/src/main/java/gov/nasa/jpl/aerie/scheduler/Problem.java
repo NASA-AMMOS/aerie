@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -57,7 +58,7 @@ public class Problem {
    *
    * @param mission IN the mission model that this problem is based on
    */
-  public Problem(MissionModel<?> mission, PlanningHorizon planningHorizon, SchedulerModel schedulerModel) {
+  public Problem(MissionModel<?> mission, PlanningHorizon planningHorizon, SimulationFacade simulationFacade, SchedulerModel schedulerModel) {
     this.missionModel = mission;
     this.schedulerModel = schedulerModel;
     this.initialPlan = new PlanInMemory();
@@ -68,7 +69,15 @@ public class Problem {
         this.add(new ActivityType(taskType.getKey(), taskType.getValue(), schedulerModel.getDurationTypes().get(taskType.getKey())));
       }
     }
-    simulationFacade = new SimulationFacade(planningHorizon, missionModel);
+    this.simulationFacade = simulationFacade;
+  }
+
+  public Problem(PlanningHorizon planningHorizon){
+    this(null, planningHorizon, null, null);
+  }
+
+  public Problem(@NotNull MissionModel<?> mission, @NotNull PlanningHorizon planningHorizon) {
+    this(mission,planningHorizon, new SimulationFacade(planningHorizon, mission), null);
   }
 
   public SimulationFacade getSimulationFacade(){

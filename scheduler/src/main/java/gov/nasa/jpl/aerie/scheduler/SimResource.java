@@ -35,6 +35,7 @@ public class SimResource implements
     ExternalState
 {
 
+  private final SimulationFacade facade;
   /** the identifier of this resource for use in properly querying the simulation results */
   private String name;
 
@@ -42,6 +43,10 @@ public class SimResource implements
   private SimulationResults simResults;
 
   TreeMap<Window, SerializedValue> values;
+
+  public SimResource(SimulationFacade facade){
+    this.facade = facade;
+  }
 
   public boolean isEmpty() {
     return simResults == null
@@ -101,7 +106,9 @@ public class SimResource implements
   }
 
   public SerializedValue getValueAtTime(Duration t) {
+    facade.updateResourcesIfNecessary(t);
     failIfEmpty();
+
     final var queryT = t;
 
     //TODO: unify necessary generic profile operations in Profile interface to avoid special casing
@@ -132,7 +139,9 @@ public class SimResource implements
   }
 
   public Windows whenValueBetween(SerializedValue inf, SerializedValue sup, Windows windows) {
-    failIfEmpty();
+    if(!windows.isEmpty()){
+      facade.updateResourcesIfNecessary(windows.maxTimePoint().get());
+    }
 
     //special case doubles are the only aerie types that can be compared with inequality constraints
       final var gteConstraint = new GreaterThanOrEqual(new RealResource(this.name), new RealValue(inf.asReal().orElseThrow(exceptionType)));
@@ -144,6 +153,9 @@ public class SimResource implements
   }
 
   public Windows whenValueBelow(SerializedValue val, Windows windows) {
+    if(!windows.isEmpty()){
+      facade.updateResourcesIfNecessary(windows.maxTimePoint().get());
+    }
     failIfEmpty();
     //special case doubles are the only aerie types that can be compared with inequality constraints
       final var constraint = new LessThan(new RealResource(this.name), new RealValue(val.asReal().orElseThrow(exceptionType)));
@@ -152,7 +164,11 @@ public class SimResource implements
   }
 
   public Windows whenValueAbove(SerializedValue val, Windows windows) {
+    if(!windows.isEmpty()){
+      facade.updateResourcesIfNecessary(windows.maxTimePoint().get());
+    }
     failIfEmpty();
+
     //special case doubles are the only aerie types that can be compared with inequality constraints
     final var constraint = new GreaterThan(new RealResource(this.name), new RealValue(val.asReal().orElseThrow(exceptionType)));
     final var satisfied = constraint.evaluate(this.simResults);
@@ -160,6 +176,9 @@ public class SimResource implements
   }
 
   public Windows whenValueEqual(SerializedValue val, Windows windows) {
+    if(!windows.isEmpty()){
+      facade.updateResourcesIfNecessary(windows.maxTimePoint().get());
+    }
     failIfEmpty();
     var asReal = val.asReal();
     Expression<Windows> constraint;
@@ -177,12 +196,18 @@ public class SimResource implements
 
   @Override
   public Map<Window, SerializedValue> getTimeline(Windows timeDomain) {
+    if(!timeDomain.isEmpty()){
+      facade.updateResourcesIfNecessary(timeDomain.maxTimePoint().get());
+    }
     return values;
   }
 
   @Override
   public Windows whenValueNotEqual(SerializedValue val, Windows windows) {
-
+    if(!windows.isEmpty()){
+      facade.updateResourcesIfNecessary(windows.maxTimePoint().get());
+    }
+    failIfEmpty();
     Expression<Windows> constraint;
     var asReal = val.asReal();
     if (asReal.isPresent()) {

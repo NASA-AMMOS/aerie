@@ -99,18 +99,17 @@ public class PrioritySolver implements Solver {
         allGood = false;
         break;
       }
-      plan.add(act);
       if(checkSimBeforeInsertingActivities) {
-        simulationFacade.simulatePlan(plan);
+        simulationFacade.simulateActivity(act);
         var simDur = simulationFacade.getActivityDuration(act);
-        if (simDur == null) {
+        if (!simDur.isPresent()) {
           logger.error("Activity " + act + " could not be simulated");
           allGood = false;
           break;
         }
         if (act.getDuration() == null) {
-          act.setDuration(simDur);
-        } else if (simDur.compareTo(act.getDuration()) != 0) {
+          act.setDuration(simDur.get());
+        } else if (simDur.get().compareTo(act.getDuration()) != 0) {
           allGood = false;
           logger.error("When simulated, activity " + act
                              + " has a different duration than expected (exp=" + act.getDuration() + ", real=" + simDur + ")");
@@ -119,8 +118,14 @@ public class PrioritySolver implements Solver {
       }
     }
 
-    if(!allGood) {
-      plan.remove(acts);
+    if(allGood) {
+      //update plan with regard to simulation
+      for(var act: acts) {
+        plan.add(act);
+      }
+    } else{
+      //update simulation with regard to plan
+      simulationFacade.removeActivitiesFromSimulation(acts);
     }
     return allGood;
   }
@@ -145,7 +150,7 @@ public class PrioritySolver implements Solver {
 
     //if backed by real models, initialize the simulation states/resources/profiles for the plan so state queries work
     if (problem.getMissionModel() != null) {
-      simulationFacade.simulatePlan(plan);
+      simulationFacade.simulateActivities(plan.getActivities());
     }
   }
 

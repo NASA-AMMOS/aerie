@@ -24,7 +24,7 @@ public class RadarBeamCalibrationTest {
 
   @BeforeEach
   public void setUp() {
-    problem = new Problem(null, horizon, null);
+    problem = new Problem(null, horizon, null, null);
     plan = new PlanInMemory();
   }
 

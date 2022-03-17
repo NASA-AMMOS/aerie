@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class SimulationFacadeTest {
 
@@ -62,8 +61,8 @@ public class SimulationFacadeTest {
   public void setUp() {
     missionModel = SimulationUtility.getBananaMissionModel();
     final var schedulerModel = SimulationUtility.getBananaSchedulerModel();
-    problem = new Problem(missionModel, horizon, schedulerModel);
     facade = new SimulationFacade(horizon, missionModel);
+    problem = new Problem(missionModel, horizon, facade, schedulerModel);
   }
 
   @AfterEach
@@ -79,17 +78,9 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void constraintEvalWithoutSimulationThrowsIAE() {
-    final var constraint = StateConstraintExpression.buildAboveConstraint(getFruitRes(), SerializedValue.of(2.9));
-    final var plan = makeEmptyPlan();
-    assertThrows(IllegalArgumentException.class, () -> constraint.findWindows(plan, entireHorizon));
-  }
-
-  @Test
   public void doubleConstraintEvalOnEmptyPlan() {
     final var constraint = StateConstraintExpression.buildAboveConstraint(getFruitRes(), SerializedValue.of(2.9));
     final var plan = makeEmptyPlan();
-    facade.simulatePlan(plan);
     var actual = constraint.findWindows(plan, entireHorizon);
     assertThat(actual).isEqualTo(entireHorizon);
   }
@@ -98,7 +89,6 @@ public class SimulationFacadeTest {
   public void boolConstraintEvalOnEmptyPlan() {
     final var constraint = StateConstraintExpression.buildEqualConstraint(getFlagConflictedRes(), SerializedValue.of(false));
     final var plan = makeEmptyPlan();
-    facade.simulatePlan(plan);
     final var actual = constraint.findWindows(plan, entireHorizon);
     assertThat(actual).isEqualTo(entireHorizon);
   }
@@ -107,7 +97,6 @@ public class SimulationFacadeTest {
   public void stringConstraintEvalOnEmptyPlan() {
     final var constraint = StateConstraintExpression.buildEqualConstraint(getFlagRes(), SerializedValue.of("A"));
     final var plan = makeEmptyPlan();
-    facade.simulatePlan(plan);
     var actual = constraint.findWindows(plan, entireHorizon);
     assertThat(actual).isEqualTo(entireHorizon);
   }
@@ -116,7 +105,6 @@ public class SimulationFacadeTest {
   public void intConstraintEvalOnEmptyPlan() {
     final var constraint = StateConstraintExpression.buildEqualConstraint(getPlantRes(), SerializedValue.of(200));
     final var plan = makeEmptyPlan();
-    facade.simulatePlan(plan);
     final var actual = constraint.findWindows(plan, entireHorizon);
     assertThat(actual).isEqualTo(entireHorizon);
   }
@@ -150,21 +138,21 @@ public class SimulationFacadeTest {
 
   @Test
   public void getValueAtTimeDoubleOnSimplePlanMidpoint() {
-    facade.simulatePlan(makeTestPlanP0B1());
+    facade.simulateActivities(makeTestPlanP0B1().getActivities());
     var actual = getFruitRes().getValueAtTime(t1_5);
     assertThat(actual).isEqualTo(SerializedValue.of(3.0));
   }
 
   @Test
   public void getValueAtTimeDoubleOnSimplePlan() {
-    facade.simulatePlan(makeTestPlanP0B1());
+    facade.simulateActivities(makeTestPlanP0B1().getActivities());
     var actual = getFruitRes().getValueAtTime(t2);
     assertThat(actual).isEqualTo(SerializedValue.of(2.9));
   }
 
   @Test
   public void whenValueAboveDoubleOnSimplePlan() {
-    facade.simulatePlan(makeTestPlanP0B1());
+    facade.simulateActivities(makeTestPlanP0B1().getActivities());
     var actual = getFruitRes().whenValueAbove(SerializedValue.of(2.9), entireHorizon);
     var expected = new Windows(Window.betweenClosedOpen(t0, t2));
     assertThat(actual).isEqualTo(expected);
@@ -172,7 +160,7 @@ public class SimulationFacadeTest {
 
   @Test
   public void whenValueBelowDoubleOnSimplePlan() {
-    facade.simulatePlan(makeTestPlanP0B1());
+    facade.simulateActivities(makeTestPlanP0B1().getActivities());
     var actual = getFruitRes().whenValueBelow(SerializedValue.of(3.0), entireHorizon);
     var expected = new Windows(Window.betweenClosedOpen(t2, tEnd));
     assertThat(actual).isEqualTo(expected);
@@ -180,7 +168,7 @@ public class SimulationFacadeTest {
 
   @Test
   public void whenValueBetweenDoubleOnSimplePlan() {
-    facade.simulatePlan(makeTestPlanP0B1());
+    facade.simulateActivities(makeTestPlanP0B1().getActivities());
     var actual = getFruitRes().whenValueBetween(SerializedValue.of(3.00), SerializedValue.of(3.99), entireHorizon);
     var expected = new Windows(Window.betweenClosedOpen(t1, t2));
     assertThat(actual).isEqualTo(expected);
@@ -188,7 +176,7 @@ public class SimulationFacadeTest {
 
   @Test
   public void whenValueEqualDoubleOnSimplePlan() {
-    facade.simulatePlan(makeTestPlanP0B1());
+    facade.simulateActivities(makeTestPlanP0B1().getActivities());
     var actual = getFruitRes().whenValueEqual(SerializedValue.of(3.00), entireHorizon);
     var expected = new Windows(Window.betweenClosedOpen(t1, t2));
     assertThat(actual).isEqualTo(expected);
@@ -196,7 +184,7 @@ public class SimulationFacadeTest {
 
   @Test
   public void whenValueNotEqualDoubleOnSimplePlan() {
-    facade.simulatePlan(makeTestPlanP0B1());
+    facade.simulateActivities(makeTestPlanP0B1().getActivities());
     var actual = getFruitRes().whenValueNotEqual(SerializedValue.of(3.00), entireHorizon);
     var expected = new Windows(List.of(Window.betweenClosedOpen(t0, t1), Window.betweenClosedOpen(t2, tEnd)));
     assertThat(actual).isEqualTo(expected);
