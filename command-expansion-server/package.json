@@ -22,7 +22,8 @@
     "graphql-request": "^4.0.0",
     "pg": "^8.7.3",
     "reserved-words": "^0.1.2",
-    "typescript": "^4.5.5"
+    "typescript": "^4.5.5",
+    "winston": "^3.6.0"
   },
   "devDependencies": {
     "@microsoft/tsdoc": "^0.13.2",
