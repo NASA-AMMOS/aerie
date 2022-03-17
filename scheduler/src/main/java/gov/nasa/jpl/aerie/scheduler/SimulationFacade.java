@@ -14,6 +14,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -148,16 +149,23 @@ public class SimulationFacade {
 
   public void simulateActivity(final ActivityInstance activity) throws SimulationException {
 
-    Map<String, SerializedValue> params = new HashMap<>(activity.getArguments());
-    if(activity.getDuration()!= null) {
-      params.put("duration", new DurationValueMapper().serializeValue(activity.getDuration()));
-    } else{
-      logger.warn("Activity has no duration parameter");
+    final var arguments = new HashMap<>(activity.getArguments());
+    if (activity.hasDuration()) {
+      final var durationType = activity.getType().getDurationType();
+      if (durationType instanceof DurationType.Controllable dt) {
+        arguments.put(dt.parameterName(), new DurationValueMapper().serializeValue(activity.getDuration()));
+      } else if (durationType instanceof DurationType.Uncontrollable) {
+        // If an activity has already been simulated, it will have a duration, even if its DurationType is Uncontrollable.
+      } else {
+        throw new Error("Unhandled variant of DurationType: " + durationType);
+      }
+    } else {
+      logger.warn("Activity has unconstrained duration {}", activity);
     }
     var activityIdSim = new ActivityInstanceId(itSimActivityId++);
     planActInstanceIdToSimulationActInstanceId.put(activity.getId(), activityIdSim);
 
-    var serializedActivity = new SerializedActivity(activity.getType().getName(), params);
+    var serializedActivity = new SerializedActivity(activity.getType().getName(), arguments);
 
     try {
       driver.simulateActivity(serializedActivity, activity.getStartTime(), activityIdSim);
