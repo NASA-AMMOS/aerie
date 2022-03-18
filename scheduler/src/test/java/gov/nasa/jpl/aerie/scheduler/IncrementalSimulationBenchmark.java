@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -21,7 +22,7 @@ public class IncrementalSimulationBenchmark {
    * to simulate a plan with a number of _left activities. Note that this is an ideal case for the incremental driver as
    * it never has to reset.
    */
-  public static void main(String[] args){
+  public static void main(String[] args) throws TaskSpecType.UnconstructableTaskSpecException {
     System.out.println("Incremental");
     benchmarkIncrementalSimulationDriver();
     System.out.println("Non-incremental");
@@ -63,7 +64,7 @@ public class IncrementalSimulationBenchmark {
     }
   }
 
-  private static void benchmarkIncrementalSimulationDriver(){
+  private static void benchmarkIncrementalSimulationDriver() throws TaskSpecType.UnconstructableTaskSpecException {
     final var acts = getActivities();
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var incrementalSimulationDriver = new IncrementalSimulationDriver(fooMissionModel);

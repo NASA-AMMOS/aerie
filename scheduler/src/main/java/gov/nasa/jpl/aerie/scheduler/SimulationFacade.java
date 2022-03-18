@@ -12,7 +12,9 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -105,7 +107,7 @@ public class SimulationFacade {
      return duration;
   }
 
-  public void removeActivitiesFromSimulation(Collection<ActivityInstance> activities){
+  public void removeActivitiesFromSimulation(final Collection<ActivityInstance> activities) throws SimulationException {
     var atLeastOne = false;
     for(var act: activities){
       if(insertedActivities.containsKey(act)){
@@ -115,7 +117,7 @@ public class SimulationFacade {
     }
     //reset incremental simulation
     if(atLeastOne){
-      var oldInsertedActivities = new HashMap<>(insertedActivities);
+      final var oldInsertedActivities = new HashMap<>(insertedActivities);
       insertedActivities.clear();
       planActInstanceIdToSimulationActInstanceId.clear();
       driver = new IncrementalSimulationDriver(missionModel);
@@ -123,25 +125,53 @@ public class SimulationFacade {
     }
   }
 
-  public void simulateActivities(Collection<ActivityInstance> activities){
-    var activitiesSortedByStartTime = activities.stream().sorted(Comparator.comparing(ActivityInstance::getStartTime)).collect(Collectors.toList());
-    activitiesSortedByStartTime.forEach(this::simulateActivity);
+  public void simulateActivities(final Collection<ActivityInstance> activities)
+  throws SimulationException {
+    final var activitiesSortedByStartTime =
+        activities.stream().sorted(Comparator.comparing(ActivityInstance::getStartTime)).toList();
+    for (final var activityInstance : activitiesSortedByStartTime) {
+      try {
+        simulateActivity(activityInstance);
+      } catch (SimulationException e) {
+        throw new SimulationException("Failed to instantiate "
+                                      + activityInstance
+                                      + ". Consider checking that its arguments are valid.", e);
+      }
+    }
+
   }
 
-  public void simulateActivity(ActivityInstance activity){
+  static class SimulationException extends Exception {
+    SimulationException(final String message, final Throwable cause) {
+      super(message, cause);
+    }
+  }
 
-    Map<String, SerializedValue> params = new HashMap<>(activity.getArguments());
-    if(activity.getDuration()!= null) {
-      params.put("duration", new DurationValueMapper().serializeValue(activity.getDuration()));
-    } else{
-      logger.warn("Activity has no duration parameter");
+  public void simulateActivity(final ActivityInstance activity) throws SimulationException {
+
+    final var arguments = new HashMap<>(activity.getArguments());
+    if (activity.hasDuration()) {
+      final var durationType = activity.getType().getDurationType();
+      if (durationType instanceof DurationType.Controllable dt) {
+        arguments.put(dt.parameterName(), new DurationValueMapper().serializeValue(activity.getDuration()));
+      } else if (durationType instanceof DurationType.Uncontrollable) {
+        // If an activity has already been simulated, it will have a duration, even if its DurationType is Uncontrollable.
+      } else {
+        throw new Error("Unhandled variant of DurationType: " + durationType);
+      }
+    } else {
+      logger.warn("Activity has unconstrained duration {}", activity);
     }
     var activityIdSim = new ActivityInstanceId(itSimActivityId++);
     planActInstanceIdToSimulationActInstanceId.put(activity.getId(), activityIdSim);
 
-    var serializedActivity = new SerializedActivity(activity.getType().getName(), params);
+    var serializedActivity = new SerializedActivity(activity.getType().getName(), arguments);
 
-    driver.simulateActivity(serializedActivity, activity.getStartTime(), activityIdSim);
+    try {
+      driver.simulateActivity(serializedActivity, activity.getStartTime(), activityIdSim);
+    } catch (TaskSpecType.UnconstructableTaskSpecException e) {
+      throw new SimulationException("Failed to simulate " + activity + ", possibly because it has invalid arguments", e);
+    }
     insertedActivities.put(activity, serializedActivity);
   }
 

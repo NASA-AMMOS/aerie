@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -102,7 +103,9 @@ public class IncrementalSimulationDriver {
   }
 
 
-  public void simulateActivity(SerializedActivity activity, Duration startTime, ActivityInstanceId activityId){
+  public void simulateActivity(SerializedActivity activity, Duration startTime, ActivityInstanceId activityId)
+  throws TaskSpecType.UnconstructableTaskSpecException
+  {
     final var activityToSimulate = new SimulatedActivity(startTime, activity, activityId);
     if(startTime.noLongerThan(curTime)){
       final var toBeInserted = new ArrayList<>(activitiesInserted);
@@ -158,7 +161,9 @@ public class IncrementalSimulationDriver {
     return lastSimResults;
   }
 
-  private void simulateSchedule(Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule){
+  private void simulateSchedule(final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule)
+  throws TaskSpecType.UnconstructableTaskSpecException
+  {
 
     if(schedule.isEmpty()){
       throw new IllegalArgumentException("simulateSchedule() called with empty schedule, use simulateUntil() instead");
@@ -169,7 +174,7 @@ public class IncrementalSimulationDriver {
       final var startOffset = entry.getValue().getLeft();
       final var directive = entry.getValue().getRight();
 
-      final var taskId = engine.initiateTaskFromInput(missionModel, directive);
+      final var taskId = engine.initiateTaskFromInputOrFail(missionModel, directive);
       engine.scheduleTask(taskId, startOffset);
       plannedDirectiveToTask.put(directiveId,taskId);
       taskToPlannedDirective.put(taskId, directiveId);

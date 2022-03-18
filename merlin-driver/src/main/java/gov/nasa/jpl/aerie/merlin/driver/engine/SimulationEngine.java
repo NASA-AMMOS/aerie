@@ -72,21 +72,27 @@ public final class SimulationEngine implements AutoCloseable {
   /** Construct a task defined by the behavior of a model given a type and arguments. */
   public <Model>
   TaskId initiateTaskFromInput(final MissionModel<Model> model, final SerializedActivity input) {
-    final var task = TaskId.generate();
-
-    final Directive<Model, ?, ?> directive;
     try {
-      directive = model.instantiateDirective(input);
+      return initiateTaskFromInputOrFail(model, input);
     } catch (final TaskSpecType.UnconstructableTaskSpecException ex) {
+      final var task = TaskId.generate();
+
       // TODO: Provide more information about the failure.
-      this.tasks.put(task, new ExecutionState.IllegalSource());
+      this.tasks.put(task, new ExecutionState.IllegalSource<>());
 
       return task;
     }
+  }
 
+  /** Construct a task defined by the behavior of a model given a type and arguments. */
+  public <Model>
+  TaskId initiateTaskFromInputOrFail(final MissionModel<Model> model, final SerializedActivity input)
+  throws TaskSpecType.UnconstructableTaskSpecException
+  {
+    final var directive  = model.instantiateDirective(input);
+    final var task = TaskId.generate();
     this.tasks.put(task, new ExecutionState.NotStarted<>(() -> directive.createTask(model.getModel())));
     this.taskDirective.put(task, directive);
-
     return task;
   }
 

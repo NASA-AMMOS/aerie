@@ -137,21 +137,21 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void getValueAtTimeDoubleOnSimplePlanMidpoint() {
+  public void getValueAtTimeDoubleOnSimplePlanMidpoint() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     var actual = getFruitRes().getValueAtTime(t1_5);
     assertThat(actual).isEqualTo(SerializedValue.of(3.0));
   }
 
   @Test
-  public void getValueAtTimeDoubleOnSimplePlan() {
+  public void getValueAtTimeDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     var actual = getFruitRes().getValueAtTime(t2);
     assertThat(actual).isEqualTo(SerializedValue.of(2.9));
   }
 
   @Test
-  public void whenValueAboveDoubleOnSimplePlan() {
+  public void whenValueAboveDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     var actual = getFruitRes().whenValueAbove(SerializedValue.of(2.9), entireHorizon);
     var expected = new Windows(Window.betweenClosedOpen(t0, t2));
@@ -159,7 +159,7 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void whenValueBelowDoubleOnSimplePlan() {
+  public void whenValueBelowDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     var actual = getFruitRes().whenValueBelow(SerializedValue.of(3.0), entireHorizon);
     var expected = new Windows(Window.betweenClosedOpen(t2, tEnd));
@@ -167,7 +167,7 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void whenValueBetweenDoubleOnSimplePlan() {
+  public void whenValueBetweenDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     var actual = getFruitRes().whenValueBetween(SerializedValue.of(3.00), SerializedValue.of(3.99), entireHorizon);
     var expected = new Windows(Window.betweenClosedOpen(t1, t2));
@@ -175,7 +175,7 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void whenValueEqualDoubleOnSimplePlan() {
+  public void whenValueEqualDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     var actual = getFruitRes().whenValueEqual(SerializedValue.of(3.00), entireHorizon);
     var expected = new Windows(Window.betweenClosedOpen(t1, t2));
@@ -183,7 +183,7 @@ public class SimulationFacadeTest {
   }
 
   @Test
-  public void whenValueNotEqualDoubleOnSimplePlan() {
+  public void whenValueNotEqualDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     var actual = getFruitRes().whenValueNotEqual(SerializedValue.of(3.00), entireHorizon);
     var expected = new Windows(List.of(Window.betweenClosedOpen(t0, t1), Window.betweenClosedOpen(t2, tEnd)));
