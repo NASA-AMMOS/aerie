@@ -8,43 +8,11 @@ import gov.nasa.jpl.aerie.scheduler.OptionGoal;
 import gov.nasa.jpl.aerie.scheduler.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.RecurrenceGoal;
 import gov.nasa.jpl.aerie.scheduler.Time;
-import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
-import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
-import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
-import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingDSLCompilationService;
 
 public class GoalBuilder {
-  sealed interface GoalBuildResult {
-    record Success(GoalRecord goalRecord) implements GoalBuildResult {}
-    record Failure(String reason) implements GoalBuildResult {}
-  }
-  static GoalBuildResult buildGoalRecord(
-      final PlanId planId,
-      final PostgresGoalRecord pgGoal,
-      final Timestamp horizonStartTimestamp,
-      final Timestamp horizonEndTimestamp,
-      final SchedulingDSLCompilationService schedulingDSLCompilationService)
-  {
-    final SchedulingDSL.GoalSpecifier goalSpecifier;
-    try {
-      goalSpecifier = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-          planId,
-          pgGoal.definition(),
-          pgGoal.name());
-    } catch (SchedulingDSLCompilationService.SchedulingDSLCompilationException e) {
-      return new GoalBuildResult.Failure(e.getMessage());
-    }
-    final var goalId = new GoalId(pgGoal.id());
-
-    final var goal = goalOfGoalSpecifier(
-        goalSpecifier,
-        horizonStartTimestamp,
-        horizonEndTimestamp);
-
-    return new GoalBuildResult.Success(new GoalRecord(goalId, goalSpecifier));
-  }
+  private GoalBuilder() {}
 
   public static Goal goalOfGoalSpecifier(
       final SchedulingDSL.GoalSpecifier goalSpecifier,
