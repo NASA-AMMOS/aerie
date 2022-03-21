@@ -156,22 +156,26 @@ public class Evaluation {
     return Objects.hash(goalEvals);
   }
 
-  boolean canAssociateMoreToCreatorOf(ActivityInstance instance){
-    Goal creator = getGoalCreator(instance);
-    if(creator instanceof ActivityExistentialGoal activityExistentialCreator) {
+  boolean canAssociateMoreToCreatorOf(final ActivityInstance instance){
+    final var creator = getGoalCreator(instance)
+        .orElseThrow(() -> new IllegalStateException("No goal is referenced as creator for activity " + instance));
+    if (creator instanceof ActivityExistentialGoal activityExistentialCreator) {
       //we can piggyback
       return activityExistentialCreator.childCustody == ChildCustody.Jointly;
     }
     return true;
   }
 
-  Goal getGoalCreator(ActivityInstance instance){
-    for(var goalEval : goalEvals.entrySet()){
+  /**
+   * If an activity instance was already in the plan prior to this run of the scheduler, this method will return Optional.empty()
+   */
+  Optional<Goal> getGoalCreator(final ActivityInstance instance){
+    for(final var goalEval : goalEvals.entrySet()){
       if(goalEval.getValue().getInsertedActivities().contains(instance)){
-        return goalEval.getKey();
+        return Optional.of(goalEval.getKey());
       }
     }
-    throw new IllegalStateException("No goal is referenced as creator for activity " + instance) ;
+    return Optional.empty();
   }
 
 }
