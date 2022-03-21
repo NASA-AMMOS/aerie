@@ -199,7 +199,7 @@ public class PrioritySolverTest {
 
     final var plan = solver.getNextSolution().orElseThrow();
 
-    final var expectedPlan = makePlanA12(problem);
+    final var expectedPlan = makePlanA012(problem);
     //TODO: evaluation should have association of instances to goal
     //TODO: should ensure no other spurious acts yet need to ignore special window activities
     //TODO: may want looser expectation (eg allow flexibility as long as right repeat pattern met)

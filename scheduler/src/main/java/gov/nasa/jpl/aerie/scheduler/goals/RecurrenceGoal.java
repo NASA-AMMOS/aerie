@@ -40,25 +40,6 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
       return getThis();
     }
 
-    /**
-     * specifies the allowed interval over which the activity should repeat
-     *
-     * this interval is understood to be a minimum (ie more frequent repetition
-     * does not impede the goal's satisfaction)
-     *
-     * this specifier is required. it replaces any previous specification.
-     *
-     * TODO: work out semantics of min/max of range
-     *
-     * @param intervalRange IN the range of duration over which a matching
-     *     activity instance must exist in order to satisfy the goal
-     * @return this builder, ready for additional specification
-     */
-    public Builder repeatingEvery(Window intervalRange) {
-      this.every = intervalRange;
-      return getThis();
-    }
-
     protected Window every;
 
     /**
@@ -180,16 +161,16 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
       Duration start, Duration end, Plan plan)
   {
     final var conflicts = new java.util.LinkedList<MissingActivityConflict>();
-
-    var goalConstraint = this.stateConstraints;
-
     //determine how much flexibility there is in creating activities
     final var recurrenceFlexibility = recurrenceInterval.end.minus(
         recurrenceInterval.start);
 
-    //walk forward in time by full allowed stride lengths
+    if(end.minus(start).noLongerThan(recurrenceInterval.end)){
+      return conflicts;
+    }
+
     for (var intervalT = start.plus(recurrenceInterval.end);
-         intervalT.compareTo(end) < 0;
+         ;
          intervalT = intervalT.plus(recurrenceInterval.end)
     ) {
       //REVIEW: technically, could create activity at extremely short
@@ -197,14 +178,13 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
       //        framed, which is exactly what the current solver will do since
       //        it chooses the minimum. but it looks ugly. so for now passing
       //        a limited flexibility for creation
-      final var minT = intervalT.minus(recurrenceFlexibility);
-      var interval =  new Windows(Window.between(minT,intervalT));
-      if(goalConstraint != null) {
-        interval.intersectWith(goalConstraint.findWindows(plan, new Windows(Window.between(start, end))));
-      }
+      var interval =  new Windows(Window.between(intervalT.minus(recurrenceInterval.end), Duration.min(intervalT, end)));
       conflicts.add(new MissingActivityTemplateConflict(
           this, new Windows(
           interval),this.getActTemplate()));
+      if(intervalT.compareTo(end) > 0){
+        break;
+      }
     }
 
     return conflicts;
