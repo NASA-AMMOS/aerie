@@ -43,10 +43,10 @@ public class GoalBuilder {
         horizonStartTimestamp,
         horizonEndTimestamp);
 
-    return new GoalBuildResult.Success(new GoalRecord(goalId, goal));
+    return new GoalBuildResult.Success(new GoalRecord(goalId, goalSpecifier));
   }
 
-  private static Goal goalOfGoalSpecifier(
+  public static Goal goalOfGoalSpecifier(
       final SchedulingDSL.GoalSpecifier goalSpecifier,
       final Timestamp horizonStartTimestamp,
       final Timestamp horizonEndTimestamp) {
