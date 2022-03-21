@@ -105,7 +105,8 @@ public record SynchronousSchedulerAgent(
             .goalOfGoalSpecifier(
                 goalRecord.definition(),
                 specification.horizonStartTimestamp(),
-                specification.horizonEndTimestamp());
+                specification.horizonEndTimestamp(),
+                problem::getActivityType);
         orderedGoals.add(goal);
         goals.put(goal, goalRecord.id());
       }

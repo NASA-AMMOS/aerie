@@ -11,21 +11,25 @@ import gov.nasa.jpl.aerie.scheduler.Time;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 
+import java.util.function.Function;
+
 public class GoalBuilder {
   private GoalBuilder() {}
 
   public static Goal goalOfGoalSpecifier(
       final SchedulingDSL.GoalSpecifier goalSpecifier,
       final Timestamp horizonStartTimestamp,
-      final Timestamp horizonEndTimestamp) {
+      final Timestamp horizonEndTimestamp,
+      final Function<String, ActivityType> lookupActivityType) {
     if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalDefinition g) {
-      return goalOfGoalDefinition(g, horizonStartTimestamp, horizonEndTimestamp);
+      return goalOfGoalDefinition(g, horizonStartTimestamp, horizonEndTimestamp, lookupActivityType);
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalAnd g) {
       var builder = new CompositeAndGoal.Builder();
       for (final var subGoalSpecifier : g.goals()) {
         builder = builder.and(goalOfGoalSpecifier(subGoalSpecifier,
                                                   horizonStartTimestamp,
-                                                  horizonEndTimestamp));
+                                                  horizonEndTimestamp,
+                                                  lookupActivityType));
       }
       return builder.build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalOr g) {
@@ -33,7 +37,8 @@ public class GoalBuilder {
       for (final var subGoalSpecifier : g.goals()) {
         builder = builder.or(goalOfGoalSpecifier(subGoalSpecifier,
                                                  horizonStartTimestamp,
-                                                 horizonEndTimestamp));
+                                                 horizonEndTimestamp,
+                                                 lookupActivityType));
       }
       return builder.build();
     } else {
@@ -44,7 +49,8 @@ public class GoalBuilder {
   private static Goal goalOfGoalDefinition(
       final SchedulingDSL.GoalSpecifier.GoalDefinition goalDefinition,
       final Timestamp horizonStartTimestamp,
-      final Timestamp horizonEndTimestamp) {
+      final Timestamp horizonEndTimestamp,
+      final Function<String, ActivityType> lookupActivityType) {
     final var hor = new PlanningHorizon(
         Time.fromString(horizonStartTimestamp.toString()),
         Time.fromString(horizonEndTimestamp.toString())).getHor();
@@ -52,15 +58,17 @@ public class GoalBuilder {
       case ActivityRecurrenceGoal -> new RecurrenceGoal.Builder()
           .forAllTimeIn(hor)
           .repeatingEvery(goalDefinition.interval())
-          .thereExistsOne(makeActivityTemplate(goalDefinition))
+          .thereExistsOne(makeActivityTemplate(goalDefinition, lookupActivityType))
           .build();
     };
   }
 
-  private static ActivityCreationTemplate makeActivityTemplate(final SchedulingDSL.GoalSpecifier.GoalDefinition goalDefinition) {
+  private static ActivityCreationTemplate makeActivityTemplate(
+      final SchedulingDSL.GoalSpecifier.GoalDefinition goalDefinition,
+      final Function<String, ActivityType> lookupActivityType) {
     final var activityTemplate = goalDefinition.activityTemplate();
     var builder = new ActivityCreationTemplate.Builder()
-        .ofType(new ActivityType(activityTemplate.activityType()));
+        .ofType(lookupActivityType.apply(activityTemplate.activityType()));
     for (final var argument : activityTemplate.arguments().entrySet()) {
       builder = builder.withArgument(argument.getKey(), argument.getValue());
     }
