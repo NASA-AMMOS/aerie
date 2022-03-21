@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 
-import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -20,7 +19,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;

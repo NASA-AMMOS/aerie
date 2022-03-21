@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.CompositeAndGoal;
@@ -15,8 +14,6 @@ import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingDSLCompilationService;
-
-import java.io.IOException;
 
 public class GoalBuilder {
   sealed interface GoalBuildResult {

@@ -1,8 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
-import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import org.intellij.lang.annotations.Language;
 

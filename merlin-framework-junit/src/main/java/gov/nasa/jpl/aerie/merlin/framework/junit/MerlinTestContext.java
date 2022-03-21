@@ -1,10 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.framework.junit;
 
-import java.util.Map;
-
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+
+import java.util.Map;
 
 public final class MerlinTestContext<Model> {
   private final Registrar registrar;

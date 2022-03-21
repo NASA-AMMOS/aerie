@@ -11,36 +11,35 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.WildcardTypeName;
-import gov.nasa.jpl.aerie.merlin.framework.VoidEnum;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
+import gov.nasa.jpl.aerie.merlin.framework.VoidEnum;
 import gov.nasa.jpl.aerie.merlin.processor.MissionModelProcessor;
 import gov.nasa.jpl.aerie.merlin.processor.Resolver;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ConfigurationTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Auto-generates Java source files from mission model metamodels. */
 public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Messager messager) {
@@ -134,6 +133,9 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             .addSuperinterface(
                 ParameterizedTypeName.get(
                     ClassName.get(MissionModelFactory.class),
+                    missionModel.modelConfigurationType
+                        .map($ -> ClassName.get($.declaration()))
+                        .orElse(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class)),
                     ParameterizedTypeName.get(
                         ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                         ClassName.get(missionModel.topLevelModel))))
@@ -142,23 +144,15 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .methodBuilder("getConfigurationType")
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
-                    .returns(ParameterizedTypeName.get(
-                        ClassName.get(Optional.class),
-                        ParameterizedTypeName.get(
-                            ClassName.get(ConfigurationType.class),
-                            WildcardTypeName.subtypeOf(Object.class))))
-                    .addCode(
+                    .returns(
                         missionModel.modelConfigurationType
-                            .map(configType -> CodeBlock.builder() // If configuration is provided
-                                .addStatement(
-                                    "return $T.of(new $L())",
-                                    Optional.class,
-                                    configType.mapper().name))
-                            .orElseGet(() -> CodeBlock.builder() // If configuration is not provided
-                                .addStatement(
-                                    "return $T.empty()",
-                                    Optional.class))
-                        .build())
+                            .map(configType -> configType.mapper().name)
+                            .orElse(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.EmptyConfigurationType.class)))
+                    .addStatement(
+                        "return new $T()",
+                        missionModel.modelConfigurationType
+                            .map(configType -> configType.mapper().name)
+                            .orElse(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.EmptyConfigurationType.class)))
                 .build())
             .addMethod(
                 MethodSpec
@@ -183,7 +177,9 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
                     .addParameter(
-                        TypeName.get(gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class),
+                        missionModel.modelConfigurationType
+                            .map($ -> ClassName.get($.declaration()))
+                            .orElse(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class)),
                         "configuration",
                         Modifier.FINAL)
                     .addParameter(
@@ -194,7 +190,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         ParameterizedTypeName.get(
                             ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                             ClassName.get(missionModel.topLevelModel)))
-                    .addException(MissionModelFactory.MissionModelInstantiationException.class)
                     .addStatement(
                         "final var $L = new $T($L)",
                         "registrar",
@@ -205,71 +200,28 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         "executor",
                         gov.nasa.jpl.aerie.merlin.framework.RootModel.class)
                     .addCode("\n")
-                    .addCode(
-                        missionModel.modelConfigurationType
-                            .map(configType -> CodeBlock // If configuration is provided
-                                .builder()
-                                .beginControlFlow("try")
-                                .addStatement(
-                                    "final var $L = $L.asMap().orElseThrow(() -> new $T())",
-                                    "serializedArguments",
-                                    "configuration",
-                                    ConfigurationType.UnconstructableConfigurationException.class)
-                                .addStatement(
-                                    "final var $L = new $L().instantiate($L)",
-                                    "deserializedConfig",
-                                    configType.mapper().name,
-                                    "serializedArguments")
-                                .addStatement(
-                                    "final var $L = $T.initializing($L, $L, () -> new $T($L, $L))",
-                                    "model",
-                                    gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
-                                    "executor",
-                                    "builder",
-                                    ClassName.get(missionModel.topLevelModel),
-                                    "registrar",
-                                    "deserializedConfig")
-                                .addStatement(
-                                    "return new $T<$T>($L, $L)",
-                                    gov.nasa.jpl.aerie.merlin.framework.RootModel.class,
-                                    ClassName.get(missionModel.topLevelModel),
-                                    "model",
-                                    "executor")
-                                .nextControlFlow(
-                                    "catch (final $T ex)",
-                                    ConfigurationType.UnconstructableConfigurationException.class)
-                                .addStatement(
-                                    "throw new $T(ex)",
-                                    MissionModelFactory.MissionModelInstantiationException.class)
-                                .endControlFlow()
-                                .build())
-                            .orElseGet(() -> CodeBlock // If configuration is not provided
-                                .builder()
-                                .addStatement(
-                                    "final var $L = $T.initializing($L, $L, () -> new $T($L))",
-                                    "model",
-                                    gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
-                                    "executor",
-                                    "builder",
-                                    ClassName.get(missionModel.topLevelModel),
-                                    "registrar")
-                                .addStatement(
-                                    "return new $T<$T>($L, $L)",
-                                    gov.nasa.jpl.aerie.merlin.framework.RootModel.class,
-                                    ClassName.get(missionModel.topLevelModel),
-                                    "model",
-                                    "executor")
-                                .build()))
-                    .build())
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("getParameters")
-                    .addModifiers(Modifier.PUBLIC)
-                    .addAnnotation(Override.class)
-                    .returns(ParameterizedTypeName.get(List.class, Parameter.class))
                     .addStatement(
-                        "return getConfigurationType().map(configType -> configType.getParameters()).orElseGet(() -> $T.of())",
-                        List.class)
+                        "final var $L = $T.initializing($L, $L, () -> $L)",
+                        "model",
+                        gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
+                        "executor",
+                        "builder",
+                        (missionModel.modelConfigurationType.isPresent())
+                            ? CodeBlock.of(
+                                "new $T($L, $L)",
+                                ClassName.get(missionModel.topLevelModel),
+                                "registrar",
+                                "configuration")
+                            : CodeBlock.of(
+                                "new $T($L))",
+                                ClassName.get(missionModel.topLevelModel),
+                                "registrar"))
+                    .addStatement(
+                        "return new $T<$T>($L, $L)",
+                        gov.nasa.jpl.aerie.merlin.framework.RootModel.class,
+                        ClassName.get(missionModel.topLevelModel),
+                        "model",
+                        "executor")
                     .build())
             .build();
 
@@ -349,7 +301,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             .addMethods(
                 missionModel.activityTypes
                     .stream()
-                    .flatMap(entry -> List
+                    .flatMap(entry -> Stream
                         .of(
                             MethodSpec
                                 .methodBuilder("spawn")
@@ -437,8 +389,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     "$T.waitFor(spawn($L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "activity")
-                                .build())
-                        .stream())
+                                .build()))
                     .collect(Collectors.toList()))
             .build();
 
@@ -535,7 +486,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
         return Optional.empty();
       }
       superInterface = ParameterizedTypeName.get(
-          ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
+          ClassName.get(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper.class),
           ParameterizedTypeName.get(
               ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
               ClassName.get(missionModel.topLevelModel)),

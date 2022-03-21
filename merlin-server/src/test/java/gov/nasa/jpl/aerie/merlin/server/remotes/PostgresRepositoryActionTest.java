@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.server.remotes;
 import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepository;
 
 public class PostgresRepositoryActionTest {

@@ -6,8 +6,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.function.Supplier;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
 
 public final class ThreadedTask<Return> implements Task<Return> {
   private final Scoped<Context> rootContext;

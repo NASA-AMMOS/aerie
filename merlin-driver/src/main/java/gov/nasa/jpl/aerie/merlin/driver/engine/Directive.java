@@ -8,7 +8,7 @@ import java.util.Map;
 
 /** A directive to a specific mission model. */
 // TODO: Move this into the framework basement layer.
-public final record Directive<Model, DirectiveType, Return> (
+public record Directive<Model, DirectiveType, Return> (
     TaskSpecType<Model, DirectiveType, Return> directiveType,
     DirectiveType directive
 ) {

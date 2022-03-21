@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.configwithdefaults;
 
-import static gov.nasa.jpl.aerie.merlin.framework.annotations.Export.*;
+import static gov.nasa.jpl.aerie.merlin.framework.annotations.Export.WithDefaults;
 
 public record Configuration(Integer a, Double b, String c) {
 

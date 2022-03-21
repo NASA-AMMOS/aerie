@@ -1,15 +1,13 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
-import gov.nasa.jpl.aerie.foomissionmodel.generated.ConfigurationMapper;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
-import gov.nasa.jpl.aerie.foomissionmodel.mappers.FooValueMappers;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
@@ -29,17 +27,16 @@ public class SimulateMapSchedule {
   }
 
   private static MissionModel<RootModel<Mission>>
-  makeMissionModel(final MissionModelBuilder builder, final SerializedValue config) {
+  makeMissionModel(final MissionModelBuilder builder, final Configuration config) {
     final var factory = new GeneratedMissionModelFactory();
     final var model = factory.instantiate(config, builder);
-    return builder.build(model, factory.getTaskSpecTypes());
+    return builder.build(model, factory.getConfigurationType(), factory.getTaskSpecTypes());
   }
 
   private static
   void simulateWithMapSchedule() {
     final var config = new Configuration();
-    final var serializedConfig = SerializedValue.of(new ConfigurationMapper().getArguments(config));
-    final var missionModel = makeMissionModel(new MissionModelBuilder(), serializedConfig);
+    final var missionModel = makeMissionModel(new MissionModelBuilder(), config);
 
     try {
       final var schedule = loadSchedule();

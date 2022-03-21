@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationExcepti
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.SpecificationLoadException;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
-import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresSpecificationRepository;
 
 public interface SpecificationService {
   // Queries

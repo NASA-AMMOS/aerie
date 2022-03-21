@@ -1,8 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import org.apache.commons.lang3.tuple.Pair;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.util.ArrayList;

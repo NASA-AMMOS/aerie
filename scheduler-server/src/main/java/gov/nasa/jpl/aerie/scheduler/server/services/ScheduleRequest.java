@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 
 import java.util.Objects;
