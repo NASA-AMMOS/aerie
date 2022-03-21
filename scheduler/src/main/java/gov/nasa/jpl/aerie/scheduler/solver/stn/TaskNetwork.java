@@ -107,7 +107,9 @@ public class TaskNetwork {
     stn.addTimepoint(etenvTpName);
 
     stn.addDurCst(startHorizon, stenvTpName, t1-stHorizon, t1-stHorizon);
-    stn.addDurCst(endHorizon, etenvTpName, t2-stHorizon, t2-stHorizon);
+    stn.addDurCst(startHorizon, etenvTpName, t2-stHorizon, t2-stHorizon);
+
+    stn.addBeforeCst(stenvTpName,etenvTpName);
 
     //enveloppe start is before act start
     stn.addBeforeCst(stenvTpName, stAct);

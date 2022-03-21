@@ -82,5 +82,17 @@ public class STNTest {
     var expD1 = new TaskNetwork.TNActData(Pair.of(3.,3.), Pair.of(4.,4.), Pair.of(1.,1.));
     assert(expD1.equals(d));
   }
-
+  @Test
+  public void testEnveloppe2(){
+    var stn = new TaskNetwork(2,10);
+    stn.addAct("Act");
+    stn.addStartInterval("Act", 2,15);
+    stn.addDurationInterval("Act", 1, 20);
+    stn.addEnveloppe("Act", "win", 3,7);
+    var success = stn.propagate();
+    assert(success);
+    var d = stn.getAllData("Act");
+    var expD1 = new TaskNetwork.TNActData(Pair.of(3.,6.), Pair.of(4.,7.), Pair.of(1.,4.));
+    assert(expD1.equals(d));
+  }
 }
