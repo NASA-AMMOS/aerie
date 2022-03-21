@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpress
 import gov.nasa.jpl.aerie.scheduler.constraints.transformers.TimeWindowsTransformer;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.Time;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +54,7 @@ public class TimeRangeExpression {
         final var anchorActSearch = new ActivityExpression.Builder()
             .basedOn(actTemplate)
             .startsIn(Window.between(
-                minTimepoint.get(),
+                Duration.max(Duration.ZERO, minTimepoint.get()),
                 Window.Inclusivity.Inclusive,
                 maxTimepoint.get(),
                 Window.Inclusivity.Exclusive)).build();
