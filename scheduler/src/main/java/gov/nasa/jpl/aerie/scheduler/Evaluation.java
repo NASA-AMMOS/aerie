@@ -157,13 +157,12 @@ public class Evaluation {
   }
 
   boolean canAssociateMoreToCreatorOf(final ActivityInstance instance){
-    final var creator = getGoalCreator(instance)
-        .orElseThrow(() -> new IllegalStateException("No goal is referenced as creator for activity " + instance));
-    if (creator instanceof ActivityExistentialGoal activityExistentialCreator) {
-      //we can piggyback
-      return activityExistentialCreator.childCustody == ChildCustody.Jointly;
-    }
-    return true;
+    final var creator$ = getGoalCreator(instance);
+    if (creator$.isEmpty()) return false;
+    final var creator = creator$.get();
+
+    if (!(creator instanceof ActivityExistentialGoal activityExistentialCreator)) return true;
+    return activityExistentialCreator.childCustody == ChildCustody.Jointly; // we can piggyback
   }
 
   /**
