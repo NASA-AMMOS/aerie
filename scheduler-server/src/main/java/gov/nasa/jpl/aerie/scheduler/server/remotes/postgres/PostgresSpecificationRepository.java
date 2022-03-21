@@ -14,6 +14,7 @@ import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingDSLCompilationServ
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public final class PostgresSpecificationRepository implements SpecificationRepository {
@@ -53,11 +54,17 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
             this.schedulingDSLCompilationService))
         .toList();
 
-    final var failedGoals = goals
-        .stream()
-        .filter(goal -> goal instanceof GoalCompilationResult.Failure)
-        .map(goal -> (GoalCompilationResult.Failure) goal)
-        .toList();
+    final var successfulGoals = new ArrayList<GoalRecord>();
+    final var failedGoals = new ArrayList<GoalCompilationResult.Failure>();
+    for (final var goalBuildResult : goals) {
+      if (goalBuildResult instanceof GoalCompilationResult.Failure g) {
+        failedGoals.add(g);
+      } else if (goalBuildResult instanceof GoalCompilationResult.Success g) {
+        successfulGoals.add(g.goalRecord());
+      } else {
+        throw new Error("Unhandled variant of GoalCompilationResult: " + goalBuildResult);
+      }
+    }
 
     if (!failedGoals.isEmpty()) {
       throw new SpecificationLoadException(specificationId,
@@ -70,10 +77,7 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
     return new Specification(
         planId,
         specificationRecord.planRevision(),
-        goals
-            .stream()
-            .map(goal -> ((GoalCompilationResult.Success) goal).goalRecord())
-            .toList(),
+        successfulGoals,
         specificationRecord.horizonStartTimestamp(),
         specificationRecord.horizonEndTimestamp(),
         specificationRecord.simulationArguments()
