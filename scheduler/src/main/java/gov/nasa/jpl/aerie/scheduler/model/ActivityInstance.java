@@ -22,6 +22,38 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class ActivityInstance {
   /**
+   * unique id
+   */
+  private final SchedulingActivityInstanceId id;
+
+  /**
+   * the descriptor for the behavior invoked by this activity instance
+   */
+  private final ActivityType type;
+
+  /**
+   * the length of time this activity instances lasts for after its start
+   */
+  private Duration duration;
+
+  /**
+   * the time at which this activity instance is scheduled to start
+   */
+  private Duration startTime;
+
+  /**
+   * arguments are stored in a String/Object hashmap.
+   */
+  private Map<String, SerializedValue> arguments = new HashMap<>();
+  /**
+   * uninstantiated arguments
+   */
+  private Map<String, VariableArgumentComputer> variableArguments = new HashMap<>();
+
+
+  private static final AtomicLong uniqueId = new AtomicLong();
+
+  /**
    * creates a new unscheduled activity instance of specified type
    *
    * @param type IN the datatype signature of and behavior descriptor invoked
@@ -75,7 +107,7 @@ public class ActivityInstance {
     this.duration = o.duration;
     this.arguments = o.arguments;
     this.variableArguments = o.variableArguments;
-    if (duration.isNegative()) {
+    if (hasDuration() && duration.isNegative()) {
       throw new RuntimeException("Negative duration");
     }
   }
@@ -218,7 +250,7 @@ public class ActivityInstance {
   }
 
   public String toString() {
-    return "[" + this.type.getName() + ","+ this.id + "," + this.getStartTime() + "," + (this.hasDuration() ? this.getEndTime() : "") + "]";
+    return "[" + this.type.getName() + ","+ this.id + "," + (this.hasStartTime() ? this.getStartTime() : "{}") + "," + (this.hasEndTime() ? this.getEndTime() : "{}") + "]";
   }
 
   /**
@@ -298,26 +330,6 @@ public class ActivityInstance {
   }
 
   /**
-   * unique id
-   */
-  private final SchedulingActivityInstanceId id;
-
-  /**
-   * the descriptor for the behavior invoked by this activity instance
-   */
-  private final ActivityType type;
-
-  /**
-   * the length of time this activity instances lasts for after its start
-   */
-  private Duration duration;
-
-  /**
-   * the time at which this activity instance is scheduled to start
-   */
-  private Duration startTime;
-
-  /**
    * adds an argument to the activity instance
    *
    * @param argument specification. must be identical as the one defined in the model
@@ -369,15 +381,4 @@ public class ActivityInstance {
     return arguments;
   }
 
-  /**
-   * arguments are stored in a String/Object hashmap.
-   */
-  private Map<String, SerializedValue> arguments = new HashMap<>();
-  /**
-   * uninstantiated arguments
-   */
-  private Map<String, VariableArgumentComputer> variableArguments = new HashMap<>();
-
-
-  private static final AtomicLong uniqueId = new AtomicLong();
 }
