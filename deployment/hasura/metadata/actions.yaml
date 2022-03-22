@@ -15,6 +15,10 @@ actions:
     definition:
       kind: synchronous
       handler: http://aerie_commanding:3000/put-expansion-set
+  - name: expandAllActivities
+    definition:
+      kind: synchronous
+      handler: http://aerie_commanding:3000/expand-all-activity-instances
   - name: getModelEffectiveArguments
     definition:
       kind: ""
@@ -86,6 +90,8 @@ custom_types:
     - name: CommandDictionaryResponse
     - name: AddCommandExpansionResponse
     - name: TypeScriptResponse
+    - name: ExpandAllActivitiesResponse
+    - name: ExpandedActivityInstance
   scalars:
     - name: ResourceSchema
     - name: MerlinSimulationResults
@@ -94,3 +100,5 @@ custom_types:
     - name: ActivityArguments
     - name: ProfileSet
     - name: SchedulingFailureReason
+    - name: Command
+    - name: UserCodeError

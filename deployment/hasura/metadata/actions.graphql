@@ -18,11 +18,18 @@ type Mutation {
 }
 
 type Mutation{
-  createExpansionSet (
-    commandDictionaryId: Int!,
-    missionModelId: Int!,
+  createExpansionSet(
+    commandDictionaryId: Int!
+    missionModelId: Int!
     expansionIds: [Int!]!
   ): ExpansionSetResponse
+}
+
+type Mutation{
+  expandAllActivities(
+    expansionSetId: Int!
+    simulationDatasetId: Int!
+  ): ExpandAllActivitiesResponse
 }
 
 type Query {
@@ -144,6 +151,17 @@ type TypeScriptResponse {
   typescript: String!
 }
 
+type ExpandAllActivitiesResponse {
+  id: Int!
+  expandedActivityInstances: [ExpandedActivityInstance!]!
+}
+
+type ExpandedActivityInstance {
+  id: Int!
+  commands: [Command!]
+  errors: [UserCodeError!]!
+}
+
 scalar ResourceSchema
 
 scalar MerlinSimulationResults
@@ -157,3 +175,7 @@ scalar ActivityArguments
 scalar ProfileSet
 
 scalar SchedulingFailureReason
+
+scalar Command
+
+scalar UserCodeError
