@@ -258,6 +258,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
     if (window != null) {
       tnw.addEnveloppe(name, "window", window.start, window.end);
     }
+    tnw.addEnveloppe(name, "planningHorizon", planningHorizon.getStartAerie(), planningHorizon.getEndAerie());
     if (this.startRange != null) {
       tnw.addStartInterval(name, this.startRange.start, this.startRange.end);
     }
