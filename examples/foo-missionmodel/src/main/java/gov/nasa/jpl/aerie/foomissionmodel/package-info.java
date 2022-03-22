@@ -8,6 +8,9 @@
 @WithActivityType(BasicActivity.class)
 @WithActivityType(FooActivity.class)
 @WithActivityType(BarActivity.class)
+@WithActivityType(SolarPanelNonLinear.class)
+@WithActivityType(SolarPanelNonLinearTimeDependent.class)
+
 @WithActivityType(DecompositionTestActivities.ParentActivity.class)
 @WithActivityType(DecompositionTestActivities.ChildActivity.class)
 
@@ -18,6 +21,8 @@ import gov.nasa.jpl.aerie.foomissionmodel.activities.BarActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.BasicActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.DecompositionTestActivities;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.FooActivity;
+import gov.nasa.jpl.aerie.foomissionmodel.activities.SolarPanelNonLinear;
+import gov.nasa.jpl.aerie.foomissionmodel.activities.SolarPanelNonLinearTimeDependent;
 import gov.nasa.jpl.aerie.foomissionmodel.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel.WithActivityType;

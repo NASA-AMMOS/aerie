@@ -27,6 +27,9 @@ public final class SimulationUtility {
     return builder.build(model, factory.getConfigurationType(), registry);
   }
 
+  public static SchedulerModel getFooSchedulerModel(){
+    return new gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedSchedulerModel();
+  }
 
   public static MissionModel<?> getBananaMissionModel(){
     final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, Path.of("/etc/hosts"));
