@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -31,8 +30,8 @@ import java.util.Optional;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Optional<PostgresPlanRevisionData> get(final PlanId planId) throws SQLException {
-    this.statement.setLong(1, planId.id());
+  public Optional<PostgresPlanRevisionData> get(final long planId) throws SQLException {
+    this.statement.setLong(1, planId);
 
     final var results = this.statement.executeQuery();
     if (!results.next()) return Optional.empty();

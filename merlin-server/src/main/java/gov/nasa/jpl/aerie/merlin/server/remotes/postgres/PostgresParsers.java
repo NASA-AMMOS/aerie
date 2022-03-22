@@ -17,11 +17,11 @@ import java.util.Map;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstanceIdP;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.server.http.ValueSchemaJsonParser.valueSchemaP;
 
@@ -60,7 +60,7 @@ public final class PostgresParsers {
   public static final JsonParser<Map<String, SerializedValue>> simulationArgumentsP = mapP(serializedValueP);
 
   public static final JsonParser<ActivityAttributesRecord> activityAttributesP = productP
-      .optionalField("directiveId", activityInstanceIdP)
+      .optionalField("directiveId", longP)
       .field("arguments", activityArgumentsP)
       .field("computedAttributes", serializedValueP)
         .map(Iso.of(

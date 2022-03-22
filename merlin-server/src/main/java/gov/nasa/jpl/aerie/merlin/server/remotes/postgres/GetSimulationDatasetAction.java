@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.SimulationStateRecord.Status;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -12,7 +13,7 @@ import java.util.Optional;
   private static final @Language("Sql") String sql = """
     select
           d.simulation_id,
-          d.state,
+          d.status,
           d.reason,
           d.canceled,
           d.offset_from_plan_start
@@ -36,12 +37,20 @@ import java.util.Optional;
     final var results = this.statement.executeQuery();
     if (!results.next()) return Optional.empty();
 
+    final Status status;
+    try {
+      status = Status.fromString(results.getString(2));
+    } catch (final Status.InvalidSimulationStatusException ex) {
+      throw new Error("Simulation Dataset initialized with invalid state.");
+    }
+
     final var simulationId = results.getLong(1);
-    final var state = new SimulationStateRecord(
-        results.getString(2),
-        results.getString(3));
+    final var reason = results.getString(3);
     final var canceled = results.getBoolean(4);
     final var offsetFromPlanStart = PostgresParsers.parseOffset(results, 5, planStart);
+    final var state = new SimulationStateRecord(
+        status,
+        reason);
 
     return Optional.of(
         new SimulationDatasetRecord(

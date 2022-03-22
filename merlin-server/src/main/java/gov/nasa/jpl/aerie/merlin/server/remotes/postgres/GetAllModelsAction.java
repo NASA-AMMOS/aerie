@@ -23,21 +23,26 @@ import java.util.Map;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Map<String, MissionModelJar> get() throws SQLException {
+  public Map<Long, MissionModelRecord> get() throws SQLException {
     try (final var results = this.statement.executeQuery()) {
-      final var missionModels = new HashMap<String, MissionModelJar>();
+      final var missionModels = new HashMap<Long, MissionModelRecord>();
 
       while (results.next()) {
-        final var id = Long.toString(results.getLong(1));
+        final var id = results.getLong(1);
+        final var mission = results.getString(2);
+        final var name = results.getString(3);
+        final var version = results.getString(4);
+        final var owner = results.getString(5);
+        final var path = Path.of(results.getString(6));
 
-        final var missionModel = new MissionModelJar();
-        missionModel.mission = results.getString(2);
-        missionModel.name = results.getString(3);
-        missionModel.version = results.getString(4);
-        missionModel.owner = results.getString(5);
-        missionModel.path = Path.of(results.getString(6));
-
-        missionModels.put(id, missionModel);
+        missionModels.put(
+            id,
+            new MissionModelRecord(
+                mission,
+                name,
+                version,
+                owner,
+                path));
       }
 
       return missionModels;

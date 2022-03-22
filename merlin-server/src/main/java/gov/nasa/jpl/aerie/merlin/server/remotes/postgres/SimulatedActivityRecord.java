@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
@@ -16,6 +15,6 @@ import java.util.Optional;
     Duration duration,
     Optional<Long> parentId,
     List<Long> childIds,
-    Optional<ActivityInstanceId> directiveId,
+    Optional<Long> directiveId,
     SerializedValue computedAttributes
 ) {}

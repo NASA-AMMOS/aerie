@@ -1,54 +1,28 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
-import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
-import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.intellij.lang.annotations.Language;
 
+import javax.json.Json;
+import java.io.Reader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.activityArgumentsP;
 
 /*package-local*/ final class GetActivitiesAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    with
-      json_activity_arguments as
-        ( select
-            arg.activity_id,
-            json_object_agg(arg.name, arg.value) as arguments
-          from activity_argument as arg
-          group by activity_id ),
-      full_activity as
-        ( select
-            a.plan_id,
-            a.id,
-            ceil(extract(epoch from a.start_offset) * 1000*1000) as start_offset_in_micros,
-            a.type,
-            coalesce(arguments.arguments, '[]'::json) as arguments
-          from activity as a
-          left join json_activity_arguments as arguments
-            on a.id = arguments.activity_id ),
-      json_activities as
-        ( select
-            a.plan_id,
-            array_to_json(array_agg(json_build_object(
-              'id', a.id,
-              'start_offset_in_micros', a.start_offset_in_micros,
-              'type', a.type,
-              'arguments', a.arguments))
-            ) as activities
-          from full_activity as a
-          group by a.plan_id )
     select
-      to_char(p.start_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as start_time,
-      coalesce(activities.activities, '[]'::json) as activities
-    from plan as p
-    left join json_activities as activities
-      on activities.plan_id = p.id
-    where p.id = ?
+      a.id,
+      a.type,
+      ceil(extract(epoch from a.start_offset) * 1000*1000) as start_offset_in_micros,
+      a.arguments
+    from activity as a
+    where a.plan_id = ?
     """;
 
   private final PreparedStatement statement;
@@ -57,17 +31,31 @@ import java.util.Map;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Map<ActivityInstanceId, ActivityInstance> get(final PlanId planId) throws SQLException, NoSuchPlanException {
-    this.statement.setLong(1, planId.id());
+  public List<ActivityInstanceRecord> get(final long planId) throws SQLException {
+    this.statement.setLong(1, planId);
 
+    final var activities = new ArrayList<ActivityInstanceRecord>();
     try (final var results = this.statement.executeQuery()) {
-      if (!results.next()) throw new NoSuchPlanException(planId);
-
-      final var startTimestamp = Timestamp.fromString(results.getString(1));
-      final var activitiesJson = results.getString(2);
-
-      return PostgresPlanRepository.parseActivitiesJson(activitiesJson, startTimestamp);
+      while (results.next()) {
+        activities.add(
+            new ActivityInstanceRecord(
+                results.getLong("id"),
+                results.getString("type"),
+                results.getLong("start_offset_in_micros"),
+                parseActivityArguments(results.getCharacterStream("arguments"))));
+      }
     }
+
+    return activities;
+  }
+
+  private Map<String, SerializedValue> parseActivityArguments(final Reader stream) {
+    final var json = Json.createReader(stream).readValue();
+    return activityArgumentsP
+        .parse(json)
+        .getSuccessOrThrow(
+            failureReason -> new Error("Corrupt activity arguments cannot be parsed: " + failureReason.reason())
+        );
   }
 
   @Override

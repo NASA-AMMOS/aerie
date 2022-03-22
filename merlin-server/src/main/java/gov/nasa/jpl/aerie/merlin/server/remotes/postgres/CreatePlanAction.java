@@ -25,7 +25,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
     this.statement = connection.prepareStatement(sql);
   }
 
-  public PlanId apply(
+  public long apply(
       final String name,
       final long modelId,
       final Timestamp startTime,
@@ -40,7 +40,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
     try (final var results = this.statement.executeQuery()) {
       if (!results.next()) throw new FailedInsertException("plan");
 
-      return new PlanId(results.getLong(1));
+      return results.getLong(1);
     } catch (final SQLException ex) {
       // https://www.postgresql.org/docs/current/errcodes-appendix.html
       if (Objects.equals(ex.getSQLState(), "23503")) {  /* foreign_key_violation */

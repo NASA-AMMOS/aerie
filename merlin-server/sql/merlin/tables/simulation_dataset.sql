@@ -1,3 +1,5 @@
+create type status_t as enum('incomplete', 'failed', 'success');
+
 create table simulation_dataset (
   id integer generated always as identity,
   simulation_id integer not null,
@@ -15,7 +17,7 @@ create table simulation_dataset (
   dataset_revision integer null,
 
   -- Simulation state
-  state text not null default 'incomplete',
+  status status_t not null default 'incomplete',
   reason text null,
   canceled boolean not null default false,
 
@@ -56,8 +58,8 @@ comment on column simulation_dataset.simulation_revision is e''
   'The revision of the simulation corresponding to the given revision of the dataset.';
 comment on column simulation_dataset.dataset_revision is e''
   'The revision of the dataset corresponding to the given revisions of the input entities.';
-comment on column simulation_dataset.state is e''
-  'The state of the simulation for which the dataset is associated.';
+comment on column simulation_dataset.status is e''
+  'The status of the simulation for which the dataset is associated.';
 comment on column simulation_dataset.reason is e''
   'The reason for failure in the event that simulation fails.';
 comment on column simulation_dataset.canceled is e''

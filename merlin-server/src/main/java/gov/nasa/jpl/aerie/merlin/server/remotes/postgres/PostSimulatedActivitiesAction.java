@@ -1,7 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
@@ -31,16 +29,16 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
     this.statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
   }
 
-  public Map<ActivityInstanceId, Long> apply(
+  public Map<Long, Long> apply(
       final long datasetId,
-      final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities,
+      final Map<Long, SimulatedActivityRecord> simulatedActivities,
       final Timestamp simulationStart
   ) throws SQLException {
     final var ids = simulatedActivities.keySet().stream().toList();
     for (final var id : ids) {
       final var act = simulatedActivities.get(id);
-      final var startTimestamp = new Timestamp(act.start);
-      final var actEnd = act.start.plus(act.duration.dividedBy(Duration.MICROSECOND), ChronoUnit.MICROS);
+      final var startTimestamp = new Timestamp(act.start());
+      final var actEnd = act.start().plus(act.duration().dividedBy(Duration.MICROSECOND), ChronoUnit.MICROS);
       final var endTimestamp = new Timestamp(actEnd);
 
       statement.setLong(1, datasetId);
@@ -48,8 +46,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
       setTimestamp(statement, 3, simulationStart);
       setTimestamp(statement, 4, endTimestamp);
       setTimestamp(statement, 5, startTimestamp);
-      statement.setString(6, act.type);
-      statement.setString(7, buildAttributes(act.directiveId, act.arguments, act.computedAttributes));
+      statement.setString(6, act.type());
+      statement.setString(7, buildAttributes(act.directiveId(), act.arguments(), act.computedAttributes()));
 
       statement.addBatch();
     }
@@ -57,7 +55,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
     statement.executeBatch();
     final var resultSet = statement.getGeneratedKeys();
 
-    final var simIdToPostgresId = new HashMap<ActivityInstanceId, Long>(ids.size());
+    final var simIdToPostgresId = new HashMap<Long, Long>(ids.size());
     for (final var id : ids) {
       if (!resultSet.next()) throw new Error("Not enough generated IDs returned from batch insertion.");
       simIdToPostgresId.put(id, resultSet.getLong(1));
@@ -66,7 +64,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
     return simIdToPostgresId;
   }
 
-  private String buildAttributes(final Optional<ActivityInstanceId> directiveId, final Map<String, SerializedValue> arguments, final SerializedValue returnValue) {
+  private String buildAttributes(final Optional<Long> directiveId, final Map<String, SerializedValue> arguments, final SerializedValue returnValue) {
     return activityAttributesP.unparse(new ActivityAttributesRecord(directiveId, arguments, returnValue)).toString();
   }
 

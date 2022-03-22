@@ -26,7 +26,7 @@ import java.sql.SQLException;
   throws SQLException, NoSuchSimulationDatasetException
   {
     final var state = SimulationStateRecord.fromSimulationState(simulationState);
-    this.statement.setString(1, state.state());
+    this.statement.setString(1, state.status().label);
     this.statement.setString(2, state.reason());
     this.statement.setLong(3, datasetId);
 

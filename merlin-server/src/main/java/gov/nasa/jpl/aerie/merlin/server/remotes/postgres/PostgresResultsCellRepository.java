@@ -118,7 +118,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   ) throws SQLException
   {
     try (final var getSimulationAction = new GetSimulationAction(connection)) {
-      return getSimulationAction.get(planId);
+      return getSimulationAction.get(planId.id());
     }
   }
 
@@ -151,7 +151,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   ) throws SQLException
   {
     try (final var createSimulationAction = new CreateSimulationAction(connection)) {
-      return createSimulationAction.apply(planId, arguments);
+      return createSimulationAction.apply(planId.id(), arguments);
     }
   }
 
@@ -211,11 +211,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     final var record = record$.get();
 
     return Optional.of(
-        switch (record.state().state()) {
-          case "incomplete" -> new ResultsProtocol.State.Incomplete();
-          case "failed" -> new ResultsProtocol.State.Failed(record.state().reason());
-          case "success" -> new ResultsProtocol.State.Success(getSimulationResults(connection, record, planId));
-          default -> throw new Error(String.format("Unexpected simulation state %s", record.state()));
+        switch (record.state().status()) {
+          case INCOMPLETE -> new ResultsProtocol.State.Incomplete();
+          case FAILED -> new ResultsProtocol.State.Failed(record.state().reason());
+          case SUCCESS -> new ResultsProtocol.State.Success(getSimulationResults(connection, record, planId));
         });
   }
 
@@ -290,7 +289,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
             record.duration(),
             record.parentId().map(pgIdToSimId::get).orElse(null),
             record.childIds().stream().map(pgIdToSimId::get).collect(Collectors.toList()),
-            record.directiveId(),
+            record.directiveId().map(ActivityInstanceId::new),
             record.computedAttributes()
         ));
       }
@@ -307,7 +306,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final var record = activityRecords.get(id);
       if (record.directiveId().isEmpty()) continue;
 
-      final var directiveId = record.directiveId().get();
+      final var directiveId = new ActivityInstanceId(record.directiveId().get());
       pgIdToSimId.put(id, directiveId);
       simIds.add(directiveId.id());
     }
@@ -349,7 +348,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final PlanId planId
   ) throws SQLException, NoSuchPlanException {
     try (final var getPlanAction = new GetPlanAction(connection)) {
-      return getPlanAction.get(planId);
+      return getPlanAction
+          .get(planId.id())
+          .orElseThrow(() -> new NoSuchPlanException(planId));
     }
   }
 
@@ -406,20 +407,40 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         final var postSimulatedActivitiesAction = new PostSimulatedActivitiesAction(connection);
         final var updateSimulatedActivityParentsAction = new UpdateSimulatedActivityParentsAction(connection)
     ) {
+      final var simulatedActivityRecords = simulatedActivities
+          .entrySet()
+          .stream()
+          .collect(Collectors.toMap(
+              e -> e.getKey().id(),
+              e -> simulatedActivityToRecord(e.getValue())));
+
       final var simIdToPgId = postSimulatedActivitiesAction.apply(
           datasetId,
-          simulatedActivities,
+          simulatedActivityRecords,
           simulationStart);
       updateSimulatedActivityParentsAction.apply(
           datasetId,
-          simulatedActivities,
+          simulatedActivityRecords,
           simIdToPgId);
     }
+  }
+
+  private static SimulatedActivityRecord simulatedActivityToRecord(final SimulatedActivity activity) {
+    return new SimulatedActivityRecord(
+        activity.type,
+        activity.arguments,
+        activity.start,
+        activity.duration,
+        Optional.ofNullable(activity.parentId).map(ActivityInstanceId::id),
+        activity.childIds.stream().map(ActivityInstanceId::id).collect(Collectors.toList()),
+        activity.directiveId.map(ActivityInstanceId::id),
+        activity.computedAttributes);
   }
 
   public static final class PostgresResultsCell implements ResultsProtocol.OwnerRole {
     private final DataSource dataSource;
     private final SimulationRecord simulation;
+    private final PlanId planId;
     private final long datasetId;
     private final Timestamp planStart;
 
@@ -431,6 +452,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     ) {
       this.dataSource = dataSource;
       this.simulation = simulation;
+      this.planId = new PlanId(simulation.planId());
       this.datasetId = datasetId;
       this.planStart = planStart;
     }
@@ -441,7 +463,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         return getSimulationState(
             connection,
             datasetId,
-            simulation.planId(),
+            planId,
             planStart)
             .orElseThrow(() -> new Error("Dataset corrupted"));
       } catch (final SQLException ex) {
