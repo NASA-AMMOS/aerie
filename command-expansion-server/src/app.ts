@@ -2,22 +2,22 @@ import './polyfills.js';
 import express, { Application, NextFunction, Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import DataLoader from 'dataloader';
-import ts from 'typescript';
 import { GraphQLClient } from 'graphql-request';
 import * as ampcs from '@nasa-jpl/aerie-ampcs';
 import getLogger from "./utils/logger.js";
-import {executeUserCode} from '@nasa-jpl/aerie-ts-user-code-runner';
 import { getEnv } from './env.js';
 import { DbExpansion } from './db.js';
 import { processDictionary } from './lib/codegen/CommandTypeCodegen.js';
 import { generateTypescriptForGraphQLActivitySchema } from './lib/codegen/ActivityTypescriptCodegen.js';
 import { InferredDataloader } from './lib/batchLoaders/index.js';
 import { commandDictionaryTypescriptBatchLoader } from './lib/batchLoaders/commandDictionaryTypescriptBatchLoader.js';
-import { activitySchemaBatchLoader } from './lib/batchLoaders/activitySchemaBatchLoader.js';
+import {activitySchemaBatchLoader, GraphQLActivitySchema} from './lib/batchLoaders/activitySchemaBatchLoader.js';
 import { simulatedActivityInstanceBatchLoader } from './lib/batchLoaders/simulatedActivityInstanceBatchLoader.js';
-import { mapGraphQLActivityInstance } from './lib/mapGraphQLActivityInstance.js';
-import { isRejected } from './utils/typeguards.js';
+import {ActivityInstance, mapGraphQLActivityInstance} from './lib/mapGraphQLActivityInstance.js';
 import {expansionSetBatchLoader} from "./lib/batchLoaders/expansionSetBatchLoader.js";
+import path from "path";
+import Piscina from "piscina";
+import {ExpansionResult} from "./worker";
 
 
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
@@ -27,6 +27,8 @@ app.use(bodyParser.json({ limit: '25mb' }));
 
 DbExpansion.init();
 const db = DbExpansion.getDb();
+
+const piscina = new Piscina({ filename: `${path.resolve()}/build/worker.js` });
 
 type Context = {
   commandTypescriptDataLoader: InferredDataloader<typeof commandDictionaryTypescriptBatchLoader>,
@@ -139,10 +141,10 @@ app.post('/put-expansion-set', async (req, res) => {
   ]);
 
   if (rows.length < 1) {
-    throw new Error(`PUT /put-expansion-set: No expansion set was inserted in the database`);
+    throw new Error(`POST /put-expansion-set: No expansion set was inserted in the database`);
   }
   const id = rows[0].id;
-  logger.info(`PUT /put-expansion-set: Updated expansion set in the database: id=${id}`);
+  console.log(`POST /put-expansion-set: Updated expansion set in the database: id=${id}`);
   res.status(200).json({ id });
   return;
 });
@@ -179,74 +181,106 @@ app.post('/get-activity-typescript', async (req, res) => {
 app.post('/expand-all-activity-instances', async (req, res) => {
   const context: Context = res.locals.context;
 
+  // Query for expansion set data
   console.log(`input = ${JSON.stringify(req.body.input)}`);
   const expansionSetId = req.body.input.expansionSetId as number;
   const simulationDatasetId = req.body.input.simulationDatasetId as number;
-  const commandTypes: string = '';
-
   const expansionSet = await context.expansionSetDataLoader.load({expansionSetId});
-  const activityInstances = await context.simulatedActivityInstanceDataLoader.load({simulationDatasetId});
-  // console.log(`expansion set data = ${JSON.stringify(expansionSet)}`);
+  const commandTypes = expansionSet.commandDictionary.commandTypesTypeScript;
 
-  const mappedActivityInstances = await Promise.all(activityInstances.map(async activityInstance => {
-    const activitySchema = await context.activitySchemaDataLoader.load({
-      missionModelId: expansionSet.missionModel.id,
-      activityTypeName: activityInstance.type,
-    });
-    return {
-      activityTypeName: activityInstance.type,
-      instance: mapGraphQLActivityInstance(activityInstance, activitySchema),
-      schema: activitySchema,
-    };
-  }));
+  // Populate expansion run table, this table serves as a "ledger" for attempted expansions
+  const { rows } = await db.query(`
+    INSERT INTO expansion_run (simulation_dataset_id, expansion_set_id)
+    VALUES ($1, $2)
+    RETURNING id;
+  `, [
+    expansionSet.commandDictionary.id,
+    expansionSet.id,
+  ]);
+  if (rows.length < 1) {
+    throw new Error(`POST /expand-all-activity-instances: No expansion run record was inserted in the database`);
+  }
+  const expansionRunId = rows[0];
 
-  console.log(`Expanding ${activityInstances.length} activity instances`);
+  // Collect and couple all activity instances and associated schemas
+  let activities: { instance: ActivityInstance, schema: GraphQLActivitySchema }[];
+  {
+    const instances = await context.simulatedActivityInstanceDataLoader.load({simulationDatasetId});
+    activities = await Promise.all(instances.map(async activityInstance => {
+      const activitySchema = await context.activitySchemaDataLoader.load({
+        missionModelId: expansionSet.missionModel.id,
+        activityTypeName: activityInstance.type,
+      });
+      return {
+        instance: mapGraphQLActivityInstance(activityInstance, activitySchema),
+        schema: activitySchema,
+      };
+    }));
+  }
 
-  const results = await Promise.allSettled(mappedActivityInstances.map(async mappedActivityInstance => {
-    console.log(`Looking for activity type name: ${mappedActivityInstance.activityTypeName}`);
+  // 1. Map act. instances to expansions
+  // 2. Create list of expansion promises
+  // 3. Pass all promises to `allSettled` to get concrete expansion results
+  console.log(`Expanding ${activities.length} activity instance(s)`);
+  const expansionPromises: Promise<ExpansionResult>[] = activities.map(activity => {
+    const activityTypeName = activity.schema.name;
+    console.log(`Looking for activity type name: ${activityTypeName}`);
     expansionSet.expansionRules.forEach(expansionRule => console.log(`Finding expansion rule with activity type name: ${expansionRule.activityType}`));
-    const expansion = expansionSet.expansionRules.find(expansionRule => expansionRule.activityType === mappedActivityInstance.activityTypeName);
-    if (expansion !== undefined) {
-      console.log("HIT 1");
-
-      const activityTypes = generateTypescriptForGraphQLActivitySchema(mappedActivityInstance.schema);
-      const result = await executeUserCode(
-          expansion.expansionLogic,
-          [{
-            activity: mappedActivityInstance.instance,
-          }],
-          'Command[] | Command | null',
-          ['{ activity: ActivityType }'],
-          3000,
-          [
-            ts.createSourceFile('command-types.ts', commandTypes, ts.ScriptTarget.ES2021),
-            ts.createSourceFile('activity-types.ts', activityTypes, ts.ScriptTarget.ES2021),
-          ],
-      );
-
-      console.log("HIT 2");
-      const commands = result.unwrap();
-      console.log(`commands = ${JSON.stringify(commands)}`);
-      // Store results in the database
-
+    const expansion = expansionSet.expansionRules.find(expansionRule => expansionRule.activityType === activityTypeName);
+    if (expansion === undefined) {
+      throw new Error(`POST /expand-all-activity-instances: Activity type name ("${activityTypeName}") not found within any expansion rules associated with expansion set with id: ${expansionSetId}`);
     }
-  }));
+    const activityTypes = generateTypescriptForGraphQLActivitySchema(activity.schema);
+    return piscina.run({
+      expansionLogic: expansion.expansionLogic,
+      activityInstance: activity.instance,
+      commandTypes: commandTypes,
+      activityTypes: activityTypes,
+    });
+  });
 
-  const errors = results.filter(isRejected).map(result => result.reason);
+  const activityInstanceCommandsIds: number[] = [];
 
+  for (const settledPromise of await Promise.allSettled(expansionPromises)) {
+    if (settledPromise.status === 'fulfilled') {
+      const { activityInstance, commands, errors } = (settledPromise as PromiseFulfilledResult<ExpansionResult>).value;
+      if (commands.length < 1) {
+        // TODO should we fail-fast or aggregate all errors?
+        return res.json({ errors: errors.map(error => error.message) });
+      }
+
+      // Populate activity instance commands table
+      console.log(`commands = ${JSON.stringify(commands)}`);
+      const { rows } = await db.query(`
+        INSERT INTO activity_instance_commands (activity_instance_id, commands, expansion_run_id)
+        VALUES ($1, $2, $3)
+        RETURNING id;
+      `, [
+        activityInstance.id,
+        commands,
+        expansionRunId,
+      ]);
+      if (rows.length < 1) {
+        throw new Error(`POST /expand-all-activity-instances: No activity instance commands were inserted in the database`);
+      }
+      activityInstanceCommandsIds.push(rows[0].id);
+    }
+    else if (settledPromise.status === 'rejected') {
+      const reason = (settledPromise as PromiseRejectedResult).reason;
+      throw new Error(`POST /expand-all-activity-instances: Unexpected error: ${reason}`);
+    }
+  }
+
+  // Return expansion run ID and all associated activity instance commands IDs
   return res.json({
-    errors,
+    expansionRunId: expansionRunId,
+    activityInstanceCommandsIds: activityInstanceCommandsIds
   });
 });
 
 // General error handler
-<<<<<<< HEAD
 app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
   logger.error(err);
-=======
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error(err);
->>>>>>> 7abed7eb2 ([WIP] Getting evaluation put together)
   res.status(err.status ?? err.statusCode ?? 500).send(err.message);
   return next();
 });

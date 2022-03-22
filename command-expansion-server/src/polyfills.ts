@@ -7,13 +7,11 @@ declare global {
 
   var Temporal: typeof TemporalPolyfill;
   //@ts-ignore
-  var Intl: typeof InltPolyfill;
-
+  //var Intl: typeof InltPolyfill;
 }
 
 globalThis.Temporal = TemporalPolyfill;
 //@ts-ignore
-globalThis.Intl = InltPolyfill;
+//globalThis.Intl = InltPolyfill;
 
 Date.prototype.toTemporalInstant = toTemporalInstant;
-

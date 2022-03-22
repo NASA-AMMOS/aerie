@@ -8,20 +8,7 @@ import { Temporal } from '@js-temporal/polyfill';
 export function mapGraphQLActivityInstance(
   activityInstance: SimulatedActivityInstance<any, any>,
   activitySchema: GraphQLActivitySchema,
-): {
-  id: number;
-  duration: Temporal.Duration;
-  startOffset: Temporal.Duration;
-  type: string;
-  attributes: {
-    arguments: {
-      [key: string]: any;
-    };
-    computed: {
-      [key: string]: any;
-    } | null;
-  };
-} {
+): ActivityInstance {
   return {
     id: activityInstance.id,
     duration: Temporal.Duration.from(parse(activityInstance.duration).toISOString()),
@@ -74,4 +61,19 @@ function convertType(value: any, schema: Schema): any {
     default:
       throw new Error(`Unknown schema type: ${(schema as any).type}`);
   }
+}
+
+export interface ActivityInstance {
+  id: number;
+  duration: Temporal.Duration;
+  startOffset: Temporal.Duration;
+  type: string;
+  attributes: {
+    arguments: {
+      [key: string]: any;
+    };
+    computed: {
+      [key: string]: any;
+    } | null;
+  };
 }

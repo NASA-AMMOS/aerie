@@ -10,7 +10,22 @@ export const expansionSetBatchLoader: BatchLoader<
   { graphqlClient: GraphQLClient }
 > = opts => async keys => {
   const {expansion_set} = await opts.graphqlClient.request<{
-    expansion_set: GraphQLExpansionSet[]
+    expansion_set: {
+      id: number;
+      command_dictionary: {
+        id: number;
+        command_types_typescript_path: string
+      }
+      mission_model: {
+        id: number;
+        activity_types: GraphQLActivitySchema[];
+      };
+      expansion_rules: {
+        id: number;
+        activity_type: string;
+        expansion_logic: string;
+      }[];
+    }[]
   }>(gql`
     query GetExpansionSet($expansionSetIds: [Int!]!) {
       expansion_set(where: { id: {_in: $expansionSetIds } }) {
@@ -55,31 +70,13 @@ export const expansionSetBatchLoader: BatchLoader<
         activityTypes: expansionSet.mission_model.activity_types,
       },
       expansionRules: expansionSet.expansion_rules.map(expansionRule => ({
-          id: expansionRule.id,
-          activityType: expansionRule.activity_type,
-          expansionLogic: Buffer.from(expansionRule.expansion_logic, 'base64').toString('utf8')
-        })
-      )
+        id: expansionRule.id,
+        activityType: expansionRule.activity_type,
+        expansionLogic: Buffer.from(expansionRule.expansion_logic, 'base64').toString('utf8')
+      }))
     }
   }));
 };
-
-export interface GraphQLExpansionSet {
-  id: number;
-  command_dictionary: {
-    id: number;
-    command_types_typescript_path: string
-  }
-  mission_model: {
-    id: number;
-    activity_types: GraphQLActivitySchema[];
-  };
-  expansion_rules: {
-    id: number;
-    activity_type: string;
-    expansion_logic: string;
-  }[];
-}
 
 export interface ExpansionSet {
   id: number;
