@@ -1,4 +1,4 @@
-create type status_t as enum('incomplete', 'failed', 'success');
+create type status_t as enum('pending', 'incomplete', 'failed', 'success');
 
 create table simulation_dataset (
   id integer generated always as identity,
@@ -17,7 +17,7 @@ create table simulation_dataset (
   dataset_revision integer null,
 
   -- Simulation state
-  status status_t not null default 'incomplete',
+  status status_t not null default 'pending',
   reason text null,
   canceled boolean not null default false,
 

@@ -6,6 +6,9 @@ public final class ResultsProtocol {
   private ResultsProtocol() {}
 
   public /*sealed*/ interface State {
+    /** Simulation in enqueued. */
+    record Pending() implements State {}
+
     /** Simulation in progress, but no results to share yet. */
     record Incomplete() implements State {}
 

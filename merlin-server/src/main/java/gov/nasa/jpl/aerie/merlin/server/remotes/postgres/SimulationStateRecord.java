@@ -2,8 +2,9 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 
-public final record SimulationStateRecord(Status status, String reason) {
+public record SimulationStateRecord(Status status, String reason) {
   public enum Status {
+    PENDING("pending"),
     INCOMPLETE("incomplete"),
     FAILED("failed"),
     SUCCESS("success");
@@ -15,6 +16,7 @@ public final record SimulationStateRecord(Status status, String reason) {
 
     public static Status fromString(final String label) throws InvalidSimulationStatusException {
       return switch(label) {
+        case "pending" -> PENDING;
         case "incomplete" -> INCOMPLETE;
         case "failed" -> FAILED;
         case "success" -> SUCCESS;
