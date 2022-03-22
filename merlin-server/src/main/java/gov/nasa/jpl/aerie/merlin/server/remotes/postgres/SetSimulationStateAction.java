@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol.State;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -11,7 +10,7 @@ import java.sql.SQLException;
   private final @Language("SQL") String sql = """
         update simulation_dataset
           set
-            state = ?,
+            status = ?,
             reason = ?
           where dataset_id = ?
         """;
@@ -22,10 +21,9 @@ import java.sql.SQLException;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public void apply(final long datasetId, final State simulationState)
+  public void apply(final long datasetId, final SimulationStateRecord state)
   throws SQLException, NoSuchSimulationDatasetException
   {
-    final var state = SimulationStateRecord.fromSimulationState(simulationState);
     this.statement.setString(1, state.status().label);
     this.statement.setString(2, state.reason());
     this.statement.setLong(3, datasetId);
