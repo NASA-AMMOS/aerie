@@ -12,7 +12,6 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.BinaryMutexConstraint;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
@@ -613,22 +612,23 @@ private void satisfyOptionGoal(OptionGoal goal) {
         //FINISH: clean this up code dupl re windows etc
         final var act = missingInstance.getInstance();
         newActs.add(new ActivityInstance(act));
-//        final var windows = createWindows( act, startWindows );
-//        newActs.addAll( windows );
+
       } else if (missing instanceof final MissingActivityTemplateConflict missingTemplate) {
         //select the "best" time among the possibilities, and latest among ties
         //REVIEW: currently not handling preferences / ranked windows
-        final var startT = startWindows.minTimePoint();
 
+        startWindows.intersectWith(missing.getTemporalContext());
         //create the new activity instance (but don't place in schedule)
         //REVIEW: not yet handling multiple activities at a time
-        final var template = missingTemplate.getActTemplate();
-        final var completeTemplate = new ActivityCreationTemplate.Builder()
-            .basedOn(template).startsIn(Window.between(startT.get(), startT.get())).build();
-        final var act = completeTemplate.createActivity(
-            goal.getName() + "_" + java.util.UUID.randomUUID());
-        if (act != null) {
-          newActs.add(act);
+        final var act = missingTemplate.getActTemplate().createActivity(
+            goal.getName() + "_" + java.util.UUID.randomUUID(),
+            startWindows,
+            true,
+            simulationFacade,
+            plan,
+            this.problem.getPlanningHorizon());
+        if (act.isPresent()) {
+          newActs.add(act.get());
         }//if(act)
       }
 

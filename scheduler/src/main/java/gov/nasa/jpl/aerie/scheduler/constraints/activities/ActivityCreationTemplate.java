@@ -6,16 +6,24 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.EquationSolvingAlgorithms;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.constraints.resources.ExternalState;
 import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateQueryParam;
 import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpressionState;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetwork;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * criteria used to identify create activity instances in scheduling goals
@@ -229,21 +237,19 @@ public class ActivityCreationTemplate extends ActivityExpression {
    * @return
    */
   public @NotNull
-  ActivityInstance createActivity(String name, Windows windows, boolean instantiateVariableArguments) {
+  Optional<ActivityInstance> createActivity(String name, Windows windows, boolean instantiateVariableArguments, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
     //REVIEW: how to properly export any flexibility to instance?
-
     for (var window : windows) {
-      //success = STNProcess(window);
-      var act = createInstanceForReal(name, window, instantiateVariableArguments);
-      if (act!=null) {
+      var act = createInstanceForReal(name, window, instantiateVariableArguments, facade, plan, planningHorizon);
+      if (act.isPresent()) {
         return act;
       }
     }
-    return null;
+    return Optional.empty();
 
   }
 
-  private ActivityInstance createInstanceForReal(final String name, final Window window, final boolean instantiateVariableArguments) {
+  private Optional<ActivityInstance> createInstanceForReal(final String name, final Window window, final boolean instantiateVariableArguments, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
     final var act = new ActivityInstance(this.type);
     act.setArguments(this.arguments);
     act.setVariableArguments(this.variableArguments);
@@ -264,7 +270,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
     final var success = tnw.solveConstraints();
     if (!success) {
       logger.warn("Inconsistent temporal constraints, returning empty activity");
-      return null;
+      return Optional.empty();
     }
     final var solved = tnw.getAllData(name);
     //select earliest start time
@@ -287,7 +293,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
         act.instantiateVariableArgument(param.getKey());
       }
     }
-    return act;
+    return Optional.of(act);
   }
 
   /**
@@ -306,8 +312,8 @@ public class ActivityCreationTemplate extends ActivityExpression {
    *     according to any specified template criteria
    */
   public @NotNull
-  ActivityInstance createActivity(String name) {
-    return createInstanceForReal(name,null, true);
+  Optional<ActivityInstance> createActivity(String name, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
+    return createInstanceForReal(name,null, true, facade, plan, planningHorizon);
   }
 
 
