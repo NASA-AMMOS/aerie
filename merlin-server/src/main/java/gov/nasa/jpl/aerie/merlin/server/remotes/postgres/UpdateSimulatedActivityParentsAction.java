@@ -28,7 +28,7 @@ import java.util.Map;
   ) throws SQLException {
     for (final var id : simulatedActivities.keySet()) {
       final var activity =  simulatedActivities.get(id);
-      if (activity.parentId().isPresent()) continue;
+      if (activity.parentId().isEmpty()) continue;
 
       this.statement.setLong(1, simIdToPgId.get(activity.parentId().get()));
       this.statement.setLong(2, datasetId);
