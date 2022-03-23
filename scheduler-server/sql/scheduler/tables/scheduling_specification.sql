@@ -41,7 +41,7 @@ create function increment_revision_on_goal_update()
 language plpgsql as $$begin
   with goals as (
     select g.specification_id from scheduling_specification_goals as g
-    where g.goalification_id = new.id
+    where g.specification_id = new.id
   )
   update scheduling_specification set revision = revision + 1
   where exists(select 1 from goals where specification_id = id);
