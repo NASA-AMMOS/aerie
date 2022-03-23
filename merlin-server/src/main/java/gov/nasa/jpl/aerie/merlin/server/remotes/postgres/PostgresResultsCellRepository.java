@@ -271,9 +271,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   ) throws SQLException, NoSuchSimulationDatasetException
   {
     try (final var setSimulationStateAction = new SetSimulationStateAction(connection)) {
-      setSimulationStateAction.apply(
-          datasetId,
-          new SimulationStateRecord(SimulationStateRecord.Status.FAILED, reason));
+      setSimulationStateAction.apply(datasetId, SimulationStateRecord.failed(reason));
     }
   }
 
@@ -449,9 +447,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     insertSimulationEvents(connection, datasetId, results.events, simulationStart);
 
     try (final var setSimulationStateAction = new SetSimulationStateAction(connection)) {
-      setSimulationStateAction.apply(
-          datasetId,
-          new SimulationStateRecord(SimulationStateRecord.Status.SUCCESS, ""));
+      setSimulationStateAction.apply(datasetId, SimulationStateRecord.success());
     }
   }
 

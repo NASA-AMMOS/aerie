@@ -1,8 +1,22 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
-
 public record SimulationStateRecord(Status status, String reason) {
+  public static SimulationStateRecord pending() {
+    return new SimulationStateRecord(Status.PENDING, "");
+  }
+
+  public static SimulationStateRecord incomplete() {
+    return new SimulationStateRecord(Status.INCOMPLETE, "");
+  }
+
+  public static SimulationStateRecord failed(final String reason) {
+    return new SimulationStateRecord(Status.FAILED, reason);
+  }
+
+  public static SimulationStateRecord success() {
+    return new SimulationStateRecord(Status.SUCCESS, "");
+  }
+
   public enum Status {
     PENDING("pending"),
     INCOMPLETE("incomplete"),
