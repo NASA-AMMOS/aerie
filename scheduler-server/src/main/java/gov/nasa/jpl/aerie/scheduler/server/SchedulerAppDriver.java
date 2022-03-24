@@ -147,7 +147,7 @@ public final class SchedulerAppDriver {
         Integer.parseInt(getEnv("SCHEDULER_PORT", "27193")),
         logger.isDebugEnabled(),
         Path.of(getEnv("SCHEDULER_LOCAL_STORE", "/usr/src/app/scheduler_file_store")),
-        new PostgresStore(getEnv("SCHEDULER_DB_TYPE", "postgres"),
+        new PostgresStore(getEnv("SCHEDULER_DB_SERVER", "postgres"),
                           getEnv("SCHEDULER_DB_USER", "aerie"),
                           Integer.parseInt(getEnv("SCHEDULER_DB_PORT", "5432")),
                           getEnv("SCHEDULER_DB_PASSWORD", "aerie"),

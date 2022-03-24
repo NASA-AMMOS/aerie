@@ -109,7 +109,7 @@ public final class AerieAppDriver {
         Integer.parseInt(getEnv("MERLIN_PORT","27183")),
         logger.isDebugEnabled(),
         Path.of(getEnv("MERLIN_LOCAL_STORE","/usr/src/app/merlin_file_store")),
-        new PostgresStore(getEnv("MERLIN_DB_TYPE","postgres"),
+        new PostgresStore(getEnv("MERLIN_DB_SERVER","postgres"),
                           getEnv("MERLIN_DB_USER","aerie"),
                           Integer.parseInt(getEnv("MERLIN_DB_PORT","5432")),
                           getEnv("MERLIN_DB_PASSWORD","aerie"),
