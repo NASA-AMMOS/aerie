@@ -53,8 +53,7 @@ public void minimalDef(){
 
     problem.setGoals(List.of(goal));
 
-    HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, problem);
+    final var solver = new PrioritySolver(problem);
     var plan = new PlanInMemory();
 
 
@@ -90,19 +89,11 @@ public void minimalDef(){
         .named("TestCardGoal")
         .forAllTimeIn(period)
         .owned(ChildCustody.Jointly)
-        //.withPriority(7.0)
-
         .build();
 
     Problem problem = new Problem(null, null, null, null);
-
     problem.setGoals(List.of(goal));
-
-    HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, problem);
     var plan = new PlanInMemory();
-
-
     var evaluation = new Evaluation();
     plan.addEvaluation(evaluation);
     var conflicts = goal.controllableGetConflictsDurAndOccur(plan, Duration.of(12, Duration.SECONDS), 3);

@@ -144,8 +144,7 @@ public class TestStateConstraints {
         .build();
 
     problem.setGoals(List.of(cg));
-    HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, this.problem);
+    final var solver = new PrioritySolver(this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
 
     Windows windows1 = new Windows( horizon.getHor());
@@ -194,8 +193,7 @@ public class TestStateConstraints {
         .build();
 
     problem.setGoals(List.of(proceduralGoalWithConstraints));
-    HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, this.problem);
+    final var solver = new PrioritySolver(this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
 
 
@@ -271,8 +269,7 @@ public class TestStateConstraints {
         .build();
 
     problem.setGoals(List.of(proceduralgoalwithoutconstraints));
-    HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, problem);
+    final var solver = new PrioritySolver(problem);
     final var plan = solver.getNextSolution().orElseThrow();
     assert (TestUtility.containsExactlyActivity(plan, act1));
     assert (TestUtility.doesNotContainActivity(plan, act2));
@@ -311,8 +308,7 @@ public class TestStateConstraints {
         .build();
 
     problem.setGoals(List.of(cg));
-    HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, this.problem);
+    final var solver = new PrioritySolver(this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
     assert(TestUtility.activityStartingAtTime(plan, horizon.getHor().start, activityTypeImage));
     assert(TestUtility.activityStartingAtTime(plan, Time.fromString("2025-180T00:00:00.000",horizon), activityTypeImage));

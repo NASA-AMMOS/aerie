@@ -14,16 +14,16 @@ import static com.google.common.truth.Truth8.assertThat;
 
 public class PrioritySolverTest {
   private static PrioritySolver makeEmptyProblemSolver() {
-    return new PrioritySolver(new HuginnConfiguration(), new Problem(null, h, null, null));
+    return new PrioritySolver(new Problem(null, h, null, null));
   }
 
   private static PrioritySolver makeProblemSolver(Problem problem) {
-    return new PrioritySolver(new HuginnConfiguration(), problem);
+    return new PrioritySolver(problem);
   }
 
   @Test
   public void ctor_onEmptyProblemWorks() {
-    new PrioritySolver(new HuginnConfiguration(), new Problem(null,h, null, null));
+    new PrioritySolver(new Problem(null,h, null, null));
   }
 
   @Test
@@ -60,8 +60,7 @@ public class PrioritySolverTest {
     return mission;
   }
 
-  private final static HuginnConfiguration defaultConfig = new HuginnConfiguration();
-  private final static PlanningHorizon h = defaultConfig.getHorizon();
+  private final static PlanningHorizon h = new PlanningHorizon(Time.fromString("2025-001T01:01:01.001"), Time.fromString("2030-001T01:01:01.001"));
   private final static Duration t0 = h.getStartAerie();
   private final static Duration d1min = Duration.of(1, Duration.MINUTE);
   private final static Duration d1hr = Duration.of(1, Duration.HOUR);
@@ -70,7 +69,6 @@ public class PrioritySolverTest {
   private final static Duration t3hr = t0.plus(d1hr.times(2));
 
   private static final NullPointerTester NULL_POINTER_TESTER = new NullPointerTester()
-      .setDefault(HuginnConfiguration.class, new HuginnConfiguration())
       .setDefault(Problem.class, new Problem(null, h, null, null));
 
 

@@ -27,8 +27,7 @@ public class TestRecurrenceGoal {
 
     problem.setGoals(List.of(goal));
 
-    HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, problem);
+    final var solver = new PrioritySolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
     assert(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), actType));

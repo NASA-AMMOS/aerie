@@ -202,7 +202,7 @@ public record SynchronousSchedulerAgent(
   private Solver createScheduler(final PlanMetadata planMetadata, final Problem problem) {
     //TODO: allow for separate control of windows for constraint analysis vs ability to schedule activities
     //      (eg constraint may need view into immutable past to know how to schedule things in the future)
-    final var solver = new PrioritySolver(new HuginnConfiguration(), problem);
+    final var solver = new PrioritySolver(problem);
     solver.checkSimBeforeInsertingActInPlan();
     return solver;
   }

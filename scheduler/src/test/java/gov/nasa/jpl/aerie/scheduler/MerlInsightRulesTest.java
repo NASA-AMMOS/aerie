@@ -33,7 +33,7 @@ public class MerlInsightRulesTest {
   public void schedule(){
     smallProblem.setInitialPlan(plan);
     rules.getGlobalConstraints().forEach(smallProblem::add);
-    var solver = new PrioritySolver(new HuginnConfiguration(), smallProblem);
+    var solver = new PrioritySolver(smallProblem);
     solver.checkSimBeforeInsertingActInPlan();
     plan = solver.getNextSolution().get();
     solver.printEvaluation();

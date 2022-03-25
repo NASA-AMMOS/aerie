@@ -25,22 +25,43 @@ public class PrioritySolver implements Solver {
 
   private static final Logger logger = LoggerFactory.getLogger(PrioritySolver.class);
 
+  boolean checkSimBeforeInsertingActivities;
+
+  /**
+   * description of the planning problem to solve
+   *
+   * remains constant throughout solver lifetime
+   */
+  final Problem problem;
+
+  /**
+   * the single-shot priority-ordered greedy solution devised by the solver
+   *
+   * this object is null until first call to getNextSolution()
+   */
+  Plan plan;
+
+  /**
+   * tracks how well this solver thinks it has satisfied goals
+   *
+   * including which activities were created to satisfy each goal
+   */
+  Evaluation evaluation;
+
+  private final SimulationFacade simulationFacade;
+
   /**
    * create a new greedy solver for the specified input planning problem
    *
    * the solver is configured to operate on a given planning problem, which
    * must not change out from under the solver during its lifetime
    *
-   * @param config IN, STORED controlling configuration for the solver,
-   *     which must not change
    * @param problem IN, STORED description of the planning problem to be
    *     solved, which must not change
    */
-  public PrioritySolver(HuginnConfiguration config, Problem problem) {
-    checkNotNull(config, "creating solver with null configuration");
+  public PrioritySolver(Problem problem) {
     checkNotNull(problem, "creating solver with null input problem descriptor");
     this.checkSimBeforeInsertingActivities = false;
-    this.config = config;
     this.problem = problem;
     this.simulationFacade = problem.getSimulationFacade();
   }
@@ -98,7 +119,7 @@ public class PrioritySolver implements Solver {
       //if some parameters are left uninstantiated, this is the last moment to do it
       act.instantiateVariableArguments();
       var duration = act.getDuration();
-      if(duration != null && duration.longerThan(this.config.getHorizon().getEndAerie())){
+      if(duration != null && duration.longerThan(this.problem.getPlanningHorizon().getEndAerie())){
         logger.warn("Activity " + act
                            + " is planned to finish after the end of the planning horizon, not simulating. Extend the planning horizon.");
         allGood = false;
@@ -159,7 +180,7 @@ public class PrioritySolver implements Solver {
     this.checkSimBeforeInsertingActivities = false;
     problem.getInitialPlan().getActivitiesByTime().stream()
       .filter( act -> (act.getStartTime()==null)
-               || config.getHorizon().contains( act.getStartTime() ) )
+               || problem.getPlanningHorizon().contains( act.getStartTime() ) )
       .forEach(this::checkAndInsertAct);
     this.checkSimBeforeInsertingActivities = prevCheckFlag;
 
@@ -662,37 +683,5 @@ private void satisfyOptionGoal(OptionGoal goal) {
           Collectors.joining(" ")));
     }
   }
-
-  boolean checkSimBeforeInsertingActivities;
-
-  /**
-   * the controlling configuration for the solver
-   *
-   * remains constant throughout solver lifetime
-   */
-  final HuginnConfiguration config;
-
-  /**
-   * description of the planning problem to solve
-   *
-   * remains constant throughout solver lifetime
-   */
-  final Problem problem;
-
-  /**
-   * the single-shot priority-ordered greedy solution devised by the solver
-   *
-   * this object is null until first call to getNextSolution()
-   */
-  Plan plan;
-
-  /**
-   * tracks how well this solver thinks it has satisfied goals
-   *
-   * including which activities were created to satisfy each goal
-   */
-  Evaluation evaluation;
-
-  private final SimulationFacade simulationFacade;
 
 }

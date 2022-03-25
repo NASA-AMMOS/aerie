@@ -81,6 +81,10 @@ public class Problem {
     return simulationFacade;
   }
 
+  public PlanningHorizon getPlanningHorizon(){
+    return planningHorizon;
+  }
+
   /**
    * adds a new global constraint to the mission model
    *
