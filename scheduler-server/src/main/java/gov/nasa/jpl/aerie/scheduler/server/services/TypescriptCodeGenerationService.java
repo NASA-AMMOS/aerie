@@ -36,7 +36,7 @@ public class TypescriptCodeGenerationService {
     final var result = new ArrayList<String>();
     result.add("/** Start Codegen */");
     for (final var activityTypeCode : activityTypeCodes) {
-      result.add("interface %s extends ActivityTemplate {}".formatted(activityTypeCode.activityName()));
+      result.add("interface %s extends ActivityTemplate {}".formatted(activityTypeCode.activityTypeName()));
     }
     result.add("export const ActivityTemplates = {");
     result.add(indent(generateActivityTemplates(activityTypeCodes)));
@@ -48,14 +48,13 @@ public class TypescriptCodeGenerationService {
   private static String generateActivityTemplates(final Iterable<ActivityTypeCode> activityTypeCodes) {
     final var result = new ArrayList<String>();
     for (final var activityTypeCode : activityTypeCodes) {
-      result.add(String.format("%s: function %s(", activityTypeCode.activityName(), activityTypeCode.activityName()));
-      result.add(indent("name: string"));
+      result.add(String.format("%s: function %s(", activityTypeCode.activityTypeName(), activityTypeCode.activityTypeName()));
       result.add(indent("args: {"));
       for (final var parameterType : activityTypeCode.parameterTypes()) {
         result.add(indent(indent("%s: %s".formatted(parameterType.name(), ActivityParameterType.toString(parameterType.type())))));
       }
-      result.add(indent("}): %s {".formatted(activityTypeCode.activityName())));
-      result.add(indent(indent("return { name, activityType: '%s', args };".formatted(activityTypeCode.activityName()))));
+      result.add(indent("}): %s {".formatted(activityTypeCode.activityTypeName())));
+      result.add(indent(indent("return { activityType: '%s', args };".formatted(activityTypeCode.activityTypeName()))));
       result.add(indent("},"));
     }
     return joinLines(result);
@@ -69,7 +68,7 @@ public class TypescriptCodeGenerationService {
     return joinLines(s.lines().map(line -> "  " + line).toList());
   }
 
-  private record ActivityTypeCode(String activityName, List<ActivityParameter> parameterTypes) {}
+  private record ActivityTypeCode(String activityTypeName, List<ActivityParameter> parameterTypes) {}
   private record ActivityParameter(String name, ActivityParameterType type) {}
   private sealed interface ActivityParameterType {
     record TSString() implements ActivityParameterType {}

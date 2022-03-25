@@ -116,7 +116,7 @@ class SchedulingDSLCompilationServiceTests {
         PLAN_ID, """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
-                    activityTemplate: ActivityTemplates.PeelBanana('MyActivity', { peelDirection: 'fromStem' }),
+                    activityTemplate: ActivityTemplates.PeelBanana({ peelDirection: 'fromStem' }),
                     interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
                   })
                 }
@@ -124,7 +124,6 @@ class SchedulingDSLCompilationServiceTests {
     final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.GoalDefinition(
         SchedulingDSL.GoalKinds.ActivityRecurrenceGoal,
         new SchedulingDSL.ActivityTemplate(
-            "MyActivity",
             "PeelBanana",
             Map.of(
                 "peelDirection",
@@ -141,7 +140,7 @@ class SchedulingDSLCompilationServiceTests {
     actualGoalDefinition = (SchedulingDSL.GoalSpecifier.GoalDefinition) schedulingDSLCompilationService.compileSchedulingGoalDSL(
         PLAN_ID, """
                 export default function myGoal() {
-                  return myHelper(ActivityTemplates.PeelBanana('MyActivity', { peelDirection: 'fromStem' }))
+                  return myHelper(ActivityTemplates.PeelBanana({ peelDirection: 'fromStem' }))
                 }
                 function myHelper(activityTemplate) {
                   return Goal.ActivityRecurrenceGoal({
@@ -153,7 +152,6 @@ class SchedulingDSLCompilationServiceTests {
     final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.GoalDefinition(
         SchedulingDSL.GoalKinds.ActivityRecurrenceGoal,
         new SchedulingDSL.ActivityTemplate(
-            "MyActivity",
             "PeelBanana",
             Map.of(
                 "peelDirection",
@@ -169,7 +167,7 @@ class SchedulingDSLCompilationServiceTests {
           PLAN_ID, """
                 export default function myGoal() {
                   const x = "hello world" - 2
-                  return myHelper(ActivityTemplates.PeelBanana('MyActivity', { peelDirection: 'fromStem' }))
+                  return myHelper(ActivityTemplates.PeelBanana({ peelDirection: 'fromStem' }))
                 }
                 function myHelper(activityTemplate) {
                   return Goal.ActivityRecurrenceGoal({
