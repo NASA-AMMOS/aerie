@@ -48,6 +48,16 @@ class TypescriptCodeGenerationServiceTest {
                  + "    }): PeelBanana {\n"
                  + "      return { activityType: 'PeelBanana', args };\n"
                  + "    },\n"
+                 + "}\n"
+                 + "declare global {\n"
+                 + "  var ActivityTemplates: {\n"
+                 + "    PeelBanana: (\n"
+                 + "      args: {\n"
+                 + "        duration: Duration\n"
+                 + "        fancy: { subfield1: string, subfield2: { subsubfield1: Double, }[], }\n"
+                 + "        peelDirection: (\"fromTip\" | \"fromStem\")\n"
+                 + "      }) => PeelBanana\n"
+                 + "  }\n"
                  + "};\n"
                  + "/** End Codegen */",
         TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(MISSION_MODEL_TYPES));

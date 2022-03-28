@@ -40,6 +40,11 @@ public class TypescriptCodeGenerationService {
     }
     result.add("export const ActivityTemplates = {");
     result.add(indent(generateActivityTemplates(activityTypeCodes)));
+    result.add("}");
+    result.add("declare global {");
+    result.add(indent("var ActivityTemplates: {"));
+    result.add(indent(indent(generateActivityTemplateTypeDeclarations(activityTypeCodes))));
+    result.add(indent("}"));
     result.add("};");
     result.add("/** End Codegen */");
     return joinLines(result);
@@ -56,6 +61,19 @@ public class TypescriptCodeGenerationService {
       result.add(indent("}): %s {".formatted(activityTypeCode.activityTypeName())));
       result.add(indent(indent("return { activityType: '%s', args };".formatted(activityTypeCode.activityTypeName()))));
       result.add(indent("},"));
+    }
+    return joinLines(result);
+  }
+
+  private static String generateActivityTemplateTypeDeclarations(final Iterable<ActivityTypeCode> activityTypeCodes) {
+    final var result = new ArrayList<String>();
+    for (final var activityTypeCode : activityTypeCodes) {
+      result.add(String.format("%s: (", activityTypeCode.activityTypeName()));
+      result.add(indent("args: {"));
+      for (final var parameterType : activityTypeCode.parameterTypes()) {
+        result.add(indent(indent("%s: %s".formatted(parameterType.name(), ActivityParameterType.toString(parameterType.type())))));
+      }
+      result.add(indent("}) => %s".formatted(activityTypeCode.activityTypeName())));
     }
     return joinLines(result);
   }
