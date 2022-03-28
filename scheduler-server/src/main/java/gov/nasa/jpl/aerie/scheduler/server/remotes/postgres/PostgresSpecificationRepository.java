@@ -2,7 +2,10 @@ package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.SpecificationLoadException;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
+import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
@@ -11,7 +14,8 @@ import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingDSLCompilationServ
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class PostgresSpecificationRepository implements SpecificationRepository {
   private final DataSource dataSource;
@@ -26,54 +30,80 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
   public Specification getSpecification(final SpecificationId specificationId)
   throws NoSuchSpecificationException, SpecificationLoadException
   {
-    try (final var connection = this.dataSource.getConnection()) {
-      try (
-          final var getSpecificationAction = new GetSpecificationAction(connection);
-          final var getSpecificationGoalsAction = new GetSpecificationGoalsAction(connection)
-      ) {
-        final var specificationRecord = getSpecificationAction
-            .get(specificationId.id())
-            .orElseThrow(() -> new NoSuchSpecificationException(specificationId));
-        final var planId = new PlanId(specificationRecord.planId());
-        final var goals = getSpecificationGoalsAction
-            .get(specificationId.id())
-            .stream()
-            .map((PostgresGoalRecord pgGoal) -> GoalBuilder.buildGoalRecord(
-                planId,
-                pgGoal,
-                specificationRecord.horizonStartTimestamp(),
-                specificationRecord.horizonEndTimestamp(),
-                this.schedulingDSLCompilationService))
-            .collect(Collectors.toList());
-
-        final var failedGoals = goals
-            .stream()
-            .filter(goal -> goal instanceof GoalBuilder.GoalBuildResult.Failure)
-            .map(goal -> (GoalBuilder.GoalBuildResult.Failure) goal)
-            .toList();
-        if (!failedGoals.isEmpty()) {
-          throw new SpecificationLoadException(specificationId,
-              failedGoals
-                  .stream()
-                  .map(GoalBuilder.GoalBuildResult.Failure::reason)
-                  .reduce("", (s1, s2) -> s1 + ", " + s2));
-        }
-
-        return new Specification(
-            planId,
-            specificationRecord.planRevision(),
-            goals
-                .stream()
-                .map(goal -> ((GoalBuilder.GoalBuildResult.Success) goal).goalRecord())
-                .toList(),
-            specificationRecord.horizonStartTimestamp(),
-            specificationRecord.horizonEndTimestamp(),
-            specificationRecord.simulationArguments()
-        );
-      }
+    final SpecificationRecord specificationRecord;
+    final PlanId planId;
+    final List<PostgresGoalRecord> postgresGoalRecords;
+    try (final var connection = this.dataSource.getConnection();
+         final var getSpecificationAction = new GetSpecificationAction(connection);
+         final var getSpecificationGoalsAction = new GetSpecificationGoalsAction(connection)
+    ) {
+      specificationRecord = getSpecificationAction
+          .get(specificationId.id())
+          .orElseThrow(() -> new NoSuchSpecificationException(specificationId));
+      planId = new PlanId(specificationRecord.planId());
+      postgresGoalRecords = getSpecificationGoalsAction.get(specificationId.id());
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get scheduling specification", ex);
     }
+
+    final var goals = postgresGoalRecords
+        .stream()
+        .map((PostgresGoalRecord pgGoal) -> compileGoalDefinition(
+            planId,
+            pgGoal,
+            this.schedulingDSLCompilationService))
+        .toList();
+
+    final var successfulGoals = new ArrayList<GoalRecord>();
+    final var failedGoals = new ArrayList<GoalCompilationResult.Failure>();
+    for (final var goalBuildResult : goals) {
+      if (goalBuildResult instanceof GoalCompilationResult.Failure g) {
+        failedGoals.add(g);
+      } else if (goalBuildResult instanceof GoalCompilationResult.Success g) {
+        successfulGoals.add(g.goalRecord());
+      } else {
+        throw new Error("Unhandled variant of GoalCompilationResult: " + goalBuildResult);
+      }
+    }
+
+    if (!failedGoals.isEmpty()) {
+      throw new SpecificationLoadException(specificationId,
+                                           failedGoals
+                                               .stream()
+                                               .map(GoalCompilationResult.Failure::reason)
+                                               .reduce("", (s1, s2) -> s1 + ", " + s2));
+    }
+
+    return new Specification(
+        planId,
+        specificationRecord.planRevision(),
+        successfulGoals,
+        specificationRecord.horizonStartTimestamp(),
+        specificationRecord.horizonEndTimestamp(),
+        specificationRecord.simulationArguments()
+    );
+  }
+
+  private static GoalCompilationResult compileGoalDefinition(
+      final PlanId planId,
+      final PostgresGoalRecord pgGoal,
+      final SchedulingDSLCompilationService schedulingDSLCompilationService)
+  {
+    final SchedulingDSL.GoalSpecifier goalSpecifier;
+    try {
+      goalSpecifier = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+          planId,
+          pgGoal.definition(),
+          pgGoal.name());
+    } catch (SchedulingDSLCompilationService.SchedulingDSLCompilationException e) {
+      return new GoalCompilationResult.Failure(e.getMessage());
+    }
+    return new GoalCompilationResult.Success(new GoalRecord(new GoalId(pgGoal.id()), goalSpecifier));
+  }
+
+  private sealed interface GoalCompilationResult {
+    record Success(GoalRecord goalRecord) implements GoalCompilationResult {}
+    record Failure(String reason) implements GoalCompilationResult {}
   }
 
   @Override

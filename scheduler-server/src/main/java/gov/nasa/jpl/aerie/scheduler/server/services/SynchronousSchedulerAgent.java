@@ -24,10 +24,10 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationExcepti
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.ResultsProtocolFailure;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.SpecificationLoadException;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
-import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
+import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.GoalBuilder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -38,6 +38,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,22 +85,32 @@ public record SynchronousSchedulerAgent(
       //confirm requested plan to schedule from/into still exists at targeted version (request could be stale)
       //TODO: maybe some kind of high level db transaction wrapping entire read/update of target plan revision
 
-      final var specificationWithGoals = specificationService.getSpecification(request.specificationId());
-      final var planMetadata = merlinService.getPlanMetadata(specificationWithGoals.planId());
+      final var specification = specificationService.getSpecification(request.specificationId());
+      final var planMetadata = merlinService.getPlanMetadata(specification.planId());
       ensureRequestIsCurrent(request);
-      ensurePlanRevisionMatch(specificationWithGoals,planMetadata.planRev());
+      ensurePlanRevisionMatch(specification, planMetadata.planRev());
       //create scheduler problem seeded with initial plan
       final var schedulerMissionModel = loadMissionModel(planMetadata);
-      var planningHorizon = new PlanningHorizon(Time.fromInstant(specificationWithGoals.horizonStartTimestamp().toInstant()),Time.fromInstant(specificationWithGoals.horizonEndTimestamp().toInstant())) ;
+      final var planningHorizon = new PlanningHorizon(Time.fromInstant(specification.horizonStartTimestamp().toInstant()), Time.fromInstant(specification.horizonEndTimestamp().toInstant())) ;
       final var problem = new Problem(schedulerMissionModel.missionModel(), planningHorizon, new SimulationFacade(planningHorizon, schedulerMissionModel.missionModel()), schedulerMissionModel.schedulerModel());
       //seed the problem with the initial plan contents
       problem.setInitialPlan(loadInitialPlan(planMetadata, problem));
 
       //apply constraints/goals to the problem
       loadConstraints(planMetadata, schedulerMissionModel.missionModel()).forEach(problem::add);
-      var orderedGoals = specificationWithGoals.goalsByPriority().stream().map(GoalRecord::definition).collect(Collectors.toList());
+      final var orderedGoals = new ArrayList<Goal>();
+      final var goals = new HashMap<Goal, GoalId>();
+      for (final var goalRecord : specification.goalsByPriority()) {
+        final var goal = GoalBuilder
+            .goalOfGoalSpecifier(
+                goalRecord.definition(),
+                specification.horizonStartTimestamp(),
+                specification.horizonEndTimestamp(),
+                problem::getActivityType);
+        orderedGoals.add(goal);
+        goals.put(goal, goalRecord.id());
+      }
       problem.setGoals(orderedGoals);
-      var goals = specificationWithGoals.goalsByPriority().stream().collect(Collectors.toMap(GoalRecord::definition, GoalRecord::id));
 
       final var scheduler = createScheduler(planMetadata,problem);
       //run the scheduler to find a solution to the posed problem, if any
@@ -108,8 +119,8 @@ public record SynchronousSchedulerAgent(
 
       //store the solution plan back into merlin (and reconfirm no intervening mods!)
       //TODO: make revision confirmation atomic part of plan mutation (plan might have been modified during scheduling!)
-      ensurePlanRevisionMatch(specificationWithGoals, getMerlinPlanRev(specificationWithGoals.planId()));
-      var instancesToIds = storeFinalPlan(planMetadata, solutionPlan);
+      ensurePlanRevisionMatch(specification, getMerlinPlanRev(specification.planId()));
+      final var instancesToIds = storeFinalPlan(planMetadata, solutionPlan);
 
       //collect results and notify subscribers of success
       final var results = collectResults(solutionPlan,instancesToIds, goals);
