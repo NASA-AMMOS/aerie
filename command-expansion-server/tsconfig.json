@@ -98,6 +98,6 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
-  "exclude":["commanding_file_store", "build"]
+  "exclude":["commanding_file_store", "build","cdict"]
 
 }
