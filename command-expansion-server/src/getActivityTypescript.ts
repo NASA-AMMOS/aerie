@@ -1,6 +1,9 @@
 import { GraphQLClient, gql } from "graphql-request";
 import { globalDeclaration, indent, interfaceDeclaration } from "./packages/lib/CodegenHelpers.js";
 import { ErrorWithStatusCode } from "./utils/ErrorWithStatusCode.js";
+import getLogger from "./utils/logger.js";
+
+const logger = getLogger("getActivityTypescript");
 
 enum SchemaTypes {
   Int = "int",
@@ -66,7 +69,7 @@ export async function getActivityTypescript(
   missionModelId: number,
   activityTypeName: string
 ): Promise<string> {
-  console.log(`query parameters from ${activityTypeName} with missionModelId: ${missionModelId}`);
+  logger.info(`query parameters from ${activityTypeName} with missionModelId: ${missionModelId}`);
   const response = await graphqlClient.request<{
     activity_type: GraphQLActivity[];
   }>(

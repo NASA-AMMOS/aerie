@@ -1,10 +1,10 @@
 package gov.nasa.jpl.aerie.banananation;
 
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
+
 import java.nio.file.Path;
 
 import static gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Template;
-
-import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 
 public record Configuration(int initialPlantCount, String initialProducer, Path initialDataPath) {
 

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
+import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -14,10 +15,9 @@ import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.jar.JarFile;
-import java.util.stream.Collectors;
 
 public final class MissionModelLoader {
-    public static MissionModelFactory<?> loadMissionModelFactory(final Path path, final String name, final String version)
+    public static MissionModelFactory<?, ?> loadMissionModelFactory(final Path path, final String name, final String version)
         throws MissionModelLoadException
     {
         final var service = loadMissionModelProvider(path, name, version);
@@ -33,17 +33,22 @@ public final class MissionModelLoader {
         return loadMissionModel(missionModelConfig, factory, builder);
     }
 
-    public static <Model>
+    private static <Config, Model>
     MissionModel<Model> loadMissionModel(
         final SerializedValue missionModelConfig,
-        final MissionModelFactory<Model> factory,
+        final MissionModelFactory<Config, Model> factory,
         final MissionModelBuilder builder
     ) {
-        final var model = factory.instantiate(missionModelConfig, builder);
-        return factory.getConfigurationType()
-            .map(builder::withConfigurationType)
-            .orElse(builder)
-            .build(model, factory.getTaskSpecTypes());
+        try {
+            final var serializedConfigMap =
+                missionModelConfig.asMap().orElseThrow(ConfigurationType.UnconstructableConfigurationException::new);
+
+            final var config = factory.getConfigurationType().instantiate(serializedConfigMap);
+            final var model = factory.instantiate(config, builder);
+            return builder.build(model, factory.getConfigurationType(), factory.getTaskSpecTypes());
+        } catch (final ConfigurationType.UnconstructableConfigurationException ex) {
+            throw new MissionModelInstantiationException(ex);
+        }
     }
 
     public static MerlinPlugin loadMissionModelProvider(final Path path, final String name, final String version)
@@ -84,7 +89,7 @@ public final class MissionModelLoader {
 
             final var classPathList = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))
                 .lines()
-                .collect(Collectors.toList());
+                .toList();
 
             if (classPathList.size() != 1) {
                 throw new MissionModelLoadException(jarPath, name, version);
@@ -120,6 +125,12 @@ public final class MissionModelLoader {
                     name,
                     version),
                 cause);
+        }
+    }
+
+    public static final class MissionModelInstantiationException extends RuntimeException {
+        public MissionModelInstantiationException(final Throwable cause) {
+            super(cause);
         }
     }
 }

@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -21,7 +22,7 @@ public class IncrementalSimulationBenchmark {
    * to simulate a plan with a number of _left activities. Note that this is an ideal case for the incremental driver as
    * it never has to reset.
    */
-  public static void main(String[] args){
+  public static void main(String[] args) throws TaskSpecType.UnconstructableTaskSpecException {
     System.out.println("Incremental");
     benchmarkIncrementalSimulationDriver();
     System.out.println("Non-incremental");
@@ -37,7 +38,7 @@ public class IncrementalSimulationBenchmark {
       var act = new IncrementalSimulationTest.TestSimulatedActivity(
           cur,
           new SerializedActivity("BasicActivity", Map.of()),
-          String.valueOf(cur.in(MICROSECONDS)));
+          new ActivityInstanceId(cur.in(MICROSECONDS)));
       acts.add(act);
     }
     return acts;
@@ -52,7 +53,7 @@ public class IncrementalSimulationBenchmark {
     final var alreadyIn = new HashMap<ActivityInstanceId, Pair<Duration, SerializedActivity>>();
     //builds incrementally long plans and simulates them
     for(var act:acts){
-      alreadyIn.put(new ActivityInstanceId(Long.parseLong(act.name())), Pair.of(act.start(), act.activity()));
+      alreadyIn.put(act.id(), Pair.of(act.start(), act.activity()));
       final var task = SimulationDriver.buildPlanTask(alreadyIn);
       final var start = System.nanoTime();
       SimulationDriver.simulateTask(fooMissionModel, task);
@@ -63,15 +64,15 @@ public class IncrementalSimulationBenchmark {
     }
   }
 
-  private static void benchmarkIncrementalSimulationDriver(){
+  private static void benchmarkIncrementalSimulationDriver() throws TaskSpecType.UnconstructableTaskSpecException {
     final var acts = getActivities();
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    final SimulationDriverFacade incrementalSimulationDriver = new SimulationDriverFacade(new IncrementalSimulationDriver(fooMissionModel));
+    final var incrementalSimulationDriver = new IncrementalSimulationDriver(fooMissionModel);
     int i = 0;
     var sum = 0.;
     for(var act : acts) {
       final var start = System.nanoTime();
-      incrementalSimulationDriver.simulateActivity(act.activity(), act.name(), act.start());
+      incrementalSimulationDriver.simulateActivity(act.activity(), act.start(), act.id());
       final var dur = System.nanoTime() - start;
       sum += dur;
       final var curMean = sum / (++i);

@@ -18,11 +18,8 @@ public class MerlInsightRules extends Problem {
 
   static final PlanningHorizon DEFAULT_PLANNING_HORIZON = new PlanningHorizon(new Time(0), new Time(48 * 3600));
 
-  public MerlInsightRules(MissionModel<?> missionModel, SchedulerModel schedulerModel) {
-    super(missionModel, DEFAULT_PLANNING_HORIZON, schedulerModel);
-  }
   public MerlInsightRules(MissionModel<?> missionModel, PlanningHorizon planningHorizon, SchedulerModel schedulerModel) {
-    super(missionModel, planningHorizon, schedulerModel);
+    super(missionModel, planningHorizon, new SimulationFacade(planningHorizon,missionModel), schedulerModel);
   }
 
   @Override

@@ -1,12 +1,11 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
-import javax.json.Json;
-
 import gov.nasa.jpl.aerie.foomissionmodel.generated.ConfigurationMapper;
-import gov.nasa.jpl.aerie.foomissionmodel.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import org.junit.jupiter.api.Test;
+
+import javax.json.Json;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;

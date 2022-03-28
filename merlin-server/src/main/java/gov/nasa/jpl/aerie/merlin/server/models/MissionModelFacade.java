@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
@@ -7,7 +8,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
@@ -102,10 +102,7 @@ public final class MissionModelFacade {
   public List<String> validateConfiguration(final Map<String, SerializedValue> arguments)
   throws UnconfigurableMissionModelException, UnconstructableMissionModelConfigurationException
   {
-    final var configType = this.missionModel.getConfigurationType()
-        .orElseThrow(UnconfigurableMissionModelException::new);
-
-    return getValidationFailures(configType, arguments);
+    return getValidationFailures(this.missionModel.getConfigurationType(), arguments);
   }
 
   private <Config> List<String> getValidationFailures(
@@ -126,9 +123,7 @@ public final class MissionModelFacade {
   public Map<String, SerializedValue> getEffectiveArguments(final Map<String, SerializedValue> arguments)
   throws UnconfigurableMissionModelException, MissingArgumentsException, UnconstructableMissionModelConfigurationException
   {
-    final var configType = this.missionModel.getConfigurationType()
-        .orElseThrow(UnconfigurableMissionModelException::new);
-    return getEffectiveArguments(configType, arguments);
+    return getEffectiveArguments(this.missionModel.getConfigurationType(), arguments);
   }
 
   private static <Config> Map<String, SerializedValue> getEffectiveArguments(
@@ -147,9 +142,9 @@ public final class MissionModelFacade {
   }
 
   public static final class Unconfigured<Model> {
-    private final MissionModelFactory<Model> factory;
+    private final MissionModelFactory<?, Model> factory;
 
-    public Unconfigured(final MissionModelFactory<Model> factory) {
+    public Unconfigured(final MissionModelFactory<?, Model> factory) {
       this.factory = factory;
     }
 
@@ -174,7 +169,7 @@ public final class MissionModelFacade {
     }
 
     public List<Parameter> getParameters() {
-      return factory.getParameters();
+      return this.factory.getConfigurationType().getParameters();
     }
   }
 

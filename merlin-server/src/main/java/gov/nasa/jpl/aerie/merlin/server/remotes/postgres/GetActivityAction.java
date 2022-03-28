@@ -1,40 +1,27 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
-import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
-import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
-import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.intellij.lang.annotations.Language;
 
+import javax.json.Json;
+import java.io.Reader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.function.Supplier;
+import java.util.Map;
+import java.util.Optional;
+
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.activityArgumentsP;
 
 /*package-local*/ final class GetActivityAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    with
-      json_activity_arguments as
-        ( select
-            arg.activity_id,
-            json_object_agg(arg.name, arg.value) as arguments
-          from activity_argument as arg
-          group by activity_id )
     select
-      a.plan_id,
-      to_char(p.start_time + a.start_offset, 'YYYY-DDD"T"HH24:MI:SS.FF6') as start_time,
       a.type,
-      coalesce(arguments.arguments, '[]'::json) as arguments
-    from plan as p
-    left join activity as a
-      on p.id = a.plan_id
-    left join json_activity_arguments as arguments
-      on a.id = arguments.activity_id
-    where p.id = ?
-      and a.id = ?
+      ceil(extract(epoch from a.start_offset) * 1000*1000) as start_offset_in_micros,
+      a.arguments
+    from activity as a
+    where a.plan_id = ? and
+          a.id = ?
     """;
 
   private final PreparedStatement statement;
@@ -43,40 +30,37 @@ import java.util.function.Supplier;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public ActivityInstance get(final PlanId planId, final long activityId)
-  throws SQLException, NoSuchPlanException, NoSuchActivityInstanceException
-  {
-    this.statement.setLong(1, planId.id());
+  public Optional<ActivityInstanceRecord> get(final long planId, final long activityId) throws SQLException {
+    this.statement.setLong(1, planId);
     this.statement.setLong(2, activityId);
 
     try (final var results = this.statement.executeQuery()) {
-      if (!results.next()) throw new NoSuchPlanException(planId);
-      requireColumnNonNull(results, 1, () -> new NoSuchActivityInstanceException(
-          planId,
-          new ActivityInstanceId(activityId)));
+      if (!results.next()) return Optional.empty();
 
-      final var startTimestamp = Timestamp.fromString(results.getString(2));
-      final var type = results.getString(3);
-      final var activityArguments = PostgresPlanRepository.parseActivityArgumentsJson(results.getString(4));
+      final var startOffset = results.getLong("start_offset_in_micros");
+      final var type = results.getString("type");
+      final var activityArguments = parseActivityArguments(results.getCharacterStream("arguments"));
 
-      return new ActivityInstance(type, startTimestamp, activityArguments);
+      return Optional.of(
+          new ActivityInstanceRecord(
+              activityId,
+              type,
+              startOffset,
+              activityArguments));
     }
+  }
+
+  private Map<String, SerializedValue> parseActivityArguments(final Reader stream) {
+    final var json = Json.createReader(stream).readValue();
+    return activityArgumentsP
+        .parse(json)
+        .getSuccessOrThrow(
+            failureReason -> new Error("Corrupt activity arguments cannot be parsed: " + failureReason.reason())
+        );
   }
 
   @Override
   public void close() throws SQLException {
     this.statement.close();
-  }
-
-  private static <T extends Throwable>
-  void requireColumnNonNull(final ResultSet results, final int index, final Supplier<T> makeException)
-  throws T, SQLException {
-    if (isColumnNull(results, index)) throw makeException.get();
-  }
-
-  private static boolean isColumnNull(final ResultSet results, final int index) throws SQLException {
-    // You're kidding, right? This is how you detect NULL with JDBC?
-    results.getObject(index);
-    return results.wasNull();
   }
 }

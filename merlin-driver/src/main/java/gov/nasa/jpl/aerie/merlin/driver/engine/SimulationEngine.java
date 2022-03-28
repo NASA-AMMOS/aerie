@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
@@ -16,7 +17,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -72,21 +72,27 @@ public final class SimulationEngine implements AutoCloseable {
   /** Construct a task defined by the behavior of a model given a type and arguments. */
   public <Model>
   TaskId initiateTaskFromInput(final MissionModel<Model> model, final SerializedActivity input) {
-    final var task = TaskId.generate();
-
-    final Directive<Model, ?, ?> directive;
     try {
-      directive = model.instantiateDirective(input);
+      return initiateTaskFromInputOrFail(model, input);
     } catch (final TaskSpecType.UnconstructableTaskSpecException ex) {
+      final var task = TaskId.generate();
+
       // TODO: Provide more information about the failure.
-      this.tasks.put(task, new ExecutionState.IllegalSource());
+      this.tasks.put(task, new ExecutionState.IllegalSource<>());
 
       return task;
     }
+  }
 
+  /** Construct a task defined by the behavior of a model given a type and arguments. */
+  public <Model>
+  TaskId initiateTaskFromInputOrFail(final MissionModel<Model> model, final SerializedActivity input)
+  throws TaskSpecType.UnconstructableTaskSpecException
+  {
+    final var directive  = model.instantiateDirective(input);
+    final var task = TaskId.generate();
     this.tasks.put(task, new ExecutionState.NotStarted<>(() -> directive.createTask(model.getModel())));
     this.taskDirective.put(task, directive);
-
     return task;
   }
 
@@ -524,12 +530,12 @@ public final class SimulationEngine implements AutoCloseable {
                                  serializedTimeline);
   }
 
-  public Duration getTaskDuration(TaskId taskId){
+  public Optional<Duration> getTaskDuration(TaskId taskId){
     final var state = tasks.get(taskId);
     if (state instanceof ExecutionState.Terminated e) {
-      return e.joinOffset().minus(e.startOffset());
+      return Optional.of(e.joinOffset().minus(e.startOffset()));
     }
-    throw new IllegalStateException("Asking for the duration of unfinished task");
+    return Optional.empty();
   }
 
   @SuppressWarnings("unchecked")

@@ -3,10 +3,7 @@ package gov.nasa.jpl.aerie.merlin.processor.metamodel;
 import com.squareup.javapoet.ClassName;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
 
-import javax.lang.model.element.TypeParameterElement;
-import javax.lang.model.type.TypeMirror;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 

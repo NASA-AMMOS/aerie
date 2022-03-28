@@ -49,7 +49,7 @@ public void minimalDef(){
 
         .build();
 
-    Problem problem = new Problem(null, null, null);
+    Problem problem = new Problem(null, null, null, null);
 
     problem.setGoals(List.of(goal));
 
@@ -94,7 +94,7 @@ public void minimalDef(){
 
         .build();
 
-    Problem problem = new Problem(null, null, null);
+    Problem problem = new Problem(null, null, null, null);
 
     problem.setGoals(List.of(goal));
 
