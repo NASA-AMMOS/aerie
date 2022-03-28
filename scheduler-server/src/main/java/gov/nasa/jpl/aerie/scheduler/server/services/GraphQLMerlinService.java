@@ -11,18 +11,22 @@ import gov.nasa.jpl.aerie.scheduler.Plan;
 import gov.nasa.jpl.aerie.scheduler.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.Problem;
 import gov.nasa.jpl.aerie.scheduler.Time;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.scheduler.server.http.SerializedValueJsonParser;
+import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonException;
 import javax.json.JsonObject;
+import javax.json.JsonValue;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -411,12 +415,17 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
         }
         """.formatted(planId.id());
     final var response = postRequest(request).get();
-    final var activityTypes = new ArrayList<TypescriptCodeGenerationService.ActivityType>();
     final var activityTypesJsonArray =
         response.getJsonObject("data")
                 .getJsonObject("plan_by_pk")
                 .getJsonObject("mission_model")
                 .getJsonArray("activity_types");
+    final var activityTypes = parseActivityTypes(activityTypesJsonArray);
+    return new TypescriptCodeGenerationService.MissionModelTypes(activityTypes, List.of());
+  }
+
+  private static List<TypescriptCodeGenerationService.ActivityType> parseActivityTypes(final JsonArray activityTypesJsonArray) {
+    final var activityTypes = new ArrayList<TypescriptCodeGenerationService.ActivityType>();
     for (final var activityTypeJson : activityTypesJsonArray) {
       final var parametersJson = activityTypeJson.asJsonObject().getJsonObject("parameters");
       final var parameters = new HashMap<String, ValueSchema>();
@@ -433,6 +442,31 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
       }
       activityTypes.add(new TypescriptCodeGenerationService.ActivityType(activityTypeJson.asJsonObject().getString("name"), parameters));
     }
+    return activityTypes;
+  }
+
+  @Override
+  public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
+  throws IOException, MerlinServiceException, NoSuchMissionModelException
+  {
+    final var request = """
+        query GetActivityTypesFromMissionModel{
+             mission_model_by_pk(id:%d){
+               activity_types{
+                 name
+                 parameters
+               }
+             }
+           }
+        }
+        """.formatted(missionModelId.id());
+    final var response = postRequest(request).get();
+    final var data = response.getJsonObject("data");
+    if (data.get("mission_model_by_pk").getValueType().equals(JsonValue.ValueType.NULL)) throw new NoSuchMissionModelException(missionModelId);
+    final var activityTypesJsonArray = data
+        .getJsonObject("mission_model_by_pk")
+        .getJsonArray("activity_types");
+    final var activityTypes = parseActivityTypes(activityTypesJsonArray);
     return new TypescriptCodeGenerationService.MissionModelTypes(activityTypes, List.of());
   }
 

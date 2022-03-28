@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.scheduler.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.Plan;
 import gov.nasa.jpl.aerie.scheduler.Problem;
 import gov.nasa.jpl.aerie.scheduler.Time;
+import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
@@ -96,6 +97,13 @@ class SchedulingDSLCompilationServiceTests {
 
       @Override
       public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final PlanId missionModelId)
+      {
+        return MISSION_MODEL_TYPES;
+      }
+
+      @Override
+      public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
+      throws IOException, MerlinServiceException
       {
         return MISSION_MODEL_TYPES;
       }
