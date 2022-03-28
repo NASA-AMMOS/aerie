@@ -4,7 +4,8 @@ public record HasuraAction<I extends HasuraAction.Input>(String name, I input, S
 {
   public record Session(String hasuraRole, String hasuraUserId) { }
 
-  public sealed interface Input permits SpecificationInput { }
+  public sealed interface Input permits SpecificationInput, MissionModelIdInput { }
 
   public record SpecificationInput(SpecificationId specificationId) implements Input { }
+  public record MissionModelIdInput(MissionModelId missionModelId) implements  Input { }
 }

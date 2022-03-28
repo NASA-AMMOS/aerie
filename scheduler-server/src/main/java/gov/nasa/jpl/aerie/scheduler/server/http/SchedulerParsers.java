@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler.server.http;
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.scheduler.server.models.HasuraAction;
+import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -27,6 +28,12 @@ public class SchedulerParsers {
       . map(Iso.of(
           SpecificationId::new,
           SpecificationId::id));
+
+  public static final JsonParser<MissionModelId> missionModelIdP
+      = longP
+      . map(Iso.of(
+          MissionModelId::new,
+          MissionModelId::id));
 
   /**
    * parser for hasura session details
@@ -65,4 +72,13 @@ public class SchedulerParsers {
       .map(Iso.of(
           untuple((name, specificationId, session, requestQuery) -> new HasuraAction<>(name, new HasuraAction.SpecificationInput(specificationId), session)),
           action -> tuple(action.name(), action.input().specificationId(), action.session(), "")));
+
+  /**
+   * parser for a hasura action that accepts a mission model id as its sole input, along with normal hasura session details
+   */
+  public static final JsonParser<HasuraAction<HasuraAction.MissionModelIdInput>> hasuraMissionModelIdActionP
+      = hasuraActionP(productP.field("missionModelId", missionModelIdP))
+      .map(Iso.of(
+          untuple((name, missionModelId, session, requestQuery) -> new HasuraAction<>(name, new HasuraAction.MissionModelIdInput(missionModelId), session)),
+          action -> tuple(action.name(), action.input().missionModelId(), action.session(), "")));
 }
