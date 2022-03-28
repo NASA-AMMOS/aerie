@@ -15,10 +15,9 @@ public class MerlInsightRulesTest {
     MissionModel<?> aerieLanderMissionModel = MerlinSightTestUtility.getMerlinSightMissionModel();
     final var aerieLanderSchedulerModel = MerlinSightTestUtility.getMerlinSightSchedulerModel();
     rules = new MerlInsightRules(aerieLanderMissionModel, planningHorizon, aerieLanderSchedulerModel);
-    rules.getSimulationFacade().simulatePlan(makeEmptyPlan());
     plan = makeEmptyPlan();
     controller = new AerieController(MerlinSightTestUtility.LOCAL_AERIE, MerlinSightTestUtility.latest, false, planningHorizon, rules.getActivityTypes());
-    smallProblem = new Problem(aerieLanderMissionModel, planningHorizon, aerieLanderSchedulerModel);
+    smallProblem = new Problem(aerieLanderMissionModel, planningHorizon, rules.getSimulationFacade(), aerieLanderSchedulerModel);
   }
 
   private PlanningHorizon planningHorizon;
@@ -33,6 +32,7 @@ public class MerlInsightRulesTest {
 
   public void schedule(){
     smallProblem.setInitialPlan(plan);
+    rules.getGlobalConstraints().forEach(smallProblem::add);
     var solver = new PrioritySolver(new HuginnConfiguration(), smallProblem);
     solver.checkSimBeforeInsertingActInPlan();
     plan = solver.getNextSolution().get();

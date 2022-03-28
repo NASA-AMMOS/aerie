@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -47,6 +49,7 @@ public class IncrementalSimulationDriver {
     plannedDirectiveToTask = new HashMap<>();
     taskToPlannedDirective = new HashMap<>();
     initSimulation();
+    simulateUntil(Duration.ZERO);
   }
 
   private void initSimulation(){
@@ -79,7 +82,30 @@ public class IncrementalSimulationDriver {
     }
   }
 
-  public void simulateActivity(SerializedActivity activity, Duration startTime, ActivityInstanceId activityId){
+  //
+  private void simulateUntil(Duration endTime){
+    assert(endTime.noShorterThan(curTime));
+    while (true) {
+      final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
+      // Increment real time, if necessary.
+      if(batch.offsetFromStart().longerThan(endTime) || endTime.isEqualTo(Duration.MAX_VALUE)){
+        break;
+      }
+      curTime = batch.offsetFromStart();
+      final var delta = batch.offsetFromStart().minus(curTime);
+      timeline.add(delta);
+      // Run the jobs in this batch.
+      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, missionModel);
+      timeline.add(commit);
+
+    }
+    lastSimResults = null;
+  }
+
+
+  public void simulateActivity(SerializedActivity activity, Duration startTime, ActivityInstanceId activityId)
+  throws TaskSpecType.UnconstructableTaskSpecException
+  {
     final var activityToSimulate = new SimulatedActivity(startTime, activity, activityId);
     if(startTime.noLongerThan(curTime)){
       final var toBeInserted = new ArrayList<>(activitiesInserted);
@@ -104,7 +130,7 @@ public class IncrementalSimulationDriver {
    * @return the simulation results
    */
   public SimulationResults getSimulationResults(){
-    return getSimulationResultsUntil(curTime);
+    return getSimulationResultsUpTo(curTime);
   }
 
   /**
@@ -112,8 +138,12 @@ public class IncrementalSimulationDriver {
    * The provided simulation results might cover more than the required time period.
    * @return the simulation results
    */
-  public SimulationResults getSimulationResultsUntil(Duration endTime){
+  public SimulationResults getSimulationResultsUpTo(Duration endTime){
     //if previous results cover a bigger period, we return do not regenerate
+    if(endTime.longerThan(curTime)){
+      simulateUntil(endTime);
+    }
+
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd)) {
       final Map<String, ActivityInstanceId> convertedTaskToPlannedDir = new HashMap<>();
       taskToPlannedDirective.forEach((taskId, plannedDirective)->
@@ -131,23 +161,33 @@ public class IncrementalSimulationDriver {
     return lastSimResults;
   }
 
-  private void simulateSchedule(Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule){
+  private void simulateSchedule(final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule)
+  throws TaskSpecType.UnconstructableTaskSpecException
+  {
+
+    if(schedule.isEmpty()){
+      throw new IllegalArgumentException("simulateSchedule() called with empty schedule, use simulateUntil() instead");
+    }
 
     for (final var entry : schedule.entrySet()) {
       final var directiveId = entry.getKey();
       final var startOffset = entry.getValue().getLeft();
       final var directive = entry.getValue().getRight();
 
-      final var taskId = engine.initiateTaskFromInput(missionModel, directive);
+      final var taskId = engine.initiateTaskFromInputOrFail(missionModel, directive);
       engine.scheduleTask(taskId, startOffset);
       plannedDirectiveToTask.put(directiveId,taskId);
       taskToPlannedDirective.put(taskId, directiveId);
     }
-
+    var allTaskFinished = false;
     while (true) {
       final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
       // Increment real time, if necessary.
       final var delta = batch.offsetFromStart().minus(curTime);
+      //once all tasks are finished, we need to wait for events triggered at the same time
+      if(allTaskFinished && !delta.isZero()){
+        break;
+      }
       curTime = batch.offsetFromStart();
       timeline.add(delta);
       // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
@@ -157,9 +197,9 @@ public class IncrementalSimulationDriver {
       final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, missionModel);
       timeline.add(commit);
 
-      // Exit IFF all tasks are complete
-      if (taskToPlannedDirective.keySet().stream().allMatch(taskId -> engine.isTaskComplete(taskId))) {
-        break;
+      // all tasks are complete : do not exit yet, there might be event triggered at the same time
+      if ((taskToPlannedDirective.size() > 0 && taskToPlannedDirective.keySet().stream().allMatch(taskId -> engine.isTaskComplete(taskId)))) {
+        allTaskFinished = true;
       }
 
     }
@@ -171,7 +211,7 @@ public class IncrementalSimulationDriver {
    * @param activityInstanceId the activity id
    * @return its duration if the activity has been simulated and has finished simulating, an IllegalArgumentException otherwise
    */
-  public Duration getActivityDuration(ActivityInstanceId activityInstanceId){
+  public Optional<Duration> getActivityDuration(ActivityInstanceId activityInstanceId){
     return engine.getTaskDuration(plannedDirectiveToTask.get(activityInstanceId));
   }
 

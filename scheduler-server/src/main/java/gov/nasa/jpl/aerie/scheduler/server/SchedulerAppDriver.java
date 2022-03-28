@@ -3,22 +3,21 @@ package gov.nasa.jpl.aerie.scheduler.server;
 import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import gov.nasa.jpl.aerie.scheduler.server.config.InMemoryStore;
-import gov.nasa.jpl.aerie.scheduler.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.scheduler.server.config.AppConfiguration;
+import gov.nasa.jpl.aerie.scheduler.server.config.InMemoryStore;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
+import gov.nasa.jpl.aerie.scheduler.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.scheduler.server.config.Store;
 import gov.nasa.jpl.aerie.scheduler.server.http.SchedulerBindings;
-import gov.nasa.jpl.aerie.scheduler.server.mocks.InMemorySpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.mocks.InMemoryResultsCellRepository;
+import gov.nasa.jpl.aerie.scheduler.server.mocks.InMemorySpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.ResultsCellRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
-import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresSpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresResultsCellRepository;
+import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresSpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.services.CachedSchedulerService;
 import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
 import gov.nasa.jpl.aerie.scheduler.server.services.LocalSpecificationService;
-import gov.nasa.jpl.aerie.scheduler.server.services.MerlinService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingDSLCompilationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.SynchronousSchedulerAgent;
@@ -148,7 +147,7 @@ public final class SchedulerAppDriver {
         Integer.parseInt(getEnv("SCHEDULER_PORT", "27193")),
         logger.isDebugEnabled(),
         Path.of(getEnv("SCHEDULER_LOCAL_STORE", "/usr/src/app/scheduler_file_store")),
-        new PostgresStore(getEnv("SCHEDULER_DB_TYPE", "postgres"),
+        new PostgresStore(getEnv("SCHEDULER_DB_SERVER", "postgres"),
                           getEnv("SCHEDULER_DB_USER", "aerie"),
                           Integer.parseInt(getEnv("SCHEDULER_DB_PORT", "5432")),
                           getEnv("SCHEDULER_DB_PASSWORD", "aerie"),

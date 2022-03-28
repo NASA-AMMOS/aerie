@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Optional;
 
 /*package-local*/ final class GetModelAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
@@ -24,20 +25,25 @@ import java.sql.SQLException;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public MissionModelJar get(final long modelId) throws SQLException, MissionModelRepository.NoSuchMissionModelException {
+  public Optional<MissionModelRecord> get(final long modelId) throws SQLException {
     this.statement.setLong(1, modelId);
 
     try (final var results = this.statement.executeQuery()) {
-      if (!results.next()) throw new MissionModelRepository.NoSuchMissionModelException();
+      if (!results.next()) return Optional.empty();
 
-      final var missionModel = new MissionModelJar();
-      missionModel.mission = results.getString(1);
-      missionModel.name = results.getString(2);
-      missionModel.version = results.getString(3);
-      missionModel.owner = results.getString(4);
-      missionModel.path = Path.of(results.getString(5));
 
-      return missionModel;
+      final var mission = results.getString(1);
+      final var name = results.getString(2);
+      final var version = results.getString(3);
+      final var owner = results.getString(4);
+      final var path = Path.of(results.getString(5));
+
+      return Optional.of(new MissionModelRecord(
+              mission,
+              name,
+              version,
+              owner,
+              path));
     }
   }
 

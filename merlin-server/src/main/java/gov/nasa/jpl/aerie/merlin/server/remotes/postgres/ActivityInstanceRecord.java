@@ -4,10 +4,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
 
-public final record SimulationTemplateRecord(
+public record ActivityInstanceRecord(
     long id,
-    long revision,
-    long modelId,
-    String description,
+    String type,
+    long startOffsetInMicros,
     Map<String, SerializedValue> arguments) {}
-

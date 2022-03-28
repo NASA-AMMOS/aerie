@@ -61,7 +61,12 @@ public class PrioritySolver implements Solver {
   public Optional<Plan> getNextSolution() {
     if (plan == null) {
       //on first call to solver; setup fresh solution workspace for problem
-      initializePlan();
+      try {
+        initializePlan();
+      } catch (SimulationFacade.SimulationException e) {
+        logger.error("Tried to initializePlan but at least one activity could not be instantiated", e);
+        return Optional.empty();
+      }
 
       //attempt to satisfy the goals in the problem
       solve();
@@ -99,18 +104,23 @@ public class PrioritySolver implements Solver {
         allGood = false;
         break;
       }
-      plan.add(act);
       if(checkSimBeforeInsertingActivities) {
-        simulationFacade.simulatePlan(plan);
+        try {
+          simulationFacade.simulateActivity(act);
+        } catch (SimulationFacade.SimulationException e) {
+          allGood = false;
+          logger.error("Tried to simulate {} but the activity could not be instantiated", act, e);
+          break;
+        }
         var simDur = simulationFacade.getActivityDuration(act);
-        if (simDur == null) {
+        if (!simDur.isPresent()) {
           logger.error("Activity " + act + " could not be simulated");
           allGood = false;
           break;
         }
         if (act.getDuration() == null) {
-          act.setDuration(simDur);
-        } else if (simDur.compareTo(act.getDuration()) != 0) {
+          act.setDuration(simDur.get());
+        } else if (simDur.get().compareTo(act.getDuration()) != 0) {
           allGood = false;
           logger.error("When simulated, activity " + act
                              + " has a different duration than expected (exp=" + act.getDuration() + ", real=" + simDur + ")");
@@ -119,8 +129,21 @@ public class PrioritySolver implements Solver {
       }
     }
 
-    if(!allGood) {
-      plan.remove(acts);
+    if(allGood) {
+      //update plan with regard to simulation
+      for(var act: acts) {
+        plan.add(act);
+      }
+    } else{
+      //update simulation with regard to plan
+
+      try {
+        simulationFacade.removeActivitiesFromSimulation(acts);
+      } catch (SimulationFacade.SimulationException e) {
+        // We do not expect to get SimulationExceptions from re-simulating activities that have been simulated before
+        throw new Error("Simulation failed after removing activities");
+      }
+
     }
     return allGood;
   }
@@ -128,7 +151,7 @@ public class PrioritySolver implements Solver {
   /**
    * creates internal storage space to build up partial solutions in
    **/
-  public void initializePlan() {
+  public void initializePlan() throws SimulationFacade.SimulationException {
     plan = new PlanInMemory();
 
     //turn off simulation checking for initial plan contents (must accept user input regardless)
@@ -145,7 +168,7 @@ public class PrioritySolver implements Solver {
 
     //if backed by real models, initialize the simulation states/resources/profiles for the plan so state queries work
     if (problem.getMissionModel() != null) {
-      simulationFacade.simulatePlan(plan);
+      simulationFacade.simulateActivities(plan.getActivities());
     }
   }
 

@@ -25,13 +25,13 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
   }
 
   public PlanDatasetRecord apply(
-      final PlanId planId,
+      final long planId,
       final Timestamp planStart,
       final Timestamp datasetStart
   ) throws SQLException {
     final var offsetFromPlanStart = Duration.of(planStart.microsUntil(datasetStart), MICROSECONDS);
 
-    this.statement.setLong(1, planId.id());
+    this.statement.setLong(1, planId);
     PreparedStatements.setTimestamp(this.statement, 2, datasetStart);
     PreparedStatements.setTimestamp(this.statement, 3, planStart);
 

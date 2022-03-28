@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.framework.junit;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
+import gov.nasa.jpl.aerie.merlin.framework.EmptyConfigurationType;
 import gov.nasa.jpl.aerie.merlin.framework.InitializationContext;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
@@ -137,7 +138,10 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
         throw ex.wrapped;
       }
 
-      this.missionModel = this.builder.build(new RootModel<>(this.context.model(), executor), this.context.activityTypes());
+      this.missionModel = this.builder.build(
+          new RootModel<>(this.context.model(), executor),
+          new EmptyConfigurationType(),
+          this.context.activityTypes());
 
       // Clear the builder; it shouldn't be used from here on, and if it is, an error should be raised.
       this.builder = null;

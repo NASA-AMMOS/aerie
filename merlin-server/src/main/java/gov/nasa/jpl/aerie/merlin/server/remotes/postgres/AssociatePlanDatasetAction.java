@@ -22,11 +22,11 @@ import java.sql.SQLException;
   }
 
   public PlanDatasetRecord apply(
-      final PlanId planId,
+      final long planId,
       final long datasetId,
       final Timestamp planStart
   ) throws SQLException {
-    this.statement.setLong(1, planId.id());
+    this.statement.setLong(1, planId);
     this.statement.setLong(2, datasetId);
 
     final var results = this.statement.executeQuery();

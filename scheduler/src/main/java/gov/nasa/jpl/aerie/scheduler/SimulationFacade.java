@@ -11,9 +11,8 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
@@ -23,12 +22,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
@@ -50,11 +51,17 @@ public class SimulationFacade {
 
   // planning horizon
   private final PlanningHorizon planningHorizon;
+  private IncrementalSimulationDriver driver;
+  private int itSimActivityId;
 
   //simulation results from the last simulation, as output directly by simulation driver
   private SimulationResults lastSimDriverResults;
 
   private final Map<SchedulingActivityInstanceId, ActivityInstanceId> planActInstanceIdToSimulationActInstanceId = new HashMap<>();
+
+  private final Map<ActivityInstance, SerializedActivity> insertedActivities;
+
+  private static final Duration MARGIN = Duration.of(5,MICROSECONDS);
 
   /**
    * Accessor for integer resource feeders
@@ -64,7 +71,7 @@ public class SimulationFacade {
    */
   public SimResource getResource(String resourceName) {
     if (!resources.containsKey(resourceName)) {
-      resources.put(resourceName, new SimResource());
+      resources.put(resourceName, new SimResource(this));
     }
     return resources.get(resourceName);
   }
@@ -72,7 +79,10 @@ public class SimulationFacade {
   public SimulationFacade(PlanningHorizon planningHorizon, MissionModel<?> missionModel) {
     this.missionModel = missionModel;
     this.planningHorizon = planningHorizon;
-    resources = new HashMap<>();
+    this.resources = new HashMap<>();
+    this.driver = new IncrementalSimulationDriver(missionModel);
+    this.itSimActivityId = 0;
+    this.insertedActivities = new HashMap<>();
   }
 
   public PlanningHorizon getPlanningHorizon(){
@@ -85,72 +95,84 @@ public class SimulationFacade {
    * @param activityInstance the activity instance we want the duration for
    * @return the duration if found in the last simulation, null otherwise
    */
-  public Duration getActivityDuration(ActivityInstance activityInstance) {
-    if (lastSimDriverResults == null) {
+  public Optional<Duration> getActivityDuration(ActivityInstance activityInstance) {
+    if(!planActInstanceIdToSimulationActInstanceId.containsKey(activityInstance.getId())){
       logger.error("You need to simulate before requesting activity duration");
+      return Optional.empty();
     }
-    final var simAct = lastSimDriverResults.simulatedActivities.get(planActInstanceIdToSimulationActInstanceId.get(activityInstance.getId()));
-    if (simAct != null) {
-      return simAct.duration;
-    } else {
-      if(lastSimDriverResults.unfinishedActivities.get(planActInstanceIdToSimulationActInstanceId.get(activityInstance.getId())) != null){
-        logger.error("Activity "
-                           + activityInstance
-                           + " has not finished, check planning horizon ?");
-      } else{
-        logger.error("Simulation has been launched but activity with name= "
-                           + activityInstance
-                           + " has not been found");
-      }
-    }
-    return null;
+     var duration = driver.getActivityDuration(planActInstanceIdToSimulationActInstanceId.get(activityInstance.getId()));
+     if(duration.isEmpty()){
+       logger.error("Incremental simulation is probably outdated, check that no activity is removed between simulation and querying");
+     }
+     return duration;
   }
 
-  /**
-   * Simulates schedule and processes results to produce accessors for resources and activities. The complete set of
-   * activities scheduled so
-   * far should be passed for every simulation. Simulation runs for the whole planning horizon.
-   *
-   * @param plan the plan to simulate
-   */
-  public void simulatePlan(Plan plan) {
-    planActInstanceIdToSimulationActInstanceId.clear();
-    final var actsInPlan = plan.getActivitiesByTime();
-    final var schedule = new HashMap<ActivityInstanceId, Pair<Duration, SerializedActivity>>();
-    long counter = 0;
-
-    for (final var act : actsInPlan) {
-
-      final var arguments = new HashMap<>(act.getArguments());
-      if(act.getDuration() != null) {
-        final var durationType = act.getType().getDurationType();
-        if (durationType instanceof DurationType.Controllable d) {
-          arguments.put(d.parameterName(), new DurationValueMapper().serializeValue(act.getDuration()));
-        } else if (durationType instanceof DurationType.Uncontrollable) {
-          logger.warn("Activity instance has a specified duration, but the activity type's duration is uncontrollable");
-        } else {
-          throw new Error("Unhandled variant of DurationType: " + durationType);
-        }
-      } else{
-        logger.warn("Activity instance has unspecified duration");
+  public void removeActivitiesFromSimulation(final Collection<ActivityInstance> activities) throws SimulationException {
+    var atLeastOne = false;
+    for(var act: activities){
+      if(insertedActivities.containsKey(act)){
+        atLeastOne = true;
+        insertedActivities.remove(act);
       }
-      var activityIdSim = new ActivityInstanceId(counter++);
-      planActInstanceIdToSimulationActInstanceId.put(act.getId(), activityIdSim);
-      schedule.put(activityIdSim, Pair.of(
-          act.getStartTime(),
-          new SerializedActivity(act.getType().getName(), arguments)));
+    }
+    //reset incremental simulation
+    if(atLeastOne){
+      final var oldInsertedActivities = new HashMap<>(insertedActivities);
+      insertedActivities.clear();
+      planActInstanceIdToSimulationActInstanceId.clear();
+      driver = new IncrementalSimulationDriver(missionModel);
+      simulateActivities(oldInsertedActivities.keySet());
+    }
+  }
+
+  public void simulateActivities(final Collection<ActivityInstance> activities)
+  throws SimulationException {
+    final var activitiesSortedByStartTime =
+        activities.stream().sorted(Comparator.comparing(ActivityInstance::getStartTime)).toList();
+    for (final var activityInstance : activitiesSortedByStartTime) {
+      try {
+        simulateActivity(activityInstance);
+      } catch (SimulationException e) {
+        throw new SimulationException("Failed to instantiate "
+                                      + activityInstance
+                                      + ". Consider checking that its arguments are valid.", e);
+      }
     }
 
-    final var simulationDuration = planningHorizon.getAerieHorizonDuration();
+  }
 
-    final var results = SimulationDriver.simulate(
-        this.missionModel,
-        schedule,
-        Instant.now(),
-        simulationDuration);
+  static class SimulationException extends Exception {
+    SimulationException(final String message, final Throwable cause) {
+      super(message, cause);
+    }
+  }
 
-    handleSimulationResults(results);
+  public void simulateActivity(final ActivityInstance activity) throws SimulationException {
 
+    final var arguments = new HashMap<>(activity.getArguments());
+    if (activity.hasDuration()) {
+      final var durationType = activity.getType().getDurationType();
+      if (durationType instanceof DurationType.Controllable dt) {
+        arguments.put(dt.parameterName(), new DurationValueMapper().serializeValue(activity.getDuration()));
+      } else if (durationType instanceof DurationType.Uncontrollable) {
+        // If an activity has already been simulated, it will have a duration, even if its DurationType is Uncontrollable.
+      } else {
+        throw new Error("Unhandled variant of DurationType: " + durationType);
+      }
+    } else {
+      logger.warn("Activity has unconstrained duration {}", activity);
+    }
+    var activityIdSim = new ActivityInstanceId(itSimActivityId++);
+    planActInstanceIdToSimulationActInstanceId.put(activity.getId(), activityIdSim);
+
+    var serializedActivity = new SerializedActivity(activity.getType().getName(), arguments);
+
+    try {
+      driver.simulateActivity(serializedActivity, activity.getStartTime(), activityIdSim);
+    } catch (TaskSpecType.UnconstructableTaskSpecException e) {
+      throw new SimulationException("Failed to simulate " + activity + ", possibly because it has invalid arguments", e);
+    }
+    insertedActivities.put(activity, serializedActivity);
   }
 
   /**
@@ -176,7 +198,6 @@ public class SimulationFacade {
    * @param results results generated from a simulation driver run
    */
   private void handleSimulationResults(SimulationResults results) {
-    this.lastSimDriverResults = results;
     //simulation results from the last simulation, as converted for use by the constraint evaluation engine
     final var lastConstraintModelResults = convertToConstraintModelResults(
         results);
@@ -186,7 +207,7 @@ public class SimulationFacade {
 
     for (final var schema : sc.entrySet()) {
       if (!resources.containsKey(schema.getKey())) {
-        resources.put(schema.getKey(), new SimResource());
+        resources.put(schema.getKey(), new SimResource(this));
       }
     }
 
@@ -198,6 +219,7 @@ public class SimulationFacade {
           entry.getValue(),
           this.planningHorizon.getStartAerie());
     }
+    lastSimDriverResults = results;
   }
 
   /**
@@ -206,7 +228,7 @@ public class SimulationFacade {
    * @param driverResults the recorded results of a simulation run from the simulation driver
    * @return the same results rearranged to be suitable for use by the constraint evaluation engine
    */
-  gov.nasa.jpl.aerie.constraints.model.SimulationResults convertToConstraintModelResults(
+  private gov.nasa.jpl.aerie.constraints.model.SimulationResults convertToConstraintModelResults(
       SimulationResults driverResults)
   {
     final var planDuration = planningHorizon.getAerieHorizonDuration();
@@ -279,13 +301,15 @@ public class SimulationFacade {
     return new DiscreteProfile(pieces);
   }
 
-  private <T> List<Pair<Duration, T>> deserialize(List<Pair<Duration, SerializedValue>> values, ValueMapper<T> mapper) {
-    final var deserialized = new ArrayList<Pair<Duration, T>>();
-    for (final var el : values) {
-      var des = mapper.deserializeValue(el.getValue()).getSuccessOrThrow();
-      deserialized.add(Pair.of(el.getKey(), des));
+  public void updateResourcesIfNecessary(Duration endTime) {
+    var endTimeWithMargin = endTime;
+    if(endTime.noLongerThan(Duration.MAX_VALUE.minus(MARGIN))){
+      endTimeWithMargin = endTime.plus(MARGIN);
     }
-    return deserialized;
+    var results = driver.getSimulationResultsUpTo(endTimeWithMargin);
+    //compare references
+    if(results != lastSimDriverResults) {
+      handleSimulationResults(results);
+    }
   }
-
 }

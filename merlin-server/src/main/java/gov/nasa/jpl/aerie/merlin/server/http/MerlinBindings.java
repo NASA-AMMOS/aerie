@@ -16,12 +16,12 @@ import javax.json.stream.JsonParsingException;
 import java.io.StringReader;
 import java.util.List;
 
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraActivityActionP;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraExternalDatasetActionP;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelActionP;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelArgumentsActionP;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelEventTriggerP;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraPlanActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraExternalDatasetActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelArgumentsActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelEventTriggerP;
+import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraPlanActionP;
 import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;

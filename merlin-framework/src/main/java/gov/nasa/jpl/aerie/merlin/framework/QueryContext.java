@@ -43,7 +43,7 @@ public final class QueryContext implements Context {
   }
 
   @Override
-  public String spawn(final TaskFactory task) {
+  public <Return> String spawn(final TaskFactory<Return> task) {
     throw new IllegalStateException("Cannot schedule tasks in a query-only context");
   }
 

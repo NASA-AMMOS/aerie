@@ -21,7 +21,7 @@ Each container has environment variables that can be used to fine-tune your depl
 
 ## Starting the Services
 
-Download this [deployment](../deployment) directory on your local machine, then do:
+Download and unzip the latest [Deployment.zip](https://github.com/NASA-AMMOS/aerie/releases) file onto your local machine, then do:
 
 ```sh
 cd deployment
