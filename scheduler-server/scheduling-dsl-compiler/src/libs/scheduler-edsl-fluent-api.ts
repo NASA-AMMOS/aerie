@@ -39,13 +39,24 @@ export class Goal {
     });
   }
 
-  public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Integer }): ActivityRecurrenceGoal {
+  public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): ActivityRecurrenceGoal {
     return Goal.new({
       kind: 'ActivityRecurrenceGoal',
       activityTemplate: opts.activityTemplate,
       interval: opts.interval,
     });
   }
+}
+
+declare global {
+  export class Goal {
+    public and(...others: Goal[]): Goal
+
+    public or(...others: Goal[]): Goal
+
+    public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): ActivityRecurrenceGoal
+  }
+  type Duration = number
 }
 
 interface ActivityTemplate extends AST.ActivityTemplate {}
