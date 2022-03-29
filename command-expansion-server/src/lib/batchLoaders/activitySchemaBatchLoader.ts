@@ -30,7 +30,7 @@ export const activitySchemaBatchLoader: BatchLoader<
 
   return Promise.all(keys.map(async ({ missionModelId, activityTypeName }) => {
     const activitySchema = activity_type.find(activitySchema => (
-        activitySchema.model_id === missionModelId
+        activitySchema.model_id.toString() === missionModelId.toString()
         && activitySchema.name === activityTypeName
     ));
     if (activitySchema === undefined) {

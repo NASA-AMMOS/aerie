@@ -1,7 +1,7 @@
 import { GraphQLClient, gql } from "graphql-request";
-import { globalDeclaration, indent, interfaceDeclaration } from "./CodegenHelpers.js";
+import { globalDeclaration, indent, interfaceDeclaration } from "./codegen/CodegenHelpers.js";
 import { ErrorWithStatusCode } from "../utils/ErrorWithStatusCode.js";
-import getLogger from "./utils/logger.js";
+import getLogger from "../utils/logger.js";
 
 const logger = getLogger("getActivityTypescript");
 
@@ -90,10 +90,10 @@ export async function getActivityTypescript(
 
   const activity = response.activity_type[0];
 
-  return generateTypescriptForGraphQLActivitySchema(activity);
+  return generateTypescriptForGraphQLActivity(activity);
 }
 
-function generateTypescriptForGraphQLActivitySchema(activitySchema: GraphQLActivity): string {
+function generateTypescriptForGraphQLActivity(activitySchema: GraphQLActivity): string {
   const propertyDeclarations = Object.entries(activitySchema.parameters)
     .map(([parameterName, parameterValue]) => `readonly ${parameterName}: ${convertSchemaType(parameterValue.schema)};`)
     .join("\n");

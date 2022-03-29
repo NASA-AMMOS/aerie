@@ -32,6 +32,8 @@ ${typescriptFswCommands.map((fswCommand) => fswCommand.value).join('\n')}
 export const Commands = {${dictionary.fswCommands
     .map((fswCommand) => `\t\t${fswCommand.stem}: ${fswCommand.stem},\n`)
     .join('')}};
+const globalThis = (0,eval)("this");
+Object.assign(globalThis, Commands);
 `;
 
   return {
@@ -201,10 +203,6 @@ function mapArgumentType(argument: ampcs.FswCommandArgument, enumMap: ampcs.Enum
     default:
       throw new Error(`Unsupported argument type: ${argument.arg_type}`);
   }
-}
-
-function versionBuilder(dictionary: ampcs.CommandDictionary) {
-  return `output/command_lib_${dictionary.header.mission_name.toLowerCase()}_${dictionary.header.version}.ts`;
 }
 
 export async function processDictionary(dictionary: ampcs.CommandDictionary) {

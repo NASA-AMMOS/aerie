@@ -11,14 +11,18 @@ import { processDictionary } from './lib/codegen/CommandTypeCodegen.js';
 import { generateTypescriptForGraphQLActivitySchema } from './lib/codegen/ActivityTypescriptCodegen.js';
 import { InferredDataloader } from './lib/batchLoaders/index.js';
 import { commandDictionaryTypescriptBatchLoader } from './lib/batchLoaders/commandDictionaryTypescriptBatchLoader.js';
-import {activitySchemaBatchLoader, GraphQLActivitySchema} from './lib/batchLoaders/activitySchemaBatchLoader.js';
+import { activitySchemaBatchLoader } from './lib/batchLoaders/activitySchemaBatchLoader.js';
 import { simulatedActivityInstanceBatchLoader } from './lib/batchLoaders/simulatedActivityInstanceBatchLoader.js';
-import {ActivityInstance, mapGraphQLActivityInstance} from './lib/mapGraphQLActivityInstance.js';
-import {expansionSetBatchLoader} from "./lib/batchLoaders/expansionSetBatchLoader.js";
-import path from "path";
-import Piscina from "piscina";
-import {ExpansionResult} from "./worker";
+import { expansionSetBatchLoader } from './lib/batchLoaders/expansionSetBatchLoader.js';
+import path from 'path';
+import Piscina from 'piscina';
+import executeExpansion from './worker.js';
+import { isRejected, isResolved } from './utils/typeguards.js';
+import { UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
+import { Command } from './lib/codegen/CommandEDSLPreface';
 
+
+const logger = getLogger("app");
 
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
 
@@ -37,7 +41,7 @@ type Context = {
   expansionSetDataLoader: InferredDataloader<typeof expansionSetBatchLoader>,
 };
 
-app.use(async(req: Request, res: Response, next: NextFunction) => {
+app.use(async(req: Request, res: Response, _next: NextFunction) => {
   const graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL);
 
   const context: Context = {
@@ -48,10 +52,8 @@ app.use(async(req: Request, res: Response, next: NextFunction) => {
   };
 
   res.locals.context = context;
-  return next();
+  return _next();
 });
-
-const logger = getLogger("app");
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Aerie Command Service");
@@ -144,7 +146,7 @@ app.post('/put-expansion-set', async (req, res) => {
     throw new Error(`POST /put-expansion-set: No expansion set was inserted in the database`);
   }
   const id = rows[0].id;
-  console.log(`POST /put-expansion-set: Updated expansion set in the database: id=${id}`);
+  logger.info(`POST /put-expansion-set: Updated expansion set in the database: id=${id}`);
   res.status(200).json({ id });
   return;
 });
@@ -182,107 +184,97 @@ app.post('/expand-all-activity-instances', async (req, res) => {
   const context: Context = res.locals.context;
 
   // Query for expansion set data
-  console.log(`input = ${JSON.stringify(req.body.input)}`);
   const expansionSetId = req.body.input.expansionSetId as number;
   const simulationDatasetId = req.body.input.simulationDatasetId as number;
-  const expansionSet = await context.expansionSetDataLoader.load({expansionSetId});
+  const [expansionSet, activityInstances] = await Promise.all([
+    context.expansionSetDataLoader.load({ expansionSetId }),
+    context.simulatedActivityInstanceDataLoader.load({ simulationDatasetId }),
+  ]);
   const commandTypes = expansionSet.commandDictionary.commandTypesTypeScript;
 
-  // Populate expansion run table, this table serves as a "ledger" for attempted expansions
-  const { rows } = await db.query(`
-    INSERT INTO expansion_run (simulation_dataset_id, expansion_set_id)
-    VALUES ($1, $2)
-    RETURNING id;
-  `, [
-    expansionSet.commandDictionary.id,
-    expansionSet.id,
-  ]);
-  if (rows.length < 1) {
-    throw new Error(`POST /expand-all-activity-instances: No expansion run record was inserted in the database`);
-  }
-  const expansionRunId = rows[0];
-
-  // Collect and couple all activity instances and associated schemas
-  let activities: { instance: ActivityInstance, schema: GraphQLActivitySchema }[];
-  {
-    const instances = await context.simulatedActivityInstanceDataLoader.load({simulationDatasetId});
-    activities = await Promise.all(instances.map(async activityInstance => {
-      const activitySchema = await context.activitySchemaDataLoader.load({
-        missionModelId: expansionSet.missionModel.id,
-        activityTypeName: activityInstance.type,
-      });
-      return {
-        instance: mapGraphQLActivityInstance(activityInstance, activitySchema),
-        schema: activitySchema,
-      };
-    }));
-  }
-
-  // 1. Map act. instances to expansions
-  // 2. Create list of expansion promises
-  // 3. Pass all promises to `allSettled` to get concrete expansion results
-  console.log(`Expanding ${activities.length} activity instance(s)`);
-  const expansionPromises: Promise<ExpansionResult>[] = activities.map(activity => {
-    const activityTypeName = activity.schema.name;
-    console.log(`Looking for activity type name: ${activityTypeName}`);
-    expansionSet.expansionRules.forEach(expansionRule => console.log(`Finding expansion rule with activity type name: ${expansionRule.activityType}`));
-    const expansion = expansionSet.expansionRules.find(expansionRule => expansionRule.activityType === activityTypeName);
-    if (expansion === undefined) {
-      throw new Error(`POST /expand-all-activity-instances: Activity type name ("${activityTypeName}") not found within any expansion rules associated with expansion set with id: ${expansionSetId}`);
-    }
-    const activityTypes = generateTypescriptForGraphQLActivitySchema(activity.schema);
-    return piscina.run({
-      expansionLogic: expansion.expansionLogic,
-      activityInstance: activity.instance,
-      commandTypes: commandTypes,
-      activityTypes: activityTypes,
+  const settledExpansionResults = await Promise.allSettled(activityInstances.map(async activityInstance => {
+    const activitySchema = await context.activitySchemaDataLoader.load({
+      missionModelId: expansionSet.missionModel.id,
+      activityTypeName: activityInstance.type,
     });
-  });
-
-  const activityInstanceCommandsIds: number[] = [];
-
-  for (const settledPromise of await Promise.allSettled(expansionPromises)) {
-    if (settledPromise.status === 'fulfilled') {
-      const { activityInstance, commands, errors } = (settledPromise as PromiseFulfilledResult<ExpansionResult>).value;
-      if (commands.length < 1) {
-        // TODO should we fail-fast or aggregate all errors?
-        return res.json({ errors: errors.map(error => error.message) });
-      }
-
-      // Populate activity instance commands table
-      console.log(`commands = ${JSON.stringify(commands)}`);
-      const { rows } = await db.query(`
-        INSERT INTO activity_instance_commands (activity_instance_id, commands, expansion_run_id)
-        VALUES ($1, $2, $3)
-        RETURNING id;
-      `, [
-        activityInstance.id,
-        commands,
-        expansionRunId,
-      ]);
-      if (rows.length < 1) {
-        throw new Error(`POST /expand-all-activity-instances: No activity instance commands were inserted in the database`);
-      }
-      activityInstanceCommandsIds.push(rows[0].id);
+    const expansion = expansionSet.expansionRules.find(expansionRule => expansionRule.activityType === activityInstance.type);
+    if (expansion === undefined) {
+      return {
+        activityInstance,
+        commands: null,
+        errors: null,
+      };
     }
-    else if (settledPromise.status === 'rejected') {
-      const reason = (settledPromise as PromiseRejectedResult).reason;
-      throw new Error(`POST /expand-all-activity-instances: Unexpected error: ${reason}`);
-    }
+    const activityTypes = generateTypescriptForGraphQLActivitySchema(activitySchema);
+    return await piscina.run({
+      expansionLogic: expansion.expansionLogic,
+      activityInstance,
+      commandTypes,
+      activityTypes,
+    }) as ReturnType<typeof executeExpansion>;
+  }));
+
+  const rejectedExpansionResults = settledExpansionResults.filter(isRejected).map(p => p.reason);
+
+  for (const expansionResult of rejectedExpansionResults) {
+    logger.error(expansionResult.reason);
+  }
+  if (rejectedExpansionResults.length > 0) {
+    throw new Error(rejectedExpansionResults.map(rejectedExpansionResult => rejectedExpansionResult.reason).join('\n'));
   }
 
-  // Return expansion run ID and all associated activity instance commands IDs
-  return res.json({
-    expansionRunId: expansionRunId,
-    activityInstanceCommandsIds: activityInstanceCommandsIds
+  const expandedActivityInstances = settledExpansionResults.filter(isResolved).map(p => ({
+    id: p.value.activityInstance.id,
+    commands: p.value.commands,
+    errors: p.value.errors
+  }));
+
+  // Store expansion run  and activity instance commands in DB
+  const { rows } = await db.query(`
+    WITH expansion_run_id AS (
+      INSERT INTO expansion_run (simulation_dataset_id, expansion_set_id)
+        VALUES ($1, $2)
+        RETURNING id
+    )
+    INSERT
+    INTO activity_instance_commands (expansion_run_id,
+                                     activity_instance_id,
+                                     commands,
+                                     errors)
+    SELECT *
+    FROM unnest(
+        array_fill((SELECT id FROM expansion_run_id), ARRAY [array_length($3::int[], 1)]),
+        $3::int[],
+        $4::jsonb[],
+        $5::jsonb[]
+      )
+    RETURNING (SELECT id FROM expansion_run_id);
+    `, [
+    simulationDatasetId,
+    expansionSetId,
+    expandedActivityInstances.map(result => result.id),
+    expandedActivityInstances.map(result => result.commands !== null ? JSON.stringify(result.commands) : null),
+    expandedActivityInstances.map(result => JSON.stringify(result.errors)),
+  ]);
+
+  if (rows.length < 1) {
+    throw new Error(`POST /expand-all-activity-instances: No expansion run was inserted in the database`);
+  }
+  const id = rows[0].id;
+  logger.info(`POST /expand-all-activity-instances: Inserted expansion run to the database: id=${id}`);
+
+  res.status(200).json({
+    id,
+    expandedActivityInstances,
   });
+  return;
 });
 
 // General error handler
 app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
   logger.error(err);
-  res.status(err.status ?? err.statusCode ?? 500).send(err.message);
-  return next();
+  res.status(err.status ?? err.statusCode ?? 500).send({message: err.message});
+  return _next();
 });
 
 app.listen(PORT, () => {

@@ -7,11 +7,11 @@
   "scripts": {
     "copy-preface": "cp ./src/lib/codegen/CommandEDSLPreface.ts ./build/lib/codegen/CommandEDSLPreface.ts;",
     "build": "tsc -p tsconfig.build.json; npm run copy-preface;",
-    "start": "node ./build/app.js",
+    "start": "node --experimental-vm-modules ./build/app.js",
     "ts-watch": "npm run copy-preface; tsc -p tsconfig.build.json --watch",
-    "dev-server": "supervisor -- --inspect=0.0.0.0 ./build/app.js",
+    "dev-server": "supervisor -- --inspect=0.0.0.0 --experimental-vm-modules ./build/app.js",
     "dev": "concurrently -n \"tsc,node\" -c \"blue,red\" \"npm run ts-watch\" \"npm run dev-server\"",
-    "debug": "node --inspect=0.0.0.0:9229 ./build/app.js",
+    "debug": "node --inspect=0.0.0.0:9229 --experimental-vm-modules ./build/app.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
   },
   "author": "",
@@ -19,7 +19,7 @@
   "dependencies": {
     "@js-temporal/polyfill": "^0.4.0",
     "@nasa-jpl/aerie-ampcs": "^1.0.0",
-    "@nasa-jpl/aerie-ts-user-code-runner": "^0.1.2",
+    "@nasa-jpl/aerie-ts-user-code-runner": "^0.2.1",
     "body-parser": "^1.19.2",
     "dataloader": "^2.0.0",
     "express": "^5.0.0-beta.1",

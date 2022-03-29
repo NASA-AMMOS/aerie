@@ -21,7 +21,7 @@ export function generateTypescriptForGraphQLActivitySchema(activitySchema: Graph
 
   const propertyDeclarations = [activityTypeDeclaration, commonProperties, attributesDeclaration].join('\n');
 
-  return globalDeclaration(`${interfaceDeclaration(activitySchema.name, propertyDeclarations)}\n${activityTypeAlias}\n\nexport {};`);
+  return globalDeclaration(`${interfaceDeclaration(activitySchema.name, propertyDeclarations)}\n${activityTypeAlias}`) + '\n\nexport {};';
 }
 
 function convertSchemaType(schema: Schema): string {
