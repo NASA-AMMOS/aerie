@@ -20,8 +20,9 @@ include 'command-expansion-server'
 include 'constraints'
 include 'scheduler'
 
-// DB tests
+// Testing
 include 'db-tests'
+include 'e2e-tests'
 
 // Example mission models
 include 'examples:banananation'

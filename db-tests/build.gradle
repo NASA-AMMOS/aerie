@@ -8,7 +8,7 @@ java {
   }
 }
 
-test {
+task e2eTest(type: Test) {
   useJUnitPlatform()
 }
 
