@@ -99,9 +99,17 @@ public record SchedulerBindings(
       final var response = this.generateSchedulingLibAction.run(missionModelId);
       final String resultString;
       if (response instanceof GenerateSchedulingLibAction.Response.Success r) {
-        resultString = r.libraryCode();
+        resultString = Json
+            .createObjectBuilder()
+            .add("status", "success")
+            .add("typescript", r.libraryCode())
+            .build().toString();
       } else if (response instanceof GenerateSchedulingLibAction.Response.Failure r) {
-        resultString = r.reason();
+        resultString = Json
+            .createObjectBuilder()
+            .add("status", "failure")
+            .add("reason", r.reason())
+            .build().toString();
       } else {
         throw new Error("Unhandled variant of Response: " + response);
       }

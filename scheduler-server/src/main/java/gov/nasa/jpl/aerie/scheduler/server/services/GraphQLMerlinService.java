@@ -451,11 +451,10 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   {
     final var request = """
         query GetActivityTypesFromMissionModel{
-             mission_model_by_pk(id:%d){
-               activity_types{
-                 name
-                 parameters
-               }
+           mission_model_by_pk(id:%d){
+             activity_types{
+               name
+               parameters
              }
            }
         }

@@ -72,6 +72,12 @@ type Query {
 }
 
 type Query {
+  schedulingDslTypescript(
+    missionModelId: Int!
+  ): SchedulingDslTypescriptResponse
+}
+
+type Query {
   simulate(
     planId: Int!
   ): MerlinSimulationResponse
@@ -104,6 +110,11 @@ enum SchedulingStatus {
   incomplete
 }
 
+enum SchedulingDslTypescriptResponseStatus {
+  success
+  failure
+}
+
 type ResourceType {
   name: String!
   schema: ResourceSchema!
@@ -133,6 +144,12 @@ type AddExternalDatasetResponse {
 type SchedulingResponse {
   status: SchedulingStatus!
   reason: SchedulingFailureReason
+}
+
+type SchedulingDslTypescriptResponse {
+  status: SchedulingDslTypescriptResponseStatus!
+  typescript: String
+  reason: String
 }
 
 type CommandDictionaryResponse {
