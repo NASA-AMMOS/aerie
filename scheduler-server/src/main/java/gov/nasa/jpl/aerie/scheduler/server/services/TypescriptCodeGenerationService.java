@@ -40,7 +40,7 @@ public class TypescriptCodeGenerationService {
     }
     result.add("export const ActivityTemplates = {");
     result.add(indent(generateActivityTemplates(activityTypeCodes)));
-    result.add("}");
+    result.add("};");
     result.add("/** End Codegen */");
     return joinLines(result);
   }

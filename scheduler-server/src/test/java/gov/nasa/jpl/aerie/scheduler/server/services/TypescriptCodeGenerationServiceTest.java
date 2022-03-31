@@ -49,7 +49,7 @@ class TypescriptCodeGenerationServiceTest {
                  + "    }): PeelBanana {\n"
                  + "      return { name, activityType: 'PeelBanana', args };\n"
                  + "    },\n"
-                 + "}\n"
+                 + "};\n"
                  + "/** End Codegen */",
         TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(MISSION_MODEL_TYPES));
   }
