@@ -11,7 +11,7 @@ create table scheduling_template (
 );
 
 comment on table scheduling_template is e''
-  'A template scheuling spec from which scheduling requests may be based.'
+  'A template scheduling spec from which scheduling requests may be based.'
 '\n'
   'The associated scheduling goals are stored in the scheduling_template_goals table.';
 comment on column scheduling_template.id is e''
