@@ -79,6 +79,16 @@ custom_types:
         - description: null
           is_deprecated: null
           value: incomplete
+    - name: CommandSeqJsonStepType
+      values:
+        - description: null
+          is_deprecated: null
+          value: command
+    - name: CommandSeqJsonTimeType
+      values:
+        - description: null
+          is_deprecated: null
+          value: COMPLETE
   input_objects: []
   objects:
     - name: ResourceType
@@ -92,6 +102,11 @@ custom_types:
     - name: TypeScriptResponse
     - name: ExpandAllActivitiesResponse
     - name: ExpandedActivityInstance
+    - name: CommandSeqJson
+    - name: CommandSeqJsonStep
+    - name: CommandSeqJsonTime
+    - name: UserCodeError
+    - name: CodeLocation
   scalars:
     - name: ResourceSchema
     - name: MerlinSimulationResults
@@ -100,5 +115,4 @@ custom_types:
     - name: ActivityArguments
     - name: ProfileSet
     - name: SchedulingFailureReason
-    - name: Command
-    - name: UserCodeError
+    - name: Any

@@ -49,14 +49,14 @@ type Query {
 
 type Query {
   getActivityTypeScript(
-    missionModelId: ID!
+    missionModelId: Int!
     activityTypeName: String!
   ): TypeScriptResponse
 }
 
 type Query {
   getCommandTypeScript(
-  commandDictionaryId: ID!): TypeScriptResponse
+  commandDictionaryId: Int!): TypeScriptResponse
 }
 
 type Query {
@@ -136,7 +136,7 @@ type SchedulingResponse {
 }
 
 type CommandDictionaryResponse {
-  id: ID!
+  id: Int!
 }
 
 type ExpansionSetResponse {
@@ -158,8 +158,46 @@ type ExpandAllActivitiesResponse {
 
 type ExpandedActivityInstance {
   id: Int!
-  commands: [Command!]
+  commands: [CommandSeqJson!]
   errors: [UserCodeError!]!
+}
+
+enum CommandSeqJsonStepType {
+  command
+}
+
+enum CommandSeqJsonTimeType {
+  COMPLETE
+}
+
+type CommandSeqJson {
+  id: String!,
+  metadata: Any!,
+  steps: [CommandSeqJsonStep!]!
+}
+
+type CommandSeqJsonStep {
+  stem: String!,
+  time: CommandSeqJsonTime!,
+  type: CommandSeqJsonStepType!,
+  metadata: Any!
+  args: [Any!]!
+}
+
+type CommandSeqJsonTime {
+  type: CommandSeqJsonTimeType!
+}
+
+type UserCodeError {
+  message: String!
+  stack: String!
+  sourceContext: String!
+  location: CodeLocation
+}
+
+type CodeLocation {
+  line: Int!
+  column: Int!
 }
 
 scalar ResourceSchema
@@ -176,6 +214,6 @@ scalar ProfileSet
 
 scalar SchedulingFailureReason
 
-scalar Command
+scalar CommandArgumentsSeqJson
 
-scalar UserCodeError
+scalar Any
