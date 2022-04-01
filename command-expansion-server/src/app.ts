@@ -127,13 +127,15 @@ app.post('/put-expansion-set', async (req, res, next) => {
       INSERT INTO expansion_set (command_dict_id, mission_model_id)
         VALUES ($1, $2)
         RETURNING id
-    )
-    INSERT INTO expansion_set_to_rule (set_id, rule_id)
-      SELECT * FROM unnest(
-        array_fill((SELECT id FROM expansion_set_id), ARRAY[array_length($3::int[], 1)]),
-        $3::int[]
-      )
-    RETURNING (SELECT id FROM expansion_set_id);
+    ),
+         rules as (
+           SELECT id, activity_type FROM expansion_rule WHERE id = ANY($3::int[]) ORDER BY id
+         )
+    INSERT INTO expansion_set_to_rule (set_id, rule_id, activity_type)
+      SELECT a.id, b.id, b.activity_type
+      FROM (SELECT id from expansion_set_id) a,
+           (SELECT id, activity_type from rules) b
+      RETURNING (SELECT id FROM expansion_set_id);
   `, [
     commandDictionaryId,
     missionModelId,
