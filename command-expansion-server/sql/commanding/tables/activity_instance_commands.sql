@@ -12,7 +12,8 @@ create table activity_instance_commands (
     unique (activity_instance_id,expansion_run_id),
 
   foreign key (expansion_run_id)
-  references expansion_run (id)
+    references expansion_run (id)
+    on delete cascade
 );
 
 comment on table activity_instance_commands is e''

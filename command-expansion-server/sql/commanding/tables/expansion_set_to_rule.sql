@@ -4,13 +4,15 @@ create table expansion_set_to_rule (
   activity_type text not null,
 
   constraint expansion_set_to_rule_primary_key
-  primary key (set_id,rule_id),
+    primary key (set_id,rule_id),
 
   foreign key (set_id)
-  references expansion_set (id),
+    references expansion_set (id)
+    on delete cascade,
 
   foreign key (rule_id, activity_type)
-  references expansion_rule (id, activity_type),
+    references expansion_rule (id, activity_type)
+    on delete cascade,
 
   CONSTRAINT max_one_expansion_of_each_activity_type_per_expansion_set
     UNIQUE (set_id, activity_type)

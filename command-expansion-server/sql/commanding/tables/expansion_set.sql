@@ -8,7 +8,8 @@ create table expansion_set (
     primary key (id),
 
   foreign key (command_dict_id)
-  references command_dictionary (id)
+    references command_dictionary (id)
+    on delete cascade
 );
 
 comment on table expansion_set is e''
