@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "lib": ["es2020"],
+    "moduleResolution": "node",
+    "module": "es2020",
+    "target": "es2020"
+  },
+  "include": ["src/**/*.d.ts", "src/**/*.ts"]
+}

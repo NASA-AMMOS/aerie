@@ -1,0 +1,22 @@
+plugins {
+  id 'com.github.node-gradle.node' version '3.1.1'
+}
+
+node {
+  version = '16.4.0'
+  npmVersion = '8.5.0'
+  download = true
+}
+
+task assemble {
+  dependsOn npmInstall
+}
+
+task build {
+  dependsOn assemble
+}
+
+task e2eTest(type: NpmTask) {
+  dependsOn npmInstall
+  args = ['run', 'test']
+}
