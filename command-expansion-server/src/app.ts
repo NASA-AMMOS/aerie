@@ -9,14 +9,13 @@ import { getEnv } from './env.js';
 import { DbExpansion } from './db.js';
 import { processDictionary } from './lib/codegen/CommandTypeCodegen.js';
 import { generateTypescriptForGraphQLActivitySchema } from './lib/codegen/ActivityTypescriptCodegen.js';
-import { InferredDataloader } from './lib/batchLoaders/index.js';
+import { InferredDataloader, objectCacheKeyFunction } from './lib/batchLoaders/index.js';
 import { commandDictionaryTypescriptBatchLoader } from './lib/batchLoaders/commandDictionaryTypescriptBatchLoader.js';
 import { activitySchemaBatchLoader } from './lib/batchLoaders/activitySchemaBatchLoader.js';
 import { simulatedActivityInstanceBatchLoader } from './lib/batchLoaders/simulatedActivityInstanceBatchLoader.js';
 import { expansionSetBatchLoader } from './lib/batchLoaders/expansionSetBatchLoader.js';
-import path from 'path';
 import Piscina from 'piscina';
-import executeExpansion from './worker.js';
+import type executeExpansion from './worker.js';
 import { isRejected, isResolved } from './utils/typeguards.js';
 import { UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
 import { Command } from './lib/codegen/CommandEDSLPreface';
@@ -27,12 +26,14 @@ const logger = getLogger("app");
 const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
 
 const app: Application = express();
+// WARNING: bodyParser.json() is vulnerable to a string too long issue. Iff that occurs,
+// we should switch to a stream parser like https://www.npmjs.com/package/stream-json
 app.use(bodyParser.json({ limit: '25mb' }));
 
 DbExpansion.init();
 const db = DbExpansion.getDb();
 
-const piscina = new Piscina({ filename: `${path.resolve()}/build/worker.js` });
+const piscina = new Piscina({ filename: new URL('worker.js', import.meta.url).pathname });
 
 type Context = {
   commandTypescriptDataLoader: InferredDataloader<typeof commandDictionaryTypescriptBatchLoader>,
@@ -41,25 +42,25 @@ type Context = {
   expansionSetDataLoader: InferredDataloader<typeof expansionSetBatchLoader>,
 };
 
-app.use(async(req: Request, res: Response, _next: NextFunction) => {
+app.use(async(req: Request, res: Response, next: NextFunction) => {
   const graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL);
 
   const context: Context = {
-    commandTypescriptDataLoader: new DataLoader(commandDictionaryTypescriptBatchLoader({graphqlClient})),
-    activitySchemaDataLoader: new DataLoader(activitySchemaBatchLoader({graphqlClient})),
-    simulatedActivityInstanceDataLoader: new DataLoader(simulatedActivityInstanceBatchLoader({graphqlClient})),
-    expansionSetDataLoader: new DataLoader(expansionSetBatchLoader({graphqlClient})),
+    commandTypescriptDataLoader: new DataLoader(commandDictionaryTypescriptBatchLoader({graphqlClient}),{cacheKeyFn: objectCacheKeyFunction}),
+    activitySchemaDataLoader: new DataLoader(activitySchemaBatchLoader({graphqlClient}),{cacheKeyFn: objectCacheKeyFunction}),
+    simulatedActivityInstanceDataLoader: new DataLoader(simulatedActivityInstanceBatchLoader({graphqlClient}),{cacheKeyFn: objectCacheKeyFunction}),
+    expansionSetDataLoader: new DataLoader(expansionSetBatchLoader({graphqlClient}),{cacheKeyFn: objectCacheKeyFunction}),
   };
 
   res.locals.context = context;
-  return _next();
+  return next();
 });
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Aerie Command Service");
 });
 
-app.post('/put-dictionary', async (req, res) => {
+app.post('/put-dictionary', async (req, res, next) => {
   const base64Dictionary: string = req.body.input.dictionary;
   const dictionary = Buffer.from(base64Dictionary, "base64").toString("utf8");
   logger.info(`Dictionary received`);
@@ -87,16 +88,14 @@ app.post('/put-dictionary', async (req, res) => {
   ]);
 
   if (rows.length < 1) {
-    logger.error(`POST /dictionary: No command dictionary was updated in the database`);
-    res.status(500).send(`POST /dictionary: No command dictionary was updated in the database`);
-    return;
+    throw new Error(`POST /dictionary: No command dictionary was updated in the database`);
   }
   const id = rows[0].id;
   res.status(200).json({ id });
-  return;
+  return next();
 });
 
-app.post('/put-expansion', async (req, res) => {
+app.post('/put-expansion', async (req, res, next) => {
   const activityTypeName = req.body.input.activityTypeName as string;
   const expansionLogicBase64 = req.body.input.expansionLogic as string;
 
@@ -116,10 +115,10 @@ app.post('/put-expansion', async (req, res) => {
   const id = rows[0].id;
   logger.info(`POST /put-expansion: Updated expansion in the database: id=${id}`);
   res.status(200).json({ id });
-  return;
+  return next()
 });
 
-app.post('/put-expansion-set', async (req, res) => {
+app.post('/put-expansion-set', async (req, res, next) => {
   const commandDictionaryId = req.body.input.commandDictionaryId as number;
   const missionModelId = req.body.input.missionModelId as number;
   const expansionIds = req.body.input.expansionIds as number[];
@@ -148,10 +147,10 @@ app.post('/put-expansion-set', async (req, res) => {
   const id = rows[0].id;
   logger.info(`POST /put-expansion-set: Updated expansion set in the database: id=${id}`);
   res.status(200).json({ id });
-  return;
+  return next();
 });
 
-app.post('/get-command-typescript', async (req, res) => {
+app.post('/get-command-typescript', async (req, res, next) => {
   const context: Context = res.locals.context;
 
   const commandDictionaryId = req.body.input.commandDictionaryId as number;
@@ -161,10 +160,10 @@ app.post('/get-command-typescript', async (req, res) => {
   res.status(200).json({
     typescript: commandTypescriptBase64,
   });
-  return;
+  return next();
 });
 
-app.post('/get-activity-typescript', async (req, res) => {
+app.post('/get-activity-typescript', async (req, res, next) => {
   const context: Context = res.locals.context;
 
   const missionModelId = req.body.input.missionModelId as number;
@@ -177,10 +176,10 @@ app.post('/get-activity-typescript', async (req, res) => {
   res.status(200).json({
     typescript: activityTypescriptBase64,
   });
-  return;
+  return next();
 });
 
-app.post('/expand-all-activity-instances', async (req, res) => {
+app.post('/expand-all-activity-instances', async (req, res, next) => {
   const context: Context = res.locals.context;
 
   // Query for expansion set data
@@ -267,14 +266,14 @@ app.post('/expand-all-activity-instances', async (req, res) => {
     id,
     expandedActivityInstances,
   });
-  return;
+  return next();
 });
 
 // General error handler
-app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   logger.error(err);
   res.status(err.status ?? err.statusCode ?? 500).send({message: err.message});
-  return _next();
+  return next();
 });
 
 app.listen(PORT, () => {

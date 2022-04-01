@@ -32,7 +32,7 @@ ${typescriptFswCommands.map((fswCommand) => fswCommand.value).join('\n')}
 export const Commands = {${dictionary.fswCommands
     .map((fswCommand) => `\t\t${fswCommand.stem}: ${fswCommand.stem},\n`)
     .join('')}};
-const globalThis = (0,eval)("this");
+
 Object.assign(globalThis, Commands);
 `;
 
@@ -184,7 +184,7 @@ function mapArgumentType(argument: ampcs.FswCommandArgument, enumMap: ampcs.Enum
       ) {
         return 'boolean';
       } else {
-        return enumMap[argument.enum_name].values.map((value) => `'${value.symbol}'`).join(' | ');
+        return `(${enumMap[argument.enum_name].values.map((value) => `'${value.symbol}'`).join(' | ')})`;
       }
     case 'boolean':
       return 'boolean';
