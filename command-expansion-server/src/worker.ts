@@ -11,6 +11,7 @@ import getLogger from "./utils/logger.js";
 const logger = getLogger("worker");
 
 const temporalPolyfillTypes = fs.readFileSync(new URL('../src/TemporalPolyfillTypes.ts', import.meta.url).pathname, 'utf8');
+const codeRunner = new UserCodeRunner();
 
 export default async function executeExpansion(opts: {
   expansionLogic: string,
@@ -24,7 +25,7 @@ export default async function executeExpansion(opts: {
 }> {
   try {
 
-    const result = await new UserCodeRunner().executeUserCode(
+    const result = await codeRunner.executeUserCode<[{ activityInstance: ActivityInstance }], ExpansionReturn>(
       opts.expansionLogic,
       [{
         activityInstance: opts.activityInstance
@@ -42,9 +43,17 @@ export default async function executeExpansion(opts: {
       }),
     );
 
-    return result.isOk()
-      ? { activityInstance: opts.activityInstance, commands: result.unwrap(), errors: [] }
-      : { activityInstance: opts.activityInstance, commands: null, errors: result.unwrapErr().map(err => err.toJSON()) };
+    if (result.isOk()) {
+      let commands = result.unwrap();
+      if (!Array.isArray(commands)) {
+        commands = [ commands ];
+      }
+      const commandsFlat = commands.flat() as Command[];
+      return { activityInstance: opts.activityInstance, commands: commandsFlat.map(c => c.toSeqJson()), errors: [] }
+    }
+    else {
+      return { activityInstance: opts.activityInstance, commands: null, errors: result.unwrapErr().map(err => err.toJSON()) };
+    }
   }
   catch (e: any) {
     logger.error(e);
