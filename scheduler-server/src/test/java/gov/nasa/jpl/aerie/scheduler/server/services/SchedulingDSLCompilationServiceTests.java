@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.scheduler.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.Plan;
 import gov.nasa.jpl.aerie.scheduler.Problem;
 import gov.nasa.jpl.aerie.scheduler.Time;
+import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
@@ -99,6 +100,13 @@ class SchedulingDSLCompilationServiceTests {
       {
         return MISSION_MODEL_TYPES;
       }
+
+      @Override
+      public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
+      throws IOException, MerlinServiceException
+      {
+        return MISSION_MODEL_TYPES;
+      }
     }));
   }
 
@@ -116,7 +124,7 @@ class SchedulingDSLCompilationServiceTests {
         PLAN_ID, """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
-                    activityTemplate: ActivityTemplates.PeelBanana('MyActivity', { peelDirection: 'fromStem' }),
+                    activityTemplate: ActivityTemplates.PeelBanana({ peelDirection: 'fromStem' }),
                     interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
                   })
                 }
@@ -124,7 +132,6 @@ class SchedulingDSLCompilationServiceTests {
     final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.GoalDefinition(
         SchedulingDSL.GoalKinds.ActivityRecurrenceGoal,
         new SchedulingDSL.ActivityTemplate(
-            "MyActivity",
             "PeelBanana",
             Map.of(
                 "peelDirection",
@@ -141,7 +148,7 @@ class SchedulingDSLCompilationServiceTests {
     actualGoalDefinition = (SchedulingDSL.GoalSpecifier.GoalDefinition) schedulingDSLCompilationService.compileSchedulingGoalDSL(
         PLAN_ID, """
                 export default function myGoal() {
-                  return myHelper(ActivityTemplates.PeelBanana('MyActivity', { peelDirection: 'fromStem' }))
+                  return myHelper(ActivityTemplates.PeelBanana({ peelDirection: 'fromStem' }))
                 }
                 function myHelper(activityTemplate) {
                   return Goal.ActivityRecurrenceGoal({
@@ -153,7 +160,6 @@ class SchedulingDSLCompilationServiceTests {
     final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.GoalDefinition(
         SchedulingDSL.GoalKinds.ActivityRecurrenceGoal,
         new SchedulingDSL.ActivityTemplate(
-            "MyActivity",
             "PeelBanana",
             Map.of(
                 "peelDirection",
@@ -169,7 +175,7 @@ class SchedulingDSLCompilationServiceTests {
           PLAN_ID, """
                 export default function myGoal() {
                   const x = "hello world" - 2
-                  return myHelper(ActivityTemplates.PeelBanana('MyActivity', { peelDirection: 'fromStem' }))
+                  return myHelper(ActivityTemplates.PeelBanana({ peelDirection: 'fromStem' }))
                 }
                 function myHelper(activityTemplate) {
                   return Goal.ActivityRecurrenceGoal({

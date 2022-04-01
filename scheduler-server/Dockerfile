@@ -17,6 +17,7 @@ RUN cd /usr/src/app && tar --strip-components 1 -xf server.tar
 COPY scheduling-dsl-compiler /usr/src/app/scheduling-dsl-compiler
 ENV SCHEDULING_DSL_COMPILER_ROOT="/usr/src/app/scheduling-dsl-compiler/"
 ENV SCHEDULING_DSL_COMPILER_COMMAND="./build/main.js"
+ENV NODE_PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/node"
 
 WORKDIR /usr/src/app
 ENTRYPOINT ["/usr/src/app/bin/scheduler-server"]

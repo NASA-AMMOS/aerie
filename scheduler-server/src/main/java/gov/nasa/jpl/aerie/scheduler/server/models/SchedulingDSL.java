@@ -26,12 +26,11 @@ public class SchedulingDSL {
 
   private static final JsonParser<ActivityTemplate> activityTemplateP =
       productP
-          .field("name", stringP)
           .field("activityType", stringP)
           .field("args", mapP(serializedValueP))
           .map(Iso.of(
               untuple(ActivityTemplate::new),
-              $ -> tuple($.name(), $.activityType(), $.arguments())));
+              $ -> tuple($.activityType(), $.arguments())));
 
 
   private static final JsonParser<Duration> durationP
@@ -92,5 +91,5 @@ public class SchedulingDSL {
   }
 
 
-  public record ActivityTemplate(String name, String activityType, Map<String, SerializedValue> arguments) {}
+  public record ActivityTemplate(String activityType, Map<String, SerializedValue> arguments) {}
 }

@@ -1,4 +1,5 @@
 import executeSourceCode from "./executor.js";
+import fs from "fs";
 
 process.on('uncaughtException', (err) => {
   console.error("uncaughtException")
@@ -13,7 +14,8 @@ async function handleRequest(data: Buffer) {
     const result = await executeSourceCode({
       source,
       filename,
-      generatedCode
+      generatedCode,
+      dslTS: (await fs.promises.readFile(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/scheduler-edsl-fluent-api.ts`)).toString()
     })
     const stringified = JSON.stringify(result);
     if (stringified === undefined) {

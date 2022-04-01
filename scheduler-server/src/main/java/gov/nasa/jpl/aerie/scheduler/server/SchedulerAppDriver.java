@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresResultsCellRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresSpecificationRepository;
 import gov.nasa.jpl.aerie.scheduler.server.services.CachedSchedulerService;
+import gov.nasa.jpl.aerie.scheduler.server.services.GenerateSchedulingLibAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
 import gov.nasa.jpl.aerie.scheduler.server.services.LocalSpecificationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
@@ -71,8 +72,10 @@ public final class SchedulerAppDriver {
     final var schedulerService = new CachedSchedulerService(stores.results(), scheduleAgent);
     final var scheduleAction = new ScheduleAction(specificationService, schedulerService);
 
+    final var generateSchedulingLibAction = new GenerateSchedulingLibAction(typescriptCodeGenerationService);
+
     //establish bindings to the service layers
-    final var bindings = new SchedulerBindings(schedulerService, scheduleAction);
+    final var bindings = new SchedulerBindings(schedulerService, scheduleAction, generateSchedulingLibAction);
 
     //configure the http server (the consumer lambda overlays additional config on the input javalinConfig)
     final var javalin = Javalin.create(javalinConfig -> {

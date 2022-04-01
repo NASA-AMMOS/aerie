@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
+import gov.nasa.jpl.aerie.scheduler.server.services.GenerateSchedulingLibAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulerService;
 import io.javalin.Javalin;
@@ -21,6 +22,7 @@ import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.seria
 import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeInvalidEntityException;
 import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeInvalidJsonException;
 import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeScheduleResultsResponse;
+import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraMissionModelIdActionP;
 import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraSpecificationActionP;
 import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.path;
@@ -28,13 +30,15 @@ import static io.javalin.apibuilder.ApiBuilder.post;
 
 /**
  * set up mapping between scheduler http endpoints and java method calls
- *
- * @param schedulerService object that will service synchronous scheduling api requests (like goal reordering)
+ *  @param schedulerService object that will service synchronous scheduling api requests (like goal reordering)
  * @param scheduleAction action that initiates scheduling of a plan and collects results, possibly asynchronously
+ * @param generateSchedulingLibAction
  */
-public record SchedulerBindings(SchedulerService schedulerService, ScheduleAction scheduleAction)
-    implements Plugin
-{
+public record SchedulerBindings(
+    SchedulerService schedulerService,
+    ScheduleAction scheduleAction,
+    GenerateSchedulingLibAction generateSchedulingLibAction
+) implements Plugin {
   public SchedulerBindings {
     Objects.requireNonNull(schedulerService, "schedulerService must be non-null");
     Objects.requireNonNull(scheduleAction, "scheduleAction must be non-null");
@@ -53,6 +57,7 @@ public record SchedulerBindings(SchedulerService schedulerService, ScheduleActio
       before(ctx -> ctx.contentType("application/json"));
 
       path("schedule", () -> post(this::schedule));
+      path("schedulingDslTypescript", () -> post(this::getSchedulingDslTypescript));
     });
   }
 
@@ -78,6 +83,41 @@ public record SchedulerBindings(SchedulerService schedulerService, ScheduleActio
       ctx.status(400).result(serializeInvalidJsonException(ex).toString());
     } catch (final NoSuchSpecificationException ex) {
       ctx.status(404).result(serializeException(ex).toString());
+    }
+  }
+
+  /**
+   * action bound to the /schedulingDslTypescript endpoint: generates the typescript code for a given mission model
+   *
+   * @param ctx the http context of the request from which to read input or post results
+   */
+  private void getSchedulingDslTypescript(final Context ctx) {
+    try {
+      final var body = parseJson(ctx.body(), hasuraMissionModelIdActionP);
+      final var missionModelId = body.input().missionModelId();
+
+      final var response = this.generateSchedulingLibAction.run(missionModelId);
+      final String resultString;
+      if (response instanceof GenerateSchedulingLibAction.Response.Success r) {
+        resultString = Json
+            .createObjectBuilder()
+            .add("status", "success")
+            .add("typescript", r.libraryCode())
+            .build().toString();
+      } else if (response instanceof GenerateSchedulingLibAction.Response.Failure r) {
+        resultString = Json
+            .createObjectBuilder()
+            .add("status", "failure")
+            .add("reason", r.reason())
+            .build().toString();
+      } else {
+        throw new Error("Unhandled variant of Response: " + response);
+      }
+      ctx.result(resultString);
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(serializeInvalidEntityException(ex).toString());
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(serializeInvalidJsonException(ex).toString());
     }
   }
 

@@ -24,7 +24,8 @@ public class SchedulingDSLCompilationService {
     this.typescriptCodeGenerationService = typescriptCodeGenerationService;
     final var schedulingDslCompilerRoot = System.getenv("SCHEDULING_DSL_COMPILER_ROOT");
     final var schedulingDslCompilerCommand = System.getenv("SCHEDULING_DSL_COMPILER_COMMAND");
-    this.nodeProcess = new ProcessBuilder("node", schedulingDslCompilerCommand)
+    final var nodePath = System.getenv("NODE_PATH");
+    this.nodeProcess = new ProcessBuilder(nodePath, "--experimental-vm-modules", schedulingDslCompilerCommand)
         .redirectError(ProcessBuilder.Redirect.INHERIT)
         .directory(new File(schedulingDslCompilerRoot))
         .start();

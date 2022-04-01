@@ -44,7 +44,11 @@ test {
 
   // Add node bin directory to PATH, helps CI/CD services without node installed
   projectDir.toPath().resolve('.gradle/nodejs').toFile().listFiles().each {
-    environment 'PATH', "${System.env.PATH}${System.getProperty('path.separator')}$it/bin"
+    environment 'NODE_PATH', "$it/bin/node"
+  }
+
+  if (System.getenv("NODE_PATH") == null) {
+    environment 'NODE_PATH', "node"
   }
 
   environment "SCHEDULING_DSL_COMPILER_ROOT", projectDir.toPath().resolve('scheduling-dsl-compiler')

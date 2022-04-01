@@ -6,7 +6,9 @@ import gov.nasa.jpl.aerie.scheduler.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.Plan;
 import gov.nasa.jpl.aerie.scheduler.Problem;
 import gov.nasa.jpl.aerie.scheduler.Time;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import org.apache.commons.lang3.tuple.Pair;
@@ -131,7 +133,9 @@ public interface MerlinService {
    */
   Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(final PlanId planId, final Plan plan) throws IOException, NoSuchPlanException, MerlinServiceException;
 
-  TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final PlanId missionModelId) throws IOException, MerlinServiceException;
+  TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final PlanId planId) throws IOException, MerlinServiceException;
+  TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId) throws IOException, MerlinServiceException,
+                                                                                                                     NoSuchMissionModelException;
 
   class MerlinServiceException extends Exception {
     MerlinServiceException(final String message) {

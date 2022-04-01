@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
+import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -28,39 +30,74 @@ public class TypescriptCodeGenerationService {
       throw new Error("Could not fetch mission model types", e);
     }
   }
+
+  public String generateTypescriptTypesForMissionModel(final MissionModelId missionModelId) throws NoSuchMissionModelException {
+    try {
+      return generateTypescriptTypesFromMissionModel(this.merlinService.getMissionModelTypes(missionModelId));
+    } catch (MerlinService.MerlinServiceException | IOException e) {
+      throw new Error("Could not fetch mission model types", e);
+    }
+  }
+
   public static String generateTypescriptTypesFromMissionModel(final MissionModelTypes missionModelTypes) {
-    var indentLevel = 0;
     final var activityTypeCodes = new ArrayList<ActivityTypeCode>();
     for (final var activityType : missionModelTypes.activityTypes()) {
       activityTypeCodes.add(getActivityTypeInformation(activityType));
     }
-    var result = "/** Start Codegen */\n";
+    final var result = new ArrayList<String>();
+    result.add("/** Start Codegen */");
     for (final var activityTypeCode : activityTypeCodes) {
-      result += "interface %s extends ActivityTemplate {}\n".formatted(activityTypeCode.activityName()).indent(indentLevel);
+      result.add("interface %s extends ActivityTemplate {}".formatted(activityTypeCode.activityTypeName()));
     }
-    result += "export const ActivityTemplates = {\n".indent(indentLevel);
-    indentLevel += 2;
-    for (final var activityTypeCode : activityTypeCodes) {
-      result += String.format("%s: function %s(\n", activityTypeCode.activityName(), activityTypeCode.activityName()).indent(indentLevel);
-      indentLevel += 2;
-      result += "name: string\n".indent(indentLevel);
-      result += "args: {\n".indent(indentLevel);
-      indentLevel += 2;
-      for (final var parameterType : activityTypeCode.parameterTypes()) {
-        result += "%s: %s\n".formatted(parameterType.name(), ActivityParameterType.toString(parameterType.type())).indent(indentLevel);
-      }
-      indentLevel -= 2;
-      result += "}): %s {\n".formatted(activityTypeCode.activityName()).indent(indentLevel);
-      indentLevel += 2;
-      result += "return { name, activityType: '%s', args };\n".formatted(activityTypeCode.activityName()).indent(indentLevel);
-      indentLevel -= 2;
-      result += "},\n".indent(indentLevel);
-    }
-    result += "}\n/** End Codegen */";
-    return result;
+    result.add("export const ActivityTemplates = {");
+    result.add(indent(generateActivityTemplates(activityTypeCodes)));
+    result.add("}");
+    result.add("declare global {");
+    result.add(indent("var ActivityTemplates: {"));
+    result.add(indent(indent(generateActivityTemplateTypeDeclarations(activityTypeCodes))));
+    result.add(indent("}"));
+    result.add("};");
+    result.add("/** End Codegen */");
+    return joinLines(result);
   }
 
-  private record ActivityTypeCode(String activityName, List<ActivityParameter> parameterTypes) {}
+  private static String generateActivityTemplates(final Iterable<ActivityTypeCode> activityTypeCodes) {
+    final var result = new ArrayList<String>();
+    for (final var activityTypeCode : activityTypeCodes) {
+      result.add(String.format("%s: function %s(", activityTypeCode.activityTypeName(), activityTypeCode.activityTypeName()));
+      result.add(indent("args: {"));
+      for (final var parameterType : activityTypeCode.parameterTypes()) {
+        result.add(indent(indent("%s: %s".formatted(parameterType.name(), ActivityParameterType.toString(parameterType.type())))));
+      }
+      result.add(indent("}): %s {".formatted(activityTypeCode.activityTypeName())));
+      result.add(indent(indent("return { activityType: '%s', args };".formatted(activityTypeCode.activityTypeName()))));
+      result.add(indent("},"));
+    }
+    return joinLines(result);
+  }
+
+  private static String generateActivityTemplateTypeDeclarations(final Iterable<ActivityTypeCode> activityTypeCodes) {
+    final var result = new ArrayList<String>();
+    for (final var activityTypeCode : activityTypeCodes) {
+      result.add(String.format("%s: (", activityTypeCode.activityTypeName()));
+      result.add(indent("args: {"));
+      for (final var parameterType : activityTypeCode.parameterTypes()) {
+        result.add(indent(indent("%s: %s".formatted(parameterType.name(), ActivityParameterType.toString(parameterType.type())))));
+      }
+      result.add(indent("}) => %s".formatted(activityTypeCode.activityTypeName())));
+    }
+    return joinLines(result);
+  }
+
+  private static String joinLines(final Iterable<String> result) {
+    return String.join("\n", result);
+  }
+
+  private static String indent(final String s) {
+    return joinLines(s.lines().map(line -> "  " + line).toList());
+  }
+
+  private record ActivityTypeCode(String activityTypeName, List<ActivityParameter> parameterTypes) {}
   private record ActivityParameter(String name, ActivityParameterType type) {}
   private sealed interface ActivityParameterType {
     record TSString() implements ActivityParameterType {}
