@@ -17,8 +17,7 @@ import { expansionSetBatchLoader } from './lib/batchLoaders/expansionSetBatchLoa
 import Piscina from 'piscina';
 import type executeExpansion from './worker.js';
 import { isRejected, isResolved } from './utils/typeguards.js';
-import { UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
-import { Command } from './lib/codegen/CommandEDSLPreface';
+import { mapGraphQLActivityInstance } from './lib/mapGraphQLActivityInstance.js';
 
 
 const logger = getLogger("app");
@@ -185,18 +184,21 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
   // Query for expansion set data
   const expansionSetId = req.body.input.expansionSetId as number;
   const simulationDatasetId = req.body.input.simulationDatasetId as number;
-  const [expansionSet, activityInstances] = await Promise.all([
+  const [expansionSet, simulatedActivityInstances] = await Promise.all([
     context.expansionSetDataLoader.load({ expansionSetId }),
     context.simulatedActivityInstanceDataLoader.load({ simulationDatasetId }),
   ]);
   const commandTypes = expansionSet.commandDictionary.commandTypesTypeScript;
 
-  const settledExpansionResults = await Promise.allSettled(activityInstances.map(async activityInstance => {
+  const settledExpansionResults = await Promise.allSettled(simulatedActivityInstances.map(async simulatedActivityInstance => {
     const activitySchema = await context.activitySchemaDataLoader.load({
       missionModelId: expansionSet.missionModel.id,
-      activityTypeName: activityInstance.type,
+      activityTypeName: simulatedActivityInstance.type,
     });
-    const expansion = expansionSet.expansionRules.find(expansionRule => expansionRule.activityType === activityInstance.type);
+    const expansion = expansionSet.expansionRules.find(expansionRule => expansionRule.activityType === simulatedActivityInstance.type);
+
+    const activityInstance = mapGraphQLActivityInstance(simulatedActivityInstance, activitySchema);
+
     if (expansion === undefined) {
       return {
         activityInstance,

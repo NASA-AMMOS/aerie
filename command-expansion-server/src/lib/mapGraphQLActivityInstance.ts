@@ -1,9 +1,7 @@
 import '../polyfills.js';
-
 import parse from 'postgres-interval';
 import { SimulatedActivityInstance } from './batchLoaders/simulatedActivityInstanceBatchLoader.js';
 import { GraphQLActivitySchema, Schema, SchemaTypes } from './batchLoaders/activitySchemaBatchLoader.js';
-import { Temporal } from '@js-temporal/polyfill';
 
 export function mapGraphQLActivityInstance(
   activityInstance: SimulatedActivityInstance<any, any>,
@@ -45,7 +43,6 @@ function convertType(value: any, schema: Schema): any {
     case SchemaTypes.String:
       return value;
     case SchemaTypes.Series:
-      schema.items;
       return value.map((value: any) => convertType(value, schema.items));
     case SchemaTypes.Struct:
       const struct: { [attributeName: string]: any } = {};
