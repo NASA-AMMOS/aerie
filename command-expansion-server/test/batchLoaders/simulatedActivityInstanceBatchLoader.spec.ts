@@ -3,7 +3,7 @@ import { simulatedActivityInstanceBatchLoader } from '../../src/lib/batchLoaders
 import { removeMissionModel, uploadMissionModel } from '../utils/MissionModel.js';
 import { createPlan, removePlan } from '../utils/Plan';
 import { insertActivity, removeActivity } from '../utils/Activity';
-import { executeSimulation } from '../utils/Simulation';
+import { executeSimulation, removeSimulation } from '../utils/Simulation';
 
 let graphqlClient: GraphQLClient;
 let missionModelId: number;
@@ -20,6 +20,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  console.log(missionModelId, planId, activityId, simulationDatasetId);
+  await removeSimulation(graphqlClient, simulationDatasetId);
   await removeActivity(graphqlClient, activityId);
   await removePlan(graphqlClient, planId);
   await removeMissionModel(graphqlClient, missionModelId);

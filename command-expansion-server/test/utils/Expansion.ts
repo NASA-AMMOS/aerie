@@ -22,8 +22,6 @@ export async function insertExpansion(graphqlClient: GraphQLClient): Promise<num
   return res.addCommandExpansionTypeScript.id;
 }
 
-
-
 export async function insertErrorExpansion(graphqlClient: GraphQLClient): Promise<number> {
   const res = await graphqlClient.request<{
     addCommandExpansionTypeScript: { id: number}
@@ -46,18 +44,17 @@ export async function insertErrorExpansion(graphqlClient: GraphQLClient): Promis
   return res.addCommandExpansionTypeScript.id;
 }
 
-export async function removeExpansion(graphqlClient: GraphQLClient, $expansionId: number): Promise<void> {
+export async function removeExpansion(graphqlClient: GraphQLClient, expansionId: number): Promise<void> {
   return graphqlClient.request(gql`
     mutation DeleteExpansionRule($expansionId: Int!) {
-      delete_expansion_rule_by_pk(id: $activityId) {
+      delete_expansion_rule_by_pk(id: $expansionId) {
         id
       }
     }
   `, {
-    $expansionId,
+    expansionId,
   });
 }
-
 
 export async function insertExpansionSet(graphqlClient: GraphQLClient, commandDictionaryId: number, missionModelId: number, expansionIds: number[]): Promise<number> {
   const res = await graphqlClient.request<{
