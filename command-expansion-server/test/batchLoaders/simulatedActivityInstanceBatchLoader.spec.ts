@@ -25,7 +25,7 @@ afterAll(async () => {
   await removeMissionModel(graphqlClient, missionModelId);
 });
 
-it('[XFAIL] should load simulated activity instance', async () => {
+it('should load simulated activity instance', async () => {
   const activityInstances = await simulatedActivityInstanceBatchLoader({graphqlClient})([
     { simulationDatasetId },
   ]);

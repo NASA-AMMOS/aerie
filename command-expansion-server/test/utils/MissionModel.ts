@@ -1,6 +1,5 @@
-import FormData from 'form-data';
 import fs from 'fs';
-import fetch from 'node-fetch';
+import fetch, { FormData, File, fileFrom } from 'node-fetch';
 import { gql, GraphQLClient } from 'graphql-request';
 import { randomUUID } from 'crypto';
 
@@ -11,7 +10,8 @@ export async function uploadMissionModel(graphqlClient: GraphQLClient): Promise<
   const bananaNationMissionModelUrl = new URL('../inputs/banananation-0.10.0-SNAPSHOT.jar', import.meta.url);
 
   const formData = new FormData();
-  formData.append('file', fs.createReadStream(bananaNationMissionModelUrl.pathname));
+  const file = await fileFrom(bananaNationMissionModelUrl.pathname);
+  formData.set('file', file, 'banananation-0.10.0-SNAPSHOT.jar');
 
   const uploadRes = await fetch(`${process.env.MERLIN_GATEWAY_URL}/file`, {
     method: 'POST',
