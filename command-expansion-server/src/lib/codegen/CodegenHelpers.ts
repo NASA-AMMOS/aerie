@@ -7,5 +7,5 @@ export function interfaceDeclaration(name: string,  interfaceContents: string): 
 }
 
 export function indent(text:string): string {
-  return text.split("\n").map(line => `\t${line}`).join("\n");
+  return text.split('\n').map(line => `\t${line}`).join('\n');
 }

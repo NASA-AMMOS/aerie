@@ -18,11 +18,18 @@ type Mutation {
 }
 
 type Mutation{
-  createExpansionSet (
-    commandDictionaryId: Int!,
-    missionModelId: Int!,
+  createExpansionSet(
+    commandDictionaryId: Int!
+    missionModelId: Int!
     expansionIds: [Int!]!
   ): ExpansionSetResponse
+}
+
+type Mutation{
+  expandAllActivities(
+    expansionSetId: Int!
+    simulationDatasetId: Int!
+  ): ExpandAllActivitiesResponse
 }
 
 type Query {
@@ -42,14 +49,14 @@ type Query {
 
 type Query {
   getActivityTypeScript(
-    missionModelId: ID!
+    missionModelId: Int!
     activityTypeName: String!
   ): TypeScriptResponse
 }
 
 type Query {
   getCommandTypeScript(
-  commandDictionaryId: ID!): TypeScriptResponse
+  commandDictionaryId: Int!): TypeScriptResponse
 }
 
 type Query {
@@ -129,7 +136,7 @@ type SchedulingResponse {
 }
 
 type CommandDictionaryResponse {
-  id: ID!
+  id: Int!
 }
 
 type ExpansionSetResponse {
@@ -142,6 +149,55 @@ type AddCommandExpansionResponse {
 
 type TypeScriptResponse {
   typescript: String!
+}
+
+type ExpandAllActivitiesResponse {
+  id: Int!
+  expandedActivityInstances: [ExpandedActivityInstance!]!
+}
+
+type ExpandedActivityInstance {
+  id: Int!
+  commands: [CommandSeqJson!]
+  errors: [UserCodeError!]!
+}
+
+enum CommandSeqJsonStepType {
+  command
+}
+
+enum CommandSeqJsonTimeType {
+  COMPLETE
+}
+
+type CommandSeqJson {
+  id: String!,
+  metadata: Any!,
+  steps: [CommandSeqJsonStep!]!
+}
+
+type CommandSeqJsonStep {
+  stem: String!,
+  time: CommandSeqJsonTime!,
+  type: CommandSeqJsonStepType!,
+  metadata: Any!
+  args: [Any!]!
+}
+
+type CommandSeqJsonTime {
+  type: CommandSeqJsonTimeType!
+}
+
+type UserCodeError {
+  message: String!
+  stack: String!
+  sourceContext: String!
+  location: CodeLocation
+}
+
+type CodeLocation {
+  line: Int!
+  column: Int!
 }
 
 scalar ResourceSchema
@@ -157,3 +213,7 @@ scalar ActivityArguments
 scalar ProfileSet
 
 scalar SchedulingFailureReason
+
+scalar CommandArgumentsSeqJson
+
+scalar Any

@@ -7,7 +7,8 @@ create table command_dictionary (
 
   constraint command_dictionary_synthetic_key
       primary key (id),
-  constraint command_dictionary_natural_key unique (mission,version)
+  constraint command_dictionary_natural_key
+    unique (mission,version)
 );
 
 comment on table command_dictionary is e''
@@ -20,3 +21,5 @@ comment on column command_dictionary.mission is e''
   'A human-meaningful identifier for the mission described by the command dictionary';
 comment on column command_dictionary.version is e''
   'A human-meaningful version qualifier.';
+comment on constraint command_dictionary_natural_key on command_dictionary is e''
+  'There an only be one command dictionary of a given version for a given mission.';

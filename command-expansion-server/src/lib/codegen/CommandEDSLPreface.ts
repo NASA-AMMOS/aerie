@@ -1,5 +1,4 @@
 /** START Preface */
-type ArgType = boolean | string | number;
 export class Command<A extends ArgType[] | {[argName: string]: any} = [] | {}> {
   public readonly stem: string;
   public readonly arguments: A;
@@ -38,13 +37,27 @@ export class Command<A extends ArgType[] | {[argName: string]: any} = [] | {}> {
     }
   }
 }
-type Arrayable<T> = T | Arrayable<T>[];
-
-export type ExpansionReturn = Arrayable<Command>;
 
 declare global {
-  type Context = {}
+  export class Command<A extends ArgType[] | {[argName: string]: any} = [] | {}> {
+    public readonly stem: string;
+    public readonly arguments: A;
 
+    private constructor(opts: {
+      stem: string
+      arguments: A,
+    })
+
+    public static new<A extends any[] | {[argName: string]: any}>(opts: {
+      stem: string
+      arguments: A,
+    }): Command<A>;
+
+    public toSeqJson(): any
+  }
+  type Context = {}
+  type ArgType = boolean | string | number;
+  type Arrayable<T> = T | Arrayable<T>[];
   type ExpansionReturn = Arrayable<Command>;
 
   type U<BitLength extends 8 | 16 | 32 | 64> = number;

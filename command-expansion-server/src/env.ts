@@ -15,13 +15,13 @@ export const defaultEnv: Env = {
   LOG_FILE: 'console',
   LOG_LEVEL: 'info',
   MERLIN_GRAPHQL_URL: 'http://hasura:8080/v1/graphql',
-  PORT: "3000",
-  POSTGRES_AERIE_EXPANSION_DB: "aerie_commanding",
-  POSTGRES_HOST: "localhost",
-  POSTGRES_PASSWORD: "aerie",
-  POSTGRES_PORT: "5432",
-  POSTGRES_USER: "aerie",
-  STORAGE: "commanding_file_store",
+  PORT: '3000',
+  POSTGRES_AERIE_EXPANSION_DB: 'aerie_commanding',
+  POSTGRES_HOST: 'localhost',
+  POSTGRES_PASSWORD: 'aerie',
+  POSTGRES_PORT: '5432',
+  POSTGRES_USER: 'aerie',
+  STORAGE: 'commanding_file_store',
 };
 
 export function getEnv(): Env {

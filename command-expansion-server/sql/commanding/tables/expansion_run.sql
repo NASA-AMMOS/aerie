@@ -8,7 +8,8 @@ create table expansion_run (
     primary key (id),
 
   foreign key (expansion_set_id)
-  references expansion_set (id)
+    references expansion_set (id)
+    on delete cascade
 );
 comment on table expansion_run is e''
   'The configuration for an expansion run for a plan.';

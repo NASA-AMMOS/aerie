@@ -15,6 +15,10 @@ actions:
     definition:
       kind: synchronous
       handler: http://aerie_commanding:3000/put-expansion-set
+  - name: expandAllActivities
+    definition:
+      kind: synchronous
+      handler: http://aerie_commanding:3000/expand-all-activity-instances
   - name: getModelEffectiveArguments
     definition:
       kind: ""
@@ -75,6 +79,16 @@ custom_types:
         - description: null
           is_deprecated: null
           value: incomplete
+    - name: CommandSeqJsonStepType
+      values:
+        - description: null
+          is_deprecated: null
+          value: command
+    - name: CommandSeqJsonTimeType
+      values:
+        - description: null
+          is_deprecated: null
+          value: COMPLETE
   input_objects: []
   objects:
     - name: ResourceType
@@ -86,6 +100,13 @@ custom_types:
     - name: CommandDictionaryResponse
     - name: AddCommandExpansionResponse
     - name: TypeScriptResponse
+    - name: ExpandAllActivitiesResponse
+    - name: ExpandedActivityInstance
+    - name: CommandSeqJson
+    - name: CommandSeqJsonStep
+    - name: CommandSeqJsonTime
+    - name: UserCodeError
+    - name: CodeLocation
   scalars:
     - name: ResourceSchema
     - name: MerlinSimulationResults
@@ -94,3 +115,4 @@ custom_types:
     - name: ActivityArguments
     - name: ProfileSet
     - name: SchedulingFailureReason
+    - name: Any

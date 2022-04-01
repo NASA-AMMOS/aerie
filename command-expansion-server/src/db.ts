@@ -1,7 +1,8 @@
+import {inspect} from 'util';
 import type { Pool, PoolConfig } from "pg";
 import pg from "pg";
-import { getEnv } from "../../env.js";
-import getLogger from "../../utils/logger.js";
+import getLogger from "./utils/logger.js";
+import { getEnv } from "./env.js";
 
 const { Pool: DbPool } = pg;
 
@@ -33,7 +34,12 @@ export class DbExpansion {
       };
 
       logger.info(`Postgres Config:`);
-      logger.info(config);
+      logger.info(inspect(config, {
+        colors: true,
+        depth: Infinity,
+        showHidden: false,
+        sorted: true,
+      }));
 
       DbExpansion.pool = new DbPool(config);
     } catch (error) {
