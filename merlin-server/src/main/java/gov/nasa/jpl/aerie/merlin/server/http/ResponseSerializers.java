@@ -236,7 +236,12 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeSimulationResultsResponse(final GetSimulationResultsAction.Response response) {
-    if (response instanceof GetSimulationResultsAction.Response.Incomplete) {
+    if (response instanceof GetSimulationResultsAction.Response.Pending) {
+      return Json
+          .createObjectBuilder()
+          .add("status", "pending")
+          .build();
+    } else if (response instanceof GetSimulationResultsAction.Response.Incomplete) {
       return Json
           .createObjectBuilder()
           .add("status", "incomplete")

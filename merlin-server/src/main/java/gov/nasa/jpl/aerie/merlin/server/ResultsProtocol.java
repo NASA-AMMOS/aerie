@@ -5,7 +5,10 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 public final class ResultsProtocol {
   private ResultsProtocol() {}
 
-  public /*sealed*/ interface State {
+  public sealed interface State {
+    /** Simulation in enqueued. */
+    record Pending() implements State {}
+
     /** Simulation in progress, but no results to share yet. */
     record Incomplete() implements State {}
 

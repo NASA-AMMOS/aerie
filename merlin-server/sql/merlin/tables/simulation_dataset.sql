@@ -1,4 +1,4 @@
-create type status_t as enum('incomplete', 'failed', 'success');
+create type status_t as enum('pending', 'incomplete', 'failed', 'success');
 
 create table simulation_dataset (
   id integer generated always as identity,
@@ -17,7 +17,7 @@ create table simulation_dataset (
   dataset_revision integer null,
 
   -- Simulation state
-  status status_t not null default 'incomplete',
+  status status_t not null default 'pending',
   reason text null,
   canceled boolean not null default false,
 
@@ -215,4 +215,46 @@ create trigger cancel_on_simulation_template_update_trigger
   execute function cancel_on_simulation_template_update();
 exception
   when duplicate_object then null;
+end $$;
+
+-- Simulation dataset NOTIFY triggers
+-- These triggers NOTIFY LISTEN(ing) merlin worker clients of pending simulation requests
+
+create or replace function notify_simulation_workers ()
+returns trigger
+security definer
+language plpgsql as $$
+declare
+  simulation_ref simulation;
+begin
+  select into simulation_ref * from simulation where id = new.simulation_id;
+
+  perform (
+    with payload(model_revision,
+                 plan_revision,
+                 simulation_revision,
+                 simulation_template_revision,
+                 dataset_id,
+                 simulation_id,
+                 plan_id) as
+    (
+      select NEW.model_revision,
+             NEW.plan_revision,
+             NEW.simulation_revision,
+             NEW.simulation_template_revision,
+             NEW.dataset_id,
+             NEW.simulation_id,
+             simulation_ref.plan_id
+    )
+    select pg_notify('simulation_notification',  json_strip_nulls(row_to_json(payload))::text)
+    from payload
+  );
+  return null;
+end$$;
+
+do $$ begin
+create trigger notify_simulation_workers
+  after insert on simulation_dataset
+  for each row
+  execute procedure notify_simulation_workers();
 end $$;

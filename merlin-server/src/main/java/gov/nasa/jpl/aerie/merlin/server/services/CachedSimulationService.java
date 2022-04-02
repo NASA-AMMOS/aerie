@@ -17,21 +17,8 @@ public record CachedSimulationService (
       // Allocate a fresh cell.
       final var cell = this.store.allocate(planId);
 
-      // Split the cell into its two concurrent roles, and delegate the writer role to another process.
-      final ResultsProtocol.ReaderRole reader;
-      try {
-        final ResultsProtocol.WriterRole writer = cell;
-        reader = cell;
-
-        this.agent.simulate(planId, revisionData, writer);
-      } catch (final InterruptedException ex) {
-        // If we couldn't delegate, clean up the cell and return an Incomplete.
-        this.store.deallocate(cell);
-        return new ResultsProtocol.State.Incomplete();
-      }
-
       // Return the current value of the reader; if it's incomplete, the caller can check it again later.
-      return reader.get();
+      return cell.get();
     }
   }
 }

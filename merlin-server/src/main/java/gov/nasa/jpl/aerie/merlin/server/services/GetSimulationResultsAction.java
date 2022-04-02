@@ -28,6 +28,7 @@ import java.util.Objects;
 
 public final class GetSimulationResultsAction {
   public /*sealed*/ interface Response {
+    record Pending() implements Response {}
     record Incomplete() implements Response {}
     record Failed(String reason) implements Response {}
     record Complete(SimulationResults results, Map<String, List<Violation>> violations) implements Response {}
@@ -52,7 +53,9 @@ public final class GetSimulationResultsAction {
 
     final var response = this.simulationService.getSimulationResults(planId, revisionData);
 
-    if (response instanceof ResultsProtocol.State.Incomplete) {
+    if (response instanceof ResultsProtocol.State.Pending) {
+      return new Response.Pending();
+    } else if (response instanceof ResultsProtocol.State.Incomplete) {
       return new Response.Incomplete();
     } else if (response instanceof ResultsProtocol.State.Failed r) {
       return new Response.Failed(r.reason());
