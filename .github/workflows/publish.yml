@@ -58,6 +58,19 @@ jobs:
           push: true
           tags: ${{ steps.aerieMerlin.outputs.tags }}
           labels: ${{ steps.aerieMerlin.outputs.labels }}
+      # Build aerie-merlin-worker Docker artifacts.
+      - name: Extract metadata (tags, labels) for aerie-merlin-worker Docker image
+        id: aerieMerlinWorker
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin-worker
+      - name: Build and push aerie-merlin-worker Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./merlin-worker
+          push: true
+          tags: ${{ steps.aerieMerlinWorker.outputs.tags }}
+          labels: ${{ steps.aerieMerlinWorker.outputs.labels }}
       # Build aerie-scheduler Docker artifacts.
       - name: Extract metadata (tags, labels) for aerie-scheduler Docker image
         id: aerieScheduler
