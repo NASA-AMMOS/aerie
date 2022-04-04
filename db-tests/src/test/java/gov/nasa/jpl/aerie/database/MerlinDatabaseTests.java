@@ -63,16 +63,6 @@ class MerlinDatabaseTests {
     }
   }
 
-  void clearFileUploads() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE uploaded_file CASCADE;"""
-          );
-    }
-  }
-
   int insertMissionModel(final int fileId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
@@ -85,16 +75,6 @@ class MerlinDatabaseTests {
           );
       res.next();
       return res.getInt("id");
-    }
-  }
-
-  void clearMissionModels() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE mission_model CASCADE;"""
-          );
     }
   }
 
@@ -117,16 +97,6 @@ class MerlinDatabaseTests {
     }
   }
 
-  void clearPlans() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE plan CASCADE;"""
-          );
-    }
-  }
-
   int insertActivity(final int planId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
@@ -143,16 +113,6 @@ class MerlinDatabaseTests {
     }
   }
 
-  void clearActivities() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE activity CASCADE;"""
-          );
-    }
-  }
-
   int insertSimulationTemplate(final int modelId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
@@ -165,16 +125,6 @@ class MerlinDatabaseTests {
           );
       res.next();
       return res.getInt("id");
-    }
-  }
-
-  void clearSimulationTemplates() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE simulation_template CASCADE;"""
-          );
     }
   }
 
@@ -208,16 +158,6 @@ class MerlinDatabaseTests {
     }
   }
 
-  void clearSimulations() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE simulation CASCADE;"""
-          );
-    }
-  }
-
   int insertDataset() throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
@@ -229,16 +169,6 @@ class MerlinDatabaseTests {
           );
       res.next();
       return res.getInt("id");
-    }
-  }
-
-  void clearDatasets() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE dataset CASCADE;"""
-          );
     }
   }
 
@@ -257,16 +187,6 @@ class MerlinDatabaseTests {
     }
   }
 
-  void clearPlanDatasets() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE plan_dataset CASCADE;"""
-          );
-    }
-  }
-
   SimulationDatasetRecord insertSimulationDataset(final int simulationId, final int datasetId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
@@ -282,13 +202,9 @@ class MerlinDatabaseTests {
     }
   }
 
-  void clearSimulationDatasets() throws SQLException {
+  void clearTable(String table) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE simulation_dataset CASCADE;"""
-          );
+      statement.executeUpdate("TRUNCATE " + table + " CASCADE;");
     }
   }
 
@@ -319,15 +235,15 @@ class MerlinDatabaseTests {
 
   @AfterEach
   void afterEach() throws SQLException {
-    clearFileUploads();
-    clearMissionModels();
-    clearPlans();
-    clearActivities();
-    clearSimulationTemplates();
-    clearSimulations();
-    clearDatasets();
-    clearPlanDatasets();
-    clearSimulationDatasets();
+    clearTable("uploaded_file");
+    clearTable("mission_model");
+    clearTable("plan");
+    clearTable("activity");
+    clearTable("simulation_template");
+    clearTable("simulation");
+    clearTable("dataset");
+    clearTable("plan_dataset");
+    clearTable("simulation_dataset");
   }
 
   @Nested
