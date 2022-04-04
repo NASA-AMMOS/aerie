@@ -16,7 +16,7 @@ services:
       POSTGRES_PASSWORD: aerie
       POSTGRES_PORT: 5432
       POSTGRES_USER: aerie
-    image: "ghcr.io/nasa-ammos/aerie-gateway:latest"
+    image: "${REPOSITORY_DOCKER_URL}/aerie-gateway:${DOCKER_TAG}"
     ports: ["9000:9000"]
     restart: always
     volumes:
@@ -35,11 +35,29 @@ services:
       JAVA_OPTS: >
         -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN
         -Dorg.slf4j.simpleLogger.logFile=System.err
-    image: "ghcr.io/nasa-ammos/aerie-merlin:latest"
+    image: "${REPOSITORY_DOCKER_URL}/aerie-merlin:${DOCKER_TAG}"
     ports: ["27183:27183"]
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store
+  aerie_merlin_worker_1:
+    container_name: aerie_merlin_worker
+    depends_on: ["postgres"]
+    environment:
+      MERLIN_WORKER_DB: "aerie_merlin"
+      MERLIN_WORKER_DB_PASSWORD: "aerie"
+      MERLIN_WORKER_DB_PORT: 5432
+      MERLIN_WORKER_DB_SERVER: "postgres"
+      MERLIN_WORKER_DB_USER: "aerie"
+      MERLIN_WORKER_LOCAL_STORE: /usr/src/app/merlin_file_store
+      JAVA_OPTS: >
+        -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO
+        -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=WARN
+        -Dorg.slf4j.simpleLogger.logFile=System.err
+    image: "${REPOSITORY_DOCKER_URL}/aerie-merlin-worker:${DOCKER_TAG}"
+    restart: always
+    volumes:
+      - aerie_file_store:/usr/src/app/merlin_file_store:ro
   aerie_scheduler:
     container_name: aerie_scheduler
     depends_on: ["aerie_merlin", "postgres"]
@@ -58,7 +76,7 @@ services:
       JAVA_OPTS: >
         -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN
         -Dorg.slf4j.simpleLogger.logFile=System.err
-    image: "ghcr.io/nasa-ammos/aerie-scheduler:latest"
+    image: "${REPOSITORY_DOCKER_URL}/aerie-scheduler:${DOCKER_TAG}"
     ports: ["27193:27193"]
     restart: always
     volumes:
@@ -72,7 +90,7 @@ services:
       GATEWAY_SERVER_URL: http://aerie_gateway:9000
       HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
       HASURA_SERVER_URL: http://hasura:8080/v1/graphql
-    image: "ghcr.io/nasa-ammos/aerie-ui:latest"
+    image: "${REPOSITORY_DOCKER_URL}/aerie-ui:${DOCKER_TAG}"
     ports: ["80:80"]
     restart: always
   hasura:

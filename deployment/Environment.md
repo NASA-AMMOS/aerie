@@ -41,6 +41,18 @@ This document provides detailed information about environment variables for each
 | `MERLIN_DB_PASSWORD` | Password of the DB instance                               | `string` | aerie                          |
 | `MERLIN_DB`          | The DB for Merlin.                                        | `string` | aerie_merlin                   |
 
+## Aerie Merlin Worker
+
+| Name                        | Description                                                                              | Type     | Default                        |
+|-----------------------------|------------------------------------------------------------------------------------------| -------- | ------------------------------ |
+| `JAVA_OPTS`                 | Configuration for Merlin's logging level and output file                                 | `string` | log level: warn. output: stderr|
+| `MERLIN_WORKER_LOCAL_STORE` | The local storage as for the Merlin container (this must the same as the Merlin container)                                      | `string` | /usr/src/app/merlin_file_store |
+| `MERLIN_WORKER_DB_SERVER`   | The DB instance that Merlin will connect with (this must the same as the Merlin container) | `string` | postgres                       |
+| `MERLIN_WORKER_DB_PORT`     | The DB instance port number that Merlin will connect with (this must the same as the Merlin container)                               | `number` | 5432                           |
+| `MERLIN_WORKER_DB_USER`     | Username of the DB instance (this must the same as the Merlin container)                                                             | `string` | aerie                          |
+| `MERLIN_WORKER_DB_PASSWORD` | Password of the DB instance (this must the same as the Merlin container)                                                             | `string` | aerie                          |
+| `MERLIN_WORKER_DB`          | The DB for Merlin. (this must the same as the Merlin container)                                                                     
+
 ## Aerie Scheduler
 
 | Name                    | Description                                                           | Type     | Default                                            |
