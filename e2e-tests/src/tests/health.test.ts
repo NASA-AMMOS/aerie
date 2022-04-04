@@ -11,4 +11,9 @@ test.describe('Health', () => {
     const healthy = await req.healthHasura(request);
     expect(healthy).toBeTruthy();
   });
+
+  test('UI is healthy', async ({ request }) => {
+    const healthy = await req.healthUI(request);
+    expect(healthy).toBeTruthy();
+  });
 });
