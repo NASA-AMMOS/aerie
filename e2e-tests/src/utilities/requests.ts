@@ -2,7 +2,7 @@ import type { APIRequestContext } from '@playwright/test';
 import { sync as glob } from 'fast-glob';
 import { createReadStream } from 'fs';
 import { basename, resolve } from 'path';
-import { GATEWAY_URL, HASURA_URL } from '../utilities/urls';
+import { GATEWAY_URL, HASURA_URL, UI_URL } from '../utilities/urls';
 import gql from './gql';
 
 /**
@@ -58,6 +58,11 @@ const req = {
 
   async healthHasura(request: APIRequestContext): Promise<boolean> {
     const response = await request.get(`${HASURA_URL}/healthz`);
+    return response.ok();
+  },
+
+  async healthUI(request: APIRequestContext): Promise<boolean> {
+    const response = await request.get(`${UI_URL}/health`);
     return response.ok();
   },
 
