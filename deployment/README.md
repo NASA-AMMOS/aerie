@@ -19,6 +19,15 @@ Before you can deploy Aerie, you must install and configure the following produc
 
 Each container has environment variables that can be used to fine-tune your deployment. See the [environment variable documentation](./Environment.md) for the complete set of variables. See the example [docker-compose.yml](./docker-compose.yml) file for examples on how to set the environment variables. **We highly recommend changing the default environment variable passwords before deploying Aerie**.
 
+## Configuring Merlin Simulation Workers
+A Merlin simulation is executed by an aerie-merlin-worker. An Aerie deployment can configure one or 
+more workers to provide an Aerie deployment with the ability to execute multiple concurrent 
+simulations. Without a worker Aerie will not execute any simulations. Workers are declared by adding
+a worker container definition in your docker-compose file for each worker. The default docker-compose.yml
+contained in this directory declares a single worker. The worker must configured to access the same 
+postgresql instance and database as the Merlin server. It is recommended that the number of workers 
+does not exceed the host's remaining available cores (considering other processes running on the host). 
+
 ## Starting the Services
 
 Download and unzip the latest [Deployment.zip](https://github.com/NASA-AMMOS/aerie/releases) file onto your local machine, then do:
