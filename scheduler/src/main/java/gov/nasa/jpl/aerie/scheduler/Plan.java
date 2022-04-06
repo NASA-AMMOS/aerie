@@ -1,5 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * a solution to a planning problem including a schedule of activities
  *
@@ -15,7 +20,7 @@ public interface Plan {
    *
    * @param acts IN the set of activity instances to schedule into the plan
    */
-  void add(java.util.Collection<ActivityInstance> acts);
+  void add(Collection<ActivityInstance> acts);
 
   /**
    * adds the given activity instance to the scheduled plan solution
@@ -32,7 +37,7 @@ public interface Plan {
    *
    * @param acts IN the set of activity instances to remove from the plan
    */
-  void remove(java.util.Collection<ActivityInstance> acts);
+  void remove(Collection<ActivityInstance> acts);
 
   /**
    * removes the given activity instance to the scheduled plan solution
@@ -43,29 +48,33 @@ public interface Plan {
    */
   void remove(ActivityInstance act);
 
-  void removeAllWindows();
-
-
   /**
    * fetches activities in the plan ordered by start time
    *
    * @return set of all activities in the plan ordered by start time
    */
-  java.util.List<ActivityInstance> getActivitiesByTime();
+  List<ActivityInstance> getActivitiesByTime();
 
   /**
    * fetches activities in the plan by type
    *
    * @return map of all activities in the plan by type
    */
-  java.util.Map<String, java.util.List<ActivityInstance>> getActivitiesByType();
+  Map<ActivityType, List<ActivityInstance>> getActivitiesByType();
 
   /**
-   * fetches activities in the plan by type
+   * fetches activities in the plan by id
    *
-   * @return map of all activities in the plan by type
+   * @return map of all activities in the plan by id
    */
-  java.util.Set<ActivityInstance> getActivities();
+  Map<SchedulingActivityInstanceId, ActivityInstance> getActivitiesById();
+
+  /**
+   * fetches activities in the plan
+   *
+   * @return set of all activities in the plan
+   */
+  Set<ActivityInstance> getActivities();
 
   /**
    * finds activity instances in the plan that meet the given criteria
@@ -73,7 +82,7 @@ public interface Plan {
    * @param template IN the matching criteria to use on activity instances
    * @return collection of instances that match the given template
    */
-  java.util.Collection<ActivityInstance> find(
+  Collection<ActivityInstance> find(
       ActivityExpression template);
 
   /**
@@ -87,9 +96,9 @@ public interface Plan {
   void addEvaluation(Evaluation eval);
 
   /**
-   * fetches all of the evaluations posted to the plan
+   * fetches evaluation posted to the plan
    *
-   * @return container of all evaluations posted to the plan
+   * @return evaluation posted to the plan
    */
   Evaluation getEvaluation();
 

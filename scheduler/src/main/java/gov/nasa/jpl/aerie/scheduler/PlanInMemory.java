@@ -3,6 +3,14 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * an in-memory solution to a planning problem including a schedule of activities
@@ -11,6 +19,37 @@ import java.util.Collection;
  * goals may be left unsatisfied
  */
 public class PlanInMemory implements Plan {
+
+  /**
+   * the set of all evaluations posted to the plan
+   *
+   * note that different solvers may evaluate the same plan differently
+   */
+  protected Evaluation evaluation;
+
+  /**
+   * container of all activity instances in plan, indexed by name
+   */
+  private final HashMap<SchedulingActivityInstanceId, ActivityInstance> actsById
+      = new HashMap<>();
+
+  /**
+   * container of all activity instances in plan, indexed by type
+   */
+  private final HashMap<ActivityType, List<ActivityInstance>> actsByType
+      = new HashMap<>();
+
+  /**
+   * container of all activity instances in plan, indexed by start time
+   */
+  private final TreeMap<Duration, List<ActivityInstance>> actsByTime
+      = new TreeMap<>();
+
+  /**
+   * container of all activity instances in plan
+   */
+  private final HashSet<ActivityInstance> actsSet
+      = new HashSet<>();
 
   /**
    * ctor creates a new empty solution plan
@@ -50,14 +89,14 @@ public class PlanInMemory implements Plan {
       throw new IllegalArgumentException(
           "adding activity with duplicate name=" + id + " to plan");
     }
-    final var type = act.getType().getName();
+    final var type = act.getType();
     assert type != null;
 
     actsById.put(id, act);
     //REVIEW: use a cleaner multimap? maybe guava
-    actsByTime.computeIfAbsent(startT, k -> new java.util.LinkedList<>())
+    actsByTime.computeIfAbsent(startT, k -> new LinkedList<>())
               .add(act);
-    actsByType.computeIfAbsent(type, k -> new java.util.LinkedList<>())
+    actsByType.computeIfAbsent(type, k -> new LinkedList<>())
               .add(act);
     actsSet.add(act);
   }
@@ -80,23 +119,13 @@ public class PlanInMemory implements Plan {
     actsSet.remove(act);
   }
 
-  @Override
-  public void removeAllWindows() {
-    var acts = actsByType.get("Window");
-    for (var act : acts) {
-      remove(act);
-    }
-
-  }
-
-
   /**
    * {@inheritDoc}
    */
   @Override
-  public java.util.List<ActivityInstance> getActivitiesByTime() {
+  public List<ActivityInstance> getActivitiesByTime() {
     //REVIEW: could probably do something tricky with streams to avoid new
-    final var orderedActs = new java.util.LinkedList<ActivityInstance>();
+    final var orderedActs = new LinkedList<ActivityInstance>();
 
     //NB: tree map ensures that values are in key order, but still need to flatten
     for (final var actsAtT : actsByTime.values()) {
@@ -104,48 +133,29 @@ public class PlanInMemory implements Plan {
       orderedActs.addAll(actsAtT);
     }
 
-    return java.util.Collections.unmodifiableList(orderedActs);
+    return Collections.unmodifiableList(orderedActs);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public java.util.Map<String, java.util.List<ActivityInstance>> getActivitiesByType() {
-    return java.util.Collections.unmodifiableMap(actsByType);
+  public Map<ActivityType, List<ActivityInstance>> getActivitiesByType() {
+    return Collections.unmodifiableMap(actsByType);
+  }
+
+  @Override
+  public Map<SchedulingActivityInstanceId, ActivityInstance> getActivitiesById() {
+    return Collections.unmodifiableMap(actsById);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public java.util.Set<ActivityInstance> getActivities() {
-    return java.util.Collections.unmodifiableSet(actsSet);
+  public Set<ActivityInstance> getActivities() {
+    return Collections.unmodifiableSet(actsSet);
   }
-
-  /**
-   * container of all activity instances in plan, indexed by name
-   */
-  private final java.util.HashMap<SchedulingActivityInstanceId, ActivityInstance> actsById
-      = new java.util.HashMap<>();
-
-  /**
-   * container of all activity instances in plan, indexed by type
-   */
-  private final java.util.HashMap<String, java.util.List<ActivityInstance>> actsByType
-      = new java.util.HashMap<>();
-
-  /**
-   * container of all activity instances in plan, indexed by start time
-   */
-  private final java.util.TreeMap<Duration, java.util.List<ActivityInstance>> actsByTime
-      = new java.util.TreeMap<>();
-
-  /**
-   * container of all activity instances in plan
-   */
-  private final java.util.HashSet<ActivityInstance> actsSet
-      = new java.util.HashSet<>();
 
   /**
    * {@inheritDoc}
@@ -156,7 +166,7 @@ public class PlanInMemory implements Plan {
   {
     //REVIEW: could do something clever with returning streams to prevent wasted work
     //REVIEW: something more clever for time-based queries using time index
-    java.util.LinkedList<ActivityInstance> matched = new java.util.LinkedList<>();
+    LinkedList<ActivityInstance> matched = new LinkedList<>();
     for (final var actsAtTime : actsByTime.values()) {
       for (final var act : actsAtTime) {
         if (template.matches(act)) {
@@ -182,13 +192,5 @@ public class PlanInMemory implements Plan {
   public Evaluation getEvaluation() {
     return evaluation;
   }
-
-  /**
-   * the set of all evaluations posted to the plan
-   *
-   * note that different solvers may evaluate the same plan differently
-   */
-  protected Evaluation evaluation;
-
 
 }
