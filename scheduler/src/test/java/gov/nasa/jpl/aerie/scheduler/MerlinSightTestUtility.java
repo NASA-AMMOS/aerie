@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
@@ -28,8 +29,9 @@ public class MerlinSightTestUtility {
     final var builder = new MissionModelBuilder();
     final var configuration = gov.nasa.jpl.aerielander.config.Configuration.defaultConfiguration();
     final var factory = new gov.nasa.jpl.aerielander.generated.GeneratedMissionModelFactory();
-    final var model = factory.instantiate(configuration, builder);
-    final var mission = builder.build(model, factory.getConfigurationType(), factory.getTaskSpecTypes());
+    final var registry = DirectiveTypeRegistry.extract(factory);
+    final var model = factory.instantiate(registry.registry(), configuration, builder);
+    final var mission = builder.build(model, factory.getConfigurationType(), registry.taskSpecTypes());
     return mission;
    //return null;
   }

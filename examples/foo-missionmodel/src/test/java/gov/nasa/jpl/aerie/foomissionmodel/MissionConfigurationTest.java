@@ -21,13 +21,13 @@ public final class MissionConfigurationTest {
   public @Nested final class Test1 {
 
     @RegisterExtension
-    public static final MerlinExtension<Mission> ext = new MerlinExtension<>();
+    public static final MerlinExtension<ActivityTypes, Mission> ext = new MerlinExtension<>();
 
     private final Mission model;
 
-    public Test1(final MerlinTestContext<Mission> ctx) {
+    public Test1(final MerlinTestContext<ActivityTypes, Mission> ctx) {
       this.model = new Mission(ctx.registrar(), new Configuration());
-      ctx.use(model, ActivityTypes.activityTypes);
+      ctx.use(model, ActivityTypes::register);
     }
 
     @Test
@@ -42,13 +42,13 @@ public final class MissionConfigurationTest {
   public @Nested final class Test2 {
 
     @RegisterExtension
-    public static final MerlinExtension<Mission> ext = new MerlinExtension<>();
+    public static final MerlinExtension<ActivityTypes, Mission> ext = new MerlinExtension<>();
 
     private final Mission model;
 
-    public Test2(final MerlinTestContext<Mission> ctx) {
+    public Test2(final MerlinTestContext<ActivityTypes, Mission> ctx) {
       this.model = new Mission(ctx.registrar(), new Configuration(2.0));
-      ctx.use(model, ActivityTypes.activityTypes);
+      ctx.use(model, ActivityTypes::register);
     }
 
     @Test

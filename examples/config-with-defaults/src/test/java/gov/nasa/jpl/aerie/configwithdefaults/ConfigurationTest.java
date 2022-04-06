@@ -18,18 +18,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 public final class ConfigurationTest {
 
   @RegisterExtension
-  public static final MerlinExtension<Mission> ext = new MerlinExtension<>();
+  public static final MerlinExtension<ActivityTypes, Mission> ext = new MerlinExtension<>();
 
   private final Mission model;
 
-  public ConfigurationTest(final MerlinTestContext<Mission> ctx)
+  public ConfigurationTest(final MerlinTestContext<ActivityTypes, Mission> ctx)
   throws ConfigurationType.UnconstructableConfigurationException
   {
     // Rely on config. defaults by instantiating config. with empty argument map
     final var config = new ConfigurationMapper().instantiate(Map.of());
 
     this.model = new Mission(ctx.registrar(), config);
-    ctx.use(model, ActivityTypes.activityTypes);
+    ctx.use(model, ActivityTypes::register);
   }
 
   @Test

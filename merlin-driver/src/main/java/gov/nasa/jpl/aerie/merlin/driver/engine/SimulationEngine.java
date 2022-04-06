@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
@@ -10,6 +11,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
@@ -687,8 +689,20 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public String spawn(final String type, final Map<String, SerializedValue> arguments) {
-      final var task = initiateTaskFromInput(this.model, new SerializedActivity(type, arguments));
+    public <Input, Output> String spawn(
+        final DirectiveTypeId<Input, Output> rawDirectiveTypeId,
+        final Input input,
+        final Task<Output> state)
+    {
+      // SAFETY: The only kind of DirectiveTypeId the task should have are those provided by us.
+      final var directiveTypeId = (DirectiveTypeRegistry.DirectiveTypeId<Input, Output>) rawDirectiveTypeId;
+
+      final var directiveType = this.model.getDirectiveTypes().lookup(directiveTypeId);
+      final var directive = new Directive<>(directiveType, directiveTypeId.name, input);
+
+      final var task = TaskId.generate();
+      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state));
+      SimulationEngine.this.taskDirective.put(task, directive);
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       this.frame.signal(JobId.forTask(task));

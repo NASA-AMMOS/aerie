@@ -130,6 +130,9 @@ public final class CellExpiryTest {
 
     initializer.resource(resourceName, resource);
 
-    return initializer.build(new Phantom<>(ref), new EmptyConfigurationType(), Map.of());
+    return initializer.build(
+        new Phantom<>(ref),
+        new EmptyConfigurationType(),
+        new DirectiveTypeRegistry<>(Map.of(), Map.of()));
   }
 }

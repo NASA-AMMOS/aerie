@@ -13,7 +13,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
@@ -68,9 +67,9 @@ public final class MissionModelBuilder implements Initializer {
   MissionModel<Model> build(
       final Model model,
       final ConfigurationType<?> configurationType,
-      final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes)
+      final DirectiveTypeRegistry<?, Model> registry)
   {
-    return this.state.build(model, configurationType, taskSpecTypes);
+    return this.state.build(model, configurationType, registry);
   }
 
   private interface MissionModelBuilderState extends Initializer {
@@ -78,7 +77,7 @@ public final class MissionModelBuilder implements Initializer {
     build(
         Model model,
         ConfigurationType<?> configurationType,
-        Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes);
+        DirectiveTypeRegistry<?, Model> registry);
   }
 
   private final class UnbuiltState implements MissionModelBuilderState {
@@ -149,7 +148,7 @@ public final class MissionModelBuilder implements Initializer {
     MissionModel<Model> build(
         final Model model,
         final ConfigurationType<?> configurationType,
-        final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes)
+        final DirectiveTypeRegistry<?, Model> registry)
     {
       final var missionModel = new MissionModel<>(
           model,
@@ -158,7 +157,7 @@ public final class MissionModelBuilder implements Initializer {
           this.topics,
           this.daemons,
           configurationType,
-          taskSpecTypes);
+          registry);
 
       MissionModelBuilder.this.state = new BuiltState();
 
@@ -210,7 +209,7 @@ public final class MissionModelBuilder implements Initializer {
     MissionModel<Model> build(
         final Model model,
         final ConfigurationType<?> configurationType,
-        final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes)
+        final DirectiveTypeRegistry<?, Model> registry)
     {
       throw new IllegalStateException("Cannot build a builder multiple times");
     }

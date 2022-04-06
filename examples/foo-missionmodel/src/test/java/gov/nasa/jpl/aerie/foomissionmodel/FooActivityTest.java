@@ -22,7 +22,7 @@ public final class FooActivityTest {
   // Our `MerlinExtension` hooks test class construction and test method execution,
   //   executing each with the appropriate simulation context.
   @RegisterExtension
-  public static final MerlinExtension<Mission> ext = new MerlinExtension<>();
+  public static final MerlinExtension<ActivityTypes, Mission> ext = new MerlinExtension<>();
 
   private final Mission model;
 
@@ -30,14 +30,14 @@ public final class FooActivityTest {
   // This means that models can be created (and cell storage allocated, and daemons spawned),
   //   but simulation control actions like `waitFor`, `delay`, and `emit` cannot be performed.
   // The `Registrar` does not need to be declared as a parameter, but will be injected if declared.
-  public FooActivityTest(final MerlinTestContext<Mission> ctx) {
+  public FooActivityTest(final MerlinTestContext<ActivityTypes, Mission> ctx) {
     // Model configuration can be provided directly, just as for a normal Java class constructor.
     this.model = new Mission(ctx.registrar(), new Configuration());
 
     // Activities must be registered explicitly in order to be used in testing.
     // The generated `ActivityTypes` helper class loads all declared activities,
     //   but focused subsystem tests might register only the activities under test.
-    ctx.use(model, ActivityTypes.activityTypes);
+    ctx.use(model, ActivityTypes::register);
   }
 
 

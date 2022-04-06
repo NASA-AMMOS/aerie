@@ -1,11 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.protocol.model;
 
+import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeRegistrar;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 
-import java.util.Map;
+public interface MissionModelFactory<Registry, Config, Model> {
+  Registry buildRegistry(DirectiveTypeRegistrar<Model> registrar);
 
-public interface MissionModelFactory<Config, Model> {
   ConfigurationType<Config> getConfigurationType();
-  Map<String, TaskSpecType<Model, ?, ?>> getTaskSpecTypes();
-  Model instantiate(Config configuration, Initializer builder);
+
+  Model instantiate(Registry registry, Config configuration, Initializer builder);
 }

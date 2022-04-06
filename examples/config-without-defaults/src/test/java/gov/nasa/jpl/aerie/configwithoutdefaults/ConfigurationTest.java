@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public final class ConfigurationTest {
 
   @RegisterExtension
-  public static final MerlinExtension<Mission> ext = new MerlinExtension<>();
+  public static final MerlinExtension<ActivityTypes, Mission> ext = new MerlinExtension<>();
 
   private static final Integer a = 42;
   private static final Double b = 3.14;
@@ -27,7 +27,7 @@ public final class ConfigurationTest {
 
   private final Mission model;
 
-  public ConfigurationTest(final MerlinTestContext<Mission> ctx)
+  public ConfigurationTest(final MerlinTestContext<ActivityTypes, Mission> ctx)
   throws ConfigurationType.UnconstructableConfigurationException
   {
     // Rely on config. defaults by instantiating config. with empty argument map
@@ -38,7 +38,7 @@ public final class ConfigurationTest {
     ));
 
     this.model = new Mission(ctx.registrar(), config);
-    ctx.use(model, ActivityTypes.activityTypes);
+    ctx.use(model, ActivityTypes::register);
   }
 
   @Test

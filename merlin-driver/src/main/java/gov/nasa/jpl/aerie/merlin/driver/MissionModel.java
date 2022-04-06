@@ -23,7 +23,7 @@ public final class MissionModel<Model> {
   private final LiveCells initialCells;
   private final Map<String, Resource<?>> resources;
   private final List<SerializableTopic<?>> topics;
-  private final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes;
+  private final DirectiveTypeRegistry<?, Model> directiveTypes;
   private final ConfigurationType<?> configurationType;
   private final List<Initializer.TaskFactory<?>> daemons;
 
@@ -34,14 +34,14 @@ public final class MissionModel<Model> {
       final List<SerializableTopic<?>> topics,
       final List<Initializer.TaskFactory<?>> daemons,
       final ConfigurationType<?> configurationType,
-      final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes)
+      final DirectiveTypeRegistry<?, Model> directiveTypes)
   {
     this.model = Objects.requireNonNull(model);
     this.initialCells = Objects.requireNonNull(initialCells);
     this.resources = Collections.unmodifiableMap(resources);
     this.topics = Collections.unmodifiableList(topics);
     this.configurationType = Objects.requireNonNull(configurationType);
-    this.taskSpecTypes = Collections.unmodifiableMap(taskSpecTypes);
+    this.directiveTypes = Objects.requireNonNull(directiveTypes);
     this.daemons = Collections.unmodifiableList(daemons);
   }
 
@@ -53,14 +53,14 @@ public final class MissionModel<Model> {
     return this.configurationType;
   }
 
-  public Map<String, TaskSpecType<Model, ?, ?>> getTaskSpecificationTypes() {
-    return this.taskSpecTypes;
+  public DirectiveTypeRegistry<?, Model> getDirectiveTypes() {
+    return this.directiveTypes;
   }
 
   public Directive<Model, ?, ?> instantiateDirective(final SerializedActivity specification)
   throws TaskSpecType.UnconstructableTaskSpecException
   {
-    return Directive.instantiate(this.taskSpecTypes.get(specification.getTypeName()), specification.getArguments());
+    return Directive.instantiate(this.directiveTypes.taskSpecTypes().get(specification.getTypeName()), specification);
   }
 
   public Task<Unit> getDaemon() {

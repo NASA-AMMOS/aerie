@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.banananation.Configuration;
+import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
@@ -11,17 +12,19 @@ public final class SimulationUtility {
 
   private static MissionModel<?> makeMissionModel(final MissionModelBuilder builder, final Configuration config) {
     final var factory = new gov.nasa.jpl.aerie.banananation.generated.GeneratedMissionModelFactory();
-    final var model = factory.instantiate(config, builder);
-    return builder.build(model, factory.getConfigurationType(), factory.getTaskSpecTypes());
+    final var registry = DirectiveTypeRegistry.extract(factory);
+    final var model = factory.instantiate(registry.registry(), config, builder);
+    return builder.build(model, factory.getConfigurationType(), registry);
   }
 
   public static MissionModel<?>
   getFooMissionModel() {
     final var conf = new gov.nasa.jpl.aerie.foomissionmodel.Configuration();
     final var factory = new gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory();
+    final var registry = DirectiveTypeRegistry.extract(factory);
     final var builder = new MissionModelBuilder();
-    final var model = factory.instantiate(conf, builder);
-    return builder.build(model, factory.getConfigurationType(), factory.getTaskSpecTypes());
+    final var model = factory.instantiate(registry.registry(), conf, builder);
+    return builder.build(model, factory.getConfigurationType(), registry);
   }
 
 
