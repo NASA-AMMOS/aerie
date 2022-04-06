@@ -1,11 +1,7 @@
 package gov.nasa.jpl.aerie.database;
 
-import com.impossibl.postgres.jdbc.PGDataSource;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -14,7 +10,7 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.UUID;
@@ -28,85 +24,28 @@ record PlanDatasetRecord(int plan_id, int dataset_id) {}
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class DatabaseTests {
+class MerlinDatabaseTests {
   private static final File initSqlScriptFile = new File("../merlin-server/sql/merlin/init.sql");
-  private java.sql.Connection connection;
+  private DatabaseTestHelper helper;
 
-  // Setup test database
+  private Connection connection;
+
   @BeforeAll
   void beforeAll() throws SQLException, IOException, InterruptedException {
-
-    // Create test database and grant privileges
-    {
-      final var pb = new ProcessBuilder("psql",
-                                        "postgresql://postgres:postgres@localhost:5432",
-                                        "-v", "ON_ERROR_STOP=1",
-                                        "-c", "CREATE DATABASE aerie_merlin_test;",
-                                        "-c", "GRANT ALL PRIVILEGES ON DATABASE aerie_merlin_test TO aerie;"
-      );
-
-      final var proc = pb.start();
-
-      // Handle the case where we cannot connect to postgres by skipping the tests
-      final var errors = new String(proc.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
-      Assumptions.assumeFalse(errors.contains("Connection refused"));
-      proc.waitFor();
-      proc.destroy();
-    }
-
-    // Grant table privileges to aerie user for the tests
-    // Apparently, the previous privileges are insufficient on their own
-    {
-      final var pb = new ProcessBuilder("psql",
-                                        "postgresql://postgres:postgres@localhost:5432/aerie_merlin_test",
-                                        "-v", "ON_ERROR_STOP=1",
-                                        "-c", "ALTER DEFAULT PRIVILEGES GRANT ALL ON TABLES TO aerie;",
-                                        "-c", "\\ir %s".formatted(initSqlScriptFile.getAbsolutePath())
-      );
-
-      pb.redirectError(ProcessBuilder.Redirect.INHERIT);
-      final var proc = pb.start();
-      proc.waitFor();
-      proc.destroy();
-    }
-
-    final var pgDataSource = new PGDataSource();
-
-    pgDataSource.setServerName("localhost");
-    pgDataSource.setPortNumber(5432);
-    pgDataSource.setDatabaseName("aerie_merlin_test");
-    pgDataSource.setApplicationName("Merlin Database Tests");
-
-    final var hikariConfig = new HikariConfig();
-    hikariConfig.setUsername("aerie");
-    hikariConfig.setPassword("aerie");
-    hikariConfig.setDataSource(pgDataSource);
-
-    final var hikariDataSource = new HikariDataSource(hikariConfig);
-
-    connection = hikariDataSource.getConnection();
+    helper = new DatabaseTestHelper(
+        "aerie_merlin_test",
+        "Merlin Database Tests",
+        initSqlScriptFile
+    );
+    helper.startDatabase();
+    connection = helper.connection();
   }
 
-  // Teardown test database
   @AfterAll
   void afterAll() throws SQLException, IOException, InterruptedException {
-    Assumptions.assumeTrue(connection != null);
-    connection.close();
-
-    // Clear out all data from the database on test conclusion
-    // This is done WITH (FORCE) so there aren't issues with trying
-    // to drop a database while there are connected sessions from
-    // dev tools
-    final var pb = new ProcessBuilder("psql",
-                                      "postgresql://postgres:postgres@localhost:5432",
-                                      "-v", "ON_ERROR_STOP=1",
-                                      "-c", "DROP DATABASE IF EXISTS aerie_merlin_test WITH (FORCE);"
-    );
-
-    pb.redirectError(ProcessBuilder.Redirect.INHERIT);
-    final var proc = pb.start();
-    proc.waitFor();
-    proc.destroy();
+    helper.stopDatabase();
+    connection = null;
+    helper = null;
   }
 
   int insertFileUpload() throws SQLException {
@@ -124,16 +63,6 @@ class DatabaseTests {
     }
   }
 
-  void clearFileUploads() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE uploaded_file CASCADE;"""
-          );
-    }
-  }
-
   int insertMissionModel(final int fileId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
@@ -146,16 +75,6 @@ class DatabaseTests {
           );
       res.next();
       return res.getInt("id");
-    }
-  }
-
-  void clearMissionModels() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE mission_model CASCADE;"""
-          );
     }
   }
 
@@ -178,16 +97,6 @@ class DatabaseTests {
     }
   }
 
-  void clearPlans() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE plan CASCADE;"""
-          );
-    }
-  }
-
   int insertActivity(final int planId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
@@ -204,16 +113,6 @@ class DatabaseTests {
     }
   }
 
-  void clearActivities() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE activity CASCADE;"""
-          );
-    }
-  }
-
   int insertSimulationTemplate(final int modelId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
@@ -226,16 +125,6 @@ class DatabaseTests {
           );
       res.next();
       return res.getInt("id");
-    }
-  }
-
-  void clearSimulationTemplates() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE simulation_template CASCADE;"""
-          );
     }
   }
 
@@ -269,16 +158,6 @@ class DatabaseTests {
     }
   }
 
-  void clearSimulations() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE simulation CASCADE;"""
-          );
-    }
-  }
-
   int insertDataset() throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
@@ -290,16 +169,6 @@ class DatabaseTests {
           );
       res.next();
       return res.getInt("id");
-    }
-  }
-
-  void clearDatasets() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE dataset CASCADE;"""
-          );
     }
   }
 
@@ -318,16 +187,6 @@ class DatabaseTests {
     }
   }
 
-  void clearPlanDatasets() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE plan_dataset CASCADE;"""
-          );
-    }
-  }
-
   SimulationDatasetRecord insertSimulationDataset(final int simulationId, final int datasetId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
@@ -343,13 +202,9 @@ class DatabaseTests {
     }
   }
 
-  void clearSimulationDatasets() throws SQLException {
+  void clearTable(String table) throws SQLException {
     try (final var statement = connection.createStatement()) {
-      statement
-          .executeUpdate(
-              """
-                  TRUNCATE simulation_dataset CASCADE;"""
-          );
+      statement.executeUpdate("TRUNCATE " + table + " CASCADE;");
     }
   }
 
@@ -380,15 +235,15 @@ class DatabaseTests {
 
   @AfterEach
   void afterEach() throws SQLException {
-    clearFileUploads();
-    clearMissionModels();
-    clearPlans();
-    clearActivities();
-    clearSimulationTemplates();
-    clearSimulations();
-    clearDatasets();
-    clearPlanDatasets();
-    clearSimulationDatasets();
+    clearTable("uploaded_file");
+    clearTable("mission_model");
+    clearTable("plan");
+    clearTable("activity");
+    clearTable("simulation_template");
+    clearTable("simulation");
+    clearTable("dataset");
+    clearTable("plan_dataset");
+    clearTable("simulation_dataset");
   }
 
   @Nested
