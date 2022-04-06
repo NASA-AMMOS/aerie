@@ -19,6 +19,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestCardinalityGoal {
 
@@ -51,7 +52,7 @@ public class TestCardinalityGoal {
 
     final var solver = new PrioritySolver(problem);
     var plan = solver.getNextSolution();
-    assert(plan.get().getActivitiesByTime().size() == 6);
+    assertTrue(plan.get().getActivitiesByTime().size() == 6);
     assertEquals(plan.get().getActivitiesByTime().stream()
                      .map(ActivityInstance::getDuration)
                      .reduce(Duration.ZERO, Duration::plus), Duration.of(12, Duration.SECOND));

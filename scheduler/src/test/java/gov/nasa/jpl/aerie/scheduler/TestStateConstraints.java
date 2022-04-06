@@ -32,6 +32,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class TestStateConstraints {
 
 
@@ -86,7 +90,7 @@ public class TestStateConstraints {
     Windows windows2 = new Windows( horizon.getHor());
     Windows re2 = constraintEncounter.findWindows(plan, windows2);
 
-    assert (re1.equals(re2));
+    assertEquals(re1, re2);
 
   }
 
@@ -98,13 +102,13 @@ public class TestStateConstraints {
                                                .equal(encounterEnumState, SerializedValue.of(OrbitPhasesEnum.ENCOUNTER.name()))
                                                .between(altitudeIntegerState,SerializedValue.of(20),SerializedValue.of(50))
                                                .build();
-    assert (approachStateConstraint1.getClass() == StateConstraintExpressionConjunction.class);
+    assertSame(approachStateConstraint1.getClass(), StateConstraintExpressionConjunction.class);
 
     StateConstraintExpression approachStateConstraint2 = new StateConstraintExpression.Builder()
         .above(altitudeDerivativeState, SerializedValue.of(0.0))
         .build();
 
-    assert (approachStateConstraint2.getClass() == StateConstraintExpressionDisjunction.class);
+    assertSame(approachStateConstraint2.getClass(), StateConstraintExpressionDisjunction.class);
 
 
     StateConstraintExpression approachStateConstraint = new StateConstraintExpression.Builder()
@@ -125,7 +129,7 @@ public class TestStateConstraints {
 
     re1.addAll(re2);
 
-    assert (re1.equals(re3));
+    assertEquals(re1, re3);
 
   }
 
@@ -166,7 +170,7 @@ public class TestStateConstraints {
 
     Windows windows1 = new Windows( horizon.getHor());
     Windows re1 = approachStateConstraint1.findWindows(plan, windows1);
-    assert (TestUtility.atLeastOneActivityOfTypeInTW(plan, re1, activityTypeImage));
+    assertTrue(TestUtility.atLeastOneActivityOfTypeInTW(plan, re1, activityTypeImage));
   }
 
   /**
@@ -214,8 +218,8 @@ public class TestStateConstraints {
     final var plan = solver.getNextSolution().orElseThrow();
 
 
-    assert (TestUtility.containsExactlyActivity(plan, act1));
-    assert (TestUtility.doesNotContainActivity(plan, act2));
+    assertTrue(TestUtility.containsExactlyActivity(plan, act1));
+    assertTrue(TestUtility.doesNotContainActivity(plan, act2));
   }
 
   @Test
@@ -288,8 +292,8 @@ public class TestStateConstraints {
     problem.setGoals(List.of(proceduralgoalwithoutconstraints));
     final var solver = new PrioritySolver(problem);
     final var plan = solver.getNextSolution().orElseThrow();
-    assert (TestUtility.containsExactlyActivity(plan, act1));
-    assert (TestUtility.doesNotContainActivity(plan, act2));
+    assertTrue(TestUtility.containsExactlyActivity(plan, act1));
+    assertTrue(TestUtility.doesNotContainActivity(plan, act2));
   }
 
   /**

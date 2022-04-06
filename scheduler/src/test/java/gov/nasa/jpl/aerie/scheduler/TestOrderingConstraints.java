@@ -20,6 +20,11 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class TestOrderingConstraints {
 
   /**
@@ -70,7 +75,7 @@ public class TestOrderingConstraints {
 
     //constraint is invalid in interval (0,10)
     ConstraintState cs = cc.isEnforced(plan, new Windows(Window.between(t0, h.toDur(TestUtility.timeFromEpochSeconds(10)))));
-    assert (cs.isViolation);
+    assertTrue(cs.isViolation);
     CardinalityConstraint cc2 =
         new CardinalityConstraint.Builder().atMost(0).type(type1).inInterval(Window.between(
             t0,
@@ -78,7 +83,7 @@ public class TestOrderingConstraints {
 
     //constraint is valid in interval (8,10)
     ConstraintState cs2 = cc2.isEnforced(plan, new Windows(Window.between(t8, t10)));
-    assert (!cs2.isViolation);
+    assertFalse(cs2.isViolation);
   }
 
 
@@ -96,13 +101,13 @@ public class TestOrderingConstraints {
 
     //constraint is invalid in interval (0,10)
     ConstraintState cs = mc.isEnforced(plan, new Windows(Window.between(t0, t10)));
-    assert (cs.isViolation);
-    assert (cs.violationWindows.equals(new Windows(Window.betweenClosedOpen(t3, t5))));
+    assertTrue(cs.isViolation);
+    assertEquals(cs.violationWindows, new Windows(Window.betweenClosedOpen(t3, t5)));
 
     //constraint is valid in interval (8,10)
     cs = mc.isEnforced(plan, new Windows(Window.between(t8, t10)));
-    assert (!cs.isViolation);
-    assert (cs.violationWindows == null);
+    assertFalse(cs.isViolation);
+    assertNull(cs.violationWindows);
 
 
   }
@@ -130,7 +135,7 @@ public class TestOrderingConstraints {
 
     Windows expectedWindows = new Windows(tw1);
     expectedWindows.subtract(Window.between(t1, Window.Inclusivity.Inclusive, t5, Window.Inclusivity.Exclusive));
-    assert (foundWindows.equals(expectedWindows));
+    assertEquals(foundWindows, expectedWindows);
 
 
   }
@@ -156,6 +161,8 @@ public class TestOrderingConstraints {
         new MissingActivityInstanceConflict(new ActivityExistentialGoal(), act1));
 
     Windows expectedWindows = new Windows();
-    assert (foundWindows.equals(expectedWindows));
+    assertEquals(foundWindows, expectedWindows);
+
+
   }
 }

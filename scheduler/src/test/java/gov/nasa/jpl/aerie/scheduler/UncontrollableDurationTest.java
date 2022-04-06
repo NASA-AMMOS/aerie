@@ -19,6 +19,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class UncontrollableDurationTest {
 
   PlanningHorizon planningHorizon;
@@ -81,12 +83,12 @@ public class UncontrollableDurationTest {
     solver.checkSimBeforeInsertingActInPlan();
     final var plan = solver.getNextSolution().get();
     solver.printEvaluation();
-    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT1M51S"), planningHorizon.fromStart("PT6M51S"), problem.getActivityType("SolarPanelNonLinear")));
-    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT35M11S"), planningHorizon.fromStart("PT40M11S"), problem.getActivityType("SolarPanelNonLinear")));
-    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT18M31S"), planningHorizon.fromStart("PT23M31S"), problem.getActivityType("SolarPanelNonLinear")));
-    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT23M31S"), planningHorizon.fromStart("PT25M"), problem.getActivityType("SolarPanelNonLinear")));
-    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT6M51S"), planningHorizon.fromStart("PT8M20S"), problem.getActivityType("SolarPanelNonLinear")));
-    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT40M11S"), planningHorizon.fromStart("PT41M40S"), problem.getActivityType("SolarPanelNonLinear")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT1M51S"), planningHorizon.fromStart("PT6M51S"), problem.getActivityType("SolarPanelNonLinear")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT35M11S"), planningHorizon.fromStart("PT40M11S"), problem.getActivityType("SolarPanelNonLinear")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT18M31S"), planningHorizon.fromStart("PT23M31S"), problem.getActivityType("SolarPanelNonLinear")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT23M31S"), planningHorizon.fromStart("PT25M"), problem.getActivityType("SolarPanelNonLinear")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT6M51S"), planningHorizon.fromStart("PT8M20S"), problem.getActivityType("SolarPanelNonLinear")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT40M11S"), planningHorizon.fromStart("PT41M40S"), problem.getActivityType("SolarPanelNonLinear")));
   }
 
   @Test
@@ -132,12 +134,12 @@ public class UncontrollableDurationTest {
     solver.checkSimBeforeInsertingActInPlan();
     final var plan = solver.getNextSolution().get();
     solver.printEvaluation();
-    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT3M57.222965S"), planningHorizon.fromStart("PT6M40.222965S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
-    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT21M57.209547S"), planningHorizon.fromStart("PT23M15.209547S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
-    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT34M06.190019S"), planningHorizon.fromStart("PT38M1.190019S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
-    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT6M40.222965S"), planningHorizon.fromStart("PT09M58.222965S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
-    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT23M15.209547S"), planningHorizon.fromStart("PT24M7.209547S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
-    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT38M1.190019S"), planningHorizon.fromStart("PT39M41.190019S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT3M57.222965S"), planningHorizon.fromStart("PT6M40.222965S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT21M57.209547S"), planningHorizon.fromStart("PT23M15.209547S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT34M06.190019S"), planningHorizon.fromStart("PT38M1.190019S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT6M40.222965S"), planningHorizon.fromStart("PT09M58.222965S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT23M15.209547S"), planningHorizon.fromStart("PT24M7.209547S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT38M1.190019S"), planningHorizon.fromStart("PT39M41.190019S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
   }
 
 }

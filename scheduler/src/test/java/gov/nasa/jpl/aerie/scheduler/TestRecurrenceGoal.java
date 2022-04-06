@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class TestRecurrenceGoal {
 
   @Test
@@ -36,10 +38,10 @@ public class TestRecurrenceGoal {
     final var solver = new PrioritySolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
-    assert(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), actType));
-    assert(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), actType));
-    assert(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), actType));
-    assert(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), actType));
+    assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), actType));
+    assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), actType));
+    assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), actType));
+    assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), actType));
 
   }
 
