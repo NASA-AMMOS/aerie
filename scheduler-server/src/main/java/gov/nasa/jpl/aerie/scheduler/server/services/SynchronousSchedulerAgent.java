@@ -7,13 +7,15 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.Goal;
-import gov.nasa.jpl.aerie.scheduler.HuginnConfiguration;
 import gov.nasa.jpl.aerie.scheduler.Plan;
+import gov.nasa.jpl.aerie.scheduler.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.PrioritySolver;
 import gov.nasa.jpl.aerie.scheduler.Problem;
+import gov.nasa.jpl.aerie.scheduler.SchedulingActivityInstanceId;
 import gov.nasa.jpl.aerie.scheduler.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.Solver;
 import gov.nasa.jpl.aerie.scheduler.Time;
@@ -24,10 +26,12 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationExcepti
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.ResultsProtocolFailure;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.SpecificationLoadException;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
+import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.GoalBuilder;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -94,7 +98,8 @@ public record SynchronousSchedulerAgent(
       final var planningHorizon = new PlanningHorizon(Time.fromInstant(specification.horizonStartTimestamp().toInstant()), Time.fromInstant(specification.horizonEndTimestamp().toInstant())) ;
       final var problem = new Problem(schedulerMissionModel.missionModel(), planningHorizon, new SimulationFacade(planningHorizon, schedulerMissionModel.missionModel()), schedulerMissionModel.schedulerModel());
       //seed the problem with the initial plan contents
-      problem.setInitialPlan(loadInitialPlan(planMetadata, problem));
+      final var loadedPlanComponents = loadInitialPlan(planMetadata, problem);
+      problem.setInitialPlan(loadedPlanComponents.schedulerPlan());
 
       //apply constraints/goals to the problem
       loadConstraints(planMetadata, schedulerMissionModel.missionModel()).forEach(problem::add);
@@ -120,8 +125,10 @@ public record SynchronousSchedulerAgent(
       //store the solution plan back into merlin (and reconfirm no intervening mods!)
       //TODO: make revision confirmation atomic part of plan mutation (plan might have been modified during scheduling!)
       ensurePlanRevisionMatch(specification, getMerlinPlanRev(specification.planId()));
-      final var instancesToIds = storeFinalPlan(planMetadata, solutionPlan);
-
+      final var instancesToIds = storeFinalPlan(planMetadata,
+                                                loadedPlanComponents.idMap(),
+                                                loadedPlanComponents.merlinPlan(),
+                                                solutionPlan);
       //collect results and notify subscribers of success
       final var results = collectResults(solutionPlan,instancesToIds, goals);
       writer.succeedWith(results);
@@ -193,12 +200,9 @@ public record SynchronousSchedulerAgent(
    * @return a new scheduler that is set up to begin providing solutions to the problem
    */
   private Solver createScheduler(final PlanMetadata planMetadata, final Problem problem) {
-    final var config = new HuginnConfiguration();
-    //TODO: move temporal focus from sched config into Problem object
     //TODO: allow for separate control of windows for constraint analysis vs ability to schedule activities
     //      (eg constraint may need view into immutable past to know how to schedule things in the future)
-    config.setHorizon(planMetadata.horizon());
-    final var solver = new PrioritySolver(config, problem);
+    final var solver = new PrioritySolver(new HuginnConfiguration(), problem);
     solver.checkSimBeforeInsertingActInPlan();
     return solver;
   }
@@ -212,15 +216,35 @@ public record SynchronousSchedulerAgent(
    * @throws ResultsProtocolFailure when the requested plan cannot be loaded, or the target plan revision has
    *     changed, or aerie could not be reached
    */
-  private Plan loadInitialPlan(final PlanMetadata planMetadata, final Problem problem) {
+  private PlanComponents loadInitialPlan(final PlanMetadata planMetadata, final Problem problem) {
     //TODO: maybe paranoid check if plan rev has changed since original metadata?
     try {
-      return merlinService.getPlanActivities(planMetadata, problem);
+      final var merlinPlan =  merlinService.getPlanActivities(planMetadata, problem);
+      final Map<SchedulingActivityInstanceId, ActivityInstanceId> schedulingIdToMerlinId = new HashMap<>();
+      final var plan = new PlanInMemory();
+      final var activityTypes = problem.getActivityTypes().stream().collect(Collectors.toMap(ActivityType::getName, at -> at));
+      for(final var elem : merlinPlan.getActivitiesById().entrySet()){
+        final var activity = elem.getValue();
+        if(!activityTypes.containsKey(activity.type())){
+          throw new IllegalArgumentException("Activity type found in JSON object after request to merlin server has "
+                                             + "not been found in types extracted from mission model. Probable "
+                                             + "inconsistency between mission model used by scheduler server and "
+                                             + "merlin server.");
+        }
+        final var schedulerActType = activityTypes.get(activity.type());
+        final var act = new ActivityInstance(schedulerActType);
+        act.setArguments(activity.arguments());
+        act.setStartTime(activity.startTimestamp());
+        schedulingIdToMerlinId.put(act.getId(), elem.getKey());
+        plan.add(act);
+      }
+      return new PlanComponents(plan, merlinPlan, schedulingIdToMerlinId);
     } catch (Exception e) {
       throw new ResultsProtocolFailure(e);
     }
   }
 
+  record PlanComponents(Plan schedulerPlan, MerlinPlan merlinPlan, Map<SchedulingActivityInstanceId, ActivityInstanceId> idMap) {}
   record SchedulerMissionModel(MissionModel<?> missionModel, SchedulerModel schedulerModel) {}
 
   /**
@@ -330,14 +354,17 @@ public record SynchronousSchedulerAgent(
    * @throws ResultsProtocolFailure when the plan could not be stored to aerie, the target plan revision has
    *     changed, or aerie could not be reached
    */
-  private Map<ActivityInstance, ActivityInstanceId> storeFinalPlan(final PlanMetadata planMetadata, final Plan newPlan) {
+  private Map<ActivityInstance, ActivityInstanceId> storeFinalPlan(final PlanMetadata planMetadata,
+                                                                   final Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
+                                                                   final MerlinPlan initialPlan,
+                                                                   final Plan newPlan) {
     try {
       switch (this.outputMode) {
         case CreateNewOutputPlan -> {
           return merlinService.createNewPlanWithActivities(planMetadata, newPlan).getValue();
         }
         case UpdateInputPlanWithNewActivities -> {
-          return merlinService.updatePlanActivities(planMetadata.planId(), newPlan);
+          return merlinService.updatePlanActivities(planMetadata.planId(), idsFromInitialPlan, initialPlan, newPlan);
         }
         default -> throw new IllegalArgumentException("unsupported scheduler output mode " + this.outputMode);
       }

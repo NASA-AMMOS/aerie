@@ -6,7 +6,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.Plan;
 import gov.nasa.jpl.aerie.scheduler.Problem;
+import gov.nasa.jpl.aerie.scheduler.SchedulingActivityInstanceId;
 import gov.nasa.jpl.aerie.scheduler.Time;
+import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
@@ -45,7 +47,7 @@ class SchedulingDSLCompilationServiceTests {
       }
 
       @Override
-      public Plan getPlanActivities(final PlanMetadata planMetadata, final Problem mission)
+      public MerlinPlan getPlanActivities(final PlanMetadata planMetadata, final Problem mission)
       {
         return null;
       }
@@ -74,7 +76,10 @@ class SchedulingDSLCompilationServiceTests {
       }
 
       @Override
-      public Map<ActivityInstance, ActivityInstanceId> updatePlanActivities(final PlanId planId, final Plan plan)
+      public Map<ActivityInstance, ActivityInstanceId> updatePlanActivities(final PlanId planId,
+                                                                            final Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
+                                                                            final MerlinPlan initialPlan,
+                                                                            final Plan plan)
       {
         return null;
       }

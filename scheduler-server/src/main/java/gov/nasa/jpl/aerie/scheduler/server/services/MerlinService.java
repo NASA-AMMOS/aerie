@@ -2,12 +2,16 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.scheduler.SchedulingActivityInstanceId;
 import gov.nasa.jpl.aerie.scheduler.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.Plan;
 import gov.nasa.jpl.aerie.scheduler.Problem;
 import gov.nasa.jpl.aerie.scheduler.Time;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
+import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
@@ -47,8 +51,8 @@ public interface MerlinService {
    * @return a newly allocated snapshot of the plan contents
    * @throws NoSuchPlanException when the plan container does not exist in aerie
    */
-  Plan getPlanActivities(final PlanMetadata planMetadata, final Problem mission)
-  throws IOException, NoSuchPlanException, MerlinServiceException;
+  MerlinPlan getPlanActivities(final PlanMetadata planMetadata, final Problem mission)
+  throws IOException, NoSuchPlanException, MerlinServiceException, InvalidJsonException;
 
   /**
    * create an entirely new plan container in aerie and synchronize the in-memory plan to it
@@ -97,7 +101,12 @@ public interface MerlinService {
    * @throws NoSuchPlanException when the plan container does not exist in aerie
    * @return
    */
-  Map<ActivityInstance, ActivityInstanceId> updatePlanActivities(final PlanId planId, final Plan plan) throws IOException, NoSuchPlanException, MerlinServiceException;
+  Map<ActivityInstance, ActivityInstanceId> updatePlanActivities(
+      PlanId planId,
+      Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
+      MerlinPlan initialPlan,
+      Plan plan)
+  throws IOException, NoSuchPlanException, MerlinServiceException, NoSuchActivityInstanceException;
 
   /**
    * confirms that the specified plan exists in the aerie database, throwing exception if not
