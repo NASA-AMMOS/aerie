@@ -5,6 +5,7 @@ export interface ActivityTemplate {
 
 export enum NodeKind {
   ActivityRecurrenceGoal = 'ActivityRecurrenceGoal',
+  ActivityCoexistenceGoal = 'ActivityCoexistenceGoal',
   GoalAnd = 'GoalAnd',
   GoalOr = 'GoalOr'
 }
@@ -18,14 +19,24 @@ export enum NodeKind {
  */
 export type Goal =
   | ActivityRecurrenceGoal
+  | ActivityCoexistenceGoal
   ;
-// TODO coexistence goal
 // TODO cardinality goal
 
 export interface ActivityRecurrenceGoal {
   kind: NodeKind.ActivityRecurrenceGoal,
   activityTemplate: ActivityTemplate,
   interval: number,
+}
+
+export interface ActivityExpression {
+  type: string
+}
+
+export interface ActivityCoexistenceGoal {
+  kind: NodeKind.ActivityCoexistenceGoal,
+  activityTemplate: ActivityTemplate,
+  forEach: ActivityExpression
 }
 
 export type GoalSpecifier =
