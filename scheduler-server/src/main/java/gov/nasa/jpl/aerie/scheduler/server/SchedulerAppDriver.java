@@ -22,6 +22,7 @@ import gov.nasa.jpl.aerie.scheduler.server.services.LocalSpecificationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingDSLCompilationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.SynchronousSchedulerAgent;
+import gov.nasa.jpl.aerie.scheduler.server.services.ThreadedSchedulerAgent;
 import gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
@@ -67,8 +68,13 @@ public final class SchedulerAppDriver {
 
     //create objects in each service abstraction layer (mirroring MerlinApp)
     final var specificationService = new LocalSpecificationService(stores.specifications());
-    final var scheduleAgent = new SynchronousSchedulerAgent(specificationService, merlinService,
-        config.merlinFileStore(), config.missionRuleJarPath(), config.outputMode());
+    final var scheduleAgent = ThreadedSchedulerAgent.spawn(
+        "scheduler-agent",
+        new SynchronousSchedulerAgent(specificationService,
+                                      merlinService,
+                                      config.merlinFileStore(),
+                                      config.missionRuleJarPath(),
+                                      config.outputMode()));
     final var schedulerService = new CachedSchedulerService(stores.results(), scheduleAgent);
     final var scheduleAction = new ScheduleAction(specificationService, schedulerService);
 
