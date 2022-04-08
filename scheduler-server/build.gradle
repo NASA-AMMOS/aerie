@@ -53,6 +53,9 @@ test {
 
   environment "SCHEDULING_DSL_COMPILER_ROOT", projectDir.toPath().resolve('scheduling-dsl-compiler')
   environment "SCHEDULING_DSL_COMPILER_COMMAND", './build/main.js'
+
+  dependsOn ":examples:banananation:assemble"
+  environment 'AERIE_ROOT', rootDir.toString()
 }
 
 application {
