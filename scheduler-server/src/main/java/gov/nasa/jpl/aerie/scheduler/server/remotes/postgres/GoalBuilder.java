@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.function.Function;
 
@@ -29,6 +30,8 @@ public class GoalBuilder {
           .repeatingEvery(g.interval())
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
           .build();
+    } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition g) {
+      throw new NotImplementedException("Working on coexistence goal");
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalAnd g) {
       var builder = new CompositeAndGoal.Builder();
       for (final var subGoalSpecifier : g.goals()) {

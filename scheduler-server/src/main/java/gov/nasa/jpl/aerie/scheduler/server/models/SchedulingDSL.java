@@ -31,14 +31,13 @@ public class SchedulingDSL {
               $ -> tuple($.activityType(), $.arguments())));
 
 
-  private static final JsonParser<Duration> durationP
-      = longP
+  private static final JsonParser<Duration> durationP =
+      longP
       . map(Iso.of(
           microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
           duration -> duration.in(Duration.MICROSECONDS)));
 
-  private static final ProductParsers.JsonObjectParser<GoalSpecifier.RecurrenceGoalDefinition>
-      recurrenceGoalDefinitionP =
+  private static final ProductParsers.JsonObjectParser<GoalSpecifier.RecurrenceGoalDefinition> recurrenceGoalDefinitionP =
       productP
           .field("activityTemplate", activityTemplateP)
           .field("interval", durationP)
@@ -47,6 +46,22 @@ public class SchedulingDSL {
               goalDefinition -> tuple(
                   goalDefinition.activityTemplate(),
                   goalDefinition.interval())));
+
+  private static final JsonParser<ActivityExpression> activityExpressionP =
+      productP
+          .field("type", stringP)
+          .map(Iso.of(ActivityExpression::new,
+                      ActivityExpression::type));
+
+  private static final ProductParsers.JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP =
+      productP
+          .field("activityTemplate", activityTemplateP)
+          .field("forEach", activityExpressionP)
+          .map(Iso.of(
+              untuple(GoalSpecifier.CoexistenceGoalDefinition::new),
+              goalDefinition -> tuple(
+                  goalDefinition.activityTemplate(),
+                  goalDefinition.forEach())));
 
   private static ProductParsers.JsonObjectParser<GoalSpecifier.GoalAnd> goalAndF(final JsonParser<GoalSpecifier> goalSpecifierP) {
     return productP
@@ -66,6 +81,7 @@ public class SchedulingDSL {
   private static final JsonParser<GoalSpecifier> goalSpecifierP =
       recursiveP(self -> SumParsers.sumP("kind", GoalSpecifier.class, List.of(
           SumParsers.variant("ActivityRecurrenceGoal", GoalSpecifier.RecurrenceGoalDefinition.class, recurrenceGoalDefinitionP),
+          SumParsers.variant("ActivityCoexistenceGoal", GoalSpecifier.CoexistenceGoalDefinition.class, coexistenceGoalDefinitionP),
           SumParsers.variant("GoalAnd", GoalSpecifier.GoalAnd.class, goalAndF(self)),
           SumParsers.variant("GoalOr", GoalSpecifier.GoalOr.class, goalOrF(self))
       )));
@@ -79,10 +95,16 @@ public class SchedulingDSL {
         ActivityTemplate activityTemplate,
         Duration interval
     ) implements GoalSpecifier {}
+    record CoexistenceGoalDefinition(
+        ActivityTemplate activityTemplate,
+        ActivityExpression forEach
+    ) implements GoalSpecifier {}
     record GoalAnd(List<GoalSpecifier> goals) implements GoalSpecifier {}
     record GoalOr(List<GoalSpecifier> goals) implements GoalSpecifier {}
   }
 
 
   public record ActivityTemplate(String activityType, Map<String, SerializedValue> arguments) {}
+
+  public record ActivityExpression(String type) {}
 }

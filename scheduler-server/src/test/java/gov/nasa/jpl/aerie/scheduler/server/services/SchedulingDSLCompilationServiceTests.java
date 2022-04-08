@@ -241,8 +241,7 @@ class SchedulingDSLCompilationServiceTests {
   }
 
   @Test
-  void testHugeGoal()
-  {
+  void testHugeGoal() {
     // This test is intended to create a Goal that is bigger than the node subprocess's standard input buffer
     final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
     result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
@@ -274,6 +273,43 @@ class SchedulingDSLCompilationServiceTests {
     );
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
       assertEquals(expectedGoalDefinition, r.goalSpecifier());
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      fail(r.toString());
+    }
+  }
+
+  @Test
+  void testCoexistenceGoal() {
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(PLAN_ID, """
+          export default function() {
+            return Goal.CoexistenceGoal({
+              activityTemplate: ActivityTemplates.SampleActivity1({
+                variant: 'option2',
+                fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
+                duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+              }),
+              forEach: ActivityTypes.SampleActivity1,
+            })
+          }
+        """, "");
+
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+      assertEquals(
+          new SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition(
+              new SchedulingDSL.ActivityTemplate("SampleActivity1",
+                                                 Map.ofEntries(
+                                                     Map.entry("variant", SerializedValue.of("option2")),
+                                                     Map.entry("fancy", SerializedValue.of(Map.ofEntries(
+                                                         Map.entry("subfield1", SerializedValue.of("value1")),
+                                                         Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
+                                                         )))),
+                                                     Map.entry("duration", SerializedValue.of(60L * 60 * 1000 * 1000))
+                                                 )
+              ),
+              new SchedulingDSL.ActivityExpression("SampleActivity1")
+          ),
+          r.goalSpecifier()
+      );
     } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
       fail(r.toString());
     }
