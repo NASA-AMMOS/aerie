@@ -60,7 +60,7 @@ import java.util.stream.Collectors;
 //TODO: will eventually need scheduling goal service arg to pull goals from scheduler's own data store
 public record SynchronousSchedulerAgent(
     SpecificationService specificationService,
-    GraphQLMerlinService merlinService,
+    MerlinService merlinService,
     Path modelJarsDir,
     Path goalsJarPath,
     PlanOutputMode outputMode
