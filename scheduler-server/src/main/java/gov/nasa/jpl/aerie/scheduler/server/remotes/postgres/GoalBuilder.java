@@ -1,6 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
+import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.goals.OptionGoal;
@@ -9,7 +12,6 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
-import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.function.Function;
 
@@ -31,7 +33,12 @@ public class GoalBuilder {
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
           .build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition g) {
-      throw new NotImplementedException("Working on coexistence goal");
+      return new CoexistenceGoal.Builder()
+          .forAllTimeIn(hor)
+          .forEach(ActivityExpression.ofType(lookupActivityType.apply(g.forEach().type())))
+          .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
+          .startsAt(TimeAnchor.END)
+          .build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalAnd g) {
       var builder = new CompositeAndGoal.Builder();
       for (final var subGoalSpecifier : g.goals()) {
