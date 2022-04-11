@@ -4,13 +4,15 @@ import { createReadStream } from 'fs';
 import { basename, resolve } from 'path';
 import { GATEWAY_URL, HASURA_URL, UI_URL } from '../utilities/urls';
 import gql from './gql';
+import {request} from "@playwright/test";
+import time from "./time";
 
 /**
  * Aerie API request functions.
  */
 const req = {
   async createMissionModel(request: APIRequestContext, model: MissionModelInsertInput): Promise<number> {
-    const data = await req.hasura(request, gql.CREATE_MISSION_MODEL, { model });
+    const data = await req.hasura(request, gql.CREATE_MISSION_MODEL, { model: model });
     const { insert_mission_model_one } = data;
     const { id: mission_model_id } = insert_mission_model_one;
 
@@ -18,10 +20,9 @@ const req = {
   },
 
   async deleteMissionModel(request: APIRequestContext, id: number): Promise<number> {
-    const data = await req.hasura(request, gql.DELETE_MISSION_MODEL, { id });
+    const data = await req.hasura(request, gql.DELETE_MISSION_MODEL, { id: id });
     const { delete_mission_model_by_pk } = data;
     const { id: deleted_mission_model_id } = delete_mission_model_by_pk;
-
     return deleted_mission_model_id;
   },
 
@@ -98,6 +99,93 @@ const req = {
       throw new Error(response.statusText());
     }
   },
+
+  async createPlan(request: APIRequestContext, model: CreatePlanInput): Promise<number> {
+    const data = await req.hasura(request, gql.CREATE_PLAN, { plan: model });
+    const { insert_plan_one } = data;
+    const { id: plan_id } = insert_plan_one;
+    return plan_id;
+  },
+
+  async createSimulation(request: APIRequestContext, simulationInput: SimulationCreation): Promise<number> {
+    const data = await req.hasura(request, gql.CREATE_SIMULATION, { simulation: simulationInput });
+    const { insert_simulation_one } = data;
+    const { id: simulation_id } = insert_simulation_one;
+    return simulation_id;
+  },
+
+  async insertSchedulingGoal(request: APIRequestContext, schedulingInput: SchedulingGoalInsertInput) {
+    const data = await req.hasura(request, gql.CREATE_SCHEDULING_GOAL, {goal: schedulingInput});
+    const { insert_scheduling_goal_one } = data;
+    const { id: goal_id } = insert_scheduling_goal_one;
+    return goal_id
+  },
+
+  async insertSchedulingSpecification(request: APIRequestContext, specificationInput: SchedulingSpecInsertInput) {
+    const data = await req.hasura(request, gql.INSERT_SCHEDULING_SPECIFICATION, {scheduling_spec: specificationInput});
+    const { insert_scheduling_specification_one } = data;
+    const { id: spec_id } = insert_scheduling_specification_one;
+    return spec_id
+  },
+
+  async getPlanRevision(request: APIRequestContext, id: number): Promise<number | null> {
+    const data = await req.hasura(request, gql.GET_PLAN_REVISION, { id: id });
+    const { plan } = data;
+    const { revision } = plan;
+    return revision;
+  },
+
+  async schedule(request: APIRequestContext, specificationId: number): Promise<SchedulingResponse> {
+    const data = await req.hasura(request, gql.SCHEDULE, {
+      specificationId: specificationId,
+    });
+    const { schedule } = data;
+    return schedule;
+  },
+
+  async createSchedulingSpecGoal(request: APIRequestContext, spec_goal: SchedulingSpecGoalInsertInput): Promise<void> {
+    const data = await req.hasura(request, gql.CREATE_SCHEDULING_SPEC_GOAL, {spec_goal});
+    const { insert_scheduling_specification_goals_one } = data;
+    const {
+      goal_id: goal_id,
+      priority : priority,
+      specification_id: specification_id} = insert_scheduling_specification_goals_one
+    return specification_id;
+  },
+
+  async deletePlan(request: APIRequestContext, id: number){
+    const data = await req.hasura(request, gql.DELETE_PLAN, { id: id })
+    const { deletePlan } = data;
+    const {id : deletedPlan} = deletePlan;
+    return deletedPlan;
+  },
+
+  async getPlan(request: APIRequestContext, id: number): Promise<Plan>{
+    const data = await req.hasura(request, gql.GET_PLAN, { id: id });
+    const { plan } = data;
+    const startTime = new Date(plan.startTime);
+    return {
+      ...plan,
+      activities: plan.activities.map((activity: any) => toActivity(activity, startTime)),
+      endTime: time.getDoyTimeFromDuration(startTime, plan.duration),
+      startTime: time.getDoyTime(startTime),
+    };
+  },
+
 };
+/**
+ * Converts any activity to an Activity.
+ */
+export function toActivity(activity: any, startTime: Date): Activity {
+  return {
+    arguments: activity.arguments,
+    children: [],
+    duration: 0,
+    id: activity.id,
+    parent: null,
+    startTime: time.getDoyTimeFromDuration(startTime, activity.startOffset),
+    type: activity.type,
+  };
+}
 
 export default req;
