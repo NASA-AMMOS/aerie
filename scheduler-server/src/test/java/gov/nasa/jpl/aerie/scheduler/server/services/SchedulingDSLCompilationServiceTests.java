@@ -136,8 +136,7 @@ class SchedulingDSLCompilationServiceTests {
                   })
                 }
             """, "goalfile");
-    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.GoalDefinition(
-        SchedulingDSL.GoalKinds.ActivityRecurrenceGoal,
+    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
         new SchedulingDSL.ActivityTemplate(
             "SampleActivity1",
             Map.ofEntries(
@@ -178,8 +177,7 @@ class SchedulingDSLCompilationServiceTests {
                   })
                 }
             """, "goalfile");
-    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.GoalDefinition(
-        SchedulingDSL.GoalKinds.ActivityRecurrenceGoal,
+    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
         new SchedulingDSL.ActivityTemplate(
             "SampleActivity1",
             Map.ofEntries(
@@ -260,8 +258,7 @@ class SchedulingDSLCompilationServiceTests {
                   })
                 }
             """ + " ".repeat(9001), "goalfile");
-    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.GoalDefinition(
-        SchedulingDSL.GoalKinds.ActivityRecurrenceGoal,
+    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
         new SchedulingDSL.ActivityTemplate(
             "SampleActivity1",
             Map.ofEntries(
