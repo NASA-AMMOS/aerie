@@ -1,4 +1,10 @@
-FROM eclipse-temurin:17-focal
+FROM alpine:3.15 AS extractor
+
+COPY build/distributions/*.tar /usr/src/app/server.tar
+RUN mkdir /usr/src/app/extracted
+RUN cd /usr/src/app && tar --strip-components 1 -xf server.tar -C extracted
+
+FROM eclipse-temurin:17-jre-focal
 
 ENV NODE_VERSION=16.14.0
 RUN apt install -y curl
@@ -11,8 +17,7 @@ ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 RUN node --version
 RUN npm --version
 
-COPY build/distributions/*.tar /usr/src/app/server.tar
-RUN cd /usr/src/app && tar --strip-components 1 -xf server.tar
+COPY --from=extractor /usr/src/app/extracted /usr/src/app
 
 COPY scheduling-dsl-compiler /usr/src/app/scheduling-dsl-compiler
 ENV SCHEDULING_DSL_COMPILER_ROOT="/usr/src/app/scheduling-dsl-compiler/"
