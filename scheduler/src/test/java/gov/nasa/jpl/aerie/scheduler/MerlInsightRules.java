@@ -6,6 +6,28 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpressions;
+import gov.nasa.jpl.aerie.scheduler.constraints.filters.Filters;
+import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpressionDisjunction;
+import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraints;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.transformers.Transformers;
+import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
+import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
+import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
+import gov.nasa.jpl.aerie.scheduler.goals.Goal;
+import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
+import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.model.Time;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -19,7 +41,7 @@ public class MerlInsightRules extends Problem {
   static final PlanningHorizon DEFAULT_PLANNING_HORIZON = new PlanningHorizon(new Time(0), new Time(48 * 3600));
 
   public MerlInsightRules(MissionModel<?> missionModel, PlanningHorizon planningHorizon, SchedulerModel schedulerModel) {
-    super(missionModel, planningHorizon, new SimulationFacade(planningHorizon,missionModel), schedulerModel);
+    super(missionModel, planningHorizon, new SimulationFacade(planningHorizon, missionModel), schedulerModel);
   }
 
   @Override
@@ -551,7 +573,7 @@ public class MerlInsightRules extends Problem {
         .equal(getResource("/dsn/allocated/Goldstone"), SerializedValue.of("Allocated"))
         .build();
 
-    var disj = new StateConstraintExpressionDisjunction(List.of(sc1,sc2,sc3), "disjunction");
+    var disj = new StateConstraintExpressionDisjunction(List.of(sc1, sc2, sc3), "disjunction");
 
     TimeRangeExpression expr = new TimeRangeExpression.Builder()
         .from(disj)

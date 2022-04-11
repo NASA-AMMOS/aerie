@@ -4,6 +4,12 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.filters.FilterSequenceMaxGapAfter;
+import gov.nasa.jpl.aerie.scheduler.constraints.filters.FilterSequenceMinGapAfter;
+import gov.nasa.jpl.aerie.scheduler.constraints.filters.Filters;
+import gov.nasa.jpl.aerie.scheduler.constraints.filters.TimeWindowsFilter;
+import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

@@ -3,6 +3,9 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
 import java.util.List;
 

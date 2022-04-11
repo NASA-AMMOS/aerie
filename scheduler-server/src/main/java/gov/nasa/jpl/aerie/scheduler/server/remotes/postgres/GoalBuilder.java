@@ -1,13 +1,13 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.scheduler.ActivityCreationTemplate;
-import gov.nasa.jpl.aerie.scheduler.ActivityType;
-import gov.nasa.jpl.aerie.scheduler.CompositeAndGoal;
-import gov.nasa.jpl.aerie.scheduler.Goal;
-import gov.nasa.jpl.aerie.scheduler.OptionGoal;
-import gov.nasa.jpl.aerie.scheduler.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.RecurrenceGoal;
-import gov.nasa.jpl.aerie.scheduler.Time;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
+import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
+import gov.nasa.jpl.aerie.scheduler.goals.Goal;
+import gov.nasa.jpl.aerie.scheduler.goals.OptionGoal;
+import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.model.Time;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 

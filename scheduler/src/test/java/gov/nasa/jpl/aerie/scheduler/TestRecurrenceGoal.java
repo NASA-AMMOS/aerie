@@ -3,6 +3,13 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
+import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.model.Time;
+import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -12,7 +19,7 @@ public class TestRecurrenceGoal {
   @Test
   public void testRecurrence() {
     var actType = new ActivityType("RecGoalActType", null, DurationType.controllable("duration"));
-    var planningHorizon = new PlanningHorizon(new Time(0),new Time(20));
+    var planningHorizon = new PlanningHorizon(new Time(0), new Time(20));
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(20, Duration.SECONDS)))

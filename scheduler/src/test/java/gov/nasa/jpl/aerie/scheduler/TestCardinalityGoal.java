@@ -4,6 +4,16 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
+import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
+import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
+import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
+import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
+import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

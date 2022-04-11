@@ -3,6 +3,18 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
+import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.BinaryMutexConstraint;
+import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.CardinalityConstraint;
+import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.ConstraintState;
+import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.OrderingConstraint;
+import gov.nasa.jpl.aerie.scheduler.goals.ActivityExistentialGoal;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.model.Time;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +47,6 @@ public class TestOrderingConstraints {
 
   @Test
   public void testCardinalityConstraint() {
-    PlanningHorizon h = new PlanningHorizon(Time.fromString("2025-001T00:00:00.000"), Time.fromString("2027-001T00:00:00.000"));
     ActivityType type1 = new ActivityType("Type1");
     ActivityType type2 = new ActivityType("Type2");
 

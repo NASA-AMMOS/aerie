@@ -1,6 +1,13 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.scheduler.goals.Goal;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.model.Time;
+import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -10,7 +17,7 @@ public class MerlInsightRulesTest {
 
   @BeforeEach
   void setUp(){
-    planningHorizon = new PlanningHorizon(new Time(0), new Time(48*3600));
+    planningHorizon = new PlanningHorizon(new Time(0), new Time(48 * 3600));
     MissionModel<?> aerieLanderMissionModel = MerlinSightTestUtility.getMerlinSightMissionModel();
     final var aerieLanderSchedulerModel = MerlinSightTestUtility.getMerlinSightSchedulerModel();
     rules = new MerlInsightRules(aerieLanderMissionModel, planningHorizon, aerieLanderSchedulerModel);

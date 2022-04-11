@@ -5,6 +5,14 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.model.Time;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimResource;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -79,7 +87,7 @@ public class SimulationFacadeTest {
 
   @Test
   public void doubleConstraintEvalOnEmptyPlan() {
-    final var constraint = StateConstraintExpression.buildAboveConstraint(getFruitRes(), SerializedValue.of(2.9));
+    final var constraint = new StateConstraintExpression.Builder().above(getFruitRes(), SerializedValue.of(2.9)).build();
     final var plan = makeEmptyPlan();
     var actual = constraint.findWindows(plan, entireHorizon);
     assertThat(actual).isEqualTo(entireHorizon);
@@ -87,7 +95,7 @@ public class SimulationFacadeTest {
 
   @Test
   public void boolConstraintEvalOnEmptyPlan() {
-    final var constraint = StateConstraintExpression.buildEqualConstraint(getFlagConflictedRes(), SerializedValue.of(false));
+    final var constraint = new StateConstraintExpression.Builder().equal(getFlagConflictedRes(), SerializedValue.of(false)).build();
     final var plan = makeEmptyPlan();
     final var actual = constraint.findWindows(plan, entireHorizon);
     assertThat(actual).isEqualTo(entireHorizon);
@@ -95,7 +103,7 @@ public class SimulationFacadeTest {
 
   @Test
   public void stringConstraintEvalOnEmptyPlan() {
-    final var constraint = StateConstraintExpression.buildEqualConstraint(getFlagRes(), SerializedValue.of("A"));
+    final var constraint = new StateConstraintExpression.Builder().equal(getFlagRes(), SerializedValue.of("A")).build();
     final var plan = makeEmptyPlan();
     var actual = constraint.findWindows(plan, entireHorizon);
     assertThat(actual).isEqualTo(entireHorizon);
@@ -103,7 +111,7 @@ public class SimulationFacadeTest {
 
   @Test
   public void intConstraintEvalOnEmptyPlan() {
-    final var constraint = StateConstraintExpression.buildEqualConstraint(getPlantRes(), SerializedValue.of(200));
+    final var constraint = new StateConstraintExpression.Builder().equal(getPlantRes(), SerializedValue.of(200)).build();
     final var plan = makeEmptyPlan();
     final var actual = constraint.findWindows(plan, entireHorizon);
     assertThat(actual).isEqualTo(entireHorizon);
