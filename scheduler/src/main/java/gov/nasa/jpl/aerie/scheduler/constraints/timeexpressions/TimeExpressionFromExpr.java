@@ -2,8 +2,8 @@ package gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.Time;
 
 import java.util.Map;
 
@@ -26,9 +26,9 @@ public class TimeExpressionFromExpr extends TimeExpression {
     if (rangeExpr != null) {
       Duration resMin = rangeExpr.start;
       Duration resMax = rangeExpr.end;
-      for (Map.Entry<Time.Operator, Duration> entry : this.operations.entrySet()) {
-        resMin = Time.performOperation(entry.getKey(), resMin, entry.getValue());
-        resMax = Time.performOperation(entry.getKey(), resMax, entry.getValue());
+      for (Map.Entry<TimeUtility.Operator, Duration> entry : this.operations.entrySet()) {
+        resMin = TimeUtility.performOperation(entry.getKey(), resMin, entry.getValue());
+        resMax = TimeUtility.performOperation(entry.getKey(), resMax, entry.getValue());
       }
 
       retRange = Window.between(resMin, resMax);

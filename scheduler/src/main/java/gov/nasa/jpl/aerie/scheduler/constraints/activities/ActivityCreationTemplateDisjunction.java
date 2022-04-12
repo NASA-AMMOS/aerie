@@ -3,9 +3,13 @@ package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplate {
 
@@ -33,9 +37,9 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
    */
   @Override
   public @NotNull
-  ActivityInstance createActivity(String name) {
+  Optional<ActivityInstance> createActivity(String name, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
     //TODO: returns first ACT of disjunction, change it
-    return acts.get(0).createActivity(name);
+    return acts.get(0).createActivity(name, facade, plan, planningHorizon);
 
   }
 
@@ -49,9 +53,9 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
    */
   @Override
   public @NotNull
-  ActivityInstance createActivity(String name, Windows windows, boolean instantiateVariableArguments) {
+  Optional<ActivityInstance> createActivity(String name, Windows windows, boolean instantiateVariableArguments, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
     //TODO: returns first ACT of disjunction, change it
-    return acts.get(0).createActivity(name, windows, instantiateVariableArguments);
+    return acts.get(0).createActivity(name, windows, instantiateVariableArguments, facade,  plan, planningHorizon);
 
   }
 

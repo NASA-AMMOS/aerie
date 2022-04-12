@@ -14,26 +14,40 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.Time;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class TestOrderingConstraints {
-  private Plan plan;
-  private static final PlanningHorizon h = new PlanningHorizon(new Time(0), new Time(15));
+import java.time.Instant;
 
-  private final static Duration t0 = h.toDur(new Time(0));
-  private final static Duration t1 = h.toDur(new Time(1));
-  private final static Duration t2 = h.toDur(new Time(2));
-  private final static Duration t3 = h.toDur(new Time(3));
-  private final static Duration t4 = h.toDur(new Time(4));
-  private final static Duration t5 = h.toDur(new Time(5));
-  private final static Duration t6 = h.toDur(new Time(6));
-  private final static Duration t7 = h.toDur(new Time(7));
-  private final static Duration t8 = h.toDur(new Time(8));
-  private final static Duration t9 = h.toDur(new Time(9));
-  private final static Duration t10 = h.toDur(new Time(10));
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public class TestOrderingConstraints {
+
+  /**
+   * span of time over which the scheduler should run
+   */
+  private final Range<Instant> horizon = new Range<>(
+      TimeUtility.fromDOY("2025-001T00:00:00.000"),
+      TimeUtility.fromDOY("2027-001T00:00:00.000"));
+
+  private Plan plan;
+  private static final PlanningHorizon h = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(15));
+
+  private final static Duration t0 = h.toDur(TestUtility.timeFromEpochSeconds(0));
+  private final static Duration t1 = h.toDur(TestUtility.timeFromEpochSeconds(1));
+  private final static Duration t2 = h.toDur(TestUtility.timeFromEpochSeconds(2));
+  private final static Duration t3 = h.toDur(TestUtility.timeFromEpochSeconds(3));
+  private final static Duration t4 = h.toDur(TestUtility.timeFromEpochSeconds(4));
+  private final static Duration t5 = h.toDur(TestUtility.timeFromEpochSeconds(5));
+  private final static Duration t6 = h.toDur(TestUtility.timeFromEpochSeconds(6));
+  private final static Duration t7 = h.toDur(TestUtility.timeFromEpochSeconds(7));
+  private final static Duration t8 = h.toDur(TestUtility.timeFromEpochSeconds(8));
+  private final static Duration t9 = h.toDur(TestUtility.timeFromEpochSeconds(9));
+  private final static Duration t10 = h.toDur(TestUtility.timeFromEpochSeconds(10));
 
   @BeforeEach
   public void setUp() {
@@ -60,8 +74,8 @@ public class TestOrderingConstraints {
             t10)).build();
 
     //constraint is invalid in interval (0,10)
-    ConstraintState cs = cc.isEnforced(plan, new Windows(Window.between(t0, h.toDur(new Time(10.)))));
-    assert (cs.isViolation);
+    ConstraintState cs = cc.isEnforced(plan, new Windows(Window.between(t0, h.toDur(TestUtility.timeFromEpochSeconds(10)))));
+    assertTrue(cs.isViolation);
     CardinalityConstraint cc2 =
         new CardinalityConstraint.Builder().atMost(0).type(type1).inInterval(Window.between(
             t0,
@@ -69,7 +83,7 @@ public class TestOrderingConstraints {
 
     //constraint is valid in interval (8,10)
     ConstraintState cs2 = cc2.isEnforced(plan, new Windows(Window.between(t8, t10)));
-    assert (!cs2.isViolation);
+    assertFalse(cs2.isViolation);
   }
 
 
@@ -87,13 +101,13 @@ public class TestOrderingConstraints {
 
     //constraint is invalid in interval (0,10)
     ConstraintState cs = mc.isEnforced(plan, new Windows(Window.between(t0, t10)));
-    assert (cs.isViolation);
-    assert (cs.violationWindows.equals(new Windows(Window.betweenClosedOpen(t3, t5))));
+    assertTrue(cs.isViolation);
+    assertEquals(cs.violationWindows, new Windows(Window.betweenClosedOpen(t3, t5)));
 
     //constraint is valid in interval (8,10)
     cs = mc.isEnforced(plan, new Windows(Window.between(t8, t10)));
-    assert (!cs.isViolation);
-    assert (cs.violationWindows == null);
+    assertFalse(cs.isViolation);
+    assertNull(cs.violationWindows);
 
 
   }
@@ -121,7 +135,7 @@ public class TestOrderingConstraints {
 
     Windows expectedWindows = new Windows(tw1);
     expectedWindows.subtract(Window.between(t1, Window.Inclusivity.Inclusive, t5, Window.Inclusivity.Exclusive));
-    assert (foundWindows.equals(expectedWindows));
+    assertEquals(foundWindows, expectedWindows);
 
 
   }
@@ -147,6 +161,8 @@ public class TestOrderingConstraints {
         new MissingActivityInstanceConflict(new ActivityExistentialGoal(), act1));
 
     Windows expectedWindows = new Windows();
-    assert (foundWindows.equals(expectedWindows));
+    assertEquals(foundWindows, expectedWindows);
+
+
   }
 }

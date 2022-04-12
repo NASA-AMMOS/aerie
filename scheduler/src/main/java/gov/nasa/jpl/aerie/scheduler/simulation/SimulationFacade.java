@@ -256,7 +256,7 @@ public class SimulationFacade {
   private gov.nasa.jpl.aerie.constraints.model.ActivityInstance convertToConstraintModelActivityInstance(
       long id, SimulatedActivity driverActivity)
   {
-    final var planStartT = this.planningHorizon.getStartHuginn().toInstant();
+    final var planStartT = this.planningHorizon.getStartHuginn();
     final var startT = Duration.of(planStartT.until(driverActivity.start, ChronoUnit.MICROS), MICROSECONDS);
     final var endT = startT.plus(driverActivity.duration);
     return new gov.nasa.jpl.aerie.constraints.model.ActivityInstance(

@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.scheduler.goals.OptionGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.Time;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 
@@ -52,8 +51,8 @@ public class GoalBuilder {
       final Timestamp horizonEndTimestamp,
       final Function<String, ActivityType> lookupActivityType) {
     final var hor = new PlanningHorizon(
-        Time.fromString(horizonStartTimestamp.toString()),
-        Time.fromString(horizonEndTimestamp.toString())).getHor();
+        horizonStartTimestamp.toInstant(),
+        horizonEndTimestamp.toInstant()).getHor();
     return switch(goalDefinition.kind()) {
       case ActivityRecurrenceGoal -> new RecurrenceGoal.Builder()
           .forAllTimeIn(hor)

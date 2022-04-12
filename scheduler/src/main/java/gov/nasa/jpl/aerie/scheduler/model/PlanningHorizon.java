@@ -4,33 +4,32 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 public final class PlanningHorizon{
 
-  private final Time start;
-  private final Time end;
+  private final Instant start;
+  private final Instant end;
 
   private final Window aerieHorizon;
 
-  public PlanningHorizon(@NotNull Time start, @NotNull Time end){
-    this.start= start;
+  public PlanningHorizon(@NotNull Instant start, @NotNull Instant end){
+    this.start = start;
     this.end = end;
-    aerieHorizon = Window.betweenClosedOpen(Duration.ZERO,end.minus(start));
+    aerieHorizon = Window.betweenClosedOpen(Duration.ZERO , Duration.of(ChronoUnit.MICROS.between(start, end), Duration.MICROSECONDS));
   }
 
   public Window getHor(){
     return aerieHorizon;
   }
 
-  public Time getStartHuginn(){
+  public Instant getStartHuginn(){
     return start;
-  }
-  public Time getEndHuginn(){
-    return end;
   }
 
   public boolean contains(Duration time){
-    var huginnTime  = toTime(time);
-    return start.smallerThan(huginnTime) && end.biggerThan(huginnTime);
+    return aerieHorizon.contains(time);
   }
 
   public Duration getStartAerie(){
@@ -45,12 +44,15 @@ public final class PlanningHorizon{
     return getEndAerie();
   }
 
-  public Time toTime(Duration dur){
-    return start.plus(dur);
+  public Duration toDur(Instant t){
+    return Duration.of(ChronoUnit.MICROS.between(start, t), Duration.MICROSECONDS);
   }
 
-  public Duration toDur(Time t){
-    return t.minus(start);
+  public Duration fromStart(java.time.Duration duration){
+    return toDur(start.plus(duration));
   }
 
+  public Duration fromStart(String duration){
+    return fromStart(java.time.Duration.parse(duration));
+  }
 }

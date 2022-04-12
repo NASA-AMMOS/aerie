@@ -15,7 +15,6 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
-import gov.nasa.jpl.aerie.scheduler.model.Time;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
@@ -94,7 +93,7 @@ public record SynchronousSchedulerAgent(
       ensurePlanRevisionMatch(specification, planMetadata.planRev());
       //create scheduler problem seeded with initial plan
       final var schedulerMissionModel = loadMissionModel(planMetadata);
-      final var planningHorizon = new PlanningHorizon(Time.fromInstant(specification.horizonStartTimestamp().toInstant()), Time.fromInstant(specification.horizonEndTimestamp().toInstant())) ;
+      final var planningHorizon = new PlanningHorizon(specification.horizonStartTimestamp().toInstant(), specification.horizonEndTimestamp().toInstant()) ;
       final var problem = new Problem(schedulerMissionModel.missionModel(), planningHorizon, new SimulationFacade(planningHorizon, schedulerMissionModel.missionModel()), schedulerMissionModel.schedulerModel());
       //seed the problem with the initial plan contents
       final var loadedPlanComponents = loadInitialPlan(planMetadata, problem);

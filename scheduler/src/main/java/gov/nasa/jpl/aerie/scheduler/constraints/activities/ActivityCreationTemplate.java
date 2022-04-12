@@ -6,16 +6,23 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.EquationSolvingAlgorithms;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.constraints.resources.ExternalState;
 import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateQueryParam;
 import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpressionState;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetwork;
 import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * criteria used to identify create activity instances in scheduling goals
@@ -153,15 +160,10 @@ public class ActivityCreationTemplate extends ActivityExpression {
                                      + this.type.getName()
                                      + " because its DurationType is Uncontrollable");
         }
-        if (this.durationIn != null) {
-          throw new RuntimeException("Cannot constrain duration on activity of type "
-                                     + this.type.getName()
-                                     + " because its DurationType is Uncontrollable");
-        }
-        if (this.endsIn != null) {
-          throw new RuntimeException("Cannot constrain end time of an activity of type "
-                                     + this.type.getName()
-                                     + " because its DurationType is Uncontrollable");
+        if(this.acceptableAbsoluteTimingError.isZero()){
+          logger.warn("Root-finding is likely to fail as activity has an uncontrollable duration and the timing "
+          + "precision is 0. Setting it for you at 1s. Next time, use withTimingPrecision() when building the template.");
+          this.acceptableAbsoluteTimingError = Duration.of(500, Duration.MILLISECOND);
         }
       }
 
@@ -229,21 +231,19 @@ public class ActivityCreationTemplate extends ActivityExpression {
    * @return
    */
   public @NotNull
-  ActivityInstance createActivity(String name, Windows windows, boolean instantiateVariableArguments) {
+  Optional<ActivityInstance> createActivity(String name, Windows windows, boolean instantiateVariableArguments, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
     //REVIEW: how to properly export any flexibility to instance?
-
     for (var window : windows) {
-      //success = STNProcess(window);
-      var act = createInstanceForReal(name, window, instantiateVariableArguments);
-      if (act!=null) {
+      var act = createInstanceForReal(name, window, instantiateVariableArguments, facade, plan, planningHorizon);
+      if (act.isPresent()) {
         return act;
       }
     }
-    return null;
+    return Optional.empty();
 
   }
 
-  private ActivityInstance createInstanceForReal(final String name, final Window window, final boolean instantiateVariableArguments) {
+  private Optional<ActivityInstance> createInstanceForReal(final String name, final Window window, final boolean instantiateVariableArguments, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
     final var act = new ActivityInstance(this.type);
     act.setArguments(this.arguments);
     act.setVariableArguments(this.variableArguments);
@@ -252,6 +252,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
     if (window != null) {
       tnw.addEnveloppe(name, "window", window.start, window.end);
     }
+    tnw.addEnveloppe(name, "planningHorizon", planningHorizon.getStartAerie(), planningHorizon.getEndAerie());
     if (this.startRange != null) {
       tnw.addStartInterval(name, this.startRange.start, this.startRange.end);
     }
@@ -264,21 +265,85 @@ public class ActivityCreationTemplate extends ActivityExpression {
     final var success = tnw.solveConstraints();
     if (!success) {
       logger.warn("Inconsistent temporal constraints, returning empty activity");
-      return null;
+      return Optional.empty();
     }
     final var solved = tnw.getAllData(name);
-    //select earliest start time
-    final var earliestStart = solved.start().start;
-    act.setStartTime(earliestStart);
-    if (this.parametricDur == null) {
-      //select smallest duration
-      act.setDuration(solved.duration().start);
-    } else {
-      final var computedDur = this.parametricDur.compute(Window.between(earliestStart, earliestStart));
-      if (solved.duration().contains(computedDur)) {
-        act.setDuration(computedDur);
+
+    //the domain of user/scheduling temporal constraints have been reduced with the STN,
+    //now it is time to find an assignment compatible
+    //CASE 1: activity has an uncontrollable duration
+    if(this.type.getDurationType() instanceof DurationType.Uncontrollable){
+      final var f = new EquationSolvingAlgorithms.Function<Duration>(){
+        //As simulation is called, this is not an approximation
+        @Override
+        public boolean isApproximation(){
+          return false;
+        }
+
+        @Override
+        public Duration valueAt(final Duration start) {
+          final var actToSim = new ActivityInstance(act);
+          actToSim.setStartTime(start);
+          actToSim.instantiateVariableArguments();
+          try {
+            facade.simulateActivity(actToSim);
+            final var dur = facade.getActivityDuration(actToSim);
+            facade.removeActivitiesFromSimulation(List.of(actToSim));
+            return dur.map(start::plus).orElse(Duration.MAX_VALUE);
+          } catch (SimulationFacade.SimulationException e) {
+            return Duration.MAX_VALUE;
+          }
+        }
+
+      };
+      try {
+        var endInterval = solved.end();
+        var startInterval = solved.start();
+
+        final var durationHalfEndInterval = endInterval.duration().dividedBy(2);
+
+        final var result = new EquationSolvingAlgorithms.SecantDurationAlgorithm().findRoot(f,
+                                                                                            startInterval.start,
+                                                                                            startInterval.end,
+                                                                                            endInterval.start.plus(durationHalfEndInterval),
+                                                                                            durationHalfEndInterval,
+                                                                                            durationHalfEndInterval,
+                                                                                            startInterval.start,
+                                                                                            startInterval.end,
+                                                                                            20);
+        act.setStartTime(result.x());
+        if(!f.isApproximation()){
+          //f is calling simulation -> we do not need to resimulate this activity later
+          act.setDuration(result.fx().minus(result.x()));
+        }
+        return Optional.of(act);
+      } catch (EquationSolvingAlgorithms.ZeroDerivative zeroDerivative) {
+        logger.debug("Rootfinding encountered a zero-derivative");
+      } catch (EquationSolvingAlgorithms.DivergenceException e) {
+        logger.debug("Rootfinding diverged");
+        logger.debug(e.history.history().toString());
+      } catch (EquationSolvingAlgorithms.ExceededMaxIterationException e) {
+        logger.debug("Too many iterations");
+        logger.debug(e.history.history().toString());
+      } catch (EquationSolvingAlgorithms.NoSolutionException e) {
+        logger.debug("No solution");
+      }
+      return Optional.empty();
+      //CASE 2: activity has a controllable duration
+    } else{
+      //select earliest start time, STN guarantees satisfiability
+      final var earliestStart = solved.start().start;
+      act.setStartTime(earliestStart);
+      if (this.parametricDur == null) {
+        //select smallest duration
+        act.setDuration(solved.end().start.minus(solved.start().start));
       } else {
-        throw new IllegalArgumentException("Parametric duration is incompatible with temporal constraints");
+        final var computedDur = this.parametricDur.compute(Window.between(earliestStart, earliestStart));
+        if (solved.duration().contains(computedDur)) {
+          act.setDuration(computedDur);
+        } else {
+          throw new IllegalArgumentException("Parametric duration is incompatible with temporal constraints");
+        }
       }
     }
 
@@ -287,7 +352,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
         act.instantiateVariableArgument(param.getKey());
       }
     }
-    return act;
+    return Optional.of(act);
   }
 
   /**
@@ -306,8 +371,8 @@ public class ActivityCreationTemplate extends ActivityExpression {
    *     according to any specified template criteria
    */
   public @NotNull
-  ActivityInstance createActivity(String name) {
-    return createInstanceForReal(name,null, true);
+  Optional<ActivityInstance> createActivity(String name, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
+    return createInstanceForReal(name,null, true, facade, plan, planningHorizon);
   }
 
 

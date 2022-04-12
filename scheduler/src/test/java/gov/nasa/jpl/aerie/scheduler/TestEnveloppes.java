@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class TestEnveloppes {
   @Test
   public void testEnveloppes() {
@@ -42,8 +44,8 @@ public class TestEnveloppes {
         .name("encounter_envelopper_TRE")
         .build();
     var ranges = tre.computeRange(null, horizon);
-    assert(ranges.size()==1);
-    assert(ranges.includes(Window.betweenClosedOpen(Duration.of(1,Duration.SECONDS), Duration.of(10,Duration.SECONDS))));
+    assertTrue(ranges.size()==1);
+    assertTrue(ranges.includes(Window.betweenClosedOpen(Duration.of(1,Duration.SECONDS), Duration.of(10,Duration.SECONDS))));
 
   }
 

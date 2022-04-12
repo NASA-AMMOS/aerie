@@ -10,9 +10,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Objects;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class IncrementalSimulationTest {
 
@@ -38,7 +39,7 @@ public class IncrementalSimulationTest {
     /*ensures that when current simulation results cover more than the asked period and that nothing has happened
     between two requests, the same results are returned*/
     var simResults2 = incrementalSimulationDriver.getSimulationResultsUpTo(Duration.of(7,SECONDS));
-    assert(Objects.equals(simResults, simResults2));
+    assertEquals(simResults, simResults2);
   }
 
   @Test
@@ -46,9 +47,9 @@ public class IncrementalSimulationTest {
     final var acts = getActivities();
     var act1Dur = incrementalSimulationDriver.getActivityDuration(acts.get(0).id());
     var act2Dur = incrementalSimulationDriver.getActivityDuration(acts.get(1).id());
-    assert(act1Dur.isPresent() && act2Dur.isPresent());
-    assert(act1Dur.get().isEqualTo(Duration.of(1, SECONDS)));
-    assert(act2Dur.get().isEqualTo(Duration.of(1, SECONDS)));
+    assertTrue(act1Dur.isPresent() && act2Dur.isPresent());
+    assertTrue(act1Dur.get().isEqualTo(Duration.of(1, SECONDS)));
+    assertTrue(act2Dur.get().isEqualTo(Duration.of(1, SECONDS)));
   }
 
   private ArrayList<TestSimulatedActivity> getActivities(){

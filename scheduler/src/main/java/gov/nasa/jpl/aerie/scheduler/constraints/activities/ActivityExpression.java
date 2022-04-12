@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
@@ -71,6 +72,7 @@ public class ActivityExpression {
    */
   public abstract static class AbstractBuilder<B extends AbstractBuilder<B, AT>, AT extends ActivityExpression> {
 
+    protected Duration acceptableAbsoluteTimingError = Duration.of(0, Duration.MILLISECOND);
 
     Map<String, SerializedValue> arguments = new HashMap<>();
     Map<String, VariableArgumentComputer> variableArguments = new HashMap<>();
@@ -87,6 +89,11 @@ public class ActivityExpression {
 
     public B withArgument(String argument, SerializedValue val) {
       arguments.put(argument, val);
+      return getThis();
+    }
+
+    public B withTimingPrecision(Duration acceptableAbsoluteTimingError){
+      this.acceptableAbsoluteTimingError = acceptableAbsoluteTimingError;
       return getThis();
     }
 
@@ -123,7 +130,7 @@ public class ActivityExpression {
      */
     public @NotNull
     B startsIn(@Nullable Window range) {
-      this.startsIn = range;
+      this.startsIn = extendUpToAbsoluteError(range, acceptableAbsoluteTimingError);
       return getThis();
     }
 
@@ -142,7 +149,7 @@ public class ActivityExpression {
      */
     public @NotNull
     B startsOrEndsIn(@Nullable Window range) {
-      this.startsOrEndsIn = range;
+      this.startsOrEndsIn = extendUpToAbsoluteError(range, acceptableAbsoluteTimingError);
       return getThis();
     }
 
@@ -161,7 +168,11 @@ public class ActivityExpression {
      */
     public @NotNull
     B startsOrEndsIn(@Nullable Windows windows) {
-      this.startsOrEndsInW = windows;
+      Windows wins = new Windows();
+      for(final var win : windows){
+        wins.add(extendUpToAbsoluteError(win, acceptableAbsoluteTimingError));
+      }
+      this.startsOrEndsInW = wins;
       return getThis();
     }
 
@@ -181,7 +192,7 @@ public class ActivityExpression {
      */
     public @NotNull
     B endsIn(@Nullable Window range) {
-      this.endsIn = range;
+      this.endsIn = extendUpToAbsoluteError(range, acceptableAbsoluteTimingError);
       return getThis();
     }
 
@@ -189,7 +200,11 @@ public class ActivityExpression {
 
     public @NotNull
     B startsIn(Windows ranges) {
-      this.startsInR = ranges;
+      Windows wins = new Windows();
+      for(final var win : ranges){
+        wins.add(extendUpToAbsoluteError(win, acceptableAbsoluteTimingError));
+      }
+      this.startsInR = wins;
       return getThis();
     }
 
@@ -281,6 +296,16 @@ public class ActivityExpression {
      */
     public abstract @NotNull
     AT build();
+
+    private Window extendUpToAbsoluteError(final Window window, final Duration absoluteError){
+      final var diff = absoluteError.times(2).minus(window.duration());
+      if(diff.isPositive()){
+        final var toApply = diff.dividedBy(2);
+        return Window.between(window.start.minus(toApply), window.startInclusivity, window.end.plus(toApply), window.endInclusivity);
+      } else {
+        return window;
+      }
+    }
 
   }
 

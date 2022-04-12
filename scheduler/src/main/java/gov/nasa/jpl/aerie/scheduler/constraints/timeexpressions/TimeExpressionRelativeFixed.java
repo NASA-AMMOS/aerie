@@ -2,8 +2,8 @@ package gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.Time;
 
 import java.util.Map;
 
@@ -29,8 +29,8 @@ public class TimeExpressionRelativeFixed extends TimeExpression {
     }
 
     Duration res = from;
-    for (Map.Entry<Time.Operator, Duration> entry : this.operations.entrySet()) {
-      res = Time.performOperation(entry.getKey(), res, entry.getValue());
+    for (Map.Entry<TimeUtility.Operator, Duration> entry : this.operations.entrySet()) {
+      res = TimeUtility.performOperation(entry.getKey(), res, entry.getValue());
     }
 
     Window retRange;

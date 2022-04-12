@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
-import gov.nasa.jpl.aerie.scheduler.model.Time;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
@@ -18,6 +17,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Map;
 
 /**
@@ -79,7 +79,7 @@ public interface MerlinService {
    * @return the database id of the newly created aerie plan container
    * @throws NoSuchPlanException when the plan container could not be found in aerie after creation
    */
-  PlanId createEmptyPlan(final String name, final long modelId, final Time startTime, final Duration duration)
+  PlanId createEmptyPlan(final String name, final long modelId, final Instant startTime, final Duration duration)
   throws IOException, NoSuchPlanException, MerlinServiceException;
 
 

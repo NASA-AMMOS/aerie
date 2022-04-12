@@ -17,6 +17,8 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 public class TestFilters {
 
   @Test
@@ -58,7 +60,15 @@ public class TestFilters {
 
     Windows res = tre2.computeRange(null,horizonW);
 
-    assert (res.equals(new Windows(Window.betweenClosedOpen(Duration.of(7, Duration.SECONDS), Duration.of(10, Duration.SECONDS)), Window.betweenClosedOpen(Duration.of(25, Duration.SECONDS), Duration.of(50, Duration.SECONDS)))));
+    assertEquals(
+        res,
+        new Windows(
+            Window.betweenClosedOpen(
+                Duration.of(7, Duration.SECONDS),
+                Duration.of(10, Duration.SECONDS)),
+            Window.betweenClosedOpen(
+                Duration.of(25, Duration.SECONDS),
+                Duration.of(50, Duration.SECONDS))));
 
 
   }
@@ -125,7 +135,7 @@ public class TestFilters {
     Windows res = fsm.filter(null, tw);
 
     var expected = new Windows(Arrays.asList(r2,r3));
-    assert(res.equals(expected));
+    assertEquals(res, expected);
   }
 
   @Test
@@ -149,7 +159,7 @@ public class TestFilters {
 
     Windows expected = new Windows(Arrays.asList(r1,r5,r7));
     Windows res = fsm.filter(null, tw);
-    assert(res.equals(expected));
+    assertEquals(res, expected);
 
   }
 

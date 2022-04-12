@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.goals;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplateDisjunction;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
@@ -13,9 +14,7 @@ import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpress
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
-import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
-import gov.nasa.jpl.aerie.scheduler.conflicts.UnsatisfiableMissingActivityConflict;
 
 import java.util.ArrayList;
 
@@ -220,28 +219,9 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       if (!alreadyOneActivityAssociated) {
         //create conflict if no matching target activity found
         if (existingActs.isEmpty()) {
-          final var actName = getName() + "_" + java.util.UUID.randomUUID();
-          ActivityInstance act;
-          var stateConstraints = getStateConstraints();
-          var temporalContext = new Windows(this.temporalContext);
-          if (getStateConstraints() != null) {
-            var valid = stateConstraints.findWindows(plan, temporalContext);
-            act = temp.createActivity(actName, valid, false);
-          } else {
-            act = temp.createActivity(actName, temporalContext, false);
-          }
-          if (act == null) {
-            conflicts.add(new UnsatisfiableMissingActivityConflict(this));
-          } else {
-            conflicts.add(new MissingActivityInstanceConflict(this, act));
-          }
-          //  conflicts.add( new MissingActivityTemplateConflict(
-          //          this, TimeWindows.of( startTimeRange ) ) );
+          conflicts.add(new MissingActivityTemplateConflict(this, new Windows(this.temporalContext), temp));
         } else {
           conflicts.add(new MissingAssociationConflict(this, missingActAssociations));
-          //REVIEW: will need to record associations to check for joint/sole ownership,
-          //        but that assignment will itself be a combinatoric problem
-          //REVIEW: should record determined associations more permanent, eg for UI
         }
       }
 
