@@ -20,17 +20,17 @@ function generateTypescriptCode(dictionary: ampcs.CommandDictionary): {
   // language=TypeScript
   const declarations = `
 declare global {
-${typescriptFswCommands.map((fswCommand) => fswCommand.declaration).join('\n')}
+${typescriptFswCommands.map(fswCommand => fswCommand.declaration).join('\n')}
 \tconst Commands: {\n${dictionary.fswCommands
-    .map((fswCommand) => `\t\t${fswCommand.stem}: ${fswCommand.stem},\n`)
+    .map(fswCommand => `\t\t${fswCommand.stem}: ${fswCommand.stem},\n`)
     .join('')}\t};
 }`;
 
   // language=TypeScript
   const values = `
-${typescriptFswCommands.map((fswCommand) => fswCommand.value).join('\n')}
+${typescriptFswCommands.map(fswCommand => fswCommand.value).join('\n')}
 export const Commands = {${dictionary.fswCommands
-    .map((fswCommand) => `\t\t${fswCommand.stem}: ${fswCommand.stem},\n`)
+    .map(fswCommand => `\t\t${fswCommand.stem}: ${fswCommand.stem},\n`)
     .join('')}};
 
 Object.assign(globalThis, Commands);
@@ -44,7 +44,7 @@ Object.assign(globalThis, Commands);
 
 function generateFswCommandCode(
   fswCommand: ampcs.FswCommand,
-  enumMap: ampcs.EnumMap
+  enumMap: ampcs.EnumMap,
 ): { value: string; declaration: string } {
   const needsUnderscore =
     /^\d/.test(fswCommand.stem) ||
@@ -54,7 +54,7 @@ function generateFswCommandCode(
   const fswCommandName = (needsUnderscore ? '_' : '') + fswCommand.stem;
   const numberOfArguments = fswCommand.arguments.length;
 
-  const hasRepeatedArgs = fswCommand.arguments.some((arg) => arg.arg_type === 'repeat');
+  const hasRepeatedArgs = fswCommand.arguments.some(arg => arg.arg_type === 'repeat');
 
   const doc = `
 \t/**${fswCommand.description}*/`;
@@ -80,8 +80,8 @@ ${doc}
   }
 
   if (hasRepeatedArgs) {
-    const repeatArg = fswCommand.arguments.find((arg) => arg.arg_type === 'repeat')! as ampcs.FswCommandArgumentRepeat;
-    const otherArgs = fswCommand.arguments.filter((arg) => arg.arg_type !== 'repeat');
+    const repeatArg = fswCommand.arguments.find(arg => arg.arg_type === 'repeat')! as ampcs.FswCommandArgumentRepeat;
+    const otherArgs = fswCommand.arguments.filter(arg => arg.arg_type !== 'repeat');
     const minRepeat = repeatArg.repeat?.min ?? 0;
     const maxRepeat = repeatArg.repeat?.max ?? 10;
 
@@ -101,20 +101,20 @@ export function ${fswCommandName}<T extends any[]>(args: T[]) {
       let repeatArgsDeclaration = '';
       for (let n = 1; n < i; n++) {
         repeatArgsDeclaration += repeatArg.repeat?.arguments
-          .map((arg) => `\t${arg.name}${n}: ${mapArgumentType(arg, enumMap)},\n`)
+          .map(arg => `\t${arg.name}${n}: ${mapArgumentType(arg, enumMap)},\n`)
           .join('');
       }
       // language=TypeScript
       const overloadPositionalDeclaration = `
 ${doc}
 \tfunction ${fswCommandName}(
-${repeatArgsDeclaration}${otherArgs.map((arg) => `\t${arg.name}: ${mapArgumentType(arg, enumMap)}, \n`).join('')}
+${repeatArgsDeclaration}${otherArgs.map(arg => `\t${arg.name}: ${mapArgumentType(arg, enumMap)}, \n`).join('')}
 \t): ${fswCommandName};`;
       // language=TypeScript
       const overloadNamedDeclaration = `
 ${doc}
 \tfunction ${fswCommandName}(args: {
-${repeatArgsDeclaration}${otherArgs.map((arg) => `\t${arg.name}: ${mapArgumentType(arg, enumMap)}, \n`).join('')}
+${repeatArgsDeclaration}${otherArgs.map(arg => `\t${arg.name}: ${mapArgumentType(arg, enumMap)}, \n`).join('')}
 \t}): ${fswCommandName};`;
       overloadDeclarations.push(overloadPositionalDeclaration);
       overloadDeclarations.push(overloadNamedDeclaration);
@@ -133,10 +133,10 @@ ${overloadDeclarations.join('')}
   const value = `
 ${doc}
 export function ${fswCommandName}(...args: [\n${fswCommand.arguments
-    .map((argument) => (argument.arg_type === 'repeat' ? '' : `\t${mapArgumentType(argument, enumMap)},\n`))
+    .map(argument => (argument.arg_type === 'repeat' ? '' : `\t${mapArgumentType(argument, enumMap)},\n`))
     .join('')}] | [{\n${fswCommand.arguments
-    .map((argument) =>
-      argument.arg_type === 'repeat' ? '' : `\t${argument.name}: ${mapArgumentType(argument, enumMap)},\n`
+    .map(argument =>
+      argument.arg_type === 'repeat' ? '' : `\t${argument.name}: ${mapArgumentType(argument, enumMap)},\n`,
     )
     .join('')}}]): ${fswCommandName} {
   return Command.new({
@@ -149,21 +149,21 @@ export function ${fswCommandName}(...args: [\n${fswCommand.arguments
   const declaration = `
 ${doc}
 \tfunction ${fswCommandName}(\n${fswCommand.arguments
-    .map((argument) =>
-      argument.arg_type === 'repeat' ? '' : `\t\t${argument.name}: ${mapArgumentType(argument, enumMap)},\n`
+    .map(argument =>
+      argument.arg_type === 'repeat' ? '' : `\t\t${argument.name}: ${mapArgumentType(argument, enumMap)},\n`,
     )
     .join('')}\t): ${fswCommandName};
 ${doc}
 \tfunction ${fswCommandName}(args: {\n${fswCommand.arguments
-    .map((argument) =>
-      argument.arg_type === 'repeat' ? '' : `\t\t${argument.name}: ${mapArgumentType(argument, enumMap)},\n`
+    .map(argument =>
+      argument.arg_type === 'repeat' ? '' : `\t\t${argument.name}: ${mapArgumentType(argument, enumMap)},\n`,
     )
     .join('')}\t}): ${fswCommandName};
 \tinterface ${fswCommandName} extends Command<[\n${fswCommand.arguments
-    .map((argument) => (argument.arg_type === 'repeat' ? '' : `\t\t${mapArgumentType(argument, enumMap)},\n`))
+    .map(argument => (argument.arg_type === 'repeat' ? '' : `\t\t${mapArgumentType(argument, enumMap)},\n`))
     .join('')}\t] | {\n${fswCommand.arguments
-    .map((argument) =>
-      argument.arg_type === 'repeat' ? '' : `\t\t${argument.name}: ${mapArgumentType(argument, enumMap)},\n`
+    .map(argument =>
+      argument.arg_type === 'repeat' ? '' : `\t\t${argument.name}: ${mapArgumentType(argument, enumMap)},\n`,
     )
     .join('')}\t}> {}`;
 
@@ -184,7 +184,7 @@ function mapArgumentType(argument: ampcs.FswCommandArgument, enumMap: ampcs.Enum
       ) {
         return 'boolean';
       } else {
-        return `(${enumMap[argument.enum_name].values.map((value) => `'${value.symbol}'`).join(' | ')})`;
+        return `(${enumMap[argument.enum_name].values.map(value => `'${value.symbol}'`).join(' | ')})`;
       }
     case 'boolean':
       return 'boolean';

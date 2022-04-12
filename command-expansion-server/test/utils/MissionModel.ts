@@ -22,37 +22,43 @@ export async function uploadMissionModel(graphqlClient: GraphQLClient): Promise<
     throw new Error(`Failed to upload mission model: ${uploadRes.statusText}`);
   }
 
-  const missionModelFileId = ((await uploadRes.json()) as {id: number}).id;
+  const missionModelFileId = ((await uploadRes.json()) as { id: number }).id;
 
-  const res = await graphqlClient.request(gql`
-    mutation InsertTestMissionModel($model: mission_model_insert_input!) {
-      insert_mission_model_one(object: $model) {
-        id
+  const res = await graphqlClient.request(
+    gql`
+      mutation InsertTestMissionModel($model: mission_model_insert_input!) {
+        insert_mission_model_one(object: $model) {
+          id
+        }
       }
-    }
-  `, {
-    model: {
-      mission: 'banananation',
-      name: 'banananation' + randomUUID(),
-      version: '0.0.0',
-      jar_id: missionModelFileId,
-    }
-  });
-  await new Promise((resolve) => setTimeout(resolve, 3000));
-  return ((res.insert_mission_model_one as {id: number}) as {id: number}).id;
+    `,
+    {
+      model: {
+        mission: 'banananation',
+        name: 'banananation' + randomUUID(),
+        version: '0.0.0',
+        jar_id: missionModelFileId,
+      },
+    },
+  );
+  await new Promise(resolve => setTimeout(resolve, 3000));
+  return (res.insert_mission_model_one as { id: number } as { id: number }).id;
 }
 
 export async function removeMissionModel(graphqlClient: GraphQLClient, missionModelId: number): Promise<void> {
   /*
    * Remove a mission model
    */
-  await graphqlClient.request(gql`
-    mutation DeleteMissionModel($missionModelId: Int!) {
-      deleteModel: delete_mission_model_by_pk(id: $missionModelId) {
-        id
+  await graphqlClient.request(
+    gql`
+      mutation DeleteMissionModel($missionModelId: Int!) {
+        deleteModel: delete_mission_model_by_pk(id: $missionModelId) {
+          id
+        }
       }
-    }
-  `, {
-    missionModelId,
-  });
+    `,
+    {
+      missionModelId,
+    },
+  );
 }

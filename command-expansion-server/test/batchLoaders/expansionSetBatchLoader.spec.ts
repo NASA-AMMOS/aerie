@@ -27,9 +27,7 @@ afterAll(async () => {
 });
 
 it.skip('[XFAIL] should load expansion set data', async () => {
-  const expansionSets = await expansionSetBatchLoader({graphqlClient})([
-    { expansionSetId },
-  ]);
+  const expansionSets = await expansionSetBatchLoader({ graphqlClient })([{ expansionSetId }]);
   if (expansionSets[0] instanceof Error) {
     throw expansionSets[0];
   }

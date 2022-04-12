@@ -35,9 +35,9 @@ export default function getLogger(where: string): winston.Logger {
 
   return winston.createLogger({
     format: winston.format.combine(
-        winston.format.label({ label: where }),
-        winston.format.errors({ stack: true }),
-        myFormat,
+      winston.format.label({ label: where }),
+      winston.format.errors({ stack: true }),
+      myFormat,
     ),
     level: LOG_LEVEL.toLowerCase(),
     transports: [transport],

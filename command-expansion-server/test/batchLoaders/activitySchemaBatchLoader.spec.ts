@@ -16,7 +16,7 @@ afterAll(async () => {
 
 it('should load activity schemas', async () => {
   const activitySchemas = await activitySchemaBatchLoader({ graphqlClient })([
-      { activityTypeName: 'ParameterTest', missionModelId },
+    { activityTypeName: 'ParameterTest', missionModelId },
   ]);
 
   const firstSchema = activitySchemas[0];

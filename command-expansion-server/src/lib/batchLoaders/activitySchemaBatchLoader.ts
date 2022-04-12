@@ -1,23 +1,26 @@
-import {ErrorWithStatusCode} from '../../utils/ErrorWithStatusCode.js';
-import type {BatchLoader} from './index.js';
-import {gql, GraphQLClient} from 'graphql-request';
-
+import { ErrorWithStatusCode } from '../../utils/ErrorWithStatusCode.js';
+import type { BatchLoader } from './index.js';
+import { gql, GraphQLClient } from 'graphql-request';
 
 export const activitySchemaBatchLoader: BatchLoader<
-  { missionModelId: number, activityTypeName: string },
-    GraphQLActivitySchema,
+  { missionModelId: number; activityTypeName: string },
+  GraphQLActivitySchema,
   { graphqlClient: GraphQLClient }
 > = opts => async keys => {
-  const {activity_type} = await opts.graphqlClient.request<{
-    activity_type: (GraphQLActivitySchema & { model_id: number })[]
+  const { activity_type } = await opts.graphqlClient.request<{
+    activity_type: (GraphQLActivitySchema & { model_id: number })[];
   }>(gql`
-    query GetActivitySchema {
+   query GetActivitySchema {
       activity_type(where: {
         _or: [
-          ${keys.map(key => `{
+          ${keys
+            .map(
+              key => `{
               model_id: { _eq: ${key.missionModelId} },
               name: { _eq: "${key.activityTypeName}" }
-             }`).join(', ')}
+             }`,
+            )
+            .join(', ')}
         ]
       }) {
         name
@@ -28,17 +31,22 @@ export const activitySchemaBatchLoader: BatchLoader<
     }
   `);
 
-  return Promise.all(keys.map(async ({ missionModelId, activityTypeName }) => {
-    const activitySchema = activity_type.find(activitySchema => (
-        activitySchema.model_id.toString() === missionModelId.toString()
-        && activitySchema.name === activityTypeName
-    ));
-    if (activitySchema === undefined) {
-      return new ErrorWithStatusCode(`No activity with name: ${activityTypeName} in mission model with id: ${missionModelId}`, 404);
-    }
-    return activitySchema;
-  }));
-}
+  return Promise.all(
+    keys.map(async ({ missionModelId, activityTypeName }) => {
+      const activitySchema = activity_type.find(
+        activitySchema =>
+          activitySchema.model_id.toString() === missionModelId.toString() && activitySchema.name === activityTypeName,
+      );
+      if (activitySchema === undefined) {
+        return new ErrorWithStatusCode(
+          `No activity with name: ${activityTypeName} in mission model with id: ${missionModelId}`,
+          404,
+        );
+      }
+      return activitySchema;
+    }),
+  );
+};
 
 export enum SchemaTypes {
   Int = 'int',
@@ -52,14 +60,14 @@ export enum SchemaTypes {
 }
 
 export type Schema =
-    | IntSchema
-    | RealSchema
-    | DurationSchema
-    | BooleanSchema
-    | StringSchema
-    | SeriesSchema
-    | StructSchema
-    | VariantSchema;
+  | IntSchema
+  | RealSchema
+  | DurationSchema
+  | BooleanSchema
+  | StringSchema
+  | SeriesSchema
+  | StructSchema
+  | VariantSchema;
 
 interface BaseSchema<T extends SchemaTypes | unknown> {
   type: T;
@@ -95,7 +103,7 @@ interface GraphQLActivityParameter {
 
 export interface GraphQLActivitySchema {
   name: string;
-  parameters: {[key: string]: GraphQLActivityParameter};
+  parameters: { [key: string]: GraphQLActivityParameter };
   requiredParameters: string[];
   computed_attributes_value_schema: Schema;
 }
