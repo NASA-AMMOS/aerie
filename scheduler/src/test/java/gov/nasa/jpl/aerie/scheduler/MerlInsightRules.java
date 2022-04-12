@@ -26,7 +26,6 @@ import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.Time;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -38,7 +37,7 @@ import java.util.TreeMap;
 
 public class MerlInsightRules extends Problem {
 
-  static final PlanningHorizon DEFAULT_PLANNING_HORIZON = new PlanningHorizon(new Time(0), new Time(48 * 3600));
+  static final PlanningHorizon DEFAULT_PLANNING_HORIZON = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(48 * 3600));
 
   public MerlInsightRules(MissionModel<?> missionModel, PlanningHorizon planningHorizon, SchedulerModel schedulerModel) {
     super(missionModel, planningHorizon, new SimulationFacade(planningHorizon, missionModel), schedulerModel);

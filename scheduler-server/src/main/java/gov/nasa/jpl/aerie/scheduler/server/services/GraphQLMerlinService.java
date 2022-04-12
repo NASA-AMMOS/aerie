@@ -10,7 +10,6 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
-import gov.nasa.jpl.aerie.scheduler.model.Time;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
@@ -22,7 +21,6 @@ import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
-import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -169,11 +167,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
             .getSuccessOrThrow((reason) -> new InvalidJsonException(new InvalidEntityException(List.of(reason))));
       }
 
-      //TODO: unify scheduler/aerie time types to avoid conversions
-      final var endTime = new Timestamp((Instant) duration.addTo(startTime.toInstant()));
-      final var horizon = new PlanningHorizon(
-          Time.fromString(startTime.toString()),
-          Time.fromString(endTime.toString()));
+      final var endTime = (Instant) duration.addTo(startTime.toInstant());
+      final var horizon = new PlanningHorizon(startTime.toInstant(), endTime);
 
       return new PlanMetadata(
           new PlanId(planPK),
@@ -257,7 +252,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    * {@inheritDoc}
    */
   @Override
-  public PlanId createEmptyPlan(final String name, final long modelId, final Time startTime, final Duration duration)
+  public PlanId createEmptyPlan(final String name, final long modelId, final Instant startTime, final Duration duration)
   throws IOException, NoSuchPlanException, MerlinServiceException
   {
     final var requestFormat = (
@@ -573,7 +568,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    */
   public String getGraphQLValueString(Object obj) {
     //TODO: can probably leverage some serializers from aerie
-    if (obj instanceof String || obj instanceof Enum<?> || obj instanceof Time) {
+    if (obj instanceof String || obj instanceof Enum<?> || obj instanceof Instant) {
       //TODO: (defensive) should escape contents of bare strings, eg internal quotes
       //NB: Time::toString will format correctly as HH:MM:SS.sss, just need to quote it here
       return "\"" + obj + "\"";

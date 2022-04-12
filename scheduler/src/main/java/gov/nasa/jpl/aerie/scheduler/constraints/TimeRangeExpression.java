@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.scheduler.constraints;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.scheduler.Range;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.filters.Filters;
 import gov.nasa.jpl.aerie.scheduler.constraints.filters.TimeWindowsFilter;
@@ -10,7 +9,6 @@ import gov.nasa.jpl.aerie.scheduler.constraints.resources.ExternalState;
 import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.transformers.TimeWindowsTransformer;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.Time;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.ArrayList;
@@ -125,9 +123,6 @@ public class TimeRangeExpression {
   protected List<ExternalState> constantsStates;
   private ActivityExpression actTemplate;
 
-  //TODO:unused now, not sure it is useful
-  protected Range<Time> horizon;
-
   public static TimeRangeExpression constantValuesOf(ExternalState sce) {
     return new Builder().ofEachValue(sce).build();
   }
@@ -148,7 +143,6 @@ public class TimeRangeExpression {
 
     final List<Windows> constantWin = new ArrayList<>();
 
-    Range<Time> horizon = null;
     private ActivityExpression actTemplate;
 
 
@@ -164,12 +158,6 @@ public class TimeRangeExpression {
 
     public Builder thenTransform(TimeWindowsTransformer transformer) {
       filtersAndTransformers.add(transformer);
-      return getThis();
-    }
-
-
-    public Builder onHorizon(Range<Time> horizon) {
-      this.horizon = horizon;
       return getThis();
     }
 
@@ -233,7 +221,6 @@ public class TimeRangeExpression {
       tre.filtersAndTransformers = filtersAndTransformers;
       tre.constantsStates = constantsStates;
       tre.stateExpr = stateExpr;
-      tre.horizon = horizon;
       tre.timeRangeExpressions = timeRangeExpressions;
       tre.actTemplate = actTemplate;
 

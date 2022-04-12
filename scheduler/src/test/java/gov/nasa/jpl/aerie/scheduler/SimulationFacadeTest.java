@@ -10,13 +10,13 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.Time;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimResource;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -28,11 +28,11 @@ public class SimulationFacadeTest {
   Problem problem;
   SimulationFacade facade;
   //concrete named time points used to setup tests and validate expectations
-  private static final Time t0h = Time.fromMilli(0);
-  private static final Time t1h = Time.fromMilli(1000);
-  private static final Time t1_5h = Time.fromMilli(1500);
-  private static final Time t2h = Time.fromMilli(2000);
-  private static final Time tEndh = Time.fromMilli(5000);
+  private static final Instant t0h = TestUtility.timeFromEpochMillis(0);
+  private static final Instant t1h = TestUtility.timeFromEpochMillis(1000);
+  private static final Instant t1_5h = TestUtility.timeFromEpochMillis(1500);
+  private static final Instant t2h = TestUtility.timeFromEpochMillis(2000);
+  private static final Instant tEndh = TestUtility.timeFromEpochMillis(5000);
 
   //hard-coded range of scheduling/simulation operations
   private static final PlanningHorizon horizon = new PlanningHorizon(t0h, tEndh);

@@ -15,7 +15,6 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.Time;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Test;
@@ -74,7 +73,7 @@ public class PrioritySolverTest {
     return mission;
   }
 
-  private final static PlanningHorizon h = new PlanningHorizon(Time.fromString("2025-001T01:01:01.001"), Time.fromString("2030-001T01:01:01.001"));
+  private final static PlanningHorizon h = new PlanningHorizon(TimeUtility.fromDOY("2025-001T01:01:01.001"), TimeUtility.fromDOY("2030-001T01:01:01.001"));
   private final static Duration t0 = h.getStartAerie();
   private final static Duration d1min = Duration.of(1, Duration.MINUTE);
   private final static Duration d1hr = Duration.of(1, Duration.HOUR);

@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
-import gov.nasa.jpl.aerie.scheduler.model.Time;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
@@ -21,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Map;
 
 import static gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationServiceTest.MISSION_MODEL_TYPES;
@@ -64,7 +64,7 @@ class SchedulingDSLCompilationServiceTests {
       public PlanId createEmptyPlan(
           final String name,
           final long modelId,
-          final Time startTime,
+          final Instant startTime,
           final Duration duration)
       {
         return null;

@@ -2,8 +2,8 @@ package gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.Time;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 
 import java.util.LinkedHashMap;
@@ -23,7 +23,7 @@ public abstract class TimeExpression {
   public abstract Window computeTime(Plan plan, Window interval);
 
 
-  protected LinkedHashMap<Time.Operator, Duration> operations = new LinkedHashMap<>();
+  protected LinkedHashMap<TimeUtility.Operator, Duration> operations = new LinkedHashMap<>();
 
 
   public static TimeExpression fromAnchor(TimeAnchor anchor) {
@@ -67,52 +67,52 @@ public abstract class TimeExpression {
 
   public static TimeExpression offsetByAfterStart(Duration dur) {
     TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.START, true, DEF_NAME);
-    te.operations.put(Time.Operator.PLUS, dur);
+    te.operations.put(TimeUtility.Operator.PLUS, dur);
     return te;
   }
 
 
   public static TimeExpression offsetByBeforeStart(Duration dur) {
     TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.START, true, DEF_NAME);
-    te.operations.put(Time.Operator.MINUS, dur);
+    te.operations.put(TimeUtility.Operator.MINUS, dur);
     return te;
   }
 
 
   public static TimeExpression offsetByAfterEnd(Duration dur) {
     TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.END, true, DEF_NAME);
-    te.operations.put(Time.Operator.PLUS, dur);
+    te.operations.put(TimeUtility.Operator.PLUS, dur);
     return te;
   }
 
 
   public static TimeExpression offsetByBeforeEnd(Duration dur) {
     TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.END, true, DEF_NAME);
-    te.operations.put(Time.Operator.MINUS, dur);
+    te.operations.put(TimeUtility.Operator.MINUS, dur);
     return te;
   }
 
   public static TimeExpression beforeEnd() {
     TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.END, false, DEF_NAME);
-    te.operations.put(Time.Operator.MINUS, Duration.MAX_VALUE);
+    te.operations.put(TimeUtility.Operator.MINUS, Duration.MAX_VALUE);
     return te;
   }
 
   public static TimeExpression beforeStart() {
     TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.START, false, DEF_NAME);
-    te.operations.put(Time.Operator.MINUS,Duration.MAX_VALUE);
+    te.operations.put(TimeUtility.Operator.MINUS,Duration.MAX_VALUE);
     return te;
   }
 
   public static TimeExpression afterEnd() {
     TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.END, false, DEF_NAME);
-    te.operations.put(Time.Operator.PLUS, Duration.MAX_VALUE);
+    te.operations.put(TimeUtility.Operator.PLUS, Duration.MAX_VALUE);
     return te;
   }
 
   public static TimeExpression afterStart() {
     TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.START, false, DEF_NAME);
-    te.operations.put(Time.Operator.PLUS, Duration.MAX_VALUE);
+    te.operations.put(TimeUtility.Operator.PLUS, Duration.MAX_VALUE);
     return te;
   }
 
@@ -153,7 +153,7 @@ public abstract class TimeExpression {
     TimeAnchor fromAnchor;
 
     public Builder minus(Duration dur) {
-      operations.put(Time.Operator.MINUS, dur);
+      operations.put(TimeUtility.Operator.MINUS, dur);
       return getThis();
     }
 
@@ -163,11 +163,11 @@ public abstract class TimeExpression {
     }
 
     public Builder plus(Duration dur) {
-      operations.put(Time.Operator.PLUS, dur);
+      operations.put(TimeUtility.Operator.PLUS, dur);
       return getThis();
     }
 
-    protected final LinkedHashMap<Time.Operator, Duration> operations = new LinkedHashMap<>();
+    protected final LinkedHashMap<TimeUtility.Operator, Duration> operations = new LinkedHashMap<>();
 
     public TimeExpression build() {
       if (fromExpression != null) {

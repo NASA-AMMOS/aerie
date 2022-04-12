@@ -8,7 +8,9 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.Time;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -17,7 +19,7 @@ public class MerlInsightRulesTest {
 
   @BeforeEach
   void setUp(){
-    planningHorizon = new PlanningHorizon(new Time(0), new Time(48 * 3600));
+    planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(48 * 3600));
     MissionModel<?> aerieLanderMissionModel = MerlinSightTestUtility.getMerlinSightMissionModel();
     final var aerieLanderSchedulerModel = MerlinSightTestUtility.getMerlinSightSchedulerModel();
     rules = new MerlInsightRules(aerieLanderMissionModel, planningHorizon, aerieLanderSchedulerModel);
@@ -48,11 +50,49 @@ public class MerlInsightRulesTest {
   public void firstRule() {
     smallProblem.setGoals(new ArrayList<>(rules.getFirstRuleGoals().values()));
     schedule();
+    var time = planningHorizon.getStartAerie().plus(Duration.MINUTE);
+    assert(TestUtility.activityStartingAtTime(plan, time, rules.getActivityType("SSAMonitoring")));
+    assert(TestUtility.activityStartingAtTime(plan, time, rules.getActivityType("HP3TemP")));
+    for(var t = Duration.HOUR; t.shorterThan(planningHorizon.getEndAerie()); t = t.plus(Duration.HOUR)){
+      assert(TestUtility.activityStartingAtTime(plan, time, rules.getActivityType("HP3TemP")));
+    }
   }
   @Test
   public void secondRule() {
     smallProblem.setGoals(new ArrayList<>(rules.getSecondRuleGoals().values()));
     schedule();
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT23H27M"),
+                                        planningHorizon.fromStart("PT23H30M"), rules.getActivityType("IDAHeatersOn")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT23H29M"),
+                                        planningHorizon.fromStart("PT23H44M"), rules.getActivityType("IDCHeatersOn")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT23H39M"),
+                                        planningHorizon.fromStart("PT23H54M"), rules.getActivityType("ICCHeatersOn")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT23H54M"),
+                                        planningHorizon.fromStart("P1D"), rules.getActivityType("ICCImages")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1D"),
+                                        planningHorizon.fromStart("P1DT20M"), rules.getActivityType("IDAMoveArm")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1DT14M"),
+                                        planningHorizon.fromStart("P1DT20M"), rules.getActivityType("IDCImages")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1DT20M"),
+                                        planningHorizon.fromStart("P1DT40M"), rules.getActivityType("IDAGrapple")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1DT40M"),
+                                        planningHorizon.fromStart("P1DT1H40M"), rules.getActivityType("IDAMoveArm")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1DT40M"),
+                                        planningHorizon.fromStart("P1DT46M"), rules.getActivityType("IDCImages")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1DT1H34M"),
+                                        planningHorizon.fromStart("P1DT1H40M"), rules.getActivityType("IDCImages")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1DT1H40M"),
+                                        planningHorizon.fromStart("P1DT2H"), rules.getActivityType("IDAGrapple")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1DT1H42M"),
+                                        planningHorizon.fromStart("P1DT1H48M"), rules.getActivityType("ICCImages")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1DT1H47M50S"),
+                                        planningHorizon.fromStart("P1DT1H48M"), rules.getActivityType("ICCHeatersOff")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1DT2H"),
+                                        planningHorizon.fromStart("P1DT2H3M"), rules.getActivityType("IDAHeatersOff")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1DT2H"),
+                                        planningHorizon.fromStart("P1DT2H6M"), rules.getActivityType("IDCImages")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1DT2H6M"),
+                                        planningHorizon.fromStart("P1DT2H21M"), rules.getActivityType("IDCHeatersOff")));
   }
 
   @Test
@@ -62,5 +102,15 @@ public class MerlInsightRulesTest {
     goals.addAll(rules.getThirdRuleGoals().values());
     smallProblem.setGoals(goals);
     schedule();
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1D"),
+                                        planningHorizon.fromStart("P1DT8H"), rules.getActivityType("AllocateDSNStation")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1D"),
+                                        planningHorizon.fromStart("P1DT5M23S"), rules.getActivityType("XBandPrep")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1D"),
+                                        planningHorizon.fromStart("P1DT8H"), rules.getActivityType("XBandCommSched")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1DT5M23S"),
+                                        planningHorizon.fromStart("P1DT7H59M41S"), rules.getActivityType("XBandActive")));
+    assert(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1DT7H59M41S"),
+                                        planningHorizon.fromStart("P1DT8H"), rules.getActivityType("XBandCleanup")));
   }
 }

@@ -12,7 +12,6 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.Time;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +45,7 @@ public class TestCardinalityGoal {
         .owned(ChildCustody.Jointly)
         .build();
 
-    Problem problem = new Problem(null, new PlanningHorizon(new Time(0), new Time(25)), null, null);
+    Problem problem = new Problem(null, new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25)), null, null);
 
     problem.setGoals(List.of(goal));
 

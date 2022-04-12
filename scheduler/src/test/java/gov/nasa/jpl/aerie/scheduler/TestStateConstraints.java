@@ -21,7 +21,6 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.Time;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,8 +39,8 @@ public class TestStateConstraints {
    * span of time over which the scheduler should run
    */
   private final PlanningHorizon horizon = new PlanningHorizon(
-      Time.fromString("2025-001T00:00:00.000"),
-      Time.fromString("2027-001T00:00:00.000"));
+      TimeUtility.fromDOY("2025-001T00:00:00.000"),
+      TimeUtility.fromDOY("2027-001T00:00:00.000"));
 
   private final AltitudeDerivativeState altitudeDerivativeState = new AltitudeDerivativeState(horizon);
   private final AltitudeIntegerState altitudeIntegerState = new AltitudeIntegerState(horizon);
@@ -188,10 +187,10 @@ public class TestStateConstraints {
     final var activityTypeImage = new ActivityType("EISImage");
 
     ActivityInstance act1 = new ActivityInstance(activityTypeImage,
-                                                 Time.fromString("2025-202T00:00:00.000",horizon), dur);
+                                                 TimeUtility.fromDOY("2025-202T00:00:00.000",horizon), dur);
 
     ActivityInstance act2 = new ActivityInstance(activityTypeImage,
-                                                 Time.fromString("2025-179T00:00:00.000",horizon), dur);
+                                                 TimeUtility.fromDOY("2025-179T00:00:00.000",horizon), dur);
 
     //create an "external tool" that insists on a few fixed activities
     final var externalActs = java.util.List.of(
@@ -239,8 +238,8 @@ public class TestStateConstraints {
         .satisfied(approachStateConstraint2)
         .build();
 
-    Duration begin = Time.fromString("2025-160T00:00:00.000",horizon);
-    Duration end = Time.fromString("2025-210T00:00:00.000", horizon);
+    Duration begin = TimeUtility.fromDOY("2025-160T00:00:00.000",horizon);
+    Duration end = TimeUtility.fromDOY("2025-210T00:00:00.000", horizon);
     var windows = approachStateConstraint.findWindows(null, new Windows( Window.between(begin, end)));
     System.out.println(windows);
 
@@ -264,10 +263,10 @@ public class TestStateConstraints {
     final var activityTypeImageWithConstraint = new ActivityType("EISImageWithConstraints", approachStateConstraint);
 
     ActivityInstance act1 = new ActivityInstance(activityTypeImageWithConstraint,
-                                                 Time.fromString("2025-202T00:00:00.000",horizon), dur);
+                                                 TimeUtility.fromDOY("2025-202T00:00:00.000",horizon), dur);
 
     ActivityInstance act2 = new ActivityInstance(activityTypeImageWithConstraint,
-                                                 Time.fromString("2025-179T00:00:00.000",horizon), dur);
+                                                 TimeUtility.fromDOY("2025-179T00:00:00.000",horizon), dur);
 
     //create an "external tool" that insists on a few fixed activities
     final var externalActs = java.util.List.of(
@@ -329,8 +328,8 @@ public class TestStateConstraints {
     final var solver = new PrioritySolver(this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
     assert(TestUtility.activityStartingAtTime(plan, horizon.getHor().start, activityTypeImage));
-    assert(TestUtility.activityStartingAtTime(plan, Time.fromString("2025-180T00:00:00.000",horizon), activityTypeImage));
-    assert(TestUtility.activityStartingAtTime(plan, Time.fromString("2025-185T00:00:00.000",horizon), activityTypeImage));
+    assert(TestUtility.activityStartingAtTime(plan, TimeUtility.fromDOY("2025-180T00:00:00.000",horizon), activityTypeImage));
+    assert(TestUtility.activityStartingAtTime(plan, TimeUtility.fromDOY("2025-185T00:00:00.000",horizon), activityTypeImage));
   }
 
   /**
@@ -342,25 +341,25 @@ public class TestStateConstraints {
       type = SupportedTypes.STRING;
       values = new HashMap<>() {{
         put(
-            Window.betweenClosedOpen(horizon.getHor().start, Time.fromString("2025-180T00:00:00.000", horizon)),
+            Window.betweenClosedOpen(horizon.getHor().start, TimeUtility.fromDOY("2025-180T00:00:00.000", horizon)),
             OrbitPhasesEnum.NOTENCOUNTER.name());
         put(
             Window.betweenClosedOpen(
-                Time.fromString("2025-180T00:00:00.000", horizon),
-                Time.fromString("2025-185T00:00:00.000", horizon)),
+                TimeUtility.fromDOY("2025-180T00:00:00.000", horizon),
+                TimeUtility.fromDOY("2025-185T00:00:00.000", horizon)),
             OrbitPhasesEnum.ENCOUNTER.name());
         put(
             Window.betweenClosedOpen(
-                Time.fromString("2025-185T00:00:00.000", horizon),
-                Time.fromString("2025-200T00:00:00.000", horizon)),
+                TimeUtility.fromDOY("2025-185T00:00:00.000", horizon),
+                TimeUtility.fromDOY("2025-200T00:00:00.000", horizon)),
             OrbitPhasesEnum.NOTENCOUNTER.name());
         put(
             Window.betweenClosedOpen(
-                Time.fromString("2025-200T00:00:00.000", horizon),
-                Time.fromString("2025-205T00:00:00.000", horizon)),
+                TimeUtility.fromDOY("2025-200T00:00:00.000", horizon),
+                TimeUtility.fromDOY("2025-205T00:00:00.000", horizon)),
             OrbitPhasesEnum.ENCOUNTER.name());
         put(
-            Window.betweenClosedOpen(Time.fromString("2025-205T00:00:00.000", horizon), horizon.getHor().end),
+            Window.betweenClosedOpen(TimeUtility.fromDOY("2025-205T00:00:00.000", horizon), horizon.getHor().end),
             OrbitPhasesEnum.NOTENCOUNTER.name());
       }};
     }
@@ -374,20 +373,20 @@ public class TestStateConstraints {
     public AltitudeIntegerState(PlanningHorizon horizon) {
       type = SupportedTypes.LONG;
       values = new HashMap<>() {{
-        put(Window.betweenClosedOpen(horizon.getHor().start, Time.fromString("2025-180T00:00:00.000", horizon)), 10L);
+        put(Window.betweenClosedOpen(horizon.getHor().start, TimeUtility.fromDOY("2025-180T00:00:00.000", horizon)), 10L);
         put(Window.betweenClosedOpen(
-            Time.fromString("2025-180T00:00:00.000", horizon),
-            Time.fromString("2025-183T00:00:00.000", horizon)), 20L);
+            TimeUtility.fromDOY("2025-180T00:00:00.000", horizon),
+            TimeUtility.fromDOY("2025-183T00:00:00.000", horizon)), 20L);
         put(Window.betweenClosedOpen(
-            Time.fromString("2025-183T00:00:00.000", horizon),
-            Time.fromString("2025-185T00:00:00.000", horizon)), 30L);
+            TimeUtility.fromDOY("2025-183T00:00:00.000", horizon),
+            TimeUtility.fromDOY("2025-185T00:00:00.000", horizon)), 30L);
         put(Window.betweenClosedOpen(
-            Time.fromString("2025-185T00:00:00.000", horizon),
-            Time.fromString("2025-202T00:00:00.000", horizon)), 40L);
+            TimeUtility.fromDOY("2025-185T00:00:00.000", horizon),
+            TimeUtility.fromDOY("2025-202T00:00:00.000", horizon)), 40L);
         put(Window.betweenClosedOpen(
-            Time.fromString("2025-202T00:00:00.000", horizon),
-            Time.fromString("2025-203T00:00:00.000", horizon)), 50L);
-        put(Window.betweenClosedOpen(Time.fromString("2025-203T00:00:00.000", horizon), horizon.getHor().end), 60L);
+            TimeUtility.fromDOY("2025-202T00:00:00.000", horizon),
+            TimeUtility.fromDOY("2025-203T00:00:00.000", horizon)), 50L);
+        put(Window.betweenClosedOpen(TimeUtility.fromDOY("2025-203T00:00:00.000", horizon), horizon.getHor().end), 60L);
       }};
     }
 
@@ -401,14 +400,14 @@ public class TestStateConstraints {
     public AltitudeDerivativeState(PlanningHorizon horizon) {
       type = SupportedTypes.REAL;
       values = new HashMap<>() {{
-        put(Window.betweenClosedOpen(horizon.getHor().start, Time.fromString("2025-180T00:00:00.000", horizon)), 0.0);
+        put(Window.betweenClosedOpen(horizon.getHor().start, TimeUtility.fromDOY("2025-180T00:00:00.000", horizon)), 0.0);
         put(Window.betweenClosedOpen(
-            Time.fromString("2025-180T00:00:00.000", horizon),
-            Time.fromString("2025-185T00:00:00.000", horizon)), 0.0);
+            TimeUtility.fromDOY("2025-180T00:00:00.000", horizon),
+            TimeUtility.fromDOY("2025-185T00:00:00.000", horizon)), 0.0);
         put(Window.betweenClosedOpen(
-            Time.fromString("2025-185T00:00:00.000", horizon),
-            Time.fromString("2025-200T00:00:00.000", horizon)), 0.0);
-        put(Window.betweenClosedOpen(Time.fromString("2025-200T00:00:00.000", horizon), horizon.getHor().end), 1.0);
+            TimeUtility.fromDOY("2025-185T00:00:00.000", horizon),
+            TimeUtility.fromDOY("2025-200T00:00:00.000", horizon)), 0.0);
+        put(Window.betweenClosedOpen(TimeUtility.fromDOY("2025-200T00:00:00.000", horizon), horizon.getHor().end), 1.0);
       }};
     }
 
