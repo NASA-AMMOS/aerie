@@ -51,7 +51,7 @@ services:
       context: ./merlin-server
       dockerfile: Dockerfile
       args:
-        IMAGE_INCLUDE_JDK: true
+        IMAGE_INCLUDE_JDK: "true"
     container_name: aerie_merlin
     depends_on: ["postgres"]
     environment:
@@ -77,7 +77,7 @@ services:
       context: ./scheduler-server
       dockerfile: Dockerfile
       args:
-        IMAGE_INCLUDE_JDK: true
+        IMAGE_INCLUDE_JDK: "true"
     container_name: aerie_scheduler
     depends_on: ["aerie_merlin", "postgres"]
     environment:
@@ -121,7 +121,7 @@ services:
       context: ./merlin-worker
       dockerfile: Dockerfile
       args:
-        IMAGE_INCLUDE_JDK: true
+        IMAGE_INCLUDE_JDK: "true"
     container_name: aerie_merlin_worker_1
     depends_on: ["postgres"]
     environment:
@@ -145,7 +145,7 @@ services:
       context: ./merlin-worker
       dockerfile: Dockerfile
       args:
-        IMAGE_INCLUDE_JDK: true
+        IMAGE_INCLUDE_JDK: "true"
     container_name: aerie_merlin_worker_2
     depends_on: ["postgres"]
     environment:
