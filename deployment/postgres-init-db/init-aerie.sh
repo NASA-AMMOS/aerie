@@ -29,7 +29,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 
   \echo 'Initializing aerie_commanding database...'
   CREATE DATABASE aerie_commanding;
-  GRANT ALL PRIVILEGES ON DATABASE aerie_ui TO aerie;
+  GRANT ALL PRIVILEGES ON DATABASE aerie_commanding TO aerie;
   \echo 'Done!'
 
 EOSQL
