@@ -83,7 +83,9 @@ public class SchedulingDSLCompilationService {
     }
   }
 
-  private static <T> T parseJson(final String jsonStr, final JsonParser<T> parser) throws InvalidJsonException, InvalidEntityException {
+  private static <T> T parseJson(final String jsonStr, final JsonParser<T> parser)
+  throws InvalidJsonException, InvalidEntityException
+  {
     try (final var reader = Json.createReader(new StringReader(jsonStr))) {
       final var requestJson = reader.readValue();
       final var result = parser.parse(requestJson);

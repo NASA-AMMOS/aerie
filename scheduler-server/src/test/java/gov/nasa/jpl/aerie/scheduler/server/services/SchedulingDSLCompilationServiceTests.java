@@ -108,7 +108,6 @@ class SchedulingDSLCompilationServiceTests {
 
       @Override
       public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
-      throws IOException, MerlinServiceException
       {
         return MISSION_MODEL_TYPES;
       }
