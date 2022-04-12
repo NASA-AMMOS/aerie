@@ -4,6 +4,16 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
+import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
+import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
+import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
+import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
+import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -53,8 +63,7 @@ public void minimalDef(){
 
     problem.setGoals(List.of(goal));
 
-    HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, problem);
+    final var solver = new PrioritySolver(problem);
     var plan = new PlanInMemory();
 
 
@@ -90,19 +99,11 @@ public void minimalDef(){
         .named("TestCardGoal")
         .forAllTimeIn(period)
         .owned(ChildCustody.Jointly)
-        //.withPriority(7.0)
-
         .build();
 
     Problem problem = new Problem(null, null, null, null);
-
     problem.setGoals(List.of(goal));
-
-    HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, problem);
     var plan = new PlanInMemory();
-
-
     var evaluation = new Evaluation();
     plan.addEvaluation(evaluation);
     var conflicts = goal.controllableGetConflictsDurAndOccur(plan, Duration.of(12, Duration.SECONDS), 3);

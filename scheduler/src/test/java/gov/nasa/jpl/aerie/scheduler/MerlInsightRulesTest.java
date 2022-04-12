@@ -1,8 +1,14 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.scheduler.goals.Goal;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.model.Time;
+import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -11,18 +17,16 @@ public class MerlInsightRulesTest {
 
   @BeforeEach
   void setUp(){
-    planningHorizon = new PlanningHorizon(new Time(0), new Time(48*3600));
+    planningHorizon = new PlanningHorizon(new Time(0), new Time(48 * 3600));
     MissionModel<?> aerieLanderMissionModel = MerlinSightTestUtility.getMerlinSightMissionModel();
     final var aerieLanderSchedulerModel = MerlinSightTestUtility.getMerlinSightSchedulerModel();
     rules = new MerlInsightRules(aerieLanderMissionModel, planningHorizon, aerieLanderSchedulerModel);
     plan = makeEmptyPlan();
-    controller = new AerieController(MerlinSightTestUtility.LOCAL_AERIE, MerlinSightTestUtility.latest, false, planningHorizon, rules.getActivityTypes());
     smallProblem = new Problem(aerieLanderMissionModel, planningHorizon, rules.getSimulationFacade(), aerieLanderSchedulerModel);
   }
 
   private PlanningHorizon planningHorizon;
   private MerlInsightRules rules;
-  private AerieController controller;
   private Problem smallProblem;
   private Plan plan;
   /** constructs an empty plan with the test model/horizon **/
@@ -33,18 +37,11 @@ public class MerlInsightRulesTest {
   public void schedule(){
     smallProblem.setInitialPlan(plan);
     rules.getGlobalConstraints().forEach(smallProblem::add);
-    var solver = new PrioritySolver(new HuginnConfiguration(), smallProblem);
+    var solver = new PrioritySolver(smallProblem);
     solver.checkSimBeforeInsertingActInPlan();
     plan = solver.getNextSolution().get();
     solver.printEvaluation();
     MerlinSightTestUtility.printPlan(plan);
-    if(controller.isLocalAerieUp()) {
-      controller.initEmptyPlan(plan, planningHorizon.getStartAerie(), planningHorizon.getEndAerie(), null);
-      controller.createSimulation(plan);
-      controller.sendPlan(plan, planningHorizon.getStartAerie(), planningHorizon.getEndAerie(), null);
-    } else{
-      System.out.println("Not sending plan because there is no local instance of Aerie present at " + MerlinSightTestUtility.LOCAL_AERIE);
-    }
   }
 
   @Test
@@ -65,11 +62,5 @@ public class MerlInsightRulesTest {
     goals.addAll(rules.getThirdRuleGoals().values());
     smallProblem.setGoals(goals);
     schedule();
-  }
-
-  @Disabled
-  @Test
-  public void deleteAllPlans(){
-    controller.deleteAllPlans();
   }
 }

@@ -3,21 +3,24 @@ package gov.nasa.jpl.aerie.scheduler;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
+import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.BinaryMutexConstraint;
+import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.CardinalityConstraint;
+import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.ConstraintState;
+import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.OrderingConstraint;
+import gov.nasa.jpl.aerie.scheduler.goals.ActivityExistentialGoal;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.model.Time;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class TestOrderingConstraints {
-
-  /**
-   * span of time over which the scheduler should run
-   */
-  private final Range<Time> horizon = new Range<>(
-      Time.fromString("2025-001T00:00:00.000"),
-      Time.fromString("2027-001T00:00:00.000"));
-
   private Plan plan;
-  private HuginnConfiguration huginnConfiguration;
   private static final PlanningHorizon h = new PlanningHorizon(new Time(0), new Time(15));
 
   private final static Duration t0 = h.toDur(new Time(0));
@@ -35,8 +38,6 @@ public class TestOrderingConstraints {
   @BeforeEach
   public void setUp() {
     plan = new PlanInMemory();
-    huginnConfiguration = new HuginnConfiguration();
-    huginnConfiguration.setHorizon(h);
   }
 
   @AfterEach
@@ -46,7 +47,6 @@ public class TestOrderingConstraints {
 
   @Test
   public void testCardinalityConstraint() {
-    PlanningHorizon h = huginnConfiguration.getHorizon();
     ActivityType type1 = new ActivityType("Type1");
     ActivityType type2 = new ActivityType("Type2");
 
@@ -112,8 +112,6 @@ public class TestOrderingConstraints {
     plan.add(act1);
     plan.add(act2);
     BinaryMutexConstraint mc = OrderingConstraint.buildMutexConstraint(type1, type2);
-
-
     Windows tw1 = new Windows(Window.between(t0, t10));
 
     var foundWindows = mc.findWindows(
@@ -127,7 +125,6 @@ public class TestOrderingConstraints {
 
 
   }
-
 
   @Test
   public void testCardinalityFindWindows() {
@@ -151,9 +148,5 @@ public class TestOrderingConstraints {
 
     Windows expectedWindows = new Windows();
     assert (foundWindows.equals(expectedWindows));
-
-
   }
-
-
 }

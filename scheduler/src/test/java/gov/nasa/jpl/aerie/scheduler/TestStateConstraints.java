@@ -5,6 +5,24 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
+import gov.nasa.jpl.aerie.scheduler.constraints.resources.ImpliesFromState;
+import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpressionConjunction;
+import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpressionDisjunction;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
+import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
+import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
+import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
+import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
+import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.model.Time;
+import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -144,8 +162,7 @@ public class TestStateConstraints {
         .build();
 
     problem.setGoals(List.of(cg));
-    HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, this.problem);
+    final var solver = new PrioritySolver(this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
 
     Windows windows1 = new Windows( horizon.getHor());
@@ -194,8 +211,7 @@ public class TestStateConstraints {
         .build();
 
     problem.setGoals(List.of(proceduralGoalWithConstraints));
-    HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, this.problem);
+    final var solver = new PrioritySolver(this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
 
 
@@ -271,8 +287,7 @@ public class TestStateConstraints {
         .build();
 
     problem.setGoals(List.of(proceduralgoalwithoutconstraints));
-    HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, problem);
+    final var solver = new PrioritySolver(problem);
     final var plan = solver.getNextSolution().orElseThrow();
     assert (TestUtility.containsExactlyActivity(plan, act1));
     assert (TestUtility.doesNotContainActivity(plan, act2));
@@ -311,8 +326,7 @@ public class TestStateConstraints {
         .build();
 
     problem.setGoals(List.of(cg));
-    HuginnConfiguration huginn = new HuginnConfiguration();
-    final var solver = new PrioritySolver(huginn, this.problem);
+    final var solver = new PrioritySolver(this.problem);
     final var plan = solver.getNextSolution().orElseThrow();
     assert(TestUtility.activityStartingAtTime(plan, horizon.getHor().start, activityTypeImage));
     assert(TestUtility.activityStartingAtTime(plan, Time.fromString("2025-180T00:00:00.000",horizon), activityTypeImage));
