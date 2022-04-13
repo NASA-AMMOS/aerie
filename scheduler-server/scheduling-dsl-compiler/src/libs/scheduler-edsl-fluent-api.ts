@@ -1,7 +1,4 @@
-import * as AST from './scheduler-ast.js'
-
-// For accessing the private field of WindowSet from Goal
-const GET_INTERNAL_SYMBOL = Symbol('GET_INTERNAL_SYMBOL');
+import type * as AST from './scheduler-ast.js';
 
 interface ActivityRecurrenceGoal extends Goal {}
 export class Goal {
@@ -15,7 +12,7 @@ export class Goal {
     return new Goal(goalSpecifier);
   }
 
-  public get [GET_INTERNAL_SYMBOL](): AST.GoalSpecifier {
+  private __serialize(): AST.GoalSpecifier {
     return this.goalSpecifier;
   }
 
@@ -56,12 +53,12 @@ declare global {
 
     public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): ActivityRecurrenceGoal
   }
-  type Duration = number
+  type Duration = number;
+  type Double = number;
+  type Integer = number;
 }
 
-interface ActivityTemplate extends AST.ActivityTemplate {}
+export interface ActivityTemplate extends AST.ActivityTemplate {}
 
-export function serializeGoal(goal: Goal): AST.GoalSpecifier {
-  return goal[GET_INTERNAL_SYMBOL];
-}
-
+// Make Goal available on the global object
+Object.assign(globalThis, { Goal });

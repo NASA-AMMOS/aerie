@@ -46,6 +46,7 @@ public class TypescriptCodeGenerationService {
     }
     final var result = new ArrayList<String>();
     result.add("/** Start Codegen */");
+    result.add("import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';");
     for (final var activityTypeCode : activityTypeCodes) {
       result.add("interface %s extends ActivityTemplate {}".formatted(activityTypeCode.activityTypeName()));
     }
@@ -57,6 +58,8 @@ public class TypescriptCodeGenerationService {
     result.add(indent(indent(generateActivityTemplateTypeDeclarations(activityTypeCodes))));
     result.add(indent("}"));
     result.add("};");
+    result.add("// Make ActivityTemplates available on the global object");
+    result.add("Object.assign(globalThis, { ActivityTemplates });");
     result.add("/** End Codegen */");
     return joinLines(result);
   }
@@ -67,7 +70,7 @@ public class TypescriptCodeGenerationService {
       result.add(String.format("%s: function %s(", activityTypeCode.activityTypeName(), activityTypeCode.activityTypeName()));
       result.add(indent("args: {"));
       for (final var parameterType : activityTypeCode.parameterTypes()) {
-        result.add(indent(indent("%s: %s".formatted(parameterType.name(), ActivityParameterType.toString(parameterType.type())))));
+        result.add(indent(indent("%s: %s,".formatted(parameterType.name(), ActivityParameterType.toString(parameterType.type())))));
       }
       result.add(indent("}): %s {".formatted(activityTypeCode.activityTypeName())));
       result.add(indent(indent("return { activityType: '%s', args };".formatted(activityTypeCode.activityTypeName()))));
@@ -82,7 +85,7 @@ public class TypescriptCodeGenerationService {
       result.add(String.format("%s: (", activityTypeCode.activityTypeName()));
       result.add(indent("args: {"));
       for (final var parameterType : activityTypeCode.parameterTypes()) {
-        result.add(indent(indent("%s: %s".formatted(parameterType.name(), ActivityParameterType.toString(parameterType.type())))));
+        result.add(indent(indent("%s: %s,".formatted(parameterType.name(), ActivityParameterType.toString(parameterType.type())))));
       }
       result.add(indent("}) => %s".formatted(activityTypeCode.activityTypeName())));
     }
