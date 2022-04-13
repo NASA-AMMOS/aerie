@@ -143,10 +143,16 @@ public record SynchronousSchedulerAgent(
       writer.succeedWith(results);
     } catch (final SpecificationLoadException e) {
       //unwrap failure message from any anticipated exceptions and forward to subscribers
-      writer.failWith(e.getMessage() + SchedulingCompilationError.schedulingErrorJsonP.unparse(e.errors).toString());
-    } catch (final ResultsProtocolFailure | NoSuchSpecificationException | NoSuchPlanException | IOException | MerlinService.MerlinServiceException e) {
-      //unwrap failure message from any anticipated exceptions and forward to subscribers
-      writer.failWith(e.getMessage());
+      writer.failWith("%s\n%s".formatted(
+          e.toString(),
+          SchedulingCompilationError.schedulingErrorJsonP.unparse(e.errors).toString()));
+    } catch (final ResultsProtocolFailure |
+        NoSuchSpecificationException |
+        NoSuchPlanException |
+        IOException |
+        MerlinService.MerlinServiceException e) {
+      // unwrap failure message from any anticipated exceptions and forward to subscribers
+      writer.failWith(e.toString());
     }
   }
 
