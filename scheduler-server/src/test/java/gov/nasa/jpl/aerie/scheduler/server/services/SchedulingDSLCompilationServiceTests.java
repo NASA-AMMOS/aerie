@@ -15,12 +15,12 @@ import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 import static gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationServiceTest.MISSION_MODEL_TYPES;
@@ -34,7 +34,7 @@ class SchedulingDSLCompilationServiceTests {
   SchedulingDSLCompilationService schedulingDSLCompilationService;
 
   @BeforeAll
-  void setUp() throws SchedulingDSLCompilationService.SchedulingDSLCompilationException, IOException {
+  void setUp() throws IOException {
     schedulingDSLCompilationService = new SchedulingDSLCompilationService(new TypescriptCodeGenerationService(new MerlinService() {
       @Override
       public long getPlanRevision(final PlanId planId) {
@@ -121,14 +121,17 @@ class SchedulingDSLCompilationServiceTests {
 
   @Test
   void testSchedulingDSL_basic()
-  throws IOException, SchedulingDSLCompilationService.SchedulingDSLCompilationException
   {
-    final SchedulingDSL.GoalSpecifier.GoalDefinition actualGoalDefinition;
-    actualGoalDefinition = (SchedulingDSL.GoalSpecifier.GoalDefinition) schedulingDSLCompilationService.compileSchedulingGoalDSL(
+    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
+    result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
         PLAN_ID, """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
-                    activityTemplate: ActivityTemplates.PeelBanana({ peelDirection: 'fromStem' }),
+                    activityTemplate: ActivityTemplates.PeelBanana({
+                      peelDirection: 'fromStem',
+                      fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
+                      duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                    }),
                     interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
                   })
                 }
@@ -137,22 +140,36 @@ class SchedulingDSLCompilationServiceTests {
         SchedulingDSL.GoalKinds.ActivityRecurrenceGoal,
         new SchedulingDSL.ActivityTemplate(
             "PeelBanana",
-            Map.of(
-                "peelDirection",
-                SerializedValue.of("fromStem"))),
-        Duration.HOUR);
-    assertEquals(expectedGoalDefinition, actualGoalDefinition);
+            Map.ofEntries(
+                Map.entry("peelDirection", SerializedValue.of("fromStem")),
+                Map.entry("fancy", SerializedValue.of(Map.ofEntries(
+                    Map.entry("subfield1", SerializedValue.of("value1")),
+                    Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
+                )))),
+                Map.entry("duration", SerializedValue.of(60L * 60 * 1000 * 1000))
+            )
+        ),
+        Duration.HOUR
+    );
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+      assertEquals(expectedGoalDefinition, r.goalSpecifier());
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      fail(r.toString());
+    }
   }
 
   @Test
   void testSchedulingDSL_helper_function()
-  throws SchedulingDSLCompilationService.SchedulingDSLCompilationException, IOException
   {
-    final SchedulingDSL.GoalSpecifier.GoalDefinition actualGoalDefinition;
-    actualGoalDefinition = (SchedulingDSL.GoalSpecifier.GoalDefinition) schedulingDSLCompilationService.compileSchedulingGoalDSL(
+    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
+    result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
         PLAN_ID, """
                 export default function myGoal() {
-                  return myHelper(ActivityTemplates.PeelBanana({ peelDirection: 'fromStem' }))
+                  return myHelper(ActivityTemplates.PeelBanana({
+                    peelDirection: 'fromStem',
+                    fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
+                    duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                  }))
                 }
                 function myHelper(activityTemplate) {
                   return Goal.ActivityRecurrenceGoal({
@@ -165,58 +182,63 @@ class SchedulingDSLCompilationServiceTests {
         SchedulingDSL.GoalKinds.ActivityRecurrenceGoal,
         new SchedulingDSL.ActivityTemplate(
             "PeelBanana",
-            Map.of(
-                "peelDirection",
-                SerializedValue.of("fromStem"))),
+            Map.ofEntries(
+                Map.entry("peelDirection", SerializedValue.of("fromStem")),
+                Map.entry("fancy", SerializedValue.of(Map.ofEntries(
+                    Map.entry("subfield1", SerializedValue.of("value1")),
+                    Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
+                    )))),
+                Map.entry("duration", SerializedValue.of(60L * 60 * 1000 * 1000))
+            )
+        ),
         Duration.HOUR);
-    assertEquals(expectedGoalDefinition, actualGoalDefinition);
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+      assertEquals(expectedGoalDefinition, r.goalSpecifier());
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      fail(r.toString());
+    }
   }
 
   @Test
   void testSchedulingDSL_variable_not_defined() {
-    try {
-      schedulingDSLCompilationService.compileSchedulingGoalDSL(
+    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error actualErrors;
+    actualErrors = (SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error) schedulingDSLCompilationService.compileSchedulingGoalDSL(
           PLAN_ID, """
                 export default function myGoal() {
-                  const x = "hello world" - 2
-                  return myHelper(ActivityTemplates.PeelBanana({ peelDirection: 'fromStem' }))
+                  const x = 4 - 2
+                  return myHelper(ActivityTemplates.PeelBanana({
+                    peelDirection: 'fromStem',
+                    fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
+                    duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                  }))
                 }
                 function myHelper(activityTemplate) {
                   return Goal.ActivityRecurrenceGoal({
-                    windowSet: x,
                     activityTemplate,
-                    interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                    interval: x // 1 hour in microseconds
                   })
                 }
               """, "goalfile_with_type_error");
-    } catch (SchedulingDSLCompilationService.SchedulingDSLCompilationException e) {
-      final var expectedError = "x is not defined";
-      assertTrue(
-          e.getMessage().contains(expectedError),
-          "Exception should contain " + expectedError + ", but was " + e.getMessage());
-      return;
-    }
-    fail("Did not throw CompilationException");
+    assertTrue(
+        actualErrors.errors()
+                    .stream()
+                    .anyMatch(e -> e.message().contains("TypeError: TS2304 Cannot find name 'x'."))
+    );
   }
 
   @Test
-  @Disabled("We haven't figured out how to handle this case yet")
   void testSchedulingDSL_wrong_return_type() {
-    try {
-      schedulingDSLCompilationService.compileSchedulingGoalDSL(
+    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error actualErrors;
+    actualErrors = (SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error) schedulingDSLCompilationService.compileSchedulingGoalDSL(
           PLAN_ID, """
                 export default function myGoal() {
                   return 5
                 }
               """, "goalfile_with_wrong_return_type");
-    } catch (SchedulingDSLCompilationService.SchedulingDSLCompilationException e) {
-      final var expectedError =
-          "error TS2394: This overload signature is not compatible with its implementation signature";
-      assertTrue(
-          e.getMessage().contains(expectedError),
-          "Exception should contain " + expectedError + ", but was " + e.getMessage());
-      return;
-    }
-    fail("Did not throw CompilationException");
+    assertTrue(
+        actualErrors.errors()
+                    .stream()
+                    .anyMatch(e -> e.message().contains("TypeError: TS2322 Incorrect return type. Expected: 'Goal', Actual: 'number'."))
+    );
   }
 }
