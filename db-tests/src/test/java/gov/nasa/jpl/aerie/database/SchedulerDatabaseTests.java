@@ -273,6 +273,50 @@ class SchedulerDatabaseTests {
           new int[]{0, 1, 2}
       );
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"specification", "template"})
+    void shouldGeneratePriorityWhenNull(String tableStem) throws SQLException {
+      connection.createStatement().executeUpdate("""
+          insert into scheduling_%s_goals(%s_id, goal_id)
+          values (%d, %d);
+        """.formatted(
+          tableStem, tableStem,
+          specAndTemplateIds.get(tableStem)[0],
+          goalIds[0]
+      ));
+      checkPriorities(
+          tableStem, 0,
+          new int[]{0},
+          new int[]{0}
+      );
+      connection.createStatement().executeUpdate("""
+          insert into scheduling_%s_goals(%s_id, goal_id, priority)
+          values (%d, %d, null);
+        """.formatted(
+          tableStem, tableStem,
+          specAndTemplateIds.get(tableStem)[0],
+          goalIds[2]
+      ));
+      checkPriorities(
+          tableStem, 0,
+          new int[]{0, 2},
+          new int[]{0, 1}
+      );
+      connection.createStatement().executeUpdate("""
+          insert into scheduling_%s_goals(%s_id, goal_id)
+          values (%d, %d);
+        """.formatted(
+          tableStem, tableStem,
+          specAndTemplateIds.get(tableStem)[0],
+          goalIds[1]
+      ));
+      checkPriorities(
+          tableStem, 0,
+          new int[]{0, 2, 1},
+          new int[]{0, 1, 2}
+      );
+    }
   }
 
 }
