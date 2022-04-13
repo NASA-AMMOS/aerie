@@ -147,7 +147,7 @@ public final class SchedulerAppDriver {
   private static AppConfiguration loadConfiguration() {
     final var logger = LoggerFactory.getLogger(SchedulerAppDriver.class);
     return new AppConfiguration(
-        Integer.parseInt(getEnv("SCHEDULER_PORT", "27193")),
+        Integer.parseInt(getEnv("SCHEDULER_PORT", "27185")),
         logger.isDebugEnabled(),
         Path.of(getEnv("SCHEDULER_LOCAL_STORE", "/usr/src/app/scheduler_file_store")),
         new PostgresStore(getEnv("SCHEDULER_DB_SERVER", "postgres"),

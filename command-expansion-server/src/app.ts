@@ -22,7 +22,7 @@ import { mapGraphQLActivityInstance } from './lib/mapGraphQLActivityInstance.js'
 
 const logger = getLogger("app");
 
-const PORT: number = parseInt(getEnv().PORT, 10) ?? 3000;
+const PORT: number = parseInt(getEnv().PORT, 10) ?? 27184;
 
 const app: Application = express();
 // WARNING: bodyParser.json() is vulnerable to a string too long issue. Iff that occurs,
