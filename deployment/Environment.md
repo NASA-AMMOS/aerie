@@ -2,12 +2,28 @@
 
 This document provides detailed information about environment variables for each service in Aerie.
 
+- [Aerie Commanding](#aerie-commanding)
 - [Aerie Gateway](#aerie-gateway)
 - [Aerie Merlin](#aerie-merlin)
 - [Aerie Scheduler](#aerie-scheduler)
 - [Aerie UI](#aerie-ui)
 - [Hasura](#hasura)
 - [Postgres](#postgres)
+
+## Aerie Commanding
+
+| Name                          | Description                                       | Type     | Default                             |
+|-------------------------------|---------------------------------------------------| -------- |-------------------------------------|
+| `LOG_FILE`                    | Either an output filepath to log to, or 'console' | `string` | console                             |
+| `LOG_LEVEL`                   | Logging level for filtering logs                  | `string` | warn                                |
+| `MERLIN_GRAPHQL_URL`          | URI of the Aerie GraphQL API                      | `string` | http://hasura:8080/v1/graphql       |
+| `COMMANDING_SERVER_PORT`      | Port the server listens on                        | `number` | 27184                               |
+| `COMMANDING_DB`               | Name of Commanding Postgres database              | `string` | aerie_commanding                    |
+| `COMMANDING_DB_SERVER`        | Hostname of Postgres instance                     | `string` | postgres                            |
+| `COMMANDING_DB_PASSWORD`      | Password of Postgres instance                     | `string` | aerie                               |
+| `COMMANDING_DB_PORT`          | Port of Postgres instance                         | `number` | 5432                                |
+| `COMMANDING_DB_USER`          | User of Postgres instance                         | `string` | aerie                               |
+| `COMMANDING_LOCAL_STORE`      | Local storage file storage in the container       | `string` | /usr/src/app/commanding_file_store  |
 
 ## Aerie Gateway
 
@@ -43,15 +59,15 @@ This document provides detailed information about environment variables for each
 
 ## Aerie Merlin Worker
 
-| Name                        | Description                                                                              | Type     | Default                        |
-|-----------------------------|------------------------------------------------------------------------------------------| -------- | ------------------------------ |
-| `JAVA_OPTS`                 | Configuration for Merlin's logging level and output file                                 | `string` | log level: warn. output: stderr|
-| `MERLIN_WORKER_LOCAL_STORE` | The local storage as for the Merlin container (this must the same as the Merlin container)                                      | `string` | /usr/src/app/merlin_file_store |
-| `MERLIN_WORKER_DB_SERVER`   | The DB instance that Merlin will connect with (this must the same as the Merlin container) | `string` | postgres                       |
-| `MERLIN_WORKER_DB_PORT`     | The DB instance port number that Merlin will connect with (this must the same as the Merlin container)                               | `number` | 5432                           |
-| `MERLIN_WORKER_DB_USER`     | Username of the DB instance (this must the same as the Merlin container)                                                             | `string` | aerie                          |
-| `MERLIN_WORKER_DB_PASSWORD` | Password of the DB instance (this must the same as the Merlin container)                                                             | `string` | aerie                          |
-| `MERLIN_WORKER_DB`          | The DB for Merlin. (this must the same as the Merlin container)                                                                     
+| Name                        | Description                                               | Type     | Default                                      |
+|-----------------------------|-----------------------------------------------------------| -------- |----------------------------------------------|
+| `JAVA_OPTS`                 | Configuration for Merlin's logging level and output file  | `string` | log level: warn. output: stderr              |
+| `MERLIN_WORKER_LOCAL_STORE` | The local storage as for the Merlin container             | `string` | /usr/src/app/merlin_file_store               |
+| `MERLIN_WORKER_DB_SERVER`   | The DB instance that Merlin will connect with             | `string` | (this must the same as the Merlin container) |
+| `MERLIN_WORKER_DB_PORT`     | The DB instance port number that Merlin will connect with | `number` | (this must the same as the Merlin container) |
+| `MERLIN_WORKER_DB_USER`     | Username of the DB instance                               | `string` | (this must the same as the Merlin container) |
+| `MERLIN_WORKER_DB_PASSWORD` | Password of the DB instance                               | `string` | (this must the same as the Merlin container) |
+| `MERLIN_WORKER_DB`          | The DB for Merlin.                                        | `string` | (this must the same as the Merlin container) |                                                             
 
 ## Aerie Scheduler
 
@@ -68,7 +84,7 @@ This document provides detailed information about environment variables for each
 | `SCHEDULER_LOCAL_STORE` | Local storage for scheduler in the container                          | `string` | /usr/src/app/scheduler_file_store                  |
 | `SCHEDULER_LOGGING`     | Whether or not you want Javalin to log server information             | `string` | true                                               |
 | `SCHEDULER_OUTPUT_MODE` | how scheduler output is sent back to aerie                            | `string` | UpdateInputPlanWithNewActivities                   |
-| `SCHEDULER_PORT`        | Port number for the scheduler server                                  | `number` | 27193                                              |
+| `SCHEDULER_PORT`        | Port number for the scheduler server                                  | `number` | 27185                                              |
 | `SCHEDULER_RULES_JAR`   | Jar file to load scheduling rules from (until user input to database) | `string` | /usr/src/app/merlin_file_store/scheduler_rules.jar |
 
 ## Aerie UI
