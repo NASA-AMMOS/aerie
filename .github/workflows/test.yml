@@ -31,6 +31,14 @@ jobs:
         run: ./gradlew classes
       - name: Assemble
         run: ./gradlew assemble
+      - name: Validate Docker Configurations
+        # `docker-compose` and `docker compose` have different "leniencies"
+        run: |
+          find . -name docker-compose\*.yml | while read -r file; do \
+            echo "$file"; \
+            docker-compose -f "$file" config -q && \
+            docker compose -f "$file" config -q; \
+          done
       - name: Start Services
         run: |
           docker compose -f ./e2e-tests/docker-compose-test.yml up -d --build
