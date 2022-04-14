@@ -1,5 +1,4 @@
 export interface ActivityTemplate {
-  name: string,
   activityType: string,
   args: {[key: string]: any},
 }

@@ -3,6 +3,7 @@
 
 ## Cache ##
 .DS_Store
+*.tsbuildinfo
 
 ### STS ###
 .apt_generated

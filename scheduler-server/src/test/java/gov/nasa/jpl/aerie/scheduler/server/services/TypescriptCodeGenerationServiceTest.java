@@ -37,29 +37,34 @@ class TypescriptCodeGenerationServiceTest {
 
   @Test
   void testCodeGen() {
-    assertEquals("/** Start Codegen */\n"
-                 + "interface PeelBanana extends ActivityTemplate {}\n"
-                 + "export const ActivityTemplates = {\n"
-                 + "  PeelBanana: function PeelBanana(\n"
-                 + "    args: {\n"
-                 + "      duration: Duration\n"
-                 + "      fancy: { subfield1: string, subfield2: { subsubfield1: Double, }[], }\n"
-                 + "      peelDirection: (\"fromTip\" | \"fromStem\")\n"
-                 + "    }): PeelBanana {\n"
-                 + "      return { activityType: 'PeelBanana', args };\n"
-                 + "    },\n"
-                 + "}\n"
-                 + "declare global {\n"
-                 + "  var ActivityTemplates: {\n"
-                 + "    PeelBanana: (\n"
-                 + "      args: {\n"
-                 + "        duration: Duration\n"
-                 + "        fancy: { subfield1: string, subfield2: { subsubfield1: Double, }[], }\n"
-                 + "        peelDirection: (\"fromTip\" | \"fromStem\")\n"
-                 + "      }) => PeelBanana\n"
-                 + "  }\n"
-                 + "};\n"
-                 + "/** End Codegen */",
+    assertEquals(
+        """
+            /** Start Codegen */
+            import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';
+            interface PeelBanana extends ActivityTemplate {}
+            export const ActivityTemplates = {
+              PeelBanana: function PeelBanana(
+                args: {
+                  duration: Duration,
+                  fancy: { subfield1: string, subfield2: { subsubfield1: Double, }[], },
+                  peelDirection: ("fromTip" | "fromStem"),
+                }): PeelBanana {
+                  return { activityType: 'PeelBanana', args };
+                },
+            }
+            declare global {
+              var ActivityTemplates: {
+                PeelBanana: (
+                  args: {
+                    duration: Duration,
+                    fancy: { subfield1: string, subfield2: { subsubfield1: Double, }[], },
+                    peelDirection: ("fromTip" | "fromStem"),
+                  }) => PeelBanana
+              }
+            };
+            // Make ActivityTemplates available on the global object
+            Object.assign(globalThis, { ActivityTemplates });
+            /** End Codegen */""",
         TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(MISSION_MODEL_TYPES));
   }
 }

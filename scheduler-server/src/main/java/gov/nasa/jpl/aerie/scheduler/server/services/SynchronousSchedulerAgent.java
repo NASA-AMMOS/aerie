@@ -25,6 +25,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
+import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingCompilationError;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.GoalBuilder;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
@@ -93,8 +94,16 @@ public record SynchronousSchedulerAgent(
       ensurePlanRevisionMatch(specification, planMetadata.planRev());
       //create scheduler problem seeded with initial plan
       final var schedulerMissionModel = loadMissionModel(planMetadata);
-      final var planningHorizon = new PlanningHorizon(specification.horizonStartTimestamp().toInstant(), specification.horizonEndTimestamp().toInstant()) ;
-      final var problem = new Problem(schedulerMissionModel.missionModel(), planningHorizon, new SimulationFacade(planningHorizon, schedulerMissionModel.missionModel()), schedulerMissionModel.schedulerModel());
+      final var planningHorizon = new PlanningHorizon(
+          specification.horizonStartTimestamp().toInstant(),
+          specification.horizonEndTimestamp().toInstant()
+      );
+      final var problem = new Problem(
+          schedulerMissionModel.missionModel(),
+          planningHorizon,
+          new SimulationFacade(planningHorizon, schedulerMissionModel.missionModel()),
+          schedulerMissionModel.schedulerModel()
+      );
       //seed the problem with the initial plan contents
       final var loadedPlanComponents = loadInitialPlan(planMetadata, problem);
       problem.setInitialPlan(loadedPlanComponents.schedulerPlan());
@@ -115,7 +124,7 @@ public record SynchronousSchedulerAgent(
       }
       problem.setGoals(orderedGoals);
 
-      final var scheduler = createScheduler(planMetadata,problem);
+      final var scheduler = createScheduler(planMetadata, problem);
       //run the scheduler to find a solution to the posed problem, if any
       final var solutionPlan = scheduler.getNextSolution().orElseThrow(
           () -> new ResultsProtocolFailure("scheduler returned no solution"));
@@ -128,13 +137,13 @@ public record SynchronousSchedulerAgent(
                                                 loadedPlanComponents.merlinPlan(),
                                                 solutionPlan);
       //collect results and notify subscribers of success
-      final var results = collectResults(solutionPlan,instancesToIds, goals);
+      final var results = collectResults(solutionPlan, instancesToIds, goals);
       writer.succeedWith(results);
-    } catch (final ResultsProtocolFailure | NoSuchSpecificationException | SpecificationLoadException e) {
+    } catch (final SpecificationLoadException e) {
       //unwrap failure message from any anticipated exceptions and forward to subscribers
-      writer.failWith(e.getMessage());
-
-    } catch (final NoSuchPlanException | IOException | MerlinService.MerlinServiceException e) {
+      writer.failWith(e.getMessage() + SchedulingCompilationError.schedulingErrorJsonP.unparse(e.errors).toString());
+    } catch (final ResultsProtocolFailure | NoSuchSpecificationException | NoSuchPlanException | IOException | MerlinService.MerlinServiceException e) {
+      //unwrap failure message from any anticipated exceptions and forward to subscribers
       writer.failWith(e.getMessage());
     }
   }

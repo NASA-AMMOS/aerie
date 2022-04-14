@@ -57,7 +57,7 @@ public final class SchedulerAppDriver {
     final SchedulingDSLCompilationService schedulingDSLCompilationService;
     try {
       schedulingDSLCompilationService = new SchedulingDSLCompilationService(typescriptCodeGenerationService);
-    } catch (SchedulingDSLCompilationService.SchedulingDSLCompilationException | IOException e) {
+    } catch (IOException e) {
       throw new Error("Failed to start SchedulingDSLCompilationService", e);
     }
 
