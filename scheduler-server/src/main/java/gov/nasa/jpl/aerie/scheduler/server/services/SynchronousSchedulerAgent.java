@@ -5,6 +5,8 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
@@ -243,6 +245,15 @@ public record SynchronousSchedulerAgent(
         act.setArguments(activity.arguments());
         act.setStartTime(activity.startTimestamp());
         schedulingIdToMerlinId.put(act.getId(), elem.getKey());
+        if (schedulerActType.getDurationType() instanceof DurationType.Controllable s) {
+          final var serializedDuration = activity.arguments().get(s.parameterName());
+          final var duration = Duration.of(serializedDuration.asInt().orElseThrow(() -> new Exception("Controllable Duration parameter was not an Int")), Duration.MICROSECONDS);
+          act.setDuration(duration);
+        } else if (schedulerActType.getDurationType() instanceof DurationType.Uncontrollable s) {
+          // Do nothing
+        } else {
+          throw new Error("Unhandled variant of DurationType:" + schedulerActType.getDurationType());
+        }
         plan.add(act);
       }
       return new PlanComponents(plan, merlinPlan, schedulingIdToMerlinId);
