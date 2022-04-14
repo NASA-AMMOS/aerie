@@ -48,6 +48,10 @@ class TypescriptCodeGenerationServiceTest {
         """
             /** Start Codegen */
             import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';
+            export enum ActivityType {
+              SampleActivity1 = 'SampleActivity1',
+              SampleActivity2 = 'SampleActivity2',
+            }
             interface SampleActivity1 extends ActivityTemplate {}
             interface SampleActivity2 extends ActivityTemplate {}
             const ActivityTemplateConstructors = {
@@ -56,20 +60,22 @@ class TypescriptCodeGenerationServiceTest {
                 fancy: { subfield1: string, subfield2: { subsubfield1: Double, }[], },
                 variant: ("option1" | "option2"),
               }): SampleActivity1 {
-                return { activityType: 'SampleActivity1', args };
+                return { activityType: ActivityType.SampleActivity1, args };
               },
               SampleActivity2: function SampleActivity2Constructor(args: {
                 quantity: Double,
               }): SampleActivity2 {
-                return { activityType: 'SampleActivity2', args };
+                return { activityType: ActivityType.SampleActivity2, args };
               },
             };
             declare global {
               var ActivityTemplates: typeof ActivityTemplateConstructors;
+              var ActivityTypes: typeof ActivityType;
             }
-            // Make ActivityTemplates available on the global object
+            // Make ActivityTemplates and ActivityTypes available on the global object
             Object.assign(globalThis, {
               ActivityTemplates: ActivityTemplateConstructors,
+              ActivityTypes: ActivityType,
             });
             /** End Codegen */""",
         TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(MISSION_MODEL_TYPES));

@@ -47,18 +47,31 @@ public class TypescriptCodeGenerationService {
     final var result = new ArrayList<String>();
     result.add("/** Start Codegen */");
     result.add("import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';");
+    result.add(generateActivityTypeEnum(activityTypeCodes));
     for (final var activityTypeCode : activityTypeCodes) {
       result.add("interface %s extends ActivityTemplate {}".formatted(activityTypeCode.activityTypeName()));
     }
     result.add(generateActivityTemplateConstructors(activityTypeCodes));
     result.add("declare global {");
     result.add(indent("var ActivityTemplates: typeof ActivityTemplateConstructors;"));
+    result.add(indent("var ActivityTypes: typeof ActivityType;"));
     result.add("}");
-    result.add("// Make ActivityTemplates available on the global object");
+    result.add("// Make ActivityTemplates and ActivityTypes available on the global object");
     result.add("Object.assign(globalThis, {");
     result.add(indent("ActivityTemplates: ActivityTemplateConstructors,"));
+    result.add(indent("ActivityTypes: ActivityType,"));
     result.add("});");
     result.add("/** End Codegen */");
+    return joinLines(result);
+  }
+
+  private static String generateActivityTypeEnum(ArrayList<ActivityTypeCode> activityTypeCodes) {
+    final var result = new ArrayList<String>();
+    result.add("export enum ActivityType {");
+    for (final var activityTypeCode : activityTypeCodes) {
+      result.add(indent("%s = '%s',".formatted(activityTypeCode.activityTypeName(), activityTypeCode.activityTypeName())));
+    }
+    result.add("}");
     return joinLines(result);
   }
 
@@ -69,7 +82,7 @@ public class TypescriptCodeGenerationService {
       result.add(indent("%s: function %sConstructor(args: {".formatted(activityTypeCode.activityTypeName(), activityTypeCode.activityTypeName())));
       result.add(indent(indent(generateActivityArgumentTypes(activityTypeCode.parameterTypes()))));
       result.add(indent("}): %s {".formatted(activityTypeCode.activityTypeName())));
-      result.add(indent(indent("return { activityType: '%s', args };".formatted(activityTypeCode.activityTypeName()))));
+      result.add(indent(indent("return { activityType: ActivityType.%s, args };".formatted(activityTypeCode.activityTypeName()))));
       result.add(indent("},"));
     }
     result.add("};");
