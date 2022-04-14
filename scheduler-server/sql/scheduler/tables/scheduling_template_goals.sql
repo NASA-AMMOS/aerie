@@ -1,7 +1,11 @@
 create table scheduling_template_goals (
   template_id integer not null,
   goal_id integer not null,
-  priority integer not null constraint non_negative_template_goal_priority check (priority >= 0),
+  priority integer
+    not null
+    default null -- Nulls are detected and replaced with the next
+                 -- available priority by the insert trigger
+    constraint non_negative_template_goal_priority check (priority >= 0),
 
   constraint scheduling_template_goals_primary_key
     primary key (template_id, goal_id),
@@ -31,7 +35,12 @@ comment on column scheduling_template_goals.priority is e''
 
 create or replace function insert_scheduling_template_goal_func()
   returns trigger as $$begin
-    if NEW.priority > (
+    if NEW.priority IS NULL then
+      NEW.priority = (
+        select coalesce(max(priority), -1) from scheduling_template_goals
+        where template_id = NEW.template_id
+      ) + 1;
+    elseif NEW.priority > (
       select coalesce(max(priority), -1) from scheduling_template_goals
       where template_id = NEW.template_id
     ) + 1 then
