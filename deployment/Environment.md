@@ -12,23 +12,23 @@ This document provides detailed information about environment variables for each
 
 ## Aerie Commanding
 
-| Name                          | Description                                       | Type     | Default                             |
-|-------------------------------|---------------------------------------------------| -------- |-------------------------------------|
-| `LOG_FILE`                    | Either an output filepath to log to, or 'console' | `string` | console                             |
-| `LOG_LEVEL`                   | Logging level for filtering logs                  | `string` | warn                                |
-| `MERLIN_GRAPHQL_URL`          | URI of the Aerie GraphQL API                      | `string` | http://hasura:8080/v1/graphql       |
-| `COMMANDING_SERVER_PORT`      | Port the server listens on                        | `number` | 27184                               |
-| `COMMANDING_DB`               | Name of Commanding Postgres database              | `string` | aerie_commanding                    |
-| `COMMANDING_DB_SERVER`        | Hostname of Postgres instance                     | `string` | postgres                            |
-| `COMMANDING_DB_PASSWORD`      | Password of Postgres instance                     | `string` | aerie                               |
-| `COMMANDING_DB_PORT`          | Port of Postgres instance                         | `number` | 5432                                |
-| `COMMANDING_DB_USER`          | User of Postgres instance                         | `string` | aerie                               |
-| `COMMANDING_LOCAL_STORE`      | Local storage file storage in the container       | `string` | /usr/src/app/commanding_file_store  |
+| Name                     | Description                                       | Type     | Default                            |
+| ------------------------ | ------------------------------------------------- | -------- | ---------------------------------- |
+| `LOG_FILE`               | Either an output filepath to log to, or 'console' | `string` | console                            |
+| `LOG_LEVEL`              | Logging level for filtering logs                  | `string` | warn                               |
+| `MERLIN_GRAPHQL_URL`     | URI of the Aerie GraphQL API                      | `string` | http://hasura:8080/v1/graphql      |
+| `COMMANDING_SERVER_PORT` | Port the server listens on                        | `number` | 27184                              |
+| `COMMANDING_DB`          | Name of Commanding Postgres database              | `string` | aerie_commanding                   |
+| `COMMANDING_DB_SERVER`   | Hostname of Postgres instance                     | `string` | postgres                           |
+| `COMMANDING_DB_PASSWORD` | Password of Postgres instance                     | `string` | aerie                              |
+| `COMMANDING_DB_PORT`     | Port of Postgres instance                         | `number` | 5432                               |
+| `COMMANDING_DB_USER`     | User of Postgres instance                         | `string` | aerie                              |
+| `COMMANDING_LOCAL_STORE` | Local storage file storage in the container       | `string` | /usr/src/app/commanding_file_store |
 
 ## Aerie Gateway
 
 | Name                          | Description                                                | Type     | Default                          |
-|-------------------------------|------------------------------------------------------------| -------- |----------------------------------|
+| ----------------------------- | ---------------------------------------------------------- | -------- | -------------------------------- |
 | `GQL_API_URL`                 | URL of GraphQL API for the GraphQL Playground.             | `string` | http://localhost:8080/v1/graphql |
 | `LOG_FILE`                    | Either an output filepath to log to, or 'console'.         | `string` | console                          |
 | `LOG_LEVEL`                   | Logging level for filtering logs.                          | `string` | warn                             |
@@ -46,33 +46,33 @@ This document provides detailed information about environment variables for each
 
 ## Aerie Merlin
 
-| Name                 | Description                                               | Type     | Default                        |
-| -------------------- | --------------------------------------------------------- | -------- | ------------------------------ |
-| `JAVA_OPTS`          | Configuration for Merlin's logging level and output file  | `string` | log level: warn. output: stderr|
-| `MERLIN_PORT`        | Port number for the Merlin server                         | `number` | 27183                          |
-| `MERLIN_LOCAL_STORE` | Local storage for Merlin in the container                 | `string` | /usr/src/app/merlin_file_store |
-| `MERLIN_DB_SERVER`   | The DB instance that Merlin will connect with             | `string` | postgres                       |
-| `MERLIN_DB_PORT`     | The DB instance port number that Merlin will connect with | `number` | 5432                           |
-| `MERLIN_DB_USER`     | Username of the DB instance                               | `string` | aerie                          |
-| `MERLIN_DB_PASSWORD` | Password of the DB instance                               | `string` | aerie                          |
-| `MERLIN_DB`          | The DB for Merlin.                                        | `string` | aerie_merlin                   |
+| Name                 | Description                                               | Type     | Default                         |
+| -------------------- | --------------------------------------------------------- | -------- | ------------------------------- |
+| `JAVA_OPTS`          | Configuration for Merlin's logging level and output file  | `string` | log level: warn. output: stderr |
+| `MERLIN_PORT`        | Port number for the Merlin server                         | `number` | 27183                           |
+| `MERLIN_LOCAL_STORE` | Local storage for Merlin in the container                 | `string` | /usr/src/app/merlin_file_store  |
+| `MERLIN_DB_SERVER`   | The DB instance that Merlin will connect with             | `string` | postgres                        |
+| `MERLIN_DB_PORT`     | The DB instance port number that Merlin will connect with | `number` | 5432                            |
+| `MERLIN_DB_USER`     | Username of the DB instance                               | `string` | aerie                           |
+| `MERLIN_DB_PASSWORD` | Password of the DB instance                               | `string` | aerie                           |
+| `MERLIN_DB`          | The DB for Merlin.                                        | `string` | aerie_merlin                    |
 
 ## Aerie Merlin Worker
 
 | Name                        | Description                                               | Type     | Default                                      |
-|-----------------------------|-----------------------------------------------------------| -------- |----------------------------------------------|
+| --------------------------- | --------------------------------------------------------- | -------- | -------------------------------------------- |
 | `JAVA_OPTS`                 | Configuration for Merlin's logging level and output file  | `string` | log level: warn. output: stderr              |
 | `MERLIN_WORKER_LOCAL_STORE` | The local storage as for the Merlin container             | `string` | /usr/src/app/merlin_file_store               |
 | `MERLIN_WORKER_DB_SERVER`   | The DB instance that Merlin will connect with             | `string` | (this must the same as the Merlin container) |
 | `MERLIN_WORKER_DB_PORT`     | The DB instance port number that Merlin will connect with | `number` | (this must the same as the Merlin container) |
 | `MERLIN_WORKER_DB_USER`     | Username of the DB instance                               | `string` | (this must the same as the Merlin container) |
 | `MERLIN_WORKER_DB_PASSWORD` | Password of the DB instance                               | `string` | (this must the same as the Merlin container) |
-| `MERLIN_WORKER_DB`          | The DB for Merlin.                                        | `string` | (this must the same as the Merlin container) |                                                             
+| `MERLIN_WORKER_DB`          | The DB for Merlin.                                        | `string` | (this must the same as the Merlin container) |
 
 ## Aerie Scheduler
 
 | Name                    | Description                                                           | Type     | Default                                            |
-|-------------------------|-----------------------------------------------------------------------| -------- |----------------------------------------------------|
+| ----------------------- | --------------------------------------------------------------------- | -------- | -------------------------------------------------- |
 | `JAVA_OPTS`             | Configuration for the scheduler's logging level and output file       | `string` | log level: warn. output: stderr                    |
 | `MERLIN_GRAPHQL_URL`    | URI of the Merlin graphql interface to call                           | `string` | http://hasura:8080/v1/graphql                      |
 | `MERLIN_LOCAL_STORE`    | Local storage for Merlin in the container (for backdoor jar access)   | `string` | /usr/src/app/merlin_file_store                     |
@@ -89,12 +89,13 @@ This document provides detailed information about environment variables for each
 
 ## Aerie UI
 
-| Name                 | Description                                                           | Type     | Default                          |
-| -------------------- | --------------------------------------------------------------------- | -------- | -------------------------------- |
-| `GATEWAY_CLIENT_URL` | Url of the Gateway as called from the client (i.e. web browser)       | `string` | http://localhost:9000            |
-| `GATEWAY_SERVER_URL` | Url of the Gateway as called from the server (i.e. Node.js container) | `string` | http://localhost:9000            |
-| `HASURA_CLIENT_URL`  | Url of Hasura as called from the client (i.e. web browser)            | `string` | http://localhost:8080/v1/graphql |
-| `HASURA_SERVER_URL`  | Url of Hasura as called from the server (i.e. Node.js container)      | `string` | http://localhost:8080/v1/graphql |
+| Name                 | Description                                                                                               | Type     | Default                          |
+| -------------------- | --------------------------------------------------------------------------------------------------------- | -------- | -------------------------------- |
+| `GATEWAY_CLIENT_URL` | Url of the Gateway as called from the client (i.e. web browser)                                           | `string` | http://localhost:9000            |
+| `GATEWAY_SERVER_URL` | Url of the Gateway as called from the server (i.e. Node.js container)                                     | `string` | http://localhost:9000            |
+| `HASURA_CLIENT_URL`  | Url of Hasura as called from the client (i.e. web browser)                                                | `string` | http://localhost:8080/v1/graphql |
+| `HASURA_SERVER_URL`  | Url of Hasura as called from the server (i.e. Node.js container)                                          | `string` | http://localhost:8080/v1/graphql |
+| `ORIGIN`             | Url of where the UI is served from. See the [Svelte Kit Adapter Node docs][svelte-kit-adapter-node-docs]. | `string` | http://localhost                 |
 
 ## Hasura
 
@@ -112,3 +113,5 @@ Additionally, Hasura provides documentation on it's own environment variables yo
 ## Postgres
 
 The default Aerie deployment uses the default Postgres environment. See the [Docker Postgres documentation](https://hub.docker.com/_/postgres) for more complete information on those environment variables and how to use them.
+
+[svelte-kit-adapter-node-docs]: https://github.com/sveltejs/kit/blob/master/packages/adapter-node/README.md
