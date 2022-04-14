@@ -6,19 +6,19 @@ actions:
   - name: uploadDictionary
     definition:
       kind: synchronous
-      handler: http://aerie_commanding:3000/put-dictionary
+      handler: http://aerie_commanding:27184/put-dictionary
   - name: addCommandExpansionTypeScript
     definition:
       kind: synchronous
-      handler: http://aerie_commanding:3000/put-expansion
+      handler: http://aerie_commanding:27184/put-expansion
   - name: createExpansionSet
     definition:
       kind: synchronous
-      handler: http://aerie_commanding:3000/put-expansion-set
+      handler: http://aerie_commanding:27184/put-expansion-set
   - name: expandAllActivities
     definition:
       kind: synchronous
-      handler: http://aerie_commanding:3000/expand-all-activity-instances
+      handler: http://aerie_commanding:27184/expand-all-activity-instances
   - name: getModelEffectiveArguments
     definition:
       kind: ""
@@ -30,11 +30,11 @@ actions:
   - name: getActivityTypeScript
     definition:
       kind: ""
-      handler: http://aerie_commanding:3000/get-activity-typescript
+      handler: http://aerie_commanding:27184/get-activity-typescript
   - name: getCommandTypeScript
     definition:
       kind: ""
-      handler: http://aerie_commanding:3000/get-command-typescript
+      handler: http://aerie_commanding:27184/get-command-typescript
   - name: resourceTypes
     definition:
       kind: ""
@@ -42,11 +42,11 @@ actions:
   - name: schedule
     definition:
       kind: ""
-      handler: http://aerie_scheduler:27193/schedule
+      handler: http://aerie_scheduler:27185/schedule
   - name: schedulingDslTypescript
     definition:
       kind: ""
-      handler: http://aerie_scheduler:27193/schedulingDslTypescript
+      handler: http://aerie_scheduler:27185/schedulingDslTypescript
   - name: simulate
     definition:
       kind: ""
