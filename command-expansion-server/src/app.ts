@@ -9,15 +9,18 @@ import { getEnv } from './env.js';
 import { DbExpansion } from './db.js';
 import { processDictionary } from './lib/codegen/CommandTypeCodegen.js';
 import { generateTypescriptForGraphQLActivitySchema } from './lib/codegen/ActivityTypescriptCodegen.js';
-import { InferredDataloader, objectCacheKeyFunction } from './lib/batchLoaders/index.js';
+import { InferredDataloader, objectCacheKeyFunction, unwrapPromiseSettledResults } from './lib/batchLoaders/index.js';
 import { commandDictionaryTypescriptBatchLoader } from './lib/batchLoaders/commandDictionaryTypescriptBatchLoader.js';
 import { activitySchemaBatchLoader } from './lib/batchLoaders/activitySchemaBatchLoader.js';
 import { simulatedActivityInstanceBatchLoader } from './lib/batchLoaders/simulatedActivityInstanceBatchLoader.js';
 import { expansionSetBatchLoader } from './lib/batchLoaders/expansionSetBatchLoader.js';
 import Piscina from 'piscina';
-import type executeExpansion from './worker.js';
+import type { executeExpansion, typecheckExpansion } from './worker.js';
 import { isRejected, isResolved } from './utils/typeguards.js';
 import { mapGraphQLActivityInstance } from './lib/mapGraphQLActivityInstance.js';
+import { expansionBatchLoader } from './lib/batchLoaders/expansionBatchLoader.js';
+import type { UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
+import { InheritedError } from './utils/InheritedError.js';
 
 const logger = getLogger('app');
 
@@ -38,6 +41,7 @@ type Context = {
   activitySchemaDataLoader: InferredDataloader<typeof activitySchemaBatchLoader>;
   simulatedActivityInstanceDataLoader: InferredDataloader<typeof simulatedActivityInstanceBatchLoader>;
   expansionSetDataLoader: InferredDataloader<typeof expansionSetBatchLoader>;
+  expansionDataLoader: InferredDataloader<typeof expansionBatchLoader>;
 };
 
 app.use(async (req: Request, res: Response, next: NextFunction) => {
@@ -54,6 +58,9 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
       cacheKeyFn: objectCacheKeyFunction,
     }),
     expansionSetDataLoader: new DataLoader(expansionSetBatchLoader({ graphqlClient }), {
+      cacheKeyFn: objectCacheKeyFunction,
+    }),
+    expansionDataLoader: new DataLoader(expansionBatchLoader({graphqlClient}),{
       cacheKeyFn: objectCacheKeyFunction,
     }),
   };
@@ -125,12 +132,52 @@ app.post('/put-expansion', async (req, res, next) => {
 });
 
 app.post('/put-expansion-set', async (req, res, next) => {
+  const context: Context = res.locals.context;
+
   const commandDictionaryId = req.body.input.commandDictionaryId as number;
   const missionModelId = req.body.input.missionModelId as number;
   const expansionIds = req.body.input.expansionIds as number[];
 
-  const { rows } = await db.query(
-    `
+  const [expansions, commandTypes] = await Promise.all([
+    context.expansionDataLoader.loadMany(expansionIds.map(id => ({ expansionId: id }))),
+    context.commandTypescriptDataLoader.load({ dictionaryId: commandDictionaryId }),
+  ]);
+
+  const typecheckErrorPromises = await Promise.allSettled(expansions.map(async (expansion, index) => {
+    if (expansion instanceof Error) {
+      throw new InheritedError(`Expansion with id: ${expansionIds[index]} could not be loaded`, expansion);
+    }
+    const activitySchema = await context.activitySchemaDataLoader.load({missionModelId, activityTypeName: expansion.activityType });
+    const activityTypescript = generateTypescriptForGraphQLActivitySchema(activitySchema);
+    const result = await (piscina.run({
+      expansionLogic: expansion.expansionLogic,
+      commandTypes: commandTypes,
+      activityTypes: activityTypescript,
+    }, { name: 'typecheckExpansion' }) as ReturnType<typeof typecheckExpansion>);
+
+    return result.errors;
+  }));
+
+  const errors = unwrapPromiseSettledResults(typecheckErrorPromises).reduce((accum, item) => {
+    if (item instanceof Error) {
+      accum.push(item);
+    } else {
+      accum.concat(item);
+    }
+    return accum;
+  }, [] as (Error | ReturnType<UserCodeError['toJSON']>)[]);
+
+  if (errors.length > 0) {
+    throw new InheritedError(`Expansion set could not be typechecked`, errors.map(e => ({
+      name: 'TypeCheckError',
+      stack: e.stack,
+      // @ts-ignore  Message is not spread when it comes from an Error object because it's a getter
+      message: e.message,
+      ...e,
+    })));
+  }
+
+  const { rows } = await db.query(`
     WITH expansion_set_id AS (
       INSERT INTO expansion_set (command_dict_id, mission_model_id)
         VALUES ($1, $2)
@@ -223,7 +270,7 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
         activityInstance,
         commandTypes,
         activityTypes,
-      })) as ReturnType<typeof executeExpansion>;
+      }, { name: 'executeExpansion' })) as ReturnType<typeof executeExpansion>;
     }),
   );
 
