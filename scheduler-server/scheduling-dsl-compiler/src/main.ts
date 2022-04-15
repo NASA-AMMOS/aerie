@@ -1,22 +1,45 @@
 import fs from 'fs';
 import ts from 'typescript';
 import { UserCodeRunner } from '@nasa-jpl/aerie-ts-user-code-runner';
-import type { Goal } from './libs/scheduler-edsl-fluent-api.js'
+import type { Goal } from './libs/scheduler-edsl-fluent-api.js';
 
 const codeRunner = new UserCodeRunner();
 const schedulerEDSL = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/scheduler-edsl-fluent-api.ts`, 'utf8');
 const schedulerAST = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/scheduler-ast.ts`, 'utf8');
 
+function registerInputCallback(callback: (data: string) => void) {
+  process.stdin.once('data', data => callback(data.toString()));
+}
+
+function writeOutputOneLine(data: string) {
+  process.stdout.write(data + '\n');
+}
+
+function writeSuccess(data: string) {
+  writeOutputOneLine('success');
+  writeOutputOneLine(data);
+}
+
+function writeError(data: string) {
+  writeOutputOneLine('error');
+  writeOutputOneLine(data);
+}
+
+function writePanic(data: string) {
+  writeOutputOneLine('panic');
+  writeOutputOneLine(data);
+}
+
 process.on('uncaughtException', (err) => {
   console.error('uncaughtException');
   console.error((err && err.stack) ? err.stack : err);
-  process.stdout.write('panic\n' + err.stack ?? err.message);
+  writePanic(err.stack ?? err.message);
   process.exit(1);
 });
 
-async function handleRequest(data: Buffer) {
+async function handleRequest(data: string) {
   try {
-    const { goalCode, missionModelGeneratedCode } = JSON.parse(data.toString()) as { goalCode: string, missionModelGeneratedCode: string };
+    const { goalCode, missionModelGeneratedCode } = JSON.parse(data) as { goalCode: string, missionModelGeneratedCode: string };
 
     const result = await codeRunner.executeUserCode<[], Goal>(
         goalCode,
@@ -32,8 +55,8 @@ async function handleRequest(data: Buffer) {
     );
 
     if (result.isErr()) {
-      process.stdout.write('error\n' + JSON.stringify(result.unwrapErr().map(err => err.toJSON())) + '\n');
-      process.stdin.once('data', handleRequest);
+      writeError(JSON.stringify(result.unwrapErr().map(err => err.toJSON())));
+      registerInputCallback(handleRequest);
       return;
     }
 
@@ -45,18 +68,18 @@ async function handleRequest(data: Buffer) {
     if (stringified === undefined) {
       throw Error(JSON.stringify(result.unwrap()) + ' was not JSON serializable');
     }
-    process.stdout.write('success\n' + stringified + '\n');
+    writeSuccess(stringified);
   } catch (error: any) {
-    process.stdout.write('panic\n' + JSON.stringify(error.stack ?? error.message) + '\n');
+    writePanic(JSON.stringify(error.stack ?? error.message));
   }
-  process.stdin.once('data', handleRequest);
+  registerInputCallback(handleRequest);
 }
 
-process.stdin.once('data', data => {
-  if (data.toString().trim() === 'ping') {
+registerInputCallback(data => {
+  if (data.trim() === 'ping') {
     // Enable testing the health of the service by sending 'ping' and expecting 'pong' in return.
-    process.stdout.write('pong\n');
-    process.stdin.once('data', handleRequest);
+    writeOutputOneLine('pong');
+    registerInputCallback(handleRequest);
   }
 });
 
