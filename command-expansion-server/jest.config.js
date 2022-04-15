@@ -9,7 +9,7 @@ export default {
   coverageReporters: ['html'],
   setupFiles: ['dotenv/config'],
   globalSetup: "./jestGlobalSetup.js",
-  setupFilesAfterEnv: [],
+  setupFilesAfterEnv: ["jest-extended/all"],
   reporters: [
     'default',
     ['jest-html-reporters', {
