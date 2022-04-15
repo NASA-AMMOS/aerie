@@ -241,4 +241,44 @@ class SchedulingDSLCompilationServiceTests {
                     .anyMatch(e -> e.message().contains("TypeError: TS2322 Incorrect return type. Expected: 'Goal', Actual: 'number'."))
     );
   }
+
+  @Test
+  void testHugeGoal()
+  {
+    // This test is intended to create a Goal that is bigger than the node subprocess's standard input buffer
+    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
+    result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        PLAN_ID, """
+                export default function myGoal() {
+                  return Goal.ActivityRecurrenceGoal({
+                    activityTemplate: ActivityTemplates.SampleActivity1({
+                      variant: 'option2',
+                      fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
+                      duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                    }),
+                    interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                  })
+                }
+            """ + " ".repeat(9001), "goalfile");
+    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.GoalDefinition(
+        SchedulingDSL.GoalKinds.ActivityRecurrenceGoal,
+        new SchedulingDSL.ActivityTemplate(
+            "SampleActivity1",
+            Map.ofEntries(
+                Map.entry("variant", SerializedValue.of("option2")),
+                Map.entry("fancy", SerializedValue.of(Map.ofEntries(
+                    Map.entry("subfield1", SerializedValue.of("value1")),
+                    Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
+                    )))),
+                Map.entry("duration", SerializedValue.of(60L * 60 * 1000 * 1000))
+            )
+        ),
+        Duration.HOUR
+    );
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+      assertEquals(expectedGoalDefinition, r.goalSpecifier());
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      fail(r.toString());
+    }
+  }
 }
