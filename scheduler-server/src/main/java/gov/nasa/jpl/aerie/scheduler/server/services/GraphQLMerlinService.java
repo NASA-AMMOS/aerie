@@ -346,7 +346,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   public void deleteActivity(final ActivityInstanceId id)
   throws MerlinServiceException, IOException, NoSuchActivityInstanceException
   {
-    final var request = "delete_activity_by_pk( id : %d ){ id }".formatted(id);
+    final var request = "mutation {delete_activity_by_pk( id : %d ){ id }}".formatted(id.id());
     final var response = postRequest(request).orElseThrow(() -> new NoSuchActivityInstanceException(id));
     try {
       response.getJsonObject("data").getJsonObject("delete_activity_by_pk").getJsonNumber("id").longValueExact();
