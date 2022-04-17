@@ -276,8 +276,6 @@ public abstract class ValueSchema {
     }
   }
 
-  public enum Unit { UNIT }
-
   /**
    * Asserts that this object represents a real number.
    *
