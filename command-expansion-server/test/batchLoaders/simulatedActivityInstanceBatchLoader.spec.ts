@@ -28,9 +28,7 @@ afterAll(async () => {
 });
 
 it('should load simulated activity instance', async () => {
-  const activityInstances = await simulatedActivityInstanceBatchLoader({graphqlClient})([
-    { simulationDatasetId },
-  ]);
+  const activityInstances = await simulatedActivityInstanceBatchLoader({ graphqlClient })([{ simulationDatasetId }]);
   if (activityInstances[0] instanceof Error) {
     throw activityInstances[0];
   }

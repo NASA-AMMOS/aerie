@@ -1,20 +1,14 @@
 /** START Preface */
-export class Command<A extends ArgType[] | {[argName: string]: any} = [] | {}> {
+export class Command<A extends ArgType[] | { [argName: string]: any } = [] | {}> {
   public readonly stem: string;
   public readonly arguments: A;
 
-  private constructor(opts: {
-    stem: string
-    arguments: A,
-  }) {
+  private constructor(opts: { stem: string; arguments: A }) {
     this.stem = opts.stem;
-    this.arguments = opts.arguments
+    this.arguments = opts.arguments;
   }
 
-  public static new<A extends any[] | {[argName: string]: any}>(opts: {
-    stem: string
-    arguments: A,
-  }): Command<A> {
+  public static new<A extends any[] | { [argName: string]: any }>(opts: { stem: string; arguments: A }): Command<A> {
     return new Command({
       stem: opts.stem,
       arguments: opts.arguments,
@@ -28,34 +22,28 @@ export class Command<A extends ArgType[] | {[argName: string]: any} = [] | {}> {
       steps: [
         {
           stem: this.stem,
-          time: {type: 'COMPLETE'},
+          time: { type: 'COMPLETE' },
           type: 'command',
           metadata: {},
           args: typeof this.arguments == 'object' ? Object.values(this.arguments) : this.arguments,
-        }
-      ]
-    }
+        },
+      ],
+    };
   }
 }
 
 declare global {
-  export class Command<A extends ArgType[] | {[argName: string]: any} = [] | {}> {
+  export class Command<A extends ArgType[] | { [argName: string]: any } = [] | {}> {
     public readonly stem: string;
     public readonly arguments: A;
 
-    private constructor(opts: {
-      stem: string
-      arguments: A,
-    })
+    private constructor(opts: { stem: string; arguments: A });
 
-    public static new<A extends any[] | {[argName: string]: any}>(opts: {
-      stem: string
-      arguments: A,
-    }): Command<A>;
+    public static new<A extends any[] | { [argName: string]: any }>(opts: { stem: string; arguments: A }): Command<A>;
 
-    public toSeqJson(): any
+    public toSeqJson(): any;
   }
-  type Context = {}
+  type Context = {};
   type ArgType = boolean | string | number;
   type Arrayable<T> = T | Arrayable<T>[];
   type ExpansionReturn = Arrayable<Command>;
