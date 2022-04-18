@@ -1,4 +1,4 @@
-import type * as AST from './scheduler-ast.js';
+import * as AST from './scheduler-ast.js';
 
 interface ActivityRecurrenceGoal extends Goal {}
 export class Goal {
@@ -18,7 +18,7 @@ export class Goal {
 
   public and(...others: Goal[]): Goal {
     return Goal.new({
-      kind: 'GoalAnd',
+      kind: AST.NodeKind.GoalAnd,
       goals: [
         this.goalSpecifier,
         ...others.map(other => other.goalSpecifier),
@@ -28,7 +28,7 @@ export class Goal {
 
   public or(...others: Goal[]): Goal {
     return Goal.new({
-      kind: 'GoalOr',
+      kind: AST.NodeKind.GoalOr,
       goals: [
         this.goalSpecifier,
         ...others.map(other => other.goalSpecifier),
@@ -38,7 +38,7 @@ export class Goal {
 
   public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): ActivityRecurrenceGoal {
     return Goal.new({
-      kind: 'ActivityRecurrenceGoal',
+      kind: AST.NodeKind.ActivityRecurrenceGoal,
       activityTemplate: opts.activityTemplate,
       interval: opts.interval,
     });
