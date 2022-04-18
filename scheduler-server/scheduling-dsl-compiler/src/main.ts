@@ -1,4 +1,5 @@
 import fs from 'fs';
+import * as readline from 'readline';
 import ts from 'typescript';
 import { UserCodeRunner } from '@nasa-jpl/aerie-ts-user-code-runner';
 import type { Goal } from './libs/scheduler-edsl-fluent-api.js';
@@ -7,8 +8,10 @@ const codeRunner = new UserCodeRunner();
 const schedulerEDSL = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/scheduler-edsl-fluent-api.ts`, 'utf8');
 const schedulerAST = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/scheduler-ast.ts`, 'utf8');
 
+const input = readline.createInterface(process.stdin);
+
 function registerInputCallback(callback: (data: string) => void) {
-  process.stdin.once('data', data => callback(data.toString()));
+  input.once('line', callback);
 }
 
 function writeOutputOneLine(data: string) {
