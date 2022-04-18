@@ -127,8 +127,8 @@ class SchedulingDSLCompilationServiceTests {
         PLAN_ID, """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
-                    activityTemplate: ActivityTemplates.PeelBanana({
-                      peelDirection: 'fromStem',
+                    activityTemplate: ActivityTemplates.SampleActivity1({
+                      variant: 'option2',
                       fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
                       duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
                     }),
@@ -139,9 +139,9 @@ class SchedulingDSLCompilationServiceTests {
     final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.GoalDefinition(
         SchedulingDSL.GoalKinds.ActivityRecurrenceGoal,
         new SchedulingDSL.ActivityTemplate(
-            "PeelBanana",
+            "SampleActivity1",
             Map.ofEntries(
-                Map.entry("peelDirection", SerializedValue.of("fromStem")),
+                Map.entry("variant", SerializedValue.of("option2")),
                 Map.entry("fancy", SerializedValue.of(Map.ofEntries(
                     Map.entry("subfield1", SerializedValue.of("value1")),
                     Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
@@ -165,8 +165,8 @@ class SchedulingDSLCompilationServiceTests {
     result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
         PLAN_ID, """
                 export default function myGoal() {
-                  return myHelper(ActivityTemplates.PeelBanana({
-                    peelDirection: 'fromStem',
+                  return myHelper(ActivityTemplates.SampleActivity1({
+                    variant: 'option2',
                     fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
                     duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
                   }))
@@ -181,9 +181,9 @@ class SchedulingDSLCompilationServiceTests {
     final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.GoalDefinition(
         SchedulingDSL.GoalKinds.ActivityRecurrenceGoal,
         new SchedulingDSL.ActivityTemplate(
-            "PeelBanana",
+            "SampleActivity1",
             Map.ofEntries(
-                Map.entry("peelDirection", SerializedValue.of("fromStem")),
+                Map.entry("variant", SerializedValue.of("option2")),
                 Map.entry("fancy", SerializedValue.of(Map.ofEntries(
                     Map.entry("subfield1", SerializedValue.of("value1")),
                     Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
@@ -206,8 +206,8 @@ class SchedulingDSLCompilationServiceTests {
           PLAN_ID, """
                 export default function myGoal() {
                   const x = 4 - 2
-                  return myHelper(ActivityTemplates.PeelBanana({
-                    peelDirection: 'fromStem',
+                  return myHelper(ActivityTemplates.SampleActivity1({
+                    variant: 'option2',
                     fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
                     duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
                   }))
