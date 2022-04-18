@@ -13,16 +13,16 @@ class TypescriptCodeGenerationServiceTest {
   public static final TypescriptCodeGenerationService.MissionModelTypes MISSION_MODEL_TYPES =
       new TypescriptCodeGenerationService.MissionModelTypes(
           List.of(new TypescriptCodeGenerationService.ActivityType(
-              "PeelBanana",
+              "SampleActivity1",
               Map.of(
-                  "peelDirection",
+                  "variant",
                   ValueSchema.ofVariant(List.of(
                       new ValueSchema.Variant(
-                          "fromTip", "fromTip"
+                          "option1", "option1"
                       ),
                       new ValueSchema.Variant(
-                          "fromStem",
-                          "fromStem"))),
+                          "option2",
+                          "option2"))),
                   "duration",
                   ValueSchema.DURATION,
                   "fancy",
@@ -41,25 +41,25 @@ class TypescriptCodeGenerationServiceTest {
         """
             /** Start Codegen */
             import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';
-            interface PeelBanana extends ActivityTemplate {}
+            interface SampleActivity1 extends ActivityTemplate {}
             export const ActivityTemplates = {
-              PeelBanana: function PeelBanana(
+              SampleActivity1: function SampleActivity1(
                 args: {
                   duration: Duration,
                   fancy: { subfield1: string, subfield2: { subsubfield1: Double, }[], },
-                  peelDirection: ("fromTip" | "fromStem"),
-                }): PeelBanana {
-                  return { activityType: 'PeelBanana', args };
+                  variant: ("option1" | "option2"),
+                }): SampleActivity1 {
+                  return { activityType: 'SampleActivity1', args };
                 },
             }
             declare global {
               var ActivityTemplates: {
-                PeelBanana: (
+                SampleActivity1: (
                   args: {
                     duration: Duration,
                     fancy: { subfield1: string, subfield2: { subsubfield1: Double, }[], },
-                    peelDirection: ("fromTip" | "fromStem"),
-                  }) => PeelBanana
+                    variant: ("option1" | "option2"),
+                  }) => SampleActivity1
               }
             };
             // Make ActivityTemplates available on the global object
