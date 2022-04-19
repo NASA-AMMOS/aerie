@@ -50,38 +50,27 @@ class TypescriptCodeGenerationServiceTest {
             import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';
             interface SampleActivity1 extends ActivityTemplate {}
             interface SampleActivity2 extends ActivityTemplate {}
-            const ActivityTemplates = {
-              SampleActivity1: function SampleActivity1(
-                args: {
-                  duration: Duration,
-                  fancy: { subfield1: string, subfield2: { subsubfield1: Double, }[], },
-                  variant: ("option1" | "option2"),
-                }): SampleActivity1 {
-                  return { activityType: 'SampleActivity1', args };
-                },
-              SampleActivity2: function SampleActivity2(
-                args: {
-                  quantity: Double,
-                }): SampleActivity2 {
-                  return { activityType: 'SampleActivity2', args };
-                },
-            }
-            declare global {
-              var ActivityTemplates: {
-                SampleActivity1: (
-                  args: {
-                    duration: Duration,
-                    fancy: { subfield1: string, subfield2: { subsubfield1: Double, }[], },
-                    variant: ("option1" | "option2"),
-                  }) => SampleActivity1
-                SampleActivity2: (
-                  args: {
-                    quantity: Double,
-                  }) => SampleActivity2
-              }
+            const ActivityTemplateConstructors = {
+              SampleActivity1: function SampleActivity1Constructor(args: {
+                duration: Duration,
+                fancy: { subfield1: string, subfield2: { subsubfield1: Double, }[], },
+                variant: ("option1" | "option2"),
+              }): SampleActivity1 {
+                return { activityType: 'SampleActivity1', args };
+              },
+              SampleActivity2: function SampleActivity2Constructor(args: {
+                quantity: Double,
+              }): SampleActivity2 {
+                return { activityType: 'SampleActivity2', args };
+              },
             };
+            declare global {
+              var ActivityTemplates: typeof ActivityTemplateConstructors;
+            }
             // Make ActivityTemplates available on the global object
-            Object.assign(globalThis, { ActivityTemplates });
+            Object.assign(globalThis, {
+              ActivityTemplates: ActivityTemplateConstructors,
+            });
             /** End Codegen */""",
         TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(MISSION_MODEL_TYPES));
   }

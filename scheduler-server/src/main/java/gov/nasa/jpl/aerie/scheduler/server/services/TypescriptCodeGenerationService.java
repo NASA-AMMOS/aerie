@@ -50,31 +50,36 @@ public class TypescriptCodeGenerationService {
     for (final var activityTypeCode : activityTypeCodes) {
       result.add("interface %s extends ActivityTemplate {}".formatted(activityTypeCode.activityTypeName()));
     }
-    result.add("const ActivityTemplates = {");
-    result.add(indent(generateActivityTemplates(activityTypeCodes)));
-    result.add("}");
+    result.add(generateActivityTemplateConstructors(activityTypeCodes));
     result.add("declare global {");
-    result.add(indent("var ActivityTemplates: {"));
-    result.add(indent(indent(generateActivityTemplateTypeDeclarations(activityTypeCodes))));
-    result.add(indent("}"));
-    result.add("};");
+    result.add(indent("var ActivityTemplates: typeof ActivityTemplateConstructors;"));
+    result.add("}");
     result.add("// Make ActivityTemplates available on the global object");
-    result.add("Object.assign(globalThis, { ActivityTemplates });");
+    result.add("Object.assign(globalThis, {");
+    result.add(indent("ActivityTemplates: ActivityTemplateConstructors,"));
+    result.add("});");
     result.add("/** End Codegen */");
     return joinLines(result);
   }
 
-  private static String generateActivityTemplates(final Iterable<ActivityTypeCode> activityTypeCodes) {
+  private static String generateActivityTemplateConstructors(final Iterable<ActivityTypeCode> activityTypeCodes) {
     final var result = new ArrayList<String>();
+    result.add("const ActivityTemplateConstructors = {");
     for (final var activityTypeCode : activityTypeCodes) {
-      result.add(String.format("%s: function %s(", activityTypeCode.activityTypeName(), activityTypeCode.activityTypeName()));
-      result.add(indent("args: {"));
-      for (final var parameterType : activityTypeCode.parameterTypes()) {
-        result.add(indent(indent("%s: %s,".formatted(parameterType.name(), ActivityParameterType.toString(parameterType.type())))));
-      }
+      result.add(indent("%s: function %sConstructor(args: {".formatted(activityTypeCode.activityTypeName(), activityTypeCode.activityTypeName())));
+      result.add(indent(indent(generateActivityArgumentTypes(activityTypeCode.parameterTypes()))));
       result.add(indent("}): %s {".formatted(activityTypeCode.activityTypeName())));
       result.add(indent(indent("return { activityType: '%s', args };".formatted(activityTypeCode.activityTypeName()))));
       result.add(indent("},"));
+    }
+    result.add("};");
+    return joinLines(result);
+  }
+
+  private static String generateActivityArgumentTypes(final Iterable<TypescriptCodeGenerationService.ActivityParameter> parameterTypes) {
+    final var result = new ArrayList<String>();
+    for (final var parameterType : parameterTypes) {
+      result.add("%s: %s,".formatted(parameterType.name(), ActivityParameterType.toString(parameterType.type())));
     }
     return joinLines(result);
   }
