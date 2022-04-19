@@ -25,7 +25,8 @@ afterAll(async () => {
   await removeMissionModel(graphqlClient, missionModelId);
   await removeMissionModel(graphqlClient, missionModelId);
 });
-
+// We expect this to fail right now because the expansion set batch loader needs to pull the dictionary commands from
+// the filesystem, which isn't available locally, but in the docker container.
 it.skip('[XFAIL] should load expansion set data', async () => {
   const expansionSets = await expansionSetBatchLoader({ graphqlClient })([{ expansionSetId }]);
   if (expansionSets[0] instanceof Error) {

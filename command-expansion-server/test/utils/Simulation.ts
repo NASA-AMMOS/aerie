@@ -4,46 +4,59 @@ import { jest } from '@jest/globals';
 
 jest.setTimeout(10000);
 
-export async function executeSimulation(graphqlClient: GraphQLClient, planId: number): Promise<number> {
+export async function executeSimulation(graphqlClient: GraphQLClient, planId: number): Promise<{simulationId: number, simulationDatasetId: number}> {
   const startTime = perf.performance.now();
   while (perf.performance.now() - startTime < 10000) {
-    const simulationRes = await graphqlClient.request(
-      gql`
-        query SimulatePlan($planId: Int!) {
-          simulate(planId: $planId) {
-            status
-            results
-            reason
+    const simulationRes = await graphqlClient.request(gql`
+      query SimulatePlan($planId: Int!) {
+        simulate(planId: $planId) {
+          status
+          results
+          reason
+        }
+      }
+    `, {
+      planId,
+    });
+    const status = simulationRes.simulate.status;
+    if (status !== 'pending' && status !== 'incomplete') {
+      const getSimulationRes = await graphqlClient.request(gql`
+        query SimulationDatasetId($planId: Int!) {
+          simulation_dataset(where: {simulation: {plan_id: {_eq: $planId}}}) {
+            id
+          }
+          simulation(where: {plan_id: {_eq: $planId}}) {
+            id
           }
         }
-      `,
-      {
+      `, {
         planId,
-      },
-    );
-    const status = simulationRes.simulate.status;
-    if (status !== 'incomplete') {
-      return simulationRes.simulate.results;
+      });
+      return {
+        simulationDatasetId: getSimulationRes.simulation_dataset[0].id,
+        simulationId: getSimulationRes.simulation[0].id,
+      };
     }
   }
   throw new Error('Simulation timed out');
 }
 
-export async function removeSimulation(graphqlClient: GraphQLClient, simulationId: number): Promise<void> {
+export async function removeSimulationArtifacts(graphqlClient: GraphQLClient, simulationIds: {simulationId: number, simulationDatasetId: number}): Promise<void> {
   /*
    * Remove a plan
    */
 
-  await graphqlClient.request(
-    gql`
-      mutation DeleteSimulation($simulationId: Int!) {
-        delete_simulation_by_pk(id: $simulationId) {
-          id
-        }
+  await graphqlClient.request(gql`
+    mutation DeleteSimulation($simulationId: Int!, $simulationDatasetId: Int!) {
+      delete_simulation_by_pk(id: $simulationId) {
+        id
       }
-    `,
-    {
-      simulationId,
-    },
-  );
+      delete_simulation_dataset_by_pk(id: $simulationDatasetId) {
+        id
+      }
+    }
+  `, {
+    simulationId: simulationIds.simulationId,
+    simulationDatasetId: simulationIds.simulationDatasetId,
+  });
 }

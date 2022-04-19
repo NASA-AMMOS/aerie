@@ -1,5 +1,4 @@
-import fs from 'fs';
-import fetch, { FormData, File, fileFrom } from 'node-fetch';
+import fetch, { FormData, fileFrom } from 'node-fetch';
 import { gql, GraphQLClient } from 'graphql-request';
 import { randomUUID } from 'crypto';
 
@@ -7,7 +6,7 @@ export async function uploadMissionModel(graphqlClient: GraphQLClient): Promise<
   /*
    * Insert a mission model
    */
-  const bananaNationMissionModelUrl = new URL('../inputs/banananation-0.10.0-SNAPSHOT.jar', import.meta.url);
+  const bananaNationMissionModelUrl = new URL('../inputs/banananation-0.11.0-SNAPSHOT.jar', import.meta.url);
 
   const formData = new FormData();
   const file = await fileFrom(bananaNationMissionModelUrl.pathname);
