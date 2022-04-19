@@ -42,7 +42,7 @@ class TypescriptCodeGenerationServiceTest {
             /** Start Codegen */
             import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';
             interface SampleActivity1 extends ActivityTemplate {}
-            export const ActivityTemplates = {
+            const ActivityTemplates = {
               SampleActivity1: function SampleActivity1(
                 args: {
                   duration: Duration,

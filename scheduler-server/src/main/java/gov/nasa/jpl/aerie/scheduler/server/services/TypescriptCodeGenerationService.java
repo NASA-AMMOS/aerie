@@ -50,7 +50,7 @@ public class TypescriptCodeGenerationService {
     for (final var activityTypeCode : activityTypeCodes) {
       result.add("interface %s extends ActivityTemplate {}".formatted(activityTypeCode.activityTypeName()));
     }
-    result.add("export const ActivityTemplates = {");
+    result.add("const ActivityTemplates = {");
     result.add(indent(generateActivityTemplates(activityTypeCodes)));
     result.add("}");
     result.add("declare global {");
