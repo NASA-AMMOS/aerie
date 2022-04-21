@@ -1,6 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
+import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.goals.OptionGoal;
@@ -20,8 +23,22 @@ public class GoalBuilder {
       final Timestamp horizonStartTimestamp,
       final Timestamp horizonEndTimestamp,
       final Function<String, ActivityType> lookupActivityType) {
-    if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalDefinition g) {
-      return goalOfGoalDefinition(g, horizonStartTimestamp, horizonEndTimestamp, lookupActivityType);
+    final var hor = new PlanningHorizon(
+        horizonStartTimestamp.toInstant(),
+        horizonEndTimestamp.toInstant()).getHor();
+    if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition g) {
+      return new RecurrenceGoal.Builder()
+          .forAllTimeIn(hor)
+          .repeatingEvery(g.interval())
+          .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
+          .build();
+    } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition g) {
+      return new CoexistenceGoal.Builder()
+          .forAllTimeIn(hor)
+          .forEach(ActivityExpression.ofType(lookupActivityType.apply(g.forEach().type())))
+          .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
+          .startsAt(TimeAnchor.END)
+          .build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalAnd g) {
       var builder = new CompositeAndGoal.Builder();
       for (final var subGoalSpecifier : g.goals()) {
@@ -45,27 +62,9 @@ public class GoalBuilder {
     }
   }
 
-  private static Goal goalOfGoalDefinition(
-      final SchedulingDSL.GoalSpecifier.GoalDefinition goalDefinition,
-      final Timestamp horizonStartTimestamp,
-      final Timestamp horizonEndTimestamp,
-      final Function<String, ActivityType> lookupActivityType) {
-    final var hor = new PlanningHorizon(
-        horizonStartTimestamp.toInstant(),
-        horizonEndTimestamp.toInstant()).getHor();
-    return switch(goalDefinition.kind()) {
-      case ActivityRecurrenceGoal -> new RecurrenceGoal.Builder()
-          .forAllTimeIn(hor)
-          .repeatingEvery(goalDefinition.interval())
-          .thereExistsOne(makeActivityTemplate(goalDefinition, lookupActivityType))
-          .build();
-    };
-  }
-
   private static ActivityCreationTemplate makeActivityTemplate(
-      final SchedulingDSL.GoalSpecifier.GoalDefinition goalDefinition,
+      final SchedulingDSL.ActivityTemplate activityTemplate,
       final Function<String, ActivityType> lookupActivityType) {
-    final var activityTemplate = goalDefinition.activityTemplate();
     var builder = new ActivityCreationTemplate.Builder()
         .ofType(lookupActivityType.apply(activityTemplate.activityType()));
     for (final var argument : activityTemplate.arguments().entrySet()) {

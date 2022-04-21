@@ -31,7 +31,14 @@ class TypescriptCodeGenerationServiceTest {
                       ValueSchema.STRING,
                       "subfield2",
                       ValueSchema.ofSeries(ValueSchema.ofStruct(Map.of("subsubfield1", ValueSchema.REAL)))
-                  ))))),
+                  )))),
+                  new TypescriptCodeGenerationService.ActivityType(
+                      "SampleActivity2",
+                      Map.of(
+                          "quantity",
+                          ValueSchema.REAL
+                      )
+                  )),
           null
       );
 
@@ -41,29 +48,35 @@ class TypescriptCodeGenerationServiceTest {
         """
             /** Start Codegen */
             import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';
-            interface SampleActivity1 extends ActivityTemplate {}
-            export const ActivityTemplates = {
-              SampleActivity1: function SampleActivity1(
-                args: {
-                  duration: Duration,
-                  fancy: { subfield1: string, subfield2: { subsubfield1: Double, }[], },
-                  variant: ("option1" | "option2"),
-                }): SampleActivity1 {
-                  return { activityType: 'SampleActivity1', args };
-                },
+            export enum ActivityType {
+              SampleActivity1 = 'SampleActivity1',
+              SampleActivity2 = 'SampleActivity2',
             }
-            declare global {
-              var ActivityTemplates: {
-                SampleActivity1: (
-                  args: {
-                    duration: Duration,
-                    fancy: { subfield1: string, subfield2: { subsubfield1: Double, }[], },
-                    variant: ("option1" | "option2"),
-                  }) => SampleActivity1
-              }
+            interface SampleActivity1 extends ActivityTemplate {}
+            interface SampleActivity2 extends ActivityTemplate {}
+            const ActivityTemplateConstructors = {
+              SampleActivity1: function SampleActivity1Constructor(args: {
+                duration: Duration,
+                fancy: { subfield1: string, subfield2: { subsubfield1: Double, }[], },
+                variant: ("option1" | "option2"),
+              }): SampleActivity1 {
+                return { activityType: ActivityType.SampleActivity1, args };
+              },
+              SampleActivity2: function SampleActivity2Constructor(args: {
+                quantity: Double,
+              }): SampleActivity2 {
+                return { activityType: ActivityType.SampleActivity2, args };
+              },
             };
-            // Make ActivityTemplates available on the global object
-            Object.assign(globalThis, { ActivityTemplates });
+            declare global {
+              var ActivityTemplates: typeof ActivityTemplateConstructors;
+              var ActivityTypes: typeof ActivityType;
+            }
+            // Make ActivityTemplates and ActivityTypes available on the global object
+            Object.assign(globalThis, {
+              ActivityTemplates: ActivityTemplateConstructors,
+              ActivityTypes: ActivityType,
+            });
             /** End Codegen */""",
         TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(MISSION_MODEL_TYPES));
   }

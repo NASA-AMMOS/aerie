@@ -3,6 +3,13 @@ export interface ActivityTemplate {
   args: {[key: string]: any},
 }
 
+export enum NodeKind {
+  ActivityRecurrenceGoal = 'ActivityRecurrenceGoal',
+  ActivityCoexistenceGoal = 'ActivityCoexistenceGoal',
+  GoalAnd = 'GoalAnd',
+  GoalOr = 'GoalOr'
+}
+
 /**
  * Goal
  *
@@ -12,14 +19,24 @@ export interface ActivityTemplate {
  */
 export type Goal =
   | ActivityRecurrenceGoal
+  | ActivityCoexistenceGoal
   ;
-// TODO coexistence goal
 // TODO cardinality goal
 
 export interface ActivityRecurrenceGoal {
-  kind: 'ActivityRecurrenceGoal',
+  kind: NodeKind.ActivityRecurrenceGoal,
   activityTemplate: ActivityTemplate,
   interval: number,
+}
+
+export interface ActivityExpression {
+  type: string
+}
+
+export interface ActivityCoexistenceGoal {
+  kind: NodeKind.ActivityCoexistenceGoal,
+  activityTemplate: ActivityTemplate,
+  forEach: ActivityExpression
 }
 
 export type GoalSpecifier =
@@ -39,12 +56,12 @@ export type GoalComposition =
   ;
 
 export interface GoalAnd {
-  kind: 'GoalAnd',
+  kind: NodeKind.GoalAnd,
   goals: GoalSpecifier[],
 }
 
 export interface GoalOr {
-  kind: 'GoalOr',
+  kind: NodeKind.GoalOr,
   goals: GoalSpecifier[],
 }
 

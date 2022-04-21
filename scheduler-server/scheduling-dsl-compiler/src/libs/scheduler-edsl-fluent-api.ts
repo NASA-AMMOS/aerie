@@ -1,6 +1,9 @@
-import type * as AST from './scheduler-ast.js';
+import * as AST from './scheduler-ast.js';
+import { ActivityType } from "./mission-model-generated-code";
 
 interface ActivityRecurrenceGoal extends Goal {}
+interface ActivityCoexistenceGoal extends Goal {}
+
 export class Goal {
   private readonly goalSpecifier: AST.GoalSpecifier;
 
@@ -18,7 +21,7 @@ export class Goal {
 
   public and(...others: Goal[]): Goal {
     return Goal.new({
-      kind: 'GoalAnd',
+      kind: AST.NodeKind.GoalAnd,
       goals: [
         this.goalSpecifier,
         ...others.map(other => other.goalSpecifier),
@@ -28,7 +31,7 @@ export class Goal {
 
   public or(...others: Goal[]): Goal {
     return Goal.new({
-      kind: 'GoalOr',
+      kind: AST.NodeKind.GoalOr,
       goals: [
         this.goalSpecifier,
         ...others.map(other => other.goalSpecifier),
@@ -38,9 +41,18 @@ export class Goal {
 
   public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): ActivityRecurrenceGoal {
     return Goal.new({
-      kind: 'ActivityRecurrenceGoal',
+      kind: AST.NodeKind.ActivityRecurrenceGoal,
       activityTemplate: opts.activityTemplate,
       interval: opts.interval,
+    });
+  }
+  public static CoexistenceGoal(opts: { activityTemplate: ActivityTemplate, forEach: ActivityType }): ActivityCoexistenceGoal {
+    return Goal.new({
+      kind: AST.NodeKind.ActivityCoexistenceGoal,
+      activityTemplate: opts.activityTemplate,
+      forEach: {
+        type: opts.forEach
+      },
     });
   }
 }
@@ -52,6 +64,8 @@ declare global {
     public or(...others: Goal[]): Goal
 
     public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): ActivityRecurrenceGoal
+
+    public static CoexistenceGoal(opts: { activityTemplate: ActivityTemplate, forEach: ActivityType }): ActivityCoexistenceGoal
   }
   type Duration = number;
   type Double = number;

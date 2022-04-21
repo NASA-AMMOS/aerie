@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -159,7 +160,52 @@ public class SchedulingIntegrationTests {
     }
   }
 
-  private static Map<String, Collection<MockMerlinService.PlannedActivityInstance>> partitionByActivityType(final Iterable<MockMerlinService.PlannedActivityInstance> activities) {
+  @Test
+  void testSingleActivityPlanSimpleCoexistenceGoal() {
+    // TODO Coexistence goal's "forEach" doesn't work on activities with zero Duration
+    final var growBananaDuration = Duration.of(1, Duration.HOUR);
+    final var results = runSchedulerOnBanananation(
+        List.of(new MockMerlinService.PlannedActivityInstance(
+            "GrowBanana",
+            Map.of(
+                "quantity", SerializedValue.of(1),
+                "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+            Duration.ZERO)),
+        List.of("""
+          export default () => Goal.CoexistenceGoal({
+            activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+            forEach: ActivityTypes.GrowBanana,
+          })
+          """));
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(1, goalResult.createdActivities().size());
+    for (final var activity : goalResult.createdActivities()) {
+      assertNotNull(activity);
+    }
+    for (final var activity : goalResult.satisfyingActivities()) {
+      assertNotNull(activity);
+    }
+
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var peelBananas = planByActivityType.get("PeelBanana");
+    final var growBananas = planByActivityType.get("GrowBanana");
+    assertEquals(1, peelBananas.size());
+    assertEquals(1, growBananas.size());
+    final var peelBanana = peelBananas.iterator().next();
+    final var growBanana = growBananas.iterator().next();
+
+    assertEquals(SerializedValue.of("fromStem"), peelBanana.args().get("peelDirection"));
+    assertEquals(SerializedValue.of(1), growBanana.args().get("quantity"));
+
+    assertEquals(growBanana.startTime().plus(growBananaDuration), peelBanana.startTime());
+  }
+
+  private static Map<String, Collection<MockMerlinService.PlannedActivityInstance>>
+  partitionByActivityType(final Iterable<MockMerlinService.PlannedActivityInstance> activities) {
     final var result = new HashMap<String, Collection<MockMerlinService.PlannedActivityInstance>>();
     for (final var activity : activities) {
       result
