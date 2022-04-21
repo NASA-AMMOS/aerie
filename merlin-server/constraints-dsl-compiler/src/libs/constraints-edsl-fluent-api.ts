@@ -1,5 +1,6 @@
 import * as AST from './constraints-ast.js';
 
+interface DummyConstraint extends Constraint {}
 export class Constraint {
   private readonly constraintSpecifier: AST.ConstraintSpecifier;
 
@@ -34,12 +35,22 @@ export class Constraint {
       ],
     });
   }
+
+  // Dummy function just for testing.
+  // Delete as soon as an actual constraint is implemented.
+  public static DummyConstraint(num: number): DummyConstraint {
+    return Constraint.new({
+      kind: AST.NodeKind.DummyConstraint,
+      someNumber: num
+    });
+  }
 }
 
 declare global {
   export class Constraint {
     public and(...others: Constraint[]): Constraint
     public or(...others: Constraint[]): Constraint
+    public static DummyConstraint(num: number): DummyConstraint
   }
   type Duration = number;
   type Double = number;

@@ -1,9 +1,16 @@
 export enum NodeKind {
+  DummyConstraint = 'DummyConstraint',
   ConstraintAnd = 'ConstraintAnd',
   ConstraintOr = 'ConstraintOr'
 }
 
-export type Constraint = void;
+export type Constraint = | DummyConstraint;
+
+export interface DummyConstraint {
+  kind: NodeKind.DummyConstraint,
+  someNumber: number,
+}
+
 export type ConstraintSpecifier =
     | Constraint
     | ConstraintComposition
