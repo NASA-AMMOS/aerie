@@ -749,7 +749,7 @@ public final class SimulationEngine implements AutoCloseable {
     record InProgress<Return>(Duration startOffset, Task<Return> state)
         implements ExecutionState<Return>
     {
-      public <Return> AwaitingChildren<Return> completedAt(
+      public AwaitingChildren<Return> completedAt(
           final Duration endOffset,
           final Return returnValue,
           final LinkedList<TaskId> remainingChildren) {
