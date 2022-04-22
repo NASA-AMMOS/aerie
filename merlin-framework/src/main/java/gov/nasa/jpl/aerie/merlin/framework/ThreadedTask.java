@@ -202,17 +202,17 @@ public final class ThreadedTask<Return> implements Task<Return> {
 
     @Override
     public Scheduler delay(final Duration delay) {
-      return this.yield(TaskStatus.delayed(delay));
+      return this.yield(TaskStatus.delayed(delay, ThreadedTask.this));
     }
 
     @Override
     public Scheduler await(final String id) {
-      return this.yield(TaskStatus.awaiting(id));
+      return this.yield(TaskStatus.awaiting(id, ThreadedTask.this));
     }
 
     @Override
     public Scheduler await(final gov.nasa.jpl.aerie.merlin.protocol.model.Condition condition) {
-      return this.yield(TaskStatus.awaiting(condition));
+      return this.yield(TaskStatus.awaiting(condition, ThreadedTask.this));
     }
   }
 

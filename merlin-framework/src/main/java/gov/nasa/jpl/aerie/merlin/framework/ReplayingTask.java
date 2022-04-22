@@ -26,7 +26,7 @@ public final class ReplayingTask<Return> implements Task<Return> {
 
   @Override
   public TaskStatus<Return> step(final Scheduler scheduler) {
-    final var handle = new ReplayingTaskHandle<Return>();
+    final var handle = new ReplayingTaskHandle();
     final var context = new ReplayingReactionContext(this.executor, this.rootContext, this.memory, scheduler, handle);
 
     try (final var restore = this.rootContext.set(context)){
@@ -45,7 +45,7 @@ public final class ReplayingTask<Return> implements Task<Return> {
     this.memory.clear();
   }
 
-  private static final class ReplayingTaskHandle<Return> implements TaskHandle {
+  private final class ReplayingTaskHandle implements TaskHandle {
     public TaskStatus<Return> status = null;
 
     private Scheduler yield(final TaskStatus<Return> status) {
@@ -55,17 +55,17 @@ public final class ReplayingTask<Return> implements Task<Return> {
 
     @Override
     public Scheduler delay(final Duration delay) {
-      return this.yield(TaskStatus.delayed(delay));
+      return this.yield(TaskStatus.delayed(delay, ReplayingTask.this));
     }
 
     @Override
     public Scheduler await(final String id) {
-      return this.yield(TaskStatus.awaiting(id));
+      return this.yield(TaskStatus.awaiting(id, ReplayingTask.this));
     }
 
     @Override
     public Scheduler await(final gov.nasa.jpl.aerie.merlin.protocol.model.Condition condition) {
-      return this.yield(TaskStatus.awaiting(condition));
+      return this.yield(TaskStatus.awaiting(condition, ReplayingTask.this));
     }
   }
 

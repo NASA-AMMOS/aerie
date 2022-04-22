@@ -243,8 +243,7 @@ public final class SimulationEngine implements AutoCloseable {
   ) {
     // Step the modeling state forward.
     final var scheduler = new EngineScheduler(model, currentTime, task, frame);
-    final var state = progress.state();
-    final var status = state.step(scheduler);
+    final var status = progress.state().step(scheduler);
 
     // TODO: Report which topics this activity wrote to at this point in time. This is useful insight for any user.
     // TODO: Report which cells this activity read from at this point in time. This is useful insight for any user.
@@ -256,10 +255,10 @@ public final class SimulationEngine implements AutoCloseable {
       this.tasks.put(task, progress.completedAt(currentTime, s.returnValue(), children));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
     } else if (status instanceof TaskStatus.Delayed<Return> s) {
-      this.tasks.put(task, progress.continueWith(state));
+      this.tasks.put(task, progress.continueWith(s.continuation()));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
     } else if (status instanceof TaskStatus.AwaitingTask<Return> s) {
-      this.tasks.put(task, progress.continueWith(state));
+      this.tasks.put(task, progress.continueWith(s.continuation()));
 
       final var target = new TaskId(s.target());
       final var targetExecution = this.tasks.get(target);
@@ -276,7 +275,7 @@ public final class SimulationEngine implements AutoCloseable {
       this.conditions.put(condition, s.condition());
       this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(currentTime));
 
-      this.tasks.put(task, progress.continueWith(state));
+      this.tasks.put(task, progress.continueWith(s.continuation()));
       this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forCondition(condition)));
     } else {
       throw new IllegalArgumentException("Unknown subclass of %s: %s".formatted(TaskStatus.class, status));

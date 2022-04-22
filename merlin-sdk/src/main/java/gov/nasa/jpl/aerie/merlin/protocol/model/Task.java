@@ -5,10 +5,10 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 
 public interface Task<Return> extends AutoCloseable {
   /**
-   * Perform one step of the task, returning the conditions under which to progress to the next step.
+   * Perform one step of the task, returning the next step of the task and the conditions under which to perform it.
    *
-   * If this method returns {@link TaskStatus.Completed}, then any system resources held must be released.
-   * See {@link #reset()} for more details on resource management.
+   * <p>Clients must only call {@code step()} at most once, and must not invoke {@code step()} after {@link #reset()}
+   * has been invoked.</p>
    */
   TaskStatus<Return> step(Scheduler scheduler);
 
