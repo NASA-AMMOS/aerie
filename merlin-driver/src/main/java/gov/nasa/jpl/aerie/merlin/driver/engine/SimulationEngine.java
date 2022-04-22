@@ -249,16 +249,6 @@ public final class SimulationEngine implements AutoCloseable {
     // TODO: Report which topics this activity wrote to at this point in time. This is useful insight for any user.
     // TODO: Report which cells this activity read from at this point in time. This is useful insight for any user.
 
-    this.stepEffectModelHelper(task, progress, currentTime, state, status);
-  }
-
-  private <Return> void stepEffectModelHelper(
-      final TaskId task,
-      final ExecutionState.InProgress<Return> progress,
-      final Duration currentTime,
-      final Task<Return> state,
-      final TaskStatus<Return> status)
-  {
     // Based on the task's return status, update its execution state and schedule its resumption.
     if (status instanceof TaskStatus.Completed<Return> s) {
       final var children = new LinkedList<>(this.taskChildren.getOrDefault(task, Collections.emptySet()));
