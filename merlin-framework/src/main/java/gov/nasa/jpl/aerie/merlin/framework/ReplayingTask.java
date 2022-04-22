@@ -35,7 +35,7 @@ public final class ReplayingTask<Return> implements Task<Return> {
       return TaskStatus.completed(returnValue);
     } catch (final Yield ignored) {
       // If we get here, the activity has suspended.
-      return handle.status;
+      return Objects.requireNonNull(handle.status, "Task status is null, but it should have been assigned a value on yield.");
     }
   }
 
@@ -45,7 +45,7 @@ public final class ReplayingTask<Return> implements Task<Return> {
   }
 
   private static final class ReplayingTaskHandle<Return> implements TaskHandle<Return> {
-    public TaskStatus<Return> status = TaskStatus.completed(null);
+    public TaskStatus<Return> status = null;
 
     @Override
     public Scheduler yield(final TaskStatus<Return> status) {
