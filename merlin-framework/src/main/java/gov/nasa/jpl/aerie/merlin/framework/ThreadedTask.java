@@ -110,7 +110,7 @@ public final class ThreadedTask<Return> implements Task<Return> {
   }
 
   @Override
-  public void reset() {
+  public void release() {
     if (this.lifecycle == Lifecycle.Running) {
       try {
         // TODO: Add a (configurable) timeout to the `take()` call.

@@ -40,11 +40,6 @@ public final class ReplayingTask<Return> implements Task<Return> {
     }
   }
 
-  @Override
-  public void reset() {
-    this.memory.clear();
-  }
-
   private final class ReplayingTaskHandle implements TaskHandle {
     public TaskStatus<Return> status = null;
 

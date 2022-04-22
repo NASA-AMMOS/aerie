@@ -27,7 +27,7 @@ public final class OneShotTask implements Task<Unit> {
   }
 
   @Override
-  public void reset() {
+  public void release() {
     this.isTerminated = true;
   }
 }

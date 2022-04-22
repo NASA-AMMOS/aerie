@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.Directive;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
@@ -66,16 +65,9 @@ public final class MissionModel<Model> {
   }
 
   public Task<Unit> getDaemon() {
-    return new Task<>() {
-      @Override
-      public TaskStatus<Unit> step(final Scheduler scheduler) {
-        MissionModel.this.daemons.forEach(daemon -> scheduler.spawn(daemon.create()));
-        return TaskStatus.completed(Unit.UNIT);
-      }
-
-      @Override
-      public void reset() {
-      }
+    return scheduler -> {
+      MissionModel.this.daemons.forEach(daemon -> scheduler.spawn(daemon.create()));
+      return TaskStatus.completed(Unit.UNIT);
     };
   }
 

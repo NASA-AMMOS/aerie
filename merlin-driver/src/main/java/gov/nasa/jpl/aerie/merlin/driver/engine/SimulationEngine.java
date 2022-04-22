@@ -363,7 +363,7 @@ public final class SimulationEngine implements AutoCloseable {
   public void close() {
     for (final var task : this.tasks.values()) {
       if (task instanceof ExecutionState.InProgress r) {
-        r.state.reset();
+        r.state.release();
       }
     }
   }
