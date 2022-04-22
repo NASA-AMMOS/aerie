@@ -7,24 +7,23 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
 /* package-local */
-final class ThreadedReactionContext<Return> implements Context {
+final class ThreadedReactionContext implements Context {
   private final ExecutorService executor;
   private final Scoped<Context> rootContext;
-  private final TaskHandle<Return> handle;
+  private final TaskHandle handle;
   private Scheduler scheduler;
 
   public ThreadedReactionContext(
       final ExecutorService executor,
       final Scoped<Context> rootContext,
       final Scheduler scheduler,
-      final TaskHandle<Return> handle)
+      final TaskHandle handle)
   {
     this.executor = Objects.requireNonNull(executor);
     this.rootContext = Objects.requireNonNull(rootContext);
@@ -71,22 +70,22 @@ final class ThreadedReactionContext<Return> implements Context {
   @Override
   public void delay(final Duration duration) {
     this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
-    this.scheduler = this.handle.yield(TaskStatus.delayed(duration));
+    this.scheduler = this.handle.delay(duration);
   }
 
   @Override
   public void waitFor(final String id) {
     this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
-    this.scheduler = this.handle.yield(TaskStatus.awaiting(id));
+    this.scheduler = this.handle.await(id);
   }
 
   @Override
   public void waitUntil(final Condition condition) {
     this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
-    this.scheduler = this.handle.yield(TaskStatus.awaiting((now, atLatest) -> {
+    this.scheduler = this.handle.await((now, atLatest) -> {
       try (final var restore = this.rootContext.set(new QueryContext(now))) {
         return condition.nextSatisfied(true, Duration.ZERO, atLatest);
       }
-    }));
+    });
   }
 }
