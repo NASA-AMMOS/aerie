@@ -663,7 +663,7 @@ public final class SimulationEngine implements AutoCloseable {
       final var topic = ((EngineQuery<? super EventType, ?>) token).topic();
 
       // Append this event to the timeline.
-      this.frame.emit(Event.create(topic, event));
+      this.frame.emit(Event.create(topic, event, this.activeTask));
 
       SimulationEngine.this.invalidateTopic(topic, this.currentTime);
     }
