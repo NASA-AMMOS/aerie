@@ -11,12 +11,12 @@ import org.junit.jupiter.api.Test;
 
 import static gov.nasa.jpl.aerie.merlin.driver.timeline.EffectExpressionDisplay.displayGraph;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.EventGraphFlattener.flatten;
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.EventGraphFlattener.unflatten;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.EventGraphUnflattener.unflatten;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public final class EventGraphFlattenerTest {
   @Test
-  void testFlattenLex() throws EventGraphFlattener.InvalidTagException {
+  void testFlattenLex() throws EventGraphUnflattener.InvalidTagException {
     final var eventGraph =
         EventGraph.concurrently(
             EventGraph.atom("a"),
@@ -39,7 +39,7 @@ public final class EventGraphFlattenerTest {
   @Property
   @Label("unflatten is a left inverse of flatten")
   public void flattenThenUnflatten(@ForAll("fanout") final EventGraph<String> graph)
-  throws EventGraphFlattener.InvalidTagException
+  throws EventGraphUnflattener.InvalidTagException
   {
     final var result = unflatten(flatten(graph));
 
