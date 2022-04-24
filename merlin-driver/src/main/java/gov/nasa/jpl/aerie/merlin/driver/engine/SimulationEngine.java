@@ -65,7 +65,7 @@ public final class SimulationEngine implements AutoCloseable {
   /** The profiling state for each tracked resource. */
   private final Map<ResourceId, ProfilingState<?>> resources = new HashMap<>();
 
-  /** The task that spawned a given task (if any)). */
+  /** The task that spawned a given task (if any). */
   private final Map<TaskId, TaskId> taskParent = new HashMap<>();
   /** The set of children for each task (if any). */
   @DerivedFrom("taskParent")
