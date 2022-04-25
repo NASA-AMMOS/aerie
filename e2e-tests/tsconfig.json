@@ -3,7 +3,8 @@
     "lib": ["es2020"],
     "moduleResolution": "node",
     "module": "es2020",
-    "target": "es2020"
+    "target": "es2020",
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*.d.ts", "src/**/*.ts"]
 }
