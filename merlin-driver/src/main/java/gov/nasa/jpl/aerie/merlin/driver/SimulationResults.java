@@ -22,6 +22,7 @@ public final class SimulationResults {
   public final Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples;
   public final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities;
   public final Map<ActivityInstanceId, SerializedActivity> unfinishedActivities;
+  public final Map<ActivityInstanceId, SerializedActivity.Unconstructable> unconstructableActivities;
   public final List<Triple<Integer, String, ValueSchema>> topics;
   public final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events;
 
@@ -30,6 +31,7 @@ public final class SimulationResults {
         final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles,
         final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities,
         final Map<ActivityInstanceId, SerializedActivity> unfinishedActivities,
+        final Map<ActivityInstanceId, SerializedActivity.Unconstructable> unconstructableActivities,
         final Instant startTime,
         final List<Triple<Integer, String, ValueSchema>> topics,
         final SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events)
@@ -41,6 +43,7 @@ public final class SimulationResults {
     this.resourceSamples = takeSamples(realProfiles, discreteProfiles);
     this.simulatedActivities = simulatedActivities;
     this.unfinishedActivities = unfinishedActivities;
+    this.unconstructableActivities = unconstructableActivities;
     this.events = events;
   }
 
@@ -97,6 +100,7 @@ public final class SimulationResults {
         + ", discreteProfiles=" + this.discreteProfiles
         + ", simulatedActivities=" + this.simulatedActivities
         + ", unfinishedActivities=" + this.unfinishedActivities
+        + ", unconstructableActivities=" + this.unconstructableActivities
         + " }";
   }
 }

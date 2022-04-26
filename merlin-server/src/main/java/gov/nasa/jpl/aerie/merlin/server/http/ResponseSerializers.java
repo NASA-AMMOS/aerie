@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
@@ -172,6 +173,43 @@ public final class ResponseSerializers {
                 Collectors.toMap(e -> Long.toString(e.getKey().id()), Map.Entry::getValue)));
   }
 
+  private static JsonValue serializeActivity(final SerializedActivity activity) {
+    return Json
+        .createObjectBuilder()
+        .add("type", activity.getTypeName())
+        .add("arguments", serializeArgumentMap(activity.getArguments()))
+        .build();
+  }
+
+  private static JsonValue serializeActivities(final Map<ActivityInstanceId, SerializedActivity> activities) {
+    return serializeMap(
+        ResponseSerializers::serializeActivity,
+        activities
+            .entrySet()
+            .stream()
+            .collect(
+                Collectors.toMap(e -> Long.toString(e.getKey().id()), Map.Entry::getValue)));
+  }
+
+  private static JsonValue serializeUnconstructableActivity(final SerializedActivity.Unconstructable activity) {
+    return Json
+        .createObjectBuilder()
+        .add("type", activity.typeName())
+        .add("arguments", serializeArgumentMap(activity.arguments()))
+        .add("reason", activity.reason())
+        .build();
+  }
+
+  private static JsonValue serializeUnconstructableActivities(final Map<ActivityInstanceId, SerializedActivity.Unconstructable> activities) {
+    return serializeMap(
+        ResponseSerializers::serializeUnconstructableActivity,
+        activities
+            .entrySet()
+            .stream()
+            .collect(
+                Collectors.toMap(e -> Long.toString(e.getKey().id()), Map.Entry::getValue)));
+  }
+
   public static JsonValue serializeSimulationResults(final SimulationResults results, final Map<String, List<Violation>> violations) {
     return Json
         .createObjectBuilder()
@@ -181,6 +219,8 @@ public final class ResponseSerializers {
             results.resourceSamples))
         .add("constraints", serializeMap(v -> serializeIterable(ResponseSerializers::serializeConstraintViolation, v), violations))
         .add("activities", serializeSimulatedActivities(results.simulatedActivities))
+        .add("unfinishedActivities", serializeActivities(results.unfinishedActivities))
+        .add("unconstructableActivities", serializeUnconstructableActivities(results.unconstructableActivities))
         .add("events", serializeSimulationEvents(results.events, topicsById(results.topics), results.startTime))
         .build();
   }

@@ -79,10 +79,7 @@ public final class SimulationEngine implements AutoCloseable {
       return initiateTaskFromInputOrFail(model, input);
     } catch (final TaskSpecType.UnconstructableTaskSpecException | MissingArgumentsException ex) {
       final var task = TaskId.generate();
-
-      // TODO: Provide more information about the failure.
-      this.tasks.put(task, new ExecutionState.IllegalSource<>());
-
+      this.tasks.put(task, new ExecutionState.IllegalSource<>(ex.toString(), input.getTypeName(), input.getArguments()));
       return task;
     }
   }
@@ -208,9 +205,11 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration currentTime,
       final MissionModel<?> model
   ) {
+    // Keep all illegal source execution states in the task map.
     // The handler for each individual task stage is responsible
     //   for putting an updated lifecycle back into the task set.
-    var lifecycle = this.tasks.remove(task);
+    var lifecycle = this.tasks.get(task);
+    if (!(lifecycle instanceof ExecutionState.IllegalSource<?>)) this.tasks.remove(task);
 
     stepTaskHelper(task, frame, currentTime, model, lifecycle);
   }
@@ -223,7 +222,7 @@ public final class SimulationEngine implements AutoCloseable {
       final ExecutionState<Return> lifecycle)
   {
     // Extract the current modeling state.
-    if (lifecycle instanceof ExecutionState.IllegalSource<Return>) {
+    if (lifecycle instanceof ExecutionState.IllegalSource<Return> e) {
       // pass -- uninstantiable tasks never progress or complete
     } else if (lifecycle instanceof ExecutionState.NotStarted<Return> e) {
       stepEffectModel(task, e.startedAt(currentTime), frame, currentTime, model);
@@ -467,13 +466,22 @@ public final class SimulationEngine implements AutoCloseable {
 
     final var simulatedActivities = new HashMap<ActivityInstanceId, SimulatedActivity>();
     final var unsimulatedActivities = new HashMap<ActivityInstanceId, SerializedActivity>();
+    final var unconstructableActivities = new HashMap<ActivityInstanceId, SerializedActivity.Unconstructable>();
+
     engine.tasks.forEach((task, state) -> {
+      final var activityId = taskToPlannedDirective.get(task.id());
+
+      if (state instanceof final ExecutionState.IllegalSource<?> e) {
+        // Record this activity as unconstructable
+        unconstructableActivities.put(activityId, new SerializedActivity.Unconstructable(e.reason(), e.typeName(), e.arguments()));
+        return;
+      }
+
       final var directive = engine.taskDirective.get(task);
       if (directive == null) return;
 
-      final var activityId = taskToPlannedDirective.get(task.id());
-
-      if (state instanceof ExecutionState.Terminated<?> e) {
+      if (state instanceof final ExecutionState.Terminated<?> e) {
+        // Record this activity as completed
         simulatedActivities.put(activityId, new SimulatedActivity(
             directive.getType(),
             directive.getArguments(),
@@ -485,9 +493,9 @@ public final class SimulationEngine implements AutoCloseable {
             serializeReturnValue(directive, e.returnValue())
         ));
       } else {
-        unsimulatedActivities.put(activityId, new SerializedActivity(
-            directive.getType(),
-            directive.getArguments()));
+        // Record this activity as unfinished
+        final var activity = new SerializedActivity(directive.getType(), directive.getArguments());
+        unsimulatedActivities.put(activityId, activity);
       }
     });
 
@@ -528,6 +536,7 @@ public final class SimulationEngine implements AutoCloseable {
                                  discreteProfiles,
                                  simulatedActivities,
                                  unsimulatedActivities,
+                                 unconstructableActivities,
                                  startTime,
                                  topics,
                                  serializedTimeline);
@@ -746,8 +755,7 @@ public final class SimulationEngine implements AutoCloseable {
   /** The lifecycle stages every task passes through. */
   private sealed interface ExecutionState<Return> {
     /** The task has an invalid source for its behavior. */
-    // TODO: Provide more details about the instantiation failure.
-    record IllegalSource<Return>()
+    record IllegalSource<Return>(String reason, String typeName, Map<String, SerializedValue> arguments)
         implements ExecutionState<Return> {}
 
     /** The task has not yet started. */

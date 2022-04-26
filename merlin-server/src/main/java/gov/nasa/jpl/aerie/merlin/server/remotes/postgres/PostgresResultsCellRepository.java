@@ -309,8 +309,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     final var profiles = ProfileRepository.getProfiles(connection, simulationDatasetRecord.datasetId(), simulationWindow);
     final var activities = getSimulatedActivities(connection, simulationDatasetRecord.datasetId(), startTimestamp);
 
-    // TODO: Currently we don't store unfinished activities, but when we do we'll have to update this
+    // TODO: Currently we don't store unfinished/unconstructable activities, but when we do we'll have to update this
     final Map<ActivityInstanceId, SerializedActivity> unfinishedActivities = Map.of();
+    final Map<ActivityInstanceId, SerializedActivity.Unconstructable> unconstructableActivities = Map.of();
 
     final var topics = getSimulationTopics(connection, simulationDatasetRecord.datasetId());
     final var events = getSimulationEvents(connection, simulationDatasetRecord.datasetId(), startTimestamp);
@@ -320,6 +321,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         profiles.discreteProfiles(),
         activities,
         unfinishedActivities,
+        unconstructableActivities,
         simulationStart,
         topics,
         events
