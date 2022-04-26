@@ -8,226 +8,233 @@
   },
   "name": "Banananation",
   "plan": {
-    "sections": [
+    "activityTables": [
+      {
+        "columnDefs": [
+          { "field": "id", "name": "ID", "sortable": true },
+          { "field": "type", "name": "Type", "sortable": true },
+          { "field": "startTime", "name": "Start Time", "sortable": true },
+          { "field": "duration", "name": "Duration", "sortable": true }
+        ],
+        "id": 0
+      }
+    ],
+    "iFrames": [
       {
         "id": 0,
-        "size": 30,
-        "timeline": {
-          "id": 0,
-          "marginLeft": 110,
-          "marginRight": 30,
+        "src": "https://iss-sim.spacex.com/",
+        "title": "ISS-Docking-Simulator"
+      }
+    ],
+    "layout": {
+      "columnSizes": "1fr 3px 2fr 3px 1fr",
+      "columns": [
+        { "componentName": "ActivityForm", "id": 1, "type": "component" },
+        { "id": 2, "track": 1, "type": "gutter" },
+        {
+          "id": 3,
+          "rowSizes": "70% 3px 1fr",
           "rows": [
-            {
-              "autoAdjustHeight": true,
-              "height": 200,
-              "horizontalGuides": [],
-              "id": 0,
-              "layers": [
-                {
-                  "activityColor": "#283593",
-                  "activityHeight": 20,
-                  "chartType": "activity",
-                  "filter": { "activity": { "type": ".*" } },
-                  "id": 0,
-                  "yAxisId": null
-                }
-              ],
-              "yAxes": []
-            }
+            { "componentName": "Timeline", "id": 4, "timelineId": 0, "type": "component" },
+            { "id": 5, "track": 1, "type": "gutter" },
+            { "activityTableId": 0, "componentName": "ActivityTable", "id": 6, "type": "component" }
           ],
-          "verticalGuides": [
-            {
-              "id": 0,
-              "label": { "text": "Guide 0" },
-              "timestamp": "2020-005T00:00:00"
-            },
-            {
-              "id": 1,
-              "label": { "text": "Guide 1" },
-              "timestamp": "2020-025T00:00:00"
-            }
-          ]
+          "type": "rows"
         },
-        "type": "timeline"
-      },
+        { "id": 7, "track": 3, "type": "gutter" },
+        { "componentName": "ActivityTypes", "id": 8, "type": "component" }
+      ],
+      "gridName": "Activities",
+      "id": 0,
+      "type": "columns"
+    },
+    "timelines": [
       {
-        "id": 1,
-        "size": 50,
-        "timeline": {
-          "id": 1,
-          "marginLeft": 110,
-          "marginRight": 30,
-          "rows": [
-            {
-              "autoAdjustHeight": false,
-              "height": 100,
-              "horizontalGuides": [
-                {
-                  "id": 0,
-                  "label": { "text": "Guide 0" },
-                  "y": 2,
-                  "yAxisId": 1
-                }
-              ],
-              "id": 1,
-              "layers": [
-                {
-                  "chartType": "line",
-                  "filter": { "resource": { "name": "peel" } },
-                  "id": 1,
-                  "lineColor": "#283593",
-                  "lineWidth": 1,
-                  "pointRadius": 2,
-                  "yAxisId": 1
-                },
-                {
-                  "chartType": "line",
-                  "filter": { "resource": { "name": "fruit" } },
-                  "id": 2,
-                  "lineColor": "#ffcd69",
-                  "lineWidth": 1,
-                  "pointRadius": 2,
-                  "yAxisId": 2
-                }
-              ],
-              "yAxes": [
-                {
-                  "color": "#000000",
-                  "id": 1,
-                  "label": { "text": "peel" },
-                  "scaleDomain": [0, 4],
-                  "tickCount": 5
-                },
-                {
-                  "color": "#000000",
-                  "id": 2,
-                  "label": { "text": "fruit" },
-                  "scaleDomain": [-10, 4],
-                  "tickCount": 5
-                }
-              ]
-            },
-            {
-              "autoAdjustHeight": false,
-              "height": 100,
-              "horizontalGuides": [],
-              "id": 3,
-              "layers": [
-                {
-                  "chartType": "x-range",
-                  "colorScheme": "schemeTableau10",
-                  "filter": { "resource": { "name": "flag$" } },
-                  "id": 3,
-                  "opacity": 0.8,
-                  "yAxisId": 3
-                }
-              ],
-              "yAxes": [
-                {
-                  "color": "#000000",
-                  "id": 3,
-                  "label": { "text": "flag" },
-                  "scaleDomain": [],
-                  "tickCount": 0
-                }
-              ]
-            },
-            {
-              "autoAdjustHeight": false,
-              "height": 100,
-              "horizontalGuides": [],
-              "id": 4,
-              "layers": [
-                {
-                  "chartType": "x-range",
-                  "colorScheme": "schemePastel2",
-                  "filter": { "resource": { "name": "conflicted" } },
-                  "id": 4,
-                  "opacity": 0.8,
-                  "yAxisId": 4
-                }
-              ],
-              "yAxes": [
-                {
-                  "color": "#000000",
-                  "id": 4,
-                  "label": { "text": "conflicted" },
-                  "scaleDomain": [],
-                  "tickCount": 0
-                }
-              ]
-            },
-            {
-              "autoAdjustHeight": false,
-              "height": 100,
-              "horizontalGuides": [],
-              "id": 5,
-              "layers": [
-                {
-                  "chartType": "line",
-                  "filter": { "resource": { "name": "conflicted" } },
-                  "id": 5,
-                  "lineColor": "#283593",
-                  "lineWidth": 1,
-                  "pointRadius": 2,
-                  "yAxisId": 5
-                }
-              ],
-              "yAxes": [
-                {
-                  "color": "#000000",
-                  "id": 5,
-                  "label": { "text": "conflicted" },
-                  "scaleDomain": [0, 1],
-                  "tickCount": 1
-                }
-              ]
-            },
-            {
-              "autoAdjustHeight": false,
-              "height": 100,
-              "horizontalGuides": [],
-              "id": 6,
-              "layers": [
-                {
-                  "chartType": "line",
-                  "filter": { "resource": { "name": "plant" } },
-                  "id": 6,
-                  "lineColor": "#283593",
-                  "lineWidth": 1,
-                  "pointRadius": 2,
-                  "yAxisId": 6
-                }
-              ],
-              "yAxes": [
-                {
-                  "color": "#000000",
-                  "id": 6,
-                  "label": { "text": "plant" },
-                  "scaleDomain": [0, 200],
-                  "tickCount": 5
-                }
-              ]
-            }
-          ],
-          "verticalGuides": [
-            {
-              "id": 3,
-              "label": { "text": "Guide 3" },
-              "timestamp": "2020-100T00:00:00"
-            }
-          ]
-        },
-        "type": "timeline"
-      },
-      {
-        "id": 2,
-        "size": 20,
-        "table": {
-          "columns": ["select", "type", "startTime"],
-          "type": "activity"
-        },
-        "type": "table"
+        "id": 0,
+        "marginLeft": 110,
+        "marginRight": 30,
+        "rows": [
+          {
+            "autoAdjustHeight": true,
+            "height": 200,
+            "horizontalGuides": [],
+            "id": 0,
+            "layers": [
+              {
+                "activityColor": "#283593",
+                "activityHeight": 20,
+                "chartType": "activity",
+                "filter": { "activity": { "type": ".*" } },
+                "id": 0,
+                "yAxisId": null
+              }
+            ],
+            "yAxes": []
+          },
+          {
+            "autoAdjustHeight": false,
+            "height": 100,
+            "horizontalGuides": [
+              {
+                "id": 0,
+                "label": { "text": "Guide 0" },
+                "y": 2,
+                "yAxisId": 1
+              }
+            ],
+            "id": 1,
+            "layers": [
+              {
+                "chartType": "line",
+                "filter": { "resource": { "name": "peel" } },
+                "id": 1,
+                "lineColor": "#283593",
+                "lineWidth": 1,
+                "pointRadius": 2,
+                "yAxisId": 1
+              },
+              {
+                "chartType": "line",
+                "filter": { "resource": { "name": "fruit" } },
+                "id": 2,
+                "lineColor": "#ffcd69",
+                "lineWidth": 1,
+                "pointRadius": 2,
+                "yAxisId": 2
+              }
+            ],
+            "yAxes": [
+              {
+                "color": "#000000",
+                "id": 1,
+                "label": { "text": "peel" },
+                "scaleDomain": [0, 4],
+                "tickCount": 5
+              },
+              {
+                "color": "#000000",
+                "id": 2,
+                "label": { "text": "fruit" },
+                "scaleDomain": [-10, 4],
+                "tickCount": 5
+              }
+            ]
+          },
+          {
+            "autoAdjustHeight": false,
+            "height": 100,
+            "horizontalGuides": [],
+            "id": 2,
+            "layers": [
+              {
+                "chartType": "x-range",
+                "colorScheme": "schemeTableau10",
+                "filter": { "resource": { "name": "flag$" } },
+                "id": 3,
+                "opacity": 0.8,
+                "yAxisId": 3
+              }
+            ],
+            "yAxes": [
+              {
+                "color": "#000000",
+                "id": 3,
+                "label": { "text": "flag" },
+                "scaleDomain": [],
+                "tickCount": 0
+              }
+            ]
+          },
+          {
+            "autoAdjustHeight": false,
+            "height": 100,
+            "horizontalGuides": [],
+            "id": 3,
+            "layers": [
+              {
+                "chartType": "x-range",
+                "colorScheme": "schemePastel2",
+                "filter": { "resource": { "name": "conflicted" } },
+                "id": 4,
+                "opacity": 0.8,
+                "yAxisId": 4
+              }
+            ],
+            "yAxes": [
+              {
+                "color": "#000000",
+                "id": 4,
+                "label": { "text": "conflicted" },
+                "scaleDomain": [],
+                "tickCount": 0
+              }
+            ]
+          },
+          {
+            "autoAdjustHeight": false,
+            "height": 100,
+            "horizontalGuides": [],
+            "id": 4,
+            "layers": [
+              {
+                "chartType": "line",
+                "filter": { "resource": { "name": "conflicted" } },
+                "id": 5,
+                "lineColor": "#283593",
+                "lineWidth": 1,
+                "pointRadius": 2,
+                "yAxisId": 5
+              }
+            ],
+            "yAxes": [
+              {
+                "color": "#000000",
+                "id": 5,
+                "label": { "text": "conflicted" },
+                "scaleDomain": [0, 1],
+                "tickCount": 1
+              }
+            ]
+          },
+          {
+            "autoAdjustHeight": false,
+            "height": 100,
+            "horizontalGuides": [],
+            "id": 5,
+            "layers": [
+              {
+                "chartType": "line",
+                "filter": { "resource": { "name": "plant" } },
+                "id": 6,
+                "lineColor": "#283593",
+                "lineWidth": 1,
+                "pointRadius": 2,
+                "yAxisId": 6
+              }
+            ],
+            "yAxes": [
+              {
+                "color": "#000000",
+                "id": 6,
+                "label": { "text": "plant" },
+                "scaleDomain": [0, 200],
+                "tickCount": 5
+              }
+            ]
+          }
+        ],
+        "verticalGuides": [
+          {
+            "id": 0,
+            "label": { "text": "Guide 0" },
+            "timestamp": "2020-005T00:00:00"
+          },
+          {
+            "id": 1,
+            "label": { "text": "Guide 1" },
+            "timestamp": "2020-025T00:00:00"
+          }
+        ]
       }
     ]
   }
