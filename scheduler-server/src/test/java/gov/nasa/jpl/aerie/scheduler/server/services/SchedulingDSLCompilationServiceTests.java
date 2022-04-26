@@ -28,13 +28,13 @@ class SchedulingDSLCompilationServiceTests {
   void setUp() throws IOException {
     schedulingDSLCompilationService = new SchedulingDSLCompilationService(new TypescriptCodeGenerationService(new MissionModelService() {
       @Override
-      public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final PlanId missionModelId)
+      public MissionModelTypes getMissionModelTypes(final PlanId missionModelId)
       {
         return MISSION_MODEL_TYPES;
       }
 
       @Override
-      public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
+      public MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
       {
         return MISSION_MODEL_TYPES;
       }

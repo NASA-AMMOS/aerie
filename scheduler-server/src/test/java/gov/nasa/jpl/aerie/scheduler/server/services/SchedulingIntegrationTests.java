@@ -34,10 +34,10 @@ import static org.junit.jupiter.api.Assertions.fail;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SchedulingIntegrationTests {
 
-  public static final TypescriptCodeGenerationService.MissionModelTypes MISSION_MODEL_TYPES =
-      new TypescriptCodeGenerationService.MissionModelTypes(
+  public static final MissionModelService.MissionModelTypes MISSION_MODEL_TYPES =
+      new MissionModelService.MissionModelTypes(
           List.of(
-              new TypescriptCodeGenerationService.ActivityType(
+              new MissionModelService.ActivityType(
                   "PeelBanana",
                   Map.of(
                       "peelDirection",
@@ -51,7 +51,7 @@ public class SchedulingIntegrationTests {
                       )
                   )
               ),
-              new TypescriptCodeGenerationService.ActivityType(
+              new MissionModelService.ActivityType(
                   "GrowBanana",
                   Map.of(
                       "growingDuration",
@@ -60,7 +60,7 @@ public class SchedulingIntegrationTests {
                       ValueSchema.REAL
                   )
               ),
-              new TypescriptCodeGenerationService.ActivityType(
+              new MissionModelService.ActivityType(
                   "BiteBanana",
                   Map.of(
                       "biteSize",
@@ -82,7 +82,7 @@ public class SchedulingIntegrationTests {
     Arrays.sort(files, Comparator.comparingLong(File::lastModified).reversed());
     final var banananationJarFile = files[0];
 
-    this.merlinService = new MockMerlinService(Path.of(banananationJarFile.getName()), "some-model-name");
+    this.merlinService = new MockMerlinService(Path.of(banananationJarFile.getName()), "some-model-name", MISSION_MODEL_TYPES);
     this.schedulingDSLCompiler = new SchedulingDSLCompilationService(new TypescriptCodeGenerationService(this.merlinService));
   }
 

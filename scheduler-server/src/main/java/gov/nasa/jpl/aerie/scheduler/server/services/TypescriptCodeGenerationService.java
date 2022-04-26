@@ -8,14 +8,10 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 public class TypescriptCodeGenerationService {
-  public record ActivityType(String name, Map<String, ValueSchema> parameters) {}
-  public record ResourceType(String name, String type, ValueSchema schema) {}
-  public record MissionModelTypes(Collection<ActivityType> activityTypes, Collection<ResourceType> resourceTypes) {}
 
   private final MissionModelService merlinService;
 
@@ -39,7 +35,7 @@ public class TypescriptCodeGenerationService {
     }
   }
 
-  public static String generateTypescriptTypesFromMissionModel(final MissionModelTypes missionModelTypes) {
+  public static String generateTypescriptTypesFromMissionModel(final MissionModelService.MissionModelTypes missionModelTypes) {
     final var activityTypeCodes = new ArrayList<ActivityTypeCode>();
     for (final var activityType : missionModelTypes.activityTypes()) {
       activityTypeCodes.add(getActivityTypeInformation(activityType));
@@ -159,11 +155,11 @@ public class TypescriptCodeGenerationService {
     }
   }
 
-  private static ActivityTypeCode getActivityTypeInformation(final ActivityType activityType) {
+  private static ActivityTypeCode getActivityTypeInformation(final MissionModelService.ActivityType activityType) {
     return new ActivityTypeCode(activityType.name(), generateActivityParameterTypes(activityType));
   }
 
-  private static List<ActivityParameter> generateActivityParameterTypes(final ActivityType activityType) {
+  private static List<ActivityParameter> generateActivityParameterTypes(final MissionModelService.ActivityType activityType) {
     return activityType
         .parameters()
         .entrySet()
