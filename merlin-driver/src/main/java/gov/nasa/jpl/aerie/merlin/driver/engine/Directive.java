@@ -19,7 +19,10 @@ public record Directive<Model, DirectiveType, Return> (
   instantiate(final @Nullable TaskSpecType<Model, DirectiveType, Return> directiveType, final SerializedActivity instance)
   throws TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException
   {
-    if (directiveType == null) throw new TaskSpecType.UnconstructableTaskSpecException();
+    if (directiveType == null) {
+      throw new TaskSpecType.UnconstructableTaskSpecException("Nonexistent task spec. type: %s".formatted(instance.getTypeName()));
+    }
+
     return new Directive<>(directiveType, instance.getTypeName(), directiveType.instantiate(instance.getArguments()));
   }
 
