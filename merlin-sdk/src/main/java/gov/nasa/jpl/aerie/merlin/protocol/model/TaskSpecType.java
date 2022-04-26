@@ -22,5 +22,17 @@ public interface TaskSpecType<Model, Specification, Return> {
   ValueSchema getReturnValueSchema();
   SerializedValue serializeReturnValue(Return returnValue);
 
-  final class UnconstructableTaskSpecException extends Exception {}
+  final class UnconstructableTaskSpecException extends Exception {
+    public UnconstructableTaskSpecException(final String message) {
+      super(message);
+    }
+
+    public static UnconstructableTaskSpecException unconstructableArgument(final String argumentName, final String failure) {
+      return new UnconstructableTaskSpecException("Unconstructable argument \"%s\": %s".formatted(argumentName, failure));
+    }
+
+    public static UnconstructableTaskSpecException nonexistentArgument(final String argumentName) {
+      return new UnconstructableTaskSpecException("Nonexistent argument \"%s\"".formatted(argumentName));
+    }
+  }
 }

@@ -17,5 +17,21 @@ public interface ConfigurationType<Config> {
   Map<String, SerializedValue> getArguments(Config configuration);
   List<String> getValidationFailures(Config configuration);
 
-  final class UnconstructableConfigurationException extends Exception {}
+  final class UnconstructableConfigurationException extends Exception {
+    public UnconstructableConfigurationException() {
+      super();
+    }
+
+    public UnconstructableConfigurationException(final String message) {
+      super(message);
+    }
+
+    public static UnconstructableConfigurationException unconstructableArgument(final String argumentName, final String failure) {
+      return new UnconstructableConfigurationException("Unconstructable argument \"%s\": %s".formatted(argumentName, failure));
+    }
+
+    public static UnconstructableConfigurationException nonexistentArgument(final String argumentName) {
+      return new UnconstructableConfigurationException("Nonexistent argument \"%s\"".formatted(argumentName));
+    }
+  }
 }

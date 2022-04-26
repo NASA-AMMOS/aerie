@@ -81,11 +81,12 @@ import java.util.stream.Collectors;
                     .add("case $S:\n", parameter.name)
                     .indent()
                     .addStatement(
-                        "$L = Optional.ofNullable(this.mapper_$L.deserializeValue($L.getValue()).getSuccessOrThrow($$ -> new $T()))",
+                        "$L = Optional.ofNullable(this.mapper_$L.deserializeValue($L.getValue()).getSuccessOrThrow(failure -> $T.unconstructableArgument(\"$L\", failure)))",
                         parameter.name,
                         parameter.name,
                         "entry",
-                        unconstructableInstantiateException)
+                        unconstructableInstantiateException,
+                        parameter.name)
                     .addStatement("break")
                     .unindent())
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -96,8 +97,9 @@ import java.util.stream.Collectors;
                 .add("default:\n")
                 .indent()
                 .addStatement(
-                    "throw new $T()",
-                    unconstructableInstantiateException)
+                    "throw $T.nonexistentArgument($L.getKey())",
+                    unconstructableInstantiateException,
+                    "entry")
                 .unindent()
                 .build())
         .endControlFlow()
