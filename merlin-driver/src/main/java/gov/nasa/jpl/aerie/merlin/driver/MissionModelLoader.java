@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.io.BufferedReader;
@@ -47,7 +48,7 @@ public final class MissionModelLoader {
             final var registry = DirectiveTypeRegistry.extract(factory);
             final var model = factory.instantiate(registry.registry(), config, builder);
             return builder.build(model, factory.getConfigurationType(), registry);
-        } catch (final ConfigurationType.UnconstructableConfigurationException ex) {
+        } catch (final ConfigurationType.UnconstructableConfigurationException | MissingArgumentsException ex) {
             throw new MissionModelInstantiationException(ex);
         }
     }

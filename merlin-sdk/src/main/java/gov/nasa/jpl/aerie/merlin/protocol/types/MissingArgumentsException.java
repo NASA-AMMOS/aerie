@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public final class MissingArgumentsException extends RuntimeException {
+public final class MissingArgumentsException extends Exception {
   public final String containerName, metaName;
   public final List<ProvidedArgument> providedArguments;
   public final List<MissingArgument> missingArguments;
