@@ -491,7 +491,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
   }
 
   @Override
-  public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final PlanId planId)
+  public MissionModelTypes getMissionModelTypes(final PlanId planId)
   throws IOException, MissionModelServiceException
   {
     final var request = """
@@ -518,11 +518,11 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
                 .getJsonObject("mission_model")
                 .getJsonArray("activity_types");
     final var activityTypes = parseActivityTypes(activityTypesJsonArray);
-    return new TypescriptCodeGenerationService.MissionModelTypes(activityTypes, List.of());
+    return new MissionModelTypes(activityTypes, List.of());
   }
 
-  private static List<TypescriptCodeGenerationService.ActivityType> parseActivityTypes(final JsonArray activityTypesJsonArray) {
-    final var activityTypes = new ArrayList<TypescriptCodeGenerationService.ActivityType>();
+  private static List<ActivityType> parseActivityTypes(final JsonArray activityTypesJsonArray) {
+    final var activityTypes = new ArrayList<ActivityType>();
     for (final var activityTypeJson : activityTypesJsonArray) {
       final var parametersJson = activityTypeJson.asJsonObject().getJsonObject("parameters");
       final var parameters = new HashMap<String, ValueSchema>();
@@ -537,13 +537,13 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
                         .getJsonObject("schema"))
                 .getSuccessOrThrow());
       }
-      activityTypes.add(new TypescriptCodeGenerationService.ActivityType(activityTypeJson.asJsonObject().getString("name"), parameters));
+      activityTypes.add(new ActivityType(activityTypeJson.asJsonObject().getString("name"), parameters));
     }
     return activityTypes;
   }
 
   @Override
-  public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
+  public MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
   throws IOException, MissionModelServiceException, NoSuchMissionModelException
   {
     final var request = """
@@ -568,7 +568,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
         .getJsonObject("mission_model_by_pk")
         .getJsonArray("activity_types");
     final var activityTypes = parseActivityTypes(activityTypesJsonArray);
-    return new TypescriptCodeGenerationService.MissionModelTypes(activityTypes, List.of());
+    return new MissionModelTypes(activityTypes, List.of());
   }
 
   /**

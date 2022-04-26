@@ -10,9 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TypescriptCodeGenerationServiceTest {
 
-  public static final TypescriptCodeGenerationService.MissionModelTypes MISSION_MODEL_TYPES =
-      new TypescriptCodeGenerationService.MissionModelTypes(
-          List.of(new TypescriptCodeGenerationService.ActivityType(
+  public static final MissionModelService.MissionModelTypes MISSION_MODEL_TYPES =
+      new MissionModelService.MissionModelTypes(
+          List.of(new MissionModelService.ActivityType(
               "SampleActivity1",
               Map.of(
                   "variant",
@@ -32,7 +32,7 @@ class TypescriptCodeGenerationServiceTest {
                       "subfield2",
                       ValueSchema.ofSeries(ValueSchema.ofStruct(Map.of("subsubfield1", ValueSchema.REAL)))
                   )))),
-                  new TypescriptCodeGenerationService.ActivityType(
+                  new MissionModelService.ActivityType(
                       "SampleActivity2",
                       Map.of(
                           "quantity",

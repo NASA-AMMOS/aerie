@@ -32,13 +32,15 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
 
   private final Path modelPath;
   private final String modelName;
+  private final MissionModelService.MissionModelTypes missionModelTypes;
   private List<PlannedActivityInstance> initialPlan;
   Collection<PlannedActivityInstance> updatedPlan;
 
-  MockMerlinService(final Path modelPath, final String modelName) {
+  MockMerlinService(final Path modelPath, final String modelName, final MissionModelService.MissionModelTypes missionModelTypes) {
     this.modelPath = modelPath;
     this.modelName = modelName;
     this.initialPlan = List.of();
+    this.missionModelTypes = missionModelTypes;
   }
 
   void setInitialPlan(final List<PlannedActivityInstance> initialPlan) {
@@ -138,17 +140,17 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   }
 
   @Override
-  public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final PlanId planId)
+  public MissionModelTypes getMissionModelTypes(final PlanId planId)
   throws IOException, MissionModelServiceException
   {
-    return SchedulingIntegrationTests.MISSION_MODEL_TYPES;
+    return this.missionModelTypes;
   }
 
   @Override
-  public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
+  public MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
   throws IOException, MissionModelServiceException, NoSuchMissionModelException
   {
-    return SchedulingIntegrationTests.MISSION_MODEL_TYPES;
+    return this.missionModelTypes;
   }
 
   record PlannedActivityInstance(String type, Map<String, SerializedValue> args, Duration startTime) {}
