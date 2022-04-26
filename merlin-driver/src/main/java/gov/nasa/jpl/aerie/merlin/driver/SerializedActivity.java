@@ -10,7 +10,7 @@ import static java.util.Collections.unmodifiableMap;
 /**
  * A serializable representation of a mission model-specific activity domain object.
  *
- * A SerializedActivity is an mission model-agnostic representation of the data in an activity,
+ * A SerializedActivity is a mission model-agnostic representation of the data in an activity,
  * structured as serializable primitives composed using sequences and maps.
  *
  * For instance, if a FooActivity accepts two parameters, each of which is a 3D point in
@@ -70,4 +70,10 @@ public final class SerializedActivity {
   public String toString() {
     return "SerializedActivity { typeName = " + this.typeName + ", arguments = " + this.arguments.toString() + " }";
   }
+
+  /**
+   * A serializable representation of an unconstructable activity
+   * along with a reason for the construction failure.
+   */
+  public record Unconstructable(SerializedActivity activity, String reason) { }
 }

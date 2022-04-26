@@ -78,10 +78,7 @@ public final class SimulationEngine implements AutoCloseable {
       return initiateTaskFromInputOrFail(model, input);
     } catch (final UnconstructableException ex) {
       final var task = TaskId.generate();
-
-      // TODO: Provide more information about the failure.
-      this.tasks.put(task, new ExecutionState.IllegalSource<>());
-
+      this.tasks.put(task, new ExecutionState.IllegalSource<>(ex.toString()));
       return task;
     }
   }
@@ -466,6 +463,8 @@ public final class SimulationEngine implements AutoCloseable {
 
     final var simulatedActivities = new HashMap<ActivityInstanceId, SimulatedActivity>();
     final var unsimulatedActivities = new HashMap<ActivityInstanceId, SerializedActivity>();
+    final var unconstructableActivities = new HashMap<ActivityInstanceId, SerializedActivity.Unconstructable>();
+
     engine.tasks.forEach((task, state) -> {
       final var directive = engine.taskDirective.get(task);
       if (directive == null) return;
@@ -484,9 +483,15 @@ public final class SimulationEngine implements AutoCloseable {
             serializeReturnValue(directive, e.returnValue())
         ));
       } else {
-        unsimulatedActivities.put(activityId, new SerializedActivity(
+        final var activity = new SerializedActivity(
             directive.getType(),
-            directive.getArguments()));
+            directive.getArguments());
+
+        unsimulatedActivities.put(activityId, activity); // Record this activity as unfinished
+
+        if (state instanceof ExecutionState.IllegalSource<?> e) { // Record this activity as unconstructable
+          unconstructableActivities.put(activityId, new SerializedActivity.Unconstructable(activity, e.reason()));
+        }
       }
     });
 
@@ -527,6 +532,7 @@ public final class SimulationEngine implements AutoCloseable {
                                  discreteProfiles,
                                  simulatedActivities,
                                  unsimulatedActivities,
+                                 unconstructableActivities,
                                  startTime,
                                  topics,
                                  serializedTimeline);
@@ -745,8 +751,7 @@ public final class SimulationEngine implements AutoCloseable {
   /** The lifecycle stages every task passes through. */
   private sealed interface ExecutionState<Return> {
     /** The task has an invalid source for its behavior. */
-    // TODO: Provide more details about the instantiation failure.
-    record IllegalSource<Return>()
+    record IllegalSource<Return>(String reason)
         implements ExecutionState<Return> {}
 
     /** The task has not yet started. */

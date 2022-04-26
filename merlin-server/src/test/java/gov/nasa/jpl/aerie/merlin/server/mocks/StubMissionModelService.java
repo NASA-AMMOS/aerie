@@ -59,6 +59,7 @@ public final class StubMissionModelService implements MissionModelService {
       Map.of(),
       Map.of(),
       Map.of(),
+      Map.of(),
       Instant.EPOCH,
       List.of(),
       new TreeMap<>());
