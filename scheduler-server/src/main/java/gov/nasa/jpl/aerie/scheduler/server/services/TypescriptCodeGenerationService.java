@@ -17,16 +17,16 @@ public class TypescriptCodeGenerationService {
   public record ResourceType(String name, String type, ValueSchema schema) {}
   public record MissionModelTypes(Collection<ActivityType> activityTypes, Collection<ResourceType> resourceTypes) {}
 
-  private final MerlinService merlinService;
+  private final MissionModelService merlinService;
 
-  public TypescriptCodeGenerationService(final MerlinService merlinService) {
+  public TypescriptCodeGenerationService(final MissionModelService merlinService) {
     this.merlinService = merlinService;
   }
 
   public String generateTypescriptTypesForPlan(final PlanId planId) {
     try {
       return generateTypescriptTypesFromMissionModel(this.merlinService.getMissionModelTypes(planId));
-    } catch (MerlinService.MerlinServiceException | IOException e) {
+    } catch (MissionModelService.MissionModelServiceException | IOException e) {
       throw new Error("Could not fetch mission model types", e);
     }
   }
@@ -34,7 +34,7 @@ public class TypescriptCodeGenerationService {
   public String generateTypescriptTypesForMissionModel(final MissionModelId missionModelId) throws NoSuchMissionModelException {
     try {
       return generateTypescriptTypesFromMissionModel(this.merlinService.getMissionModelTypes(missionModelId));
-    } catch (MerlinService.MerlinServiceException | IOException e) {
+    } catch (MissionModelService.MissionModelServiceException | IOException e) {
       throw new Error("Could not fetch mission model types", e);
     }
   }

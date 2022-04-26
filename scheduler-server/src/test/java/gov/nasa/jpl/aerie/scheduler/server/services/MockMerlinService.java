@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class MockMerlinService implements MerlinService {
+class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
 
   private final Path modelPath;
   private final String modelName;
@@ -52,7 +52,7 @@ class MockMerlinService implements MerlinService {
 
   @Override
   public PlanMetadata getPlanMetadata(final PlanId planId)
-  throws IOException, NoSuchPlanException, MerlinServiceException
+  throws IOException, NoSuchPlanException, PlanServiceException
   {
     // Checked that revision matches
     // Uses model version info to load mission model jar
@@ -81,21 +81,21 @@ class MockMerlinService implements MerlinService {
   @Override
   public Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivities(
       final PlanMetadata planMetadata,
-      final Plan plan) throws IOException, NoSuchPlanException, MerlinServiceException
+      final Plan plan) throws IOException, NoSuchPlanException, PlanServiceException
   {
     return null;
   }
 
   @Override
   public PlanId createEmptyPlan(final String name, final long modelId, final Instant startTime, final Duration duration)
-  throws IOException, NoSuchPlanException, MerlinServiceException
+  throws IOException, NoSuchPlanException, PlanServiceException
   {
     return null;
   }
 
   @Override
   public void createSimulationForPlan(final PlanId planId)
-  throws IOException, NoSuchPlanException, MerlinServiceException
+  throws IOException, NoSuchPlanException, PlanServiceException
   {
 
   }
@@ -107,7 +107,7 @@ class MockMerlinService implements MerlinService {
       final MerlinPlan initialPlan,
       final Plan plan
   )
-  throws IOException, NoSuchPlanException, MerlinServiceException, NoSuchActivityInstanceException
+  throws IOException, NoSuchPlanException, PlanServiceException, NoSuchActivityInstanceException
   {
     this.updatedPlan = extractPlannedActivityInstances(plan);
     final var res = new HashMap<ActivityInstance, ActivityInstanceId>();
@@ -119,34 +119,34 @@ class MockMerlinService implements MerlinService {
   }
 
   @Override
-  public void ensurePlanExists(final PlanId planId) throws IOException, NoSuchPlanException, MerlinServiceException {
+  public void ensurePlanExists(final PlanId planId) throws IOException, NoSuchPlanException, PlanServiceException {
 
   }
 
   @Override
   public void clearPlanActivities(final PlanId planId)
-  throws IOException, NoSuchPlanException, MerlinServiceException
+  throws IOException, NoSuchPlanException, PlanServiceException
   {
 
   }
 
   @Override
   public Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(final PlanId planId, final Plan plan)
-  throws IOException, NoSuchPlanException, MerlinServiceException
+  throws IOException, NoSuchPlanException, PlanServiceException
   {
     return null;
   }
 
   @Override
   public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final PlanId planId)
-  throws IOException, MerlinServiceException
+  throws IOException, MissionModelServiceException
   {
     return SchedulingIntegrationTests.MISSION_MODEL_TYPES;
   }
 
   @Override
   public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
-  throws IOException, MerlinServiceException, NoSuchMissionModelException
+  throws IOException, MissionModelServiceException, NoSuchMissionModelException
   {
     return SchedulingIntegrationTests.MISSION_MODEL_TYPES;
   }
