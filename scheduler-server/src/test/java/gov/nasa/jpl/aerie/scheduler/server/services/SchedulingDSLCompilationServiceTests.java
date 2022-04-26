@@ -1,25 +1,16 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
-import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
-import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
-import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -35,71 +26,7 @@ class SchedulingDSLCompilationServiceTests {
 
   @BeforeAll
   void setUp() throws IOException {
-    schedulingDSLCompilationService = new SchedulingDSLCompilationService(new TypescriptCodeGenerationService(new MerlinService() {
-      @Override
-      public long getPlanRevision(final PlanId planId) {
-        return 0;
-      }
-
-      @Override
-      public PlanMetadata getPlanMetadata(final PlanId planId) {
-        return null;
-      }
-
-      @Override
-      public MerlinPlan getPlanActivities(final PlanMetadata planMetadata, final Problem mission)
-      {
-        return null;
-      }
-
-      @Override
-      public Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivities(
-          final PlanMetadata planMetadata,
-          final Plan plan)
-      {
-        return null;
-      }
-
-      @Override
-      public PlanId createEmptyPlan(
-          final String name,
-          final long modelId,
-          final Instant startTime,
-          final Duration duration)
-      {
-        return null;
-      }
-
-      @Override
-      public void createSimulationForPlan(final PlanId planId) {
-
-      }
-
-      @Override
-      public Map<ActivityInstance, ActivityInstanceId> updatePlanActivities(final PlanId planId,
-                                                                            final Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
-                                                                            final MerlinPlan initialPlan,
-                                                                            final Plan plan)
-      {
-        return null;
-      }
-
-      @Override
-      public void ensurePlanExists(final PlanId planId) {
-
-      }
-
-      @Override
-      public void clearPlanActivities(final PlanId planId) {
-
-      }
-
-      @Override
-      public Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(final PlanId planId, final Plan plan)
-      {
-        return null;
-      }
-
+    schedulingDSLCompilationService = new SchedulingDSLCompilationService(new TypescriptCodeGenerationService(new MissionModelService() {
       @Override
       public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final PlanId missionModelId)
       {
