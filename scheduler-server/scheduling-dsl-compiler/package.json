@@ -1,5 +1,5 @@
 {
-  "name": "typescript-compiler",
+  "name": "scheduling-dsl-compiler",
   "version": "1.0.0",
   "description": "Typescript compiler for the scheduling server DSL",
   "type": "module",
