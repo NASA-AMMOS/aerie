@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.Time;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,9 +53,9 @@ public class MerlInsightRulesTest {
     schedule();
     var time = planningHorizon.getStartAerie().plus(Duration.MINUTE);
     assertTrue(TestUtility.activityStartingAtTime(plan, time, rules.getActivityType("SSAMonitoring")));
-    assertTrue(TestUtility.activityStartingAtTime(plan, time, rules.getActivityType("HP3TemP")));
+    assertTrue(TestUtility.activityStartingAtTime(plan, time, rules.getActivityType("HeatProbeTemP")));
     for(var t = Duration.HOUR; t.shorterThan(planningHorizon.getEndAerie()); t = t.plus(Duration.HOUR)){
-      assertTrue(TestUtility.activityStartingAtTime(plan, time, rules.getActivityType("HP3TemP")));
+      assertTrue(TestUtility.activityStartingAtTime(plan, time, rules.getActivityType("HeatProbeTemP")));
     }
   }
   @Test
