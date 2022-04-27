@@ -25,5 +25,10 @@ RUN apt install --no-install-recommends -y curl \
 
 COPY --from=extractor /usr/src/app/extracted /usr/src/app
 
+COPY constraints-dsl-compiler /usr/src/app/constraints-dsl-compiler
+ENV CONSTRAINTS_DSL_COMPILER_ROOT="/usr/src/app/constraints-dsl-compiler/"
+ENV CONSTRAINTS_DSL_COMPILER_COMMAND="./build/main.js"
+ENV NODE_PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/node"
+
 WORKDIR /usr/src/app
 ENTRYPOINT ["/usr/src/app/bin/merlin-server"]

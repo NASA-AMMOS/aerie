@@ -1,0 +1,21 @@
+{
+  "name": "constraints-dsl-compiler",
+  "version": "1.0.0",
+  "description": "Typescript compiler for the constraints DSL",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node build/main.js",
+    "generate-ast-schema": "npx typescript-json-schema src/libs/constraints-ast.ts \"*\" --aliasRefs --out ./build/constraints.schema.json"
+  },
+  "author": "",
+  "dependencies": {
+    "@nasa-jpl/aerie-ts-user-code-runner": "^0.2.6",
+    "source-map": "^0.7.3",
+    "typescript": "^4.5.5",
+    "typescript-json-schema": "^0.53.0"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.21"
+  }
+}
