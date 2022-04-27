@@ -35,11 +35,11 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-public class MerlInsightRules extends Problem {
+public class AerieLanderRules extends Problem {
 
   static final PlanningHorizon DEFAULT_PLANNING_HORIZON = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(48 * 3600));
 
-  public MerlInsightRules(MissionModel<?> missionModel, PlanningHorizon planningHorizon, SchedulerModel schedulerModel) {
+  public AerieLanderRules(MissionModel<?> missionModel, PlanningHorizon planningHorizon, SchedulerModel schedulerModel) {
     super(missionModel, planningHorizon, new SimulationFacade(planningHorizon, missionModel), schedulerModel);
   }
 

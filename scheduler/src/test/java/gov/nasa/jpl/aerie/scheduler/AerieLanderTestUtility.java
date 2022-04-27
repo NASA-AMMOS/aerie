@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Some utility functions used in tests
  */
-public class MerlinSightTestUtility {
+public class AerieLanderTestUtility {
   public static void printPlan(Plan plan) {
     List<ActivityInstance> acts = plan.getActivitiesByTime();
     ActivityInstance last = null;
