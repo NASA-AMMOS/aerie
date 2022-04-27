@@ -138,7 +138,7 @@ test.describe('Scheduling', () => {
     expect(plan).not.toBeNull();
     expect(plan).toBeDefined();
     expect(plan.id).toEqual(plan_id);
-    expect(plan.activities.length).toEqual(13);
+    expect(plan.activities.length).toEqual(12);
   });
 
   test('Delete plan', async ({ request }) => {

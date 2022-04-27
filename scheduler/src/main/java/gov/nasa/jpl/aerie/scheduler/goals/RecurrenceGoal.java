@@ -112,7 +112,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
       final var strideDur = actStartT.minus(prevStartT);
       if (strideDur.compareTo(recurrenceInterval.end) > 0) {
         //fill conflicts for all the missing activities in that long span
-        conflicts.addAll(makeRecurrenceConflicts(prevStartT, actStartT, plan));
+        conflicts.addAll(makeRecurrenceConflicts(prevStartT, actStartT));
 
       } else {
         /*TODO: right now, we associate with all the activities that are satisfying but we should aim for the minimum
@@ -128,7 +128,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
 
     //fill in conflicts for all missing activities in the last span up to the
     //goal's own end time (also handles case of no matching acts at all)
-    conflicts.addAll(makeRecurrenceConflicts(prevStartT, lastStartT, plan));
+    conflicts.addAll(makeRecurrenceConflicts(prevStartT, lastStartT));
 
     return conflicts;
   }
@@ -154,16 +154,13 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
    * the maximum allowed recurrence interval. there may be no conflicts
    * if the span is less than the maximum interval.
    *
-   * @param start IN the start time of the span to fill with conflicts
-   * @param end IN the end time of the span to fill with conflicts
+   * @param start IN the start time of the span to fill with conflicts (inclusive)
+   * @param end IN the end time of the span to fill with conflicts (exclusive)
    */
   private java.util.Collection<MissingActivityConflict> makeRecurrenceConflicts(
-      Duration start, Duration end, Plan plan)
+      Duration start, Duration end)
   {
     final var conflicts = new java.util.LinkedList<MissingActivityConflict>();
-    //determine how much flexibility there is in creating activities
-    final var recurrenceFlexibility = recurrenceInterval.end.minus(
-        recurrenceInterval.start);
 
     if(end.minus(start).noLongerThan(recurrenceInterval.end)){
       return conflicts;
@@ -173,21 +170,15 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
          ;
          intervalT = intervalT.plus(recurrenceInterval.end)
     ) {
-      //REVIEW: technically, could create activity at extremely short
-      //        intervals (ie minT=0) and still satisfy the goal as currently
-      //        framed, which is exactly what the current solver will do since
-      //        it chooses the minimum. but it looks ugly. so for now passing
-      //        a limited flexibility for creation
-      var interval =  new Windows(Window.between(intervalT.minus(recurrenceInterval.end), Duration.min(intervalT, end)));
-      conflicts.add(new MissingActivityTemplateConflict(
-          this, new Windows(
-          interval),this.getActTemplate()));
-      if(intervalT.compareTo(end) > 0){
+      var interval = Window.between(intervalT.minus(recurrenceInterval.end), Duration.min(intervalT, end));
+        conflicts.add(new MissingActivityTemplateConflict(
+            this, new Windows(
+            interval), this.getActTemplate()));
+      if(intervalT.compareTo(end) >= 0){
         break;
       }
     }
 
     return conflicts;
   }
-
 }

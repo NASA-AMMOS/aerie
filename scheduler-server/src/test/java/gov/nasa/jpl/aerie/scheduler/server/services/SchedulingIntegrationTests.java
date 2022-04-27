@@ -107,7 +107,7 @@ public class SchedulingIntegrationTests {
     assertEquals(1, results.scheduleResults.goalResults().size());
     final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
     assertTrue(goalResult.satisfied());
-    assertEquals(5, goalResult.createdActivities().size());
+    assertEquals(4, goalResult.createdActivities().size());
     for (final var activity : goalResult.createdActivities()) {
       assertNotNull(activity);
     }
@@ -137,7 +137,7 @@ public class SchedulingIntegrationTests {
     final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
 
     assertTrue(goalResult.satisfied());
-    assertEquals(5, goalResult.createdActivities().size());
+    assertEquals(4, goalResult.createdActivities().size());
     for (final var activity : goalResult.createdActivities()) {
       assertNotNull(activity);
     }
@@ -153,7 +153,7 @@ public class SchedulingIntegrationTests {
     assertEquals(SerializedValue.of(1), biteBanana.args().get("biteSize"));
 
     final var peelBananas = activitiesByType.get("PeelBanana");
-    assertEquals(5, peelBananas.size());
+    assertEquals(4, peelBananas.size());
 
     for (final var peelBanana : peelBananas) {
       assertEquals(SerializedValue.of("fromStem"), peelBanana.args().get("peelDirection"));
