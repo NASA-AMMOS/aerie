@@ -1,12 +1,12 @@
 {
-  "name": "scheduling-dsl-compiler",
+  "name": "constraints-dsl-compiler",
   "version": "1.0.0",
-  "description": "Typescript compiler for the scheduling server DSL",
+  "description": "Typescript compiler for the constraints DSL",
   "type": "module",
   "scripts": {
     "build": "tsc",
     "test": "npm run build && node build/main.js",
-    "generate-ast-schema": "npx typescript-json-schema src/libs/scheduler-ast.ts \"*\" --aliasRefs --out ./build/scheduler.schema.json"
+    "generate-ast-schema": "npx typescript-json-schema src/libs/constraints-ast.ts \"*\" --aliasRefs --out ./build/constraints.schema.json"
   },
   "author": "",
   "dependencies": {
