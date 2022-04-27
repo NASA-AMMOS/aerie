@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -21,7 +22,7 @@ public class IncrementalSimulationTest {
   Duration endOfLastAct;
 
   @BeforeEach
-  public void init() throws TaskSpecType.UnconstructableTaskSpecException {
+  public void init() throws UnconstructableException {
     final var acts = getActivities();
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     incrementalSimulationDriver = new IncrementalSimulationDriver(fooMissionModel);

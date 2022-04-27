@@ -4,12 +4,14 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.engine.Directive;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableException;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -104,7 +106,7 @@ public class IncrementalSimulationDriver {
 
 
   public void simulateActivity(SerializedActivity activity, Duration startTime, ActivityInstanceId activityId)
-  throws TaskSpecType.UnconstructableTaskSpecException
+  throws UnconstructableException
   {
     final var activityToSimulate = new SimulatedActivity(startTime, activity, activityId);
     if(startTime.noLongerThan(curTime)){
@@ -162,7 +164,7 @@ public class IncrementalSimulationDriver {
   }
 
   private void simulateSchedule(final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule)
-  throws TaskSpecType.UnconstructableTaskSpecException
+  throws UnconstructableException
   {
 
     if(schedule.isEmpty()){

@@ -6,10 +6,8 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableException;
 
 import javax.lang.model.element.Modifier;
 import java.util.List;
@@ -27,7 +25,6 @@ public abstract sealed class MapperMethodMaker permits
 {
   /*package-private*/ final ExportTypeRecord exportType;
   /*package-private*/ final String metaName;
-  /*package-private*/ final Class<?> unconstructableInstantiateException;
 
   public MapperMethodMaker(final ExportTypeRecord exportType) {
     this.exportType = exportType;
@@ -36,10 +33,8 @@ public abstract sealed class MapperMethodMaker permits
     //  this should be changed to a switch expression once sealed class pattern-matching switch expressions exist
     if (exportType instanceof ActivityTypeRecord) {
       this.metaName = "activity";
-      this.unconstructableInstantiateException = TaskSpecType.UnconstructableTaskSpecException.class;
     } else { // is instanceof ConfigurationTypeRecord
       this.metaName = "configuration";
-      this.unconstructableInstantiateException = ConfigurationType.UnconstructableConfigurationException.class;
     }
   }
 
@@ -179,11 +174,9 @@ public abstract sealed class MapperMethodMaker permits
     // Ensure all parameters are non-null
     return methodBuilder
         .addStatement(
-            "final var $L = new $T(\"$L\", \"$L\")",
-            "missingArgsExBuilder",
-            MissingArgumentsException.Builder.class,
-            exportType.name(),
-            metaName)
+            "final var $L = new $T()",
+            "missingArgsBuilder",
+            UnconstructableException.Reason.MissingArguments.Builder.class)
         .addCode(
             exportType.parameters()
                 .stream()
@@ -193,23 +186,23 @@ public abstract sealed class MapperMethodMaker permits
                         // Re-serialize value since provided `arguments` map may not contain the value (when using `@WithDefaults` templates)
                         "$L.ifPresentOrElse($Wvalue -> $L.withProvidedArgument(\"$L\", this.mapper_$L.serializeValue(value)),$W() -> $L.withMissingArgument(\"$L\", this.mapper_$L.getValueSchema()))",
                         parameter.name,
-                        "missingArgsExBuilder",
+                        "missingArgsBuilder",
                         parameter.name,
                         parameter.name,
-                        "missingArgsExBuilder",
+                        "missingArgsBuilder",
                         parameter.name,
                         parameter.name))
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
             .build())
         .addStatement(
             "final var $L = $L.build()",
-            "missingArgsEx",
-            "missingArgsExBuilder")
+            "missingArgsReason",
+            "missingArgsBuilder")
         .addStatement(
-            "if (!$L.$L.isEmpty()) throw $L",
-            "missingArgsEx",
-            "missingArguments",
-            "missingArgsEx");
+            "if (!$L.missingArguments().isEmpty()) throw new $T($L)",
+            "missingArgsReason",
+            UnconstructableException.class,
+            "missingArgsReason");
   }
 
   static MapperMethodMaker make(final ExportTypeRecord exportType) {

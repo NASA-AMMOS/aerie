@@ -13,6 +13,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -66,7 +67,7 @@ public final class MissionModelFacade {
   {
     try {
       return specType.getValidationFailures(specType.instantiate(arguments));
-    } catch (final TaskSpecType.UnconstructableTaskSpecException | MissingArgumentsException e) {
+    } catch (final UnconstructableException | MissingArgumentsException e) {
       throw new UnconstructableActivityInstanceException(
           "Unknown failure when deserializing activity -- do the parameters match the schema?",
           e);
@@ -93,7 +94,7 @@ public final class MissionModelFacade {
     try {
       final var activity = specType.instantiate(arguments);
       return specType.getArguments(activity);
-    } catch (final TaskSpecType.UnconstructableTaskSpecException e) {
+    } catch (final UnconstructableException e) {
       throw new UnconstructableActivityInstanceException(
           "Unknown failure when deserializing activity -- do the parameters match the schema?",
           e);
@@ -113,7 +114,7 @@ public final class MissionModelFacade {
   {
     try {
       return configurationType.getValidationFailures(configurationType.instantiate(arguments));
-    } catch (final ConfigurationType.UnconstructableConfigurationException | MissingArgumentsException e) {
+    } catch (final UnconstructableException e) {
       throw new UnconstructableMissionModelConfigurationException(
           "Unknown failure when deserializing configuration -- do the parameters match the schema?",
           e);
@@ -135,7 +136,7 @@ public final class MissionModelFacade {
     try {
       final var config = configurationType.instantiate(arguments);
       return configurationType.getArguments(config);
-    } catch (final ConfigurationType.UnconstructableConfigurationException e) {
+    } catch (final UnconstructableException e) {
       throw new UnconstructableMissionModelConfigurationException(
           "Unknown failure when deserializing configuration -- do the parameters match the schema?",
           e);

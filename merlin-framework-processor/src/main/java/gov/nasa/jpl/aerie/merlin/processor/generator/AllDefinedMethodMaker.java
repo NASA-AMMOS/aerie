@@ -7,7 +7,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableException;
 
 import javax.lang.model.element.Modifier;
 import java.util.List;
@@ -27,8 +27,7 @@ import java.util.Optional;
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
         .returns(TypeName.get(exportType.declaration().asType()))
-        .addException(unconstructableInstantiateException)
-        .addException(MissingArgumentsException.class)
+        .addException(UnconstructableException.class)
         .addParameter(
             ParameterizedTypeName.get(
                 java.util.Map.class,
@@ -69,11 +68,13 @@ import java.util.Optional;
                     .add("case $S:\n", parameter.name)
                     .indent()
                     .addStatement(
-                        "template.$L = this.mapper_$L.deserializeValue($L.getValue()).getSuccessOrThrow($$ -> new $T())",
+                        "template.$L = this.mapper_$L.deserializeValue($L.getValue()).getSuccessOrThrow(failure -> new $T(new $T(\"$L\", failure)))",
                         parameter.name,
                         parameter.name,
                         "entry",
-                        unconstructableInstantiateException)
+                        UnconstructableException.class,
+                        UnconstructableException.Reason.UnconstructableArgument.class,
+                        parameter.name)
                     .addStatement("break")
                     .unindent())
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -84,8 +85,10 @@ import java.util.Optional;
                 .add("default:\n")
                 .indent()
                 .addStatement(
-                    "throw new $T()",
-                    unconstructableInstantiateException)
+                    "throw new $T(new $T($L.getKey()))",
+                    UnconstructableException.class,
+                    UnconstructableException.Reason.NonexistentArgument.class,
+                    "entry")
                 .unindent()
                 .build())
         .endControlFlow()

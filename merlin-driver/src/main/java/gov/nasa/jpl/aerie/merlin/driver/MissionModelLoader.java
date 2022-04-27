@@ -1,9 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -39,15 +39,14 @@ public final class MissionModelLoader {
         final MissionModelFactory<Registry, Config, Model> factory,
         final MissionModelBuilder builder
     ) {
-        try {
-            final var serializedConfigMap =
-                missionModelConfig.asMap().orElseThrow(ConfigurationType.UnconstructableConfigurationException::new);
+      final var serializedConfigMap = missionModelConfig.asMap().orElseThrow(MissionModelInstantiationException::new);
 
-            final var config = factory.getConfigurationType().instantiate(serializedConfigMap);
+      try {
+        final var config = factory.getConfigurationType().instantiate(serializedConfigMap);
             final var registry = DirectiveTypeRegistry.extract(factory);
             final var model = factory.instantiate(registry.registry(), config, builder);
             return builder.build(model, factory.getConfigurationType(), registry);
-        } catch (final ConfigurationType.UnconstructableConfigurationException ex) {
+        } catch (final UnconstructableException ex) {
             throw new MissionModelInstantiationException(ex);
         }
     }
@@ -130,6 +129,10 @@ public final class MissionModelLoader {
     }
 
     public static final class MissionModelInstantiationException extends RuntimeException {
+        public MissionModelInstantiationException() {
+          super();
+        }
+
         public MissionModelInstantiationException(final Throwable cause) {
             super(cause);
         }

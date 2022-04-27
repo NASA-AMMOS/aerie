@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableException;
 
 import java.util.List;
 import java.util.Map;
@@ -21,9 +22,12 @@ public final class EmptyConfigurationType implements ConfigurationType<VoidEnum>
 
   @Override
   public VoidEnum instantiate(final Map<String, SerializedValue> arguments)
-  throws UnconstructableConfigurationException, MissingArgumentsException
+  throws UnconstructableException
   {
-    if (!arguments.isEmpty()) throw new UnconstructableConfigurationException();
+    if (!arguments.isEmpty()) {
+      // TODO: once `NonexistentArgument` is changed to `NonexistentArguments` this `stream().findAny()` logic won't be needed
+      throw new UnconstructableException(new UnconstructableException.Reason.NonexistentArgument(arguments.keySet().stream().findAny().get()));
+    }
 
     return VoidEnum.VOID;
   }

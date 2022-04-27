@@ -18,11 +18,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
+import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -76,7 +76,7 @@ public final class SimulationEngine implements AutoCloseable {
   TaskId initiateTaskFromInput(final MissionModel<Model> model, final SerializedActivity input) {
     try {
       return initiateTaskFromInputOrFail(model, input);
-    } catch (final TaskSpecType.UnconstructableTaskSpecException ex) {
+    } catch (final UnconstructableException ex) {
       final var task = TaskId.generate();
 
       // TODO: Provide more information about the failure.
@@ -89,7 +89,7 @@ public final class SimulationEngine implements AutoCloseable {
   /** Construct a task defined by the behavior of a model given a type and arguments. */
   public <Model>
   TaskId initiateTaskFromInputOrFail(final MissionModel<Model> model, final SerializedActivity input)
-  throws TaskSpecType.UnconstructableTaskSpecException
+  throws UnconstructableException
   {
     final var directive  = model.instantiateDirective(input);
     final var task = TaskId.generate();

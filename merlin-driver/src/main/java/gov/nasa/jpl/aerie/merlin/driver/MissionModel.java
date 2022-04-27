@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
+import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.Collections;
@@ -58,7 +59,7 @@ public final class MissionModel<Model> {
   }
 
   public Directive<Model, ?, ?> instantiateDirective(final SerializedActivity specification)
-  throws TaskSpecType.UnconstructableTaskSpecException
+  throws UnconstructableException
   {
     return Directive.instantiate(this.directiveTypes.taskSpecTypes().get(specification.getTypeName()), specification);
   }
