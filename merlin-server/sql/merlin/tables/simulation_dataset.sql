@@ -20,6 +20,7 @@ create table simulation_dataset (
   status status_t not null default 'pending',
   reason text null,
   canceled boolean not null default false,
+  unconstructable_activities jsonb null,
 
   constraint simulation_dataset_synthetic_key
     primary key (id),
@@ -50,6 +51,8 @@ comment on column simulation_dataset.simulation_id is e''
   'The simulation determining the contents of the associated dataset.';
 comment on column simulation_dataset.dataset_id is e''
   'The dataset containing simulated results for the simulation. NULL if the dataset has not been constructed yet.';
+comment on column simulation_dataset.offset_from_plan_start is e''
+  'The time to judge dataset items against relative to the plan start.'
 comment on column simulation_dataset.plan_revision is e''
   'The revision of the plan corresponding to the given revision of the dataset.';
 comment on column simulation_dataset.model_revision is e''
@@ -64,8 +67,8 @@ comment on column simulation_dataset.reason is e''
   'The reason for failure in the event that simulation fails.';
 comment on column simulation_dataset.canceled is e''
   'Whether the simulation has been marked as canceled.';
-comment on column simulation_dataset.offset_from_plan_start is e''
-  'The time to judge dataset items against relative to the plan start.'
+comment on column simulation_dataset.unconstructable_activities is e''
+  'A set of activity type and instantiation error pairs for all unconstructable activities.';
 '\n'
   'If the dataset as a whole begins one day before the planning period begins, '
   'then this column should contain the interval ''1 day ago''.';
