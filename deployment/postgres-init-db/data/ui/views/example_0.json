@@ -27,13 +27,13 @@
       }
     ],
     "layout": {
-      "columnSizes": "1fr 3px 2fr 3px 1fr",
+      "columnSizes": "1fr 3px 3fr 3px 1fr",
       "columns": [
-        { "componentName": "ActivityForm", "id": 1, "type": "component" },
+        { "componentName": "ActivityTypes", "id": 1, "type": "component" },
         { "id": 2, "track": 1, "type": "gutter" },
         {
           "id": 3,
-          "rowSizes": "70% 3px 1fr",
+          "rowSizes": "2fr 3px 1fr",
           "rows": [
             { "componentName": "Timeline", "id": 4, "timelineId": 0, "type": "component" },
             { "id": 5, "track": 1, "type": "gutter" },
@@ -42,7 +42,7 @@
           "type": "rows"
         },
         { "id": 7, "track": 3, "type": "gutter" },
-        { "componentName": "ActivityTypes", "id": 8, "type": "component" }
+        { "componentName": "ActivityForm", "id": 8, "type": "component" }
       ],
       "gridName": "Activities",
       "id": 0,
