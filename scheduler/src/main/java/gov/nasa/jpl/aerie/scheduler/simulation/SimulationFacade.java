@@ -51,7 +51,7 @@ public class SimulationFacade {
 
   // planning horizon
   private final PlanningHorizon planningHorizon;
-  private IncrementalSimulationDriver driver;
+  private IncrementalSimulationDriver<?> driver;
   private int itSimActivityId;
 
   //simulation results from the last simulation, as output directly by simulation driver
@@ -68,7 +68,7 @@ public class SimulationFacade {
   public SimulationFacade(PlanningHorizon planningHorizon, MissionModel<?> missionModel) {
     this.missionModel = missionModel;
     this.planningHorizon = planningHorizon;
-    this.driver = new IncrementalSimulationDriver(missionModel);
+    this.driver = new IncrementalSimulationDriver<>(missionModel);
     this.itSimActivityId = 0;
     this.insertedActivities = new HashMap<>();
   }
@@ -104,7 +104,7 @@ public class SimulationFacade {
       final var oldInsertedActivities = new HashMap<>(insertedActivities);
       insertedActivities.clear();
       planActInstanceIdToSimulationActInstanceId.clear();
-      driver = new IncrementalSimulationDriver(missionModel);
+      driver = new IncrementalSimulationDriver<>(missionModel);
       simulateActivities(oldInsertedActivities.keySet());
     }
   }

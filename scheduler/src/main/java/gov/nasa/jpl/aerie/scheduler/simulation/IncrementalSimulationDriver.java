@@ -22,13 +22,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class IncrementalSimulationDriver {
+public class IncrementalSimulationDriver<Model> {
 
   private Duration curTime = Duration.ZERO;
   private SimulationEngine engine = new SimulationEngine();
   private LiveCells cells;
   private TemporalEventSource timeline = new TemporalEventSource();
-  private final MissionModel<?> missionModel;
+  private final MissionModel<Model> missionModel;
 
   //mapping each activity name to its task id (in String form) in the simulation engine
   private final Map<ActivityInstanceId, TaskId> plannedDirectiveToTask;
@@ -45,7 +45,7 @@ public class IncrementalSimulationDriver {
 
   record SimulatedActivity(Duration start, SerializedActivity activity, ActivityInstanceId id) {}
 
-  public IncrementalSimulationDriver(MissionModel<?> missionModel){
+  public IncrementalSimulationDriver(MissionModel<Model> missionModel){
     this.missionModel = missionModel;
     plannedDirectiveToTask = new HashMap<>();
     taskToPlannedDirective = new HashMap<>();
@@ -77,9 +77,10 @@ public class IncrementalSimulationDriver {
 
     // Start daemon task(s) immediately, before anything else happens.
     {
-      final var daemon = engine.initiateTaskFromSource(missionModel::getDaemon);
-      final var commit = engine.performJobs(Set.of(SimulationEngine.JobId.forTask(daemon)),
-                                            cells, curTime, Duration.MAX_VALUE, missionModel);
+      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
+
+      final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
+      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, missionModel);
       timeline.add(commit);
     }
   }
@@ -174,10 +175,13 @@ public class IncrementalSimulationDriver {
     for (final var entry : schedule.entrySet()) {
       final var directiveId = entry.getKey();
       final var startOffset = entry.getValue().getLeft();
-      final var directive = entry.getValue().getRight();
+      final var serializedDirective = entry.getValue().getRight();
 
-      final var taskId = engine.initiateTaskFromInputOrFail(missionModel, directive);
-      engine.scheduleTask(taskId, startOffset);
+      final var directive = missionModel.instantiateDirective(serializedDirective);
+      final var task = directive.createTask(missionModel.getModel());
+      final var taskId = engine.scheduleTask(startOffset, task);
+      engine.associateDirective(taskId, directive);
+
       plannedDirectiveToTask.put(directiveId,taskId);
       taskToPlannedDirective.put(taskId, directiveId);
     }

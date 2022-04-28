@@ -19,14 +19,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class IncrementalSimulationTest {
 
-  IncrementalSimulationDriver incrementalSimulationDriver;
+  IncrementalSimulationDriver<?> incrementalSimulationDriver;
   Duration endOfLastAct;
 
   @BeforeEach
   public void init() throws TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException {
     final var acts = getActivities();
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    incrementalSimulationDriver = new IncrementalSimulationDriver(fooMissionModel);
+    incrementalSimulationDriver = new IncrementalSimulationDriver<>(fooMissionModel);
     int id = 0;
     for (var act : acts) {
       final var start = System.nanoTime();
@@ -62,7 +62,7 @@ public class IncrementalSimulationTest {
         new ActivityInstanceId(1));
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var executor = (ThreadPoolExecutor) fooMissionModel.getModel().executor();
-    incrementalSimulationDriver = new IncrementalSimulationDriver(fooMissionModel);
+    incrementalSimulationDriver = new IncrementalSimulationDriver<>(fooMissionModel);
     for (var i = 0; i < 20000; i++) {
       incrementalSimulationDriver.initSimulation();
       incrementalSimulationDriver.simulateActivity(activity.activity, activity.start, activity.id);

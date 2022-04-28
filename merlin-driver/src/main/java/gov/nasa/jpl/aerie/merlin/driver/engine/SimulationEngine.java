@@ -19,9 +19,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -73,41 +71,21 @@ public final class SimulationEngine implements AutoCloseable {
   /** The instantiated input provided to the task. Missing entries indicate tasks without input. */
   private final Map<TaskId, Directive<?, ?, ?>> taskDirective = new HashMap<>();
 
-  /** Construct a task defined by the behavior of a model given a type and arguments. */
-  public <Model>
-  TaskId initiateTaskFromInput(final MissionModel<Model> model, final SerializedActivity input) {
-    try {
-      return initiateTaskFromInputOrFail(model, input);
-    } catch (final TaskSpecType.UnconstructableTaskSpecException | MissingArgumentsException ex) {
-      // All activity instantiations are assumed to be validated by this point
-      throw new Error("Unexpected state: activity instantiation %s failed with: %s"
-          .formatted(input.getTypeName(), ex.toString()));
-    }
+  /**
+   * Associate an arbitrary Directive with a task as its originator.
+   *
+   * <p><b>This operation is unsafe!</b> Care must be taken to ensure that the type arguments of the given Directive
+   * line up with the types of the input and output for the referenced task.</p>
+   */
+  public void associateDirective(final TaskId id, final Directive<?, ?, ?> directive) {
+    this.taskDirective.put(id, directive);
   }
 
-  /** Construct a task defined by the behavior of a model given a type and arguments. */
-  public <Model>
-  TaskId initiateTaskFromInputOrFail(final MissionModel<Model> model, final SerializedActivity input)
-  throws TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException
-  {
-    final var directive  = model.instantiateDirective(input);
-    final var task = TaskId.generate();
-    this.tasks.put(task, new ExecutionState.NotStarted<>(() -> directive.createTask(model.getModel())));
-    this.taskDirective.put(task, directive);
-    return task;
-  }
-
-  /** Define a task given a factory method from which that task can be constructed. */
-  public <Return> TaskId initiateTaskFromSource(final TaskSource<Return> source) {
-    final var task = TaskId.generate();
-    this.tasks.put(task, new ExecutionState.NotStarted<>(source));
-    return task;
-  }
-
-  /** Define a task given a black-box task state. */
-  public <Return> TaskId initiateTask(final Duration startTime, final Task<Return> state) {
+  /** Schedule a new task to be performed at the given time. */
+  public <Return> TaskId scheduleTask(final Duration startTime, final Task<Return> state) {
     final var task = TaskId.generate();
     this.tasks.put(task, new ExecutionState.InProgress<>(startTime, state));
+    this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
     return task;
   }
 
@@ -118,11 +96,6 @@ public final class SimulationEngine implements AutoCloseable {
 
     this.resources.put(id, ProfilingState.create(resource));
     this.scheduledJobs.schedule(JobId.forResource(id), SubInstant.Resources.at(nextQueryTime));
-  }
-
-  /** Schedule a task to be performed at the given time. Overrides any existing scheduling for the given task. */
-  public void scheduleTask(final TaskId task, final Duration scheduleTime) {
-    this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(scheduleTime));
   }
 
   /** Schedules any conditions or resources dependent on the given topic to be re-checked at the given time. */
