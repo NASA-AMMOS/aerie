@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.constraints.tree;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.Map;
@@ -19,11 +20,11 @@ public final class NotEqual<P extends Profile<P>> implements Expression<Windows>
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
-    final var leftProfile = this.left.evaluate(results, environment);
-    final var rightProfile = this.right.evaluate(results, environment);
+  public Windows evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
+    final var leftProfile = this.left.evaluate(results, bounds, environment);
+    final var rightProfile = this.right.evaluate(results, bounds, environment);
 
-    return leftProfile.notEqualTo(rightProfile, results.bounds);
+    return leftProfile.notEqualTo(rightProfile, bounds);
   }
 
   @Override

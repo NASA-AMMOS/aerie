@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.constraints.tree;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.List;
@@ -18,10 +19,10 @@ public final class ViolationsOf implements Expression<List<Violation>> {
   }
 
   @Override
-  public List<Violation> evaluate(SimulationResults results, Map<String, ActivityInstance> environment) {
-    final var bounds = new Windows(results.bounds);
-    final var satisfiedWindows = this.expression.evaluate(results, environment);
-    return List.of(new Violation(Windows.minus(bounds, satisfiedWindows)));
+  public List<Violation> evaluate(SimulationResults results, final Window bounds, Map<String, ActivityInstance> environment) {
+    final var boundsW = new Windows(bounds);
+    final var satisfiedWindows = this.expression.evaluate(results, bounds, environment);
+    return List.of(new Violation(Windows.minus(boundsW, satisfiedWindows)));
   }
 
   @Override

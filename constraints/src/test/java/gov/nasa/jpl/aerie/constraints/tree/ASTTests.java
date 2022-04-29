@@ -451,7 +451,7 @@ public class ASTTests {
 
 
     @Override
-    public T evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
+    public T evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
       return this.value;
     }
 

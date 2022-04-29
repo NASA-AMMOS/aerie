@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.constraints.time.Window;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -20,7 +21,7 @@ public final class RealResource implements Expression<LinearProfile> {
   }
 
   @Override
-  public LinearProfile evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
+  public LinearProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
     if (results.realProfiles.containsKey(this.name)) {
       return results.realProfiles.get(this.name);
     } else if (results.discreteProfiles.containsKey(this.name)) {

@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.constraints.tree;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.constraints.time.Window;
 
 import java.util.Map;
 import java.util.Objects;
@@ -18,9 +19,9 @@ public final class Plus implements Expression<LinearProfile> {
   }
 
   @Override
-  public LinearProfile evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
-    return left.evaluate(results, environment)
-               .plus(right.evaluate(results, environment));
+  public LinearProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
+    return left.evaluate(results, bounds, environment)
+               .plus(right.evaluate(results, bounds, environment));
   }
 
   @Override

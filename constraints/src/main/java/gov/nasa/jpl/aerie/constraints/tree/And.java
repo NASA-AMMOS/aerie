@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.List;
@@ -22,11 +23,11 @@ public final class And implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
-    Windows windows = new Windows(results.bounds);
+  public Windows evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
+    Windows windows = new Windows(bounds);
     for (final var expression : this.expressions) {
       windows.intersectWith(
-          expression.evaluate(results, environment)
+          expression.evaluate(results, bounds, environment)
       );
     }
     return windows;

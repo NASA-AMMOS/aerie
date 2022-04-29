@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.constraints.tree;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.time.Window;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,7 @@ public final class ForbiddenActivityOverlap implements Expression<List<Violation
   }
 
   @Override
-  public List<Violation> evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
+  public List<Violation> evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
     final var expansion =
         new ForEachActivity(
             this.activityType1,
@@ -30,7 +31,7 @@ public final class ForbiddenActivityOverlap implements Expression<List<Violation
                 new ViolationsOf(
                     new Not(new And(new During("act1"), new During("act2"))))));
 
-    return expansion.evaluate(results, environment);
+    return expansion.evaluate(results, bounds, environment);
   }
 
   @Override
