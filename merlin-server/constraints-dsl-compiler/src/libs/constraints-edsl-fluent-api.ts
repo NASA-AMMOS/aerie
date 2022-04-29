@@ -1,35 +1,35 @@
 import * as AST from './constraints-ast.js';
 
 interface ViolationsOf extends Constraint {}
+
 export class Constraint {
-  private readonly constraint: AST.Constraint;
+  /** Internal AST node */
+  public readonly __astNode: AST.Constraint;
 
-  private constructor(constraint: AST.Constraint) {
-    this.constraint = constraint;
+  private constructor(astNode: AST.Constraint) {
+    this.__astNode = astNode;
   }
 
-  private static new(constraint: AST.Constraint): Constraint {
-    return new Constraint(constraint);
-  }
-
-  private __serialize(): AST.Constraint {
-    return this.constraint;
+  private static new(astNode: AST.Constraint): Constraint {
+    return new Constraint(astNode);
   }
 
   public static ViolationsOf(expression: WindowsExpression): ViolationsOf {
     return Constraint.new({
       kind: AST.NodeKind.ViolationsOf,
-      expression: expression['__serialize']()
+      expression: expression.__astNode,
     });
   }
 }
 
 interface True extends WindowsExpression {}
+
 export class WindowsExpression {
-  private readonly expression: AST.WindowsExpression;
+  /** Internal AST node */
+  public readonly __astNode: AST.WindowsExpression;
 
   private constructor(expression: AST.WindowsExpression) {
-    this.expression = expression;
+    this.__astNode = expression;
   }
 
   private static new(expression: AST.WindowsExpression): WindowsExpression {
@@ -46,8 +46,8 @@ export class WindowsExpression {
     return WindowsExpression.new({
       kind: AST.NodeKind.WindowsExpressionAnd,
       expressions: [
-        this.expression,
-        ...others.map(other => other.expression),
+        this.__astNode,
+        ...others.map(other => other.__astNode),
       ],
     });
   }
@@ -56,29 +56,32 @@ export class WindowsExpression {
     return WindowsExpression.new({
       kind: AST.NodeKind.WindowsExpressionOr,
       expressions: [
-        this.expression,
-        ...others.map(other => other.expression),
+        this.__astNode,
+        ...others.map(other => other.__astNode),
       ],
-    });
-  }
-
-  public static True(): True {
-    return WindowsExpression.new({
-      kind: AST.NodeKind.True
     });
   }
 }
 
 declare global {
   export class Constraint {
+    /** Internal AST Node */
+    public readonly __astNode: AST.Constraint;
+
     public static ViolationsOf(expression: WindowsExpression): ViolationsOf
   }
+
   export class WindowsExpression {
-    public and(...others: WindowsExpression[]): WindowsExpression
-    public or(...others: WindowsExpression[]): WindowsExpression
+    /** Internal AST Node */
+    public readonly __astNode: AST.WindowsExpression;
+
     public static True(): True
+
+    public and(...others: WindowsExpression[]): WindowsExpression
+
+    public or(...others: WindowsExpression[]): WindowsExpression
   }
 }
 
 // Make Constraint available on the global object
-Object.assign(globalThis, { Constraint, WindowsExpression });
+Object.assign(globalThis, {Constraint, WindowsExpression});

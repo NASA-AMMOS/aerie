@@ -101,15 +101,14 @@ class ConstraintsDSLCompilationServiceTests {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error actualErrors;
     actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) constraintsDSLCompilationService.compileConstraintsDSL(
           PLAN_ID, """
-                export default function myConstraint(): Constraint {
-                  // return WindowsExpression.True()
-                  return 5
+                export default function myConstraint() {
+                   return WindowsExpression.True()
                 }
               """);
     assertTrue(
         actualErrors.errors()
                     .stream()
-                    .anyMatch(e -> e.message().contains("TypeError: TS2322 Incorrect return type. Expected: 'Constraint', Actual: 'number'."))
+                    .anyMatch(e -> e.message().contains("TypeError: TS2322 Incorrect return type. Expected: 'Constraint', Actual: 'True'."))
     );
   }
 }
