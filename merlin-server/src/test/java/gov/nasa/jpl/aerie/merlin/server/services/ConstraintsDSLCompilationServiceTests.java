@@ -2,9 +2,6 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.constraints.tree.True;
 import gov.nasa.jpl.aerie.constraints.tree.ViolationsOf;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.server.models.ConstraintsDSL;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -12,8 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ConstraintsCompilationError;
-import gov.nasa.jpl.aerie.merlin.server.models.ConstraintsDSL;
+import gov.nasa.jpl.aerie.constraints.json.ConstraintsDSL;
 import org.json.JSONObject;
 
 import javax.json.Json;

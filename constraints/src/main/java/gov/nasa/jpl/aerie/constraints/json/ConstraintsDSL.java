@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.server.models;
+package gov.nasa.jpl.aerie.constraints.json;
 
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
@@ -14,7 +14,6 @@ import gov.nasa.jpl.aerie.json.Unit;
 import java.util.List;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
@@ -42,7 +41,7 @@ public class ConstraintsDSL {
                     $ -> tuple(Unit.UNIT, $.expressions)));
   }
 
-  private static JsonParser<True> trueP =
+  private static final JsonParser<True> trueP =
       productP
           .field("kind", literalP("WindowsExpressionTrue"))
           .map(
