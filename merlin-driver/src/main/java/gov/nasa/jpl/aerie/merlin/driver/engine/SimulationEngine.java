@@ -11,7 +11,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
@@ -542,12 +542,7 @@ public final class SimulationEngine implements AutoCloseable {
 
 
   private <EventType> Optional<SerializedValue> trySerializeEvent(Event event, MissionModel.SerializableTopic<EventType> serializableTopic) {
-    return event.extract(topicOfSerializableTopic(serializableTopic), serializableTopic.serializer());
-  }
-
-  private <EventType> Topic<EventType> topicOfSerializableTopic(MissionModel.SerializableTopic<EventType> serializableTopic) {
-    // SAFETY: All queries available to the model are given to it by the MissionModelBuilder, which always constructs EngineQuery instances.
-    return ((EngineQuery<EventType, ?>) serializableTopic.query()).topic();
+    return event.extract(serializableTopic.topic(), serializableTopic.serializer());
   }
 
   private interface Translator<Target> {
@@ -602,7 +597,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public <State> State getState(final Query<?, State> token) {
+    public <State> State getState(final Query<State> token) {
       // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
       final var query = ((EngineQuery<?, State>) token);
@@ -645,7 +640,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public <State> State get(final Query<?, State> token) {
+    public <State> State get(final Query<State> token) {
       // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
       final var query = ((EngineQuery<?, State>) token);
@@ -657,11 +652,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public <EventType> void emit(final EventType event, final Query<? super EventType, ?> token) {
-      // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
-      @SuppressWarnings("unchecked")
-      final var topic = ((EngineQuery<? super EventType, ?>) token).topic();
-
+    public <EventType> void emit(final EventType event, final Topic<EventType> topic) {
       // Append this event to the timeline.
       this.frame.emit(Event.create(topic, event, this.activeTask));
 

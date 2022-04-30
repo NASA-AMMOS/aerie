@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
@@ -37,23 +38,24 @@ final class ThreadedReactionContext implements Context {
   }
 
   @Override
-  public <CellType> CellType ask(final Query<?, CellType> query) {
+  public <CellType> CellType ask(final Query<CellType> query) {
     return this.scheduler.get(query);
   }
 
   @Override
-  public <Event, Effect, CellType> Query<Event, CellType> allocate(
+  public <Event, Effect, CellType> Query<CellType> allocate(
       final CellType initialState,
       final Applicator<Effect, CellType> applicator,
       final EffectTrait<Effect> trait,
-      final Function<Event, Effect> projection)
+      final Function<Event, Effect> projection,
+      final Topic<Event> topic)
   {
     throw new IllegalStateException("Cannot allocate during simulation");
   }
 
   @Override
-  public <Event> void emit(final Event event, final Query<Event, ?> query) {
-    this.scheduler.emit(event, query);
+  public <Event> void emit(final Event event, final Topic<Event> topic) {
+    this.scheduler.emit(event, topic);
   }
 
   @Override

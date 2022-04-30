@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 
 import java.util.Objects;
 import java.util.Optional;

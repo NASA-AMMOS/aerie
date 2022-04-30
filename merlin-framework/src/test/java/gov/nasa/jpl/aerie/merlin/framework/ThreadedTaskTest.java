@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,12 +19,12 @@ public final class ThreadedTaskTest {
   public void testTransparentExceptions() {
     final var mockScheduler = new Scheduler() {
       @Override
-      public <State> State get(final Query<?, State> query) {
+      public <State> State get(final Query<State> query) {
         throw new UnsupportedOperationException();
       }
 
       @Override
-      public <Event> void emit(final Event event, final Query<? super Event, ?> query) {
+      public <Event> void emit(final Event event, final Topic<Event> topic) {
         throw new UnsupportedOperationException();
       }
 

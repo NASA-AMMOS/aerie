@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.framework.EmptyConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
@@ -101,7 +102,8 @@ public final class CellExpiryTest {
             return empty();
           }
         },
-        Function.identity()
+        Function.identity(),
+        new Topic<>()
     );
 
     final var resource = new Resource<String>() {
