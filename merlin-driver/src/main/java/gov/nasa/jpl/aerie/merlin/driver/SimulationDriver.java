@@ -4,10 +4,13 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.Directive;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -45,6 +48,9 @@ public final class SimulationDriver {
         timeline.add(commit);
       }
 
+      // Specify a topic on which tasks can log the activity they're associated with.
+      final var activityTopic = new Topic<ActivityInstanceId>();
+
       // Schedule all activities.
       final var taskToPlannedDirective = new HashMap<String, ActivityInstanceId>();
       for (final var entry : schedule.entrySet()) {
@@ -62,7 +68,7 @@ public final class SimulationDriver {
         }
 
         final var task = directive.createTask(missionModel.getModel());
-        final var taskId = engine.scheduleTask(startOffset, task);
+        final var taskId = engine.scheduleTask(startOffset, emitAndThen(directiveId, activityTopic, task));
         engine.associateDirective(taskId, directive);
 
         taskToPlannedDirective.put(taskId.id(), directiveId);
@@ -138,5 +144,21 @@ public final class SimulationDriver {
         timeline.add(commit);
       }
     }
+  }
+
+  private static <E, T>
+  Task<T> emitAndThen(final E event, final Topic<E> topic, final Task<T> continuation) {
+    return new Task<>() {
+      @Override
+      public TaskStatus<T> step(final Scheduler scheduler) {
+        scheduler.emit(event, topic);
+        return continuation.step(scheduler);
+      }
+
+      @Override
+      public void release() {
+        continuation.release();
+      }
+    };
   }
 }

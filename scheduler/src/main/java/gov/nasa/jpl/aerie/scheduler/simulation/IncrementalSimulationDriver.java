@@ -8,9 +8,13 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -29,6 +33,8 @@ public class IncrementalSimulationDriver<Model> {
   private LiveCells cells;
   private TemporalEventSource timeline = new TemporalEventSource();
   private final MissionModel<Model> missionModel;
+
+  private final Topic<ActivityInstanceId> activityTopic = new Topic<>();
 
   //mapping each activity name to its task id (in String form) in the simulation engine
   private final Map<ActivityInstanceId, TaskId> plannedDirectiveToTask;
@@ -179,7 +185,7 @@ public class IncrementalSimulationDriver<Model> {
 
       final var directive = missionModel.instantiateDirective(serializedDirective);
       final var task = directive.createTask(missionModel.getModel());
-      final var taskId = engine.scheduleTask(startOffset, task);
+      final var taskId = engine.scheduleTask(startOffset, emitAndThen(directiveId, this.activityTopic, task));
       engine.associateDirective(taskId, directive);
 
       plannedDirectiveToTask.put(directiveId,taskId);
@@ -221,4 +227,19 @@ public class IncrementalSimulationDriver<Model> {
     return engine.getTaskDuration(plannedDirectiveToTask.get(activityInstanceId));
   }
 
+  private static <E, T>
+  Task<T> emitAndThen(final E event, final Topic<E> topic, final Task<T> continuation) {
+    return new Task<>() {
+      @Override
+      public TaskStatus<T> step(final Scheduler scheduler) {
+        scheduler.emit(event, topic);
+        return continuation.step(scheduler);
+      }
+
+      @Override
+      public void release() {
+        continuation.release();
+      }
+    };
+  }
 }
