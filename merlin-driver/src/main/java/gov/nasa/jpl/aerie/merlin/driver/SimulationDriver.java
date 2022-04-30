@@ -14,7 +14,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
 
 public final class SimulationDriver {
@@ -52,7 +51,6 @@ public final class SimulationDriver {
       final var activityTopic = new Topic<ActivityInstanceId>();
 
       // Schedule all activities.
-      final var taskToPlannedDirective = new HashMap<String, ActivityInstanceId>();
       for (final var entry : schedule.entrySet()) {
         final var directiveId = entry.getKey();
         final var startOffset = entry.getValue().getLeft();
@@ -70,8 +68,6 @@ public final class SimulationDriver {
         final var task = directive.createTask(missionModel.getModel());
         final var taskId = engine.scheduleTask(startOffset, emitAndThen(directiveId, activityTopic, task));
         engine.associateDirective(taskId, directive);
-
-        taskToPlannedDirective.put(taskId.id(), directiveId);
       }
 
       // Drive the engine until we're out of time.
@@ -95,7 +91,7 @@ public final class SimulationDriver {
         timeline.add(commit);
       }
 
-      return engine.computeResults(engine, startTime, elapsedTime, taskToPlannedDirective, timeline, missionModel);
+      return SimulationEngine.computeResults(engine, startTime, elapsedTime, activityTopic, timeline, missionModel);
     }
   }
 

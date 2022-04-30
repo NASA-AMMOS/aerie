@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class IncrementalSimulationDriver<Model> {
@@ -38,8 +37,6 @@ public class IncrementalSimulationDriver<Model> {
 
   //mapping each activity name to its task id (in String form) in the simulation engine
   private final Map<ActivityInstanceId, TaskId> plannedDirectiveToTask;
-  //and the opposite
-  private final Map<TaskId, ActivityInstanceId> taskToPlannedDirective;
 
   //simulation results so far
   private SimulationResults lastSimResults;
@@ -54,14 +51,12 @@ public class IncrementalSimulationDriver<Model> {
   public IncrementalSimulationDriver(MissionModel<Model> missionModel){
     this.missionModel = missionModel;
     plannedDirectiveToTask = new HashMap<>();
-    taskToPlannedDirective = new HashMap<>();
     initSimulation();
     simulateUntil(Duration.ZERO);
   }
 
   /*package-private*/ void initSimulation(){
     plannedDirectiveToTask.clear();
-    taskToPlannedDirective.clear();
     lastSimResults = null;
     lastSimResultsEnd = Duration.ZERO;
     if (this.engine != null) this.engine.close();
@@ -154,14 +149,11 @@ public class IncrementalSimulationDriver<Model> {
     }
 
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd)) {
-      final Map<String, ActivityInstanceId> convertedTaskToPlannedDir = new HashMap<>();
-      taskToPlannedDirective.forEach((taskId, plannedDirective)->
-                                         convertedTaskToPlannedDir.put(taskId.id(), plannedDirective));
-      lastSimResults = engine.computeResults(
+      lastSimResults = SimulationEngine.computeResults(
           engine,
           Instant.now(),
           endTime,
-          convertedTaskToPlannedDir,
+          activityTopic,
           timeline,
           missionModel);
       lastSimResultsEnd = endTime;
@@ -189,7 +181,6 @@ public class IncrementalSimulationDriver<Model> {
       engine.associateDirective(taskId, directive);
 
       plannedDirectiveToTask.put(directiveId,taskId);
-      taskToPlannedDirective.put(taskId, directiveId);
     }
     var allTaskFinished = false;
     while (true) {
@@ -210,7 +201,7 @@ public class IncrementalSimulationDriver<Model> {
       timeline.add(commit);
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time
-      if ((taskToPlannedDirective.size() > 0 && taskToPlannedDirective.keySet().stream().allMatch(taskId -> engine.isTaskComplete(taskId)))) {
+      if (!plannedDirectiveToTask.isEmpty() && plannedDirectiveToTask.values().stream().allMatch(engine::isTaskComplete)) {
         allTaskFinished = true;
       }
 

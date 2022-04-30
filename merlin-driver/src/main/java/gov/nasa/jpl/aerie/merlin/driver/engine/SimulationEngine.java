@@ -11,12 +11,13 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -41,6 +42,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -346,6 +348,80 @@ public final class SimulationEngine implements AutoCloseable {
     return (this.tasks.get(task) instanceof ExecutionState.Terminated);
   }
 
+  private record TaskInfo(
+      Map<String, ActivityInstanceId> taskToPlannedDirective,
+      Map<String, SerializedActivity> input,
+      Map<String, SerializedValue> output
+  ) {
+    public TaskInfo() {
+      this(new HashMap<>(), new HashMap<>(), new HashMap<>());
+    }
+
+    public boolean isActivity(final TaskId id) {
+      return this.taskToPlannedDirective.containsKey(id.id());
+    }
+
+    public record Trait(MissionModel<?> missionModel, Topic<ActivityInstanceId> activityTopic)
+        implements EffectTrait<Consumer<TaskInfo>>
+    {
+      @Override
+      public Consumer<TaskInfo> empty() {
+        return taskInfo -> {};
+      }
+
+      @Override
+      public Consumer<TaskInfo> sequentially(final Consumer<TaskInfo> prefix, final Consumer<TaskInfo> suffix) {
+        return taskInfo -> { prefix.accept(taskInfo); suffix.accept(taskInfo); };
+      }
+
+      @Override
+      public Consumer<TaskInfo> concurrently(final Consumer<TaskInfo> left, final Consumer<TaskInfo> right) {
+        // SAFETY: For each task, `left` commutes with `right`, because no task runs concurrently with itself.
+        return taskInfo -> { left.accept(taskInfo); right.accept(taskInfo); };
+      }
+
+      public Consumer<TaskInfo> atom(final Event ev) {
+        return taskInfo -> {
+          // Identify activities.
+          ev.extract(this.activityTopic)
+            .ifPresent(directiveId -> taskInfo.taskToPlannedDirective.put(ev.provenance().id(), directiveId));
+
+          for (final var topic : this.missionModel.getTopics()) {
+            // Identify activity inputs.
+            extractInput(topic, ev, taskInfo);
+
+            // Identify activity outputs.
+            extractOutput(topic, ev, taskInfo);
+          }
+        };
+      }
+
+      private static <T>
+      void extractInput(final MissionModel.SerializableTopic<T> topic, final Event ev, final TaskInfo taskInfo) {
+        if (!topic.name().startsWith("ActivityType.Input.")) return;
+
+        ev.extract(topic.topic()).ifPresent(input -> {
+          final var activityType = topic.name().substring("ActivityType.Input.".length());
+
+          taskInfo.input.put(
+              ev.provenance().id(),
+              new SerializedActivity(activityType, topic.serializer().apply(input).asMap().orElseThrow()));
+        });
+      }
+
+      private static <T>
+      void extractOutput(final MissionModel.SerializableTopic<T> topic, final Event ev, final TaskInfo taskInfo) {
+        if (!topic.name().startsWith("ActivityType.Output.")) return;
+
+        ev.extract(topic.topic()).ifPresent(output -> {
+          taskInfo.output.put(
+              ev.provenance().id(),
+              topic.serializer().apply(output));
+        });
+      }
+    }
+  }
+
   /** Compute a set of results from the current state of simulation. */
   // TODO: Move result extraction out of the SimulationEngine.
   //   The Engine should only need to stream events of interest to a downstream consumer.
@@ -353,13 +429,25 @@ public final class SimulationEngine implements AutoCloseable {
   // TODO: Whatever mechanism replaces `computeResults` also ought to replace `isTaskComplete`.
   // TODO: Produce results for all tasks, not just those that have completed.
   //   Planners need to be aware of failed or unfinished tasks.
-  public SimulationResults computeResults(
+  public static SimulationResults computeResults(
       final SimulationEngine engine,
       final Instant startTime,
       final Duration elapsedTime,
-      final Map<String, ActivityInstanceId> taskToPlannedDirective,
+      final Topic<ActivityInstanceId> activityTopic,
       final TemporalEventSource timeline,
-      final MissionModel<?> missionModel) {
+      final MissionModel<?> missionModel
+  ) {
+    // Collect per-task information from the event graph.
+    final var taskInfo = new TaskInfo();
+
+    for (final var point : timeline) {
+      if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
+
+      final var trait = new TaskInfo.Trait(missionModel, activityTopic);
+      p.events().evaluate(trait, trait::atom).accept(taskInfo);
+    }
+
+    // Extract profiles for every resource.
     final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
     final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
 
@@ -387,6 +475,9 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
 
+
+    // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
+    final var taskToPlannedDirective = new HashMap<>(taskInfo.taskToPlannedDirective);
     final var usedActivityInstanceIds =
         taskToPlannedDirective
             .values()
@@ -395,21 +486,20 @@ public final class SimulationEngine implements AutoCloseable {
             .collect(Collectors.toSet());
     var counter = 1L;
     for (final var task : engine.tasks.keySet()) {
-      final var directive = engine.taskDirective.get(task);
-      if (directive == null) continue;
+      if (!taskInfo.isActivity(task)) continue;
       if (taskToPlannedDirective.containsKey(task.id())) continue;
 
       while (usedActivityInstanceIds.contains(counter)) counter++;
       taskToPlannedDirective.put(task.id(), new ActivityInstanceId(counter++));
     }
 
+    // Identify the nearest ancestor *activity* (excluding intermediate anonymous tasks).
     final var activityParents = new HashMap<ActivityInstanceId, ActivityInstanceId>();
     engine.tasks.forEach((task, state) -> {
-      final var directive = engine.taskDirective.get(task);
-      if (directive == null) return;
+      if (!taskInfo.isActivity(task)) return;
 
       var parent = engine.taskParent.get(task);
-      while (parent != null && !engine.taskDirective.containsKey(parent)) {
+      while (parent != null && !taskInfo.isActivity(parent)) {
         parent = engine.taskParent.get(parent);
       }
 
@@ -426,26 +516,29 @@ public final class SimulationEngine implements AutoCloseable {
     final var simulatedActivities = new HashMap<ActivityInstanceId, SimulatedActivity>();
     final var unfinishedActivities = new HashMap<ActivityInstanceId, UnfinishedActivity>();
     engine.tasks.forEach((task, state) -> {
-      final var directive = engine.taskDirective.get(task);
-      if (directive == null) return;
+      if (!taskInfo.isActivity(task)) return;
 
       final var activityId = taskToPlannedDirective.get(task.id());
 
       if (state instanceof ExecutionState.Terminated<?> e) {
+        final var inputAttributes = taskInfo.input().get(task.id());
+        final var outputAttributes = taskInfo.output().get(task.id());
+
         simulatedActivities.put(activityId, new SimulatedActivity(
-            directive.getType(),
-            directive.getArguments(),
+            inputAttributes.getTypeName(),
+            inputAttributes.getArguments(),
             startTime.plus(e.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
             e.joinOffset().minus(e.startOffset()),
             activityParents.get(activityId),
             activityChildren.getOrDefault(activityId, Collections.emptyList()),
             (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(activityId),
-            serializeReturnValue(directive, e.returnValue())
+            outputAttributes
         ));
       } else if (state instanceof ExecutionState.InProgress<?> e){
+        final var inputAttributes = taskInfo.input().get(task.id());
         unfinishedActivities.put(activityId, new UnfinishedActivity(
-            directive.getType(),
-            directive.getArguments(),
+            inputAttributes.getTypeName(),
+            inputAttributes.getArguments(),
             startTime.plus(e.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
             activityParents.get(activityId),
             activityChildren.getOrDefault(activityId, Collections.emptyList()),
@@ -504,17 +597,8 @@ public final class SimulationEngine implements AutoCloseable {
     return Optional.empty();
   }
 
-  @SuppressWarnings("unchecked")
-  private static <DirectiveReturn, TaskReturn> SerializedValue serializeReturnValue(
-      final Directive<?, ?, DirectiveReturn> directive,
-      final TaskReturn taskReturnValue
-  ) {
-    // SAFETY: Tasks always return the same type as the TaskSpecType that declares them
-    return directive.directiveType().serializeReturnValue((DirectiveReturn) taskReturnValue);
-  }
 
-
-  private <EventType> Optional<SerializedValue> trySerializeEvent(Event event, MissionModel.SerializableTopic<EventType> serializableTopic) {
+  private static <EventType> Optional<SerializedValue> trySerializeEvent(Event event, MissionModel.SerializableTopic<EventType> serializableTopic) {
     return event.extract(serializableTopic.topic(), serializableTopic.serializer());
   }
 
