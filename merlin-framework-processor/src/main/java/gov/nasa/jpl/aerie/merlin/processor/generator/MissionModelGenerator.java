@@ -23,6 +23,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ConfigurationTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
@@ -204,6 +205,11 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                             missionModel.getTypesName(),
                             ClassName.get(missionModel.topLevelModel)))
+                    .addStatement(
+                        "$L.registerTopics($L)",
+                        "registry",
+                        "builder")
+                    .addCode("\n")
                     .addStatement(
                         "final var $L = new $T($L)",
                         "registrar",
@@ -575,6 +581,48 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .build())
             .addMethod(
                 MethodSpec
+                    .methodBuilder("registerTopics")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addParameter(TypeName.get(Initializer.class), "initializer", Modifier.FINAL)
+                    .addCode(
+                        missionModel.activityTypes
+                            .stream()
+                            .map(activityType ->
+                                     CodeBlock
+                                         .builder()
+                                         .addStatement(
+                                           """
+                                             $L.topic(
+                                             "ActivityType.Input." + $S,
+                                             $L.getInputTopic(),
+                                             $T.ofStruct($L.getParameters().stream().collect($T.toMap($$ -> $$.name(), $$ -> $$.schema()))),
+                                             $$ -> $T.of($L.getArguments($$)))""",
+                                           "initializer",
+                                           activityType.name(),
+                                           activityType.mapper().name.canonicalName().replace(".", "_"),
+                                           ValueSchema.class,
+                                           activityType.mapper().name.canonicalName().replace(".", "_"),
+                                           Collectors.class,
+                                           SerializedValue.class,
+                                           activityType.mapper().name.canonicalName().replace(".", "_"))
+                                         .addStatement(
+                                           """
+                                             $L.topic(
+                                             "ActivityType.Output." + $S,
+                                             $L.getOutputTopic(),
+                                             $L.getReturnValueSchema(),
+                                             $L::serializeReturnValue)""",
+                                           "initializer",
+                                           activityType.name(),
+                                           activityType.mapper().name.canonicalName().replace(".", "_"),
+                                           activityType.mapper().name.canonicalName().replace(".", "_"),
+                                           activityType.mapper().name.canonicalName().replace(".", "_")))
+                            .reduce((x, y) -> x.add("\n").add(y.build()))
+                            .orElse(CodeBlock.builder())
+                            .build())
+                    .build())
+            .addMethod(
+                MethodSpec
                     .methodBuilder("contextualizeModel")
                     .addModifiers(Modifier.PUBLIC)
                     .addParameter(
@@ -823,7 +871,10 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                           return $T
                                           .$L(() -> {
                                             try (final var restore = $L.registry().contextualizeModel($L)) {
-                                              return $L.$L($L.model());
+                                              $T.emit($L, this.$L);
+                                              final var result = $L.$L($L.model());
+                                              $T.emit(result, this.$L);
+                                              return result;
                                             }
                                           })
                                           .create($L.executor())""",
@@ -834,9 +885,14 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                         },
                                         "model",
                                         "model",
+                                        ModelActions.class,
+                                        "activity",
+                                        "inputTopic",
                                         "activity",
                                         effectModel.methodName(),
                                         "model",
+                                        ModelActions.class,
+                                        "outputTopic",
                                         "model")
                                     .build())
                                 .orElseGet(() -> CodeBlock
@@ -846,7 +902,9 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                           return $T
                                           .$L(() -> {
                                             try (final var restore = $L.registry().contextualizeModel($L)) {
+                                              $T.emit($L, this.$L);
                                               $L.$L($L.model());
+                                              $T.emit($T.UNIT, this.$L);
                                               return $T.UNIT;
                                             }
                                           })
@@ -858,16 +916,32 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                         },
                                         "model",
                                         "model",
+                                        ModelActions.class,
+                                        "activity",
+                                        "inputTopic",
                                         "activity",
                                         effectModel.methodName(),
                                         "model",
+                                        ModelActions.class,
+                                        Unit.class,
+                                        "outputTopic",
                                         Unit.class,
                                         "model")
                                     .build()))
                             .orElseGet(() -> CodeBlock
                                 .builder()
-                                .addStatement(
-                                    "return scheduler -> $T.completed($T.UNIT)",
+                                .add(
+                                    """
+                                      return scheduler -> {
+                                        scheduler.emit($L, this.$L);
+                                        scheduler.emit($T.UNIT, this.$L);
+                                        return $T.completed($T.UNIT);
+                                      };
+                                      """,
+                                    "activity",
+                                    "inputTopic",
+                                    Unit.class,
+                                    "outputTopic",
                                     TaskStatus.class,
                                     Unit.class)
                                 .build()))
