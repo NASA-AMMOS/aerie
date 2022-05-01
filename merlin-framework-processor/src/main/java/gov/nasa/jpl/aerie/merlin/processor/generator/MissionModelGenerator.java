@@ -23,6 +23,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ConfigurationTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
@@ -748,6 +749,46 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             .toBuilder()
             .addMethod(makeGetReturnValueSchemaMethod())
             .addMethod(makeSerializeReturnValueMethod(activityType))
+            .addField(
+                FieldSpec
+                    .builder(
+                        ParameterizedTypeName.get(
+                            ClassName.get(Topic.class),
+                            TypeName.get(activityType.declaration().asType())),
+                        "inputTopic",
+                        Modifier.PRIVATE,
+                        Modifier.FINAL)
+                    .initializer("new $T<>()", ClassName.get(Topic.class))
+                    .build())
+            .addField(
+                FieldSpec
+                    .builder(
+                        ParameterizedTypeName.get(
+                            ClassName.get(Topic.class),
+                            activityType.getOutputTypeName()),
+                        "outputTopic",
+                        Modifier.PRIVATE,
+                        Modifier.FINAL)
+                    .initializer("new $T<>()", ClassName.get(Topic.class))
+                    .build())
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("getInputTopic")
+                    .addModifiers(Modifier.PUBLIC)
+                    .returns(ParameterizedTypeName.get(
+                        ClassName.get(Topic.class),
+                        TypeName.get(activityType.declaration().asType())))
+                    .addStatement("return this.$L", "inputTopic")
+                    .build())
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("getOutputTopic")
+                    .addModifiers(Modifier.PUBLIC)
+                    .returns(ParameterizedTypeName.get(
+                        ClassName.get(Topic.class),
+                        activityType.getOutputTypeName()))
+                    .addStatement("return this.$L", "outputTopic")
+                    .build())
             .addMethod(
                 MethodSpec
                     .methodBuilder("createTask")
