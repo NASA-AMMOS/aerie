@@ -6,11 +6,11 @@ export async function uploadMissionModel(graphqlClient: GraphQLClient): Promise<
   /*
    * Insert a mission model
    */
-  const bananaNationMissionModelUrl = new URL('../inputs/banananation-0.11.1-SNAPSHOT.jar', import.meta.url);
+  const bananaNationMissionModelUrl = new URL('../inputs/banananation-0.11.2-SNAPSHOT.jar', import.meta.url);
 
   const formData = new FormData();
   const file = await fileFrom(bananaNationMissionModelUrl.pathname);
-  formData.set('file', file, 'banananation-0.11.1-SNAPSHOT.jar');
+  formData.set('file', file, 'banananation-0.11.2-SNAPSHOT.jar');
 
   const uploadRes = await fetch(`${process.env.MERLIN_GATEWAY_URL}/file`, {
     method: 'POST',
