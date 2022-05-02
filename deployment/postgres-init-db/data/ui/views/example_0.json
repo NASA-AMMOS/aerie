@@ -44,7 +44,7 @@
         { "id": 7, "track": 3, "type": "gutter" },
         { "componentName": "ActivityForm", "id": 8, "type": "component" }
       ],
-      "gridName": "Activities",
+      "gridName": "View",
       "id": 0,
       "type": "columns"
     },
