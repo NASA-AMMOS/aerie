@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.foomissionmodel.Configuration;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
+import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.framework.VoidEnum;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -107,7 +108,7 @@ public final class MissionModelTest {
                                                     "y", SerializedValue.of("test")));
 
         // WHEN
-        final var failures = missionModel.validateActivity(typeName, parameters);
+        final var failures = missionModel.validateActivity(new SerializedActivity(typeName, parameters));
 
         // THEN
         assertThat(failures).isEmpty();
@@ -121,7 +122,7 @@ public final class MissionModelTest {
                                                     "y", SerializedValue.of(1.0)));
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> missionModel.validateActivity(typeName, parameters));
+        final Throwable thrown = catchThrowable(() -> missionModel.validateActivity(new SerializedActivity(typeName, parameters)));
 
         // THEN
         assertThat(thrown).isInstanceOf(MissionModelFacade.UnconstructableActivityInstanceException.class);
@@ -134,7 +135,7 @@ public final class MissionModelTest {
         final var parameters = new HashMap<>(Map.of("Nonexistent", SerializedValue.of("")));
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> missionModel.validateActivity(typeName, parameters));
+        final Throwable thrown = catchThrowable(() -> missionModel.validateActivity(new SerializedActivity(typeName, parameters)));
 
         // THEN
         assertThat(thrown).isInstanceOf(MissionModelFacade.UnconstructableActivityInstanceException.class);

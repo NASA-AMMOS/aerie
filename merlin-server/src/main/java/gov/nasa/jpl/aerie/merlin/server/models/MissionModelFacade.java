@@ -49,14 +49,14 @@ public final class MissionModelFacade {
     return schemas;
   }
 
-  public List<String> validateActivity(final String typeName, final Map<String, SerializedValue> arguments)
+  public List<String> validateActivity(final SerializedActivity activity)
   throws NoSuchActivityTypeException, UnconstructableActivityInstanceException
   {
     final var specType = Optional
-        .ofNullable(this.missionModel.getDirectiveTypes().taskSpecTypes().get(typeName))
+        .ofNullable(this.missionModel.getDirectiveTypes().taskSpecTypes().get(activity.getTypeName()))
         .orElseThrow(NoSuchActivityTypeException::new);
 
-    return getValidationFailures(specType, arguments);
+    return getValidationFailures(specType, activity.getArguments());
   }
 
   private <Specification, Return> List<String> getValidationFailures(
