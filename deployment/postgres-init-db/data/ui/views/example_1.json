@@ -27,7 +27,7 @@
       }
     ],
     "layout": {
-      "gridName": "Activities",
+      "gridName": "View",
       "id": 0,
       "type": "columns",
       "columnSizes": "1fr 3px 3fr",
