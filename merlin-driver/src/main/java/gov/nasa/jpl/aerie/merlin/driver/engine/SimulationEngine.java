@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
-import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
@@ -70,18 +69,6 @@ public final class SimulationEngine implements AutoCloseable {
   /** The set of children for each task (if any). */
   @DerivedFrom("taskParent")
   private final Map<TaskId, Set<TaskId>> taskChildren = new HashMap<>();
-  /** The instantiated input provided to the task. Missing entries indicate tasks without input. */
-  private final Map<TaskId, Directive<?, ?, ?>> taskDirective = new HashMap<>();
-
-  /**
-   * Associate an arbitrary Directive with a task as its originator.
-   *
-   * <p><b>This operation is unsafe!</b> Care must be taken to ensure that the type arguments of the given Directive
-   * line up with the types of the input and output for the referenced task.</p>
-   */
-  public void associateDirective(final TaskId id, final Directive<?, ?, ?> directive) {
-    this.taskDirective.put(id, directive);
-  }
 
   /** Schedule a new task to be performed at the given time. */
   public <Return> TaskId scheduleTask(final Duration startTime, final Task<Return> state) {
@@ -731,15 +718,8 @@ public final class SimulationEngine implements AutoCloseable {
         final Input input,
         final Task<Output> state)
     {
-      // SAFETY: The only kind of DirectiveTypeId the task should have are those provided by us.
-      final var directiveTypeId = (DirectiveTypeRegistry.DirectiveTypeId<Input, Output>) rawDirectiveTypeId;
-
-      final var directiveType = this.model.getDirectiveTypes().lookup(directiveTypeId);
-      final var directive = new Directive<>(directiveType, directiveTypeId.name, input);
-
       final var task = TaskId.generate();
       SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state));
-      SimulationEngine.this.taskDirective.put(task, directive);
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       this.frame.signal(JobId.forTask(task));

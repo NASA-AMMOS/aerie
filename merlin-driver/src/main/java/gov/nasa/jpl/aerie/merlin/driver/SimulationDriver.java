@@ -67,7 +67,6 @@ public final class SimulationDriver {
 
         final var task = directive.createTask(missionModel.getModel());
         final var taskId = engine.scheduleTask(startOffset, emitAndThen(directiveId, activityTopic, task));
-        engine.associateDirective(taskId, directive);
       }
 
       // Drive the engine until we're out of time.
