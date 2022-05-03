@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.banananation.activities;
 import gov.nasa.jpl.aerie.banananation.generated.activities.ParameterTestActivityMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +27,7 @@ public class ParameterTestActivityTest {
   }
 
   @Test
-  public void testDeserialization() throws TaskSpecType.UnconstructableTaskSpecException {
+  public void testDeserialization() throws TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException {
     final Map<String, SerializedValue> sourceActivity = createSerializedArguments();
     final ParameterTestActivity testValues = new ParameterTestActivity();
 
@@ -94,7 +95,7 @@ public class ParameterTestActivityTest {
   }
 
   @Test
-  public void testSerialization() throws TaskSpecType.UnconstructableTaskSpecException {
+  public void testSerialization() throws TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException {
     final ParameterTestActivity sourceActivity = new ParameterTestActivity();
     final Map<String, SerializedValue> activityArgs = this.mapper.getArguments(sourceActivity);
 

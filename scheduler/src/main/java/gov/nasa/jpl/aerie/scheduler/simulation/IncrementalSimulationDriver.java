@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -104,7 +105,7 @@ public class IncrementalSimulationDriver {
 
 
   public void simulateActivity(SerializedActivity activity, Duration startTime, ActivityInstanceId activityId)
-  throws TaskSpecType.UnconstructableTaskSpecException
+  throws TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException
   {
     final var activityToSimulate = new SimulatedActivity(startTime, activity, activityId);
     if(startTime.noLongerThan(curTime)){
@@ -162,7 +163,7 @@ public class IncrementalSimulationDriver {
   }
 
   private void simulateSchedule(final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule)
-  throws TaskSpecType.UnconstructableTaskSpecException
+  throws TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException
   {
 
     if(schedule.isEmpty()){

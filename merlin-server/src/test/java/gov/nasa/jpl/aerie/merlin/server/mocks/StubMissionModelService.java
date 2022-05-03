@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
@@ -126,6 +127,15 @@ public final class StubMissionModelService implements MissionModelService {
     } else {
       return Collections.emptyList();
     }
+  }
+
+  @Override
+  public <T> Map<T, String> validateActivityInstantiations(
+      final String missionModelId,
+      final Map<T, SerializedActivity> activities)
+  throws NoSuchMissionModelException, MissionModelFacade.MissionModelContractException, LocalMissionModelService.MissionModelLoadException
+  {
+    return Map.of();
   }
 
   @Override

@@ -69,11 +69,12 @@ import java.util.Optional;
                     .add("case $S:\n", parameter.name)
                     .indent()
                     .addStatement(
-                        "template.$L = this.mapper_$L.deserializeValue($L.getValue()).getSuccessOrThrow($$ -> new $T())",
+                        "template.$L = this.mapper_$L.deserializeValue($L.getValue()).getSuccessOrThrow(failure -> $T.unconstructableArgument(\"$L\", failure))",
                         parameter.name,
                         parameter.name,
                         "entry",
-                        unconstructableInstantiateException)
+                        unconstructableInstantiateException,
+                        parameter.name)
                     .addStatement("break")
                     .unindent())
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -84,8 +85,9 @@ import java.util.Optional;
                 .add("default:\n")
                 .indent()
                 .addStatement(
-                    "throw new $T()",
-                    unconstructableInstantiateException)
+                    "throw $T.extraneousParameter($L.getKey())",
+                    unconstructableInstantiateException,
+                    "entry")
                 .unindent()
                 .build())
         .endControlFlow()

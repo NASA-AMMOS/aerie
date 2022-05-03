@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.scheduler.simulation.IncrementalSimulationDriver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,7 @@ public class IncrementalSimulationTest {
   Duration endOfLastAct;
 
   @BeforeEach
-  public void init() throws TaskSpecType.UnconstructableTaskSpecException {
+  public void init() throws TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException {
     final var acts = getActivities();
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     incrementalSimulationDriver = new IncrementalSimulationDriver(fooMissionModel);

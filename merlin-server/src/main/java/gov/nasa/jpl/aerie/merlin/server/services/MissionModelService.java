@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -30,12 +31,16 @@ public interface MissionModelService {
   throws NoSuchMissionModelException;
   // TODO: Provide a finer-scoped validation return type. Mere strings make all validations equally severe.
   List<String> validateActivityArguments(String missionModelId, SerializedActivity activity)
-  throws NoSuchMissionModelException;
+  throws NoSuchMissionModelException, TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException;
+
+  <T> Map<T, String> validateActivityInstantiations(String missionModelId, Map<T, SerializedActivity> activities)
+  throws NoSuchMissionModelException, MissionModelFacade.MissionModelContractException,
+         LocalMissionModelService.MissionModelLoadException;
 
   Map<String, SerializedValue> getActivityEffectiveArguments(String missionModelId, SerializedActivity activity)
   throws NoSuchMissionModelException,
          NoSuchActivityTypeException,
-         UnconstructableActivityInstanceException,
+         TaskSpecType.UnconstructableTaskSpecException,
          MissingArgumentsException;
 
   List<String> validateModelArguments(String missionModelId, Map<String, SerializedValue> arguments)
@@ -86,15 +91,6 @@ public interface MissionModelService {
     }
 
     public NoSuchActivityTypeException(final String activityTypeId) { this(activityTypeId, null); }
-  }
-
-  class UnconstructableActivityInstanceException extends Exception {
-    public final String activityTypeId;
-
-    public UnconstructableActivityInstanceException(final String activityTypeId, final Throwable cause) {
-      super(cause);
-      this.activityTypeId = activityTypeId;
-    }
   }
 
   class UnconfigurableMissionModelException extends Exception {

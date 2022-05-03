@@ -20,6 +20,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -76,20 +77,17 @@ public final class SimulationEngine implements AutoCloseable {
   TaskId initiateTaskFromInput(final MissionModel<Model> model, final SerializedActivity input) {
     try {
       return initiateTaskFromInputOrFail(model, input);
-    } catch (final TaskSpecType.UnconstructableTaskSpecException ex) {
-      final var task = TaskId.generate();
-
-      // TODO: Provide more information about the failure.
-      this.tasks.put(task, new ExecutionState.IllegalSource<>());
-
-      return task;
+    } catch (final TaskSpecType.UnconstructableTaskSpecException | MissingArgumentsException ex) {
+      // All activity instantiations are assumed to be validated by this point
+      throw new Error("Unexpected state: activity instantiation %s failed with: %s"
+          .formatted(input.getTypeName(), ex.toString()));
     }
   }
 
   /** Construct a task defined by the behavior of a model given a type and arguments. */
   public <Model>
   TaskId initiateTaskFromInputOrFail(final MissionModel<Model> model, final SerializedActivity input)
-  throws TaskSpecType.UnconstructableTaskSpecException
+  throws TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException
   {
     final var directive  = model.instantiateDirective(input);
     final var task = TaskId.generate();
@@ -222,9 +220,7 @@ public final class SimulationEngine implements AutoCloseable {
       final ExecutionState<Return> lifecycle)
   {
     // Extract the current modeling state.
-    if (lifecycle instanceof ExecutionState.IllegalSource<Return>) {
-      // pass -- uninstantiable tasks never progress or complete
-    } else if (lifecycle instanceof ExecutionState.NotStarted<Return> e) {
+    if (lifecycle instanceof ExecutionState.NotStarted<Return> e) {
       stepEffectModel(task, e.startedAt(currentTime), frame, currentTime, model);
     } else if (lifecycle instanceof ExecutionState.InProgress<Return> e) {
       stepEffectModel(task, e, frame, currentTime, model);
@@ -744,11 +740,6 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** The lifecycle stages every task passes through. */
   private sealed interface ExecutionState<Return> {
-    /** The task has an invalid source for its behavior. */
-    // TODO: Provide more details about the instantiation failure.
-    record IllegalSource<Return>()
-        implements ExecutionState<Return> {}
-
     /** The task has not yet started. */
     record NotStarted<Return>(TaskSource<Return> source)
         implements ExecutionState<Return>

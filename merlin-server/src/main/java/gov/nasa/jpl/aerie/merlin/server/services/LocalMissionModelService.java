@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -102,34 +103,44 @@ public final class LocalMissionModelService implements MissionModelService {
    */
   @Override
   public List<String> validateActivityArguments(final String missionModelId, final SerializedActivity activity)
-  throws NoSuchMissionModelException, MissionModelFacade.MissionModelContractException, MissionModelLoadException
+  throws NoSuchMissionModelException, MissionModelLoadException, TaskSpecType.UnconstructableTaskSpecException,
+         MissingArgumentsException
   {
     try {
       // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
-      return this.loadConfiguredMissionModel(missionModelId)
-                 .validateActivity(activity.getTypeName(), activity.getArguments());
+      return this.loadConfiguredMissionModel(missionModelId).validateActivity(activity);
     } catch (final MissionModelFacade.NoSuchActivityTypeException ex) {
       return List.of("unknown activity type");
-    } catch (final MissionModelFacade.UnconstructableActivityInstanceException ex) {
-      return List.of(ex.getMessage());
     }
+  }
+
+  /**
+   * Validate that a set of activity parameters conforms to the expectations of a named mission model.
+   *
+   * @param missionModelId The ID of the mission model to load.
+   * @param activities The serialized activities to perform instantiation validation against the named mission model.
+   * @return A map of validation errors mapping activity instance ID to failure message. If validation succeeds the map is empty.
+   */
+  @Override
+  public <T> Map<T, String> validateActivityInstantiations(final String missionModelId, final Map<T, SerializedActivity> activities)
+  throws NoSuchMissionModelException, MissionModelFacade.MissionModelContractException, MissionModelLoadException
+  {
+    return this.loadConfiguredMissionModel(missionModelId).validateActivityInstantiations(activities);
   }
 
   @Override
   public Map<String, SerializedValue> getActivityEffectiveArguments(final String missionModelId, final SerializedActivity activity)
   throws NoSuchMissionModelException,
          NoSuchActivityTypeException,
-         UnconstructableActivityInstanceException,
          MissingArgumentsException,
-         MissionModelLoadException
+         MissionModelLoadException,
+         TaskSpecType.UnconstructableTaskSpecException
   {
     try {
       return this.loadConfiguredMissionModel(missionModelId)
                  .getActivityEffectiveArguments(activity.getTypeName(), activity.getArguments());
     } catch (final MissionModelFacade.NoSuchActivityTypeException ex) {
       throw new NoSuchActivityTypeException(activity.getTypeName(), ex);
-    } catch (final MissionModelFacade.UnconstructableActivityInstanceException ex) {
-      throw new UnconstructableActivityInstanceException(activity.getTypeName(), ex);
     }
   }
 

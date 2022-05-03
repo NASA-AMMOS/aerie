@@ -15,12 +15,13 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public record SynchronousSimulationAgent (
     PlanService planService,
     MissionModelService missionModelService
 ) implements SimulationAgent {
-  public /*sealed*/ interface Response {
+  public sealed interface Response {
     record Failed(String reason) implements Response {}
     record Success(SimulationResults results) implements Response {}
   }
@@ -31,9 +32,9 @@ public record SynchronousSimulationAgent (
     try {
       plan = this.planService.getPlan(planId);
 
+      // Validate plan revision
       final var currentRevisionData = this.planService.getPlanRevisionData(planId);
       final var validationResult = currentRevisionData.matches(revisionData);
-
       if (validationResult instanceof RevisionData.MatchResult.Failure failure) {
         writer.failWith(String.format("Simulation request no longer relevant: %s", failure.reason()));
         return;
@@ -49,6 +50,22 @@ public record SynchronousSimulationAgent (
 
     final SimulationResults results;
     try {
+      // Validate plan activity construction
+      {
+        final var failures = this.missionModelService.validateActivityInstantiations(
+            plan.missionModelId,
+            plan.activityInstances.entrySet().stream().collect(Collectors.toMap(
+                Map.Entry::getKey,
+                e -> new SerializedActivity(e.getValue().type, e.getValue().arguments))));
+
+        if (!failures.isEmpty()) {
+          writer.failWith(failures.entrySet().stream()
+              .map(e -> "%s: %s".formatted(e.getKey(), e.getValue()))
+              .collect(Collectors.joining(System.lineSeparator())));
+          return;
+        }
+      }
+
       results = this.missionModelService.runSimulation(new CreateSimulationMessage(
           plan.missionModelId,
           plan.startTimestamp.toInstant(),

@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
-public final class MissingArgumentsException extends RuntimeException {
+public final class MissingArgumentsException extends Exception {
   public final String containerName, metaName;
   public final List<ProvidedArgument> providedArguments;
   public final List<MissingArgument> missingArguments;
@@ -16,6 +17,8 @@ public final class MissingArgumentsException extends RuntimeException {
       final List<ProvidedArgument> providedArguments,
       final List<MissingArgument> missingArguments)
   {
+    super("Missing arguments for %s \"%s\": %s"
+      .formatted(metaName, containerName, missingArguments.stream().map(a -> "\"%s\"".formatted(a.parameterName)).collect(Collectors.joining(", "))));
     this.containerName = containerName;
     this.metaName = metaName;
     this.providedArguments = Collections.unmodifiableList(providedArguments);
