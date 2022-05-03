@@ -12,19 +12,13 @@ import java.util.List;
 /**
  * Some utility functions used in tests
  */
-public class MerlinSightTestUtility {
-  public static final int latest = 1;
-  public static final String LOCAL_AERIE = "http://localhost:8080/v1/graphql";
-  public static final int MISSION_MODEL_ID = latest;
-
+public class AerieLanderTestUtility {
   public static void printPlan(Plan plan) {
-
     List<ActivityInstance> acts = plan.getActivitiesByTime();
     ActivityInstance last = null;
     for (var act : acts) {
       System.out.println(act.toString());
     }
-
   }
 
   public static MissionModel<?> getMerlinSightMissionModel(){
@@ -33,9 +27,7 @@ public class MerlinSightTestUtility {
     final var factory = new gov.nasa.jpl.aerielander.generated.GeneratedMissionModelFactory();
     final var registry = DirectiveTypeRegistry.extract(factory);
     final var model = factory.instantiate(registry.registry(), configuration, builder);
-    final var mission = builder.build(model, factory.getConfigurationType(), registry.taskSpecTypes());
-    return mission;
-   //return null;
+    return builder.build(model, factory.getConfigurationType(), registry);
   }
 
   static SchedulerModel getMerlinSightSchedulerModel() {

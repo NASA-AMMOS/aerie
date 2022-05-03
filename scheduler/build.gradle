@@ -8,19 +8,6 @@ java {
   }
 }
 
-// These four classes are temporarily excluded given the mission model
-// upon which they rely has been removed from the aerie repository.
-// These classes will be refactored by [AERIE-1617].
-sourceSets {
-  test {
-    java {
-      exclude 'gov/nasa/jpl/aerie/scheduler/MerlinSightTestUtility.java'
-      exclude 'gov/nasa/jpl/aerie/scheduler/MerlInsightRulesTest.java'
-      exclude 'gov/nasa/jpl/aerie/scheduler/AerieControllerTest.java'
-    }
-  }
-}
-
 test {
   useJUnitPlatform()
 }
@@ -50,4 +37,8 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
   testImplementation 'com.google.guava:guava-testlib:31.0.1-jre'
   testImplementation 'com.google.truth.extensions:truth-java8-extension:1.1.3'
+  //for when aerielander will be published
+  //testImplementation 'gov.nasa.jpl.aerie:aerielander:0.11.0-SNAPSHOT-+'
+  testImplementation files('src/test/resources/aerie-lander-0.11.1-SNAPSHOT.jar')
 }
+

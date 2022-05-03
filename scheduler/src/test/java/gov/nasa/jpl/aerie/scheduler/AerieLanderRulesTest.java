@@ -6,31 +6,29 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.Time;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class MerlInsightRulesTest {
+public class AerieLanderRulesTest {
 
   @BeforeEach
   void setUp(){
     planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(48 * 3600));
-    MissionModel<?> aerieLanderMissionModel = MerlinSightTestUtility.getMerlinSightMissionModel();
-    final var aerieLanderSchedulerModel = MerlinSightTestUtility.getMerlinSightSchedulerModel();
-    rules = new MerlInsightRules(aerieLanderMissionModel, planningHorizon, aerieLanderSchedulerModel);
+    MissionModel<?> aerieLanderMissionModel = AerieLanderTestUtility.getMerlinSightMissionModel();
+    final var aerieLanderSchedulerModel = AerieLanderTestUtility.getMerlinSightSchedulerModel();
+    rules = new AerieLanderRules(aerieLanderMissionModel, planningHorizon, aerieLanderSchedulerModel);
     plan = makeEmptyPlan();
     smallProblem = new Problem(aerieLanderMissionModel, planningHorizon, rules.getSimulationFacade(), aerieLanderSchedulerModel);
   }
 
   private PlanningHorizon planningHorizon;
-  private MerlInsightRules rules;
+  private AerieLanderRules rules;
   private Problem smallProblem;
   private Plan plan;
   /** constructs an empty plan with the test model/horizon **/
@@ -45,7 +43,7 @@ public class MerlInsightRulesTest {
     solver.checkSimBeforeInsertingActInPlan();
     plan = solver.getNextSolution().get();
     solver.printEvaluation();
-    MerlinSightTestUtility.printPlan(plan);
+    AerieLanderTestUtility.printPlan(plan);
   }
 
   @Test
@@ -54,9 +52,9 @@ public class MerlInsightRulesTest {
     schedule();
     var time = planningHorizon.getStartAerie().plus(Duration.MINUTE);
     assertTrue(TestUtility.activityStartingAtTime(plan, time, rules.getActivityType("SSAMonitoring")));
-    assertTrue(TestUtility.activityStartingAtTime(plan, time, rules.getActivityType("HP3TemP")));
+    assertTrue(TestUtility.activityStartingAtTime(plan, time, rules.getActivityType("HeatProbeTemP")));
     for(var t = Duration.HOUR; t.shorterThan(planningHorizon.getEndAerie()); t = t.plus(Duration.HOUR)){
-      assertTrue(TestUtility.activityStartingAtTime(plan, time, rules.getActivityType("HP3TemP")));
+      assertTrue(TestUtility.activityStartingAtTime(plan, time, rules.getActivityType("HeatProbeTemP")));
     }
   }
   @Test

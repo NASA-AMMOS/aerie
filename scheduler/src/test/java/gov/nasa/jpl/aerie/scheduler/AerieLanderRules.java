@@ -35,11 +35,11 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-public class MerlInsightRules extends Problem {
+public class AerieLanderRules extends Problem {
 
   static final PlanningHorizon DEFAULT_PLANNING_HORIZON = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(48 * 3600));
 
-  public MerlInsightRules(MissionModel<?> missionModel, PlanningHorizon planningHorizon, SchedulerModel schedulerModel) {
+  public AerieLanderRules(MissionModel<?> missionModel, PlanningHorizon planningHorizon, SchedulerModel schedulerModel) {
     super(missionModel, planningHorizon, new SimulationFacade(planningHorizon, missionModel), schedulerModel);
   }
 
@@ -117,7 +117,7 @@ public class MerlInsightRules extends Problem {
    (may need acts in initial plan to turn on/off Monitoring resource)
    */
 
-    var HP3actType = getActivityType("HP3TemP");
+    var HP3actType = getActivityType("HeatProbeTemP");
     var mutex = GlobalConstraints.atMostOneOf(List.of(ActivityExpression.ofType(HP3actType)));
     add(mutex);
 
@@ -136,13 +136,13 @@ public class MerlInsightRules extends Problem {
     goals.put(10, pro);
 
     var sce = new StateConstraintExpression.Builder()
-        .equal(getResource("/hp3/ssaState"), SerializedValue.of("Monitoring"))
+        .equal(getResource("/HeatProbe/ssaState"), SerializedValue.of("Monitoring"))
         .build();
 
     var HP3Acts = new ActivityCreationTemplate.Builder()
         .ofType(HP3actType)
         .duration(
-            getResource("/hp3/currentParams/PARAM_HP3_MON_TEMP_DURATION"),
+            getResource("/HeatProbe/currentParams/PARAM_HeatProbe_MON_TEMP_DURATION"),
             TimeExpression.atStart())
         .withArgument("setNewSSATime", SerializedValue.of(true))
         .build();
