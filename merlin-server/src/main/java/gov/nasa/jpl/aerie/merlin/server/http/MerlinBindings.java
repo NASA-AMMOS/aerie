@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
@@ -169,6 +170,9 @@ public final class MerlinBindings implements Plugin {
       final var failures = this.missionModelService.validateActivityArguments(missionModelId, serializedActivity);
 
       ctx.result(ResponseSerializers.serializeFailures(failures).toString());
+    } catch (final TaskSpecType.UnconstructableTaskSpecException | MissingArgumentsException ex) {
+      ctx.status(400)
+         .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404);
     } catch (final InvalidJsonException ex) {
@@ -238,7 +242,7 @@ public final class MerlinBindings implements Plugin {
     } catch (final MissingArgumentsException ex) {
       ctx.status(200)
          .result(ResponseSerializers.serializeMissingArgumentsException(ex).toString());
-    } catch (final MissionModelService.NoSuchActivityTypeException | MissionModelService.UnconstructableActivityInstanceException ex) {
+    } catch (final MissionModelService.NoSuchActivityTypeException | TaskSpecType.UnconstructableTaskSpecException ex) {
       ctx.status(400)
          .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {

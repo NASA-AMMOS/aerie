@@ -7,6 +7,8 @@ import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.framework.VoidEnum;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -100,7 +102,8 @@ public final class MissionModelTest {
 
     @Test
     public void shouldInstantiateActivityInstance()
-        throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.MissionModelContractException, MissionModelFacade.UnconstructableActivityInstanceException
+    throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.MissionModelContractException,
+           TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException
     {
         // GIVEN
         final var typeName = "foo";
@@ -125,7 +128,7 @@ public final class MissionModelTest {
         final Throwable thrown = catchThrowable(() -> missionModel.validateActivity(new SerializedActivity(typeName, parameters)));
 
         // THEN
-        assertThat(thrown).isInstanceOf(MissionModelFacade.UnconstructableActivityInstanceException.class);
+        assertThat(thrown).isInstanceOf(TaskSpecType.UnconstructableTaskSpecException.class);
     }
 
     @Test
@@ -138,6 +141,6 @@ public final class MissionModelTest {
         final Throwable thrown = catchThrowable(() -> missionModel.validateActivity(new SerializedActivity(typeName, parameters)));
 
         // THEN
-        assertThat(thrown).isInstanceOf(MissionModelFacade.UnconstructableActivityInstanceException.class);
+        assertThat(thrown).isInstanceOf(TaskSpecType.UnconstructableTaskSpecException.class);
     }
 }
