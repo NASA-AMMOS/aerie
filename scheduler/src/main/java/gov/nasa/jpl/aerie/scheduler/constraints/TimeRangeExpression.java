@@ -58,7 +58,11 @@ public class TimeRangeExpression {
                 Window.Inclusivity.Exclusive)).build();
         final var anchorActs = plan.find(anchorActSearch);
         for (var anchorAct : anchorActs) {
-          actTw.add(Window.between(anchorAct.getStartTime(), Window.Inclusivity.Inclusive, anchorAct.getEndTime(), Window.Inclusivity.Exclusive));
+          var endInclusivity = Window.Inclusivity.Exclusive;
+          if(anchorAct.getDuration().isZero()){
+            endInclusivity = Window.Inclusivity.Inclusive;
+          }
+          actTw.add(Window.between(anchorAct.getStartTime(), Window.Inclusivity.Inclusive, anchorAct.getEndTime(), endInclusivity));
         }
         inter = actTw;
       }
