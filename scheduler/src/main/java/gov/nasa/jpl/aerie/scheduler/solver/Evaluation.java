@@ -163,7 +163,8 @@ public class Evaluation {
 
   public boolean canAssociateMoreToCreatorOf(final ActivityInstance instance){
     final var creator$ = getGoalCreator(instance);
-    if (creator$.isEmpty()) return false;
+    // for now: all existing activities in the plan are allowed to be associated with any goal
+    if (creator$.isEmpty()) return true;
     final var creator = creator$.get();
 
     if(!(creator instanceof ActivityExistentialGoal activityExistentialCreator)) return true;

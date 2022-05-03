@@ -5,13 +5,18 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
+import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimResource;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
+import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -142,6 +147,42 @@ public class SimulationFacadeTest {
     plan.add(act2);
 
     return plan;
+  }
+
+  @Test
+  public void associationToExistingSatisfyingActivity(){
+    final var plan = makeEmptyPlan();
+    final var actTypePeel = problem.getActivityType("PeelBanana");
+    final var actTypeBite = problem.getActivityType("BiteBanana");
+
+    var act1 = new ActivityInstance(actTypePeel, t1, t2);
+    act1.setArguments(Map.of("peelDirection", SerializedValue.of("fromStem")));
+    plan.add(act1);
+
+    final var goal = new CoexistenceGoal.Builder()
+        .forEach(ActivityExpression.ofType(actTypePeel))
+        .forAllTimeIn(horizon.getHor())
+        .thereExistsOne(new ActivityCreationTemplate.Builder().
+                           ofType(actTypeBite)
+                           .withArgument("biteSize", SerializedValue.of(0.1))
+                           .build())
+        .startsAt(TimeAnchor.END)
+        .build();
+
+    problem.setGoals(List.of(goal));
+    problem.setInitialPlan(plan);
+    final var solver = new PrioritySolver(problem);
+    final var plan1 = solver.getNextSolution();
+    assertThat(plan1.isPresent()).isTrue();
+    final var actAssociatedInFirstRun = plan1.get().getEvaluation().forGoal(goal).getAssociatedActivities();
+    assertThat(actAssociatedInFirstRun.size()).isEqualTo(1);
+    problem.setInitialPlan(plan1.get());
+    final var solver2 = new PrioritySolver(problem);
+    final var plan2 = solver2.getNextSolution();
+    assertThat(plan2.isPresent()).isTrue();
+    final var actAssociatedInSecondRun = plan2.get().getEvaluation().forGoal(goal).getAssociatedActivities();
+    assertThat(actAssociatedInSecondRun.size()).isEqualTo(1);
+    assertThat(actAssociatedInFirstRun.iterator().next().equalsInProperties(actAssociatedInSecondRun.iterator().next())).isTrue();
   }
 
   @Test
