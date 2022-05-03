@@ -32,6 +32,10 @@ public interface MissionModelService {
   List<String> validateActivityArguments(String missionModelId, SerializedActivity activity)
   throws NoSuchMissionModelException;
 
+  <T> Map<T, String> validateActivityInstantiations(String missionModelId, Map<T, SerializedActivity> activities)
+  throws NoSuchMissionModelException, MissionModelFacade.MissionModelContractException,
+         LocalMissionModelService.MissionModelLoadException;
+
   Map<String, SerializedValue> getActivityEffectiveArguments(String missionModelId, SerializedActivity activity)
   throws NoSuchMissionModelException,
          NoSuchActivityTypeException,

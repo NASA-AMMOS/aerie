@@ -54,7 +54,7 @@ public final class MissionModelFacade {
   {
     final var specType = Optional
         .ofNullable(this.missionModel.getDirectiveTypes().taskSpecTypes().get(activity.getTypeName()))
-        .orElseThrow(NoSuchActivityTypeException::new);
+        .orElseThrow(() -> new NoSuchActivityTypeException(activity.getTypeName()));
 
     return getValidationFailures(specType, activity.getArguments());
   }
@@ -80,7 +80,7 @@ public final class MissionModelFacade {
   {
     final var specType = Optional
         .ofNullable(this.missionModel.getDirectiveTypes().taskSpecTypes().get(typeName))
-        .orElseThrow(NoSuchActivityTypeException::new);
+        .orElseThrow(() -> new NoSuchActivityTypeException(typeName));
 
     return getActivityEffectiveArguments(specType, arguments);
   }
@@ -142,6 +142,25 @@ public final class MissionModelFacade {
     }
   }
 
+  /** Get activity instantiation failure messages as a mapping of activity instance ID to failure. */
+  public <T> Map<T, String> validateActivityInstantiations(final Map<T, SerializedActivity> activities)
+  {
+    final var failures = new HashMap<T, String>();
+
+    activities.forEach((id, act) -> {
+      try {
+        getActivityEffectiveArguments(act.getTypeName(), act.getArguments());
+      } catch (final NoSuchActivityTypeException |
+          UnconstructableActivityInstanceException |
+          MissingArgumentsException e)
+      {
+        failures.put(id, e.toString());
+      }
+    });
+
+    return failures;
+  }
+
   public static final class Unconfigured<Model> {
     private final MissionModelFactory<?, ?, Model> factory;
     private final DirectiveTypeRegistry<?, Model> registry;
@@ -166,7 +185,7 @@ public final class MissionModelFacade {
     {
       final var specType = Optional
           .ofNullable(this.registry.taskSpecTypes().get(typeName))
-          .orElseThrow(MissionModelFacade.NoSuchActivityTypeException::new);
+          .orElseThrow(() -> new NoSuchActivityTypeException(typeName));
 
       return new ActivityType(typeName, specType.getParameters(), specType.getRequiredParameters(), specType.getReturnValueSchema());
     }
@@ -186,7 +205,14 @@ public final class MissionModelFacade {
     }
   }
 
-  public static class NoSuchActivityTypeException extends Exception {}
+  public static class NoSuchActivityTypeException extends Exception {
+    public final String typeName;
+
+    public NoSuchActivityTypeException(final String typeName) {
+      super("No such activity type: \"%s\"".formatted(typeName));
+      this.typeName = typeName;
+    }
+  }
 
   public static class UnconstructableActivityInstanceException extends Exception {
     public UnconstructableActivityInstanceException(final String message) {

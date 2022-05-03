@@ -114,6 +114,20 @@ public final class LocalMissionModelService implements MissionModelService {
     }
   }
 
+  /**
+   * Validate that a set of activity parameters conforms to the expectations of a named mission model.
+   *
+   * @param missionModelId The ID of the mission model to load.
+   * @param activities The serialized activities to perform instantiation validation against the named mission model.
+   * @return A map of validation errors mapping activity instance ID to failure message. If validation succeeds the map is empty.
+   */
+  @Override
+  public <T> Map<T, String> validateActivityInstantiations(final String missionModelId, final Map<T, SerializedActivity> activities)
+  throws NoSuchMissionModelException, MissionModelFacade.MissionModelContractException, MissionModelLoadException
+  {
+    return this.loadConfiguredMissionModel(missionModelId).validateActivityInstantiations(activities);
+  }
+
   @Override
   public Map<String, SerializedValue> getActivityEffectiveArguments(final String missionModelId, final SerializedActivity activity)
   throws NoSuchMissionModelException,
