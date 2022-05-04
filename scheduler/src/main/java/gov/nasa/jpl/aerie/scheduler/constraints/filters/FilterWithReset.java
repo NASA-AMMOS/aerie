@@ -13,7 +13,7 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 public class FilterWithReset implements TimeWindowsFilter {
 
 
-  public FilterWithReset(TimeRangeExpression reset, TimeWindowsFilter filter) {
+  public FilterWithReset(final TimeRangeExpression reset, final TimeWindowsFilter filter) {
     this.filter = filter;
     this.resetExpr = reset;
   }
@@ -22,7 +22,7 @@ public class FilterWithReset implements TimeWindowsFilter {
   final TimeRangeExpression resetExpr;
 
   @Override
-  public Windows filter(SimulationResults simulationResults, Plan plan, Windows windowsToFilter) {
+  public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windowsToFilter) {
 
     Windows ret = new Windows();
 

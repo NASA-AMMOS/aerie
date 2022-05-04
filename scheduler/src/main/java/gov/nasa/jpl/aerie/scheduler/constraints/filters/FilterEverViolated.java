@@ -15,7 +15,7 @@ public class FilterEverViolated extends FilterFunctional {
 
   private final Expression<Windows> expr;
 
-  public FilterEverViolated(Expression<Windows> expr) {
+  public FilterEverViolated(final Expression<Windows> expr) {
     this.expr = expr;
   }
 

@@ -16,7 +16,7 @@ import java.util.stream.StreamSupport;
  * remaining element of the larger sequence
  */
 public class TimeExpressionLatching extends TimeExpression {
-  public TimeExpressionLatching(TimeExpression expr1, TimeExpression expr2, TimeRangeExpression expr) {
+  public TimeExpressionLatching(final TimeExpression expr1, final TimeExpression expr2, final TimeRangeExpression expr) {
     this.expr1 = expr1;
     this.expr2 = expr2;
     resetWindowsExpression = expr;
@@ -29,7 +29,7 @@ public class TimeExpressionLatching extends TimeExpression {
 
 
   @Override
-  public Window computeTime(SimulationResults simulationResults, Plan plan, Window interval) {
+  public Window computeTime(final SimulationResults simulationResults, final Plan plan, final Window interval) {
 
     List<Window> resetPeriods = StreamSupport
         .stream(resetWindowsExpression.computeRange(simulationResults, plan, Windows.forever()).spliterator(), false)

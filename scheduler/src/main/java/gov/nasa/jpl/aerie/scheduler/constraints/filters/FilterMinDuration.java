@@ -12,19 +12,19 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 public class FilterMinDuration extends FilterFunctional {
   private final Duration minDuration;
 
-  public FilterMinDuration(Duration filterByDuration) {
+  public FilterMinDuration(final Duration filterByDuration) {
     this.minDuration = filterByDuration;
   }
 
   @Override
-  public Windows filter(SimulationResults simulationResults, Plan plan, Windows windows) {
+  public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
     Windows result = new Windows(windows);
     result = result.filterByDuration(this.minDuration, Duration.MAX_VALUE);
     return result;
   }
 
   @Override
-  public boolean shouldKeep(SimulationResults simulationResults, Plan plan, Window range) {
+  public boolean shouldKeep(final SimulationResults simulationResults, final Plan plan, final Window range) {
     return range.duration().noShorterThan(minDuration);
   }
 

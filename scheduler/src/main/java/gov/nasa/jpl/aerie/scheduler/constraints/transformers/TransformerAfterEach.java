@@ -9,13 +9,13 @@ public class TransformerAfterEach implements TimeWindowsTransformer {
 
   private final Duration dur;
 
-  public TransformerAfterEach(Duration dur) {
+  public TransformerAfterEach(final Duration dur) {
     this.dur = dur;
   }
 
 
   @Override
-  public Windows transformWindows(Plan plan, Windows windows, final SimulationResults simulationResults) {
+  public Windows transformWindows(final Plan plan, final Windows windows, final SimulationResults simulationResults) {
     var retWin = new Windows(windows);
     retWin = retWin.complement();
     retWin = retWin.removeFirst();
