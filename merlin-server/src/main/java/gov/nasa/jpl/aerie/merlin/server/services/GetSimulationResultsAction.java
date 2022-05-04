@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
@@ -37,15 +38,21 @@ public final class GetSimulationResultsAction {
   private final PlanService planService;
   private final MissionModelService missionModelService;
   private final SimulationService simulationService;
+  private final ConstraintsDSLCompilationService constraintsDSLCompilationService;
+  private final boolean useNewConstraintPipeline;
 
   public GetSimulationResultsAction(
       final PlanService planService,
       final MissionModelService missionModelService,
-      final SimulationService simulationService)
-  {
+      final SimulationService simulationService,
+      final ConstraintsDSLCompilationService constraintsDSLCompilationService,
+      final boolean useNewConstraintPipeline
+  ) {
     this.planService = Objects.requireNonNull(planService);
     this.missionModelService = Objects.requireNonNull(missionModelService);
     this.simulationService = Objects.requireNonNull(simulationService);
+    this.constraintsDSLCompilationService = Objects.requireNonNull(constraintsDSLCompilationService);
+    this.useNewConstraintPipeline = useNewConstraintPipeline;
   }
 
   public Response run(final PlanId planId) throws NoSuchPlanException {
@@ -155,15 +162,39 @@ public final class GetSimulationResultsAction {
 
     final var violations = new HashMap<String, List<Violation>>();
     for (final var entry : constraintJsons.entrySet()) {
-      final var subject = Json.createReader(new StringReader(entry.getValue().definition())).readValue();
-      final var constraint = ConstraintParsers.constraintP.parse(subject);
 
-      if (constraint.isFailure()) {
-        throw new Error(entry.getValue().definition());
+      // Pipeline switch
+      // To remove the old constraints pipeline, delete the `useNewConstraintPipeline` variable
+      // and the else branch of this if statement.
+      final var constraint = entry.getValue();
+      final Expression<List<Violation>> expression;
+      if (this.useNewConstraintPipeline) {
+
+        // TODO: cache these results
+        final var constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(
+            planId,
+            constraint.definition()
+        );
+
+        if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success success) {
+          expression = success.constraintExpression();
+        } else if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error error) {
+          throw new Error("Constraint compilation failed: " + error);
+        } else {
+          throw new Error("Unhandled variant of ConstraintsDSLCompilationResult: " + constraintCompilationResult);
+        }
+
+      } else {
+        final var subject = Json.createReader(new StringReader(entry.getValue().definition())).readValue();
+        final var constraintParseResult = ConstraintParsers.constraintP.parse(subject);
+
+        if (constraintParseResult.isFailure()) {
+          throw new Error(entry.getValue().definition());
+        }
+
+        expression = constraintParseResult.getSuccessOrThrow();
       }
-
       final var violationEvents = new ArrayList<Violation>();
-      final var expression = constraint.getSuccessOrThrow();
       try {
         violationEvents.addAll(expression.evaluate(preparedResults));
       } catch (final InputMismatchException ex) {

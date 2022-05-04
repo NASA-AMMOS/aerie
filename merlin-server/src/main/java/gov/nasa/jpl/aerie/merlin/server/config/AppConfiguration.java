@@ -7,7 +7,8 @@ public record AppConfiguration (
     int httpPort,
     boolean enableJavalinDevLogging,
     Path merlinFileStore,
-    Store store
+    Store store,
+    boolean useNewConstraintPipeline
 ) {
   public AppConfiguration {
     Objects.requireNonNull(merlinFileStore);

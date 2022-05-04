@@ -4,8 +4,10 @@ import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.server.mocks.FakeFile;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
+import gov.nasa.jpl.aerie.merlin.server.services.ConstraintsDSLCompilationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
+import gov.nasa.jpl.aerie.merlin.server.services.TypescriptCodeGenerationService;
 import gov.nasa.jpl.aerie.merlin.server.services.UncachedSimulationService;
 import gov.nasa.jpl.aerie.merlin.server.utils.HttpRequester;
 import io.javalin.Javalin;
@@ -37,10 +39,25 @@ public final class MerlinBindingsTest {
   public static void setupServer() {
     final var planApp = new StubPlanService();
     final var missionModelApp = new StubMissionModelService();
+
+    final var typescriptCodeGenerationService = new TypescriptCodeGenerationService();
+
+    final ConstraintsDSLCompilationService constraintsDSLCompilationService;
+    try {
+      constraintsDSLCompilationService = new ConstraintsDSLCompilationService(typescriptCodeGenerationService);
+    } catch (IOException e) {
+      throw new Error("Failed to start ConstraintsDSLCompilationService", e);
+    }
+
+    Runtime.getRuntime().addShutdownHook(new Thread(constraintsDSLCompilationService::close));
+
     final var simulationAction = new GetSimulationResultsAction(
         planApp,
         missionModelApp,
-        new UncachedSimulationService(new SynchronousSimulationAgent(planApp, missionModelApp)));
+        new UncachedSimulationService(new SynchronousSimulationAgent(planApp, missionModelApp)),
+        constraintsDSLCompilationService,
+        false
+    );
 
     SERVER = Javalin.create(config -> {
       config.showJavalinBanner = false;

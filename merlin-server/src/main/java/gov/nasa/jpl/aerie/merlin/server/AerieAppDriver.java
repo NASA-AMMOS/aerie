@@ -21,15 +21,18 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresMissionModelRep
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.CachedSimulationService;
+import gov.nasa.jpl.aerie.merlin.server.services.ConstraintsDSLCompilationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationAgent;
+import gov.nasa.jpl.aerie.merlin.server.services.TypescriptCodeGenerationService;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 public final class AerieAppDriver {
@@ -39,6 +42,17 @@ public final class AerieAppDriver {
     final var configuration = loadConfiguration();
     final var stores = loadStores(configuration);
 
+    final var typescriptCodeGenerationService = new TypescriptCodeGenerationService();
+
+    final ConstraintsDSLCompilationService constraintsDSLCompilationService;
+    try {
+      constraintsDSLCompilationService = new ConstraintsDSLCompilationService(typescriptCodeGenerationService);
+    } catch (IOException e) {
+      throw new Error("Failed to start ConstraintsDSLCompilationService", e);
+    }
+
+    Runtime.getRuntime().addShutdownHook(new Thread(constraintsDSLCompilationService::close));
+
     // Assemble the core non-web object graph.
     final var missionModelController = new LocalMissionModelService(configuration.merlinFileStore(), stores.missionModels());
     final var planController = new LocalPlanService(stores.plans());
@@ -46,7 +60,13 @@ public final class AerieAppDriver {
         "simulation-agent",
         new SynchronousSimulationAgent(planController, missionModelController));
     final var simulationController = new CachedSimulationService(stores.results(), simulationAgent);
-    final var simulationAction = new GetSimulationResultsAction(planController, missionModelController, simulationController);
+    final var simulationAction = new GetSimulationResultsAction(
+        planController,
+        missionModelController,
+        simulationController,
+        constraintsDSLCompilationService,
+        configuration.useNewConstraintPipeline()
+    );
     final var merlinBindings = new MerlinBindings(missionModelController, planController, simulationAction);
 
     // Configure an HTTP server.
@@ -113,7 +133,8 @@ public final class AerieAppDriver {
                           getEnv("MERLIN_DB_USER","aerie"),
                           Integer.parseInt(getEnv("MERLIN_DB_PORT","5432")),
                           getEnv("MERLIN_DB_PASSWORD","aerie"),
-                          getEnv("MERLIN_DB","aerie_merlin"))
+                          getEnv("MERLIN_DB","aerie_merlin")),
+        Boolean.parseBoolean(getEnv("MERLIN_USE_NEW_CONSTRAINT_PIPELINE", "false"))
     );
   }
 }
