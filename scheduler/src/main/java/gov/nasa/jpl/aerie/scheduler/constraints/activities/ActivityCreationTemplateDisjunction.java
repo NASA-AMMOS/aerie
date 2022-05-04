@@ -54,9 +54,13 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
   @Override
   public @NotNull
   Optional<ActivityInstance> createActivity(String name, Windows windows, boolean instantiateVariableArguments, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
-    //TODO: returns first ACT of disjunction, change it
-    return acts.get(0).createActivity(name, windows, instantiateVariableArguments, facade,  plan, planningHorizon);
-
+    for(var act : acts) {
+      final var activityCreation = act.createActivity(name, windows, instantiateVariableArguments, facade, plan, planningHorizon);
+      if(activityCreation.isPresent()){
+        return activityCreation;
+      }
+    }
+    return Optional.empty();
   }
 
   /**
