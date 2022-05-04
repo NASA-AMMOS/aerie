@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.And;
@@ -8,8 +7,6 @@ import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
 import gov.nasa.jpl.aerie.constraints.tree.Equal;
 import gov.nasa.jpl.aerie.constraints.tree.Or;
-import gov.nasa.jpl.aerie.constraints.tree.RealResource;
-import gov.nasa.jpl.aerie.constraints.tree.RealValue;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -19,8 +16,6 @@ import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTempl
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpressions;
 import gov.nasa.jpl.aerie.scheduler.constraints.filters.Filters;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpressionDisjunction;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraints;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;

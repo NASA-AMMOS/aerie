@@ -2,8 +2,6 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
-import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
-import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
@@ -17,14 +15,10 @@ import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.filters.FilterSequenceMaxGapAfter;
 import gov.nasa.jpl.aerie.scheduler.constraints.filters.FilterSequenceMinGapAfter;
 import gov.nasa.jpl.aerie.scheduler.constraints.filters.Filters;
-import gov.nasa.jpl.aerie.scheduler.constraints.filters.TimeWindowsFilter;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
 import org.junit.jupiter.api.Test;
 
-import javax.annotation.meta.Exclusive;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
