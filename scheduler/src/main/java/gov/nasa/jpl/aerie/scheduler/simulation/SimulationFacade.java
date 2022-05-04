@@ -26,6 +26,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,16 +41,11 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 
 /**
  * A facade for simulating plans and processing simulation results.
- * Includes : (1) providing resulting resource values to scheduler constructs
- * (2) providing durations of activity instances
  */
 @SuppressWarnings("UnnecessaryToStringCall")
 public class SimulationFacade {
 
   private static final Logger logger = LoggerFactory.getLogger(SimulationFacade.class);
-
-  // Resource feeders, mapping resource names to their corresponding resource accessor resulting from simulation results
-  private final Map<String, SimResource> resources;
 
   private final MissionModel<?> missionModel;
 
@@ -60,37 +56,22 @@ public class SimulationFacade {
 
   //simulation results from the last simulation, as output directly by simulation driver
   private SimulationResults lastSimDriverResults;
-
+  private gov.nasa.jpl.aerie.constraints.model.SimulationResults lastSimConstraintResults;
+  private Map<String, gov.nasa.jpl.aerie.constraints.model.ActivityInstance> latestEnvironment;
   private final Map<SchedulingActivityInstanceId, ActivityInstanceId> planActInstanceIdToSimulationActInstanceId = new HashMap<>();
-
   private final Map<ActivityInstance, SerializedActivity> insertedActivities;
+  private static final Duration MARGIN = Duration.of(5, MICROSECONDS);
 
-  private static final Duration MARGIN = Duration.of(5,MICROSECONDS);
-
-  /**
-   * Accessor for integer resource feeders
-   *
-   * @param resourceName the name of the resource
-   * @return the resource feeder if it exists, null otherwise
-   */
-  public SimResource getResource(String resourceName) {
-    if (!resources.containsKey(resourceName)) {
-      resources.put(resourceName, new SimResource(this));
-    }
-    return resources.get(resourceName);
+  public gov.nasa.jpl.aerie.constraints.model.SimulationResults getLatestConstraintSimulationResults(){
+    return lastSimConstraintResults;
   }
 
   public SimulationFacade(PlanningHorizon planningHorizon, MissionModel<?> missionModel) {
     this.missionModel = missionModel;
     this.planningHorizon = planningHorizon;
-    this.resources = new HashMap<>();
     this.driver = new IncrementalSimulationDriver(missionModel);
     this.itSimActivityId = 0;
     this.insertedActivities = new HashMap<>();
-  }
-
-  public PlanningHorizon getPlanningHorizon(){
-    return this.planningHorizon;
   }
 
   /**
@@ -180,53 +161,6 @@ public class SimulationFacade {
   }
 
   /**
-   * Fetches the resource schemas from the mission model
-   *
-   * @return a map from resource name to valueschema
-   */
-  private Map<String, ValueSchema> getResourceSchemas() {
-    final var schemas = new HashMap<String, ValueSchema>();
-
-    for (final var entry : this.missionModel.getResources().entrySet()) {
-      final var name = entry.getKey();
-      final var resource = entry.getValue();
-      schemas.put(name, resource.getSchema());
-    }
-
-    return schemas;
-  }
-
-  /**
-   * Updates resource feeders with results from a simulation.
-   *
-   * @param results results generated from a simulation driver run
-   */
-  private void handleSimulationResults(SimulationResults results) {
-    //simulation results from the last simulation, as converted for use by the constraint evaluation engine
-    final var lastConstraintModelResults = convertToConstraintModelResults(
-        results);
-
-    final var sc = getResourceSchemas();
-    // maps resource names to their local type
-
-    for (final var schema : sc.entrySet()) {
-      if (!resources.containsKey(schema.getKey())) {
-        resources.put(schema.getKey(), new SimResource(this));
-      }
-    }
-
-    for (final var entry : results.resourceSamples.entrySet()) {
-      final var name = entry.getKey();
-      getResource(name).initFromSimRes(
-          name,
-          lastConstraintModelResults,
-          entry.getValue(),
-          this.planningHorizon.getStartAerie());
-    }
-    lastSimDriverResults = results;
-  }
-
-  /**
    * convert a simulation driver SimulationResult to a constraint evaluation engine SimulationResult
    *
    * @param driverResults the recorded results of a simulation run from the simulation driver
@@ -237,11 +171,14 @@ public class SimulationFacade {
   {
     final var planDuration = planningHorizon.getAerieHorizonDuration();
 
+    final var activities =  driverResults.simulatedActivities.entrySet().stream()
+                                                       .map(e -> convertToConstraintModelActivityInstance(e.getKey().id(), e.getValue(), driverResults.startTime))
+                                                       .collect(Collectors.toList());
+    this.latestEnvironment = new HashMap<>();
+    activities.forEach(act -> this.latestEnvironment.put(Long.toString(act.id), act));
     return new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
         Window.between(Duration.ZERO, planDuration),
-        driverResults.simulatedActivities.entrySet().stream()
-                                         .map(e -> convertToConstraintModelActivityInstance(e.getKey().id(), e.getValue()))
-                                         .collect(Collectors.toList()),
+        activities,
         Maps.transformValues(driverResults.realProfiles, this::convertToConstraintModelLinearProfile),
         Maps.transformValues(driverResults.discreteProfiles, this::convertToConstraintModelDiscreteProfile)
     );
@@ -255,10 +192,9 @@ public class SimulationFacade {
    * @return an activity instance suitable for a constraint model SimulationResult
    */
   private gov.nasa.jpl.aerie.constraints.model.ActivityInstance convertToConstraintModelActivityInstance(
-      long id, SimulatedActivity driverActivity)
+      long id, SimulatedActivity driverActivity, final Instant startTime)
   {
-    final var planStartT = this.planningHorizon.getStartHuginn();
-    final var startT = Duration.of(planStartT.until(driverActivity.start(), ChronoUnit.MICROS), MICROSECONDS);
+    final var startT = Duration.of(startTime.until(driverActivity.start(), ChronoUnit.MICROS), MICROSECONDS);
     final var endT = startT.plus(driverActivity.duration());
     return new gov.nasa.jpl.aerie.constraints.model.ActivityInstance(
         id, driverActivity.type(), driverActivity.arguments(),
@@ -279,7 +215,7 @@ public class SimulationFacade {
     for (final var piece : driverProfile) {
       final var extent = piece.getLeft();
       final var value = piece.getRight();
-      pieces.add(new LinearProfilePiece(Window.between(elapsed, elapsed.plus(extent)), value.initial, value.rate));
+      pieces.add(new LinearProfilePiece(Window.betweenClosedOpen(elapsed, elapsed.plus(extent)), value.initial, value.rate));
       elapsed = elapsed.plus(extent);
     }
     return new LinearProfile(pieces);
@@ -299,13 +235,13 @@ public class SimulationFacade {
     for (final var piece : driverProfile.getRight()) {
       final var extent = piece.getLeft();
       final var value = piece.getRight();
-      pieces.add(new DiscreteProfilePiece(Window.between(elapsed, elapsed.plus(extent)), value));
+      pieces.add(new DiscreteProfilePiece(Window.betweenClosedOpen(elapsed, elapsed.plus(extent)), value));
       elapsed = elapsed.plus(extent);
     }
     return new DiscreteProfile(pieces);
   }
 
-  public void updateResourcesIfNecessary(Duration endTime) {
+  public void computeSimulationResultsUntil(Duration endTime) {
     var endTimeWithMargin = endTime;
     if(endTime.noLongerThan(Duration.MAX_VALUE.minus(MARGIN))){
       endTimeWithMargin = endTime.plus(MARGIN);
@@ -313,7 +249,13 @@ public class SimulationFacade {
     var results = driver.getSimulationResultsUpTo(endTimeWithMargin);
     //compare references
     if(results != lastSimDriverResults) {
-      handleSimulationResults(results);
+      //simulation results from the last simulation, as converted for use by the constraint evaluation engine
+      lastSimConstraintResults = convertToConstraintModelResults(results);
+      lastSimDriverResults = results;
     }
+  }
+
+  public Map<String, gov.nasa.jpl.aerie.constraints.model.ActivityInstance> getLatestEnvironment(){
+    return this.latestEnvironment;
   }
 }

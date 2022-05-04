@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
@@ -105,7 +106,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
    * the plan (and should probably be created). The matching is strict: all
    * arguments must be identical.
    */
-  public Collection<Conflict> getConflicts(Plan plan) {
+  public Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
     final var conflicts = new java.util.LinkedList<Conflict>();
 
     //run the generator to see what acts are still desired
@@ -121,7 +122,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
       final var satisfyingActSearch = new ActivityExpression.Builder()
           .basedOn(requestedAct)
           .build();
-      final var matchingActs = plan.find(satisfyingActSearch);
+      final var matchingActs = plan.find(satisfyingActSearch, simulationResults);
 
       var missingActAssociations = new ArrayList<ActivityInstance>();
       var planEvaluation = plan.getEvaluation();

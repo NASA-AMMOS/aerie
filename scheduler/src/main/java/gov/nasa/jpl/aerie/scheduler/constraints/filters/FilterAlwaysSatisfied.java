@@ -1,21 +1,22 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.filters;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
 
 public class FilterAlwaysSatisfied extends FilterFunctional {
 
-  private final StateConstraintExpression expr;
+  private final Expression<Windows> expr;
 
-  public FilterAlwaysSatisfied(StateConstraintExpression expr) {
+  public FilterAlwaysSatisfied(Expression<Windows> expr) {
     this.expr = expr;
   }
 
   @Override
-  public boolean shouldKeep(Plan plan, Window range) {
-    var valid = expr.findWindows(plan, new Windows(range));
+  public boolean shouldKeep(final SimulationResults simulationResults, Plan plan, Window range) {
+    var valid = expr.evaluate(simulationResults);
     return valid.equals(new Windows(range));
   }
 }

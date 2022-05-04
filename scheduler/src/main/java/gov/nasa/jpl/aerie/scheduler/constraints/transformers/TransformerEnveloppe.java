@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.transformers;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -18,7 +19,7 @@ public class TransformerEnveloppe implements TimeWindowsTransformer {
   }
 
   @Override
-  public Windows transformWindows(Plan plan, Windows windowsToTransform) {
+  public Windows transformWindows(Plan plan, Windows windowsToTransform, final SimulationResults simulationResults) {
 
     Windows ret = new Windows();
     if(!windowsToTransform.isEmpty()) {
@@ -26,7 +27,7 @@ public class TransformerEnveloppe implements TimeWindowsTransformer {
       boolean atLeastOne = false;
       for (var insideExpr : insideExprs) {
 
-        var rangeExpr = insideExpr.computeRange(plan, windowsToTransform);
+        var rangeExpr = insideExpr.computeRange(simulationResults, plan, windowsToTransform);
         if (!rangeExpr.isEmpty()) {
           atLeastOne = true;
           min = Duration.min(min, rangeExpr.minTimePoint().get());

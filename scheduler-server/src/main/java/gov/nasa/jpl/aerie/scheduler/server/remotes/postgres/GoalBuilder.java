@@ -1,12 +1,20 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.And;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
+import gov.nasa.jpl.aerie.constraints.tree.Equal;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
+import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
+import gov.nasa.jpl.aerie.constraints.tree.LessThan;
+import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
+import gov.nasa.jpl.aerie.constraints.tree.Or;
+import gov.nasa.jpl.aerie.constraints.tree.RealResource;
+import gov.nasa.jpl.aerie.constraints.tree.RealValue;
+import gov.nasa.jpl.aerie.constraints.tree.Transition;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.ExternalState;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpressionDisjunction;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
@@ -20,8 +28,6 @@ import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.NotImplementedException;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Function;
 
 public class GoalBuilder {
@@ -31,8 +37,7 @@ public class GoalBuilder {
       final SchedulingDSL.GoalSpecifier goalSpecifier,
       final Timestamp horizonStartTimestamp,
       final Timestamp horizonEndTimestamp,
-      final Function<String, ActivityType> lookupActivityType,
-      final Function<String, ExternalState> lookupResource) {
+      final Function<String, ActivityType> lookupActivityType) {
     final var hor = new PlanningHorizon(
         horizonStartTimestamp.toInstant(),
         horizonEndTimestamp.toInstant()).getHor();
@@ -47,8 +52,7 @@ public class GoalBuilder {
           .forAllTimeIn(hor)
           .forEach(timeRangeExpressionOfConstraintExpression(
               g.forEach(),
-              lookupActivityType,
-              lookupResource))
+              lookupActivityType))
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType));
       // TODO: This if statement should be removed when the DSL supports time expressions.
       if (g.forEach() instanceof SchedulingDSL.ConstraintExpression.ActivityExpression) {
@@ -63,8 +67,8 @@ public class GoalBuilder {
         builder = builder.and(goalOfGoalSpecifier(subGoalSpecifier,
                                                   horizonStartTimestamp,
                                                   horizonEndTimestamp,
-                                                  lookupActivityType,
-                                                  lookupResource));
+                                                  lookupActivityType
+        ));
       }
       return builder.build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalOr g) {
@@ -73,8 +77,8 @@ public class GoalBuilder {
         builder = builder.or(goalOfGoalSpecifier(subGoalSpecifier,
                                                  horizonStartTimestamp,
                                                  horizonEndTimestamp,
-                                                 lookupActivityType,
-                                                 lookupResource));
+                                                 lookupActivityType
+        ));
       }
       return builder.build();
     } else {
@@ -84,78 +88,51 @@ public class GoalBuilder {
 
   private static TimeRangeExpression timeRangeExpressionOfConstraintExpression(
       final SchedulingDSL.ConstraintExpression constraintExpression,
-      final Function<String, ActivityType> lookupActivityType,
-      final Function<String, ExternalState> lookupResource) {
+      final Function<String, ActivityType> lookupActivityType) {
     if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.ActivityExpression c) {
       return new TimeRangeExpression.Builder()
           .from(ActivityExpression.ofType(lookupActivityType.apply(c.expression().type())))
           .build();
+    } else {
+      return new TimeRangeExpression.Builder()
+          .from(expressionOfConstraintExpression(constraintExpression))
+          .build();
+    }
+  }
+
+  private static Expression<Windows> expressionOfConstraintExpression(
+      final SchedulingDSL.ConstraintExpression constraintExpression) {
+    if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.ActivityExpression c) {
+      throw new NotImplementedException("Nested ActivityExpressions are not yet supported");
     } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.GreaterThan c) {
-      return new TimeRangeExpression.Builder()
-          .from(new StateConstraintExpression.Builder()
-                    .above(lookupResource.apply(c.resource().name()), SerializedValue.of(c.value()))
-                    .build())
-          .build();
+      return new GreaterThan(new RealResource(c.resource().name()), new RealValue(c.value()));
     } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.LessThan c) {
-      return new TimeRangeExpression.Builder()
-          .from(new StateConstraintExpression.Builder()
-                    .lessThan(lookupResource.apply(c.resource().name()), SerializedValue.of(c.value()))
-                    .build())
-          .build();
+      return new LessThan(new RealResource(c.resource().name()), new RealValue(c.value()));
     } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.EqualLinear c) {
-      return new TimeRangeExpression.Builder()
-          .from(new StateConstraintExpression.Builder()
-                    .equal(lookupResource.apply(c.resource().name()), SerializedValue.of(c.value()))
-                    .build())
-          .build();
+      return new Equal<>(new RealResource(c.resource().name()), new RealValue(c.value()));
     } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.NotEqualLinear c) {
-      return new TimeRangeExpression.Builder()
-          .from(new StateConstraintExpression.Builder()
-                    .notEqual(lookupResource.apply(c.resource().name()), SerializedValue.of(c.value()))
-                    .build())
-          .build();
+      return new NotEqual<>(new RealResource(c.resource().name()), new RealValue(c.value()));
     } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.Between c) {
-      return new TimeRangeExpression.Builder()
-          .from(new StateConstraintExpression.Builder()
-                    .between(
-                        lookupResource.apply(c.resource().name()),
-                        SerializedValue.of(c.lowerBound()),
-                        SerializedValue.of(c.upperBound()))
-                    .build())
-          .build();
+      return new And(new GreaterThan(new RealResource(c.resource().name()), new RealValue(c.lowerBound())),
+                     new LessThan(new RealResource(c.resource().name()), new RealValue(c.upperBound())));
     } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.Transition c) {
-      return new TimeRangeExpression.Builder()
-          .from(new StateConstraintExpression.Builder()
-                    .transition(
-                        lookupResource.apply(c.resource().name()),
-                        List.of(c.from()),
-                        List.of(c.to()))
-                    .build())
-          .build();
+      return new Transition(new DiscreteResource(c.resource().name()), c.from(), c.to());
     } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.And c) {
-      final var timeRangeExpressions = new ArrayList<TimeRangeExpression>(c.expressions().size());
-      for (final var expression : c.expressions()) {
-        timeRangeExpressions.add(timeRangeExpressionOfConstraintExpression(expression, lookupActivityType, lookupResource));
-      }
-      var builder = new TimeRangeExpression.Builder();
-      for (final var timeRangeExpression : timeRangeExpressions) {
-        builder = builder.from(timeRangeExpression);
-      }
-      return builder.build();
+      return new And(c.expressions()
+                      .stream()
+                      .map(GoalBuilder::expressionOfConstraintExpression)
+                      .toList());
     } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.Or c) {
-      final var stateConstraintExpressions = new ArrayList<StateConstraintExpression>(c.expressions().size());
-      for (final var expression : c.expressions()) {
-        // TODO: Allow ActivityExpressions in Or expressions
-        if (expression instanceof SchedulingDSL.ConstraintExpression.ActivityExpression) throw new NotImplementedException("ActivityExpressions not supported in Or yet");
-        stateConstraintExpressions.addAll(timeRangeExpressionOfConstraintExpression(expression, lookupActivityType, lookupResource).stateExpr);
-      }
-      return new TimeRangeExpression.Builder()
-          .from(new StateConstraintExpressionDisjunction(stateConstraintExpressions))
-          .build();
+      return new Or(c.expressions()
+                     .stream()
+                     .map(GoalBuilder::expressionOfConstraintExpression)
+                     .toList());
     } else {
       throw new UnexpectedSubtypeError(SchedulingDSL.ConstraintExpression.class, constraintExpression);
     }
   }
+
+
 
   private static ActivityCreationTemplate makeActivityTemplate(
       final SchedulingDSL.ActivityTemplate activityTemplate,

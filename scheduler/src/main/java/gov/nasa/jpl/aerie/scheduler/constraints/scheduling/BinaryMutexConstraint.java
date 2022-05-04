@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.scheduling;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
@@ -29,18 +30,18 @@ public class BinaryMutexConstraint extends GlobalConstraint {
   }
 
 
-  public Windows findWindows(Plan plan, Windows windows, Conflict conflict) {
+  public Windows findWindows(Plan plan, Windows windows, Conflict conflict, SimulationResults simulationResults) {
     if (conflict instanceof MissingActivityInstanceConflict) {
-      return findWindows(plan, windows, ((MissingActivityInstanceConflict) conflict).getInstance().getType());
+      return findWindows(plan, windows, ((MissingActivityInstanceConflict) conflict).getInstance().getType(), simulationResults);
     } else if (conflict instanceof MissingActivityTemplateConflict) {
-      return findWindows(plan, windows, ((MissingActivityTemplateConflict) conflict).getGoal().getActTemplate().getType());
+      return findWindows(plan, windows, ((MissingActivityTemplateConflict) conflict).getGoal().getActTemplate().getType(), simulationResults);
     } else {
       throw new IllegalArgumentException("method implemented for two types of conflict");
     }
   }
 
 
-  private Windows findWindows(Plan plan, Windows windows, ActivityType actToBeScheduled) {
+  private Windows findWindows(Plan plan, Windows windows, ActivityType actToBeScheduled, SimulationResults simulationResults) {
 
     if (!(actToBeScheduled.equals(actType) || actToBeScheduled.equals(otherActType))) {
       throw new IllegalArgumentException("Activity type must be one of the mutexed types");
@@ -50,7 +51,7 @@ public class BinaryMutexConstraint extends GlobalConstraint {
     final var actSearch = new ActivityExpression.Builder()
         .ofType(actToBeSearched).build();
 
-    final var acts = new java.util.LinkedList<>(plan.find(actSearch));
+    final var acts = new java.util.LinkedList<>(plan.find(actSearch, simulationResults));
     List<Window> rangesActs = acts.stream().map(a -> Window.betweenClosedOpen(a.getStartTime(), a.getEndTime())).collect(
         Collectors.toList());
     var twActs = new Windows(rangesActs);
@@ -63,7 +64,7 @@ public class BinaryMutexConstraint extends GlobalConstraint {
 
   //Non-incremental checking
   //TODO: does not help finding where to put acts
-  public ConstraintState isEnforced(Plan plan, Windows windows) {
+  public ConstraintState isEnforced(Plan plan, Windows windows, SimulationResults simulationResults) {
 
     Windows violationWindows = new Windows();
 
@@ -72,8 +73,8 @@ public class BinaryMutexConstraint extends GlobalConstraint {
           .ofType(actType).startsOrEndsIn(window).build();
       final var otherActSearch = new ActivityExpression.Builder()
           .ofType(otherActType).startsOrEndsIn(window).build();
-      final var acts = new java.util.LinkedList<>(plan.find(actSearch));
-      final var otherActs = new java.util.LinkedList<>(plan.find(otherActSearch));
+      final var acts = new java.util.LinkedList<>(plan.find(actSearch, simulationResults));
+      final var otherActs = new java.util.LinkedList<>(plan.find(otherActSearch, simulationResults));
 
       List<Window> rangesActs = acts.stream().map(a -> Window.betweenClosedOpen(a.getStartTime(), a.getEndTime())).collect(
           Collectors.toList());

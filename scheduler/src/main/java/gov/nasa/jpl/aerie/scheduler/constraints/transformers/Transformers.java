@@ -1,10 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.transformers;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +33,7 @@ public class Transformers {
       return this;
     }
 
-    public EnveloppeBuilder when(StateConstraintExpression expr) {
+    public EnveloppeBuilder when(Expression<Windows> expr) {
       insideExprs.add(new TimeRangeExpression.Builder().from(expr).build());
       return this;
     }

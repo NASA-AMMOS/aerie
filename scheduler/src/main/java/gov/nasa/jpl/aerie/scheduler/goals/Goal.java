@@ -1,10 +1,13 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.And;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -116,12 +119,12 @@ public class Goal {
      * @param constraint IN the state constraints
      * @return this builder, ready for additional specification
      */
-    public T attachStateConstraint(StateConstraintExpression constraint) {
-      this.constraints.add(constraint);
+    public T attachStateConstraint(Expression<Windows> constraint) {
+      this.resourceConstraints.add(constraint);
       return getThis();
     }
 
-    protected  final List<StateConstraintExpression> constraints = new LinkedList<>();
+    protected  final List<Expression<Windows>> resourceConstraints = new LinkedList<>();
 
     public T partialSatisfaction() {
       this.partialSatisfaction = true;
@@ -166,16 +169,12 @@ public class Goal {
 
       goal.partialSatisfaction = true;
 
-      goal.stateConstraints = null;
-      if (this.constraints.size() > 0) {
-        if (this.constraints.size() > 1) {
-          StateConstraintExpression.Builder build = new StateConstraintExpression.Builder();
-          for (var constraint : constraints) {
-            build = build.satisfied(constraint);
-          }
-          goal.stateConstraints = build.build();
+      goal.resourceConstraints = null;
+      if (this.resourceConstraints.size() > 0) {
+        if (this.resourceConstraints.size() > 1) {
+          goal.resourceConstraints = new And(resourceConstraints);
         } else {
-          goal.stateConstraints = constraints.get(0);
+          goal.resourceConstraints = resourceConstraints.get(0);
         }
       }
 
@@ -223,14 +222,15 @@ public class Goal {
    * plan that this goal would care to improve upon
    *
    * @param plan IN: the plan that this goal should be evaluated against
+   * @param simulationResults
    * @return a list of issues in the plan that diminish goal satisfaction
    */
-  public java.util.Collection<Conflict> getConflicts(Plan plan) {
+  public java.util.Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
     return java.util.Collections.emptyList();
   }
 
-  public StateConstraintExpression getStateConstraints() {
-    return stateConstraints;
+  public Expression<Windows> getResourceConstraints() {
+    return resourceConstraints;
   }
 
   /**
@@ -268,6 +268,6 @@ public class Goal {
   /**
    * state constraints applying to the goal
    */
-  protected StateConstraintExpression stateConstraints;
+  protected Expression<Windows> resourceConstraints;
 
 }

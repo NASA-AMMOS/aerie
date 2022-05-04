@@ -1,15 +1,15 @@
 package gov.nasa.jpl.aerie.scheduler.constraints;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.filters.Filters;
 import gov.nasa.jpl.aerie.scheduler.constraints.filters.TimeWindowsFilter;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.ExternalState;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.transformers.TimeWindowsTransformer;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,25 +30,19 @@ public class TimeRangeExpression {
    * @param domain x
    * @return x
    */
-  public Windows computeRange(Plan plan, Windows domain) {
+  public Windows computeRange(SimulationResults simulationResults, Plan plan, Windows domain) {
 
     Windows inter = new Windows(domain);
-    //particularly important for combining with constant states as they are by definition adjacent values
-    //TODO:remove
-    //inter.doNotMergeAdjacent();
 
-    if (constantWin != null) {
+    if (constantWin != null && !inter.isEmpty()) {
       inter.intersectWith(constantWin);
     }
 
-    if (actTemplate != null) {
+    if (actTemplate != null && !inter.isEmpty()) {
       Windows actTw = new Windows();
-      //particularly important for combining with constant states as they are by definition adjacent values
-      //TODO:marker to remove
-      //actTw.doNotMergeAdjacent();
-      var minTimepoint = domain.minTimePoint();
-      var maxTimepoint = domain.maxTimePoint();
-      if(minTimepoint.isPresent()&& maxTimepoint.isPresent()) {
+      var minTimepoint = inter.minTimePoint();
+      var maxTimepoint = inter.maxTimePoint();
+      if(minTimepoint.isPresent() && maxTimepoint.isPresent()) {
         final var anchorActSearch = new ActivityExpression.Builder()
             .basedOn(actTemplate)
             .startsIn(Window.between(
@@ -56,7 +50,7 @@ public class TimeRangeExpression {
                 Window.Inclusivity.Inclusive,
                 maxTimepoint.get(),
                 Window.Inclusivity.Exclusive)).build();
-        final var anchorActs = plan.find(anchorActSearch);
+        final var anchorActs = plan.find(anchorActSearch, simulationResults);
         for (var anchorAct : anchorActs) {
           var endInclusivity = Window.Inclusivity.Exclusive;
           if(anchorAct.getDuration().isZero()){
@@ -64,55 +58,48 @@ public class TimeRangeExpression {
           }
           actTw.add(Window.between(anchorAct.getStartTime(), Window.Inclusivity.Inclusive, anchorAct.getEndTime(), endInclusivity));
         }
-        inter = actTw;
       }
+      inter.intersectWith(actTw);
     }
 
     for (var otherExpr : timeRangeExpressions) {
-      Windows windowsState = otherExpr.computeRange(plan, domain);
+      if(inter.isEmpty()) break;
+      Windows windowsState = otherExpr.computeRange(simulationResults, plan, domain);
       inter.intersectWith(windowsState);
-      if (inter.isEmpty()) {
-        break;
-      }
     }
 
     for (var expr : stateExpr) {
-      Windows windowsState = expr.findWindows(plan, domain);
+      if(inter.isEmpty()) break;
+      final var domainOfInter = Window.between(inter.minTimePoint().get(), inter.maxTimePoint().get());
+      Windows windowsState = expr.evaluate(simulationResults, domainOfInter, null);
       inter.intersectWith(windowsState);
-      if (inter.isEmpty()) {
-        break;
-      }
     }
 
     for (var constState : constantsStates) {
-      Windows windowsState = new Windows(toOO(constState.getTimeline(domain).keySet().stream().toList()));
-      inter.intersectWith(windowsState);
-      if (inter.isEmpty()) {
-        break;
-      }
+      if(inter.isEmpty()) break;
+      final var domainOfInter = Window.between(inter.minTimePoint().get(), inter.maxTimePoint().get());
+      final var changePoints = simulationResults.discreteProfiles.get(constState).changePoints(domainOfInter);
+      final var timeline = new Windows();
+      final var container = new ArrayList<Window>();
+      changePoints.iterator().forEachRemaining(container::add);
+      container.stream().reduce((a, b) -> {
+        timeline.add(Window.window(a.start, Window.Inclusivity.Exclusive, b.start, Window.Inclusivity.Exclusive));
+        return b;
+      });
+      inter.intersectWith(timeline);
     }
+
     for (var filterOrtransform : filtersAndTransformers) {
+      if(inter.isEmpty()) break;
       if (filterOrtransform instanceof TimeWindowsFilter) {
-        inter = ((TimeWindowsFilter) filterOrtransform).filter(plan, inter);
+        inter = ((TimeWindowsFilter) filterOrtransform).filter(simulationResults, plan, inter);
       } else if (filterOrtransform instanceof TimeWindowsTransformer) {
-        inter = ((TimeWindowsTransformer) filterOrtransform).transformWindows(plan, inter);
-      }
-      if (inter.isEmpty()) {
-        break;
+        inter = ((TimeWindowsTransformer) filterOrtransform).transformWindows(plan, inter, simulationResults);
       }
     }
 
     return inter;
 
-  }
-
-  //To avoid squashing of adjacent windows
-  public List<Window> toOO(List<Window> windows){
-    var list = new ArrayList<Window>();
-    for(var win: windows){
-      list.add(Window.between(win.start, Window.Inclusivity.Exclusive, win.end, Window.Inclusivity.Exclusive));
-    }
-    return list;
   }
 
   public void setName(String name) {
@@ -123,15 +110,15 @@ public class TimeRangeExpression {
   protected String name = "TRE_" + Math.abs(new Random().nextInt());
   protected List<TimeRangeExpression> timeRangeExpressions;
   protected List<Object> filtersAndTransformers;
-  public List<StateConstraintExpression> stateExpr;
-  protected List<ExternalState> constantsStates;
+  protected List<Expression<Windows>> stateExpr;
+  protected List<String> constantsStates;
   private ActivityExpression actTemplate;
 
-  public static TimeRangeExpression constantValuesOf(ExternalState sce) {
-    return new Builder().ofEachValue(sce).build();
+  public static TimeRangeExpression constantValuesOf(String nameDiscreteProfile) {
+    return new Builder().ofEachValue(nameDiscreteProfile).build();
   }
 
-  public static TimeRangeExpression of(StateConstraintExpression sce) {
+  public static TimeRangeExpression of(Expression<Windows> sce) {
     return new Builder().from(sce).build();
   }
 
@@ -141,8 +128,8 @@ public class TimeRangeExpression {
 
   public static class Builder {
     final List<Object> filtersAndTransformers = new ArrayList<>();
-    final List<StateConstraintExpression> stateExpr = new ArrayList<>();
-    final List<ExternalState> constantsStates = new ArrayList<>();
+    final List<Expression<Windows>> stateExpr = new ArrayList<>();
+    final List<String> constantsStates = new ArrayList<>();
     final List<TimeRangeExpression> timeRangeExpressions = new ArrayList<>();
 
     final List<Windows> constantWin = new ArrayList<>();
@@ -171,7 +158,7 @@ public class TimeRangeExpression {
      * @param expr x
      * @return x
      */
-    public Builder from(StateConstraintExpression expr) {
+    public Builder from(Expression<Windows> expr) {
       this.stateExpr.add(expr);
       return getThis();
     }
@@ -201,14 +188,13 @@ public class TimeRangeExpression {
     /**
      * relative instant use case
      *
-     * @param state x
+     * @param nameDiscreteProfile name of the discrete profile
      * @param <T> x
      * @return x
      */
-    public <T> Builder ofEachValue(ExternalState state) {
-      this.constantsStates.add(state);
+    public <T> Builder ofEachValue(String nameDiscreteProfile) {
+      this.constantsStates.add(nameDiscreteProfile);
       return getThis();
-
     }
 
 

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.model;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
@@ -164,14 +165,14 @@ public class PlanInMemory implements Plan {
    */
   @Override
   public Collection<ActivityInstance> find(
-      ActivityExpression template)
+      ActivityExpression template, SimulationResults simulationResults)
   {
     //REVIEW: could do something clever with returning streams to prevent wasted work
     //REVIEW: something more clever for time-based queries using time index
     LinkedList<ActivityInstance> matched = new LinkedList<>();
     for (final var actsAtTime : actsByTime.values()) {
       for (final var act : actsAtTime) {
-        if (template.matches(act)) {
+        if (template.matches(act, simulationResults)) {
           matched.add(act);
         }
       }

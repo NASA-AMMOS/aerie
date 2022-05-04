@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.scheduling;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
@@ -111,7 +112,7 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
 
 
   //Non-incremental checking
-  public ConstraintState isEnforced(Plan plan, Windows windows) {
+  public ConstraintState isEnforced(Plan plan, Windows windows, SimulationResults simulationResults) {
 
     int nbAct = 0;
     Windows evalSet = new Windows(windows);
@@ -131,7 +132,7 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
             .basedOn(instance).startsOrEndsIn(window).build();
       }
 
-      final var acts = new java.util.LinkedList<>(plan.find(actSearch));
+      final var acts = new java.util.LinkedList<>(plan.find(actSearch, simulationResults));
       allActs.addAll(acts);
     }
     boolean violated = false;
@@ -145,7 +146,7 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
   }
 
 
-  public Collection<ActivityInstance> getAllActs(Plan plan, Windows windows) {
+  public Collection<ActivityInstance> getAllActs(Plan plan, Windows windows, SimulationResults simulationResults) {
 
     int nbAct = 0;
     Windows evalSet = new Windows(windows);
@@ -165,7 +166,7 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
             .basedOn(instance).startsOrEndsIn(window).build();
       }
 
-      final var acts = new java.util.LinkedList<>(plan.find(actSearch));
+      final var acts = new java.util.LinkedList<>(plan.find(actSearch, simulationResults));
       allActs.addAll(acts);
     }
 
@@ -173,11 +174,11 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
   }
 
   @Override
-  public Windows findWindows(Plan plan, Windows windows, Conflict conflict) {
+  public Windows findWindows(Plan plan, Windows windows, Conflict conflict, SimulationResults simulationResults) {
     Windows intersect = new Windows(windows);
     intersect.intersectWith(this.interval);
     if (!intersect.isEmpty()) {
-      final var allActs = getAllActs(plan, intersect);
+      final var allActs = getAllActs(plan, intersect, simulationResults);
       if (allActs.size() >= max) {
         windows.subtractAll(intersect);
       }
