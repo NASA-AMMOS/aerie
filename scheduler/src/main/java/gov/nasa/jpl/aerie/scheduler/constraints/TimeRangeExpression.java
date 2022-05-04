@@ -31,7 +31,7 @@ public class TimeRangeExpression {
    * @param domain x
    * @return x
    */
-  public Windows computeRange(SimulationResults simulationResults, Plan plan, Windows domain) {
+  public Windows computeRange(final SimulationResults simulationResults, final Plan plan, final Windows domain) {
 
     Windows inter = new Windows(domain);
     if(inter.isEmpty()) return inter;

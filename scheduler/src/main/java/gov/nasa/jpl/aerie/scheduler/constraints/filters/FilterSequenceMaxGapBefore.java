@@ -16,12 +16,12 @@ public class FilterSequenceMaxGapBefore implements TimeWindowsFilter {
 
   private final Duration delay;
 
-  public FilterSequenceMaxGapBefore(Duration delay) {
+  public FilterSequenceMaxGapBefore(final Duration delay) {
     this.delay = delay;
   }
 
   @Override
-  public Windows filter(SimulationResults simulationResults, Plan plan, Windows windows) {
+  public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
     Window before = null;
     List<Window> filtered = new ArrayList<>();
     for (var range : windows) {

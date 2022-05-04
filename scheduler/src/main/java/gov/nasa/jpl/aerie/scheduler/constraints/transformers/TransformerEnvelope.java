@@ -19,7 +19,7 @@ public class TransformerEnvelope implements TimeWindowsTransformer {
   }
 
   @Override
-  public Windows transformWindows(Plan plan, Windows windowsToTransform, final SimulationResults simulationResults) {
+  public Windows transformWindows(final Plan plan, final Windows windowsToTransform, final SimulationResults simulationResults) {
 
     Windows ret = new Windows();
     if(!windowsToTransform.isEmpty()) {

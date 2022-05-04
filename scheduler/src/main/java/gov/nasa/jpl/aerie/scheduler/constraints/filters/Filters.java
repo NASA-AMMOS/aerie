@@ -10,9 +10,7 @@ import java.util.function.Function;
 
 //directory class from which the user can create filters
 public class Filters {
-
-
-  public static TimeWindowsFilter withinEach(TimeRangeExpression expr, TimeWindowsFilter filter) {
+  public static TimeWindowsFilter withinEach(final TimeRangeExpression expr, final TimeWindowsFilter filter) {
     return new FilterWithReset(expr, filter);
   }
 

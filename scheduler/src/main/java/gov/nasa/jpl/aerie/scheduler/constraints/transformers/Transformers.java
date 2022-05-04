@@ -15,11 +15,11 @@ public class Transformers {
   }
 
 
-  public static TimeWindowsTransformer afterEach(Duration dur) {
+  public static TimeWindowsTransformer afterEach(final Duration dur) {
     return new TransformerAfterEach(dur);
   }
 
-  public static TimeWindowsTransformer beforeEach(Duration dur) {
+  public static TimeWindowsTransformer beforeEach(final Duration dur) {
     return new TransformerBeforeEach(dur);
   }
 

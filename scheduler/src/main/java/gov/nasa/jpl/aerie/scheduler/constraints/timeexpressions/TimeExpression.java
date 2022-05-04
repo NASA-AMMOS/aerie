@@ -21,7 +21,7 @@ public abstract class TimeExpression {
    * @param interval the range on which the relative time expression must be computed
    * @return a range of valid times satisfying the expression
    */
-  public abstract Window computeTime(SimulationResults simulationResults, Plan plan, Window interval);
+  public abstract Window computeTime(final SimulationResults simulationResults, final Plan plan, final Window interval);
 
 
   protected LinkedHashMap<TimeUtility.Operator, Duration> operations = new LinkedHashMap<>();

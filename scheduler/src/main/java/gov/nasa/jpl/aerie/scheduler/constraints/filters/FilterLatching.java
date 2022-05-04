@@ -14,18 +14,16 @@ import java.util.List;
  * remaining element of the sequence
  */
 public class FilterLatching implements TimeWindowsFilter {
-
   private final FilterFunctional firstFilter;
   private final FilterFunctional otherFilter;
 
-  public FilterLatching(FilterFunctional filter1, FilterFunctional filter2) {
+  public FilterLatching(final FilterFunctional filter1, final FilterFunctional filter2) {
     firstFilter = filter1;
     otherFilter = filter2;
   }
 
-
   @Override
-  public Windows filter(SimulationResults simulationResults, Plan plan, Windows windows) {
+  public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
     List<Window> ret = new ArrayList<>();
 
     if (!windows.isEmpty()) {
@@ -44,9 +42,7 @@ public class FilterLatching implements TimeWindowsFilter {
           }
         }
       }
-
     }
-
     return new Windows(ret);
   }
 }

@@ -14,13 +14,13 @@ public class TimeExpressionFromExpr extends TimeExpression {
   protected boolean fixed = true;
   protected final String name;
 
-  public TimeExpressionFromExpr(TimeExpression expression, String name) {
+  public TimeExpressionFromExpr(final TimeExpression expression, final String name) {
     this.expression = expression;
     this.name = name;
   }
 
   @Override
-  public Window computeTime(SimulationResults simulationResults, Plan plan, Window interval) {
+  public Window computeTime(final SimulationResults simulationResults, final Plan plan, final Window interval) {
     Window rangeExpr = expression.computeTime(simulationResults, plan, interval);
     Window retRange = null;
 

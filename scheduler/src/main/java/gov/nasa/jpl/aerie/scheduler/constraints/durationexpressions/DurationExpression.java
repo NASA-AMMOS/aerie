@@ -10,7 +10,7 @@ public interface DurationExpression {
     WindowDuration
   }
 
-  Duration compute(Window window, final SimulationResults simulationResults);
+  Duration compute(final Window window, final SimulationResults simulationResults);
 
   default DurationExpression minus(DurationExpression other){
     return new DurationExpressionMinus(this, other);
