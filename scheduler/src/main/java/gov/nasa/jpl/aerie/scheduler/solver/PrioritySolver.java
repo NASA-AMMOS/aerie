@@ -209,6 +209,8 @@ public class PrioritySolver implements Solver {
     //if backed by real models, initialize the simulation states/resources/profiles for the plan so state queries work
     if (problem.getMissionModel() != null) {
       simulationFacade.simulateActivities(plan.getActivities());
+      plan.getActivities().forEach(activity -> simulationFacade.getActivityDuration(activity)
+                                                       .ifPresent(activity::setDuration));
     }
   }
 
