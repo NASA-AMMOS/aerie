@@ -251,6 +251,82 @@ public class SchedulingIntegrationTests {
     assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.args());
   }
 
+  @Test
+  void testEqualTo_satsified() {
+    // Initial plant count is 200 in default configuration
+    // PickBanana removes 100
+    // GrowBanana adds 100
+    // Between the end of the PickBanana, and the beginning of the GrowBanana, the StateConstraint is satisfied
+    final var growBananaDuration = Duration.of(1, Duration.HOUR);
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(
+            new MockMerlinService.PlannedActivityInstance(
+                "PickBanana",
+                Map.of("quantity", SerializedValue.of(100)),
+                Duration.of(2, Duration.HOURS)),
+            new MockMerlinService.PlannedActivityInstance(
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(100),
+                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                Duration.of(4, Duration.HOURS))),
+        List.of("""
+                export default (): Goal => {
+                 return Goal.CoexistenceGoal({
+                   activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                   forEach: WindowSet.equalTo(Resources["/plant"], 100.0)
+                 })
+               }"""));
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    assertEquals(3, results.updatedPlan().size());
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var growBanana = planByActivityType.get("GrowBanana").iterator().next();
+    final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
+    final var pickBanana = planByActivityType.get("PickBanana").iterator().next();
+    assertTrue(peelBanana.startTime().noShorterThan(pickBanana.startTime()));
+    assertTrue(peelBanana.startTime().noLongerThan(growBanana.startTime()));
+    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.args());
+  }
+
+  @Test
+  void testEqualTo_neverSatisfied() {
+    // Initial plant count is 200 in default configuration
+    // PickBanana removes 99
+    // GrowBanana adds 100
+    // The StateConstraint is never satisfied
+    final var growBananaDuration = Duration.of(1, Duration.HOUR);
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(
+            new MockMerlinService.PlannedActivityInstance(
+                "PickBanana",
+                Map.of("quantity", SerializedValue.of(99)),
+                Duration.of(2, Duration.HOURS)),
+            new MockMerlinService.PlannedActivityInstance(
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(100),
+                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                Duration.of(4, Duration.HOURS))),
+        List.of("""
+                export default (): Goal => {
+                 return Goal.CoexistenceGoal({
+                   activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                   forEach: WindowSet.equalTo(Resources["/plant"], 100.0)
+                 })
+               }"""));
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    assertEquals(2, results.updatedPlan().size());
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var pickBanana = planByActivityType.get("PickBanana").iterator().next();
+    final var growBanana = planByActivityType.get("GrowBanana").iterator().next();
+    assertEquals(Duration.of(2, Duration.HOURS), pickBanana.startTime());
+    assertEquals(Duration.of(4, Duration.HOURS), growBanana.startTime());
+  }
+
   private static Map<String, Collection<MockMerlinService.PlannedActivityInstance>>
   partitionByActivityType(final Iterable<MockMerlinService.PlannedActivityInstance> activities) {
     final var result = new HashMap<String, Collection<MockMerlinService.PlannedActivityInstance>>();
