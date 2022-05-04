@@ -58,7 +58,7 @@ public class SimulateMapSchedule {
       });
 
       simulationResults.simulatedActivities.forEach((name, activity) -> {
-        System.out.println(name + ": " + activity.start + " for " + activity.duration);
+        System.out.println(name + ": " + activity.start() + " for " + activity.duration());
       });
     } finally {
       missionModel.getModel().close();

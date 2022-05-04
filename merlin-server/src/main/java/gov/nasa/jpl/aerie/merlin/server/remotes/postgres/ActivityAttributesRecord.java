@@ -8,5 +8,5 @@ import java.util.Optional;
 public record ActivityAttributesRecord(
     Optional<Long> directiveId,
     Map<String, SerializedValue> arguments,
-    SerializedValue computedAttributes
+    Optional<SerializedValue> computedAttributes
 ) {}

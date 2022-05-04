@@ -101,14 +101,14 @@ public final class GetSimulationResultsAction {
       final var activity = entry.getValue();
 
       final var activityOffset = Duration.of(
-          plan.startTimestamp.toInstant().until(activity.start, ChronoUnit.MICROS),
+          plan.startTimestamp.toInstant().until(activity.start(), ChronoUnit.MICROS),
           Duration.MICROSECONDS);
 
       activities.add(new ActivityInstance(
           id.id(),
-          activity.type,
-          activity.arguments,
-          Window.between(activityOffset, activityOffset.plus(activity.duration))));
+          activity.type(),
+          activity.arguments(),
+          Window.between(activityOffset, activityOffset.plus(activity.duration()))));
     }
 
     final var discreteProfiles = new HashMap<String, DiscreteProfile>(results.discreteProfiles.size());

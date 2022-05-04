@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
@@ -149,22 +150,43 @@ public final class ResponseSerializers {
                .build();
   }
 
-  public static JsonValue serializeSimulatedActivity(final SimulatedActivity simulatedActivity) {
+  private static JsonValue serializeSimulatedActivity(final SimulatedActivity simulatedActivity) {
     return Json
         .createObjectBuilder()
-        .add("type", simulatedActivity.type)
-        .add("arguments", serializeArgumentMap(simulatedActivity.arguments))
-        .add("startTimestamp", serializeTimestamp(simulatedActivity.start))
-        .add("duration", serializeDuration(simulatedActivity.duration))
-        .add("parent", serializeNullable(id -> Json.createValue(id.id()), simulatedActivity.parentId))
-        .add("children", serializeIterable((id -> Json.createValue(id.id())), simulatedActivity.childIds))
-        .add("computedAttributes", serializeArgument(simulatedActivity.computedAttributes))
+        .add("type", simulatedActivity.type())
+        .add("arguments", serializeArgumentMap(simulatedActivity.arguments()))
+        .add("startTimestamp", serializeTimestamp(simulatedActivity.start()))
+        .add("duration", serializeDuration(simulatedActivity.duration()))
+        .add("parent", serializeNullable(id -> Json.createValue(id.id()), simulatedActivity.parentId()))
+        .add("children", serializeIterable((id -> Json.createValue(id.id())), simulatedActivity.childIds()))
+        .add("computedAttributes", serializeArgument(simulatedActivity.computedAttributes()))
         .build();
   }
 
-  public static JsonValue serializeSimulatedActivities(final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities) {
+  private static JsonValue serializeSimulatedActivities(final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities) {
     return serializeMap(
         ResponseSerializers::serializeSimulatedActivity,
+        simulatedActivities
+            .entrySet()
+            .stream()
+            .collect(
+                Collectors.toMap(e -> Long.toString(e.getKey().id()), Map.Entry::getValue)));
+  }
+
+  private static JsonValue serializeUnfinishedActivity(final UnfinishedActivity simulatedActivity) {
+    return Json
+        .createObjectBuilder()
+        .add("type", simulatedActivity.type())
+        .add("arguments", serializeArgumentMap(simulatedActivity.arguments()))
+        .add("startTimestamp", serializeTimestamp(simulatedActivity.start()))
+        .add("parent", serializeNullable(id -> Json.createValue(id.id()), simulatedActivity.parentId()))
+        .add("children", serializeIterable((id -> Json.createValue(id.id())), simulatedActivity.childIds()))
+        .build();
+  }
+
+  private static JsonValue serializeUnfinishedActivities(final Map<ActivityInstanceId, UnfinishedActivity> simulatedActivities) {
+    return serializeMap(
+        ResponseSerializers::serializeUnfinishedActivity,
         simulatedActivities
             .entrySet()
             .stream()
@@ -181,6 +203,7 @@ public final class ResponseSerializers {
             results.resourceSamples))
         .add("constraints", serializeMap(v -> serializeIterable(ResponseSerializers::serializeConstraintViolation, v), violations))
         .add("activities", serializeSimulatedActivities(results.simulatedActivities))
+        .add("unfinishedActivities", serializeUnfinishedActivities(results.unfinishedActivities))
         .add("events", serializeSimulationEvents(results.events, topicsById(results.topics), results.startTime))
         .build();
   }
