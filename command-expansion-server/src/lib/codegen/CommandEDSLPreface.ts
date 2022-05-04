@@ -41,35 +41,26 @@ export class Command<A extends ArgType[] | { [argName: string]: any } = [] | {}>
 
   public toSeqJson() {
     return {
-      id: 'command',
+      args: typeof this.arguments == 'object' ? Object.values(this.arguments) : this.arguments,
+      stem: this.stem,
+      time: {
+        tag: this.absoluteTime
+          ? this.absoluteTime.toString()
+          : this.relativeTime
+          ? this.relativeTime.toString()
+          : this.epochTime
+          ? this.epochTime.time.toString()
+          : '',
+        type: this.absoluteTime
+          ? 'ABSOLUTE'
+          : this.relativeTime
+          ? 'COMMAND_RELATIVE'
+          : this.epochTime
+          ? 'EPOCH_RELATIVE'
+          : 'COMMAND_COMPLETE',
+      },
+      type: 'command',
       metadata: {},
-
-      steps: [
-        {
-          stem: this.stem,
-          time: {
-            tag: this.absoluteTime
-              ? this.absoluteTime.toString()
-              : this.relativeTime
-              ? this.relativeTime.toString()
-              : this.epochTime
-              ? this.epochTime.time.toString()
-              : '',
-            type: this.absoluteTime
-              ? 'ABSOLUTE'
-              : this.relativeTime
-              ? 'COMMAND_RELATIVE'
-              : this.epochTime
-              ? 'EPOCH_RELATIVE'
-              : 'COMMAND_COMPLETE',
-          },
-          type: 'command',
-          metadata: {},
-          // include epoch field if we have an epoch time
-          ...(this.epochTime !== null ? { epoch: this.epochTime?.epochName } : {}),
-          args: typeof this.arguments == 'object' ? Object.values(this.arguments) : this.arguments,
-        },
-      ],
     };
   }
 
