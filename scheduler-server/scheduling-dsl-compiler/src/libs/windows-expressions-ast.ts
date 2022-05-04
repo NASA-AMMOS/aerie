@@ -1,6 +1,7 @@
 export enum NodeKind {
   ActivityExpression = 'ActivityExpression',
   WindowsExpressionGreaterThan = 'WindowsExpressionGreaterThan',
+  WindowsExpressionLessThan = 'WindowsExpressionLessThan',
 }
 
 export interface ActivityExpression {
@@ -17,7 +18,14 @@ export interface WindowsExpressionGreaterThan {
   right: number
 }
 
+export interface WindowsExpressionLessThan {
+  kind: NodeKind.WindowsExpressionLessThan,
+  left: LinearResource,
+  right: number
+}
+
 export type WindowsExpression =
     | ActivityExpression
     | WindowsExpressionGreaterThan
+    | WindowsExpressionLessThan
 
