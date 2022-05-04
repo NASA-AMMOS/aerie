@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Test;
 
@@ -19,30 +20,32 @@ public class TestRecurrenceGoal {
 
   @Test
   public void testRecurrence() {
-    var actType = new ActivityType("RecGoalActType", null, DurationType.controllable("duration"));
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(20, Duration.SECONDS)))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .duration(Duration.of(2, Duration.SECONDS))
-                            .ofType(actType)
+                            .ofType(activityType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
         .build();
 
-    Problem problem = new Problem(null, planningHorizon, null, null);
 
     problem.setGoals(List.of(goal));
 
     final var solver = new PrioritySolver(problem);
 
     var plan = solver.getNextSolution().orElseThrow();
-    assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), actType));
-    assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), actType));
-    assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), actType));
-    assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), actType));
-
+    assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
+    assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
+    assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
+    assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
   }
 
 }

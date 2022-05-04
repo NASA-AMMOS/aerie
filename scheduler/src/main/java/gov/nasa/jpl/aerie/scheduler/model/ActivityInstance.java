@@ -96,6 +96,11 @@ public class ActivityInstance {
     this.duration = duration;
   }
 
+  public ActivityInstance(ActivityType type, Duration start, Duration duration, Map<String, SerializedValue> parameters) {
+    this(type, start, duration);
+    parameters.forEach(this::addArgument);
+  }
+
   /**
    * create an activity instance based on the provided one (but adifferent id)
    *
