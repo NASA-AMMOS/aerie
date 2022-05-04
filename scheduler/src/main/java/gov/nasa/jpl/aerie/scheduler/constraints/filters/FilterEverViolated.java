@@ -13,12 +13,12 @@ public class FilterEverViolated extends FilterFunctional {
 
   private final Expression<Windows> expr;
 
-  public FilterEverViolated(Expression<Windows> expr) {
+  public FilterEverViolated(final Expression<Windows> expr) {
     this.expr = expr;
   }
 
   @Override
-  public boolean shouldKeep(final SimulationResults simulationResults, Plan plan, Window range) {
+  public boolean shouldKeep(final SimulationResults simulationResults, final Plan plan, final Window range) {
     return !(expr.evaluate(simulationResults, range, null).equals(new Windows(range)));
   }
 }

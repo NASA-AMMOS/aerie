@@ -6,6 +6,6 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
 public interface TimeWindowsTransformer {
 
-  Windows transformWindows(Plan plan, Windows windows, final SimulationResults simulationResults);
+  Windows transformWindows(final Plan plan, final Windows windows, final SimulationResults simulationResults);
 
 }

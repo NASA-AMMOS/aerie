@@ -12,8 +12,8 @@ public abstract class FilterFunctional implements TimeWindowsFilter {
 
 
   @Override
-  public Windows filter(SimulationResults simulationResults, Plan plan, Windows windows) {
-    List<Window> ret = new ArrayList<>();
+  public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
+    final List<Window> ret = new ArrayList<>();
     for (var window : windows) {
       if (shouldKeep(simulationResults, plan, window)) {
         ret.add(window);
@@ -23,5 +23,5 @@ public abstract class FilterFunctional implements TimeWindowsFilter {
   }
 
 
-  public abstract boolean shouldKeep(SimulationResults simulationResults, Plan plan, Window range);
+  public abstract boolean shouldKeep(final SimulationResults simulationResults, final Plan plan, final Window range);
 }

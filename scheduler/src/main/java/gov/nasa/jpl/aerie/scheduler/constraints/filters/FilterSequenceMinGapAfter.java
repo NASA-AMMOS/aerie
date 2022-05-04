@@ -17,12 +17,12 @@ import java.util.stream.StreamSupport;
 public class FilterSequenceMinGapAfter implements TimeWindowsFilter {
 
   private final Duration minDelay;
-  public FilterSequenceMinGapAfter(Duration minDelay) {
+  public FilterSequenceMinGapAfter(final Duration minDelay) {
     this.minDelay = minDelay;
   }
 
   @Override
-  public Windows filter(SimulationResults simulationResults, Plan plan, Windows windows) {
+  public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
     List<Window> filtered = new ArrayList<>();
     List<Window> windowsTo = StreamSupport
         .stream(windows.spliterator(), false)

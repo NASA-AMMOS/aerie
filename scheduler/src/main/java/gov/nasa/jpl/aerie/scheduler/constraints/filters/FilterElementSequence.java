@@ -18,8 +18,6 @@ import java.util.stream.StreamSupport;
  * - keep an element at a given position (-1 is the last element, -2 is the element before the last etc)
  */
 public class FilterElementSequence implements TimeWindowsFilter {
-
-
   private final int elementIndex;
 
   private FilterElementSequence(int numberInSequence) {
@@ -39,11 +37,9 @@ public class FilterElementSequence implements TimeWindowsFilter {
   }
 
   @Override
-  public Windows filter(SimulationResults simulationResults, Plan plan, Windows windows) {
+  public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
     List<Window> ret = new ArrayList<>();
-
     if (!windows.isEmpty()) {
-
       List<Window> ranges = StreamSupport
           .stream(windows.spliterator(), false)
           .collect(Collectors.toList());

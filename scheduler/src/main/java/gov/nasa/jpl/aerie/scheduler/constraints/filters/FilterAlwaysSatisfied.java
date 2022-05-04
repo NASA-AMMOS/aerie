@@ -10,12 +10,12 @@ public class FilterAlwaysSatisfied extends FilterFunctional {
 
   private final Expression<Windows> expr;
 
-  public FilterAlwaysSatisfied(Expression<Windows> expr) {
+  public FilterAlwaysSatisfied(final Expression<Windows> expr) {
     this.expr = expr;
   }
 
   @Override
-  public boolean shouldKeep(final SimulationResults simulationResults, Plan plan, Window range) {
+  public boolean shouldKeep(final SimulationResults simulationResults, final Plan plan, final Window range) {
     var valid = expr.evaluate(simulationResults);
     return valid.equals(new Windows(range));
   }

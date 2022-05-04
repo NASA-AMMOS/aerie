@@ -18,12 +18,12 @@ public class FilterSequenceMaxGapAfter implements TimeWindowsFilter {
 
   private final Duration maxDelay;
 
-  public FilterSequenceMaxGapAfter(Duration maxDelay) {
+  public FilterSequenceMaxGapAfter(final Duration maxDelay) {
     this.maxDelay = maxDelay;
   }
 
   @Override
-  public Windows filter(SimulationResults simulationResults, Plan plan, Windows windows) {
+  public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
     List<Window> filtered = new ArrayList<>();
     List<Window> windowsTo = StreamSupport
         .stream(windows.spliterator(), false)

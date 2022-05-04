@@ -13,12 +13,12 @@ public class TimeExpressionConstant extends TimeExpression {
 
   protected final Duration instant;
 
-  public TimeExpressionConstant(Duration instant) {
+  public TimeExpressionConstant(final Duration instant) {
     this.instant = instant;
   }
 
   @Override
-  public Window computeTime(SimulationResults simulationResults, Plan plan, Window interval) {
+  public Window computeTime(final SimulationResults simulationResults, final Plan plan, final Window interval) {
     return Window.at(this.instant);
   }
 

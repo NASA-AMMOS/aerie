@@ -12,7 +12,7 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 public class TransformWithReset implements TimeWindowsTransformer {
 
 
-  public TransformWithReset(TimeRangeExpression reset, TimeWindowsTransformer filter) {
+  public TransformWithReset(final TimeRangeExpression reset, final TimeWindowsTransformer filter) {
     this.transform = filter;
     this.resetExpr = reset;
   }
@@ -21,7 +21,7 @@ public class TransformWithReset implements TimeWindowsTransformer {
   private final TimeRangeExpression resetExpr;
 
   @Override
-  public Windows transformWindows(Plan plan, Windows windowsToTransform, final SimulationResults simulationResults) {
+  public Windows transformWindows(final Plan plan, final Windows windowsToTransform, final SimulationResults simulationResults) {
 
     Windows ret = new Windows();
     int totalFiltered = 0;

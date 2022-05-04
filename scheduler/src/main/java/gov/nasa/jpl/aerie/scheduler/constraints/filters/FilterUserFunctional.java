@@ -10,12 +10,12 @@ public class FilterUserFunctional extends FilterFunctional {
 
   final Function<Window, Boolean> function;
 
-  public FilterUserFunctional(Function<Window, Boolean> function) {
+  public FilterUserFunctional(final Function<Window, Boolean> function) {
     this.function = function;
   }
 
   @Override
-  public boolean shouldKeep(SimulationResults simulationResults, Plan plan, Window range) {
+  public boolean shouldKeep(final SimulationResults simulationResults, final Plan plan, final Window range) {
     return function.apply(range);
   }
 }

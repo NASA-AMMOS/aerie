@@ -15,11 +15,11 @@ public class Transformers {
   }
 
 
-  public static TimeWindowsTransformer afterEach(Duration dur) {
+  public static TimeWindowsTransformer afterEach(final Duration dur) {
     return new TransformerAfterEach(dur);
   }
 
-  public static TimeWindowsTransformer beforeEach(Duration dur) {
+  public static TimeWindowsTransformer beforeEach(final Duration dur) {
     return new TransformerBeforeEach(dur);
   }
 
@@ -28,23 +28,23 @@ public class Transformers {
     final List<TimeRangeExpression> insideExprs = new ArrayList<>();
     TimeRangeExpression resetExpr;
 
-    public EnveloppeBuilder withinEach(TimeRangeExpression expr) {
+    public EnveloppeBuilder withinEach(final TimeRangeExpression expr) {
       this.resetExpr = expr;
       return this;
     }
 
-    public EnveloppeBuilder when(Expression<Windows> expr) {
+    public EnveloppeBuilder when(final Expression<Windows> expr) {
       insideExprs.add(new TimeRangeExpression.Builder().from(expr).build());
       return this;
     }
 
 
-    public EnveloppeBuilder when(ActivityExpression expr) {
+    public EnveloppeBuilder when(final ActivityExpression expr) {
       insideExprs.add(new TimeRangeExpression.Builder().from(expr).build());
       return this;
     }
 
-    public EnveloppeBuilder when(TimeRangeExpression expr) {
+    public EnveloppeBuilder when(final TimeRangeExpression expr) {
       insideExprs.add(expr);
       return this;
     }
