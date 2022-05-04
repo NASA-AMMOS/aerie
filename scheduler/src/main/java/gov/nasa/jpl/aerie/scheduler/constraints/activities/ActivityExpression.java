@@ -9,7 +9,6 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.Nullable;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.QueriableState;
 import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateQueryParam;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
 

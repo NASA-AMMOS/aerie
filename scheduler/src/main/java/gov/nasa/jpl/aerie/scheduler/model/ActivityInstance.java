@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.VariableArgumentComputer;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.QueriableState;
 import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateQueryParam;
 
 import java.util.Comparator;
@@ -64,7 +63,6 @@ public class ActivityInstance {
   public ActivityInstance(ActivityType type) {
     this.id = new SchedulingActivityInstanceId(uniqueId.getAndIncrement());
     this.type = type;
-    //TODO: should guess duration from activity type bounds
   }
 
   /**
@@ -77,7 +75,6 @@ public class ActivityInstance {
   public ActivityInstance(ActivityType type, Duration start) {
     this(type);
     this.startTime = start;
-    //TODO: should guess duration from activity type bounds
   }
 
   /**
@@ -309,9 +306,7 @@ public class ActivityInstance {
   }
 
   public static SerializedValue getValue(VariableArgumentComputer computer, Duration time, SimulationResults simulationResults){
-    if (computer instanceof QueriableState state) {
-      return state.getValueAtTime(time);
-    } else if(computer instanceof StateQueryParam state) {
+    if(computer instanceof StateQueryParam state) {
       return state.getValue(simulationResults, null, Window.at(time));
     } else{
       throw new IllegalArgumentException("Variable argument specification not supported");
