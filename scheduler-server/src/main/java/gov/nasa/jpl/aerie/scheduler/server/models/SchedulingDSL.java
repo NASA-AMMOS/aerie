@@ -67,12 +67,21 @@ public class SchedulingDSL {
               untuple(ConstraintExpression.GreaterThan::new),
               $ -> tuple($.resource(), $.value())));
 
+  private static final ProductParsers.JsonObjectParser<ConstraintExpression.LessThan> lessThanP =
+      productP
+          .field("left", linearResourceP)
+          .field("right", doubleP)
+          .map(Iso.of(
+              untuple(ConstraintExpression.LessThan::new),
+              $ -> tuple($.resource(), $.value())));
+
   private static final JsonParser<ConstraintExpression> constraintExpressionP =
       SumParsers.sumP("kind", ConstraintExpression.class, List.of(
           SumParsers.variant("ActivityExpression", ConstraintExpression.ActivityExpression.class, activityExpressionP.map(Iso.of(
               ConstraintExpression.ActivityExpression::new,
               ConstraintExpression.ActivityExpression::expression))),
-          SumParsers.variant("WindowsExpressionGreaterThan", ConstraintExpression.GreaterThan.class, greaterThanP)));
+          SumParsers.variant("WindowsExpressionGreaterThan", ConstraintExpression.GreaterThan.class, greaterThanP),
+          SumParsers.variant("WindowsExpressionLessThan", ConstraintExpression.LessThan.class, lessThanP)));
 
   private static final ProductParsers.JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP =
       productP
@@ -134,5 +143,7 @@ public class SchedulingDSL {
     record ActivityExpression(SchedulingDSL.ActivityExpression expression) implements ConstraintExpression {}
 
     record GreaterThan(LinearResource resource, double value) implements ConstraintExpression {}
+
+    record LessThan(LinearResource resource, double value) implements ConstraintExpression {}
   }
 }

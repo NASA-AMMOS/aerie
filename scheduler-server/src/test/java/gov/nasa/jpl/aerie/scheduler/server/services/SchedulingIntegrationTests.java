@@ -212,6 +212,45 @@ public class SchedulingIntegrationTests {
     assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.args());
   }
 
+  @Test
+  void testLessThan() {
+    // Initial plant count is 200 in default configuration
+    // GrowBanana adds 100
+    // PickBanana removes 100
+    // Between the end of the GrowBanana, and the beginning of the PickBanana, the StateConstraint is satisfied
+    final var growBananaDuration = Duration.of(1, Duration.HOUR);
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(
+            new MockMerlinService.PlannedActivityInstance(
+                "PickBanana",
+                Map.of("quantity", SerializedValue.of(100)),
+                Duration.of(2, Duration.HOURS)),
+            new MockMerlinService.PlannedActivityInstance(
+                    "GrowBanana",
+                    Map.of(
+                        "quantity", SerializedValue.of(100),
+                        "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                    Duration.of(4, Duration.HOURS))),
+        List.of("""
+                export default (): Goal => {
+                 return Goal.CoexistenceGoal({
+                   activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                   forEach: WindowSet.lessThan(Resources["/plant"], 199.0)
+                 })
+               }"""));
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    assertEquals(3, results.updatedPlan().size());
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var growBanana = planByActivityType.get("GrowBanana").iterator().next();
+    final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
+    final var pickBanana = planByActivityType.get("PickBanana").iterator().next();
+    assertTrue(peelBanana.startTime().noShorterThan(pickBanana.startTime()));
+    assertTrue(peelBanana.startTime().noLongerThan(growBanana.startTime()));
+    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.args());
+  }
+
   private static Map<String, Collection<MockMerlinService.PlannedActivityInstance>>
   partitionByActivityType(final Iterable<MockMerlinService.PlannedActivityInstance> activities) {
     final var result = new HashMap<String, Collection<MockMerlinService.PlannedActivityInstance>>();
