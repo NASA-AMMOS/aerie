@@ -2,8 +2,8 @@ package gov.nasa.jpl.aerie.scheduler.solver;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
@@ -12,7 +12,6 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.BinaryMutexConstraint;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.NAryMutexConstraint;
@@ -28,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -136,7 +136,7 @@ public class PrioritySolver implements Solver {
 
     for(var act: acts){
       //if some parameters are left uninstantiated, this is the last moment to do it
-      act.instantiateVariableArguments();
+      act.instantiateVariableArguments(simulationFacade.getLatestConstraintSimulationResults());
       var duration = act.getDuration();
       if(duration != null && duration.longerThan(this.problem.getPlanningHorizon().getEndAerie())){
         logger.warn("Activity " + act
@@ -440,8 +440,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
           assert acts != null;
           //add the activities to the output plan
           if (!acts.isEmpty()) {
-            var actsCanBeInserted = checkAndInsertActs(acts);
-            if(actsCanBeInserted){
+            if(checkAndInsertActs(acts)){
               madeProgress = true;
 
               evaluation.forGoal(goal).associate(acts, true);
@@ -459,10 +458,10 @@ private void satisfyOptionGoal(OptionGoal goal) {
           for(var act : actToChooseFrom){
             var actWindow = new Windows();
             actWindow.add(Window.between(act.getStartTime(), act.getEndTime()));
-            var stateConstraints = goal.getStateConstraints();
+            var stateConstraints = goal.getResourceConstraints();
             var narrowed = actWindow;
             if(stateConstraints!= null) {
-              narrowed = narrowByStateConstraints(actWindow, List.of(stateConstraints));
+              narrowed = narrowByResourceConstraints(actWindow, List.of(stateConstraints));
             }
             if(narrowed.includes(actWindow)){
               //decision-making here, we choose the first satisfying activity
@@ -503,7 +502,8 @@ private void satisfyOptionGoal(OptionGoal goal) {
 
     //find all the reasons this goal is crying
     //REVIEW: maybe should have way to request only certain kinds of conflicts
-    final var rawConflicts = goal.getConflicts(plan);
+    this.simulationFacade.computeSimulationResultsUntil(this.problem.getPlanningHorizon().getEndAerie());
+    final var rawConflicts = goal.getConflicts(plan, this.simulationFacade.getLatestConstraintSimulationResults());
     assert rawConflicts != null;
 
     //filter out any issues that this simple algorithm can't deal with (ie
@@ -572,28 +572,26 @@ private void satisfyOptionGoal(OptionGoal goal) {
     //prune based on constraints on goal and activity type (mutex, state,
     //event, etc)
     //TODO: move this into polymorphic method. don't want to be demuxing types
-    Collection<StateConstraintExpression> stateConstraints = new LinkedList<>();
+    Collection<Expression<Windows>> resourceConstraints = new LinkedList<>();
 
     //add all goal constraints
-    StateConstraintExpression goalConstraints = goal.getStateConstraints();
-    ActivityType actType;
+    final var goalConstraints = goal.getResourceConstraints();
 
     if (goalConstraints != null) {
-      stateConstraints.add(goalConstraints);
+      resourceConstraints.add(goalConstraints);
     }
     if (missing instanceof final MissingActivityInstanceConflict missingInstance) {
       final var act = missingInstance.getInstance();
-      actType = act.getType();
-      StateConstraintExpression c = act.getType().getStateConstraints();
-      if (c != null) stateConstraints.add(c);
-    } else if (goal instanceof ActivityTemplateGoal) {
-      StateConstraintExpression c = ((ActivityTemplateGoal) goal).getActivityStateConstraints();
-      if (c != null) stateConstraints.add(c);
+      final var c = act.getType().getStateConstraints();
+      if (c != null) resourceConstraints.add(c);
+    } else if (goal instanceof ActivityTemplateGoal activityTemplateGoal) {
+      final var c = activityTemplateGoal.getActivityStateConstraints();
+      if (c != null) resourceConstraints.add(c);
     } else {
       //TODO: placeholder for now to avoid mutex fall through
       throw new IllegalArgumentException("request to create activities for conflict of unrecognized type");
     }
-    possibleWindows = narrowByStateConstraints(possibleWindows, stateConstraints);
+    possibleWindows = narrowByResourceConstraints(possibleWindows, resourceConstraints);
 
     possibleWindows = narrowGlobalConstraints(plan, missing, possibleWindows, this.problem.getGlobalConstraints());
 
@@ -654,8 +652,8 @@ private void satisfyOptionGoal(OptionGoal goal) {
    * @param constraints IN the constraints to use to narrow the windows,
    *     may be empty (but not null)
    */
-  private Windows narrowByStateConstraints(
-      Windows windows, Collection<StateConstraintExpression> constraints)
+  private Windows narrowByResourceConstraints(Windows windows,
+                                              Collection<Expression<Windows>> constraints)
   {
     assert windows != null;
     assert constraints != null;
@@ -665,14 +663,18 @@ private void satisfyOptionGoal(OptionGoal goal) {
       return ret;
     }
 
-    //REVIEW: could be some optimization in constraint ordering
+    final var totalDomain = Window.between(windows.minTimePoint().get(), windows.maxTimePoint().get());
+    //make sure the simulation results cover the domain
+    simulationFacade.computeSimulationResultsUntil(totalDomain.end);
 
     //iteratively narrow the windows from each constraint
+    //REVIEW: could be some optimization in constraint ordering (smallest domain first to fail fast)
     for (final var constraint : constraints) {
-      ret = constraint.findWindows(plan, ret);
-      assert ret != null;
+      //REVIEW: loop through windows more efficient than enveloppe(windows) ?
+      final var validity = constraint.evaluate(simulationFacade.getLatestConstraintSimulationResults(), totalDomain);
+      ret.intersectWith(validity);
       //short-circuit if no possible windows left
-      if (windows.isEmpty()) {
+      if (ret.isEmpty()) {
         break;
       }
     }
@@ -685,11 +687,16 @@ private void satisfyOptionGoal(OptionGoal goal) {
       Windows windows,
       Collection<GlobalConstraint> constraints) {
     Windows tmp = new Windows(windows);
+    if(tmp.isEmpty()){
+      return tmp;
+    }
+    //make sure the simulation results cover the domain
+    simulationFacade.computeSimulationResultsUntil(tmp.maxTimePoint().get());
     for (GlobalConstraint gc : constraints) {
       if (gc instanceof BinaryMutexConstraint) {
-        tmp = ((BinaryMutexConstraint) gc).findWindows(plan, tmp, mac);
+        tmp = ((BinaryMutexConstraint) gc).findWindows(plan, tmp, mac, simulationFacade.getLatestConstraintSimulationResults());
       } else if (gc instanceof NAryMutexConstraint){
-        tmp = ((NAryMutexConstraint) gc).findWindows(plan, tmp, mac);
+        tmp = ((NAryMutexConstraint) gc).findWindows(plan, tmp, mac, simulationFacade.getLatestConstraintSimulationResults());
       }
     }
   return tmp;

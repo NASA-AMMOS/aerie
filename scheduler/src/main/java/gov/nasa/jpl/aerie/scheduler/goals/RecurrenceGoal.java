@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -86,7 +87,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
    * exist over a timespan longer than the allowed range (and one should
    * probably be created!)
    */
-  public java.util.Collection<Conflict> getConflicts(Plan plan) {
+  public java.util.Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
     final var conflicts = new java.util.LinkedList<Conflict>();
 
     //collect all matching target acts ordered by start time
@@ -94,7 +95,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
     final var satisfyingActSearch = new ActivityExpression.Builder()
         .basedOn(desiredActTemplate)
         .startsIn(getTemporalContext()).build();
-    final var acts = new java.util.LinkedList<>(plan.find(satisfyingActSearch));
+    final var acts = new java.util.LinkedList<>(plan.find(satisfyingActSearch, simulationResults));
     acts.sort(java.util.Comparator.comparing(ActivityInstance::getStartTime));
 
     //walk through existing matching activities to find too-large gaps,

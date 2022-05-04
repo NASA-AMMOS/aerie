@@ -1,9 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
@@ -80,7 +81,7 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
    * @return an unmodifiable collection of all the constraints implied by
    *     the goal's created activity type
    */
-  public StateConstraintExpression getActivityStateConstraints() {
+  public Expression<Windows> getActivityStateConstraints() {
     return desiredActTemplate.getType().getStateConstraints();
   }
 

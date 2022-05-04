@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -28,19 +29,19 @@ public class TimeExpressionLatching extends TimeExpression {
 
 
   @Override
-  public Window computeTime(Plan plan, Window interval) {
+  public Window computeTime(SimulationResults simulationResults, Plan plan, Window interval) {
 
     List<Window> resetPeriods = StreamSupport
-        .stream(resetWindowsExpression.computeRange(plan, Windows.forever()).spliterator(), false)
+        .stream(resetWindowsExpression.computeRange(simulationResults, plan, Windows.forever()).spliterator(), false)
         .collect(Collectors.toList());
     boolean first = true;
     for (var window : resetPeriods) {
       Window inter = Window.intersect(window,interval);
       if (inter != null) {
         if (first) {
-          return expr1.computeTime(plan, interval);
+          return expr1.computeTime(simulationResults, plan, interval);
         } else {
-          return expr2.computeTime(plan, interval);
+          return expr2.computeTime(simulationResults, plan, interval);
         }
 
       }

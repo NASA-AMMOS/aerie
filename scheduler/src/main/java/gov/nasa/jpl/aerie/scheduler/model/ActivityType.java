@@ -1,9 +1,11 @@
 package gov.nasa.jpl.aerie.scheduler.model;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.And;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
 
 import java.util.List;
 import java.util.Objects;
@@ -32,7 +34,7 @@ public class ActivityType {
   /**
    * a list of constraints associated to this activity type
    */
-  private final StateConstraintExpression activityConstraints;
+  private Expression<Windows> activityConstraints;
 
   /**
    * the information required to simulate this activity type
@@ -76,7 +78,7 @@ public class ActivityType {
    * @param name IN the identifier of the activity type
    * @param constraints constraints for the activity type
    */
-  public ActivityType(final String name, final StateConstraintExpression constraints) {
+  public ActivityType(final String name, final Expression<Windows> constraints) {
     checkNotNull(name, "creating activity type with null name");
     checkNotNull(constraints, "creating activity type with null constraints");
     this.name = name;
@@ -115,7 +117,7 @@ public class ActivityType {
    *     with this activity type and inherited by all matching activity
    *     instances
    */
-  public StateConstraintExpression getStateConstraints() {
+  public Expression<Windows> getStateConstraints() {
     return this.activityConstraints;
   }
 
@@ -133,6 +135,10 @@ public class ActivityType {
       return paramSpec != null;
     }
     return true;
+  }
+
+  public void setResourceConstraint(Expression<Windows> constraint){
+    this.activityConstraints = constraint;
   }
 
   @Override

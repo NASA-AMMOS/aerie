@@ -1,7 +1,15 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.And;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
+import gov.nasa.jpl.aerie.constraints.tree.Equal;
+import gov.nasa.jpl.aerie.constraints.tree.Or;
+import gov.nasa.jpl.aerie.constraints.tree.RealResource;
+import gov.nasa.jpl.aerie.constraints.tree.RealValue;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -118,7 +126,7 @@ public class AerieLanderRules extends Problem {
    */
 
     var HP3actType = getActivityType("HeatProbeTemP");
-    var mutex = GlobalConstraints.atMostOneOf(List.of(ActivityExpression.ofType(HP3actType)));
+    var mutex = GlobalConstraints.atMostOneOf(ActivityExpression.ofType(HP3actType));
     add(mutex);
 
     var actT1 = getActivityType("SSAMonitoring");
@@ -135,14 +143,12 @@ public class AerieLanderRules extends Problem {
         .build();
     goals.put(10, pro);
 
-    var sce = new StateConstraintExpression.Builder()
-        .equal(getResource("/HeatProbe/ssaState"), SerializedValue.of("Monitoring"))
-        .build();
+    var sce = new Equal<>(new DiscreteResource("/HeatProbe/ssaState"), new DiscreteValue(SerializedValue.of("Monitoring")));
 
     var HP3Acts = new ActivityCreationTemplate.Builder()
         .ofType(HP3actType)
         .duration(
-            getResource("/HeatProbe/currentParams/PARAM_HeatProbe_MON_TEMP_DURATION"),
+            "/HeatProbe/currentParams/PARAM_HeatProbe_MON_TEMP_DURATION",
             TimeExpression.atStart())
         .withArgument("setNewSSATime", SerializedValue.of(true))
         .build();
@@ -286,7 +292,7 @@ public class AerieLanderRules extends Problem {
 */
   var enveloppeAllGrappleMove = new TimeRangeExpression.Builder()
       .from(Windows.forever())
-      .thenTransform(new Transformers.EnveloppeBuilder()
+      .thenTransform(new Transformers.EnvelopeBuilder()
                          .withinEach(TimeRangeExpression.of(Windows.forever()))
                          .when(ActivityExpression.ofType(atGrapple))
                          .when(ActivityExpression.ofType(actTypeIDAMoveArm))
@@ -390,7 +396,7 @@ public class AerieLanderRules extends Problem {
 
   var enveloppeAllIDCImage = new TimeRangeExpression.Builder()
       .from(Windows.forever())
-      .thenTransform(new Transformers.EnveloppeBuilder()
+      .thenTransform(new Transformers.EnvelopeBuilder()
                          .withinEach(TimeRangeExpression.of(Windows.forever()))
                          .when(ActivityExpression.ofType(actTypeIDCImage))
                          .build())
@@ -553,26 +559,14 @@ public class AerieLanderRules extends Problem {
 
     //the dsn visibility activities from generateDSNVisibilityAllocationGoal are required for the following goals
 
-    StateConstraintExpression sc1 = new StateConstraintExpression.Builder()
-        .andBuilder()
-        .name("CanberraSC")
-        .equal(getResource("/dsn/visible/Canberra"), SerializedValue.of("InView"))
-        .equal(getResource("/dsn/allocated/Canberra"), SerializedValue.of("Allocated"))
-        .build();
-    StateConstraintExpression sc2 = new StateConstraintExpression.Builder()
-        .andBuilder()
-        .name("MadridSC")
-        .equal(getResource("/dsn/visible/Madrid"), SerializedValue.of("InView"))
-        .equal(getResource("/dsn/allocated/Madrid"), SerializedValue.of("Allocated"))
-        .build();
-    StateConstraintExpression sc3 = new StateConstraintExpression.Builder()
-        .andBuilder()
-        .name("GoldstoneSC")
-        .equal(getResource("/dsn/visible/Goldstone"), SerializedValue.of("InView"))
-        .equal(getResource("/dsn/allocated/Goldstone"), SerializedValue.of("Allocated"))
-        .build();
+    var sc1 = new And(new Equal<>(new DiscreteResource("/dsn/visible/Canberra"),new DiscreteValue(SerializedValue.of("InView"))),
+                      new Equal<>(new DiscreteResource("/dsn/allocated/Canberra"),new DiscreteValue(SerializedValue.of("Allocated"))));
+    var sc2 = new And(new Equal<>(new DiscreteResource("/dsn/visible/Madrid"),new DiscreteValue(SerializedValue.of("InView"))),
+                      new Equal<>(new DiscreteResource("/dsn/allocated/Madrid"),new DiscreteValue(SerializedValue.of("Allocated"))));
+    var sc3 = new And(new Equal<>(new DiscreteResource("/dsn/visible/Goldstone"),new DiscreteValue(SerializedValue.of("InView"))),
+                      new Equal<>(new DiscreteResource("/dsn/allocated/Goldstone"),new DiscreteValue(SerializedValue.of("Allocated"))));
 
-    var disj = new StateConstraintExpressionDisjunction(List.of(sc1, sc2, sc3), "disjunction");
+    var disj = new Or(sc1, sc2, sc3);
 
     TimeRangeExpression expr = new TimeRangeExpression.Builder()
         .from(disj)
@@ -692,7 +686,7 @@ public class AerieLanderRules extends Problem {
    */
     var actTypeXbandCommched= getActivityType("XBandCommSched");
 
-    var enveloppe = new Transformers.EnveloppeBuilder()
+    var enveloppe = new Transformers.EnvelopeBuilder()
         .withinEach(expr)
         .when(ActivityExpression.ofType(actTypeXbandActive))
         .when(ActivityExpression.ofType(actTypeXbandCleanup))
@@ -709,7 +703,7 @@ public class AerieLanderRules extends Problem {
         .forAllTimeIn(DEFAULT_PLANNING_HORIZON.getHor())
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(actTypeXbandCommched)
-                            .withArgument("DSNTrack", getResource("/dsn/allocstation"))
+                            .withArgument("DSNTrack", "/dsn/allocstation")
                             .withArgument("xbandAntSel", SerializedValue.of("EAST_MGA"))
                             .build())
         .forEach(tre2)

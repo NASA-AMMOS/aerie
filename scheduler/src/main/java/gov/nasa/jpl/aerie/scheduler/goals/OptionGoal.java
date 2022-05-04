@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.solver.optimizers.Optimizer;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -32,7 +33,7 @@ public class OptionGoal extends Goal {
   }
 
   @Override
-  public java.util.Collection<Conflict> getConflicts(Plan plan) {
+  public java.util.Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
     return null;
 
   }
