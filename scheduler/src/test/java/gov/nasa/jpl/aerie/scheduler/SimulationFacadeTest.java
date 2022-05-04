@@ -90,38 +90,6 @@ public class SimulationFacadeTest {
     return new PlanInMemory();
   }
 
-  @Test
-  public void doubleConstraintEvalOnEmptyPlan() {
-    final var constraint = new StateConstraintExpression.Builder().above(getFruitRes(), SerializedValue.of(2.9)).build();
-    final var plan = makeEmptyPlan();
-    var actual = constraint.findWindows(plan, entireHorizon);
-    assertThat(actual).isEqualTo(entireHorizon);
-  }
-
-  @Test
-  public void boolConstraintEvalOnEmptyPlan() {
-    final var constraint = new StateConstraintExpression.Builder().equal(getFlagConflictedRes(), SerializedValue.of(false)).build();
-    final var plan = makeEmptyPlan();
-    final var actual = constraint.findWindows(plan, entireHorizon);
-    assertThat(actual).isEqualTo(entireHorizon);
-  }
-
-  @Test
-  public void stringConstraintEvalOnEmptyPlan() {
-    final var constraint = new StateConstraintExpression.Builder().equal(getFlagRes(), SerializedValue.of("A")).build();
-    final var plan = makeEmptyPlan();
-    var actual = constraint.findWindows(plan, entireHorizon);
-    assertThat(actual).isEqualTo(entireHorizon);
-  }
-
-  @Test
-  public void intConstraintEvalOnEmptyPlan() {
-    final var constraint = new StateConstraintExpression.Builder().equal(getPlantRes(), SerializedValue.of(200)).build();
-    final var plan = makeEmptyPlan();
-    final var actual = constraint.findWindows(plan, entireHorizon);
-    assertThat(actual).isEqualTo(entireHorizon);
-  }
-
   /**
    * constructs a simple test plan with one peel and bite
    *
