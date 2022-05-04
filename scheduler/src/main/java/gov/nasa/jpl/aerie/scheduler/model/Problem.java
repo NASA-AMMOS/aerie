@@ -184,10 +184,6 @@ public class Problem {
     this.actTypeByName.put(name, actType);
   }
 
-  public ExternalState getResource(String name){
-    return simulationFacade.getResource(name);
-  }
-
   /**
    * fetches the activity type object with the given name
    *

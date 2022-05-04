@@ -112,8 +112,8 @@ public class ActivityCreationTemplate extends ActivityExpression {
 
     protected DurationExpression parametricDur;
 
-    public Builder duration(@NotNull ExternalState state, TimeExpression expr){
-      this.parametricDur = new DurationExpressionState(new StateQueryParam(state, expr));
+    public Builder duration(@NotNull String nameState, TimeExpression expr){
+      this.parametricDur = new DurationExpressionState(new StateQueryParam(nameState, expr));
       return this;
     }
 
@@ -284,7 +284,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
         public Duration valueAt(final Duration start) {
           final var actToSim = new ActivityInstance(act);
           actToSim.setStartTime(start);
-          actToSim.instantiateVariableArguments();
+          actToSim.instantiateVariableArguments(facade.getLatestConstraintSimulationResults());
           try {
             facade.simulateActivity(actToSim);
             final var dur = facade.getActivityDuration(actToSim);
@@ -338,7 +338,8 @@ public class ActivityCreationTemplate extends ActivityExpression {
         //select smallest duration
         act.setDuration(solved.end().start.minus(solved.start().start));
       } else {
-        final var computedDur = this.parametricDur.compute(Window.between(earliestStart, earliestStart));
+        final var computedDur = this.parametricDur.compute(Window.between(earliestStart, earliestStart),
+                                                           facade.getLatestConstraintSimulationResults());
         if (solved.duration().contains(computedDur)) {
           act.setDuration(computedDur);
         } else {
@@ -349,7 +350,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
 
     for (final var param : this.variableArguments.entrySet()) {
       if (instantiateVariableArguments) {
-        act.instantiateVariableArgument(param.getKey());
+        act.instantiateVariableArgument(param.getKey(), facade.getLatestConstraintSimulationResults());
       }
     }
     return Optional.of(act);

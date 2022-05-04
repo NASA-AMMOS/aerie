@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.scheduling;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
@@ -8,7 +9,9 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
+import org.apache.commons.lang3.NotImplementedException;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,29 +25,26 @@ public class NAryMutexConstraint extends GlobalConstraintWithIntrospection {
 
   Set<ActivityExpression> activityExpressions;
 
-  public static NAryMutexConstraint buildMutexConstraint(List<ActivityExpression> actTypes) {
-    NAryMutexConstraint mc = new NAryMutexConstraint();
-    mc.activityExpressions = new HashSet<>(actTypes);
-    return mc;
+  public NAryMutexConstraint(ActivityExpression... activityExpressions){
+    this.activityExpressions = new HashSet<>(Arrays.asList(activityExpressions));
   }
 
-
-  public Windows findWindows(Plan plan, Windows windows, Conflict conflict) {
+  public Windows findWindows(Plan plan, Windows windows, Conflict conflict, final SimulationResults simulationResults) {
     if (conflict instanceof MissingActivityInstanceConflict) {
-      return findWindows(plan, windows, ((MissingActivityInstanceConflict) conflict).getInstance().getType());
+      return findWindows(plan, windows, ((MissingActivityInstanceConflict) conflict).getInstance().getType(), simulationResults);
     } else if (conflict instanceof MissingActivityTemplateConflict) {
-      return findWindows(plan, windows, ((MissingActivityTemplateConflict) conflict).getGoal().getActTemplate().getType());
+      return findWindows(plan, windows, ((MissingActivityTemplateConflict) conflict).getGoal().getActTemplate().getType(), simulationResults);
     } else {
       throw new IllegalArgumentException("method implemented for two types of conflict");
     }
   }
 
 
-  private Windows findWindows(Plan plan, Windows windows, ActivityType actToBeScheduled) {
+  private Windows findWindows(Plan plan, Windows windows, ActivityType actToBeScheduled, final SimulationResults simulationResults) {
     Windows validWindows = new Windows(windows);
     for (var expression : activityExpressions) {
       if (!expression.getType().equals(actToBeScheduled)) {
-        final var acts = new LinkedList<>(plan.find(expression));
+        final var acts = new LinkedList<>(plan.find(expression, simulationResults));
 
         List<Window> rangesActs = acts
             .stream()
@@ -59,39 +59,13 @@ public class NAryMutexConstraint extends GlobalConstraintWithIntrospection {
   }
 
 
-  //Non-incremental checking
-  //TODO : uncomment and verify
-  public ConstraintState isEnforced(Plan plan, Windows windows) {
-
-        /*TimeWindows violationWindows = new TimeWindows();
-
-        for(var window : windows.getRangeSet()){
-            final var actSearch = new ActivityExpression.Builder()
-                    .type( actType ).startsOrEndsIn(window).build();
-            final var otherActSearch = new ActivityExpression.Builder()
-                    .type( otherActType ).startsOrEndsIn(window).build();
-            final var acts = new java.util.LinkedList<>( plan.find( actSearch ) );
-            final var otherActs = new java.util.LinkedList<>( plan.find( otherActSearch ) );
-
-            List<Range<Time>> rangesActs = acts.stream().map(a ->new Range<Time>(a.getStartTime(), a.getEndTime())).collect(Collectors.toList());
-            TimeWindows twActs = TimeWindows.of(rangesActs);
-            List<Range<Time>> rangesOtherActs = otherActs.stream().map(a ->new Range<Time>(a.getStartTime(), a.getEndTime())).collect(Collectors.toList());
-            TimeWindows twOtherActs =TimeWindows.of(rangesOtherActs);
-
-            TimeWindows result = new TimeWindows(twActs);
-            result.intersection(twOtherActs);
-            //intersection with current window to be sure we are not analyzing intersections happenning outside
-            result.intersection(window);
-            violationWindows.union(result);
-        }
-        ConstraintState cState;
-        if(!violationWindows.isEmpty()){
-            cState = new ConstraintState(this,true, violationWindows);
-        } else{
-            cState = new ConstraintState(this,false, null);
-        }
-        return cState;*/
-    return null;
+  @Override
+  public ConstraintState isEnforced(
+      final Plan plan,
+      final Windows windows,
+      final SimulationResults simulationResults)
+  {
+    throw new NotImplementedException();
   }
 
 }

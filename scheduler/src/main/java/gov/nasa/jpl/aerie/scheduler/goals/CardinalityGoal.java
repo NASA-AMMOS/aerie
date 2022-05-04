@@ -1,7 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.conflicts.UnsatisfiableMissingActivityConflict;
 import org.slf4j.Logger;
@@ -12,7 +14,6 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.Range;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
@@ -55,8 +56,8 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       return getThis();
     }
 
-    public Builder inPeriod(StateConstraintExpression scExpr) {
-      inPeriod = new TimeRangeExpression.Builder().from(scExpr).build();
+    public Builder inPeriod(Expression<Windows> expression) {
+      inPeriod = new TimeRangeExpression.Builder().from(expression).build();
       return getThis();
     }
 
@@ -144,12 +145,12 @@ public class CardinalityGoal extends ActivityTemplateGoal {
    * but there was no corresponding target activity instance (and one
    * should probably be created!)
    */
-  public Collection<Conflict> getConflicts(Plan plan) {
-    Windows timeDomain = this.expr.computeRange(plan, Windows.forever());
+  public Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
+    Windows timeDomain = this.expr.computeRange(simulationResults, plan, Windows.forever());
     ActivityCreationTemplate actTB =
         new ActivityCreationTemplate.Builder().basedOn(this.desiredActTemplate).startsOrEndsIn(timeDomain).build();
 
-    final var acts = new LinkedList<>(plan.find(actTB));
+    final var acts = new LinkedList<>(plan.find(actTB, simulationResults));
     acts.sort(Comparator.comparing(ActivityInstance::getStartTime));
 
     int nbActs = 0;

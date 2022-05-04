@@ -1,7 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplateDisjunction;
@@ -10,7 +12,6 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpression;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
@@ -37,8 +38,8 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       return getThis();
     }
 
-    public Builder forEach(StateConstraintExpression scExpr) {
-      forEach = new TimeRangeExpression.Builder().from(scExpr).build();
+    public Builder forEach(Expression<Windows> expression) {
+      forEach = new TimeRangeExpression.Builder().from(expression).build();
       return getThis();
     }
 
@@ -156,10 +157,10 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
    * should probably be created!)
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
-  public java.util.Collection<Conflict> getConflicts(Plan plan) {
+  public java.util.Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
     final var conflicts = new java.util.LinkedList<Conflict>();
 
-    Windows anchors = expr.computeRange(plan, Windows.forever());
+    Windows anchors = expr.computeRange(simulationResults, plan, new Windows(this.temporalContext));
     for (var window : anchors) {
 
       boolean disj = false;
@@ -174,17 +175,17 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
       if(this.startExpr != null) {
         Window startTimeRange = null;
-        startTimeRange = this.startExpr.computeTime(plan, window);
+        startTimeRange = this.startExpr.computeTime(simulationResults, plan, window);
         actTB.startsIn(startTimeRange);
       }
       if(this.endExpr != null) {
         Window endTimeRange = null;
-        endTimeRange = this.endExpr.computeTime(plan, window);
+        endTimeRange = this.endExpr.computeTime(simulationResults, plan, window);
         actTB.endsIn(endTimeRange);
       }
       /* this will override whatever might be already present in the template */
       if(durExpr!=null){
-        var durRange = this.durExpr.compute(window);
+        var durRange = this.durExpr.compute(window, simulationResults);
         actTB.durationIn(Window.between(durRange, durRange));
       }
 
@@ -195,7 +196,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         temp = (ActivityCreationTemplate) actTB.build();
 
       }
-      final var existingActs = plan.find(temp);
+      final var existingActs = plan.find(temp, simulationResults);
 
       var missingActAssociations = new ArrayList<ActivityInstance>();
       var planEvaluation = plan.getEvaluation();

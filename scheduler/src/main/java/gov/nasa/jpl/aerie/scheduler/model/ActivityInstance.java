@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.model;
 
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -279,10 +280,10 @@ public class ActivityInstance {
            && Objects.equals(variableArguments, that.variableArguments);
   }
 
-  public void instantiateVariableArguments(){
+  public void instantiateVariableArguments(SimulationResults simulationResults){
     for (var arg : variableArguments.entrySet()) {
       if(!isVariableArgumentInstantiated(arg.getKey())) {
-        instantiateVariableArgument(arg.getKey());
+        instantiateVariableArgument(arg.getKey(), simulationResults);
       }
     }
   }
@@ -298,30 +299,30 @@ public class ActivityInstance {
   * Default policy is to query at activity start
   * TODO: kind of defeats the purpose of an expression
   * */
-  public void instantiateVariableArgument(String name) {
-    instantiateVariableArgument(name, getStartTime());
+  public void instantiateVariableArgument(String name, SimulationResults simulationResults) {
+    instantiateVariableArgument(name, getStartTime(), simulationResults);
   }
 
-  public static SerializedValue getValue(VariableArgumentComputer computer, Duration time){
+  public static SerializedValue getValue(VariableArgumentComputer computer, Duration time, SimulationResults simulationResults){
     if (computer instanceof QueriableState state) {
       return state.getValueAtTime(time);
     } else if(computer instanceof StateQueryParam state) {
-      return state.getValue(null, Window.at(time));
+      return state.getValue(simulationResults, null, Window.at(time));
     } else{
       throw new IllegalArgumentException("Variable argument specification not supported");
     }
   }
 
-  public SerializedValue getInstantiatedArgumentValue(String name, Duration time){
+  public SerializedValue getInstantiatedArgumentValue(String name, Duration time, SimulationResults simulationResults){
     var argumentValue = variableArguments.get(name);
     if(argumentValue==null){
       throw new IllegalArgumentException("Unknown argument "+ name);
     }
-    return getValue(argumentValue, time);
+    return getValue(argumentValue, time, simulationResults);
   }
 
-  public void instantiateVariableArgument(String name, Duration time){
-    addArgument(name, getInstantiatedArgumentValue(name, time));
+  public void instantiateVariableArgument(String name, Duration time, SimulationResults simulationResults){
+    addArgument(name, getInstantiatedArgumentValue(name, time, simulationResults));
   }
 
   @Override

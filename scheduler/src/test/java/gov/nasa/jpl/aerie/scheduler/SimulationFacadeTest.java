@@ -2,30 +2,50 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.And;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
+import gov.nasa.jpl.aerie.constraints.tree.Equal;
+import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
+import gov.nasa.jpl.aerie.constraints.tree.GreaterThanOrEqual;
+import gov.nasa.jpl.aerie.constraints.tree.LessThan;
+import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
+import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
+import gov.nasa.jpl.aerie.constraints.tree.RealResource;
+import gov.nasa.jpl.aerie.constraints.tree.RealValue;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionConstant;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
+import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateQueryParam;
+import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
+import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.simulation.SimResource;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.sql.SQLOutput;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SimulationFacadeTest {
 
@@ -41,7 +61,7 @@ public class SimulationFacadeTest {
 
   //hard-coded range of scheduling/simulation operations
   private static final PlanningHorizon horizon = new PlanningHorizon(t0h, tEndh);
-  private static final Windows entireHorizon = new Windows(horizon.getHor());
+  private static final Window entireHorizon = horizon.getHor();
 
   //concrete named time points used to setup tests and validate expectations
   private static final Duration t0 = horizon.toDur(t0h);
@@ -51,23 +71,23 @@ public class SimulationFacadeTest {
   private static final Duration tEnd = horizon.toDur(tEndh);
 
   /** fetch reference to the fruit resource in the mission model **/
-  private SimResource getFruitRes() {
-    return facade.getResource("/fruit");
+  private RealResource getFruitRes() {
+    return new RealResource("/fruit");
   }
 
   /** fetch reference to the conflicted marker on the flag resource in the mission model **/
-  private SimResource getFlagConflictedRes() {
-    return facade.getResource("/flag/conflicted");
+  private DiscreteResource getFlagConflictedRes() {
+    return new DiscreteResource("/flag/conflicted");
   }
 
   /** fetch reference to the flag resource in the mission model **/
-  private SimResource getFlagRes() {
-    return facade.getResource("/flag");
+  private DiscreteResource getFlagRes() {
+    return new DiscreteResource("/flag");
   }
 
   /** fetch reference to the plant resource in the mission model **/
-  private SimResource getPlantRes() {
-    return facade.getResource("/plant");
+  private DiscreteResource getPlantRes() {
+    return new DiscreteResource("/plant");
   }
 
   @BeforeEach
@@ -156,21 +176,26 @@ public class SimulationFacadeTest {
   @Test
   public void getValueAtTimeDoubleOnSimplePlanMidpoint() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
-    var actual = getFruitRes().getValueAtTime(t1_5);
+    facade.computeSimulationResultsUntil(tEnd);
+    final var stateQuery = new StateQueryParam(getFruitRes().name, new TimeExpressionConstant(t1_5));
+    final var actual = stateQuery.getValue(facade.getLatestConstraintSimulationResults(), null, horizon.getHor());
     assertThat(actual).isEqualTo(SerializedValue.of(3.0));
   }
 
   @Test
   public void getValueAtTimeDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
-    var actual = getFruitRes().getValueAtTime(t2);
+    facade.computeSimulationResultsUntil(tEnd);
+    final var stateQuery = new StateQueryParam(getFruitRes().name, new TimeExpressionConstant(t2));
+    final var actual = stateQuery.getValue(facade.getLatestConstraintSimulationResults(), null, horizon.getHor());
     assertThat(actual).isEqualTo(SerializedValue.of(2.9));
   }
 
   @Test
   public void whenValueAboveDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
-    var actual = getFruitRes().whenValueAbove(SerializedValue.of(2.9), entireHorizon);
+    facade.computeSimulationResultsUntil(tEnd);
+    var actual = new GreaterThan(getFruitRes(), new RealValue(2.9)).evaluate(facade.getLatestConstraintSimulationResults());
     var expected = new Windows(Window.betweenClosedOpen(t0, t2));
     assertThat(actual).isEqualTo(expected);
   }
@@ -178,15 +203,17 @@ public class SimulationFacadeTest {
   @Test
   public void whenValueBelowDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
-    var actual = getFruitRes().whenValueBelow(SerializedValue.of(3.0), entireHorizon);
-    var expected = new Windows(Window.betweenClosedOpen(t2, tEnd));
+    facade.computeSimulationResultsUntil(tEnd);
+    var actual = new LessThan(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
+    var expected = new Windows(Window.between(t2, tEnd));
     assertThat(actual).isEqualTo(expected);
   }
 
   @Test
   public void whenValueBetweenDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
-    var actual = getFruitRes().whenValueBetween(SerializedValue.of(3.00), SerializedValue.of(3.99), entireHorizon);
+    facade.computeSimulationResultsUntil(tEnd);
+    var actual = new And(new GreaterThanOrEqual(getFruitRes(), new RealValue(3.0)), new LessThanOrEqual(getFruitRes(), new RealValue(3.99))).evaluate(facade.getLatestConstraintSimulationResults());
     var expected = new Windows(Window.betweenClosedOpen(t1, t2));
     assertThat(actual).isEqualTo(expected);
   }
@@ -194,7 +221,8 @@ public class SimulationFacadeTest {
   @Test
   public void whenValueEqualDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
-    var actual = getFruitRes().whenValueEqual(SerializedValue.of(3.00), entireHorizon);
+    facade.computeSimulationResultsUntil(tEnd);
+    var actual = new Equal<>(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
     var expected = new Windows(Window.betweenClosedOpen(t1, t2));
     assertThat(actual).isEqualTo(expected);
   }
@@ -202,9 +230,127 @@ public class SimulationFacadeTest {
   @Test
   public void whenValueNotEqualDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
-    var actual = getFruitRes().whenValueNotEqual(SerializedValue.of(3.00), entireHorizon);
-    var expected = new Windows(List.of(Window.betweenClosedOpen(t0, t1), Window.betweenClosedOpen(t2, tEnd)));
+    facade.computeSimulationResultsUntil(tEnd);
+    var actual = new NotEqual<>(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
+    var expected = new Windows(List.of(Window.betweenClosedOpen(t0, t1), Window.between(t2, tEnd)));
     assertThat(actual).isEqualTo(expected);
   }
 
+  @Test
+  public void testCoexistenceGoalWithResourceConstraint() throws SimulationFacade.SimulationException {
+    facade.simulateActivities(makeTestPlanP0B1().getActivities());
+
+    /**
+    * reminder for PB1
+     * <pre>
+     * time: |t0--------|t1--------|t2-------->
+     * acts:            |peel(fS)  |bite(0.1)
+     * peel: |4.0-------|3.0------------------>
+     * fruit:|4.0-------|3.0-------|2.9------->
+     * </pre>
+     **/
+    final var constraint = new And(
+        new LessThanOrEqual(new RealResource("/peel"), new RealValue(3.0)),
+        new LessThanOrEqual(new RealResource("/fruit"), new RealValue(2.9))
+    );
+
+    final var actTypePeel = problem.getActivityType("PeelBanana");
+
+    CoexistenceGoal cg = new CoexistenceGoal.Builder()
+        .forAllTimeIn(horizon.getHor())
+        .thereExistsOne(new ActivityCreationTemplate.Builder()
+                            .ofType(actTypePeel)
+                            .withArgument("peelDirection", SerializedValue.of("fromStem"))
+                            .build())
+        .forEach(constraint)
+        .owned(ChildCustody.Jointly)
+        .startsAt(TimeAnchor.START)
+        .build();
+
+    problem.setGoals(List.of(cg));
+    final var solver = new PrioritySolver(this.problem);
+    final var plan = solver.getNextSolution().orElseThrow();
+    assertTrue(TestUtility.containsActivity(plan, t2, t2, actTypePeel));
+  }
+
+
+  @Test
+  public void testProceduralGoalWithResourceConstraint() throws SimulationFacade.SimulationException {
+    facade.simulateActivities(makeTestPlanP0B1().getActivities());
+
+    final var constraint = new And(
+        new LessThanOrEqual(new RealResource("/peel"), new RealValue(3.0)),
+        new LessThanOrEqual(new RealResource("/fruit"), new RealValue(2.9))
+    );
+
+    final var actTypePeel = problem.getActivityType("PeelBanana");
+
+    ActivityInstance act1 = new ActivityInstance(actTypePeel,
+                                                 t0, t1.minus(t0));
+
+    ActivityInstance act2 = new ActivityInstance(actTypePeel,
+                                                 t2, Duration.of(1, Duration.SECOND));
+
+    //create an "external tool" that insists on a few fixed activities
+    final var externalActs = java.util.List.of(
+        act1,
+        act2
+    );
+    final Function<Plan, Collection<ActivityInstance>> fixedGenerator
+        = (p) -> externalActs;
+
+    final var proceduralGoalWithConstraints = new ProceduralCreationGoal.Builder()
+        .forAllTimeIn(horizon.getHor())
+        .attachStateConstraint(constraint)
+        .generateWith(fixedGenerator)
+        .owned(ChildCustody.Jointly)
+        .build();
+
+    problem.setGoals(List.of(proceduralGoalWithConstraints));
+    final var solver = new PrioritySolver(this.problem);
+    final var plan = solver.getNextSolution().orElseThrow();
+
+    assertTrue(TestUtility.containsExactlyActivity(plan, act2));
+    assertTrue(TestUtility.doesNotContainActivity(plan, act1));
+  }
+
+  @Test
+  public void testActivityTypeWithResourceConstraint() throws SimulationFacade.SimulationException {
+    facade.simulateActivities(makeTestPlanP0B1().getActivities());
+
+    final var constraint = new And(
+        new LessThanOrEqual(new RealResource("/peel"), new RealValue(3.0)),
+        new LessThanOrEqual(new RealResource("/fruit"), new RealValue(2.9))
+    );
+
+    final var actTypePeel = problem.getActivityType("PeelBanana");
+    actTypePeel.setResourceConstraint(constraint);
+
+    ActivityInstance act1 = new ActivityInstance(actTypePeel,
+                                                 t0, t1.minus(t0));
+
+    ActivityInstance act2 = new ActivityInstance(actTypePeel,
+                                                 t2, Duration.of(1, Duration.SECOND));
+
+    //create an "external tool" that insists on a few fixed activities
+    final var externalActs = java.util.List.of(
+        act1,
+        act2
+    );
+
+    final Function<Plan, Collection<ActivityInstance>> fixedGenerator
+        = (p) -> externalActs;
+
+    final var proceduralgoalwithoutconstraints = new ProceduralCreationGoal.Builder()
+        .forAllTimeIn(horizon.getHor())
+        .generateWith(fixedGenerator)
+        .owned(ChildCustody.Jointly)
+        .build();
+
+    problem.setGoals(List.of(proceduralgoalwithoutconstraints));
+    final var solver = new PrioritySolver(problem);
+    final var plan = solver.getNextSolution().orElseThrow();
+    assertTrue(TestUtility.containsExactlyActivity(plan, act2));
+    assertTrue(TestUtility.doesNotContainActivity(plan, act1));
+  }
 }

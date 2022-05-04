@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.transformers;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -14,7 +15,7 @@ public class TransformerAfterEach implements TimeWindowsTransformer {
 
 
   @Override
-  public Windows transformWindows(Plan plan, Windows windows) {
+  public Windows transformWindows(Plan plan, Windows windows, final SimulationResults simulationResults) {
     var retWin = new Windows(windows);
     retWin = retWin.complement();
     retWin = retWin.removeFirst();

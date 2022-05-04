@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.BinaryMutexConstraint;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.CardinalityConstraint;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.ConstraintState;
-import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.OrderingConstraint;
+import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraints;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityExistentialGoal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
@@ -74,7 +74,7 @@ public class TestOrderingConstraints {
             t10)).build();
 
     //constraint is invalid in interval (0,10)
-    ConstraintState cs = cc.isEnforced(plan, new Windows(Window.between(t0, h.toDur(TestUtility.timeFromEpochSeconds(10)))));
+    ConstraintState cs = cc.isEnforced(plan, new Windows(Window.between(t0, h.toDur(TestUtility.timeFromEpochSeconds(10)))), null);
     assertTrue(cs.isViolation);
     CardinalityConstraint cc2 =
         new CardinalityConstraint.Builder().atMost(0).type(type1).inInterval(Window.between(
@@ -82,7 +82,7 @@ public class TestOrderingConstraints {
                     t10)).build();
 
     //constraint is valid in interval (8,10)
-    ConstraintState cs2 = cc2.isEnforced(plan, new Windows(Window.between(t8, t10)));
+    ConstraintState cs2 = cc2.isEnforced(plan, new Windows(Window.between(t8, t10)), null);
     assertFalse(cs2.isViolation);
   }
 
@@ -97,15 +97,15 @@ public class TestOrderingConstraints {
 
     plan.add(act1);
     plan.add(act2);
-    BinaryMutexConstraint mc = OrderingConstraint.buildMutexConstraint(type1, type2);
+    BinaryMutexConstraint mc = GlobalConstraints.buildBinaryMutexConstraint(type1, type2);
 
     //constraint is invalid in interval (0,10)
-    ConstraintState cs = mc.isEnforced(plan, new Windows(Window.between(t0, t10)));
+    ConstraintState cs = mc.isEnforced(plan, new Windows(Window.between(t0, t10)), null);
     assertTrue(cs.isViolation);
     assertEquals(cs.violationWindows, new Windows(Window.betweenClosedOpen(t3, t5)));
 
     //constraint is valid in interval (8,10)
-    cs = mc.isEnforced(plan, new Windows(Window.between(t8, t10)));
+    cs = mc.isEnforced(plan, new Windows(Window.between(t8, t10)), null);
     assertFalse(cs.isViolation);
     assertNull(cs.violationWindows);
 
@@ -125,13 +125,13 @@ public class TestOrderingConstraints {
 
     plan.add(act1);
     plan.add(act2);
-    BinaryMutexConstraint mc = OrderingConstraint.buildMutexConstraint(type1, type2);
+    BinaryMutexConstraint mc = GlobalConstraints.buildBinaryMutexConstraint(type1, type2);
     Windows tw1 = new Windows(Window.between(t0, t10));
 
     var foundWindows = mc.findWindows(
         plan,
         tw1,
-        new MissingActivityInstanceConflict(new ActivityExistentialGoal(), act2));
+        new MissingActivityInstanceConflict(new ActivityExistentialGoal(), act2), null);
 
     Windows expectedWindows = new Windows(tw1);
     expectedWindows.subtract(Window.between(t1, Window.Inclusivity.Inclusive, t5, Window.Inclusivity.Exclusive));
@@ -158,7 +158,8 @@ public class TestOrderingConstraints {
     Windows foundWindows = cc.findWindows(
         plan,
         tw1,
-        new MissingActivityInstanceConflict(new ActivityExistentialGoal(), act1));
+        new MissingActivityInstanceConflict(new ActivityExistentialGoal(), act1),
+        null);
 
     Windows expectedWindows = new Windows();
     assertEquals(foundWindows, expectedWindows);

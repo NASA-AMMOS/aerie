@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.filters;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -24,7 +25,7 @@ public class FilterSequenceMinGapBefore implements TimeWindowsFilter {
   }
 
   @Override
-  public Windows filter(Plan plan, Windows windows) {
+  public Windows filter(SimulationResults simulationResults, Plan plan, Windows windows) {
     Window before = null;
     List<Window> filtered = new ArrayList<>();
     if (windows.size() > 0) {

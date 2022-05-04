@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 
@@ -27,9 +28,9 @@ public class ActivityExpressionDisjunction extends ActivityExpression {
    * @return true if the act instance matches one of the activity expression of the disjunction
    */
   @Override
-  public boolean matches(@NotNull ActivityInstance act) {
+  public boolean matches(@NotNull ActivityInstance act, SimulationResults simulationResults) {
     for (var expr : actExpressions) {
-      if (expr.matches(act)) {
+      if (expr.matches(act, simulationResults)) {
         return true;
       }
     }
