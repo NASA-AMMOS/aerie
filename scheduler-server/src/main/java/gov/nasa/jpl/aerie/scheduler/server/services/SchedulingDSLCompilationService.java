@@ -73,16 +73,20 @@ public class SchedulingDSLCompilationService {
           final var output = outputReader.readLine();
           try {
             yield new SchedulingDSLCompilationResult.Error(parseJson(output, SchedulingCompilationError.schedulingErrorJsonP));
-          } catch (InvalidJsonException | InvalidEntityException e) {
+          } catch (InvalidJsonException e) {
             throw new Error("Could not parse JSON returned from typescript: ", e);
+          } catch (InvalidEntityException e) {
+            throw new Error("Could not parse JSON returned from typescript: " + e.failures + "\n" + output);
           }
         }
         case "success" -> {
           final var output = outputReader.readLine();
           try {
             yield new SchedulingDSLCompilationResult.Success(parseJson(output, SchedulingDSL.schedulingJsonP));
-          } catch (InvalidJsonException | InvalidEntityException e) {
-            throw new Error("Could not parse JSON returned from typescript: ", e);
+          } catch (InvalidJsonException e) {
+            throw new Error("Could not parse JSON returned from typescript: " + output, e);
+          } catch (InvalidEntityException e) {
+            throw new Error("Could not parse JSON returned from typescript: " + e.failures + "\n" + output, e);
           }
         }
         default -> throw new Error("scheduling dsl compiler returned unexpected status: " + status);
