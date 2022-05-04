@@ -15,6 +15,7 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Test;
@@ -65,12 +66,8 @@ public class PrioritySolverTest {
 
   //test mission with two primitive activity types
   private static Problem makeTestMissionAB() {
-    final var mission = new Problem(null, h, null, null);
-    final var actA = new ActivityType("A", null, DurationType.controllable("duration"));
-    mission.add(actA);
-    final var actB = new ActivityType("B", null, DurationType.controllable("duration"));
-    mission.add(actB);
-    return mission;
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    return new Problem(fooMissionModel, h, new SimulationFacade(h, fooMissionModel), SimulationUtility.getFooSchedulerModel());
   }
 
   private final static PlanningHorizon h = new PlanningHorizon(TimeUtility.fromDOY("2025-001T01:01:01.001"), TimeUtility.fromDOY("2030-001T01:01:01.001"));
@@ -87,7 +84,7 @@ public class PrioritySolverTest {
 
   private static PlanInMemory makePlanA012(Problem problem) {
     final var plan = new PlanInMemory();
-    final var actTypeA = problem.getActivityType("A");
+    final var actTypeA = problem.getActivityType("ControllableDurationActivity");
     plan.add(new ActivityInstance(actTypeA, t0, d1min));
     plan.add(new ActivityInstance(actTypeA, t1hr, d1min));
     plan.add(new ActivityInstance(actTypeA, t2hr, d1min));
@@ -96,7 +93,7 @@ public class PrioritySolverTest {
 
   private static PlanInMemory makePlanA12(Problem problem) {
     final var plan = new PlanInMemory();
-    final var actTypeA = problem.getActivityType("A");
+    final var actTypeA = problem.getActivityType("ControllableDurationActivity");
     plan.add(new ActivityInstance(actTypeA, t1hr, d1min));
     plan.add(new ActivityInstance(actTypeA, t2hr, d1min));
     return plan;
@@ -104,7 +101,7 @@ public class PrioritySolverTest {
 
   private static PlanInMemory makePlanAB012(Problem problem) {
     final var plan = makePlanA012(problem);
-    final var actTypeB = problem.getActivityType("B");
+    final var actTypeB = problem.getActivityType("OtherControllableDurationActivity");
     plan.add(new ActivityInstance(actTypeB, t0, d1min));
     plan.add(new ActivityInstance(actTypeB, t1hr, d1min));
     plan.add(new ActivityInstance(actTypeB, t2hr, d1min));
@@ -186,10 +183,11 @@ public class PrioritySolverTest {
     final var problem = makeTestMissionAB();
     final var goal = new RecurrenceGoal.Builder()
         .named("g0")
-        .startingAt(t0).endingAt(t2hr.plus(Duration.of(10, Duration.MINUTE)))
+        .startingAt(t0)
+        .endingAt(t2hr.plus(Duration.of(10, Duration.MINUTE)))
         .repeatingEvery(d1hr)
         .thereExistsOne(new ActivityCreationTemplate.Builder()
-                            .ofType(problem.getActivityType("A"))
+                            .ofType(problem.getActivityType("ControllableDurationActivity"))
                             .duration(d1min)
                             .build())
         .build();
@@ -213,8 +211,8 @@ public class PrioritySolverTest {
   public void getNextSolution_coexistenceGoalOnActivityWorks() {
     final var problem = makeTestMissionAB();
     problem.setInitialPlan(makePlanA012(problem));
-    final var actTypeA = problem.getActivityType("A");
-    final var actTypeB = problem.getActivityType("B");
+    final var actTypeA = problem.getActivityType("ControllableDurationActivity");
+    final var actTypeB = problem.getActivityType("OtherControllableDurationActivity");
     final var goal = new CoexistenceGoal.Builder()
         .named("g0")
         .forAllTimeIn(h.getHor())
