@@ -314,4 +314,33 @@ class SchedulingDSLCompilationServiceTests {
       fail(r.toString());
     }
   }
+
+  @Test
+  void strictTypeCheckingTest() {
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(PLAN_ID, """
+          interface FakeGoal {
+            and(...others: FakeGoal[]): FakeGoal;
+            or(...others: FakeGoal[]): FakeGoal;
+          }
+          export default function() {
+            const myFakeGoal: FakeGoal = {
+              and: (...others: FakeGoal[]) => {
+                return myFakeGoal;
+              },
+              or: (...others: FakeGoal[]) => {
+                return myFakeGoal;
+              },
+            };
+            return myFakeGoal;
+          }
+        """, "");
+
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      assertEquals(r.errors().size(), 1);
+      assertEquals(
+          "TypeError: TS2741 Incorrect return type. Property '__astNode' is missing in type 'FakeGoal' but required in type 'Goal'.",
+          r.errors().get(0).message()
+      );
+    }
+  }
 }
