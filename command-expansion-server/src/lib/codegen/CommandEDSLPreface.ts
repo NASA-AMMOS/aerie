@@ -39,17 +39,41 @@ export class Command<A extends ArgType[] | { [argName: string]: any } = [] | {}>
     }
   }
 
+  // return  yyyy-doyThh:mm:ss.sss
+  private instantToDoy(time: Temporal.Instant): string {
+    const utcZonedDate = time.toZonedDateTimeISO('UTC');
+    return `${utcZonedDate.year}-${this.format(utcZonedDate.dayOfYear, 3)}T${this.format(
+      utcZonedDate.hour,
+      2,
+    )}:${this.format(utcZonedDate.minute, 2)}:${this.format(utcZonedDate.second, 2)}.${this.format(
+      utcZonedDate.millisecond,
+      3,
+    )}`;
+  }
+
+  // return hh:mm:ss.sss
+  private durationToHms(time: Temporal.Duration): string {
+    return `${this.format(time.hours, 2)}:${this.format(time.minutes, 2)}:${this.format(time.seconds, 2)}.${this.format(
+      time.milliseconds,
+      3,
+    )}`;
+  }
+
+  private format(number: number, size: number): string {
+    return number.toString().padStart(size, '0');
+  }
+
   public toSeqJson() {
     return {
       args: typeof this.arguments == 'object' ? Object.values(this.arguments) : this.arguments,
       stem: this.stem,
       time: {
         tag: this.absoluteTime
-          ? this.absoluteTime.toString()
+          ? this.instantToDoy(this.absoluteTime) // yyyy-doyThh:mm:ss.sss
           : this.relativeTime
-          ? this.relativeTime.toString()
+          ? this.durationToHms(this.relativeTime) // hh:mm:ss.sss
           : this.epochTime
-          ? this.epochTime.time.toString()
+          ? this.durationToHms(this.epochTime.time) // hh:mm:ss.sss
           : '',
         type: this.absoluteTime
           ? 'ABSOLUTE'
