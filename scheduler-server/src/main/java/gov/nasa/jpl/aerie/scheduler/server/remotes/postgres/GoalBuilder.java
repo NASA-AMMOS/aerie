@@ -110,6 +110,15 @@ public class GoalBuilder {
                     .notEqual(lookupResource.apply(c.resource().name()), SerializedValue.of(c.value()))
                     .build())
           .build();
+    } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.Between c) {
+      return new TimeRangeExpression.Builder()
+          .from(new StateConstraintExpression.Builder()
+                    .between(
+                        lookupResource.apply(c.resource().name()),
+                        SerializedValue.of(c.lowerBound()),
+                        SerializedValue.of(c.upperBound()))
+                    .build())
+          .build();
     } else {
       throw new UnexpectedSubtypeError(SchedulingDSL.ConstraintExpression.class, constraintExpression);
     }
