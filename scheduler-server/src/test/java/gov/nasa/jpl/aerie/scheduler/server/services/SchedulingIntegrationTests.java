@@ -278,7 +278,7 @@ public class SchedulingIntegrationTests {
     for (final var entry : missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
-      resourceTypes.add(new MissionModelService.ResourceType(name, "", resource.getSchema()));
+      resourceTypes.add(new MissionModelService.ResourceType(name, resource.getSchema()));
     }
 
     return new MissionModelService.MissionModelTypes(activityTypes, resourceTypes);

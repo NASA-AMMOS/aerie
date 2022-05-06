@@ -28,7 +28,7 @@ public interface MissionModelService {
 
   record ActivityType(String name, Map<String, ValueSchema> parameters) {}
 
-  record ResourceType(String name, String type, ValueSchema schema) {}
+  record ResourceType(String name, ValueSchema schema) {}
 
   record MissionModelTypes(Collection<ActivityType> activityTypes, Collection<ResourceType> resourceTypes) {}
 }

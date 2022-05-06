@@ -39,7 +39,7 @@ class TypescriptCodeGenerationServiceTest {
                           ValueSchema.REAL
                       )
                   )),
-          null
+          List.of(new MissionModelService.ResourceType("/sample/resource/1", ValueSchema.REAL))
       );
 
   @Test
@@ -68,14 +68,19 @@ class TypescriptCodeGenerationServiceTest {
                 return { activityType: ActivityType.SampleActivity2, args };
               },
             };
+            export enum Resource {
+              "/sample/resource/1" = "/sample/resource/1",
+            };
             declare global {
               var ActivityTemplates: typeof ActivityTemplateConstructors;
               var ActivityTypes: typeof ActivityType;
+              var Resources: typeof Resource;
             }
             // Make ActivityTemplates and ActivityTypes available on the global object
             Object.assign(globalThis, {
               ActivityTemplates: ActivityTemplateConstructors,
               ActivityTypes: ActivityType,
+              Resources: Resource,
             });
             /** End Codegen */""",
         TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(MISSION_MODEL_TYPES));
