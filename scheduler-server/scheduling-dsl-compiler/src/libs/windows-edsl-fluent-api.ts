@@ -34,6 +34,14 @@ export class WindowSet {
     });
   }
 
+  public static neq(resource: Resource, value: Double): WindowSet {
+    return WindowSet.new({
+      kind: AST.NodeKind.WindowsExpressionNotEqualLinear,
+      left: resource,
+      right: value,
+    });
+  }
+
   public static during(activityType: ActivityType): WindowSet {
     return WindowSet.new({
       kind: AST.NodeKind.ActivityExpression,
@@ -48,6 +56,7 @@ declare global {
     public static gt(resource: Resource, value: Double): WindowSet
     public static lt(resource: Resource, value: Double): WindowSet
     public static eq(resource: Resource, value: Double): WindowSet
+    public static neq(resource: Resource, value: Double): WindowSet
     public static during(activityType: ActivityType): WindowSet
   }
 }

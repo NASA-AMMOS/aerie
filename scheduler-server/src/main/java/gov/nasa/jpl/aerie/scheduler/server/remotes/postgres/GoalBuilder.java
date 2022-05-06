@@ -104,6 +104,12 @@ public class GoalBuilder {
                     .equal(lookupResource.apply(c.resource().name()), SerializedValue.of(c.value()))
                     .build())
           .build();
+    } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.NotEqualLinear c) {
+      return new TimeRangeExpression.Builder()
+          .from(new StateConstraintExpression.Builder()
+                    .notEqual(lookupResource.apply(c.resource().name()), SerializedValue.of(c.value()))
+                    .build())
+          .build();
     } else {
       throw new UnexpectedSubtypeError(SchedulingDSL.ConstraintExpression.class, constraintExpression);
     }
