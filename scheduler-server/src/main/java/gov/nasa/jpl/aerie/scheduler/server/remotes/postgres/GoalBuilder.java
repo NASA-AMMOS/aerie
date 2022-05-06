@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
@@ -12,6 +13,7 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
+import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 
 import java.util.function.Function;
 
@@ -33,12 +35,19 @@ public class GoalBuilder {
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
           .build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition g) {
-      return new CoexistenceGoal.Builder()
+      var builder = new CoexistenceGoal.Builder()
           .forAllTimeIn(hor)
-          .forEach(ActivityExpression.ofType(lookupActivityType.apply(g.forEach().type())))
-          .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
-          .startsAt(TimeAnchor.END)
-          .build();
+          .forEach(timeRangeExpressionOfConstraintExpression(
+              g.forEach(),
+              lookupActivityType))
+          .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType));
+      // TODO: This if statement should be removed when the DSL supports time expressions.
+      if (g.forEach() instanceof SchedulingDSL.ConstraintExpression.ActivityExpression) {
+        builder = builder.startsAt(TimeAnchor.END);
+      } else {
+        builder = builder.startsAt(TimeAnchor.START);
+      }
+      return builder.build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalAnd g) {
       var builder = new CompositeAndGoal.Builder();
       for (final var subGoalSpecifier : g.goals()) {
@@ -59,6 +68,18 @@ public class GoalBuilder {
       return builder.build();
     } else {
       throw new Error("Unhandled variant of GoalSpecifier:" + goalSpecifier);
+    }
+  }
+
+  private static TimeRangeExpression timeRangeExpressionOfConstraintExpression(
+      final SchedulingDSL.ConstraintExpression constraintExpression,
+      final Function<String, ActivityType> lookupActivityType) {
+    if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.ActivityExpression c) {
+      return new TimeRangeExpression.Builder()
+          .from(ActivityExpression.ofType(lookupActivityType.apply(c.expression().type())))
+          .build();
+    } else {
+      throw new UnexpectedSubtypeError(SchedulingDSL.ConstraintExpression.class, constraintExpression);
     }
   }
 

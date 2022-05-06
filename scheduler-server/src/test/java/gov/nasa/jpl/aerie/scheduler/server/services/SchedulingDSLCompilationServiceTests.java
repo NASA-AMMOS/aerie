@@ -206,7 +206,7 @@ class SchedulingDSLCompilationServiceTests {
   }
 
   @Test
-  void testCoexistenceGoal() {
+  void testCoexistenceGoalActivityExpression() {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(PLAN_ID, """
           export default function() {
             return Goal.CoexistenceGoal({
@@ -215,7 +215,7 @@ class SchedulingDSLCompilationServiceTests {
                 fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
                 duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
               }),
-              forEach: ActivityTypes.SampleActivity1,
+              forEach: WindowSet.during(ActivityTypes.SampleActivity1)
             })
           }
         """);
@@ -233,7 +233,7 @@ class SchedulingDSLCompilationServiceTests {
                                                      Map.entry("duration", SerializedValue.of(60L * 60 * 1000 * 1000))
                                                  )
               ),
-              new SchedulingDSL.ActivityExpression("SampleActivity1")
+              new SchedulingDSL.ConstraintExpression.ActivityExpression(new SchedulingDSL.ActivityExpression("SampleActivity1"))
           ),
           r.goalSpecifier()
       );

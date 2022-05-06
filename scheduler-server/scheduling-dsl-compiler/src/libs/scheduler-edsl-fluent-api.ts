@@ -1,5 +1,5 @@
 import * as AST from './scheduler-ast.js';
-import { ActivityType } from "./mission-model-generated-code";
+import * as WindowsEDSL from './windows-edsl-fluent-api'
 
 interface ActivityRecurrenceGoal extends Goal {}
 interface ActivityCoexistenceGoal extends Goal {}
@@ -42,19 +42,17 @@ export class Goal {
       interval: opts.interval,
     });
   }
-  public static CoexistenceGoal(opts: { activityTemplate: ActivityTemplate, forEach: ActivityType }): ActivityCoexistenceGoal {
+  public static CoexistenceGoal(opts: { activityTemplate: ActivityTemplate, forEach: WindowsEDSL.WindowSet }): ActivityCoexistenceGoal {
     return Goal.new({
       kind: AST.NodeKind.ActivityCoexistenceGoal,
       activityTemplate: opts.activityTemplate,
-      forEach: {
-        type: opts.forEach
-      },
+      forEach: opts.forEach.__astnode,
     });
   }
 }
 
 declare global {
-  export class Goal {
+  class Goal {
     public readonly __astNode: AST.GoalSpecifier;
     public and(...others: Goal[]): Goal
 
@@ -62,7 +60,7 @@ declare global {
 
     public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): ActivityRecurrenceGoal
 
-    public static CoexistenceGoal(opts: { activityTemplate: ActivityTemplate, forEach: ActivityType }): ActivityCoexistenceGoal
+    public static CoexistenceGoal(opts: { activityTemplate: ActivityTemplate, forEach: WindowsEDSL.WindowSet }): ActivityCoexistenceGoal
   }
   type Duration = number;
   type Double = number;

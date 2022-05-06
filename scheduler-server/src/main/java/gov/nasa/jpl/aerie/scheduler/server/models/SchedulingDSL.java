@@ -47,16 +47,23 @@ public class SchedulingDSL {
                   goalDefinition.activityTemplate(),
                   goalDefinition.interval())));
 
-  private static final JsonParser<ActivityExpression> activityExpressionP =
+  private static final ProductParsers.JsonObjectParser<ActivityExpression> activityExpressionP =
       productP
           .field("type", stringP)
-          .map(Iso.of(ActivityExpression::new,
-                      ActivityExpression::type));
+          .map(Iso.of(
+              ActivityExpression::new,
+              ActivityExpression::type));
+
+  private static final JsonParser<ConstraintExpression> constraintExpressionP =
+      SumParsers.sumP("kind", ConstraintExpression.class, List.of(
+          SumParsers.variant("ActivityExpression", ConstraintExpression.ActivityExpression.class, activityExpressionP.map(Iso.of(
+              ConstraintExpression.ActivityExpression::new,
+              ConstraintExpression.ActivityExpression::expression)))));
 
   private static final ProductParsers.JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP =
       productP
           .field("activityTemplate", activityTemplateP)
-          .field("forEach", activityExpressionP)
+          .field("forEach", constraintExpressionP)
           .map(Iso.of(
               untuple(GoalSpecifier.CoexistenceGoalDefinition::new),
               goalDefinition -> tuple(
@@ -97,7 +104,7 @@ public class SchedulingDSL {
     ) implements GoalSpecifier {}
     record CoexistenceGoalDefinition(
         ActivityTemplate activityTemplate,
-        ActivityExpression forEach
+        ConstraintExpression forEach
     ) implements GoalSpecifier {}
     record GoalAnd(List<GoalSpecifier> goals) implements GoalSpecifier {}
     record GoalOr(List<GoalSpecifier> goals) implements GoalSpecifier {}
@@ -107,4 +114,8 @@ public class SchedulingDSL {
   public record ActivityTemplate(String activityType, Map<String, SerializedValue> arguments) {}
 
   public record ActivityExpression(String type) {}
+
+  public sealed interface ConstraintExpression {
+    record ActivityExpression(SchedulingDSL.ActivityExpression expression) implements ConstraintExpression {}
+  }
 }

@@ -144,7 +144,7 @@ public class SchedulingIntegrationTests {
         List.of("""
           export default () => Goal.CoexistenceGoal({
             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-            forEach: ActivityTypes.GrowBanana,
+            forEach: WindowSet.during(ActivityTypes.GrowBanana),
           })
           """));
 
