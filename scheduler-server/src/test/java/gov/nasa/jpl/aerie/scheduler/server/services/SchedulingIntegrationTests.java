@@ -489,6 +489,62 @@ public class SchedulingIntegrationTests {
     assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.args());
   }
 
+  @Test
+  void testWindowsTransition() {
+    // Initial producer is "Chiquita"
+    // ChangeProducer sets producer to "Dole"
+    // The PeelBanana should be placed at the same time as the ChangeProducer
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(
+            new MockMerlinService.PlannedActivityInstance(
+                "ChangeProducer",
+                Map.of(),
+                Duration.of(2, Duration.HOURS))),
+        List.of("""
+                export default (): Goal => {
+                 return Goal.CoexistenceGoal({
+                   activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                   forEach: WindowSet.transition(Resources["/producer"], "Chiquita", "Dole")
+                 })
+               }"""));
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    assertEquals(2, results.updatedPlan().size());
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var changeProducer = planByActivityType.get("ChangeProducer").iterator().next();
+    final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
+    assertEquals(changeProducer.startTime(), peelBanana.startTime());
+    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.args());
+  }
+
+  @Test
+  void testWindowsTransition_unsatisfied() {
+    // Initial producer is "Chiquita"
+    // ChangeProducer sets producer to "Dole"
+    // The PeelBanana should be placed at the same time as the ChangeProducer
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(
+            new MockMerlinService.PlannedActivityInstance(
+                "ChangeProducer",
+                Map.of("producer", SerializedValue.of("Fyffes")),
+                Duration.of(2, Duration.HOURS))),
+        List.of("""
+                export default (): Goal => {
+                 return Goal.CoexistenceGoal({
+                   activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                   forEach: WindowSet.transition(Resources["/producer"], "Chiquita", "Dole")
+                 })
+               }"""));
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    assertEquals(1, results.updatedPlan().size());
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var changeProducer = planByActivityType.get("ChangeProducer").iterator().next();
+    assertEquals("Fyffes", changeProducer.args().get("producer").asString().get());
+  }
+
   private static Map<String, Collection<MockMerlinService.PlannedActivityInstance>>
   partitionByActivityType(final Iterable<MockMerlinService.PlannedActivityInstance> activities) {
     final var result = new HashMap<String, Collection<MockMerlinService.PlannedActivityInstance>>();

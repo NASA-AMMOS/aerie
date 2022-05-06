@@ -21,6 +21,7 @@ import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 
 public class GoalBuilder {
@@ -120,6 +121,15 @@ public class GoalBuilder {
                         lookupResource.apply(c.resource().name()),
                         SerializedValue.of(c.lowerBound()),
                         SerializedValue.of(c.upperBound()))
+                    .build())
+          .build();
+    } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.Transition c) {
+      return new TimeRangeExpression.Builder()
+          .from(new StateConstraintExpression.Builder()
+                    .transition(
+                        lookupResource.apply(c.resource().name()),
+                        List.of(c.from()),
+                        List.of(c.to()))
                     .build())
           .build();
     } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.And c) {
