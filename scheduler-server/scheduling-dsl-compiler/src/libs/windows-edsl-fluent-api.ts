@@ -42,6 +42,15 @@ export class WindowSet {
     });
   }
 
+  public static between(resource: Resource, lowerBound: Double, upperBound: Double): WindowSet {
+    return WindowSet.new({
+      kind: AST.NodeKind.WindowsExpressionBetween,
+      resource,
+      lowerBound,
+      upperBound
+    });
+  }
+
   public static during(activityType: ActivityType): WindowSet {
     return WindowSet.new({
       kind: AST.NodeKind.ActivityExpression,
@@ -57,6 +66,7 @@ declare global {
     public static lessThan(resource: Resource, value: Double): WindowSet
     public static equalTo(resource: Resource, value: Double): WindowSet
     public static notEqualTo(resource: Resource, value: Double): WindowSet
+    public static between(resource: Resource, lowerBound: Double, upperBound: Double): WindowSet
     public static during(activityType: ActivityType): WindowSet
   }
 }

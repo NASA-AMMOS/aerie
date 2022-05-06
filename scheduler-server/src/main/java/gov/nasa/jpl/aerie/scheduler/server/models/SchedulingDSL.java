@@ -91,6 +91,15 @@ public class SchedulingDSL {
               untuple(ConstraintExpression.NotEqualLinear::new),
               $ -> tuple($.resource(), $.value())));
 
+  private static final ProductParsers.JsonObjectParser<ConstraintExpression.Between> betweenP =
+      productP
+          .field("resource", linearResourceP)
+          .field("lowerBound", doubleP)
+          .field("upperBound", doubleP)
+          .map(Iso.of(
+              untuple(ConstraintExpression.Between::new),
+              $ -> tuple($.resource(), $.lowerBound(), $.upperBound())));
+
   private static final JsonParser<ConstraintExpression> constraintExpressionP =
       SumParsers.sumP("kind", ConstraintExpression.class, List.of(
           SumParsers.variant("ActivityExpression", ConstraintExpression.ActivityExpression.class, activityExpressionP.map(Iso.of(
@@ -99,7 +108,8 @@ public class SchedulingDSL {
           SumParsers.variant("WindowsExpressionGreaterThan", ConstraintExpression.GreaterThan.class, greaterThanP),
           SumParsers.variant("WindowsExpressionLessThan", ConstraintExpression.LessThan.class, lessThanP),
           SumParsers.variant("WindowsExpressionEqualLinear", ConstraintExpression.EqualLinear.class, equalLinearP),
-          SumParsers.variant("WindowsExpressionNotEqualLinear", ConstraintExpression.NotEqualLinear.class, notEqualLinearP)));
+          SumParsers.variant("WindowsExpressionNotEqualLinear", ConstraintExpression.NotEqualLinear.class, notEqualLinearP),
+          SumParsers.variant("WindowsExpressionBetween", ConstraintExpression.Between.class, betweenP)));
 
   private static final ProductParsers.JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP =
       productP
@@ -167,5 +177,7 @@ public class SchedulingDSL {
     record EqualLinear(LinearResource resource, double value) implements ConstraintExpression {}
 
     record NotEqualLinear(LinearResource resource, double value) implements ConstraintExpression {}
+
+    record Between(LinearResource resource, double lowerBound, double upperBound) implements ConstraintExpression {}
   }
 }
