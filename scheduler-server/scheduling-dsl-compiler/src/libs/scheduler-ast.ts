@@ -1,3 +1,5 @@
+import * as WindowsExpressions from "./windows-expressions-ast";
+
 export interface ActivityTemplate {
   activityType: string,
   args: {[key: string]: any},
@@ -29,14 +31,10 @@ export interface ActivityRecurrenceGoal {
   interval: number,
 }
 
-export interface ActivityExpression {
-  type: string
-}
-
 export interface ActivityCoexistenceGoal {
   kind: NodeKind.ActivityCoexistenceGoal,
   activityTemplate: ActivityTemplate,
-  forEach: ActivityExpression
+  forEach: WindowsExpressions.WindowsExpression
 }
 
 export type GoalSpecifier =
@@ -64,4 +62,3 @@ export interface GoalOr {
   kind: NodeKind.GoalOr,
   goals: GoalSpecifier[],
 }
-
