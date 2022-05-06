@@ -34,6 +34,14 @@ export class WindowSet {
     });
   }
 
+  public static notEqualTo(resource: Resource, value: Double): WindowSet {
+    return WindowSet.new({
+      kind: AST.NodeKind.WindowsExpressionNotEqualLinear,
+      left: resource,
+      right: value,
+    });
+  }
+
   public static during(activityType: ActivityType): WindowSet {
     return WindowSet.new({
       kind: AST.NodeKind.ActivityExpression,
@@ -48,6 +56,7 @@ declare global {
     public static greaterThan(resource: Resource, value: Double): WindowSet
     public static lessThan(resource: Resource, value: Double): WindowSet
     public static equalTo(resource: Resource, value: Double): WindowSet
+    public static notEqualTo(resource: Resource, value: Double): WindowSet
     public static during(activityType: ActivityType): WindowSet
   }
 }
