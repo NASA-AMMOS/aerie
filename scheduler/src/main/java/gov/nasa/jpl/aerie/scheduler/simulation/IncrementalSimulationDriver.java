@@ -53,7 +53,7 @@ public class IncrementalSimulationDriver {
     simulateUntil(Duration.ZERO);
   }
 
-  private void initSimulation(){
+  /*package-private*/ void initSimulation(){
     plannedDirectiveToTask.clear();
     taskToPlannedDirective.clear();
     lastSimResults = null;
