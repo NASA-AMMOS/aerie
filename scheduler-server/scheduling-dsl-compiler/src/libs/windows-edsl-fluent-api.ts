@@ -10,6 +10,26 @@ export class WindowSet {
     return new WindowSet(windowSpecifier);
   }
 
+  public and(...others: WindowSet[]): WindowSet {
+    return WindowSet.new({
+      kind: AST.NodeKind.WindowsExpressionAnd,
+      windowsExpressions: [
+        this.__astnode,
+        ...others.map(other => other.__astnode),
+      ],
+    });
+  }
+
+  public or(...others: WindowSet[]): WindowSet {
+    return WindowSet.new({
+      kind: AST.NodeKind.WindowsExpressionOr,
+      windowsExpressions: [
+        this.__astnode,
+        ...others.map(other => other.__astnode),
+      ],
+    });
+  }
+
   public static gt(resource: Resource, value: Double): WindowSet {
     return WindowSet.new({
       kind: AST.NodeKind.WindowsExpressionGreaterThan,
@@ -62,6 +82,8 @@ export class WindowSet {
 declare global {
   class WindowSet {
     public readonly __astnode: AST.WindowsExpression
+    public and(...others: WindowSet[]): WindowSet
+    public or(...others: WindowSet[]): WindowSet
     public static gt(resource: Resource, value: Double): WindowSet
     public static lt(resource: Resource, value: Double): WindowSet
     public static eq(resource: Resource, value: Double): WindowSet

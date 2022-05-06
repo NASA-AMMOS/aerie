@@ -100,8 +100,22 @@ public class SchedulingDSL {
               untuple(ConstraintExpression.Between::new),
               $ -> tuple($.resource(), $.lowerBound(), $.upperBound())));
 
+  private static ProductParsers.JsonObjectParser<ConstraintExpression.And> windowsAndF(final JsonParser<ConstraintExpression> constraintExpressionP) {
+    return productP
+        .field("windowsExpressions", listP(constraintExpressionP))
+        .map(Iso.of(untuple(ConstraintExpression.And::new),
+                    ConstraintExpression.And::expressions));
+  }
+
+  private static ProductParsers.JsonObjectParser<ConstraintExpression.Or> windowsOrF(final JsonParser<ConstraintExpression> constraintExpressionP) {
+    return productP
+        .field("windowsExpressions", listP(constraintExpressionP))
+        .map(Iso.of(untuple(ConstraintExpression.Or::new),
+                    ConstraintExpression.Or::expressions));
+  }
+
   private static final JsonParser<ConstraintExpression> constraintExpressionP =
-      SumParsers.sumP("kind", ConstraintExpression.class, List.of(
+      recursiveP(self -> SumParsers.sumP("kind", ConstraintExpression.class, List.of(
           SumParsers.variant("ActivityExpression", ConstraintExpression.ActivityExpression.class, activityExpressionP.map(Iso.of(
               ConstraintExpression.ActivityExpression::new,
               ConstraintExpression.ActivityExpression::expression))),
@@ -109,7 +123,9 @@ public class SchedulingDSL {
           SumParsers.variant("WindowsExpressionLessThan", ConstraintExpression.LessThan.class, lessThanP),
           SumParsers.variant("WindowsExpressionEqualLinear", ConstraintExpression.EqualLinear.class, equalLinearP),
           SumParsers.variant("WindowsExpressionNotEqualLinear", ConstraintExpression.NotEqualLinear.class, notEqualLinearP),
-          SumParsers.variant("WindowsExpressionBetween", ConstraintExpression.Between.class, betweenP)));
+          SumParsers.variant("WindowsExpressionBetween", ConstraintExpression.Between.class, betweenP),
+          SumParsers.variant("WindowsExpressionAnd", ConstraintExpression.And.class, windowsAndF(self)),
+          SumParsers.variant("WindowsExpressionOr", ConstraintExpression.Or.class, windowsOrF(self)))));
 
   private static final ProductParsers.JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP =
       productP
@@ -179,5 +195,9 @@ public class SchedulingDSL {
     record NotEqualLinear(LinearResource resource, double value) implements ConstraintExpression {}
 
     record Between(LinearResource resource, double lowerBound, double upperBound) implements ConstraintExpression {}
+
+    record And(List<ConstraintExpression> expressions) implements ConstraintExpression {}
+
+    record Or(List<ConstraintExpression> expressions) implements ConstraintExpression {}
   }
 }

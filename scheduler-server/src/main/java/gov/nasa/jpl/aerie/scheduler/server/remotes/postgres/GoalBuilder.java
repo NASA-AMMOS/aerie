@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTempl
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.resources.ExternalState;
 import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpressionDisjunction;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
@@ -17,7 +18,9 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
+import org.apache.commons.lang3.NotImplementedException;
 
+import java.util.ArrayList;
 import java.util.function.Function;
 
 public class GoalBuilder {
@@ -118,6 +121,26 @@ public class GoalBuilder {
                         SerializedValue.of(c.lowerBound()),
                         SerializedValue.of(c.upperBound()))
                     .build())
+          .build();
+    } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.And c) {
+      final var timeRangeExpressions = new ArrayList<TimeRangeExpression>(c.expressions().size());
+      for (final var expression : c.expressions()) {
+        timeRangeExpressions.add(timeRangeExpressionOfConstraintExpression(expression, lookupActivityType, lookupResource));
+      }
+      var builder = new TimeRangeExpression.Builder();
+      for (final var timeRangeExpression : timeRangeExpressions) {
+        builder = builder.from(timeRangeExpression);
+      }
+      return builder.build();
+    } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.Or c) {
+      final var stateConstraintExpressions = new ArrayList<StateConstraintExpression>(c.expressions().size());
+      for (final var expression : c.expressions()) {
+        // TODO: Allow ActivityExpressions in Or expressions
+        if (expression instanceof SchedulingDSL.ConstraintExpression.ActivityExpression) throw new NotImplementedException("ActivityExpressions not supported in Or yet");
+        stateConstraintExpressions.addAll(timeRangeExpressionOfConstraintExpression(expression, lookupActivityType, lookupResource).stateExpr);
+      }
+      return new TimeRangeExpression.Builder()
+          .from(new StateConstraintExpressionDisjunction(stateConstraintExpressions))
           .build();
     } else {
       throw new UnexpectedSubtypeError(SchedulingDSL.ConstraintExpression.class, constraintExpression);
