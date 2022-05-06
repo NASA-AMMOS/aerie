@@ -100,6 +100,15 @@ public class SchedulingDSL {
               untuple(ConstraintExpression.Between::new),
               $ -> tuple($.resource(), $.lowerBound(), $.upperBound())));
 
+  private static final ProductParsers.JsonObjectParser<ConstraintExpression.Transition> transitionP =
+      productP
+          .field("resource", linearResourceP)
+          .field("from", serializedValueP)
+          .field("to", serializedValueP)
+          .map(Iso.of(
+              untuple(ConstraintExpression.Transition::new),
+              $ -> tuple($.resource(), $.from(), $.to())));
+
   private static ProductParsers.JsonObjectParser<ConstraintExpression.And> windowsAndF(final JsonParser<ConstraintExpression> constraintExpressionP) {
     return productP
         .field("windowsExpressions", listP(constraintExpressionP))
@@ -124,6 +133,7 @@ public class SchedulingDSL {
           SumParsers.variant("WindowsExpressionEqualLinear", ConstraintExpression.EqualLinear.class, equalLinearP),
           SumParsers.variant("WindowsExpressionNotEqualLinear", ConstraintExpression.NotEqualLinear.class, notEqualLinearP),
           SumParsers.variant("WindowsExpressionBetween", ConstraintExpression.Between.class, betweenP),
+          SumParsers.variant("WindowsExpressionTransition", ConstraintExpression.Transition.class, transitionP),
           SumParsers.variant("WindowsExpressionAnd", ConstraintExpression.And.class, windowsAndF(self)),
           SumParsers.variant("WindowsExpressionOr", ConstraintExpression.Or.class, windowsOrF(self)))));
 
@@ -195,6 +205,8 @@ public class SchedulingDSL {
     record NotEqualLinear(LinearResource resource, double value) implements ConstraintExpression {}
 
     record Between(LinearResource resource, double lowerBound, double upperBound) implements ConstraintExpression {}
+
+    record Transition(LinearResource resource, SerializedValue from, SerializedValue to) implements ConstraintExpression {}
 
     record And(List<ConstraintExpression> expressions) implements ConstraintExpression {}
 

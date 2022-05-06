@@ -7,6 +7,7 @@ export enum NodeKind {
   WindowsExpressionBetween = 'WindowsExpressionBetween',
   WindowsExpressionAnd = 'WindowsExpressionAnd',
   WindowsExpressionOr = 'WindowsExpressionOr',
+  WindowsExpressionTransition = 'WindowsExpressionTransition',
 }
 
 export interface ActivityExpression {
@@ -58,6 +59,13 @@ export interface WindowsExpressionOr {
   windowsExpressions: WindowsExpression[]
 }
 
+export interface WindowsExpressionTransition {
+  kind: NodeKind.WindowsExpressionTransition,
+  resource: DiscreteResource,
+  from: any,
+  to: any
+}
+
 export type WindowsExpression =
     | ActivityExpression
     | WindowsExpressionGreaterThan
@@ -67,3 +75,4 @@ export type WindowsExpression =
     | WindowsExpressionBetween
     | WindowsExpressionAnd
     | WindowsExpressionOr
+    | WindowsExpressionTransition

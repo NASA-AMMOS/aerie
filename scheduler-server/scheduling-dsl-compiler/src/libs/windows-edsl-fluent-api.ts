@@ -71,6 +71,15 @@ export class WindowSet {
     });
   }
 
+  public static transition(resource: Resource, from: any, to: any): WindowSet {
+    return WindowSet.new({
+      kind: AST.NodeKind.WindowsExpressionTransition,
+      resource,
+      from,
+      to
+    });
+  }
+
   public static during(activityType: ActivityType): WindowSet {
     return WindowSet.new({
       kind: AST.NodeKind.ActivityExpression,
@@ -89,6 +98,7 @@ declare global {
     public static eq(resource: Resource, value: Double): WindowSet
     public static neq(resource: Resource, value: Double): WindowSet
     public static between(resource: Resource, lowerBound: Double, upperBound: Double): WindowSet
+    public static transition(resource: Resource, from: any, to: any): WindowSet
     public static during(activityType: ActivityType): WindowSet
   }
 }
