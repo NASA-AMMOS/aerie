@@ -8,6 +8,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -48,17 +49,31 @@ public class TypescriptCodeGenerationService {
       result.add("interface %s extends ActivityTemplate {}".formatted(activityTypeCode.activityTypeName()));
     }
     result.add(generateActivityTemplateConstructors(activityTypeCodes));
+
+    result.add(generateResourceTypes(missionModelTypes.resourceTypes()));
+
     result.add("declare global {");
     result.add(indent("var ActivityTemplates: typeof ActivityTemplateConstructors;"));
     result.add(indent("var ActivityTypes: typeof ActivityType;"));
+    result.add(indent("var Resources: typeof Resource;"));
     result.add("}");
     result.add("// Make ActivityTemplates and ActivityTypes available on the global object");
     result.add("Object.assign(globalThis, {");
     result.add(indent("ActivityTemplates: ActivityTemplateConstructors,"));
     result.add(indent("ActivityTypes: ActivityType,"));
+    result.add(indent("Resources: Resource,"));
     result.add("});");
     result.add("/** End Codegen */");
     return joinLines(result);
+  }
+
+  private static String generateResourceTypes(final Collection<MissionModelService.ResourceType> resourceTypes) {
+    final var result = new ArrayList<String>();
+    result.add("export enum Resource {");
+    for (final var resourceType : resourceTypes) {
+      result.add(indent("\"%s\" = \"%s\",".formatted(resourceType.name(), resourceType.name())));
+    }
+    return joinLines(result) + "\n};";
   }
 
   private static String generateActivityTypeEnum(ArrayList<ActivityTypeCode> activityTypeCodes) {

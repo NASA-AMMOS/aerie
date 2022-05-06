@@ -9,3 +9,8 @@ export enum ActivityType {
   // This indicates to the compiler that we are using a string enum so we can assign it to string for our AST
   _ = '_',
 }
+
+export enum Resource {
+  "/abc" = "/abc",
+  "/abc/def" = "/abc/def",
+}

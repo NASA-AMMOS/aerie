@@ -38,6 +38,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -498,6 +499,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
         query GetActivityTypesForPlan {
           plan_by_pk(id: %d) {
             mission_model {
+              id
               activity_types {
                 name
                 parameters
@@ -518,7 +520,13 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
                 .getJsonObject("mission_model")
                 .getJsonArray("activity_types");
     final var activityTypes = parseActivityTypes(activityTypesJsonArray);
-    return new MissionModelTypes(activityTypes, List.of());
+
+    final var missionModelId = new MissionModelId(response.getJsonObject("data")
+                                       .getJsonObject("plan_by_pk")
+                                       .getJsonObject("mission_model")
+                                       .getInt("id"));
+
+    return new MissionModelTypes(activityTypes, getResourceTypes(missionModelId));
   }
 
   private static List<ActivityType> parseActivityTypes(final JsonArray activityTypesJsonArray) {
@@ -568,7 +576,41 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
         .getJsonObject("mission_model_by_pk")
         .getJsonArray("activity_types");
     final var activityTypes = parseActivityTypes(activityTypesJsonArray);
-    return new MissionModelTypes(activityTypes, List.of());
+
+    return new MissionModelTypes(activityTypes, getResourceTypes(missionModelId));
+  }
+
+  private Collection<ResourceType> getResourceTypes(final MissionModelId missionModelId)
+  throws IOException, MissionModelServiceException
+  {
+    final var request = """
+        query GetResourceTypes {
+           resourceTypes(missionModelId: "%d") {
+             name
+             schema
+           }
+         }
+        """.formatted(missionModelId.id());
+    final JsonObject response;
+    try {
+      response = postRequest(request).get();
+    } catch (PlanServiceException e) {
+      throw new MissionModelServiceException("Failed to get mission model types for model id %s".formatted(missionModelId), e);
+    }
+    final var data = response.getJsonObject("data");
+    final var resourceTypesJsonArray = data.getJsonArray("resourceTypes");
+
+    final var resourceTypes = new ArrayList<ResourceType>();
+
+    for (final var jsonValue : resourceTypesJsonArray) {
+      final var jsonObject = jsonValue.asJsonObject();
+      final var name = jsonObject.getString("name");
+      final var schema = jsonObject.getJsonObject("schema");
+
+      resourceTypes.add(new ResourceType(name, valueSchemaP.parse(schema).getSuccessOrThrow()));
+    }
+
+    return resourceTypes;
   }
 
   /**
