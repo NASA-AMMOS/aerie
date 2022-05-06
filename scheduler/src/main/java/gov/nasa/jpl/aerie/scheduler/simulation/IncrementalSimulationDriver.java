@@ -58,6 +58,7 @@ public class IncrementalSimulationDriver {
     taskToPlannedDirective.clear();
     lastSimResults = null;
     lastSimResultsEnd = Duration.ZERO;
+    if (this.engine != null) this.engine.close();
     this.engine = new SimulationEngine();
     activitiesInserted.clear();
 
