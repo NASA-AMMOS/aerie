@@ -29,6 +29,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
@@ -825,8 +826,9 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             .orElseGet(() -> CodeBlock
                                 .builder()
                                 .addStatement(
-                                    "return new $T($$ -> {})",
-                                    gov.nasa.jpl.aerie.merlin.framework.OneShotTask.class)
+                                    "return scheduler -> $T.completed($T.UNIT)",
+                                    TaskStatus.class,
+                                    Unit.class)
                                 .build()))
                     .build())
             .build())
