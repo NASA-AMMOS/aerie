@@ -196,9 +196,7 @@ public final class SimulationEngine implements AutoCloseable {
       final ExecutionState<Return> lifecycle)
   {
     // Extract the current modeling state.
-    if (lifecycle instanceof ExecutionState.NotStarted<Return> e) {
-      stepEffectModel(task, e.startedAt(currentTime), frame, currentTime, model);
-    } else if (lifecycle instanceof ExecutionState.InProgress<Return> e) {
+    if (lifecycle instanceof ExecutionState.InProgress<Return> e) {
       stepEffectModel(task, e, frame, currentTime, model);
     } else if (lifecycle instanceof ExecutionState.AwaitingChildren<Return> e) {
       stepWaitingTask(task, e, frame, currentTime);
@@ -783,15 +781,6 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** The lifecycle stages every task passes through. */
   private sealed interface ExecutionState<Return> {
-    /** The task has not yet started. */
-    record NotStarted<Return>(TaskSource<Return> source)
-        implements ExecutionState<Return>
-    {
-      public InProgress<Return> startedAt(final Duration startOffset) {
-        return new InProgress<>(startOffset, this.source.createTask());
-      }
-    }
-
     /** The task is in its primary operational phase. */
     record InProgress<Return>(Duration startOffset, Task<Return> state)
         implements ExecutionState<Return>
