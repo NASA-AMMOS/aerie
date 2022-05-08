@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
@@ -34,6 +35,11 @@ public /*non-final*/ class ModelActions {
       task.run();
       return Unit.UNIT;
     });
+  }
+
+
+  public static <T> void emit(final T event, final Topic<T> topic) {
+    context.get().emit(event, topic);
   }
 
 
