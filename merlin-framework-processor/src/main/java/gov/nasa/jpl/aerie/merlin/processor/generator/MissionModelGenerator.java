@@ -720,7 +720,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
       }
       computedAttributesTypeName = TypeName.get(typeMirror.get());
     } else {
-      effectModelReturnMapperBlock = Optional.of(CodeBlock.of("new $T(VoidEnum.class)", EnumValueMapper.class));
+      effectModelReturnMapperBlock = Optional.of(CodeBlock.of("new $T($T.class)", EnumValueMapper.class, VoidEnum.class));
       computedAttributesTypeName = TypeName.get(VoidEnum.class);
     }
     return Optional.of(new ComputedAttributesCodeBlocks(
