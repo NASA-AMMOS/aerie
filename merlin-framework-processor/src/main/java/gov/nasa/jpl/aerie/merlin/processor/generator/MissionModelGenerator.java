@@ -16,7 +16,6 @@ import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
 import gov.nasa.jpl.aerie.merlin.framework.Scoping;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
-import gov.nasa.jpl.aerie.merlin.framework.VoidEnum;
 import gov.nasa.jpl.aerie.merlin.processor.MissionModelProcessor;
 import gov.nasa.jpl.aerie.merlin.processor.Resolver;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
@@ -29,8 +28,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import javax.annotation.processing.Messager;
@@ -139,7 +138,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     missionModel.getTypesName(),
                     missionModel.modelConfigurationType
                         .map($ -> ClassName.get($.declaration()))
-                        .orElse(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class)),
+                        .orElse(ClassName.get(Unit.class)),
                     ParameterizedTypeName.get(
                         ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                         missionModel.getTypesName(),
@@ -191,7 +190,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addParameter(
                         missionModel.modelConfigurationType
                             .map($ -> ClassName.get($.declaration()))
-                            .orElse(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.VoidEnum.class)),
+                            .orElse(ClassName.get(Unit.class)),
                         "configuration",
                         Modifier.FINAL)
                     .addParameter(
@@ -491,7 +490,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     .effectModel()
                                     .flatMap(EffectModelRecord::returnType)
                                     .map(TypeName::get)
-                                    .orElse(TypeName.get(VoidEnum.class))
+                                    .orElse(TypeName.get(Unit.class))
                                     .box()),
                             activityType.declaration().getQualifiedName().toString().replace(".", "_"),
                             Modifier.PUBLIC, Modifier.FINAL)
@@ -524,7 +523,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                             .effectModel()
                                             .flatMap(EffectModelRecord::returnType)
                                             .map(TypeName::get)
-                                            .orElse(TypeName.get(VoidEnum.class))
+                                            .orElse(TypeName.get(Unit.class))
                                             .box()),
                                     activityType.declaration().getQualifiedName().toString().replace(".", "_"),
                                     Modifier.FINAL)
@@ -720,8 +719,8 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
       }
       computedAttributesTypeName = TypeName.get(typeMirror.get());
     } else {
-      effectModelReturnMapperBlock = Optional.of(CodeBlock.of("new $T($T.class)", EnumValueMapper.class, VoidEnum.class));
-      computedAttributesTypeName = TypeName.get(VoidEnum.class);
+      effectModelReturnMapperBlock = Optional.of(CodeBlock.of("new $T($T.class)", EnumValueMapper.class, Unit.class));
+      computedAttributesTypeName = TypeName.get(Unit.class);
     }
     return Optional.of(new ComputedAttributesCodeBlocks(
         computedAttributesTypeName,
@@ -759,7 +758,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             .effectModel()
                             .flatMap(EffectModelRecord::returnType)
                             .map(returnType -> TypeName.get(returnType).box())
-                            .orElse(TypeName.get(VoidEnum.class))))
+                            .orElse(TypeName.get(Unit.class))))
                     .addParameter(
                         ParameterizedTypeName.get(
                             ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
@@ -806,7 +805,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                           .$L(() -> {
                                             try (final var restore = $L.registry().contextualizeModel($L)) {
                                               $L.$L($L.model());
-                                              return $T.VOID;
+                                              return $T.UNIT;
                                             }
                                           })
                                           .create($L.executor())""",
@@ -820,7 +819,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                         "activity",
                                         effectModel.methodName(),
                                         "model",
-                                        VoidEnum.class,
+                                        Unit.class,
                                         "model")
                                     .build()))
                             .orElseGet(() -> CodeBlock
@@ -855,7 +854,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                          activityType.effectModel()
                              .flatMap(EffectModelRecord::returnType)
                              .map(TypeName::get)
-                             .orElse(TypeName.get(VoidEnum.class)).box(),
+                             .orElse(TypeName.get(Unit.class)).box(),
                          "returnValue",
                          Modifier.FINAL)
                      .addStatement(
