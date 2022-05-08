@@ -11,6 +11,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
+import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
 import gov.nasa.jpl.aerie.merlin.framework.Scoping;
@@ -772,29 +773,56 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         Modifier.FINAL)
                     .addCode(
                         activityType.effectModel()
-                            .map(effectModel -> CodeBlock
-                                  .builder()
-                                  .addStatement(
-                                      """
-                                        return $T
-                                        .$L(() -> {
-                                          try (final var restore = $L.registry().contextualizeModel($L)) {
-                                            $L.$L($L.model());
-                                          }
-                                        })
-                                        .create($L.executor())""",
-                                      gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
-                                      switch (effectModel.executor()) {
-                                        case Threaded -> "threaded";
-                                        case Replaying -> "replaying";
-                                      },
-                                      "model",
-                                      "model",
-                                      "activity",
-                                      effectModel.methodName(),
-                                      "model",
-                                      "model")
-                                  .build())
+                            .map(effectModel -> effectModel
+                                .returnType()
+                                .map(returnType -> CodeBlock
+                                    .builder()
+                                    .addStatement(
+                                        """
+                                          return $T
+                                          .$L(() -> {
+                                            try (final var restore = $L.registry().contextualizeModel($L)) {
+                                              return $L.$L($L.model());
+                                            }
+                                          })
+                                          .create($L.executor())""",
+                                        ModelActions.class,
+                                        switch (effectModel.executor()) {
+                                          case Threaded -> "threaded";
+                                          case Replaying -> "replaying";
+                                        },
+                                        "model",
+                                        "model",
+                                        "activity",
+                                        effectModel.methodName(),
+                                        "model",
+                                        "model")
+                                    .build())
+                                .orElseGet(() -> CodeBlock
+                                    .builder()
+                                    .addStatement(
+                                        """
+                                          return $T
+                                          .$L(() -> {
+                                            try (final var restore = $L.registry().contextualizeModel($L)) {
+                                              $L.$L($L.model());
+                                              return $T.VOID;
+                                            }
+                                          })
+                                          .create($L.executor())""",
+                                        ModelActions.class,
+                                        switch (effectModel.executor()) {
+                                          case Threaded -> "threaded";
+                                          case Replaying -> "replaying";
+                                        },
+                                        "model",
+                                        "model",
+                                        "activity",
+                                        effectModel.methodName(),
+                                        "model",
+                                        VoidEnum.class,
+                                        "model")
+                                    .build()))
                             .orElseGet(() -> CodeBlock
                                 .builder()
                                 .addStatement(
