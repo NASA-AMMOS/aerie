@@ -41,7 +41,7 @@ async function handleRequest(data: Buffer) {
     // The previous strategy of exporting a symbol and using it to get at a public method
     // didn't work because the symbol in the vm is different than the symbol we were using
     // here to deserialize the Constraint due to different evaluation contexts
-    const stringified = JSON.stringify(result.unwrap()['__serialize']());
+    const stringified = JSON.stringify(result.unwrap().__astNode);
     if (stringified === undefined) {
       throw Error(JSON.stringify(result.unwrap()) + ' was not JSON serializable');
     }

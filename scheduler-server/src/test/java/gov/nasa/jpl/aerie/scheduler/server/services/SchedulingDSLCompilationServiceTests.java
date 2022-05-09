@@ -135,7 +135,7 @@ class SchedulingDSLCompilationServiceTests {
                     interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
                   })
                 }
-            """, "goalfile");
+            """);
     final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
         new SchedulingDSL.ActivityTemplate(
             "SampleActivity1",
@@ -176,7 +176,7 @@ class SchedulingDSLCompilationServiceTests {
                     interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
                   })
                 }
-            """, "goalfile");
+            """);
     final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
         new SchedulingDSL.ActivityTemplate(
             "SampleActivity1",
@@ -216,7 +216,7 @@ class SchedulingDSLCompilationServiceTests {
                     interval: x // 1 hour in microseconds
                   })
                 }
-              """, "goalfile_with_type_error");
+              """);
     assertTrue(
         actualErrors.errors()
                     .stream()
@@ -232,7 +232,7 @@ class SchedulingDSLCompilationServiceTests {
                 export default function myGoal() {
                   return 5
                 }
-              """, "goalfile_with_wrong_return_type");
+              """);
     assertTrue(
         actualErrors.errors()
                     .stream()
@@ -256,7 +256,7 @@ class SchedulingDSLCompilationServiceTests {
                     interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
                   })
                 }
-            """ + " ".repeat(9001), "goalfile");
+            """ + " ".repeat(9001));
     final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
         new SchedulingDSL.ActivityTemplate(
             "SampleActivity1",
@@ -291,7 +291,7 @@ class SchedulingDSLCompilationServiceTests {
               forEach: ActivityTypes.SampleActivity1,
             })
           }
-        """, "");
+        """);
 
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
       assertEquals(
@@ -333,7 +333,7 @@ class SchedulingDSLCompilationServiceTests {
             };
             return myFakeGoal;
           }
-        """, "");
+        """);
 
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
       assertEquals(r.errors().size(), 1);

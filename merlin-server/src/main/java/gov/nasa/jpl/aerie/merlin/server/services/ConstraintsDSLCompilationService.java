@@ -1,11 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ConstraintsCompilationError;
-import gov.nasa.jpl.aerie.merlin.server.models.ConstraintsDSL;
+import gov.nasa.jpl.aerie.constraints.json.ConstraintsDSL;
 import org.json.JSONObject;
 
 import javax.json.Json;
@@ -48,7 +50,7 @@ public class ConstraintsDSLCompilationService {
   /**
    * NOTE: This method is not re-entrant (assumes only one call to this method is running at any given time)
    */
-  public ConstraintsDSLCompilationResult compileConstraintsDSL(final PlanId planId, final String constraintTypescript, final String constraintName)
+  public ConstraintsDSLCompilationResult compileConstraintsDSL(final PlanId planId, final String constraintTypescript)
   {
     final var missionModelGeneratedCode = JSONObject.quote(this.typescriptCodeGenerationService.generateTypescriptTypesForPlan(planId));
 
@@ -80,7 +82,7 @@ public class ConstraintsDSLCompilationService {
         case "success" -> {
           final var output = outputReader.readLine();
           try {
-            yield new ConstraintsDSLCompilationResult.Success(parseJson(output, ConstraintsDSL.constraintsJsonP));
+            yield new ConstraintsDSLCompilationResult.Success(parseJson(output, ConstraintsDSL.constraintP));
           } catch (InvalidJsonException | InvalidEntityException e) {
             throw new Error("Could not parse JSON returned from typescript: " + output, e);
           }
@@ -105,7 +107,7 @@ public class ConstraintsDSLCompilationService {
   }
 
   public sealed interface ConstraintsDSLCompilationResult {
-    record Success(ConstraintsDSL.ConstraintSpecifier constraintSpecifier) implements ConstraintsDSLCompilationResult {}
+    record Success(Expression<List<Violation>> constraintExpression) implements ConstraintsDSLCompilationResult {}
     record Error(List<ConstraintsCompilationError.UserCodeError> errors) implements ConstraintsDSLCompilationResult {}
   }
 }

@@ -222,7 +222,7 @@ public class SchedulingIntegrationTests {
     final var goalsByPriority = new ArrayList<GoalRecord>();
     var goalId = 0L;
     for (final var goal : goals) {
-      final var goalResult = schedulingDSLCompiler.compileSchedulingGoalDSL(planId, goal, "");
+      final var goalResult = schedulingDSLCompiler.compileSchedulingGoalDSL(planId, goal);
       if (goalResult instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success s) {
         goalsByPriority.add(new GoalRecord(new GoalId(goalId++), s.goalSpecifier()));
       } else if (goalResult instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error e) {

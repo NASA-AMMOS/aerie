@@ -1,38 +1,57 @@
 export enum NodeKind {
-  DummyConstraint = 'DummyConstraint',
-  ConstraintAnd = 'ConstraintAnd',
-  ConstraintOr = 'ConstraintOr'
+  ViolationsOf = 'ViolationsOf',
+  WindowsExpressionAnd = 'WindowsExpressionAnd',
+  WindowsExpressionOr = 'WindowsExpressionOr',
+  WindowsExpressionTrue = 'WindowsExpressionTrue'
 }
-
-export type Constraint = | DummyConstraint;
-
-export interface DummyConstraint {
-  kind: NodeKind.DummyConstraint,
-  someNumber: number,
-}
-
-export type ConstraintSpecifier =
-    | Constraint
-    | ConstraintComposition
-    ;
 
 /**
- * Constraint Composition
- *
- * Compose constraints together
+ * Top-level constraints that directly produce violations
+ * when evaluated.
  */
-export type ConstraintComposition =
-    | ConstraintAnd
-    | ConstraintOr
-    ;
+export type Constraint = | ViolationsOf;
 
-export interface ConstraintAnd {
-  kind: NodeKind.ConstraintAnd,
-  constraints: ConstraintSpecifier[],
+/**
+ * Generates violations whenever its expression generates a window.
+ */
+export interface ViolationsOf {
+  kind: NodeKind.ViolationsOf,
+  expression: WindowsExpression,
 }
 
-export interface ConstraintOr {
-  kind: NodeKind.ConstraintOr,
-  constraints: ConstraintSpecifier[],
+/**
+ * Operations that produce Windows when evaluated.
+ *
+ * These are not valid top-level constraints, and
+ * typically need to be wrapped in `Constraint.ViolationsOf`.
+ */
+export type WindowsExpression =
+  | And
+  | Or
+  | True;
+
+/**
+ * Generates a violation when all of its sub-expressions generate windows.
+ */
+export interface And {
+  kind: NodeKind.WindowsExpressionAnd,
+  expressions: WindowsExpression[],
+}
+
+/**
+ * Generates a violation when any of its sub-expressions generate windows.
+ */
+export interface Or {
+  kind: NodeKind.WindowsExpressionOr,
+  expressions: WindowsExpression[],
+}
+
+/**
+ * Always generates a window.
+ *
+ * Currently this only exists for testing, it isn't intended to be useful.
+ */
+export interface True {
+  kind: NodeKind.WindowsExpressionTrue
 }
 

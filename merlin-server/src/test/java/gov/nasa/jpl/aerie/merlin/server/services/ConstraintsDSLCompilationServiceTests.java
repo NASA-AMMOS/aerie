@@ -1,8 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.server.models.ConstraintsDSL;
+import gov.nasa.jpl.aerie.constraints.tree.True;
+import gov.nasa.jpl.aerie.constraints.tree.ViolationsOf;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -10,8 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -38,13 +35,15 @@ class ConstraintsDSLCompilationServiceTests {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult result;
     result = constraintsDSLCompilationService.compileConstraintsDSL(
         PLAN_ID, """
-                export default function myConstraint() {
-                  return Constraint.DummyConstraint(4)
+                export default () => {
+                  return Constraint.ViolationsOf(
+                    WindowsExpression.True()
+                  )
                 }
-            """, "constraintfile");
-    final var expectedConstraintDefinition = new ConstraintsDSL.ConstraintSpecifier.DummyConstraintDefinition(4);
+            """);
+    final var expectedConstraintDefinition = new ViolationsOf(new True());
     if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
-      assertEquals(expectedConstraintDefinition, r.constraintSpecifier());
+      assertEquals(expectedConstraintDefinition, r.constraintExpression());
     } else if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error r) {
       fail(r.toString());
     }
@@ -57,15 +56,15 @@ class ConstraintsDSLCompilationServiceTests {
     result = constraintsDSLCompilationService.compileConstraintsDSL(
         PLAN_ID, """
                 export default function myConstraint() {
-                  return myHelper(2)
+                  return myHelper(WindowsExpression.True())
                 }
-                function myHelper(n: number) {
-                  return Constraint.DummyConstraint(n*2)
+                function myHelper(e: WindowsExpression) {
+                  return Constraint.ViolationsOf(e)
                 }
-            """, "constraintfile");
-    final var expectedConstraintDefinition = new ConstraintsDSL.ConstraintSpecifier.DummyConstraintDefinition(4);
+            """);
+    final var expectedConstraintDefinition = new ViolationsOf(new True());
     if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
-      assertEquals(expectedConstraintDefinition, r.constraintSpecifier());
+      assertEquals(expectedConstraintDefinition, r.constraintExpression());
     } else if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error r) {
       fail(r.toString());
     }
@@ -77,14 +76,14 @@ class ConstraintsDSLCompilationServiceTests {
     actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) constraintsDSLCompilationService.compileConstraintsDSL(
           PLAN_ID, """
                 export default function myConstraint() {
-                  const x = 4 - 2
-                  return myHelper(2);
+                  const x = WindowsExpression.True();
+                  return myHelper(x);
                 }
                 function myHelper(n: number) {
-                  return Constraint.DummyConstraint(x * n);
+                  return Constraint.ViolationsOf(x);
                   )
                 }
-              """, "constraintfile_with_type_error");
+              """);
     assertTrue(
         actualErrors.errors()
                     .stream()
@@ -98,13 +97,13 @@ class ConstraintsDSLCompilationServiceTests {
     actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) constraintsDSLCompilationService.compileConstraintsDSL(
           PLAN_ID, """
                 export default function myConstraint() {
-                  return 5
+                   return WindowsExpression.True()
                 }
-              """, "constraintfile_with_wrong_return_type");
+              """);
     assertTrue(
         actualErrors.errors()
                     .stream()
-                    .anyMatch(e -> e.message().contains("TypeError: TS2322 Incorrect return type. Expected: 'Constraint', Actual: 'number'."))
+                    .anyMatch(e -> e.message().contains("TypeError: TS2322 Incorrect return type. Expected: 'Constraint', Actual: 'True'."))
     );
   }
 }
