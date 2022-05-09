@@ -1,16 +1,17 @@
-package gov.nasa.jpl.aerie.scheduler;
+package gov.nasa.jpl.aerie.scheduler.simulation;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
-import gov.nasa.jpl.aerie.scheduler.simulation.IncrementalSimulationDriver;
+import gov.nasa.jpl.aerie.scheduler.SimulationUtility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -51,6 +52,22 @@ public class IncrementalSimulationTest {
     assertTrue(act1Dur.isPresent() && act2Dur.isPresent());
     assertTrue(act1Dur.get().isEqualTo(Duration.of(1, SECONDS)));
     assertTrue(act2Dur.get().isEqualTo(Duration.of(1, SECONDS)));
+  }
+
+  @Test
+  public void testThreadsReleased() throws TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException {
+    final var activity = new TestSimulatedActivity(
+        Duration.of(0, SECONDS),
+        new SerializedActivity("BasicActivity", Map.of()),
+        new ActivityInstanceId(1));
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    final var executor = (ThreadPoolExecutor) fooMissionModel.getModel().executor();
+    incrementalSimulationDriver = new IncrementalSimulationDriver(fooMissionModel);
+    for (var i = 0; i < 20000; i++) {
+      incrementalSimulationDriver.initSimulation();
+      incrementalSimulationDriver.simulateActivity(activity.activity, activity.start, activity.id);
+      assertTrue(executor.getActiveCount() < 100, "Threads are not being cleaned up properly - this test shouldn't need more than 2 threads, but it used at least 100");
+    }
   }
 
   private ArrayList<TestSimulatedActivity> getActivities(){
