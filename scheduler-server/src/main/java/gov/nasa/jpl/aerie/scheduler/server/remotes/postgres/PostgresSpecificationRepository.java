@@ -93,8 +93,8 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
   {
     final var goalCompilationResult = schedulingDSLCompilationService.compileSchedulingGoalDSL(
         planId,
-        pgGoal.definition(),
-        pgGoal.name());
+        pgGoal.definition()
+    );
 
     if (goalCompilationResult instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error g) {
       return new GoalCompilationResult.Failure(g.errors());

@@ -41,7 +41,7 @@ class ConstraintsDSLCompilationServiceTests {
                 export default function myConstraint() {
                   return Constraint.DummyConstraint(4)
                 }
-            """, "constraintfile");
+            """);
     final var expectedConstraintDefinition = new ConstraintsDSL.ConstraintSpecifier.DummyConstraintDefinition(4);
     if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
       assertEquals(expectedConstraintDefinition, r.constraintSpecifier());
@@ -62,7 +62,7 @@ class ConstraintsDSLCompilationServiceTests {
                 function myHelper(n: number) {
                   return Constraint.DummyConstraint(n*2)
                 }
-            """, "constraintfile");
+            """);
     final var expectedConstraintDefinition = new ConstraintsDSL.ConstraintSpecifier.DummyConstraintDefinition(4);
     if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
       assertEquals(expectedConstraintDefinition, r.constraintSpecifier());
@@ -84,7 +84,7 @@ class ConstraintsDSLCompilationServiceTests {
                   return Constraint.DummyConstraint(x * n);
                   )
                 }
-              """, "constraintfile_with_type_error");
+              """);
     assertTrue(
         actualErrors.errors()
                     .stream()
@@ -100,7 +100,7 @@ class ConstraintsDSLCompilationServiceTests {
                 export default function myConstraint() {
                   return 5
                 }
-              """, "constraintfile_with_wrong_return_type");
+              """);
     assertTrue(
         actualErrors.errors()
                     .stream()

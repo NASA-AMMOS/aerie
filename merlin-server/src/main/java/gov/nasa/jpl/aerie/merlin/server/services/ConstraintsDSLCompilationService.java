@@ -48,7 +48,7 @@ public class ConstraintsDSLCompilationService {
   /**
    * NOTE: This method is not re-entrant (assumes only one call to this method is running at any given time)
    */
-  public ConstraintsDSLCompilationResult compileConstraintsDSL(final PlanId planId, final String constraintTypescript, final String constraintName)
+  public ConstraintsDSLCompilationResult compileConstraintsDSL(final PlanId planId, final String constraintTypescript)
   {
     final var missionModelGeneratedCode = JSONObject.quote(this.typescriptCodeGenerationService.generateTypescriptTypesForPlan(planId));
 
