@@ -15,8 +15,9 @@ public record BakeBananaBreadActivity(double temperature, int tbSugar, boolean g
   }
 
   @EffectModel
-  public void run(final Mission mission) {
+  public int run(final Mission mission) {
     mission.plant.add(-2);
+    return mission.plant.get();
   }
 
   public static @WithDefaults final class Defaults {

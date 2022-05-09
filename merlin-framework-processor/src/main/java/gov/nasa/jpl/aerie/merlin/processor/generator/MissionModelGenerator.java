@@ -11,6 +11,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
+import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
 import gov.nasa.jpl.aerie.merlin.framework.Scoping;
@@ -742,65 +743,94 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
 
   /** Generate `${activity_name}Mapper` class. */
   public Optional<JavaFile> generateActivityMapper(final MissionModelRecord missionModel, final ActivityTypeRecord activityType) {
-    return generateCommonMapperMethods(missionModel, activityType).map(typeSpec -> typeSpec.toBuilder()
-        .addMethod(makeGetReturnValueSchemaMethod())
-        .addMethod(makeSerializeReturnValueMethod(activityType))
-        .addMethod(
-            MethodSpec
-                .methodBuilder("createTask")
-                .addModifiers(Modifier.PUBLIC)
-                .addAnnotation(Override.class)
-                .returns(ParameterizedTypeName.get(
-                    ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.Task.class),
-                    activityType
-                        .effectModel()
-                        .flatMap(EffectModelRecord::returnType)
-                        .map(returnType -> TypeName.get(returnType).box())
-                        .orElse(TypeName.get(VoidEnum.class))))
-                .addParameter(
-                    ParameterizedTypeName.get(
-                        ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                        missionModel.getTypesName(),
-                        ClassName.get(missionModel.topLevelModel)),
-                    "model",
-                    Modifier.FINAL)
-                .addParameter(
-                    TypeName.get(activityType.declaration().asType()),
-                    "activity",
-                    Modifier.FINAL)
-                .addCode(
-                    activityType.effectModel()
-                        .map(effectModel -> CodeBlock
-                              .builder()
-                              .addStatement(
-                                  """
-                                    return $T
-                                    .$L(() -> {
-                                      try (final var restore = $L.registry().contextualizeModel($L)) {
-                                        $L.$L($L.model());
-                                      }
-                                    })
-                                    .create($L.executor())""",
-                                  gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
-                                  switch (effectModel.executor()) {
-                                    case Threaded -> "threaded";
-                                    case Replaying -> "replaying";
-                                  },
-                                  "model",
-                                  "model",
-                                  "activity",
-                                  effectModel.methodName(),
-                                  "model",
-                                  "model")
-                              .build())
-                        .orElseGet(() -> CodeBlock
-                            .builder()
-                            .addStatement(
-                                "return new $T($$ -> {})",
-                                gov.nasa.jpl.aerie.merlin.framework.OneShotTask.class)
-                            .build()))
-                .build())
-        .build())
+    return generateCommonMapperMethods(missionModel, activityType)
+        .map(typeSpec -> typeSpec
+            .toBuilder()
+            .addMethod(makeGetReturnValueSchemaMethod())
+            .addMethod(makeSerializeReturnValueMethod(activityType))
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("createTask")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addAnnotation(Override.class)
+                    .returns(ParameterizedTypeName.get(
+                        ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.Task.class),
+                        activityType
+                            .effectModel()
+                            .flatMap(EffectModelRecord::returnType)
+                            .map(returnType -> TypeName.get(returnType).box())
+                            .orElse(TypeName.get(VoidEnum.class))))
+                    .addParameter(
+                        ParameterizedTypeName.get(
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                            missionModel.getTypesName(),
+                            ClassName.get(missionModel.topLevelModel)),
+                        "model",
+                        Modifier.FINAL)
+                    .addParameter(
+                        TypeName.get(activityType.declaration().asType()),
+                        "activity",
+                        Modifier.FINAL)
+                    .addCode(
+                        activityType.effectModel()
+                            .map(effectModel -> effectModel
+                                .returnType()
+                                .map(returnType -> CodeBlock
+                                    .builder()
+                                    .addStatement(
+                                        """
+                                          return $T
+                                          .$L(() -> {
+                                            try (final var restore = $L.registry().contextualizeModel($L)) {
+                                              return $L.$L($L.model());
+                                            }
+                                          })
+                                          .create($L.executor())""",
+                                        ModelActions.class,
+                                        switch (effectModel.executor()) {
+                                          case Threaded -> "threaded";
+                                          case Replaying -> "replaying";
+                                        },
+                                        "model",
+                                        "model",
+                                        "activity",
+                                        effectModel.methodName(),
+                                        "model",
+                                        "model")
+                                    .build())
+                                .orElseGet(() -> CodeBlock
+                                    .builder()
+                                    .addStatement(
+                                        """
+                                          return $T
+                                          .$L(() -> {
+                                            try (final var restore = $L.registry().contextualizeModel($L)) {
+                                              $L.$L($L.model());
+                                              return $T.VOID;
+                                            }
+                                          })
+                                          .create($L.executor())""",
+                                        ModelActions.class,
+                                        switch (effectModel.executor()) {
+                                          case Threaded -> "threaded";
+                                          case Replaying -> "replaying";
+                                        },
+                                        "model",
+                                        "model",
+                                        "activity",
+                                        effectModel.methodName(),
+                                        "model",
+                                        VoidEnum.class,
+                                        "model")
+                                    .build()))
+                            .orElseGet(() -> CodeBlock
+                                .builder()
+                                .addStatement(
+                                    "return new $T($$ -> {})",
+                                    gov.nasa.jpl.aerie.merlin.framework.OneShotTask.class)
+                                .build()))
+                    .build())
+            .build())
         .map(typeSpec -> JavaFile
             .builder(activityType.mapper().name.packageName(), typeSpec)
             .skipJavaLangImports(true)
