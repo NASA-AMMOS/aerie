@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import java.util.List;
 import java.util.Map;
 
+import static gov.nasa.jpl.aerie.json.BasicParsers.doubleP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
@@ -54,11 +55,24 @@ public class SchedulingDSL {
               ActivityExpression::new,
               ActivityExpression::type));
 
+  private static final JsonParser<LinearResource> linearResourceP =
+      stringP
+          .map(Iso.of(LinearResource::new, LinearResource::name));
+
+  private static final ProductParsers.JsonObjectParser<ConstraintExpression.GreaterThan> greaterThanP =
+      productP
+          .field("left", linearResourceP)
+          .field("right", doubleP)
+          .map(Iso.of(
+              untuple(ConstraintExpression.GreaterThan::new),
+              $ -> tuple($.resource(), $.value())));
+
   private static final JsonParser<ConstraintExpression> constraintExpressionP =
       SumParsers.sumP("kind", ConstraintExpression.class, List.of(
           SumParsers.variant("ActivityExpression", ConstraintExpression.ActivityExpression.class, activityExpressionP.map(Iso.of(
               ConstraintExpression.ActivityExpression::new,
-              ConstraintExpression.ActivityExpression::expression)))));
+              ConstraintExpression.ActivityExpression::expression))),
+          SumParsers.variant("WindowsExpressionGreaterThan", ConstraintExpression.GreaterThan.class, greaterThanP)));
 
   private static final ProductParsers.JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP =
       productP
@@ -110,6 +124,7 @@ public class SchedulingDSL {
     record GoalOr(List<GoalSpecifier> goals) implements GoalSpecifier {}
   }
 
+  public record LinearResource(String name) {}
 
   public record ActivityTemplate(String activityType, Map<String, SerializedValue> arguments) {}
 
@@ -117,5 +132,7 @@ public class SchedulingDSL {
 
   public sealed interface ConstraintExpression {
     record ActivityExpression(SchedulingDSL.ActivityExpression expression) implements ConstraintExpression {}
+
+    record GreaterThan(LinearResource resource, double value) implements ConstraintExpression {}
   }
 }

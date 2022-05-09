@@ -1,8 +1,11 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.resources.ExternalState;
+import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
@@ -24,7 +27,8 @@ public class GoalBuilder {
       final SchedulingDSL.GoalSpecifier goalSpecifier,
       final Timestamp horizonStartTimestamp,
       final Timestamp horizonEndTimestamp,
-      final Function<String, ActivityType> lookupActivityType) {
+      final Function<String, ActivityType> lookupActivityType,
+      final Function<String, ExternalState> lookupResource) {
     final var hor = new PlanningHorizon(
         horizonStartTimestamp.toInstant(),
         horizonEndTimestamp.toInstant()).getHor();
@@ -39,7 +43,8 @@ public class GoalBuilder {
           .forAllTimeIn(hor)
           .forEach(timeRangeExpressionOfConstraintExpression(
               g.forEach(),
-              lookupActivityType))
+              lookupActivityType,
+              lookupResource))
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType));
       // TODO: This if statement should be removed when the DSL supports time expressions.
       if (g.forEach() instanceof SchedulingDSL.ConstraintExpression.ActivityExpression) {
@@ -54,7 +59,8 @@ public class GoalBuilder {
         builder = builder.and(goalOfGoalSpecifier(subGoalSpecifier,
                                                   horizonStartTimestamp,
                                                   horizonEndTimestamp,
-                                                  lookupActivityType));
+                                                  lookupActivityType,
+                                                  lookupResource));
       }
       return builder.build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalOr g) {
@@ -63,7 +69,8 @@ public class GoalBuilder {
         builder = builder.or(goalOfGoalSpecifier(subGoalSpecifier,
                                                  horizonStartTimestamp,
                                                  horizonEndTimestamp,
-                                                 lookupActivityType));
+                                                 lookupActivityType,
+                                                 lookupResource));
       }
       return builder.build();
     } else {
@@ -73,10 +80,17 @@ public class GoalBuilder {
 
   private static TimeRangeExpression timeRangeExpressionOfConstraintExpression(
       final SchedulingDSL.ConstraintExpression constraintExpression,
-      final Function<String, ActivityType> lookupActivityType) {
+      final Function<String, ActivityType> lookupActivityType,
+      final Function<String, ExternalState> lookupResource) {
     if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.ActivityExpression c) {
       return new TimeRangeExpression.Builder()
           .from(ActivityExpression.ofType(lookupActivityType.apply(c.expression().type())))
+          .build();
+    } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.GreaterThan c) {
+      return new TimeRangeExpression.Builder()
+          .from(new StateConstraintExpression.Builder()
+                    .above(lookupResource.apply(c.resource().name()), SerializedValue.of(c.value()))
+                    .build())
           .build();
     } else {
       throw new UnexpectedSubtypeError(SchedulingDSL.ConstraintExpression.class, constraintExpression);

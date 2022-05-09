@@ -10,6 +10,14 @@ export class WindowSet {
     return new WindowSet(windowSpecifier);
   }
 
+  public static greaterThan(resource: Resource, value: Double): WindowSet {
+    return WindowSet.new({
+      kind: AST.NodeKind.WindowsExpressionGreaterThan,
+      left: resource,
+      right: value,
+    });
+  }
+
   public static during(activityType: ActivityType): WindowSet {
     return WindowSet.new({
       kind: AST.NodeKind.ActivityExpression,
@@ -21,6 +29,7 @@ export class WindowSet {
 declare global {
   class WindowSet {
     public readonly __astnode: AST.WindowsExpression
+    public static greaterThan(resource: Resource, value: Double): WindowSet
     public static during(activityType: ActivityType): WindowSet
   }
 }
