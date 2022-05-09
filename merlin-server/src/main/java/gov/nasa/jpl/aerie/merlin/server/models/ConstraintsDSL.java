@@ -1,13 +1,17 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
+import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.And;
+import gov.nasa.jpl.aerie.constraints.tree.Or;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
+import gov.nasa.jpl.aerie.constraints.tree.True;
+import gov.nasa.jpl.aerie.constraints.tree.ViolationsOf;
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
-import gov.nasa.jpl.aerie.json.ProductParsers;
 import gov.nasa.jpl.aerie.json.Unit;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.List;
-import java.util.Map;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
@@ -20,50 +24,46 @@ import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 
 public class ConstraintsDSL {
 
-  private static final ProductParsers.JsonObjectParser<ConstraintSpecifier.DummyConstraintDefinition> dummyConstraintDefinitionP =
+  private static JsonParser<And> andF(final JsonParser<Expression<Windows>> windowsExpressionP) {
+    return productP
+        .field("kind", literalP("WindowsExpressionAnd"))
+        .field("expressions", listP(windowsExpressionP))
+        .map(Iso.of(untuple(($, expressions) -> new And(expressions)),
+                    // This parser is only used for deserialization, so we don't care about the reverse operation.
+                    $ -> tuple(Unit.UNIT, $.expressions)));
+  }
+
+  private static JsonParser<Or> orF(final JsonParser<Expression<Windows>> windowsExpressionP) {
+    return productP
+        .field("kind", literalP("WindowsExpressionOr"))
+        .field("expressions", listP(windowsExpressionP))
+        .map(Iso.of(untuple(($, expressions) -> new Or(expressions)),
+                    // This parser is only used for deserialization, so we don't care about the reverse operation.
+                    $ -> tuple(Unit.UNIT, $.expressions)));
+  }
+
+  private static JsonParser<True> trueP =
       productP
-          .field("kind", literalP("DummyConstraint"))
-          .field("someNumber", intP)
+          .field("kind", literalP("WindowsExpressionTrue"))
+          .map(
+              Iso.of(
+                  untuple(($) -> new True()),
+                  $ -> tuple(Unit.UNIT)
+              )
+          );
+
+  static final JsonParser<Expression<Windows>> windowsExpressionP =
+      recursiveP(self -> chooseP(andF(self), orF(self), trueP));
+
+  private static final JsonParser<ViolationsOf> violationsOfP =
+      productP
+          .field("kind", literalP("ViolationsOf"))
+          .field("expression", windowsExpressionP)
           .map(Iso.of(
-              untuple(($, someNumber) -> new ConstraintSpecifier.DummyConstraintDefinition(someNumber)),
-              $ -> tuple(Unit.UNIT, $.someNumber())));
+              untuple(($, constraint) -> new ViolationsOf(constraint)),
+              $ -> tuple(Unit.UNIT, $.expression)));
 
-  private static JsonParser<ConstraintSpecifier.ConstraintAnd> constraintAndF(final JsonParser<ConstraintSpecifier> constraintSpecifierP) {
-    return productP
-        .field("kind", literalP("ConstraintAnd"))
-        .field("constraints", listP(constraintSpecifierP))
-        .map(Iso.of(untuple(($, constraints) -> new ConstraintSpecifier.ConstraintAnd(constraints)),
-                    $ -> tuple(Unit.UNIT, $.constraints())));
-  }
+  public static final JsonParser<Expression<List<Violation>>> constraintP =
+      recursiveP(self -> chooseP(violationsOfP));
 
-  private static JsonParser<ConstraintSpecifier.ConstraintOr> constraintOrF(final JsonParser<ConstraintSpecifier> constraintSpecifierP) {
-    return productP
-        .field("kind", literalP("ConstraintOr"))
-        .field("constraints", listP(constraintSpecifierP))
-        .map(Iso.of(untuple(($, constraints) -> new ConstraintSpecifier.ConstraintOr(constraints)),
-                    $ -> tuple(Unit.UNIT, $.constraints())));
-  }
-
-
-  private static final JsonParser<ConstraintSpecifier> constraintSpecifierP =
-      recursiveP(self -> chooseP(constraintAndF(self), constraintOrF(self), dummyConstraintDefinitionP));
-
-
-  public static final JsonParser<ConstraintSpecifier> constraintsJsonP = constraintSpecifierP;
-
-
-  public enum ConstraintKinds {
-    DummyConstraint
-  }
-
-  public sealed interface ConstraintSpecifier {
-    record DummyConstraintDefinition(
-        int someNumber
-    ) implements ConstraintSpecifier {}
-    record ConstraintAnd(List<ConstraintSpecifier> constraints) implements ConstraintSpecifier {}
-    record ConstraintOr(List<ConstraintSpecifier> constraints) implements ConstraintSpecifier {}
-  }
-
-
-  public record ActivityTemplate(String activityType, Map<String, SerializedValue> arguments) {}
 }

@@ -1,38 +1,33 @@
 export enum NodeKind {
-  DummyConstraint = 'DummyConstraint',
-  ConstraintAnd = 'ConstraintAnd',
-  ConstraintOr = 'ConstraintOr'
+  ViolationsOf = 'ViolationsOf',
+  WindowsExpressionAnd = 'WindowsExpressionAnd',
+  WindowsExpressionOr = 'WindowsExpressionOr',
+  WindowsExpressionTrue = 'WindowsExpressionTrue'
 }
 
-export type Constraint = | DummyConstraint;
+export type Constraint = | ViolationsOf;
 
-export interface DummyConstraint {
-  kind: NodeKind.DummyConstraint,
-  someNumber: number,
+export interface ViolationsOf {
+  kind: NodeKind.ViolationsOf,
+  expression: WindowsExpression,
 }
 
-export type ConstraintSpecifier =
-    | Constraint
-    | ConstraintComposition
-    ;
+export type WindowsExpression =
+  | And
+  | Or
+  | True;
 
-/**
- * Constraint Composition
- *
- * Compose constraints together
- */
-export type ConstraintComposition =
-    | ConstraintAnd
-    | ConstraintOr
-    ;
-
-export interface ConstraintAnd {
-  kind: NodeKind.ConstraintAnd,
-  constraints: ConstraintSpecifier[],
+export interface And {
+  kind: NodeKind.WindowsExpressionAnd,
+  expressions: WindowsExpression[],
 }
 
-export interface ConstraintOr {
-  kind: NodeKind.ConstraintOr,
-  constraints: ConstraintSpecifier[],
+export interface Or {
+  kind: NodeKind.WindowsExpressionOr,
+  expressions: WindowsExpression[],
+}
+
+export interface True {
+  kind: NodeKind.WindowsExpressionTrue
 }
 

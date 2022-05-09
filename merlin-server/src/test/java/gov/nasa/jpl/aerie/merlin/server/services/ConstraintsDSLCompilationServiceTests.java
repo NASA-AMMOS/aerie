@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.constraints.tree.True;
+import gov.nasa.jpl.aerie.constraints.tree.ViolationsOf;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.ConstraintsDSL;
@@ -38,13 +40,15 @@ class ConstraintsDSLCompilationServiceTests {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult result;
     result = constraintsDSLCompilationService.compileConstraintsDSL(
         PLAN_ID, """
-                export default function myConstraint() {
-                  return Constraint.DummyConstraint(4)
+                export default () => {
+                  return Constraint.ViolationsOf(
+                    WindowsExpression.True()
+                  )
                 }
             """);
-    final var expectedConstraintDefinition = new ConstraintsDSL.ConstraintSpecifier.DummyConstraintDefinition(4);
+    final var expectedConstraintDefinition = new ViolationsOf(new True());
     if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
-      assertEquals(expectedConstraintDefinition, r.constraintSpecifier());
+      assertEquals(expectedConstraintDefinition, r.constraintExpression());
     } else if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error r) {
       fail(r.toString());
     }
@@ -57,15 +61,15 @@ class ConstraintsDSLCompilationServiceTests {
     result = constraintsDSLCompilationService.compileConstraintsDSL(
         PLAN_ID, """
                 export default function myConstraint() {
-                  return myHelper(2)
+                  return myHelper(WindowsExpression.True())
                 }
-                function myHelper(n: number) {
-                  return Constraint.DummyConstraint(n*2)
+                function myHelper(e: WindowsExpression) {
+                  return Constraint.ViolationsOf(e)
                 }
             """);
-    final var expectedConstraintDefinition = new ConstraintsDSL.ConstraintSpecifier.DummyConstraintDefinition(4);
+    final var expectedConstraintDefinition = new ViolationsOf(new True());
     if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
-      assertEquals(expectedConstraintDefinition, r.constraintSpecifier());
+      assertEquals(expectedConstraintDefinition, r.constraintExpression());
     } else if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error r) {
       fail(r.toString());
     }
@@ -77,11 +81,11 @@ class ConstraintsDSLCompilationServiceTests {
     actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) constraintsDSLCompilationService.compileConstraintsDSL(
           PLAN_ID, """
                 export default function myConstraint() {
-                  const x = 4 - 2
-                  return myHelper(2);
+                  const x = WindowsExpression.True();
+                  return myHelper(x);
                 }
                 function myHelper(n: number) {
-                  return Constraint.DummyConstraint(x * n);
+                  return Constraint.ViolationsOf(x);
                   )
                 }
               """);
@@ -97,7 +101,8 @@ class ConstraintsDSLCompilationServiceTests {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error actualErrors;
     actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) constraintsDSLCompilationService.compileConstraintsDSL(
           PLAN_ID, """
-                export default function myConstraint() {
+                export default function myConstraint(): Constraint {
+                  // return WindowsExpression.True()
                   return 5
                 }
               """);

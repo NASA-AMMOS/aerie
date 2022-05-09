@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
@@ -80,7 +82,7 @@ public class ConstraintsDSLCompilationService {
         case "success" -> {
           final var output = outputReader.readLine();
           try {
-            yield new ConstraintsDSLCompilationResult.Success(parseJson(output, ConstraintsDSL.constraintsJsonP));
+            yield new ConstraintsDSLCompilationResult.Success(parseJson(output, ConstraintsDSL.constraintP));
           } catch (InvalidJsonException | InvalidEntityException e) {
             throw new Error("Could not parse JSON returned from typescript: " + output, e);
           }
@@ -105,7 +107,7 @@ public class ConstraintsDSLCompilationService {
   }
 
   public sealed interface ConstraintsDSLCompilationResult {
-    record Success(ConstraintsDSL.ConstraintSpecifier constraintSpecifier) implements ConstraintsDSLCompilationResult {}
+    record Success(Expression<List<Violation>> constraintExpression) implements ConstraintsDSLCompilationResult {}
     record Error(List<ConstraintsCompilationError.UserCodeError> errors) implements ConstraintsDSLCompilationResult {}
   }
 }
