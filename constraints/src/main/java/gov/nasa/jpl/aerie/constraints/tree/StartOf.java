@@ -17,7 +17,7 @@ public final class StartOf implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
+  public Windows evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
     final var activity = environment.get(this.activityAlias);
     return new Windows(Window.at(activity.window.start));
   }

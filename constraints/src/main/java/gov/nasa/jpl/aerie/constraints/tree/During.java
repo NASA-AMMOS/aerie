@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.Map;
@@ -16,7 +17,7 @@ public final class During implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
+  public Windows evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
     final var activity = environment.get(this.activityAlias);
     return new Windows(activity.window);
   }

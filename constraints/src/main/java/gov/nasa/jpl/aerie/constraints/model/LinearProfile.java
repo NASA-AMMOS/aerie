@@ -58,7 +58,8 @@ public final class LinearProfile implements Profile<LinearProfile> {
               p.valueAt(intersection.start) + o.valueAt(intersection.start),
               p.rate + o.rate
           );
-        }
+        },
+        Window.FOREVER
     );
 
     return new LinearProfile(profilePieces);
@@ -84,12 +85,15 @@ public final class LinearProfile implements Profile<LinearProfile> {
     );
   }
 
+  private static boolean profileOutsideBounds(final LinearProfilePiece piece, final Window bounds){
+    return piece.window.isStrictlyBefore(bounds) || piece.window.isStrictlyAfter(bounds);
+  }
+
   private Windows getWindowsSatisfying(final LinearProfile other, final Window bounds, final BiFunction<LinearProfilePiece, LinearProfilePiece, Windows> condition) {
     final var windows = new Windows();
-    for (final var satisfying : processIntersections(this, other, condition)) {
+    for (final var satisfying : processIntersections(this, other, condition, bounds)) {
       windows.addAll(satisfying);
     }
-
     return Windows.intersection(
         windows,
         new Windows(bounds)
@@ -105,14 +109,17 @@ public final class LinearProfile implements Profile<LinearProfile> {
 
       final var iter = this.profilePieces.iterator();
       var prev = iter.next();
-      changePoints.add(prev.changePoints());
-
+      if(!profileOutsideBounds(prev, bounds)) {
+        changePoints.add(prev.changePoints());
+      }
       while (iter.hasNext()) {
         final var curr = iter.next();
-        changePoints.add(curr.changePoints());
+        if(!profileOutsideBounds(curr, bounds)) {
+          changePoints.add(curr.changePoints());
+        }
 
         if (Window.meets(prev.window, curr.window)) {
-          if (prev.finalValue() != curr.initialValue) changePoints.add(Window.at(prev.window.end));
+          if (prev.finalValue() != curr.initialValue && !profileOutsideBounds(prev, bounds)) changePoints.add(Window.at(prev.window.end));
         } else {
           throw new Error("Unexpected gap in profile pieces not allowed");
         }
@@ -131,8 +138,8 @@ public final class LinearProfile implements Profile<LinearProfile> {
    * @param processor BiFunction taking two profile pieces and a desired result based on their intersection
    * @return Set of all windows within bounds for which condition is satisfied between this and another profile
    */
-  private static <T> List<T> processIntersections(final LinearProfile left, final LinearProfile right, final BiFunction<LinearProfilePiece, LinearProfilePiece, T> processor) {
-    if (left.profilePieces.size() == 0 || right.profilePieces.size() == 0) return new ArrayList<>();
+  private static <T> List<T> processIntersections(final LinearProfile left, final LinearProfile right, final BiFunction<LinearProfilePiece, LinearProfilePiece, T> processor, Window bounds) {
+    if (left.profilePieces.isEmpty() || right.profilePieces.isEmpty()) return new ArrayList<>();
 
     // Setup to step through profiles simultaneously,
     // finding all windows satisfying condition within the supplied bounds
@@ -144,6 +151,8 @@ public final class LinearProfile implements Profile<LinearProfile> {
     if (!rightIter.hasNext()) return processedIntersections;
     var rightPiece = rightIter.next();
     for (final var leftPiece : left.profilePieces) {
+      //if left piece ends before bounds start, skip left piece
+      if (profileOutsideBounds(leftPiece, bounds)) continue;
       // If left piece ends before right piece, skip left piece
       if (Window.compareEndToStart(leftPiece.window, rightPiece.window) < 0) continue;
 

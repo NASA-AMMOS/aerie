@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.List;
@@ -23,6 +24,14 @@ public final class True implements Expression<Windows> {
 
   @Override
   public void extractResources(final Set<String> names) {
+  }
+
+  @Override
+  public Windows evaluate(
+      final SimulationResults results,
+      final Window bounds,
+      final Map<String, ActivityInstance> environment) {
+    return new Windows(bounds);
   }
 
   @Override

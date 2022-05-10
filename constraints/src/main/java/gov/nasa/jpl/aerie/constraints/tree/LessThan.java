@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.constraints.tree;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.Map;
@@ -19,11 +20,11 @@ public final class LessThan implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
-    LinearProfile leftProfile = this.left.evaluate(results, environment);
-    LinearProfile rightProfile = this.right.evaluate(results, environment);
+  public Windows evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
+    LinearProfile leftProfile = this.left.evaluate(results, bounds, environment);
+    LinearProfile rightProfile = this.right.evaluate(results, bounds, environment);
 
-    return leftProfile.lessThan(rightProfile, results.bounds);
+    return leftProfile.lessThan(rightProfile, bounds);
   }
 
   @Override

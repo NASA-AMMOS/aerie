@@ -18,11 +18,17 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
     this(List.of(profilePieces));
   }
 
+  private static boolean profileOutsideBounds(final DiscreteProfilePiece piece, final Window bounds){
+    return piece.window.isStrictlyBefore(bounds) || piece.window.isStrictlyAfter(bounds);
+  }
+
   @Override
   public Windows notEqualTo(final DiscreteProfile other, final Window bounds) {
     final var windows = new Windows(bounds);
     for (final var profilePiece : this.profilePieces) {
+      if(profileOutsideBounds(profilePiece, bounds)) continue;
       for (final var otherPiece : other.profilePieces) {
+        if(profileOutsideBounds(otherPiece, bounds)) continue;
         if (profilePiece.value.equals(otherPiece.value)) {
           windows.subtractAll(
               Windows.intersection(
@@ -41,7 +47,9 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
   public Windows equalTo(final DiscreteProfile other, final Window bounds) {
     final var windows = new Windows();
     for (final var profilePiece : this.profilePieces) {
+      if(profileOutsideBounds(profilePiece, bounds)) continue;
       for (final var otherPiece : other.profilePieces) {
+        if(profileOutsideBounds(otherPiece, bounds)) continue;
         if (profilePiece.value.equals(otherPiece.value)) {
           windows.addAll(
               Windows.intersection(
@@ -67,6 +75,8 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
 
     while (iter.hasNext()) {
       final var curr = iter.next();
+      //avoid adding transition points for profiles outside of bounds
+      if(profileOutsideBounds(prev, bounds) || profileOutsideBounds(curr, bounds)) {prev = curr; continue;}
 
       if (Window.meets(prev.window, curr.window)) {
         if (prev.value != curr.value) changePoints.add(Window.at(prev.window.end));
@@ -92,6 +102,8 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
 
     while (iter.hasNext()) {
       final var curr = iter.next();
+      //avoid adding transition points for profiles outside of bounds
+      if(profileOutsideBounds(prev, bounds) || profileOutsideBounds(curr, bounds)) {prev = curr; continue;}
 
       if (Window.meets(prev.window, curr.window)) {
         if (prev.value.equals(oldState) && curr.value.equals(newState)) {

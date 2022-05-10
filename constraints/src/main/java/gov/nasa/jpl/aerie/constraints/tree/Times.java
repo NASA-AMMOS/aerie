@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.constraints.tree;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.constraints.time.Window;
 
 import java.util.Map;
 import java.util.Objects;
@@ -18,8 +19,8 @@ public final class Times implements Expression<LinearProfile> {
   }
 
   @Override
-  public LinearProfile evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
-    return this.profile.evaluate(results, environment).times(this.multiplier);
+  public LinearProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
+    return this.profile.evaluate(results, bounds, environment).times(this.multiplier);
   }
 
   @Override
