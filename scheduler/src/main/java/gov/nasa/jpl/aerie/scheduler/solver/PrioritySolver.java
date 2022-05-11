@@ -80,14 +80,14 @@ public class PrioritySolver implements Solver {
    */
   public PrioritySolver(Problem problem) {
     checkNotNull(problem, "creating solver with null input problem descriptor");
-    this.checkSimBeforeInsertingActivities = false;
+    this.checkSimBeforeInsertingActivities = true;
     this.problem = problem;
     this.simulationFacade = problem.getSimulationFacade();
   }
 
   //TODO: should probably be part of sched configuration; maybe even per rule
-  public void checkSimBeforeInsertingActInPlan(){
-    this.checkSimBeforeInsertingActivities = true;
+  public void doNotcheckSimBeforeInsertingActInPlan(){
+    this.checkSimBeforeInsertingActivities = false;
   }
 
   /**

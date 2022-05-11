@@ -282,10 +282,10 @@ public class SimulationFacadeTest {
     final var actTypePeel = problem.getActivityType("PeelBanana");
 
     ActivityInstance act1 = new ActivityInstance(actTypePeel,
-                                                 t0, t1.minus(t0));
+                                                 t0, Duration.ZERO);
 
     ActivityInstance act2 = new ActivityInstance(actTypePeel,
-                                                 t2, Duration.of(1, Duration.SECOND));
+                                                 t2, Duration.ZERO);
 
     //create an "external tool" that insists on a few fixed activities
     final var externalActs = java.util.List.of(
@@ -323,10 +323,10 @@ public class SimulationFacadeTest {
     actTypePeel.setResourceConstraint(constraint);
 
     ActivityInstance act1 = new ActivityInstance(actTypePeel,
-                                                 t0, t1.minus(t0));
+                                                 t0, Duration.ZERO);
 
     ActivityInstance act2 = new ActivityInstance(actTypePeel,
-                                                 t2, Duration.of(1, Duration.SECOND));
+                                                 t2, Duration.ZERO);
 
     //create an "external tool" that insists on a few fixed activities
     final var externalActs = java.util.List.of(
