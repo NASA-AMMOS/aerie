@@ -80,7 +80,6 @@ public class UncontrollableDurationTest {
     problem.setGoals(List.of(recurrenceTrapezoidal, coexistenceTriangle));
 
     final var solver = new PrioritySolver(problem);
-    solver.checkSimBeforeInsertingActInPlan();
     final var plan = solver.getNextSolution().get();
     solver.printEvaluation();
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT1M51S"), planningHorizon.fromStart("PT6M51S"), problem.getActivityType("SolarPanelNonLinear")));
@@ -131,7 +130,6 @@ public class UncontrollableDurationTest {
     problem.setGoals(List.of(recurrenceTrapezoidal, coexistenceTriangle));
 
     final var solver = new PrioritySolver(problem);
-    solver.checkSimBeforeInsertingActInPlan();
     final var plan = solver.getNextSolution().get();
     solver.printEvaluation();
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT3M57.222965S"), planningHorizon.fromStart("PT6M40.222965S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
