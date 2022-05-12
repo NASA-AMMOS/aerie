@@ -21,8 +21,10 @@ type ResourceUnion =
     | "/abc"
     | "/abc/def"
 
-export function transition(resource: "/abc", from: any, to: any): WindowSet
-export function transition(resource: "/abc/def", from: any, to: any): WindowSet
-export function transition(resource: ResourceUnion, from: any, to: any): WindowSet {
+export function transition<T extends ResourceUnion, I =
+          T extends "/abc" ? Double
+        : T extends "/abc/def" ? string
+        : never
+>(resource: T, from: I, to: I): WindowSet {
   throw new Error("This function exists for typechecking purposes only");
 }

@@ -53,16 +53,16 @@ public class TypescriptCodeGenerationService {
 
     result.add(generateResourceTypes(missionModelTypes.resourceTypes()));
 
-    for (final var resource : missionModelTypes.resourceTypes()) {
-      final var resourceType = TypescriptType.toString(valueSchemaToTypescriptType(resource.schema()));
-      result.add("export function transition(resource: \"%s\", from: %s, to: %s): WindowSet"
-                     .formatted(resource.name(), resourceType, resourceType));
-    }
+    final var resourceConditionalType = indent(indent(generateResourceConditionalType(missionModelTypes.resourceTypes()))).trim();
     result.add("""
-                  export function transition(resource: ResourceUnion, from: any, to: any): WindowSet {
+                  export function transition<T extends ResourceUnion>(
+                    resource: T,
+                    from: %s,
+                    to: %s
+                  ): WindowSet {
                     throw new Error("This function exists for type checking purposes only");
                   }
-                  """);
+                  """.formatted(resourceConditionalType, resourceConditionalType));
 
     result.add("declare global {");
     result.add(indent("var ActivityTemplates: typeof ActivityTemplateConstructors;"));
@@ -76,6 +76,15 @@ public class TypescriptCodeGenerationService {
     result.add(indent("Resources: Resource,"));
     result.add("});");
     result.add("/** End Codegen */");
+    return joinLines(result);
+  }
+
+  private static String generateResourceConditionalType(final Iterable<MissionModelService.ResourceType> resourceTypes) {
+    final var result = new ArrayList<String>();
+    for (final var resource : resourceTypes) {
+      result.add("T extends \"%s\" ? %s :".formatted(resource.name(), TypescriptType.toString(valueSchemaToTypescriptType(resource.schema()))));
+    }
+    result.add("never");
     return joinLines(result);
   }
 
