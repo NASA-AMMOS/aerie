@@ -62,7 +62,7 @@ public final class PostgresParsers {
   public static final JsonParser<ActivityAttributesRecord> activityAttributesP = productP
       .optionalField("directiveId", longP)
       .field("arguments", activityArgumentsP)
-      .field("computedAttributes", serializedValueP)
+      .optionalField("computedAttributes", serializedValueP)
         .map(Iso.of(
             untuple(ActivityAttributesRecord::new),
             $ -> tuple($.directiveId(), $.arguments(), $.computedAttributes())

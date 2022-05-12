@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
@@ -461,7 +462,7 @@ public final class SimulationEngine implements AutoCloseable {
     });
 
     final var simulatedActivities = new HashMap<ActivityInstanceId, SimulatedActivity>();
-    final var unsimulatedActivities = new HashMap<ActivityInstanceId, SerializedActivity>();
+    final var unfinishedActivities = new HashMap<ActivityInstanceId, UnfinishedActivity>();
     engine.tasks.forEach((task, state) -> {
       final var directive = engine.taskDirective.get(task);
       if (directive == null) return;
@@ -479,10 +480,15 @@ public final class SimulationEngine implements AutoCloseable {
             (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(activityId),
             serializeReturnValue(directive, e.returnValue())
         ));
-      } else {
-        unsimulatedActivities.put(activityId, new SerializedActivity(
+      } else if (state instanceof ExecutionState.InProgress<?> e){
+        unfinishedActivities.put(activityId, new UnfinishedActivity(
             directive.getType(),
-            directive.getArguments()));
+            directive.getArguments(),
+            startTime.plus(e.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
+            activityParents.get(activityId),
+            activityChildren.getOrDefault(activityId, Collections.emptyList()),
+            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(activityId)
+        ));
       }
     });
 
@@ -522,7 +528,7 @@ public final class SimulationEngine implements AutoCloseable {
     return new SimulationResults(realProfiles,
                                  discreteProfiles,
                                  simulatedActivities,
-                                 unsimulatedActivities,
+                                 unfinishedActivities,
                                  startTime,
                                  topics,
                                  serializedTimeline);

@@ -8,13 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/*package-local*/ record SimulatedActivityRecord(
+/*package-local*/ record SpanRecord(
     String type,
-    Map<String, SerializedValue> arguments,
     Instant start,
-    Duration duration,
+    Optional<Duration> duration,
     Optional<Long> parentId,
     List<Long> childIds,
-    Optional<Long> directiveId,
-    SerializedValue computedAttributes
+    ActivityAttributesRecord attributes
 ) {}

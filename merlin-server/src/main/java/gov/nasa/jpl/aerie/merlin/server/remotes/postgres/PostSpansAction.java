@@ -17,7 +17,7 @@ import java.util.Optional;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.activityAttributesP;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatements.setTimestamp;
 
-/*package-local*/ final class PostSimulatedActivitiesAction implements AutoCloseable {
+/*package-local*/ final class PostSpansAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
       insert into span (dataset_id, start_offset, duration, type, attributes)
       values (?, ?::timestamptz - ?::timestamptz, ?::timestamptz - ?::timestamptz, ?, ?)
@@ -25,30 +25,34 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
 
   private final PreparedStatement statement;
 
-  public PostSimulatedActivitiesAction(final Connection connection) throws SQLException {
+  public PostSpansAction(final Connection connection) throws SQLException {
     this.statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
   }
 
   public Map<Long, Long> apply(
       final long datasetId,
-      final Map<Long, SimulatedActivityRecord> simulatedActivities,
+      final Map<Long, SpanRecord> spans,
       final Timestamp simulationStart
   ) throws SQLException {
-    final var ids = simulatedActivities.keySet().stream().toList();
+    final var ids = spans.keySet().stream().toList();
     for (final var id : ids) {
-      final var act = simulatedActivities.get(id);
+      final var act = spans.get(id);
       final var startTimestamp = new Timestamp(act.start());
-      final var actEnd = act.start().plus(act.duration().dividedBy(Duration.MICROSECOND), ChronoUnit.MICROS);
-      final var endTimestamp = new Timestamp(actEnd);
+
+      final var endTimestamp = act.duration().map(duration -> {
+        final var actEnd = act.start().plus(duration.dividedBy(Duration.MICROSECOND), ChronoUnit.MICROS);
+        return new Timestamp(actEnd);
+      });
 
       statement.setLong(1, datasetId);
       setTimestamp(statement, 2, startTimestamp);
       setTimestamp(statement, 3, simulationStart);
-      setTimestamp(statement, 4, endTimestamp);
+
+      if (endTimestamp.isPresent()) setTimestamp(statement, 4, endTimestamp.get());
+
       setTimestamp(statement, 5, startTimestamp);
       statement.setString(6, act.type());
-      statement.setString(7, buildAttributes(act.directiveId(), act.arguments(), act.computedAttributes()));
-
+      statement.setString(7, buildAttributes(act.attributes().directiveId(), act.attributes().arguments(), act.attributes().computedAttributes()));
       statement.addBatch();
     }
 
@@ -64,7 +68,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
     return simIdToPostgresId;
   }
 
-  private String buildAttributes(final Optional<Long> directiveId, final Map<String, SerializedValue> arguments, final SerializedValue returnValue) {
+  private String buildAttributes(final Optional<Long> directiveId, final Map<String, SerializedValue> arguments, final Optional<SerializedValue> returnValue) {
     return activityAttributesP.unparse(new ActivityAttributesRecord(directiveId, arguments, returnValue)).toString();
   }
 

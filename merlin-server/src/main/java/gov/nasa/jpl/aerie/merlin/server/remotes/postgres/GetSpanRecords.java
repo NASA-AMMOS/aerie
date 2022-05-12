@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.intellij.lang.annotations.Language;
 
@@ -19,7 +20,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.activityAttributesP;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.parseOffset;
 
-/*package-local*/ final class GetSimulatedActivitiesAction implements AutoCloseable {
+/*package-local*/ final class GetSpanRecords implements AutoCloseable {
   private final @Language("SQL") String sql = """
       select
         a.id,
@@ -35,12 +36,12 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
   private final PreparedStatement statement;
 
-  public GetSimulatedActivitiesAction(final Connection connection) throws SQLException {
+  public GetSpanRecords(final Connection connection) throws SQLException {
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Map<Long, SimulatedActivityRecord> get(final long datasetId, final Timestamp simulationStart) throws SQLException {
-    final var activities = new HashMap<Long, SimulatedActivityRecord>();
+  public Map<Long, SpanRecord> get(final long datasetId, final Timestamp simulationStart) throws SQLException {
+    final var spans = new HashMap<Long, SpanRecord>();
 
     this.statement.setLong(1, datasetId);
     final var resultSet = statement.executeQuery();
@@ -50,39 +51,41 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       final var parentId = readOptionalLong(resultSet, 3);
       final var startOffset = parseOffset(resultSet, 4, simulationStart);
       final var start = simulationStart.toInstant().plus(startOffset.in(MICROSECONDS), ChronoUnit.MICROS);
-      final var duration = parseOffset(resultSet, 5, start);
+      final var duration = isNull(resultSet, 5) ? Optional.<Duration>empty() : Optional.of(parseOffset(resultSet, 5, start));
       final var attributes = parseActivityAttributes(resultSet.getCharacterStream(6));
 
       final var initialChildIds = new ArrayList<Long>();
 
-      activities.put(id, new SimulatedActivityRecord(
+      spans.put(id, new SpanRecord(
           type,
-          attributes.arguments(),
           start,
           duration,
           parentId,
           initialChildIds,
-          attributes.directiveId(),
-          attributes.computedAttributes()
+          attributes
       ));
     }
 
     // Since child IDs are not stored, we assign them by examining the parent ID of each activity
-    activities.forEach(
+    spans.forEach(
         (id, activity) -> activity
             .parentId()
-            .ifPresent(parentId -> activities.get(parentId).childIds().add(id)));
+            .ifPresent(parentId -> spans.get(parentId).childIds().add(id)));
 
-    return activities;
+    return spans;
   }
 
-  private Optional<Long> readOptionalLong(final ResultSet resultSet, final int index) throws SQLException {
+  private static boolean isNull(final ResultSet resultSet, final int index) throws SQLException {
+    resultSet.getObject(index);
+    return resultSet.wasNull();
+  }
+
+  private static Optional<Long> readOptionalLong(final ResultSet resultSet, final int index) throws SQLException {
     final var value = resultSet.getLong(index);
-    if (resultSet.wasNull()) return Optional.empty();
-    return Optional.of(value);
+    return resultSet.wasNull() ? Optional.empty() : Optional.of(value);
   }
 
-  private ActivityAttributesRecord parseActivityAttributes(final Reader jsonStream) {
+  private static ActivityAttributesRecord parseActivityAttributes(final Reader jsonStream) {
     final var json = Json.createReader(jsonStream).readValue();
     return activityAttributesP
         .parse(json)

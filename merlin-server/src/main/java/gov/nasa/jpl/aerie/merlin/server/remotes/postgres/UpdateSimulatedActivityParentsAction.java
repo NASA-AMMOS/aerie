@@ -23,7 +23,7 @@ import java.util.Map;
 
   public void apply(
       final long datasetId,
-      final Map<Long, SimulatedActivityRecord> simulatedActivities,
+      final Map<Long, SpanRecord> simulatedActivities,
       final Map<Long, Long> simIdToPgId
   ) throws SQLException {
     for (final var id : simulatedActivities.keySet()) {
