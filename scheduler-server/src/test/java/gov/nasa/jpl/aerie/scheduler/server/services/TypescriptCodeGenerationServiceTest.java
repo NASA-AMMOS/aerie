@@ -48,6 +48,7 @@ class TypescriptCodeGenerationServiceTest {
         """
             /** Start Codegen */
             import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';
+            import type { WindowSet } from './windows-edsl-fluent-api.js';
             export enum ActivityType {
               SampleActivity1 = 'SampleActivity1',
               SampleActivity2 = 'SampleActivity2',
@@ -71,6 +72,13 @@ class TypescriptCodeGenerationServiceTest {
             export enum Resource {
               "/sample/resource/1" = "/sample/resource/1",
             };
+            type ResourceUnion =
+              | "/sample/resource/1";
+            export function transition(resource: "/sample/resource/1", from: Double, to: Double): WindowSet
+            export function transition(resource: ResourceUnion, from: any, to: any): WindowSet {
+              throw new Error("This function exists for type checking purposes only");
+            }
+
             declare global {
               var ActivityTemplates: typeof ActivityTemplateConstructors;
               var ActivityTypes: typeof ActivityType;

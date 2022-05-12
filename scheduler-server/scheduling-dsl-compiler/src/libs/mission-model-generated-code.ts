@@ -5,6 +5,8 @@
  *
  */
 
+import {WindowSet} from "./windows-edsl-fluent-api";
+
 export enum ActivityType {
   // This indicates to the compiler that we are using a string enum so we can assign it to string for our AST
   _ = '_',
@@ -12,5 +14,15 @@ export enum ActivityType {
 
 export enum Resource {
   "/abc" = "/abc",
-  "/abc/def" = "/abc/def",
+  "/abc/def" = "/abc/def"
+}
+
+type ResourceUnion =
+    | "/abc"
+    | "/abc/def"
+
+export function transition(resource: "/abc", from: any, to: any): WindowSet
+export function transition(resource: "/abc/def", from: any, to: any): WindowSet
+export function transition(resource: ResourceUnion, from: any, to: any): WindowSet {
+  throw new Error("This function exists for typechecking purposes only");
 }
