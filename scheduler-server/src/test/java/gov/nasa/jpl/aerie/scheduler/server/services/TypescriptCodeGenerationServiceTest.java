@@ -39,7 +39,12 @@ class TypescriptCodeGenerationServiceTest {
                           ValueSchema.REAL
                       )
                   )),
-          List.of(new MissionModelService.ResourceType("/sample/resource/1", ValueSchema.REAL))
+          List.of(new MissionModelService.ResourceType("/sample/resource/1", ValueSchema.REAL),
+                  new MissionModelService.ResourceType("/sample/resource/2", ValueSchema.ofStruct(
+                      Map.of("field1", ValueSchema.BOOLEAN,
+                             "field2", ValueSchema.ofVariant(List.of(
+                                 new ValueSchema.Variant("ABC", "ABC"),
+                                 new ValueSchema.Variant("DEF", "DEF")))))))
       );
 
   @Test
@@ -48,6 +53,7 @@ class TypescriptCodeGenerationServiceTest {
         """
             /** Start Codegen */
             import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';
+            import type { WindowSet } from './windows-edsl-fluent-api.js';
             export enum ActivityType {
               SampleActivity1 = 'SampleActivity1',
               SampleActivity2 = 'SampleActivity2',
@@ -70,7 +76,23 @@ class TypescriptCodeGenerationServiceTest {
             };
             export enum Resource {
               "/sample/resource/1" = "/sample/resource/1",
+              "/sample/resource/2" = "/sample/resource/2",
             };
+            type ResourceUnion =
+              | "/sample/resource/1"
+              | "/sample/resource/2";
+            export function transition<T extends ResourceUnion>(
+              resource: T,
+              from: T extends "/sample/resource/1" ? Double :
+                T extends "/sample/resource/2" ? { field1: boolean, field2: ("ABC" | "DEF"), } :
+                never,
+              to: T extends "/sample/resource/1" ? Double :
+                T extends "/sample/resource/2" ? { field1: boolean, field2: ("ABC" | "DEF"), } :
+                never
+            ): WindowSet {
+              throw new Error("This function exists for type checking purposes only");
+            }
+
             declare global {
               var ActivityTemplates: typeof ActivityTemplateConstructors;
               var ActivityTypes: typeof ActivityType;

@@ -44,6 +44,7 @@ public class TypescriptCodeGenerationService {
     final var result = new ArrayList<String>();
     result.add("/** Start Codegen */");
     result.add("import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';");
+    result.add("import type { WindowSet } from './windows-edsl-fluent-api.js';");
     result.add(generateActivityTypeEnum(activityTypeCodes));
     for (final var activityTypeCode : activityTypeCodes) {
       result.add("interface %s extends ActivityTemplate {}".formatted(activityTypeCode.activityTypeName()));
@@ -51,6 +52,17 @@ public class TypescriptCodeGenerationService {
     result.add(generateActivityTemplateConstructors(activityTypeCodes));
 
     result.add(generateResourceTypes(missionModelTypes.resourceTypes()));
+
+    final var resourceConditionalType = indent(indent(generateResourceConditionalType(missionModelTypes.resourceTypes()))).trim();
+    result.add("""
+                  export function transition<T extends ResourceUnion>(
+                    resource: T,
+                    from: %s,
+                    to: %s
+                  ): WindowSet {
+                    throw new Error("This function exists for type checking purposes only");
+                  }
+                  """.formatted(resourceConditionalType, resourceConditionalType));
 
     result.add("declare global {");
     result.add(indent("var ActivityTemplates: typeof ActivityTemplateConstructors;"));
@@ -67,13 +79,27 @@ public class TypescriptCodeGenerationService {
     return joinLines(result);
   }
 
+  private static String generateResourceConditionalType(final Iterable<MissionModelService.ResourceType> resourceTypes) {
+    final var result = new ArrayList<String>();
+    for (final var resource : resourceTypes) {
+      result.add("T extends \"%s\" ? %s :".formatted(resource.name(), TypescriptType.toString(valueSchemaToTypescriptType(resource.schema()))));
+    }
+    result.add("never");
+    return joinLines(result);
+  }
+
   private static String generateResourceTypes(final Collection<MissionModelService.ResourceType> resourceTypes) {
     final var result = new ArrayList<String>();
     result.add("export enum Resource {");
     for (final var resourceType : resourceTypes) {
       result.add(indent("\"%s\" = \"%s\",".formatted(resourceType.name(), resourceType.name())));
     }
-    return joinLines(result) + "\n};";
+    result.add("};");
+    result.add("type ResourceUnion =");
+    for (final var resourceType : resourceTypes) {
+      result.add(indent("| \"%s\"".formatted(resourceType.name())));
+    }
+    return joinLines(result) + ";";
   }
 
   private static String generateActivityTypeEnum(ArrayList<ActivityTypeCode> activityTypeCodes) {
@@ -103,7 +129,7 @@ public class TypescriptCodeGenerationService {
   private static String generateActivityArgumentTypes(final Iterable<TypescriptCodeGenerationService.ActivityParameter> parameterTypes) {
     final var result = new ArrayList<String>();
     for (final var parameterType : parameterTypes) {
-      result.add("%s: %s,".formatted(parameterType.name(), ActivityParameterType.toString(parameterType.type())));
+      result.add("%s: %s,".formatted(parameterType.name(), TypescriptType.toString(parameterType.type())));
     }
     return joinLines(result);
   }
@@ -114,7 +140,7 @@ public class TypescriptCodeGenerationService {
       result.add(String.format("%s: (", activityTypeCode.activityTypeName()));
       result.add(indent("args: {"));
       for (final var parameterType : activityTypeCode.parameterTypes()) {
-        result.add(indent(indent("%s: %s,".formatted(parameterType.name(), ActivityParameterType.toString(parameterType.type())))));
+        result.add(indent(indent("%s: %s,".formatted(parameterType.name(), TypescriptType.toString(parameterType.type())))));
       }
       result.add(indent("}) => %s".formatted(activityTypeCode.activityTypeName())));
     }
@@ -130,21 +156,21 @@ public class TypescriptCodeGenerationService {
   }
 
   private record ActivityTypeCode(String activityTypeName, List<ActivityParameter> parameterTypes) {}
-  private record ActivityParameter(String name, ActivityParameterType type) {}
-  private sealed interface ActivityParameterType {
-    record TSString() implements ActivityParameterType {}
-    record TSDouble() implements ActivityParameterType {}
-    record TSBoolean() implements ActivityParameterType {}
-    record TSInt() implements ActivityParameterType {}
-    record TSDuration() implements ActivityParameterType {}
-    record TSArray(ActivityParameterType elementType) implements ActivityParameterType {}
-    record TSStruct(List<Pair<String, ActivityParameterType>> keysAndTypes) implements ActivityParameterType {}
-    record TSEnum(List<String> values) implements ActivityParameterType {}
+  private record ActivityParameter(String name, TypescriptType type) {}
+  private sealed interface TypescriptType {
+    record TSString() implements TypescriptType {}
+    record TSDouble() implements TypescriptType {}
+    record TSBoolean() implements TypescriptType {}
+    record TSInt() implements TypescriptType {}
+    record TSDuration() implements TypescriptType {}
+    record TSArray(TypescriptType elementType) implements TypescriptType {}
+    record TSStruct(List<Pair<String, TypescriptType>> keysAndTypes) implements TypescriptType {}
+    record TSEnum(List<String> values) implements TypescriptType {}
 
     /**
      * Print this type out in one line.
      */
-    static String toString(final ActivityParameterType type) {
+    static String toString(final TypescriptType type) {
       if (type instanceof TSString) {
         return "string";
       } else if (type instanceof TSDouble) {
@@ -165,7 +191,7 @@ public class TypescriptCodeGenerationService {
       } else if (type instanceof TSEnum t) {
         return "(" + String.join(" | ", t.values().stream().map(x -> "\"" + x + "\"").toList()) + ")";
       } else {
-        throw new Error("Unhandled variant of ActivityParameterType: " + type);
+        throw new Error("Unhandled variant of TypescriptType: " + type);
       }
     }
   }
@@ -184,46 +210,46 @@ public class TypescriptCodeGenerationService {
         .toList();
   }
 
-  private static ActivityParameterType valueSchemaToTypescriptType(final ValueSchema valueSchema) {
+  private static TypescriptType valueSchemaToTypescriptType(final ValueSchema valueSchema) {
     return valueSchema.match(new ValueSchema.Visitor<>() {
       @Override
-      public ActivityParameterType onReal() {
-        return new ActivityParameterType.TSDouble();
+      public TypescriptType onReal() {
+        return new TypescriptType.TSDouble();
       }
 
       @Override
-      public ActivityParameterType onInt() {
-        return new ActivityParameterType.TSInt();
+      public TypescriptType onInt() {
+        return new TypescriptType.TSInt();
       }
 
       @Override
-      public ActivityParameterType onBoolean() {
-        return new ActivityParameterType.TSBoolean();
+      public TypescriptType onBoolean() {
+        return new TypescriptType.TSBoolean();
       }
 
       @Override
-      public ActivityParameterType onString() {
-        return new ActivityParameterType.TSString();
+      public TypescriptType onString() {
+        return new TypescriptType.TSString();
       }
 
       @Override
-      public ActivityParameterType onDuration() {
-        return new ActivityParameterType.TSDuration();
+      public TypescriptType onDuration() {
+        return new TypescriptType.TSDuration();
       }
 
       @Override
-      public ActivityParameterType onPath() {
-        return new ActivityParameterType.TSString();
+      public TypescriptType onPath() {
+        return new TypescriptType.TSString();
       }
 
       @Override
-      public ActivityParameterType onSeries(final ValueSchema value) {
-        return new ActivityParameterType.TSArray(valueSchemaToTypescriptType(value));
+      public TypescriptType onSeries(final ValueSchema value) {
+        return new TypescriptType.TSArray(valueSchemaToTypescriptType(value));
       }
 
       @Override
-      public ActivityParameterType onStruct(final Map<String, ValueSchema> value) {
-        return new ActivityParameterType.TSStruct(
+      public TypescriptType onStruct(final Map<String, ValueSchema> value) {
+        return new TypescriptType.TSStruct(
             value
                 .entrySet()
                 .stream()
@@ -236,8 +262,8 @@ public class TypescriptCodeGenerationService {
       }
 
       @Override
-      public ActivityParameterType onVariant(final List<ValueSchema.Variant> variants) {
-        return new ActivityParameterType.TSEnum(
+      public TypescriptType onVariant(final List<ValueSchema.Variant> variants) {
+        return new TypescriptType.TSEnum(
             variants
                 .stream()
                 .map(ValueSchema.Variant::label)

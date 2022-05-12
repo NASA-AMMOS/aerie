@@ -1,5 +1,5 @@
 import * as AST from './windows-expressions-ast'
-import { ActivityType, Resource } from "./mission-model-generated-code";
+import { ActivityType, Resource, transition } from "./mission-model-generated-code";
 
 export class WindowSet {
   public readonly __astnode: AST.WindowsExpression;
@@ -90,7 +90,7 @@ declare global {
     public static equalTo(resource: Resource, value: Double): WindowSet
     public static notEqualTo(resource: Resource, value: Double): WindowSet
     public static between(resource: Resource, lowerBound: Double, upperBound: Double): WindowSet
-    public static transition(resource: Resource, from: any, to: any): WindowSet
+    public static transition: typeof transition
     public static during(activityType: ActivityType): WindowSet
     public static all(...windowSets: WindowSet[]): WindowSet
     public static any(...windowSets: WindowSet[]): WindowSet

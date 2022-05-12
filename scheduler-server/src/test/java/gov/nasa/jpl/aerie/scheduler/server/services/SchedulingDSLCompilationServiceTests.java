@@ -243,7 +243,7 @@ class SchedulingDSLCompilationServiceTests {
   }
 
   @Test
-  void strictTypeCheckingTest() {
+  void strictTypeCheckingTest_astNode() {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(PLAN_ID, """
           interface FakeGoal {
             and(...others: FakeGoal[]): FakeGoal;
@@ -266,6 +266,30 @@ class SchedulingDSLCompilationServiceTests {
       assertEquals(r.errors().size(), 1);
       assertEquals(
           "TypeError: TS2741 Incorrect return type. Property '__astNode' is missing in type 'FakeGoal' but required in type 'Goal'.",
+          r.errors().get(0).message()
+      );
+    }
+  }
+
+  @Test
+  void strictTypeCheckingTest_transition() {
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(PLAN_ID, """
+          export default function() {
+            return Goal.CoexistenceGoal({
+              activityTemplate: ActivityTemplates.SampleActivity1({
+                variant: 'option2',
+                fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
+                duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+              }),
+              forEach: WindowSet.transition(Resources["/sample/resource/1"], "Chiquita", "Dole")
+            })
+          }
+        """);
+
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      assertEquals(1, r.errors().size());
+      assertEquals(
+          "TypeError: TS2345 Argument of type 'string' is not assignable to parameter of type 'number'.",
           r.errors().get(0).message()
       );
     }
