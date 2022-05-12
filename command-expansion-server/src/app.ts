@@ -109,16 +109,20 @@ app.post('/put-dictionary', async (req, res, next) => {
 });
 
 app.post('/put-expansion', async (req, res, next) => {
+  const context: Context = res.locals.context;
+
   const activityTypeName = req.body.input.activityTypeName as string;
   const expansionLogicBase64 = req.body.input.expansionLogic as string;
+  const authoringCommandDictionaryId = req.body.input.authoringCommandDictionaryId as number | null;
+  const authoringMissionModelId = req.body.input.authoringMissionModelId as number | null;
 
   const { rows } = await db.query(
     `
-    INSERT INTO expansion_rule (activity_type, expansion_logic)
-    VALUES ($1, $2)
+    INSERT INTO expansion_rule (activity_type, expansion_logic, authoring_command_dict_id, authoring_mission_model_id)
+    VALUES ($1, $2, $3, $4)
     RETURNING id;
   `,
-    [activityTypeName, expansionLogicBase64],
+    [activityTypeName, expansionLogicBase64, authoringCommandDictionaryId, authoringMissionModelId],
   );
 
   if (rows.length < 1) {
@@ -127,7 +131,23 @@ app.post('/put-expansion', async (req, res, next) => {
 
   const id = rows[0].id;
   logger.info(`POST /put-expansion: Updated expansion in the database: id=${id}`);
-  res.status(200).json({ id });
+
+  if (authoringMissionModelId == null || authoringCommandDictionaryId == null) {
+    res.status(200).json({ id })
+    return next();
+  }
+
+  const commandTypes = await context.commandTypescriptDataLoader.load({ dictionaryId: authoringCommandDictionaryId });
+  const activitySchema = await context.activitySchemaDataLoader.load({missionModelId: authoringMissionModelId, activityTypeName });
+  const activityTypescript = generateTypescriptForGraphQLActivitySchema(activitySchema);
+
+  const result = await (piscina.run({
+    expansionLogic: Buffer.from(expansionLogicBase64, 'base64').toString('utf8'),
+    commandTypes: commandTypes,
+    activityTypes: activityTypescript,
+  }, { name: 'typecheckExpansion' }) as ReturnType<typeof typecheckExpansion>);
+
+  res.status(200).json({ id, errors: result.errors });
   return next();
 });
 
