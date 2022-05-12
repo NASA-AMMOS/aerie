@@ -243,16 +243,6 @@ public final class ConstraintsDSL {
             $ -> tuple(Unit.UNIT, $.expression)));
   }
 
-  static JsonParser<IfThen> ifThenF(final JsonParser<Expression<Windows>> windowsExpressionP) {
-    return productP
-        .field("kind", literalP("WindowsExpressionIfThen"))
-        .field("condition", windowsExpressionP)
-        .field("expression", windowsExpressionP)
-        .map(Iso.of(
-            untuple((kind, cond, expr) -> new IfThen(cond, expr)),
-            $ -> tuple(Unit.UNIT, $.condition, $.expression)));
-  }
-
   static JsonParser<ForEachActivity> forEachActivityF(final JsonParser<Expression<List<Violation>>> violationListExpressionP) {
     return productP
         .field("kind", literalP("ForEachActivity"))

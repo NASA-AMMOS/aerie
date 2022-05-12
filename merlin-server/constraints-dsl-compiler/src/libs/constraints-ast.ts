@@ -21,7 +21,6 @@ export enum NodeKind {
   WindowsExpressionAll = 'WindowsExpressionAll',
   WindowsExpressionAny = 'WindowsExpressionAny',
   WindowsExpressionNot = 'WindowsExpressionNot',
-  WindowsExpressionIfThen = 'WindowsExpressionIfThen',
   ForEachActivity = 'ForEachActivity',
   ProfileChanged = 'ProfileChanged',
   ForbiddenActivityOverlap = 'ForbiddenActivityOverlap',
@@ -69,17 +68,10 @@ export type WindowsExpression =
   | WindowsExpressionAll
   | WindowsExpressionAny
   | WindowsExpressionNot
-  | WindowsExpressionIfThen
 
 export interface ProfileChanged {
   kind: NodeKind.ProfileChanged,
   expression: ProfileExpression
-}
-
-export interface WindowsExpressionIfThen {
-  kind: NodeKind.WindowsExpressionIfThen,
-  condition: WindowsExpression,
-  expression: WindowsExpression
 }
 
 export interface WindowsExpressionNot {
