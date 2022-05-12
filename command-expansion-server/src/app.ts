@@ -111,14 +111,16 @@ app.post('/put-dictionary', async (req, res, next) => {
 app.post('/put-expansion', async (req, res, next) => {
   const activityTypeName = req.body.input.activityTypeName as string;
   const expansionLogicBase64 = req.body.input.expansionLogic as string;
+  const authoringCommandDictionaryId = req.body.input.authoringCommandDictionaryId as number | null;
+  const authoringMissionModelId = req.body.input.authoringMissionModelId as number | null;
 
   const { rows } = await db.query(
     `
-    INSERT INTO expansion_rule (activity_type, expansion_logic)
-    VALUES ($1, $2)
+    INSERT INTO expansion_rule (activity_type, expansion_logic, authoring_command_dict_id, authoring_mission_model_id)
+    VALUES ($1, $2, $3, $4)
     RETURNING id;
   `,
-    [activityTypeName, expansionLogicBase64],
+    [activityTypeName, expansionLogicBase64, authoringCommandDictionaryId, authoringMissionModelId],
   );
 
   if (rows.length < 1) {
