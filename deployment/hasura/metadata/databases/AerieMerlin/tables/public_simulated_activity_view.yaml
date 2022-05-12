@@ -1,0 +1,50 @@
+table:
+  name: simulated_activity
+  schema: public
+object_relationships:
+- name: dataset
+  using:
+    manual_configuration:
+      remote_table:
+        name: dataset
+        schema: public
+      insertion_order: null
+      column_mapping:
+        dataset_id: id
+- name: parent_simulated_activity
+  using:
+    manual_configuration:
+      remote_table:
+        name: simulated_activity
+        schema: public
+      insertion_order: null
+      column_mapping:
+        parent_simulated_activity_id: simulated_activity_id
+- name: plan
+  using:
+    manual_configuration:
+      remote_table:
+        name: plan
+        schema: public
+      insertion_order: null
+      column_mapping:
+        plan_id: id
+- name: activity
+  using:
+    manual_configuration:
+      remote_table:
+        name: activity
+        schema: public
+      insertion_order: null
+      column_mapping:
+        activity_id: id
+- name: mission_model
+  using:
+    manual_configuration:
+      remote_table:
+        name: mission_model
+        schema: public
+      insertion_order: null
+      column_mapping:
+        model_id: id
+

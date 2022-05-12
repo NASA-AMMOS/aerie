@@ -16,3 +16,4 @@
 - "!include public_uploaded_file.yaml"
 - "!include public_topic.yaml"
 - "!include public_event.yaml"
+- "!include public_simulated_activity_view.yaml"
