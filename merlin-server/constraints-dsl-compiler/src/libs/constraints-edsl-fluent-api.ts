@@ -138,7 +138,10 @@ export class Real {
       profile: this.__astNode
     })
   }
-  public plus(other: Real): Real {
+  public plus(other: Real | number): Real {
+    if (!(other instanceof Real)) {
+      other = Real.Value(other);
+    }
     return new Real({
       kind: AST.NodeKind.RealProfilePlus,
       left: this.__astNode,
@@ -146,28 +149,40 @@ export class Real {
     })
   }
 
-  public lessThan(other: Real): Windows {
+  public lessThan(other: Real | number): Windows {
+    if (!(other instanceof Real)) {
+      other = Real.Value(other);
+    }
     return new Windows({
       kind: AST.NodeKind.RealProfileLessThan,
       left: this.__astNode,
       right: other.__astNode
     })
   }
-  public lessThanOrEqual(other: Real): Windows {
+  public lessThanOrEqual(other: Real | number): Windows {
+    if (!(other instanceof Real)) {
+      other = Real.Value(other);
+    }
     return new Windows({
       kind: AST.NodeKind.RealProfileLessThanOrEqual,
       left: this.__astNode,
       right: other.__astNode
     })
   }
-  public greaterThan(other: Real): Windows {
+  public greaterThan(other: Real | number): Windows {
+    if (!(other instanceof Real)) {
+      other = Real.Value(other);
+    }
     return new Windows({
       kind: AST.NodeKind.RealProfileGreaterThan,
       left: this.__astNode,
       right: other.__astNode
     })
   }
-  public greaterThanOrEqual(other: Real): Windows {
+  public greaterThanOrEqual(other: Real | number): Windows {
+    if (!(other instanceof Real)) {
+      other = Real.Value(other);
+    }
     return new Windows({
       kind: AST.NodeKind.RealProfileGreaterThanOrEqual,
       left: this.__astNode,
@@ -175,14 +190,20 @@ export class Real {
     })
   }
 
-  public equal(other: Real): Windows {
+  public equal(other: Real | number): Windows {
+    if (!(other instanceof Real)) {
+      other = Real.Value(other);
+    }
     return new Windows({
       kind: AST.NodeKind.ExpressionEqual,
       left: this.__astNode,
       right: other.__astNode
     })
   }
-  public notEqual(other: Real): Windows {
+  public notEqual(other: Real | number): Windows {
+    if (!(other instanceof Real)) {
+      other = Real.Value(other);
+    }
     return new Windows({
       kind: AST.NodeKind.ExpressionNotEqual,
       left: this.__astNode,
@@ -234,14 +255,20 @@ export class Discrete {
     })
   }
 
-  public equal(other: Discrete): Windows {
+  public equal(other: any): Windows {
+    if (!(other instanceof Discrete)) {
+      other = Discrete.Value(other);
+    }
     return new Windows({
       kind: AST.NodeKind.ExpressionEqual,
       left: this.__astNode,
       right: other.__astNode
     })
   }
-  public notEqual(other: Discrete): Windows {
+  public notEqual(other: any): Windows {
+    if (!(other instanceof Discrete)) {
+      other = Discrete.Value(other);
+    }
     return new Windows({
       kind: AST.NodeKind.ExpressionNotEqual,
       left: this.__astNode,
@@ -312,15 +339,15 @@ declare global {
 
     public rate(): Real
     public times(multiplier: number): Real
-    public plus(other: Real): Real
+    public plus(other: Real | number): Real
 
-    public lessThan(other: Real): Windows
-    public lessThanOrEqual(other: Real): Windows
-    public greaterThan(other: Real): Windows
-    public greaterThanOrEqual(other: Real): Windows
+    public lessThan(other: Real | number): Windows
+    public lessThanOrEqual(other: Real | number): Windows
+    public greaterThan(other: Real | number): Windows
+    public greaterThanOrEqual(other: Real | number): Windows
 
-    public equal(other: Real): Windows
-    public notEqual(other: Real): Windows
+    public equal(other: Real | number): Windows
+    public notEqual(other: Real | number): Windows
 
     public changed(): Windows
   }
@@ -335,8 +362,8 @@ declare global {
 
     public transition<T>(from: T, to: T): Windows
 
-    public equal(other: Discrete): Windows
-    public notEqual(other: Discrete): Windows
+    public equal(other: any): Windows
+    public notEqual(other: any): Windows
 
     public changed(): Windows
   }
