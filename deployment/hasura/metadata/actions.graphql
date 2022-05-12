@@ -164,6 +164,7 @@ type ExpansionSetResponse {
 
 type AddCommandExpansionResponse {
   id: Int!
+  errors: [UserCodeError!]
 }
 
 type TypeScriptResponse {
