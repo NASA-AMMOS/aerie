@@ -37,10 +37,6 @@ async function handleRequest(data: Buffer) {
       return;
     }
 
-    // We're doing a string index in order to access the private method __serialize of Constraint
-    // The previous strategy of exporting a symbol and using it to get at a public method
-    // didn't work because the symbol in the vm is different than the symbol we were using
-    // here to deserialize the Constraint due to different evaluation contexts
     const stringified = JSON.stringify(result.unwrap().__astNode);
     if (stringified === undefined) {
       throw Error(JSON.stringify(result.unwrap()) + ' was not JSON serializable');
