@@ -10,6 +10,20 @@ export class WindowSet {
     return new WindowSet(windowSpecifier);
   }
 
+  public static all(...windowSets: WindowSet[]): WindowSet {
+    return WindowSet.new({
+      kind: AST.NodeKind.WindowsExpressionAnd,
+      windowsExpressions: windowSets.map(windowSet => windowSet.__astnode),
+    });
+  }
+
+  public static any(...windowSets: WindowSet[]): WindowSet {
+    return WindowSet.new({
+      kind: AST.NodeKind.WindowsExpressionOr,
+      windowsExpressions: windowSets.map(windowSet => windowSet.__astnode),
+    });
+  }
+
   public static greaterThan(resource: Resource, value: Double): WindowSet {
     return WindowSet.new({
       kind: AST.NodeKind.WindowsExpressionGreaterThan,
@@ -68,6 +82,8 @@ declare global {
     public static notEqualTo(resource: Resource, value: Double): WindowSet
     public static between(resource: Resource, lowerBound: Double, upperBound: Double): WindowSet
     public static during(activityType: ActivityType): WindowSet
+    public static all(...windowSets: WindowSet[]): WindowSet
+    public static any(...windowSets: WindowSet[]): WindowSet
   }
 }
 

@@ -5,6 +5,8 @@ export enum NodeKind {
   WindowsExpressionEqualLinear = 'WindowsExpressionEqualLinear',
   WindowsExpressionNotEqualLinear = 'WindowsExpressionNotEqualLinear',
   WindowsExpressionBetween = 'WindowsExpressionBetween',
+  WindowsExpressionAnd = 'WindowsExpressionAnd',
+  WindowsExpressionOr = 'WindowsExpressionOr',
 }
 
 export interface ActivityExpression {
@@ -46,6 +48,16 @@ export interface WindowsExpressionBetween {
   upperBound: number
 }
 
+export interface WindowsExpressionAnd {
+  kind: NodeKind.WindowsExpressionAnd,
+  windowsExpressions: WindowsExpression[]
+}
+
+export interface WindowsExpressionOr {
+  kind: NodeKind.WindowsExpressionOr,
+  windowsExpressions: WindowsExpression[]
+}
+
 export type WindowsExpression =
     | ActivityExpression
     | WindowsExpressionGreaterThan
@@ -53,3 +65,5 @@ export type WindowsExpression =
     | WindowsExpressionEqualLinear
     | WindowsExpressionNotEqualLinear
     | WindowsExpressionBetween
+    | WindowsExpressionAnd
+    | WindowsExpressionOr
