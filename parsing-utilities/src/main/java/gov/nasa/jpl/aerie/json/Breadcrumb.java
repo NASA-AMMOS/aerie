@@ -16,6 +16,11 @@ public abstract class Breadcrumb {
       public <Result> Result visit(final BreadcrumbVisitor<Result> visitor) {
         return visitor.onString(breadcrumb);
       }
+
+      @Override
+      public String toString() {
+        return breadcrumb;
+      }
     };
   }
 
@@ -24,6 +29,11 @@ public abstract class Breadcrumb {
       @Override
       public <Result> Result visit(final BreadcrumbVisitor<Result> visitor) {
         return visitor.onInteger(breadcrumb);
+      }
+
+      @Override
+      public String toString() {
+        return Integer.toString(breadcrumb);
       }
     };
   }

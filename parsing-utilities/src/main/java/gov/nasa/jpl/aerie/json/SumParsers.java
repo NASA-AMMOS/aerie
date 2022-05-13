@@ -72,7 +72,7 @@ public final class SumParsers {
             return variant.parser().parse(prunedObj).mapSuccess($ -> $);
           }
 
-          return JsonParseResult.failure("invalid tag");
+          return JsonParseResult.failure("invalid tag '%s'".formatted(tag));
         } else {
           throw new RuntimeException(
               "Unknown subclass %s of class %s with value %s"

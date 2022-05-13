@@ -149,7 +149,13 @@ type SchedulingResponse {
 type SchedulingDslTypescriptResponse {
   status: SchedulingDslTypescriptResponseStatus!
   typescript: String
+  typescriptFiles: [TypescriptFile]
   reason: String
+}
+
+type TypescriptFile {
+  filename: String,
+  contents: String
 }
 
 type CommandDictionaryResponse {

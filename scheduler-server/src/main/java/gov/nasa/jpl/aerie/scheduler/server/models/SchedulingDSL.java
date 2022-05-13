@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import java.util.List;
 import java.util.Map;
 
+import static gov.nasa.jpl.aerie.json.BasicParsers.doubleP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
@@ -47,16 +48,99 @@ public class SchedulingDSL {
                   goalDefinition.activityTemplate(),
                   goalDefinition.interval())));
 
-  private static final JsonParser<ActivityExpression> activityExpressionP =
+  private static final ProductParsers.JsonObjectParser<ActivityExpression> activityExpressionP =
       productP
           .field("type", stringP)
-          .map(Iso.of(ActivityExpression::new,
-                      ActivityExpression::type));
+          .map(Iso.of(
+              ActivityExpression::new,
+              ActivityExpression::type));
+
+  private static final JsonParser<LinearResource> linearResourceP =
+      stringP
+          .map(Iso.of(LinearResource::new, LinearResource::name));
+
+  private static final ProductParsers.JsonObjectParser<ConstraintExpression.GreaterThan> greaterThanP =
+      productP
+          .field("left", linearResourceP)
+          .field("right", doubleP)
+          .map(Iso.of(
+              untuple(ConstraintExpression.GreaterThan::new),
+              $ -> tuple($.resource(), $.value())));
+
+  private static final ProductParsers.JsonObjectParser<ConstraintExpression.LessThan> lessThanP =
+      productP
+          .field("left", linearResourceP)
+          .field("right", doubleP)
+          .map(Iso.of(
+              untuple(ConstraintExpression.LessThan::new),
+              $ -> tuple($.resource(), $.value())));
+
+  private static final ProductParsers.JsonObjectParser<ConstraintExpression.EqualLinear> equalLinearP =
+      productP
+          .field("left", linearResourceP)
+          .field("right", doubleP)
+          .map(Iso.of(
+              untuple(ConstraintExpression.EqualLinear::new),
+              $ -> tuple($.resource(), $.value())));
+
+  private static final ProductParsers.JsonObjectParser<ConstraintExpression.NotEqualLinear> notEqualLinearP =
+      productP
+          .field("left", linearResourceP)
+          .field("right", doubleP)
+          .map(Iso.of(
+              untuple(ConstraintExpression.NotEqualLinear::new),
+              $ -> tuple($.resource(), $.value())));
+
+  private static final ProductParsers.JsonObjectParser<ConstraintExpression.Between> betweenP =
+      productP
+          .field("resource", linearResourceP)
+          .field("lowerBound", doubleP)
+          .field("upperBound", doubleP)
+          .map(Iso.of(
+              untuple(ConstraintExpression.Between::new),
+              $ -> tuple($.resource(), $.lowerBound(), $.upperBound())));
+
+  private static final ProductParsers.JsonObjectParser<ConstraintExpression.Transition> transitionP =
+      productP
+          .field("resource", linearResourceP)
+          .field("from", serializedValueP)
+          .field("to", serializedValueP)
+          .map(Iso.of(
+              untuple(ConstraintExpression.Transition::new),
+              $ -> tuple($.resource(), $.from(), $.to())));
+
+  private static ProductParsers.JsonObjectParser<ConstraintExpression.And> windowsAndF(final JsonParser<ConstraintExpression> constraintExpressionP) {
+    return productP
+        .field("windowsExpressions", listP(constraintExpressionP))
+        .map(Iso.of(untuple(ConstraintExpression.And::new),
+                    ConstraintExpression.And::expressions));
+  }
+
+  private static ProductParsers.JsonObjectParser<ConstraintExpression.Or> windowsOrF(final JsonParser<ConstraintExpression> constraintExpressionP) {
+    return productP
+        .field("windowsExpressions", listP(constraintExpressionP))
+        .map(Iso.of(untuple(ConstraintExpression.Or::new),
+                    ConstraintExpression.Or::expressions));
+  }
+
+  private static final JsonParser<ConstraintExpression> constraintExpressionP =
+      recursiveP(self -> SumParsers.sumP("kind", ConstraintExpression.class, List.of(
+          SumParsers.variant("ActivityExpression", ConstraintExpression.ActivityExpression.class, activityExpressionP.map(Iso.of(
+              ConstraintExpression.ActivityExpression::new,
+              ConstraintExpression.ActivityExpression::expression))),
+          SumParsers.variant("WindowsExpressionGreaterThan", ConstraintExpression.GreaterThan.class, greaterThanP),
+          SumParsers.variant("WindowsExpressionLessThan", ConstraintExpression.LessThan.class, lessThanP),
+          SumParsers.variant("WindowsExpressionEqualLinear", ConstraintExpression.EqualLinear.class, equalLinearP),
+          SumParsers.variant("WindowsExpressionNotEqualLinear", ConstraintExpression.NotEqualLinear.class, notEqualLinearP),
+          SumParsers.variant("WindowsExpressionBetween", ConstraintExpression.Between.class, betweenP),
+          SumParsers.variant("WindowsExpressionTransition", ConstraintExpression.Transition.class, transitionP),
+          SumParsers.variant("WindowsExpressionAnd", ConstraintExpression.And.class, windowsAndF(self)),
+          SumParsers.variant("WindowsExpressionOr", ConstraintExpression.Or.class, windowsOrF(self)))));
 
   private static final ProductParsers.JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP =
       productP
           .field("activityTemplate", activityTemplateP)
-          .field("forEach", activityExpressionP)
+          .field("forEach", constraintExpressionP)
           .map(Iso.of(
               untuple(GoalSpecifier.CoexistenceGoalDefinition::new),
               goalDefinition -> tuple(
@@ -97,14 +181,35 @@ public class SchedulingDSL {
     ) implements GoalSpecifier {}
     record CoexistenceGoalDefinition(
         ActivityTemplate activityTemplate,
-        ActivityExpression forEach
+        ConstraintExpression forEach
     ) implements GoalSpecifier {}
     record GoalAnd(List<GoalSpecifier> goals) implements GoalSpecifier {}
     record GoalOr(List<GoalSpecifier> goals) implements GoalSpecifier {}
   }
 
+  public record LinearResource(String name) {}
 
   public record ActivityTemplate(String activityType, Map<String, SerializedValue> arguments) {}
 
   public record ActivityExpression(String type) {}
+
+  public sealed interface ConstraintExpression {
+    record ActivityExpression(SchedulingDSL.ActivityExpression expression) implements ConstraintExpression {}
+
+    record GreaterThan(LinearResource resource, double value) implements ConstraintExpression {}
+
+    record LessThan(LinearResource resource, double value) implements ConstraintExpression {}
+
+    record EqualLinear(LinearResource resource, double value) implements ConstraintExpression {}
+
+    record NotEqualLinear(LinearResource resource, double value) implements ConstraintExpression {}
+
+    record Between(LinearResource resource, double lowerBound, double upperBound) implements ConstraintExpression {}
+
+    record Transition(LinearResource resource, SerializedValue from, SerializedValue to) implements ConstraintExpression {}
+
+    record And(List<ConstraintExpression> expressions) implements ConstraintExpression {}
+
+    record Or(List<ConstraintExpression> expressions) implements ConstraintExpression {}
+  }
 }

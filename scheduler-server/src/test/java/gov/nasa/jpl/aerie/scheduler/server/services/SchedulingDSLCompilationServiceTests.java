@@ -1,25 +1,16 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
-import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
-import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
-import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -35,79 +26,15 @@ class SchedulingDSLCompilationServiceTests {
 
   @BeforeAll
   void setUp() throws IOException {
-    schedulingDSLCompilationService = new SchedulingDSLCompilationService(new TypescriptCodeGenerationService(new MerlinService() {
+    schedulingDSLCompilationService = new SchedulingDSLCompilationService(new TypescriptCodeGenerationService(new MissionModelService() {
       @Override
-      public long getPlanRevision(final PlanId planId) {
-        return 0;
-      }
-
-      @Override
-      public PlanMetadata getPlanMetadata(final PlanId planId) {
-        return null;
-      }
-
-      @Override
-      public MerlinPlan getPlanActivities(final PlanMetadata planMetadata, final Problem mission)
-      {
-        return null;
-      }
-
-      @Override
-      public Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivities(
-          final PlanMetadata planMetadata,
-          final Plan plan)
-      {
-        return null;
-      }
-
-      @Override
-      public PlanId createEmptyPlan(
-          final String name,
-          final long modelId,
-          final Instant startTime,
-          final Duration duration)
-      {
-        return null;
-      }
-
-      @Override
-      public void createSimulationForPlan(final PlanId planId) {
-
-      }
-
-      @Override
-      public Map<ActivityInstance, ActivityInstanceId> updatePlanActivities(final PlanId planId,
-                                                                            final Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
-                                                                            final MerlinPlan initialPlan,
-                                                                            final Plan plan)
-      {
-        return null;
-      }
-
-      @Override
-      public void ensurePlanExists(final PlanId planId) {
-
-      }
-
-      @Override
-      public void clearPlanActivities(final PlanId planId) {
-
-      }
-
-      @Override
-      public Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(final PlanId planId, final Plan plan)
-      {
-        return null;
-      }
-
-      @Override
-      public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final PlanId missionModelId)
+      public MissionModelTypes getMissionModelTypes(final PlanId missionModelId)
       {
         return MISSION_MODEL_TYPES;
       }
 
       @Override
-      public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
+      public MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
       {
         return MISSION_MODEL_TYPES;
       }
@@ -279,7 +206,7 @@ class SchedulingDSLCompilationServiceTests {
   }
 
   @Test
-  void testCoexistenceGoal() {
+  void testCoexistenceGoalActivityExpression() {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(PLAN_ID, """
           export default function() {
             return Goal.CoexistenceGoal({
@@ -288,7 +215,7 @@ class SchedulingDSLCompilationServiceTests {
                 fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
                 duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
               }),
-              forEach: ActivityTypes.SampleActivity1,
+              forEach: WindowSet.during(ActivityTypes.SampleActivity1)
             })
           }
         """);
@@ -306,7 +233,7 @@ class SchedulingDSLCompilationServiceTests {
                                                      Map.entry("duration", SerializedValue.of(60L * 60 * 1000 * 1000))
                                                  )
               ),
-              new SchedulingDSL.ActivityExpression("SampleActivity1")
+              new SchedulingDSL.ConstraintExpression.ActivityExpression(new SchedulingDSL.ActivityExpression("SampleActivity1"))
           ),
           r.goalSpecifier()
       );
@@ -316,7 +243,7 @@ class SchedulingDSLCompilationServiceTests {
   }
 
   @Test
-  void strictTypeCheckingTest() {
+  void strictTypeCheckingTest_astNode() {
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(PLAN_ID, """
           interface FakeGoal {
             and(...others: FakeGoal[]): FakeGoal;
@@ -341,6 +268,67 @@ class SchedulingDSLCompilationServiceTests {
           "TypeError: TS2741 Incorrect return type. Property '__astNode' is missing in type 'FakeGoal' but required in type 'Goal'.",
           r.errors().get(0).message()
       );
+    }
+  }
+
+  @Test
+  void strictTypeCheckingTest_transition() {
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(PLAN_ID, """
+          export default function() {
+            return Goal.CoexistenceGoal({
+              activityTemplate: ActivityTemplates.SampleActivity1({
+                variant: 'option2',
+                fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
+                duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+              }),
+              forEach: WindowSet.transition(Resources["/sample/resource/1"], "Chiquita", "Dole")
+            })
+          }
+        """);
+
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      assertEquals(1, r.errors().size());
+      assertEquals(
+          "TypeError: TS2345 Argument of type 'string' is not assignable to parameter of type 'number'.",
+          r.errors().get(0).message()
+      );
+    }
+  }
+
+  @Test
+  void testCoexistenceGoalStateConstraint() {
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(PLAN_ID, """
+          export default function() {
+            return Goal.CoexistenceGoal({
+              activityTemplate: ActivityTemplates.SampleActivity1({
+                variant: 'option2',
+                fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
+                duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+              }),
+              forEach: WindowSet.gt(Resources["/sample/resource/1"], 50.0)
+            })
+          }
+        """);
+
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+      assertEquals(
+          new SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition(
+              new SchedulingDSL.ActivityTemplate("SampleActivity1",
+                                                 Map.ofEntries(
+                                                     Map.entry("variant", SerializedValue.of("option2")),
+                                                     Map.entry("fancy", SerializedValue.of(Map.ofEntries(
+                                                         Map.entry("subfield1", SerializedValue.of("value1")),
+                                                         Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
+                                                         )))),
+                                                     Map.entry("duration", SerializedValue.of(60L * 60 * 1000 * 1000))
+                                                 )
+              ),
+              new SchedulingDSL.ConstraintExpression.GreaterThan(new SchedulingDSL.LinearResource("/sample/resource/1"), 50.0)
+          ),
+          r.goalSpecifier()
+      );
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      fail(r.toString());
     }
   }
 }

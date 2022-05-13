@@ -62,7 +62,7 @@ import java.util.stream.Collectors;
 //TODO: will eventually need scheduling goal service arg to pull goals from scheduler's own data store
 public record SynchronousSchedulerAgent(
     SpecificationService specificationService,
-    MerlinService merlinService,
+    PlanService.OwnerRole merlinService,
     Path modelJarsDir,
     Path goalsJarPath,
     PlanOutputMode outputMode
@@ -120,7 +120,8 @@ public record SynchronousSchedulerAgent(
                 goalRecord.definition(),
                 specification.horizonStartTimestamp(),
                 specification.horizonEndTimestamp(),
-                problem::getActivityType);
+                problem::getActivityType,
+                problem.getSimulationFacade()::getResource);
         orderedGoals.add(goal);
         goals.put(goal, goalRecord.id());
       }
@@ -150,7 +151,7 @@ public record SynchronousSchedulerAgent(
         NoSuchSpecificationException |
         NoSuchPlanException |
         IOException |
-        MerlinService.MerlinServiceException e) {
+        PlanServiceException e) {
       // unwrap failure message from any anticipated exceptions and forward to subscribers
       writer.failWith(e.toString());
     }
@@ -172,7 +173,7 @@ public record SynchronousSchedulerAgent(
   private long getMerlinPlanRev(final PlanId planId) {
     try {
       return merlinService.getPlanRevision(planId);
-    } catch (NoSuchPlanException | IOException | MerlinService.MerlinServiceException e) {
+    } catch (NoSuchPlanException | IOException | PlanServiceException e) {
       throw new ResultsProtocolFailure(e);
     }
   }

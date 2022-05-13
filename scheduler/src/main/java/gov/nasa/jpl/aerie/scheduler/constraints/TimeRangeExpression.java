@@ -123,7 +123,7 @@ public class TimeRangeExpression {
   protected String name = "TRE_" + Math.abs(new Random().nextInt());
   protected List<TimeRangeExpression> timeRangeExpressions;
   protected List<Object> filtersAndTransformers;
-  protected List<StateConstraintExpression> stateExpr;
+  public List<StateConstraintExpression> stateExpr;
   protected List<ExternalState> constantsStates;
   private ActivityExpression actTemplate;
 
