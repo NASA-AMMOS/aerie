@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.server.http.MissionModelRepositoryExceptionBind
 import gov.nasa.jpl.aerie.merlin.server.mocks.Fixtures;
 import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryMissionModelRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.ConstraintsDSLCompilationService;
+import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
@@ -46,11 +47,13 @@ public final class DevAppDriver {
         false
     );
 
+    final var generateConstraintsLibAction = new GenerateConstraintsLibAction(typescriptCodeGenerationService);
+
     // Configure an HTTP server.
     final Javalin javalin = Javalin.create(config -> {
         config.enableDevLogging();
         config.enableCorsForAllOrigins();
-        config.registerPlugin(new MerlinBindings(missionModelController, planController, simulationAction));
+        config.registerPlugin(new MerlinBindings(missionModelController, planController, simulationAction, generateConstraintsLibAction));
         config.registerPlugin(new LocalAppExceptionBindings());
         config.registerPlugin(new MissionModelRepositoryExceptionBindings());
         config.registerPlugin(new MissionModelExceptionBindings());
