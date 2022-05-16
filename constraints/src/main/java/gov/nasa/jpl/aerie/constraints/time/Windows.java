@@ -131,10 +131,10 @@ public final class Windows implements Iterable<Window> {
     return new Windows(actualList);
   }
 
-  public Windows contractBy(Duration clampBefore, Duration clampAfter){
+  public Windows shiftBy(Duration fromStart, Duration fromEnd){
     Windows ret = new Windows();
     StreamSupport.stream(windows.ascendingOrder().spliterator(), false)
-        .forEach((x)-> ret.add(Window.between(x.start.plus(clampBefore), x.startInclusivity, x.end.minus(clampAfter), x.endInclusivity)));
+        .forEach((x)-> ret.add(Window.between(x.start.plus(fromStart), x.startInclusivity, x.end.plus(fromEnd), x.endInclusivity)));
     return ret;
   }
 
