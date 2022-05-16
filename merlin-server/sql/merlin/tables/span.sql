@@ -3,6 +3,7 @@ create table span (
 
   dataset_id integer not null,
   parent_id integer null,
+  activity_id integer null,
 
   start_offset interval not null,
   duration interval null,
@@ -20,6 +21,11 @@ create table span (
     foreign key (dataset_id, parent_id)
     references span
     on update cascade
+    on delete cascade,
+  constraint span_has_activity
+    foreign key (activity_id)
+    references activity
+    on update cascade
     on delete cascade
 )
 partition by list (dataset_id);
@@ -34,6 +40,8 @@ comment on column span.dataset_id is e''
   'The dataset this span is part of.';
 comment on column span.parent_id is e''
   'The span this span refines.';
+comment on column span.activity_id is e''
+  'The activity this span represents in the simulation.';
 comment on column span.start_offset is e''
   'The offset from the dataset start at which this span begins.';
 comment on column span.duration is e''

@@ -19,8 +19,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
 
 /*package-local*/ final class PostSpansAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-      insert into span (dataset_id, start_offset, duration, type, attributes)
-      values (?, ?::timestamptz - ?::timestamptz, ?::timestamptz - ?::timestamptz, ?, ?)
+      insert into span (dataset_id, start_offset, duration, type, activity_id, attributes)
+      values (?, ?::timestamptz - ?::timestamptz, ?::timestamptz - ?::timestamptz, ?, ?, ?)
     """;
 
   private final PreparedStatement statement;
@@ -52,7 +52,12 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
 
       setTimestamp(statement, 5, startTimestamp);
       statement.setString(6, act.type());
-      statement.setString(7, buildAttributes(act.attributes().directiveId(), act.attributes().arguments(), act.attributes().computedAttributes()));
+      if (act.attributes().directiveId().isPresent()){
+        statement.setLong(7, act.attributes().directiveId().get());
+      } else {
+        statement.setNull(7, java.sql.Types.BIGINT);
+      }
+      statement.setString(8, buildAttributes(act.attributes().directiveId(), act.attributes().arguments(), act.attributes().computedAttributes()));
       statement.addBatch();
     }
 

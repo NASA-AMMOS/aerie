@@ -12,6 +12,12 @@ object_relationships:
       remote_table:
         name: span
         schema: public
+- name: activity
+  using:
+    foreign_key_constraint_on: activity_id
+- name: dataset
+  using:
+    foreign_key_constraint_on: dataset_id
 array_relationships:
 - name: spans
   using:
