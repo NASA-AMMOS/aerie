@@ -12,6 +12,8 @@ import gov.nasa.jpl.aerie.constraints.tree.Or;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
 import gov.nasa.jpl.aerie.constraints.tree.Transition;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
@@ -135,8 +137,16 @@ public class GoalBuilder {
   private static ActivityCreationTemplate makeActivityTemplate(
       final SchedulingDSL.ActivityTemplate activityTemplate,
       final Function<String, ActivityType> lookupActivityType) {
-    var builder = new ActivityCreationTemplate.Builder()
-        .ofType(lookupActivityType.apply(activityTemplate.activityType()));
+    var builder = new ActivityCreationTemplate.Builder();
+    final var type = lookupActivityType.apply(activityTemplate.activityType());
+    if(type.getDurationType() instanceof DurationType.Controllable durationType){
+      //detect duration parameter
+      if(activityTemplate.arguments().containsKey(durationType.parameterName())){
+        builder.duration(new DurationValueMapper().deserializeValue(activityTemplate.arguments().get(durationType.parameterName())).getSuccessOrThrow());
+        activityTemplate.arguments().remove(durationType.parameterName());
+      }
+    }
+    builder = builder.ofType(type);
     for (final var argument : activityTemplate.arguments().entrySet()) {
       builder = builder.withArgument(argument.getKey(), argument.getValue());
     }
