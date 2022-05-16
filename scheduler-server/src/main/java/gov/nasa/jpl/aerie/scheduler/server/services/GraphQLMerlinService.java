@@ -1,8 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.json.BasicParsers;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
@@ -318,6 +320,12 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     for (final var activity : plan.getActivities()) {
       final var idActFromInitialPlan = idsFromInitialPlan.get(activity.getId());
       if (idActFromInitialPlan != null) {
+        //add duration to parameters if controllable
+        if(activity.getType().getDurationType() instanceof DurationType.Controllable durationType){
+          if(!activity.getArguments().containsKey(durationType.parameterName())){
+            activity.addArgument(durationType.parameterName(), new DurationValueMapper().serializeValue(activity.getDuration()));
+          }
+        }
         final var actFromInitialPlan = initialPlan.getActivityById(idActFromInitialPlan);
         //if act was present in initial plan
         final var schedulerActIntoMerlinAct = new MerlinActivityInstance(activity.getType().getName(), activity.getStartTime(), activity.getArguments());
@@ -462,6 +470,12 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
 
     for (final var act : orderedActivities) {
       requestSB.append(actPre.formatted(planId.id(), act.getType().getName(), act.getStartTime().toString()));
+      //add duration to parameters if controllable
+      if(act.getType().getDurationType() instanceof DurationType.Controllable durationType){
+        if(!act.getArguments().containsKey(durationType.parameterName())){
+          requestSB.append(argFormat.formatted(durationType.parameterName(), getGraphQLValueString(act.getDuration())));
+        }
+      }
       for (final var arg : act.getArguments().entrySet()) {
         final var name = arg.getKey();
         var value = getGraphQLValueString(arg.getValue());
