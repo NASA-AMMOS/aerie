@@ -1,7 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
@@ -163,9 +165,17 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   private static Collection<PlannedActivityInstance> extractPlannedActivityInstances(final Plan plan) {
     final var plannedActivityInstances = new ArrayList<PlannedActivityInstance>();
     for (final var activity : plan.getActivities()) {
+      final var type = activity.getType();
+      final var arguments = new HashMap<>(activity.getArguments());
+      if(type.getDurationType() instanceof DurationType.Controllable durationType){
+        //detect duration parameter and add it to parameters
+        if(!arguments.containsKey(durationType.parameterName())){
+          arguments.put(durationType.parameterName(), new DurationValueMapper().serializeValue(activity.getDuration()));
+        }
+      }
       plannedActivityInstances.add(new PlannedActivityInstance(
           activity.getType().getName(),
-          activity.getArguments(),
+          arguments,
           activity.getStartTime()));
     }
     return plannedActivityInstances;
