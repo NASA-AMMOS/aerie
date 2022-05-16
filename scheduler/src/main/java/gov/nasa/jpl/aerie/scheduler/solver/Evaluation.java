@@ -91,11 +91,11 @@ public class Evaluation {
      * @param createdByThisGoal IN a boolean stating whether the instance has been created by this goal or not
      */
     public void associate(java.util.Collection<ActivityInstance> acts, boolean createdByThisGoal) {
-      acts.forEach((a)->this.acts.put(a, createdByThisGoal));
+      acts.forEach(a ->this.acts.put(a, createdByThisGoal));
     }
 
     public void removeAssociation(java.util.Collection<ActivityInstance> acts){
-      acts.forEach((a)->this.acts.remove(a));
+      this.acts.entrySet().removeIf(act -> acts.contains(act.getKey()));
     }
 
     /**
