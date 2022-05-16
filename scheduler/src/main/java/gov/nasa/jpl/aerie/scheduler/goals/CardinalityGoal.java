@@ -5,7 +5,9 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.conflicts.UnsatisfiableGoalConflict;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
@@ -20,8 +22,12 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * describes the desired coexistence of an activity with another
@@ -45,6 +51,19 @@ public class CardinalityGoal extends ActivityTemplateGoal {
    */
   protected TimeRangeExpression expr;
 
+  // Following members are related to diagnosis of the scheduler being stuck with inserting 0-duration activities
+  /**
+   * Activities inserted so far to satisfy this goal
+   */
+  private Set<SchedulingActivityInstanceId> insertedSoFar = new HashSet<>();
+  /**
+   * Current number of steps without inserting an activity with non-zero duration
+   */
+  private int stepsWithoutProgress = 0;
+  /**
+   * Maximum acceptable number of steps without progress
+   */
+  private static int maxNoProgressSteps = 50;
 
   /**
    * the builder can construct goals piecemeal via a series of method calls
@@ -120,19 +139,30 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       if (occurrenceRange != null) {
         goal.occurrenceRange = occurrenceRange;
       }
+      if(isUnsatisfiableDurationType()){
+        throw new IllegalArgumentException("Goal is incorrectly parametrized: activity creation template has zero-duration while duration objective is non-zero");
+      }
       if(isUnsatisfiable()){
-        throw new IllegalArgumentException("Goal is incorrectly parametrized and therefore unsatisfiable : minimum duration x minimum occurence > maximum duration");
+        throw new IllegalArgumentException("Goal is incorrectly parametrized: minimum duration x minimum occurence > maximum duration");
       }
       return goal;
     }
 
+    public boolean isUnsatisfiableDurationType(){
+      return (thereExists.getDurationRange() != null &&
+              thereExists.getDurationRange().isSingleton() &&
+              thereExists.getDurationRange().start.isZero() &&
+              durationRange.start.longerThan(Duration.ZERO)
+      );
+    }
+
     public boolean isUnsatisfiable(){
-      if(this.durationRange != null && occurrenceRange != null && this.thereExists.getDurationRange() != null){
-        if(this.thereExists.getDurationRange().start.times(occurrenceRange.getMinimum()).longerThan(durationRange.end)){
-          return true;
-        }
-      }
-      return false;
+      return this.durationRange != null &&
+             occurrenceRange != null &&
+             this.thereExists.getDurationRange() != null &&
+             this.thereExists.getDurationRange().start
+                 .times(occurrenceRange.getMinimum())
+                 .longerThan(durationRange.end);
     }
 
   }//Builder
@@ -145,7 +175,9 @@ public class CardinalityGoal extends ActivityTemplateGoal {
    * but there was no corresponding target activity instance (and one
    * should probably be created!)
    */
+  @Override
   public Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
+
     Windows timeDomain = this.expr.computeRange(simulationResults, plan, Windows.forever());
     ActivityCreationTemplate actTB =
         new ActivityCreationTemplate.Builder().basedOn(this.desiredActTemplate).startsOrEndsIn(timeDomain).build();
@@ -185,10 +217,14 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       }
     }
 
+    if(stuckInsertingZeroDurationActivities(plan, this.occurrenceRange == null || nbToSchedule == 0)) return List.of(
+        new UnsatisfiableGoalConflict(this,
+                                      "During "+this.maxNoProgressSteps+" steps, solver has created only 0-duration activities to satisfy duration cardinality goal, exiting. "));
+
     final var conflicts = new LinkedList<Conflict>();
     //at this point, have thrown exception if not satisfiable
     //compute the missing association conflicts
-    for(var act:acts){
+    for(final var act : acts){
       if(!associatedActivitiesToThisGoal.contains(act) && planEvaluation.canAssociateMoreToCreatorOf(act)){
         //they ALL have to be associated
         conflicts.add(new MissingAssociationConflict(this, List.of(act)));
@@ -208,6 +244,25 @@ public class CardinalityGoal extends ActivityTemplateGoal {
     }
 
     return conflicts;
+  }
+
+  private boolean stuckInsertingZeroDurationActivities(final Plan plan, final boolean occurrencePartIsSatisfied){
+    if(this.durationRange != null && occurrencePartIsSatisfied){
+      final var inserted = plan.getEvaluation().forGoal(this).getInsertedActivities();
+      final var newlyInsertedActivities = inserted.stream().filter(a -> !insertedSoFar.contains(a.getId())).toList();
+      final var durationNewlyInserted = newlyInsertedActivities.stream().reduce(Duration.ZERO, (partialSum, activityInstance2) -> partialSum.plus(activityInstance2.getDuration()), Duration::plus);
+      if(durationNewlyInserted.isZero()) {
+        this.stepsWithoutProgress++;
+        //otherwise, reset it, we have made some progress
+      } else{
+        this.stepsWithoutProgress = 0;
+      }
+      if(stepsWithoutProgress > maxNoProgressSteps){
+        return true;
+      }
+      newlyInsertedActivities.forEach(a -> insertedSoFar.add(a.getId()));
+    }
+    return false;
   }
 
   /**
