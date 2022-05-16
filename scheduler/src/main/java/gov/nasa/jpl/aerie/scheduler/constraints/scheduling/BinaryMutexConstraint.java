@@ -42,11 +42,11 @@ public class BinaryMutexConstraint extends GlobalConstraint {
 
 
   private Windows findWindows(Plan plan, Windows windows, ActivityType actToBeScheduled, SimulationResults simulationResults) {
-
-    if (!(actToBeScheduled.equals(actType) || actToBeScheduled.equals(otherActType))) {
-      throw new IllegalArgumentException("Activity type must be one of the mutexed types");
-    }
     Windows validWindows = new Windows(windows);
+    if (!(actToBeScheduled.equals(actType) || actToBeScheduled.equals(otherActType))) {
+      //not concerned by this constraint
+      return validWindows;
+    }
     ActivityType actToBeSearched = actToBeScheduled.equals(actType) ? otherActType : actType;
     final var actSearch = new ActivityExpression.Builder()
         .ofType(actToBeSearched).build();
