@@ -38,6 +38,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,9 @@ import static gov.nasa.jpl.aerie.scheduler.server.http.ValueSchemaJsonParser.val
  *
  * @param merlinGraphqlURI endpoint of the merlin graphql service that should be used to access all plan data
  */
-public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinService {
+public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.OwnerRole,
+    MissionModelService
+{
 
   /**
    * timeout for http graphql requests issued to aerie
@@ -69,7 +72,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    * @param gqlStr the graphQL query or mutation to send to aerie
    * @return the json response returned by aerie, or an empty optional in case of io errors
    */
-  private Optional<JsonObject> postRequest(final String gqlStr) throws IOException, MerlinServiceException {
+  private Optional<JsonObject> postRequest(final String gqlStr) throws IOException, PlanServiceException {
     try {
       //TODO: (mem optimization) use streams here to avoid several copies of strings
       final var reqBody = Json.createObjectBuilder().add("query", gqlStr).build();
@@ -89,7 +92,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
       }
       final var respBody = Json.createReader(httpResp.body()).readObject();
       if (respBody.containsKey("errors")) {
-        throw new MerlinServiceException(respBody.toString());
+        throw new PlanServiceException(respBody.toString());
       }
       return Optional.of(respBody);
     } catch (final InterruptedException e) {
@@ -107,7 +110,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    * {@inheritDoc}
    */
   @Override
-  public long getPlanRevision(final PlanId planId) throws IOException, NoSuchPlanException, MerlinServiceException {
+  public long getPlanRevision(final PlanId planId) throws IOException, NoSuchPlanException, PlanServiceException {
     final var request = "query getPlanRevision { plan_by_pk( id: %s ) { revision } }"
         .formatted(planId.id());
     final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(planId));
@@ -125,7 +128,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    */
   @Override
   public PlanMetadata getPlanMetadata(final PlanId planId)
-  throws IOException, NoSuchPlanException, MerlinServiceException
+  throws IOException, NoSuchPlanException, PlanServiceException
   {
     final var request = (
         "query getPlanMetadata { "
@@ -191,7 +194,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    */
   @Override
   public MerlinPlan getPlanActivities(final PlanMetadata planMetadata, final Problem problem)
-  throws IOException, NoSuchPlanException, MerlinServiceException, InvalidJsonException
+  throws IOException, NoSuchPlanException, PlanServiceException, InvalidJsonException
   {
     final var merlinPlan = new MerlinPlan();
     final var request =
@@ -235,7 +238,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    */
   @Override
   public Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivities(final PlanMetadata planMetadata, final Plan plan)
-  throws IOException, NoSuchPlanException, MerlinServiceException
+  throws IOException, NoSuchPlanException, PlanServiceException
   {
     final var planName = getNextPlanName();
     final var planId = createEmptyPlan(
@@ -253,7 +256,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    */
   @Override
   public PlanId createEmptyPlan(final String name, final long modelId, final Instant startTime, final Duration duration)
-  throws IOException, NoSuchPlanException, MerlinServiceException
+  throws IOException, NoSuchPlanException, PlanServiceException
   {
     final var requestFormat = (
         "mutation createEmptyPlan { insert_plan_one( object: { "
@@ -283,7 +286,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    */
   @Override
   public void createSimulationForPlan(final PlanId planId)
-  throws IOException, NoSuchPlanException, MerlinServiceException
+  throws IOException, NoSuchPlanException, PlanServiceException
   {
     final var request = (
         "mutation createSimulationForPlan { insert_simulation_one( object: {"
@@ -307,7 +310,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
       final Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
       final MerlinPlan initialPlan,
       final Plan plan)
-  throws IOException, NoSuchPlanException, NoSuchActivityInstanceException, MerlinServiceException
+  throws IOException, NoSuchPlanException, NoSuchActivityInstanceException, PlanServiceException
   {
     final var ids = new HashMap<ActivityInstance, ActivityInstanceId>();
     //creation are done in batch as that's what the scheduler does the most
@@ -344,7 +347,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   }
 
   public void deleteActivity(final ActivityInstanceId id)
-  throws MerlinServiceException, IOException, NoSuchActivityInstanceException
+  throws PlanServiceException, IOException, NoSuchActivityInstanceException
   {
     final var request = "mutation {delete_activity_by_pk( id : %d ){ id }}".formatted(id.id());
     final var response = postRequest(request).orElseThrow(() -> new NoSuchActivityInstanceException(id));
@@ -356,7 +359,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   }
 
   public void updateActivity(final PlanId planId, final MerlinActivityInstance activity, final ActivityInstanceId instanceId)
-  throws MerlinServiceException, NoSuchPlanException, IOException
+  throws PlanServiceException, NoSuchPlanException, IOException
   {
     final var argFormat = "%s: %s ";
     final var argumentsSb = new StringBuilder();
@@ -385,7 +388,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    * {@inheritDoc}
    */
   @Override
-  public void ensurePlanExists(final PlanId planId) throws IOException, NoSuchPlanException, MerlinServiceException {
+  public void ensurePlanExists(final PlanId planId) throws IOException, NoSuchPlanException, PlanServiceException {
     final Supplier<NoSuchPlanException> exceptionFactory = () -> new NoSuchPlanException(planId);
     final var request = "query ensurePlanExists { plan_by_pk( id: %s ) { id } }"
         .formatted(planId.id());
@@ -412,7 +415,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    */
   //TODO: (error cleanup) more diverse exceptions for failed operations
   @Override
-  public void clearPlanActivities(final PlanId planId) throws IOException, NoSuchPlanException, MerlinServiceException {
+  public void clearPlanActivities(final PlanId planId) throws IOException, NoSuchPlanException, PlanServiceException {
     ensurePlanExists(planId);
     final var request = (
         "mutation clearPlanActivities {"
@@ -435,12 +438,13 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    */
   @Override
   public Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(final PlanId planId, final Plan plan)
-  throws IOException, NoSuchPlanException, MerlinServiceException {
+  throws IOException, NoSuchPlanException, PlanServiceException
+  {
     return createActivities(planId, plan.getActivitiesByTime());
   }
 
   private Map<ActivityInstance, ActivityInstanceId> createActivities(final PlanId planId, final List<ActivityInstance> orderedActivities)
-  throws IOException, NoSuchPlanException, MerlinServiceException
+  throws IOException, NoSuchPlanException, PlanServiceException
   {
     ensurePlanExists(planId);
     final var requestPre = "mutation createAllPlanActivities { insert_activity( objects: [";
@@ -488,13 +492,14 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   }
 
   @Override
-  public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final PlanId planId)
-  throws IOException, MerlinServiceException
+  public MissionModelTypes getMissionModelTypes(final PlanId planId)
+  throws IOException, MissionModelServiceException
   {
     final var request = """
         query GetActivityTypesForPlan {
           plan_by_pk(id: %d) {
             mission_model {
+              id
               activity_types {
                 name
                 parameters
@@ -503,18 +508,29 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
           }
         }
         """.formatted(planId.id());
-    final var response = postRequest(request).get();
+    final JsonObject response;
+    try {
+      response = postRequest(request).get();
+    } catch (PlanServiceException e) {
+      throw new MissionModelServiceException("Failed to get mission model types for plan id %s".formatted(planId), e);
+    }
     final var activityTypesJsonArray =
         response.getJsonObject("data")
                 .getJsonObject("plan_by_pk")
                 .getJsonObject("mission_model")
                 .getJsonArray("activity_types");
     final var activityTypes = parseActivityTypes(activityTypesJsonArray);
-    return new TypescriptCodeGenerationService.MissionModelTypes(activityTypes, List.of());
+
+    final var missionModelId = new MissionModelId(response.getJsonObject("data")
+                                       .getJsonObject("plan_by_pk")
+                                       .getJsonObject("mission_model")
+                                       .getInt("id"));
+
+    return new MissionModelTypes(activityTypes, getResourceTypes(missionModelId));
   }
 
-  private static List<TypescriptCodeGenerationService.ActivityType> parseActivityTypes(final JsonArray activityTypesJsonArray) {
-    final var activityTypes = new ArrayList<TypescriptCodeGenerationService.ActivityType>();
+  private static List<ActivityType> parseActivityTypes(final JsonArray activityTypesJsonArray) {
+    final var activityTypes = new ArrayList<ActivityType>();
     for (final var activityTypeJson : activityTypesJsonArray) {
       final var parametersJson = activityTypeJson.asJsonObject().getJsonObject("parameters");
       final var parameters = new HashMap<String, ValueSchema>();
@@ -529,14 +545,14 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
                         .getJsonObject("schema"))
                 .getSuccessOrThrow());
       }
-      activityTypes.add(new TypescriptCodeGenerationService.ActivityType(activityTypeJson.asJsonObject().getString("name"), parameters));
+      activityTypes.add(new ActivityType(activityTypeJson.asJsonObject().getString("name"), parameters));
     }
     return activityTypes;
   }
 
   @Override
-  public TypescriptCodeGenerationService.MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
-  throws IOException, MerlinServiceException, NoSuchMissionModelException
+  public MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
+  throws IOException, MissionModelServiceException, NoSuchMissionModelException
   {
     final var request = """
         query GetActivityTypesFromMissionModel{
@@ -548,14 +564,53 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
            }
         }
         """.formatted(missionModelId.id());
-    final var response = postRequest(request).get();
+    final JsonObject response;
+    try {
+      response = postRequest(request).get();
+    } catch (PlanServiceException e) {
+      throw new MissionModelServiceException("Failed to get mission model types for model id %s".formatted(missionModelId), e);
+    }
     final var data = response.getJsonObject("data");
     if (data.get("mission_model_by_pk").getValueType().equals(JsonValue.ValueType.NULL)) throw new NoSuchMissionModelException(missionModelId);
     final var activityTypesJsonArray = data
         .getJsonObject("mission_model_by_pk")
         .getJsonArray("activity_types");
     final var activityTypes = parseActivityTypes(activityTypesJsonArray);
-    return new TypescriptCodeGenerationService.MissionModelTypes(activityTypes, List.of());
+
+    return new MissionModelTypes(activityTypes, getResourceTypes(missionModelId));
+  }
+
+  private Collection<ResourceType> getResourceTypes(final MissionModelId missionModelId)
+  throws IOException, MissionModelServiceException
+  {
+    final var request = """
+        query GetResourceTypes {
+           resourceTypes(missionModelId: "%d") {
+             name
+             schema
+           }
+         }
+        """.formatted(missionModelId.id());
+    final JsonObject response;
+    try {
+      response = postRequest(request).get();
+    } catch (PlanServiceException e) {
+      throw new MissionModelServiceException("Failed to get mission model types for model id %s".formatted(missionModelId), e);
+    }
+    final var data = response.getJsonObject("data");
+    final var resourceTypesJsonArray = data.getJsonArray("resourceTypes");
+
+    final var resourceTypes = new ArrayList<ResourceType>();
+
+    for (final var jsonValue : resourceTypesJsonArray) {
+      final var jsonObject = jsonValue.asJsonObject();
+      final var name = jsonObject.getString("name");
+      final var schema = jsonObject.getJsonObject("schema");
+
+      resourceTypes.add(new ResourceType(name, valueSchemaP.parse(schema).getSuccessOrThrow()));
+    }
+
+    return resourceTypes;
   }
 
   /**

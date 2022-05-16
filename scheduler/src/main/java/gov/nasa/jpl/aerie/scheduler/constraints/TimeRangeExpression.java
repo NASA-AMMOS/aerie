@@ -127,6 +127,10 @@ public class TimeRangeExpression {
   protected List<ExternalState> constantsStates;
   private ActivityExpression actTemplate;
 
+  public List<StateConstraintExpression> getStateConstraints() {
+    return List.copyOf(stateExpr);
+  }
+
   public static TimeRangeExpression constantValuesOf(ExternalState sce) {
     return new Builder().ofEachValue(sce).build();
   }

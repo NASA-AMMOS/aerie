@@ -99,10 +99,19 @@ public record SchedulerBindings(
       final var response = this.generateSchedulingLibAction.run(missionModelId);
       final String resultString;
       if (response instanceof GenerateSchedulingLibAction.Response.Success r) {
+        var files = Json.createArrayBuilder();
+        for (final var entry : r.files().entrySet()) {
+          files = files.add(
+              Json.createObjectBuilder()
+                  .add("filename", entry.getKey())
+                  .add("contents", entry.getValue())
+                  .build());
+        }
         resultString = Json
             .createObjectBuilder()
             .add("status", "success")
-            .add("typescript", r.libraryCode())
+            .add("typescript", r.typescript()) // TODO deprecate when the UI uses typescriptFiles
+            .add("typescriptFiles", files)
             .build().toString();
       } else if (response instanceof GenerateSchedulingLibAction.Response.Failure r) {
         resultString = Json

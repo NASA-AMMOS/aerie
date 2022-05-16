@@ -10,9 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TypescriptCodeGenerationServiceTest {
 
-  public static final TypescriptCodeGenerationService.MissionModelTypes MISSION_MODEL_TYPES =
-      new TypescriptCodeGenerationService.MissionModelTypes(
-          List.of(new TypescriptCodeGenerationService.ActivityType(
+  public static final MissionModelService.MissionModelTypes MISSION_MODEL_TYPES =
+      new MissionModelService.MissionModelTypes(
+          List.of(new MissionModelService.ActivityType(
               "SampleActivity1",
               Map.of(
                   "variant",
@@ -32,14 +32,19 @@ class TypescriptCodeGenerationServiceTest {
                       "subfield2",
                       ValueSchema.ofSeries(ValueSchema.ofStruct(Map.of("subsubfield1", ValueSchema.REAL)))
                   )))),
-                  new TypescriptCodeGenerationService.ActivityType(
+                  new MissionModelService.ActivityType(
                       "SampleActivity2",
                       Map.of(
                           "quantity",
                           ValueSchema.REAL
                       )
                   )),
-          null
+          List.of(new MissionModelService.ResourceType("/sample/resource/1", ValueSchema.REAL),
+                  new MissionModelService.ResourceType("/sample/resource/2", ValueSchema.ofStruct(
+                      Map.of("field1", ValueSchema.BOOLEAN,
+                             "field2", ValueSchema.ofVariant(List.of(
+                                 new ValueSchema.Variant("ABC", "ABC"),
+                                 new ValueSchema.Variant("DEF", "DEF")))))))
       );
 
   @Test
@@ -48,6 +53,7 @@ class TypescriptCodeGenerationServiceTest {
         """
             /** Start Codegen */
             import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';
+            import type { WindowSet } from './windows-edsl-fluent-api.js';
             export enum ActivityType {
               SampleActivity1 = 'SampleActivity1',
               SampleActivity2 = 'SampleActivity2',
@@ -68,14 +74,35 @@ class TypescriptCodeGenerationServiceTest {
                 return { activityType: ActivityType.SampleActivity2, args };
               },
             };
+            export enum Resource {
+              "/sample/resource/1" = "/sample/resource/1",
+              "/sample/resource/2" = "/sample/resource/2",
+            };
+            type ResourceUnion =
+              | "/sample/resource/1"
+              | "/sample/resource/2";
+            export function transition<T extends ResourceUnion>(
+              resource: T,
+              from: T extends "/sample/resource/1" ? Double :
+                T extends "/sample/resource/2" ? { field1: boolean, field2: ("ABC" | "DEF"), } :
+                never,
+              to: T extends "/sample/resource/1" ? Double :
+                T extends "/sample/resource/2" ? { field1: boolean, field2: ("ABC" | "DEF"), } :
+                never
+            ): WindowSet {
+              throw new Error("This function exists for type checking purposes only");
+            }
+
             declare global {
               var ActivityTemplates: typeof ActivityTemplateConstructors;
               var ActivityTypes: typeof ActivityType;
+              var Resources: typeof Resource;
             }
             // Make ActivityTemplates and ActivityTypes available on the global object
             Object.assign(globalThis, {
               ActivityTemplates: ActivityTemplateConstructors,
               ActivityTypes: ActivityType,
+              Resources: Resource,
             });
             /** End Codegen */""",
         TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(MISSION_MODEL_TYPES));
