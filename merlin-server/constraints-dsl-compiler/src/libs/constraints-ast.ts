@@ -1,57 +1,222 @@
 export enum NodeKind {
+  DiscreteProfileResource = 'DiscreteProfileResource',
+  DiscreteProfileValue = 'DiscreteProfileValue',
+  DiscreteProfileParameter = 'DiscreteProfileParameter',
+  RealProfileResource = 'RealProfileResource',
+  RealProfileValue = 'RealProfileValue',
+  RealProfileParameter = 'RealProfileParameter',
+  RealProfilePlus = 'RealProfilePlus',
+  RealProfileTimes = 'RealProfileTimes',
+  RealProfileRate = 'RealProfileRate',
+  DiscreteProfileTransition = 'DiscreteProfileTransition',
+  WindowsExpressionDuring = 'WindowsExpressionDuring',
+  WindowsExpressionStartOf = 'WindowsExpressionStartOf',
+  WindowsExpressionEndOf = 'WindowsExpressionEndOf',
+  ExpressionEqual = 'ExpressionEqual',
+  ExpressionNotEqual = 'ExpressionNotEqual',
+  RealProfileLessThan = 'RealProfileLessThan',
+  RealProfileLessThanOrEqual = 'RealProfileLessThanOrEqual',
+  RealProfileGreaterThan = 'RealProfileGreaterThan',
+  RealProfileGreaterThanOrEqual = 'RealProfileGreaterThanOrEqual',
+  WindowsExpressionAll = 'WindowsExpressionAll',
+  WindowsExpressionAny = 'WindowsExpressionAny',
+  WindowsExpressionNot = 'WindowsExpressionNot',
+  WindowsExpressionIfThen = 'WindowsExpressionIfThen',
+  ForEachActivity = 'ForEachActivity',
+  ProfileChanged = 'ProfileChanged',
+  ForbiddenActivityOverlap = 'ForbiddenActivityOverlap',
   ViolationsOf = 'ViolationsOf',
-  WindowsExpressionAnd = 'WindowsExpressionAnd',
-  WindowsExpressionOr = 'WindowsExpressionOr',
-  WindowsExpressionTrue = 'WindowsExpressionTrue'
 }
 
-/**
- * Top-level constraints that directly produce violations
- * when evaluated.
- */
-export type Constraint = | ViolationsOf;
+export type Constraint =
+  | ViolationsOf
+  | ForbiddenActivityOverlap
+  | ForEachActivity
+  | WindowsExpression;
 
-/**
- * Generates violations whenever its expression generates a window.
- */
 export interface ViolationsOf {
   kind: NodeKind.ViolationsOf,
-  expression: WindowsExpression,
+  expression: WindowsExpression
 }
 
-/**
- * Operations that produce Windows when evaluated.
- *
- * These are not valid top-level constraints, and
- * typically need to be wrapped in `Constraint.ViolationsOf`.
- */
+export interface ForbiddenActivityOverlap {
+  kind: NodeKind.ForbiddenActivityOverlap,
+  activityType1: string,
+  activityType2: string
+}
+
+export interface ForEachActivity {
+  kind: NodeKind.ForEachActivity,
+  activityType: string,
+  alias: string,
+  expression: Constraint
+}
+
 export type WindowsExpression =
-  | And
-  | Or
-  | True;
+  | WindowsExpressionDuring
+  | WindowsExpressionStartOf
+  | WindowsExpressionEndOf
+  | ProfileChanged
+  | RealProfileLessThan
+  | RealProfileLessThanOrEqual
+  | RealProfileGreaterThan
+  | RealProfileGreaterThanOrEqual
+  | DiscreteProfileTransition
+  | ExpressionEqual<RealProfileExpression>
+  | ExpressionEqual<DiscreteProfileExpression>
+  | ExpressionNotEqual<RealProfileExpression>
+  | ExpressionNotEqual<DiscreteProfileExpression>
+  | WindowsExpressionAll
+  | WindowsExpressionAny
+  | WindowsExpressionNot
+  | WindowsExpressionIfThen
 
-/**
- * Generates a violation when all of its sub-expressions generate windows.
- */
-export interface And {
-  kind: NodeKind.WindowsExpressionAnd,
-  expressions: WindowsExpression[],
+export interface ProfileChanged {
+  kind: NodeKind.ProfileChanged,
+  expression: ProfileExpression
 }
 
-/**
- * Generates a violation when any of its sub-expressions generate windows.
- */
-export interface Or {
-  kind: NodeKind.WindowsExpressionOr,
-  expressions: WindowsExpression[],
+export interface WindowsExpressionIfThen {
+  kind: NodeKind.WindowsExpressionIfThen,
+  condition: WindowsExpression,
+  expression: WindowsExpression
 }
 
-/**
- * Always generates a window.
- *
- * Currently this only exists for testing, it isn't intended to be useful.
- */
-export interface True {
-  kind: NodeKind.WindowsExpressionTrue
+export interface WindowsExpressionNot {
+  kind: NodeKind.WindowsExpressionNot,
+  expression: WindowsExpression
 }
 
+export interface WindowsExpressionAny {
+  kind: NodeKind.WindowsExpressionAny,
+  expressions: WindowsExpression[]
+}
+
+export interface WindowsExpressionAll {
+  kind: NodeKind.WindowsExpressionAll,
+  expressions: WindowsExpression[]
+}
+
+export interface RealProfileGreaterThanOrEqual {
+  kind: NodeKind.RealProfileGreaterThanOrEqual,
+  left: RealProfileExpression,
+  right: RealProfileExpression
+}
+
+export interface RealProfileGreaterThan {
+  kind: NodeKind.RealProfileGreaterThan,
+  left: RealProfileExpression,
+  right: RealProfileExpression
+}
+
+export interface RealProfileLessThanOrEqual {
+  kind: NodeKind.RealProfileLessThanOrEqual,
+  left: RealProfileExpression,
+  right: RealProfileExpression
+}
+
+export interface RealProfileLessThan {
+  kind: NodeKind.RealProfileLessThan,
+  left: RealProfileExpression,
+  right: RealProfileExpression
+}
+
+export interface ExpressionNotEqual<T = ProfileExpression> {
+  kind: NodeKind.ExpressionNotEqual,
+  left: T,
+  right: T
+}
+
+export interface ExpressionEqual<T = ProfileExpression> {
+  kind: NodeKind.ExpressionEqual,
+  left: T,
+  right: T
+}
+
+export interface WindowsExpressionEndOf {
+  kind: NodeKind.WindowsExpressionEndOf,
+  alias: string
+}
+
+export interface WindowsExpressionStartOf {
+  kind: NodeKind.WindowsExpressionStartOf,
+  alias: string
+}
+
+export interface WindowsExpressionDuring {
+  kind: NodeKind.WindowsExpressionDuring,
+  alias: string
+}
+
+export interface DiscreteProfileTransition {
+  kind: NodeKind.DiscreteProfileTransition,
+  profile: DiscreteProfileExpression,
+  from: any,
+  to: any
+}
+
+export type ProfileExpression =
+  | RealProfileExpression
+  | DiscreteProfileExpression;
+
+export type RealProfileExpression =
+  | RealProfileRate
+  | RealProfileTimes
+  | RealProfilePlus
+  | RealProfileResource
+  | RealProfileValue
+  | RealProfileParameter;
+
+export interface RealProfileRate {
+  kind: NodeKind.RealProfileRate,
+  profile: RealProfileExpression
+}
+
+export interface RealProfileTimes {
+  kind: NodeKind.RealProfileTimes,
+  profile: RealProfileExpression,
+  multiplier: number
+}
+
+export interface RealProfilePlus {
+  kind: NodeKind.RealProfilePlus,
+  left: RealProfileExpression,
+  right: RealProfileExpression
+}
+
+export interface RealProfileResource {
+  kind: NodeKind.RealProfileResource,
+  name: string
+}
+
+export interface RealProfileValue {
+  kind: NodeKind.RealProfileValue,
+  value: number
+}
+
+export interface RealProfileParameter {
+  kind: NodeKind.RealProfileParameter,
+  alias: string,
+  name: string
+}
+
+export type DiscreteProfileExpression =
+  | DiscreteProfileResource
+  | DiscreteProfileValue
+  | DiscreteProfileParameter;
+
+export interface DiscreteProfileResource {
+  kind: NodeKind.DiscreteProfileResource,
+  name: string
+}
+
+export interface DiscreteProfileValue {
+  kind: NodeKind.DiscreteProfileValue,
+  value: any
+}
+
+export interface DiscreteProfileParameter {
+  kind: NodeKind.DiscreteProfileParameter,
+  alias: string,
+  name: string
+}

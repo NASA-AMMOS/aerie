@@ -1,8 +1,16 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
+import gov.nasa.jpl.aerie.constraints.tree.Changed;
+import gov.nasa.jpl.aerie.constraints.tree.LessThan;
+import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
+import gov.nasa.jpl.aerie.constraints.tree.RealResource;
+import gov.nasa.jpl.aerie.constraints.tree.RealValue;
+import gov.nasa.jpl.aerie.constraints.tree.Times;
 import gov.nasa.jpl.aerie.constraints.tree.True;
 import gov.nasa.jpl.aerie.constraints.tree.ViolationsOf;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.merlin.server.models.RealProfile;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -36,12 +44,12 @@ class ConstraintsDSLCompilationServiceTests {
     result = constraintsDSLCompilationService.compileConstraintsDSL(
         PLAN_ID, """
                 export default () => {
-                  return Constraint.ViolationsOf(
-                    WindowsExpression.True()
-                  )
+                  return Real.Value(4).lessThan(Real.Value(5))
                 }
             """);
-    final var expectedConstraintDefinition = new ViolationsOf(new True());
+    final var expectedConstraintDefinition = new ViolationsOf(
+        new LessThan(new RealValue(4), new RealValue(5))
+    );
     if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
       assertEquals(expectedConstraintDefinition, r.constraintExpression());
     } else if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error r) {
@@ -56,13 +64,15 @@ class ConstraintsDSLCompilationServiceTests {
     result = constraintsDSLCompilationService.compileConstraintsDSL(
         PLAN_ID, """
                 export default function myConstraint() {
-                  return myHelper(WindowsExpression.True())
+                  return times2(Real.Resource("my_resource")).changed()
                 }
-                function myHelper(e: WindowsExpression) {
-                  return Constraint.ViolationsOf(e)
+                function times2(e: Real): Real {
+                  return e.times(2)
                 }
             """);
-    final var expectedConstraintDefinition = new ViolationsOf(new True());
+    final var expectedConstraintDefinition = new ViolationsOf(
+        new Changed<>(new ProfileExpression<>(new Times(new RealResource("my_resource"), 2)))
+    );
     if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
       assertEquals(expectedConstraintDefinition, r.constraintExpression());
     } else if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error r) {
@@ -76,13 +86,12 @@ class ConstraintsDSLCompilationServiceTests {
     actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) constraintsDSLCompilationService.compileConstraintsDSL(
           PLAN_ID, """
                 export default function myConstraint() {
-                  const x = WindowsExpression.True();
-                  return myHelper(x);
+                  const x = 5;
+                  return times2(Real.Resource("my_resource")).changed()
                 }
-                function myHelper(n: number) {
-                  return Constraint.ViolationsOf(x);
-                  )
-                }
+                function times2(e: Real): Real {
+                  return e.times(x)
+                }}
               """);
     assertTrue(
         actualErrors.errors()
@@ -97,13 +106,13 @@ class ConstraintsDSLCompilationServiceTests {
     actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) constraintsDSLCompilationService.compileConstraintsDSL(
           PLAN_ID, """
                 export default function myConstraint() {
-                   return WindowsExpression.True()
+                   return Real.Resource("my_resource");
                 }
               """);
     assertTrue(
         actualErrors.errors()
                     .stream()
-                    .anyMatch(e -> e.message().contains("TypeError: TS2322 Incorrect return type. Expected: 'Constraint', Actual: 'True'."))
+                    .anyMatch(e -> e.message().contains("TypeError: TS2322 Incorrect return type. Expected: 'Constraint', Actual: 'Real'."))
     );
   }
 }

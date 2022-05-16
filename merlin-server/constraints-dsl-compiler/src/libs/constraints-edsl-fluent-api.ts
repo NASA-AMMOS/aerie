@@ -1,65 +1,259 @@
 import * as AST from './constraints-ast.js';
 
-interface ViolationsOf extends Constraint {}
-
 export class Constraint {
   /** Internal AST node */
   public readonly __astNode: AST.Constraint;
 
-  private constructor(astNode: AST.Constraint) {
+  public constructor(astNode: AST.Constraint) {
     this.__astNode = astNode;
   }
 
-  private static new(astNode: AST.Constraint): Constraint {
-    return new Constraint(astNode);
+  public static ForbiddenActivityOverlap(activityType1: string, activityType2: string): Constraint {
+    return new Constraint({
+      kind: AST.NodeKind.ForbiddenActivityOverlap,
+      activityType1,
+      activityType2
+    })
   }
 
-  public static ViolationsOf(expression: WindowsExpression): ViolationsOf {
-    return Constraint.new({
-      kind: AST.NodeKind.ViolationsOf,
-      expression: expression.__astNode,
-    });
+  public static ForEachActivity(activityType: string, alias: string, constraint: Constraint): Constraint {
+    return new Constraint({
+      kind: AST.NodeKind.ForEachActivity,
+      activityType,
+      alias,
+      expression: constraint.__astNode
+    })
   }
 }
 
-interface True extends WindowsExpression {}
-
-export class WindowsExpression {
+export class Windows {
   /** Internal AST node */
   public readonly __astNode: AST.WindowsExpression;
 
-  private constructor(expression: AST.WindowsExpression) {
+  public constructor(expression: AST.WindowsExpression) {
     this.__astNode = expression;
   }
 
-  private static new(expression: AST.WindowsExpression): WindowsExpression {
-    return new WindowsExpression(expression);
+  public static During(alias: string): Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionDuring,
+      alias
+    })
+  }
+  public static StartOf(alias: string): Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionStartOf,
+      alias
+    })
+  }
+  public static EndOf(alias: string): Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionEndOf,
+      alias
+    })
   }
 
-  public static True(): True {
-    return WindowsExpression.new({
-      kind: AST.NodeKind.WindowsExpressionTrue
+  public static All(...windows: Windows[]): Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionAll,
+      expressions: [
+        ...windows.map(other => other.__astNode),
+      ],
     });
   }
-
-  public and(...others: WindowsExpression[]): WindowsExpression {
-    return WindowsExpression.new({
-      kind: AST.NodeKind.WindowsExpressionAnd,
+  public static Any(...windows: Windows[]): Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionAny,
       expressions: [
-        this.__astNode,
-        ...others.map(other => other.__astNode),
+        ...windows.map(other => other.__astNode),
       ],
     });
   }
 
-  public or(...others: WindowsExpression[]): WindowsExpression {
-    return WindowsExpression.new({
-      kind: AST.NodeKind.WindowsExpressionOr,
+  public if(condition: Windows): Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionAny,
       expressions: [
-        this.__astNode,
-        ...others.map(other => other.__astNode),
-      ],
-    });
+        {
+          kind: AST.NodeKind.WindowsExpressionNot,
+          expression: condition.__astNode
+        },
+        this.__astNode
+      ]
+    })
+  }
+
+  public not(): Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionNot,
+      expression: this.__astNode
+    })
+  }
+
+  public violations(): Constraint {
+    return new Constraint({
+      kind: AST.NodeKind.ViolationsOf,
+      expression: this.__astNode
+    })
+  }
+}
+
+export class Real {
+  public readonly __astNode: AST.RealProfileExpression;
+
+  public constructor(profile: AST.RealProfileExpression) {
+    this.__astNode = profile;
+  }
+
+  public static Resource(name: string): Real {
+    return new Real({
+      kind: AST.NodeKind.RealProfileResource,
+      name
+    })
+  }
+  public static Value(value: number): Real {
+    return new Real({
+      kind: AST.NodeKind.RealProfileValue,
+      value
+    })
+  }
+  public static Parameter(alias: string, name: string): Real {
+    return new Real({
+      kind: AST.NodeKind.RealProfileParameter,
+      alias,
+      name
+    })
+  }
+
+  public rate(): Real {
+    return new Real({
+      kind: AST.NodeKind.RealProfileRate,
+      profile: this.__astNode
+    })
+  }
+  public times(multiplier: number): Real {
+    return new Real({
+      kind: AST.NodeKind.RealProfileTimes,
+      multiplier,
+      profile: this.__astNode
+    })
+  }
+  public plus(other: Real): Real {
+    return new Real({
+      kind: AST.NodeKind.RealProfilePlus,
+      left: this.__astNode,
+      right: other.__astNode
+    })
+  }
+
+  public lessThan(other: Real): Windows {
+    return new Windows({
+      kind: AST.NodeKind.RealProfileLessThan,
+      left: this.__astNode,
+      right: other.__astNode
+    })
+  }
+  public lessThanOrEqual(other: Real): Windows {
+    return new Windows({
+      kind: AST.NodeKind.RealProfileLessThanOrEqual,
+      left: this.__astNode,
+      right: other.__astNode
+    })
+  }
+  public greaterThan(other: Real): Windows {
+    return new Windows({
+      kind: AST.NodeKind.RealProfileGreaterThan,
+      left: this.__astNode,
+      right: other.__astNode
+    })
+  }
+  public greaterThanOrEqual(other: Real): Windows {
+    return new Windows({
+      kind: AST.NodeKind.RealProfileGreaterThanOrEqual,
+      left: this.__astNode,
+      right: other.__astNode
+    })
+  }
+
+  public equal(other: Real): Windows {
+    return new Windows({
+      kind: AST.NodeKind.ExpressionEqual,
+      left: this.__astNode,
+      right: other.__astNode
+    })
+  }
+  public notEqual(other: Real): Windows {
+    return new Windows({
+      kind: AST.NodeKind.ExpressionNotEqual,
+      left: this.__astNode,
+      right: other.__astNode
+    })
+  }
+
+  public changed(): Windows {
+    return new Windows({
+      kind: AST.NodeKind.ProfileChanged,
+      expression: this.__astNode
+    })
+  }
+}
+
+export class Discrete {
+  public readonly __astNode: AST.DiscreteProfileExpression
+
+  public constructor(profile: AST.DiscreteProfileExpression) {
+    this.__astNode = profile;
+  }
+
+  public static Resource(name: string): Discrete {
+    return new Discrete({
+      kind: AST.NodeKind.DiscreteProfileResource,
+      name
+    })
+  }
+  public static Value(value: any): Discrete {
+    return new Discrete({
+      kind: AST.NodeKind.DiscreteProfileValue,
+      value
+    })
+  }
+  public static Parameter(alias: string, name: string): Discrete {
+    return new Discrete({
+      kind: AST.NodeKind.DiscreteProfileParameter,
+      alias,
+      name
+    })
+  }
+
+  public transition(from: any, to: any): Windows {
+    return new Windows({
+      kind: AST.NodeKind.DiscreteProfileTransition,
+      profile: this.__astNode,
+      from,
+      to
+    })
+  }
+
+  public equal(other: Discrete): Windows {
+    return new Windows({
+      kind: AST.NodeKind.ExpressionEqual,
+      left: this.__astNode,
+      right: other.__astNode
+    })
+  }
+  public notEqual(other: Discrete): Windows {
+    return new Windows({
+      kind: AST.NodeKind.ExpressionNotEqual,
+      left: this.__astNode,
+      right: other.__astNode
+    })
+  }
+
+  public changed(): Windows {
+    return new Windows({
+      kind: AST.NodeKind.ProfileChanged,
+      expression: this.__astNode
+    })
   }
 }
 
@@ -68,20 +262,85 @@ declare global {
     /** Internal AST Node */
     public readonly __astNode: AST.Constraint;
 
-    public static ViolationsOf(expression: WindowsExpression): ViolationsOf
+    public static ForbiddenActivityOverlap(activityType1: string, activityType2: string): Constraint
+
+    public static ForEachActivity(activityType: string, alias: string, constraint: Constraint): Constraint
   }
 
-  export class WindowsExpression {
+  export class Windows {
     /** Internal AST Node */
     public readonly __astNode: AST.WindowsExpression;
 
-    public static True(): True
+    public static During(alias: string): Windows
+    public static StartOf(alias: string): Windows
+    public static EndOf(alias: string): Windows
 
-    public and(...others: WindowsExpression[]): WindowsExpression
+    /**
+     * Only check this expression of the condition argument produces a window.
+     *
+     * @param condition
+     */
+    public static All(...windows: Windows[]): Windows
 
-    public or(...others: WindowsExpression[]): WindowsExpression
+    /**
+     * Produce a window when this and the arguments all produce a window.
+     * @param others one or more windows expressions
+     */
+    public static Any(...windows: Windows[]): Windows
+
+    /**
+     * Produce a window when this or one of the arguments produces a window.
+     * @param others one or more windows expressions
+     */
+    public if(condition: Windows): Windows
+
+    /**
+     * Negate all the windows produced this.
+     */
+    public not(): Windows
+
+    public violations(): Constraint
+  }
+
+  export class Real {
+    /** Internal AST Node */
+    public readonly __astNode: AST.RealProfileExpression;
+
+    public static Resource(name: string): Real
+    public static Value(value: number): Real
+    public static Parameter(alias: string, name: string): Real
+
+    public rate(): Real
+    public times(multiplier: number): Real
+    public plus(other: Real): Real
+
+    public lessThan(other: Real): Windows
+    public lessThanOrEqual(other: Real): Windows
+    public greaterThan(other: Real): Windows
+    public greaterThanOrEqual(other: Real): Windows
+
+    public equal(other: Real): Windows
+    public notEqual(other: Real): Windows
+
+    public changed(): Windows
+  }
+
+  export class Discrete {
+    /** Internal AST Node */
+    public readonly __astNode: AST.DiscreteProfileExpression
+
+    public static Resource(name: string): Discrete
+    public static Value(value: any): Discrete
+    public static Parameter(alias: string, name: string): Discrete
+
+    public transition<T>(from: T, to: T): Windows
+
+    public equal(other: Discrete): Windows
+    public notEqual(other: Discrete): Windows
+
+    public changed(): Windows
   }
 }
 
 // Make Constraint available on the global object
-Object.assign(globalThis, {Constraint, WindowsExpression});
+Object.assign(globalThis, {Constraint, Windows, Real, Discrete});
