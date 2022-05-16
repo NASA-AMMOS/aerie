@@ -193,9 +193,12 @@ public class SimulationFacade {
   {
     final var startT = Duration.of(startTime.until(driverActivity.start(), ChronoUnit.MICROS), MICROSECONDS);
     final var endT = startT.plus(driverActivity.duration());
+    final var activityWindow = startT.isEqualTo(endT)
+        ? Window.between(startT, endT)
+        : Window.betweenClosedOpen(startT, endT);
     return new gov.nasa.jpl.aerie.constraints.model.ActivityInstance(
         id, driverActivity.type(), driverActivity.arguments(),
-        Window.betweenClosedOpen(startT, endT));
+        activityWindow);
   }
 
   /**
