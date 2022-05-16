@@ -9,7 +9,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.doubleP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
@@ -38,6 +40,21 @@ public class SchedulingDSL {
           microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
           duration -> duration.in(Duration.MICROSECONDS)));
 
+  private static final JsonParser<ClosedOpenInterval> intervalP =
+      productP
+          .field("start", durationP)
+          .field("end", durationP)
+          .map(Iso.of(
+              untuple(ClosedOpenInterval::new),
+              $ -> tuple($.start(), $.end())));
+
+  private static final JsonParser<CardinalitySpecification> cardinalitySpecificationJsonParser =
+      productP
+          .optionalField("duration", durationP)
+          .optionalField("occurrence", intP)
+          .map(Iso.of(
+              untuple(CardinalitySpecification::new),
+              $ -> tuple($.duration(), $.occurrence())));
   private static final ProductParsers.JsonObjectParser<GoalSpecifier.RecurrenceGoalDefinition> recurrenceGoalDefinitionP =
       productP
           .field("activityTemplate", activityTemplateP)
@@ -147,6 +164,18 @@ public class SchedulingDSL {
                   goalDefinition.activityTemplate(),
                   goalDefinition.forEach())));
 
+  private static final ProductParsers.JsonObjectParser<GoalSpecifier.CardinalityGoalDefinition> cardinalityGoalDefinitionP =
+      productP
+          .field("activityTemplate", activityTemplateP)
+          .field("specification", cardinalitySpecificationJsonParser)
+          .field("inPeriod", intervalP)
+          .map(Iso.of(
+              untuple(GoalSpecifier.CardinalityGoalDefinition::new),
+              goalDefinition -> tuple(
+                  goalDefinition.activityTemplate(),
+                  goalDefinition.specification(),
+                  goalDefinition.inPeriod())));
+
   private static ProductParsers.JsonObjectParser<GoalSpecifier.GoalAnd> goalAndF(final JsonParser<GoalSpecifier> goalSpecifierP) {
     return productP
         .field("goals", listP(goalSpecifierP))
@@ -166,6 +195,7 @@ public class SchedulingDSL {
       recursiveP(self -> SumParsers.sumP("kind", GoalSpecifier.class, List.of(
           SumParsers.variant("ActivityRecurrenceGoal", GoalSpecifier.RecurrenceGoalDefinition.class, recurrenceGoalDefinitionP),
           SumParsers.variant("ActivityCoexistenceGoal", GoalSpecifier.CoexistenceGoalDefinition.class, coexistenceGoalDefinitionP),
+          SumParsers.variant("ActivityCardinalityGoal", GoalSpecifier.CardinalityGoalDefinition.class, cardinalityGoalDefinitionP),
           SumParsers.variant("GoalAnd", GoalSpecifier.GoalAnd.class, goalAndF(self)),
           SumParsers.variant("GoalOr", GoalSpecifier.GoalOr.class, goalOrF(self))
       )));
@@ -183,12 +213,19 @@ public class SchedulingDSL {
         ActivityTemplate activityTemplate,
         ConstraintExpression forEach
     ) implements GoalSpecifier {}
+    record CardinalityGoalDefinition(
+        ActivityTemplate activityTemplate,
+        CardinalitySpecification specification,
+        ClosedOpenInterval inPeriod
+    ) implements GoalSpecifier {}
     record GoalAnd(List<GoalSpecifier> goals) implements GoalSpecifier {}
     record GoalOr(List<GoalSpecifier> goals) implements GoalSpecifier {}
   }
 
   public record LinearResource(String name) {}
 
+  public record CardinalitySpecification(Optional<Duration> duration, Optional<Integer> occurrence){}
+  public record ClosedOpenInterval(Duration start, Duration end){}
   public record ActivityTemplate(String activityType, Map<String, SerializedValue> arguments) {}
 
   public record ActivityExpression(String type) {}
