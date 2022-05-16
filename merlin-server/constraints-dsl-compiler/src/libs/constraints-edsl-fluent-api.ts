@@ -289,8 +289,22 @@ declare global {
     /** Internal AST Node */
     public readonly __astNode: AST.Constraint;
 
+    /**
+     * Forbid instances of two activity types from overlapping with each other.
+     * @param activityType1
+     * @param activityType2
+     * @constructor
+     */
     public static ForbiddenActivityOverlap(activityType1: string, activityType2: string): Constraint
 
+    /**
+     * Check a constraint for each instance of an activity type.
+     *
+     * @param activityType activity type to check
+     * @param alias aliased name of activity instances, referenced by the constraint argument
+     * @param constraint constraint to apply
+     * @constructor
+     */
     public static ForEachActivity(activityType: string, alias: string, constraint: Constraint): Constraint
   }
 
@@ -298,26 +312,51 @@ declare global {
     /** Internal AST Node */
     public readonly __astNode: AST.WindowsExpression;
 
+    /**
+     * Produce a window for the duration of the aliased activity instance.
+     *
+     * @param alias
+     * @constructor
+     */
     public static During(alias: string): Windows
+
+    /**
+     * Produce an instantaneous window at the start of the aliased activity instance.
+     *
+     * @param alias
+     * @constructor
+     */
     public static StartOf(alias: string): Windows
+
+    /**
+     * Produce an instantaneous window at the end of the aliased activity instance.
+     * @param alias
+     * @constructor
+     */
     public static EndOf(alias: string): Windows
+
+    /**
+     * Produce a window when all arguments produce a window.
+     *
+     * Performs the intersection of the argument windows.
+     *
+     * @param windows any number of windows expressions
+     */
+    public static All(...windows: Windows[]): Windows
+
+    /**
+     * Produce a window when any argument produces a window.
+     *
+     * Performs the union of the argument windows.
+     *
+     * @param windows one or more windows expressions
+     */
+    public static Any(...windows: Windows[]): Windows
 
     /**
      * Only check this expression of the condition argument produces a window.
      *
      * @param condition
-     */
-    public static All(...windows: Windows[]): Windows
-
-    /**
-     * Produce a window when this and the arguments all produce a window.
-     * @param others one or more windows expressions
-     */
-    public static Any(...windows: Windows[]): Windows
-
-    /**
-     * Produce a window when this or one of the arguments produces a window.
-     * @param others one or more windows expressions
      */
     public if(condition: Windows): Windows
 
@@ -326,6 +365,12 @@ declare global {
      */
     public not(): Windows
 
+    /**
+     * Produce a constraint violation whenever this does NOT produce a window.
+     *
+     * Essentially, express the condition you want to be satisfied, then use
+     * this method to produce a violation whenever it is NOT satisfied.
+     */
     public violations(): Constraint
   }
 
@@ -333,22 +378,87 @@ declare global {
     /** Internal AST Node */
     public readonly __astNode: AST.RealProfileExpression;
 
+    /**
+     * Reference the real profile associated with a resource.
+     * @param name
+     * @constructor
+     */
     public static Resource(name: string): Real
+
+    /**
+     * Create a constant real profile for all time.
+     * @param value
+     * @constructor
+     */
     public static Value(value: number): Real
+
+    /**
+     * Reference the value of an activity instance parameter as a constant real profile.
+     *
+     * Only valid for the duration of the activity instance.
+     *
+     * @param alias alias of the activity instance
+     * @param name name of the parameter
+     * @constructor
+     */
     public static Parameter(alias: string, name: string): Real
 
+    /**
+     * Create a real profile from this profile's derivative.
+     */
     public rate(): Real
+
+    /**
+     * Create a real profile by multiplying this profile by a constant
+     * @param multiplier
+     */
     public times(multiplier: number): Real
+
+    /**
+     * Create a real profile by adding this and another real profile together.
+     * @param other
+     */
     public plus(other: Real | number): Real
 
+    /**
+     * Produce a window whenever this profile is less than another real profile.
+     * @param other
+     */
     public lessThan(other: Real | number): Windows
+
+    /**
+     * Produce a window whenever this profile is less than or equal to another real profile.
+     * @param other
+     */
     public lessThanOrEqual(other: Real | number): Windows
+
+    /**
+     * Produce a window whenever this profile is greater than to another real profile.
+     * @param other
+     */
     public greaterThan(other: Real | number): Windows
+
+    /**
+     * Produce a window whenever this profile is greater than or equal to another real profile.
+     * @param other
+     */
     public greaterThanOrEqual(other: Real | number): Windows
 
+    /**
+     * Produce a window whenever this profile is equal to another real profile.
+     * @param other
+     */
     public equal(other: Real | number): Windows
+
+    /**
+     * Produce a window whenever this profile is not equal to another real profile.
+     * @param other
+     */
     public notEqual(other: Real | number): Windows
 
+    /**
+     * Produce an instantaneous window whenever this profile changes.
+     */
     public changed(): Windows
   }
 
@@ -356,15 +466,54 @@ declare global {
     /** Internal AST Node */
     public readonly __astNode: AST.DiscreteProfileExpression
 
+    /**
+     * Reference the discrete profile associated with a resource.
+     * @param name
+     * @constructor
+     */
     public static Resource(name: string): Discrete
+
+    /**
+     * Create a constant discrete profile for all time.
+     * @param value
+     * @constructor
+     */
     public static Value(value: any): Discrete
+
+    /**
+     * Reference the value of an activity instance parameter as a constant discrete profile.
+     *
+     * Only valid for the duration of the activity instance.
+     *
+     * @param alias alias of the activity instance
+     * @param name name of the parameter
+     * @constructor
+     */
     public static Parameter(alias: string, name: string): Discrete
 
+    /**
+     * Produce an instantaneous window whenever this profile makes a specific transition.
+     *
+     * @param from initial value
+     * @param to final value
+     */
     public transition<T>(from: T, to: T): Windows
 
+    /**
+     * Produce a window whenever this profile is equal to another discrete profile.
+     * @param other
+     */
     public equal(other: any): Windows
+
+    /**
+     * Produce a window whenever this profile is not equal to another discrete profile.
+     * @param other
+     */
     public notEqual(other: any): Windows
 
+    /**
+     * Produce an instantaneous window whenever this profile changes.
+     */
     public changed(): Windows
   }
 }
