@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.scheduler.conflicts.UnsatisfiableMissingActivityConflict;
+import gov.nasa.jpl.aerie.scheduler.conflicts.UnsatisfiableGoalConflict;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
@@ -171,7 +171,8 @@ public class CardinalityGoal extends ActivityTemplateGoal {
         durToSchedule = this.durationRange.start.minus(total);
       } else if (total.compareTo(this.durationRange.end) > 0) {
         logger.warn("Need to decrease duration of activities from the plan, impossible because scheduler cannot remove activities");
-        return List.of(new UnsatisfiableMissingActivityConflict(this));
+        return List.of(new UnsatisfiableGoalConflict(this,
+                                                     "Need to decrease duration of activities from the plan, impossible because scheduler cannot remove activities"));
       }
     }
     if (this.occurrenceRange != null && !this.occurrenceRange.contains(nbActs)) {
@@ -179,7 +180,8 @@ public class CardinalityGoal extends ActivityTemplateGoal {
         nbToSchedule = this.occurrenceRange.getMinimum() - nbActs;
       } else if (nbActs > this.occurrenceRange.getMaximum()) {
         logger.warn("Need to remove activities from the plan to satify cardinality goal, impossible");
-        return List.of(new UnsatisfiableMissingActivityConflict(this));
+        return List.of(new UnsatisfiableGoalConflict(this,
+                                                     "Need to remove activities from the plan to satify cardinality goal, impossible"));
       }
     }
 
