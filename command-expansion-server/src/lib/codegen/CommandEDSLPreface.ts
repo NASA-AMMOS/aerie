@@ -304,3 +304,10 @@ export class Sequence {
     });
   }
 }
+
+//helper functions
+function orderCommandArguments(args: { [argName: string]: any }, order: string[]): any {
+  return order.map(key => args[key]);
+}
+
+/** END Preface */
