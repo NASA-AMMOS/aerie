@@ -103,14 +103,13 @@ public record SchedulerBindings(
         for (final var entry : r.files().entrySet()) {
           files = files.add(
               Json.createObjectBuilder()
-                  .add("filename", entry.getKey())
-                  .add("contents", entry.getValue())
+                  .add("filePath", entry.getKey())
+                  .add("content", entry.getValue())
                   .build());
         }
         resultString = Json
             .createObjectBuilder()
             .add("status", "success")
-            .add("typescript", r.typescript()) // TODO deprecate when the UI uses typescriptFiles
             .add("typescriptFiles", files)
             .build().toString();
       } else if (response instanceof GenerateSchedulingLibAction.Response.Failure r) {

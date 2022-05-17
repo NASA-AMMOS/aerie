@@ -19,7 +19,7 @@ public record GenerateSchedulingLibAction(TypescriptCodeGenerationService typesc
    */
   public sealed interface Response {
     record Failure(String reason) implements Response {}
-    record Success(String typescript, Map<String, String> files) implements Response {}
+    record Success(Map<String, String> files) implements Response {}
   }
 
   /**
@@ -38,7 +38,6 @@ public record GenerateSchedulingLibAction(TypescriptCodeGenerationService typesc
       final var windowsAst = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "windows-expressions-ast.ts"));
       final var generated = this.typescriptCodeGenerationService.generateTypescriptTypesForMissionModel(missionModelId);
       return new Response.Success(
-          schedulingDsl + "\n" + generated, // TODO deprecate this when the UI is updated.
           Map.of("scheduling-edsl-fluent-api.ts", schedulingDsl,
                  "mission-model-generated-code.ts", generated,
                  "scheduler-ast.ts", schedulerAst,

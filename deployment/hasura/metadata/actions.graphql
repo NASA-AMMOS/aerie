@@ -151,7 +151,6 @@ type SchedulingResponse {
 
 type DslTypescriptResponse {
   status: DslTypescriptResponseStatus!
-  typescript: String
   typescriptFiles: [TypescriptFile]
   reason: String
 }
@@ -162,8 +161,8 @@ enum DslTypescriptResponseStatus {
 }
 
 type TypescriptFile {
-  filename: String,
-  contents: String
+  filePath: String,
+  content: String
 }
 
 type CommandDictionaryResponse {

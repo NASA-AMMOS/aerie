@@ -16,7 +16,7 @@ public record GenerateConstraintsLibAction(TypescriptCodeGenerationService types
    */
   public sealed interface Response {
     record Failure(String reason) implements Response {}
-    record Success(String typescript, Map<String, String> files) implements Response {}
+    record Success(Map<String, String> files) implements Response {}
   }
 
   /**
@@ -33,7 +33,6 @@ public record GenerateConstraintsLibAction(TypescriptCodeGenerationService types
       final var constraintsAst = Files.readString(Paths.get(constraintsDslCompilerRoot, "src", "libs", "constraints-ast.ts"));
       final var generated = TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel();
       return new Response.Success(
-          constraintsApi + "\n" + generated, // TODO deprecate this when the UI is updated.
           Map.of("constraints-edsl-fluent-api.ts", constraintsApi,
                  "mission-model-generated-code.ts", generated,
                  "constraints-ast.ts", constraintsAst));
