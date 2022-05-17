@@ -6,11 +6,6 @@ RUN cd /usr/src/app && tar --strip-components 1 -xf server.tar -C extracted
 
 FROM eclipse-temurin:18-focal
 
-ARG IMAGE_INCLUDE_JDK=false
-RUN if [ $IMAGE_INCLUDE_JDK = "true" ] ; then \
-        apt update && apt install --no-install-recommends openjdk-17-jdk-headless -y; \
-    fi ;
-
 ENV NODE_VERSION=16.14.0
 ENV NVM_DIR=/root/.nvm
 ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
