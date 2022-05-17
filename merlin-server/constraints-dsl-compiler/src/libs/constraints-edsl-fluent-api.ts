@@ -84,6 +84,22 @@ export class Windows {
     });
   }
 
+  public longerThan(duration: Duration) : Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionLongerThan,
+      windowExpression: this.__astNode,
+      duration: duration
+    })
+  }
+
+  public shorterThan(duration: Duration) : Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionShorterhan,
+      windowExpression: this.__astNode,
+      duration: duration
+    })
+  }
+
   public shiftBy(fromStart: Duration, fromEnd: Duration) : Windows {
     return new Windows({
       kind: AST.NodeKind.WindowsExpressionShiftBy,
@@ -343,6 +359,19 @@ declare global {
      * @param fromEnd duration to add from the end of the window
      */
     public shiftBy(fromStart: number, fromEnd: number): Windows;
+
+    /**
+     *  Return all windows with a duration longer than the argument
+     * @param duration the duration
+     */
+    public longerThan(duration: Duration): Windows;
+
+    /**
+     * Returns all windows with a duration shorter than the argument
+     * @param duration the duration
+     */
+    public shorterThan(duration: Duration): Windows;
+
   }
 
   export class Real {

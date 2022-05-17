@@ -12,6 +12,8 @@ export enum NodeKind {
   WindowsExpressionActivityWindow = 'WindowsExpressionActivityWindow',
   WindowsExpressionStartOf = 'WindowsExpressionStartOf',
   WindowsExpressionEndOf = 'WindowsExpressionEndOf',
+  WindowsExpressionLongerThan = 'WindowsExpressionLongerThan',
+  WindowsExpressionShorterhan = 'WindowsExpressionShorterThan',
   WindowsExpressionShiftBy = 'WindowsExpressionShiftBy',
   ExpressionEqual = 'ExpressionEqual',
   ExpressionNotEqual = 'ExpressionNotEqual',
@@ -57,6 +59,8 @@ export type WindowsExpression =
   | ExpressionNotEqual<DiscreteProfileExpression>
   | WindowsExpressionAll
   | WindowsExpressionAny
+  | WindowsExpressionLongerThan
+  | WindowsExpressionShorterThan
   | WindowsExpressionInvert
   | WindowsExpressionShiftBy;
 
@@ -138,6 +142,18 @@ export interface WindowsExpressionStartOf {
 export interface WindowsExpressionActivityWindow {
   kind: NodeKind.WindowsExpressionActivityWindow;
   alias: string;
+}
+
+export interface WindowsExpressionShorterThan {
+  kind: NodeKind.WindowsExpressionShorterhan,
+  windowExpression: WindowsExpression,
+  duration: number
+}
+
+export interface WindowsExpressionLongerThan {
+  kind: NodeKind.WindowsExpressionLongerThan,
+  windowExpression: WindowsExpression,
+  duration: number
 }
 
 export interface DiscreteProfileTransition {
