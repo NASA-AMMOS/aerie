@@ -76,7 +76,13 @@ type Query {
 type Query {
   schedulingDslTypescript(
     missionModelId: Int!
-  ): SchedulingDslTypescriptResponse
+  ): DslTypescriptResponse
+}
+
+type Query {
+  constraintsDslTypescript(
+    missionModelId: ID!
+  ): DslTypescriptResponse
 }
 
 type Query {
@@ -112,11 +118,6 @@ enum SchedulingStatus {
   incomplete
 }
 
-enum SchedulingDslTypescriptResponseStatus {
-  success
-  failure
-}
-
 type ResourceType {
   name: String!
   schema: ResourceSchema!
@@ -148,16 +149,20 @@ type SchedulingResponse {
   reason: SchedulingFailureReason
 }
 
-type SchedulingDslTypescriptResponse {
-  status: SchedulingDslTypescriptResponseStatus!
-  typescript: String
+type DslTypescriptResponse {
+  status: DslTypescriptResponseStatus!
   typescriptFiles: [TypescriptFile]
   reason: String
 }
 
+enum DslTypescriptResponseStatus {
+  success
+  failure
+}
+
 type TypescriptFile {
-  filename: String,
-  contents: String
+  filePath: String,
+  content: String
 }
 
 type CommandDictionaryResponse {

@@ -22,6 +22,7 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.CachedSimulationService;
 import gov.nasa.jpl.aerie.merlin.server.services.ConstraintsDSLCompilationService;
+import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
@@ -67,7 +68,13 @@ public final class AerieAppDriver {
         constraintsDSLCompilationService,
         configuration.useNewConstraintPipeline()
     );
-    final var merlinBindings = new MerlinBindings(missionModelController, planController, simulationAction);
+    final var generateSchedulingLibAction = new GenerateConstraintsLibAction(typescriptCodeGenerationService);
+    final var merlinBindings = new MerlinBindings(
+        missionModelController,
+        planController,
+        simulationAction,
+        generateSchedulingLibAction
+    );
 
     // Configure an HTTP server.
     final var javalin = Javalin.create(config -> {

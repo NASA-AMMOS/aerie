@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
@@ -44,15 +45,18 @@ public final class MerlinBindings implements Plugin {
   private final MissionModelService missionModelService;
   private final PlanService planService;
   private final GetSimulationResultsAction simulationAction;
+  private final GenerateConstraintsLibAction generateConstraintsLibAction;
 
   public MerlinBindings(
       final MissionModelService missionModelService,
       final PlanService planService,
-      final GetSimulationResultsAction simulationAction)
-  {
+      final GetSimulationResultsAction simulationAction,
+      final GenerateConstraintsLibAction generateConstraintsLibAction
+  ) {
     this.missionModelService = missionModelService;
     this.planService = planService;
     this.simulationAction = simulationAction;
+    this.generateConstraintsLibAction = generateConstraintsLibAction;
   }
 
   @Override
@@ -86,6 +90,9 @@ public final class MerlinBindings implements Plugin {
       });
       path("addExternalDataset", () -> {
         post(this::addExternalDataset);
+      });
+      path("constraintsDslTypescript", () -> {
+        post(this::getConstraintsDslTypescript);
       });
     });
 
@@ -271,6 +278,49 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    }
+  }
+
+  /**
+   * action bound to the /constraintsDslTypescript endpoint: generates the typescript code for a given mission model
+   *
+   * @param ctx the http context of the request from which to read input or post results
+   */
+  private void getConstraintsDslTypescript(final Context ctx) {
+    try {
+      final var body = parseJson(ctx.body(), hasuraMissionModelActionP);
+      final var missionModelId = body.input().missionModelId();
+
+      final var response = this.generateConstraintsLibAction.run(missionModelId);
+      final String resultString;
+      if (response instanceof GenerateConstraintsLibAction.Response.Success r) {
+        var files = Json.createArrayBuilder();
+        for (final var entry : r.files().entrySet()) {
+          files = files.add(
+              Json.createObjectBuilder()
+                  .add("filePath", entry.getKey())
+                  .add("content", entry.getValue())
+                  .build());
+        }
+        resultString = Json
+            .createObjectBuilder()
+            .add("status", "success")
+            .add("typescriptFiles", files)
+            .build().toString();
+      } else if (response instanceof GenerateConstraintsLibAction.Response.Failure r) {
+        resultString = Json
+            .createObjectBuilder()
+            .add("status", "failure")
+            .add("reason", r.reason())
+            .build().toString();
+      } else {
+        throw new Error("Unhandled variant of Response: " + response);
+      }
+      ctx.result(resultString);
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     }
   }
 

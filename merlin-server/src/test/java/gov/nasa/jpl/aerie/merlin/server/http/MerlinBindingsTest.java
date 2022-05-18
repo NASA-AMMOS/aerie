@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.server.mocks.FakeFile;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.ConstraintsDSLCompilationService;
+import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.TypescriptCodeGenerationService;
@@ -59,10 +60,12 @@ public final class MerlinBindingsTest {
         false
     );
 
+    final var generateConstraintsLibAction = new GenerateConstraintsLibAction(typescriptCodeGenerationService);
+
     SERVER = Javalin.create(config -> {
       config.showJavalinBanner = false;
       config.enableCorsForAllOrigins();
-      config.registerPlugin(new MerlinBindings(missionModelApp, planApp, simulationAction));
+      config.registerPlugin(new MerlinBindings(missionModelApp, planApp, simulationAction, generateConstraintsLibAction));
     });
 
     SERVER.start(54321); // Use likely unused port to avoid clash with any currently hosted port 80 services

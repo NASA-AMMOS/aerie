@@ -47,6 +47,10 @@ actions:
     definition:
       kind: ""
       handler: http://aerie_scheduler:27185/schedulingDslTypescript
+  - name: constraintsDslTypescript
+    definition:
+      kind: ""
+      handler: http://aerie_merlin:27183/constraintsDslTypescript
   - name: simulate
     definition:
       kind: ""
@@ -101,7 +105,7 @@ custom_types:
     - name: EffectiveArgumentsResponse
     - name: AddExternalDatasetResponse
     - name: SchedulingResponse
-    - name: SchedulingDslTypescriptResponse
+    - name: DslTypescriptResponse
     - name: CommandDictionaryResponse
     - name: AddCommandExpansionResponse
     - name: TypeScriptResponse
