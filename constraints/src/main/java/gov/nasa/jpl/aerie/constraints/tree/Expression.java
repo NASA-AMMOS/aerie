@@ -16,6 +16,11 @@ public interface Expression<T> {
   default T evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment){
     return this.evaluate(results, results.bounds, environment);
   }
+
+  default T evaluate(final SimulationResults results, final Window bounds){
+    return this.evaluate(results, results.bounds, Map.of());
+  }
+
   default T evaluate(final SimulationResults results) {
     return this.evaluate(results, Map.of());
   }
