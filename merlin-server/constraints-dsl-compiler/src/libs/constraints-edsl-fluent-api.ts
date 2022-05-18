@@ -9,7 +9,7 @@ export class Constraint {
     this.__astNode = astNode;
   }
 
-  public static ForbiddenActivityOverlap(activityType1: string, activityType2: string): Constraint {
+  public static ForbiddenActivityOverlap(activityType1: ActivityTypeName, activityType2: ActivityTypeName): Constraint {
     return new Constraint({
       kind: AST.NodeKind.ForbiddenActivityOverlap,
       activityType1,
@@ -17,7 +17,7 @@ export class Constraint {
     })
   }
 
-  public static ForEachActivity(activityType: string, alias: string, constraint: Constraint): Constraint {
+  public static ForEachActivity(activityType: ActivityTypeName, alias: string, constraint: Constraint): Constraint {
     return new Constraint({
       kind: AST.NodeKind.ForEachActivity,
       activityType,
@@ -296,7 +296,7 @@ declare global {
      * @param activityType2
      * @constructor
      */
-    public static ForbiddenActivityOverlap(activityType1: string, activityType2: string): Constraint
+    public static ForbiddenActivityOverlap(activityType1: ActivityTypeName, activityType2: ActivityTypeName): Constraint
 
     /**
      * Check a constraint for each instance of an activity type.
@@ -306,7 +306,7 @@ declare global {
      * @param constraint constraint to apply
      * @constructor
      */
-    public static ForEachActivity(activityType: string, alias: string, constraint: Constraint): Constraint
+    public static ForEachActivity(activityType: ActivityTypeName, alias: string, constraint: Constraint): Constraint
   }
 
   export class Windows {

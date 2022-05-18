@@ -16,10 +16,15 @@ public final class TypescriptCodeGenerationService {
   {
     final var activityTypes = this.missionModelService.getActivityTypes(missionModelId);
 
-
-
     final var result = new ArrayList<String>();
     result.add("/** Start Codegen */");
+
+    result.add("type ActivityTypeName =");
+    for (String activityType: activityTypes.keySet()) {
+      result.add(indent("| \"" + activityType + "\""));
+    }
+    result.add(indent(";"));
+
     result.add("/** End Codegen */");
     return joinLines(result);
   }
