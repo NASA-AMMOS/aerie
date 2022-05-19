@@ -47,17 +47,6 @@ public class TypescriptCodeGenerationService {
 
     result.add(generateResourceTypes(missionModelTypes.resourceTypes()));
 
-    final var resourceConditionalType = indent(indent(generateResourceConditionalType(missionModelTypes.resourceTypes()))).trim();
-    result.add("""
-                  export function transition<T extends ResourceUnion>(
-                    resource: T,
-                    from: %s,
-                    to: %s
-                  ): Windows {
-                    throw new Error("This function exists for type checking purposes only");
-                  }
-                  """.formatted(resourceConditionalType, resourceConditionalType));
-
     result.add("declare global {");
     result.add(indent("var ActivityTemplates: typeof ActivityTemplateConstructors;"));
     result.add(indent("var ActivityTypes: typeof ActivityType;"));
@@ -73,15 +62,6 @@ public class TypescriptCodeGenerationService {
     return joinLines(result);
   }
 
-  private static String generateResourceConditionalType(final Iterable<MissionModelService.ResourceType> resourceTypes) {
-    final var result = new ArrayList<String>();
-    for (final var resource : resourceTypes) {
-      result.add("T extends \"%s\" ? %s :".formatted(resource.name(), TypescriptType.toString(valueSchemaToTypescriptType(resource.schema()))));
-    }
-    result.add("never");
-    return joinLines(result);
-  }
-
   private static String generateResourceTypes(final Collection<MissionModelService.ResourceType> resourceTypes) {
     final var result = new ArrayList<String>();
     result.add("export enum Resource {");
@@ -89,11 +69,7 @@ public class TypescriptCodeGenerationService {
       result.add(indent("\"%s\" = \"%s\",".formatted(resourceType.name(), resourceType.name())));
     }
     result.add("};");
-    result.add("type ResourceUnion =");
-    for (final var resourceType : resourceTypes) {
-      result.add(indent("| \"%s\"".formatted(resourceType.name())));
-    }
-    return joinLines(result) + ";";
+    return joinLines(result);
   }
 
   private static String generateActivityTypeEnum(ArrayList<ActivityTypeCode> activityTypeCodes) {
