@@ -5,7 +5,7 @@
  *
  */
 
-import {WindowSet} from "./windows-edsl-fluent-api";
+import {Windows} from "./constraints-edsl-fluent-api";
 
 export enum ActivityType {
   // This indicates to the compiler that we are using a string enum so we can assign it to string for our AST
@@ -25,6 +25,6 @@ export function transition<T extends ResourceUnion, I =
           T extends "/abc" ? Double
         : T extends "/abc/def" ? string
         : never
->(resource: T, from: I, to: I): WindowSet {
+>(resource: T, from: I, to: I): Windows {
   throw new Error("This function exists for typechecking purposes only");
 }

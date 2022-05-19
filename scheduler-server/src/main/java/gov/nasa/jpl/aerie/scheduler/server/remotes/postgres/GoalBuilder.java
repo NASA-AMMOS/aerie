@@ -2,17 +2,6 @@ package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.constraints.tree.And;
-import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
-import gov.nasa.jpl.aerie.constraints.tree.Equal;
-import gov.nasa.jpl.aerie.constraints.tree.Expression;
-import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
-import gov.nasa.jpl.aerie.constraints.tree.LessThan;
-import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
-import gov.nasa.jpl.aerie.constraints.tree.Or;
-import gov.nasa.jpl.aerie.constraints.tree.RealResource;
-import gov.nasa.jpl.aerie.constraints.tree.RealValue;
-import gov.nasa.jpl.aerie.constraints.tree.Transition;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
@@ -32,7 +21,6 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
-import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.function.Function;
 
@@ -108,39 +96,12 @@ public class GoalBuilder {
       final Function<String, ActivityType> lookupActivityType) {
     if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.ActivityExpression c) {
       return new TimeRangeExpression.Builder()
-          .from(ActivityExpression.ofType(lookupActivityType.apply(c.expression().type())))
+          .from(ActivityExpression.ofType(lookupActivityType.apply(c.type())))
           .build();
-    } else {
+    } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.WindowsExpression c){
       return new TimeRangeExpression.Builder()
-          .from(expressionOfConstraintExpression(constraintExpression))
+          .from(c.expression())
           .build();
-    }
-  }
-
-  private static Expression<Windows> expressionOfConstraintExpression(
-      final SchedulingDSL.ConstraintExpression constraintExpression) {
-    if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.ActivityExpression c) {
-      throw new NotImplementedException("Nested ActivityExpressions are not yet supported");
-    } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.GreaterThan c) {
-      return new GreaterThan(new RealResource(c.resource().name()), new RealValue(c.value()));
-    } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.LessThan c) {
-      return new LessThan(new RealResource(c.resource().name()), new RealValue(c.value()));
-    } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.EqualLinear c) {
-      return new Equal<>(new RealResource(c.resource().name()), new RealValue(c.value()));
-    } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.NotEqualLinear c) {
-      return new NotEqual<>(new RealResource(c.resource().name()), new RealValue(c.value()));
-    } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.Transition c) {
-      return new Transition(new DiscreteResource(c.resource().name()), c.from(), c.to());
-    } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.And c) {
-      return new And(c.expressions()
-                      .stream()
-                      .map(GoalBuilder::expressionOfConstraintExpression)
-                      .toList());
-    } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.Or c) {
-      return new Or(c.expressions()
-                     .stream()
-                     .map(GoalBuilder::expressionOfConstraintExpression)
-                     .toList());
     } else {
       throw new UnexpectedSubtypeError(SchedulingDSL.ConstraintExpression.class, constraintExpression);
     }

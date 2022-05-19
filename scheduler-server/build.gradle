@@ -27,6 +27,7 @@ clean {
 }
 
 task assembleSchedulingDSLCompiler(type: NpmTask) {
+  dependsOn copyConstraintsTypescript
   dependsOn processResources
   dependsOn npmInstall
   args = ['run', 'build']

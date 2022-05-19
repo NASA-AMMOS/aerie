@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
@@ -42,6 +43,9 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
 
   MockMerlinService() {
     this.initialPlan = List.of();
+    this.planningHorizon = Optional.of(new PlanningHorizon(
+        TimeUtility.fromDOY("2021-001T00:00:00"),
+        TimeUtility.fromDOY("2021-005T00:00:00")));
   }
 
   void setInitialPlan(final List<PlannedActivityInstance> initialPlan) {

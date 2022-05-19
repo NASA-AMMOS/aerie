@@ -1,19 +1,25 @@
 package gov.nasa.jpl.aerie.scheduler.server.models;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.ProductParsers;
 import gov.nasa.jpl.aerie.json.SumParsers;
+import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.doubleP;
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintsDSL.windowsExpressionP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
@@ -65,84 +71,24 @@ public class SchedulingDSL {
                   goalDefinition.activityTemplate(),
                   goalDefinition.interval())));
 
-  private static final ProductParsers.JsonObjectParser<ActivityExpression> activityExpressionP =
+  private static final ProductParsers.JsonObjectParser<ConstraintExpression.ActivityExpression> activityExpressionP =
       productP
+          .field("kind", literalP("ActivityExpression"))
           .field("type", stringP)
           .map(Iso.of(
-              ActivityExpression::new,
-              ActivityExpression::type));
+              $ -> new ConstraintExpression.ActivityExpression($.getRight()),
+              t -> Pair.of(Unit.UNIT, t.type())));
 
   private static final JsonParser<LinearResource> linearResourceP =
       stringP
           .map(Iso.of(LinearResource::new, LinearResource::name));
 
-  private static final ProductParsers.JsonObjectParser<ConstraintExpression.GreaterThan> greaterThanP =
-      productP
-          .field("left", linearResourceP)
-          .field("right", doubleP)
-          .map(Iso.of(
-              untuple(ConstraintExpression.GreaterThan::new),
-              $ -> tuple($.resource(), $.value())));
-
-  private static final ProductParsers.JsonObjectParser<ConstraintExpression.LessThan> lessThanP =
-      productP
-          .field("left", linearResourceP)
-          .field("right", doubleP)
-          .map(Iso.of(
-              untuple(ConstraintExpression.LessThan::new),
-              $ -> tuple($.resource(), $.value())));
-
-  private static final ProductParsers.JsonObjectParser<ConstraintExpression.EqualLinear> equalLinearP =
-      productP
-          .field("left", linearResourceP)
-          .field("right", doubleP)
-          .map(Iso.of(
-              untuple(ConstraintExpression.EqualLinear::new),
-              $ -> tuple($.resource(), $.value())));
-
-  private static final ProductParsers.JsonObjectParser<ConstraintExpression.NotEqualLinear> notEqualLinearP =
-      productP
-          .field("left", linearResourceP)
-          .field("right", doubleP)
-          .map(Iso.of(
-              untuple(ConstraintExpression.NotEqualLinear::new),
-              $ -> tuple($.resource(), $.value())));
-
-  private static final ProductParsers.JsonObjectParser<ConstraintExpression.Transition> transitionP =
-      productP
-          .field("resource", linearResourceP)
-          .field("from", serializedValueP)
-          .field("to", serializedValueP)
-          .map(Iso.of(
-              untuple(ConstraintExpression.Transition::new),
-              $ -> tuple($.resource(), $.from(), $.to())));
-
-  private static ProductParsers.JsonObjectParser<ConstraintExpression.And> windowsAndF(final JsonParser<ConstraintExpression> constraintExpressionP) {
-    return productP
-        .field("windowsExpressions", listP(constraintExpressionP))
-        .map(Iso.of(untuple(ConstraintExpression.And::new),
-                    ConstraintExpression.And::expressions));
-  }
-
-  private static ProductParsers.JsonObjectParser<ConstraintExpression.Or> windowsOrF(final JsonParser<ConstraintExpression> constraintExpressionP) {
-    return productP
-        .field("windowsExpressions", listP(constraintExpressionP))
-        .map(Iso.of(untuple(ConstraintExpression.Or::new),
-                    ConstraintExpression.Or::expressions));
-  }
-
   private static final JsonParser<ConstraintExpression> constraintExpressionP =
-      recursiveP(self -> SumParsers.sumP("kind", ConstraintExpression.class, List.of(
-          SumParsers.variant("ActivityExpression", ConstraintExpression.ActivityExpression.class, activityExpressionP.map(Iso.of(
-              ConstraintExpression.ActivityExpression::new,
-              ConstraintExpression.ActivityExpression::expression))),
-          SumParsers.variant("WindowsExpressionGreaterThan", ConstraintExpression.GreaterThan.class, greaterThanP),
-          SumParsers.variant("WindowsExpressionLessThan", ConstraintExpression.LessThan.class, lessThanP),
-          SumParsers.variant("WindowsExpressionEqualLinear", ConstraintExpression.EqualLinear.class, equalLinearP),
-          SumParsers.variant("WindowsExpressionNotEqualLinear", ConstraintExpression.NotEqualLinear.class, notEqualLinearP),
-          SumParsers.variant("WindowsExpressionTransition", ConstraintExpression.Transition.class, transitionP),
-          SumParsers.variant("WindowsExpressionAnd", ConstraintExpression.And.class, windowsAndF(self)),
-          SumParsers.variant("WindowsExpressionOr", ConstraintExpression.Or.class, windowsOrF(self)))));
+      chooseP(
+          activityExpressionP,
+          windowsExpressionP.map(Iso.of(
+              ConstraintExpression.WindowsExpression::new,
+              ConstraintExpression.WindowsExpression::expression)));
 
   private static final ProductParsers.JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP =
       productP
@@ -218,23 +164,9 @@ public class SchedulingDSL {
   public record ClosedOpenInterval(Duration start, Duration end){}
   public record ActivityTemplate(String activityType, Map<String, SerializedValue> arguments) {}
 
-  public record ActivityExpression(String type) {}
-
   public sealed interface ConstraintExpression {
-    record ActivityExpression(SchedulingDSL.ActivityExpression expression) implements ConstraintExpression {}
+    record ActivityExpression(String type) implements ConstraintExpression {}
 
-    record GreaterThan(LinearResource resource, double value) implements ConstraintExpression {}
-
-    record LessThan(LinearResource resource, double value) implements ConstraintExpression {}
-
-    record EqualLinear(LinearResource resource, double value) implements ConstraintExpression {}
-
-    record NotEqualLinear(LinearResource resource, double value) implements ConstraintExpression {}
-
-    record Transition(LinearResource resource, SerializedValue from, SerializedValue to) implements ConstraintExpression {}
-
-    record And(List<ConstraintExpression> expressions) implements ConstraintExpression {}
-
-    record Or(List<ConstraintExpression> expressions) implements ConstraintExpression {}
+    record WindowsExpression(Expression<Windows> expression) implements ConstraintExpression {}
   }
 }

@@ -38,15 +38,15 @@ public record GenerateSchedulingLibAction(
       final var schedulingDslCompilerRoot = System.getenv("SCHEDULING_DSL_COMPILER_ROOT");
       final var schedulingDsl = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "scheduler-edsl-fluent-api.ts"));
       final var schedulerAst = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "scheduler-ast.ts"));
-      final var windowsDsl = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "windows-edsl-fluent-api.ts"));
-      final var windowsAst = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "windows-expressions-ast.ts"));
+      final var windowsDsl = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "constraints", "constraints-edsl-fluent-api.ts"));
+      final var windowsAst = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "constraints", "constraints-ast.ts"));
       final var generated = this.typescriptCodeGenerationService.generateTypescriptTypesForMissionModel(missionModelService, missionModelId);
       return new Response.Success(
           Map.of("scheduling-edsl-fluent-api.ts", schedulingDsl,
                  "scheduler-mission-model-generated-code.ts", generated,
                  "scheduler-ast.ts", schedulerAst,
-                 "windows-edsl-fluent-api.ts", windowsDsl,
-                 "windows-expressions-ast.ts", windowsAst));
+                 "constraints-edsl-fluent-api.ts", windowsDsl,
+                 "constraints-ast.ts", windowsAst));
     } catch (NoSuchMissionModelException | IOException e) {
       return new Response.Failure(e.getMessage());
     }

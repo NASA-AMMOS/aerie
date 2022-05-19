@@ -38,7 +38,7 @@ public class TypescriptCodeGenerationService {
     final var result = new ArrayList<String>();
     result.add("/** Start Codegen */");
     result.add("import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';");
-    result.add("import type { WindowSet } from './windows-edsl-fluent-api.js';");
+    result.add("import type { Windows } from './constraints-edsl-fluent-api.js';");
     result.add(generateActivityTypeEnum(activityTypeCodes));
     for (final var activityTypeCode : activityTypeCodes) {
       result.add("interface %s extends ActivityTemplate {}".formatted(activityTypeCode.activityTypeName()));
@@ -53,7 +53,7 @@ public class TypescriptCodeGenerationService {
                     resource: T,
                     from: %s,
                     to: %s
-                  ): WindowSet {
+                  ): Windows {
                     throw new Error("This function exists for type checking purposes only");
                   }
                   """.formatted(resourceConditionalType, resourceConditionalType));

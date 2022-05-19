@@ -7,8 +7,8 @@ import type { Goal } from './libs/scheduler-edsl-fluent-api.js';
 const codeRunner = new UserCodeRunner();
 const schedulerEDSL = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/scheduler-edsl-fluent-api.ts`, 'utf8');
 const schedulerAST = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/scheduler-ast.ts`, 'utf8');
-const windowsEDSL = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/windows-edsl-fluent-api.ts`, 'utf8');
-const windowsAST = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/windows-expressions-ast.ts`, 'utf8');
+const windowsEDSL = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/constraints/constraints-edsl-fluent-api.ts`, 'utf8');
+const windowsAST = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/constraints/constraints-ast.ts`, 'utf8');
 
 const input = readline.createInterface(process.stdin);
 
@@ -53,8 +53,8 @@ async function handleRequest(data: string) {
         [],
         10000,
         [
-          ts.createSourceFile('windows-expressions-ast.ts', windowsAST, ts.ScriptTarget.ESNext),
-          ts.createSourceFile('windows-edsl-fluent-api.ts', windowsEDSL, ts.ScriptTarget.ESNext),
+          ts.createSourceFile('constraints-ast.ts', windowsAST, ts.ScriptTarget.ESNext),
+          ts.createSourceFile('constraints-edsl-fluent-api.ts', windowsEDSL, ts.ScriptTarget.ESNext),
           ts.createSourceFile('scheduler-ast.ts', schedulerAST, ts.ScriptTarget.ESNext),
           ts.createSourceFile('scheduler-edsl-fluent-api.ts', schedulerEDSL, ts.ScriptTarget.ESNext),
           ts.createSourceFile('scheduler-mission-model-generated-code.ts', missionModelGeneratedCode, ts.ScriptTarget.ESNext),

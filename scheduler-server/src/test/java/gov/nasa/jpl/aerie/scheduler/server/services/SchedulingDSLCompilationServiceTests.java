@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
+import gov.nasa.jpl.aerie.constraints.tree.RealResource;
+import gov.nasa.jpl.aerie.constraints.tree.RealValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
@@ -223,7 +226,7 @@ class SchedulingDSLCompilationServiceTests {
                 fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
                 duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
               }),
-              forEach: WindowSet.during(ActivityTypes.SampleActivity1)
+              forEach: ActivityExpression.ofType(ActivityTypes.SampleActivity2)
             })
           }
         """);
@@ -241,7 +244,7 @@ class SchedulingDSLCompilationServiceTests {
                                                      Map.entry("duration", SerializedValue.of(60L * 60 * 1000 * 1000))
                                                  )
               ),
-              new SchedulingDSL.ConstraintExpression.ActivityExpression(new SchedulingDSL.ActivityExpression("SampleActivity1"))
+              new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2")
           ),
           r.goalSpecifier()
       );
@@ -295,7 +298,7 @@ class SchedulingDSLCompilationServiceTests {
                 fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
                 duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
               }),
-              forEach: WindowSet.transition(Resources["/sample/resource/1"], "Chiquita", "Dole")
+              forEach: Discrete.Resource(Resources["/sample/resource/1"]).transition("Chiquita", "Dole")
             })
           }
         """);
@@ -322,7 +325,7 @@ class SchedulingDSLCompilationServiceTests {
                 fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
                 duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
               }),
-              forEach: WindowSet.greaterThan(Resources["/sample/resource/1"], 50.0)
+              forEach: Real.Resource(Resources["/sample/resource/1"]).greaterThan(50.0)
             })
           }
         """);
@@ -340,7 +343,7 @@ class SchedulingDSLCompilationServiceTests {
                                                      Map.entry("duration", SerializedValue.of(60L * 60 * 1000 * 1000))
                                                  )
               ),
-              new SchedulingDSL.ConstraintExpression.GreaterThan(new SchedulingDSL.LinearResource("/sample/resource/1"), 50.0)
+              new SchedulingDSL.ConstraintExpression.WindowsExpression(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)))
           ),
           r.goalSpecifier()
       );

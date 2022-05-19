@@ -231,7 +231,7 @@ public class SchedulingIntegrationTests {
         List.of("""
           export default () => Goal.CoexistenceGoal({
             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-            forEach: WindowSet.during(ActivityTypes.GrowBanana),
+            forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
           })
           """));
 
@@ -284,7 +284,7 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: WindowSet.greaterThan(Resources["/plant"], 201.0)
+                   forEach: Real.Resource(Resources["/plant"]).greaterThan(201.0)
                  })
                }"""));
 
@@ -323,7 +323,7 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: WindowSet.lessThan(Resources["/plant"], 199.0)
+                   forEach: Real.Resource(Resources["/plant"]).lessThan(199.0)
                  })
                }"""));
 
@@ -362,7 +362,7 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: WindowSet.equalTo(Resources["/plant"], 100.0)
+                   forEach: Real.Resource(Resources["/plant"]).equal(100.0)
                  })
                }"""));
 
@@ -401,7 +401,7 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: WindowSet.equalTo(Resources["/plant"], 100.0)
+                   forEach: Real.Resource(Resources["/plant"]).equal(100.0)
                  })
                }"""));
 
@@ -438,7 +438,7 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: WindowSet.notEqualTo(Resources["/plant"], 200.0)
+                   forEach: Real.Resource(Resources["/plant"]).notEqual(200.0)
                  })
                }"""));
 
@@ -477,9 +477,9 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: WindowSet.all(
-                     WindowSet.greaterThan(Resources["/plant"], 50.0),
-                     WindowSet.lessThan(Resources["/plant"], 150.0),
+                   forEach: Windows.All(
+                     Real.Resource(Resources["/plant"]).greaterThan(50.0),
+                     Real.Resource(Resources["/plant"]).lessThan(150.0),
                    )
                  })
                }"""));
@@ -519,9 +519,9 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: WindowSet.any(
-                     WindowSet.equalTo(Resources["/plant"], 999.0),
-                     WindowSet.equalTo(Resources["/plant"], 100.0),
+                   forEach: Windows.Any(
+                     Real.Resource(Resources["/plant"]).equal(999.0),
+                     Real.Resource(Resources["/plant"]).equal(100.0),
                    )
                  })
                }"""));
@@ -553,7 +553,7 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: WindowSet.transition(Resources["/producer"], "Chiquita", "Dole")
+                   forEach: Discrete.Resource(Resources["/producer"]).transition("Chiquita", "Dole")
                  })
                }"""));
 
@@ -582,7 +582,7 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: WindowSet.transition(Resources["/producer"], "Chiquita", "Dole")
+                   forEach: Discrete.Resource(Resources["/producer"]).transition("Chiquita", "Dole")
                  })
                }"""));
 
