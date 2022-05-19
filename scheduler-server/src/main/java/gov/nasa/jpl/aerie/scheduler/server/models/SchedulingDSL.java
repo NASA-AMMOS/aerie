@@ -108,15 +108,6 @@ public class SchedulingDSL {
               untuple(ConstraintExpression.NotEqualLinear::new),
               $ -> tuple($.resource(), $.value())));
 
-  private static final ProductParsers.JsonObjectParser<ConstraintExpression.Between> betweenP =
-      productP
-          .field("resource", linearResourceP)
-          .field("lowerBound", doubleP)
-          .field("upperBound", doubleP)
-          .map(Iso.of(
-              untuple(ConstraintExpression.Between::new),
-              $ -> tuple($.resource(), $.lowerBound(), $.upperBound())));
-
   private static final ProductParsers.JsonObjectParser<ConstraintExpression.Transition> transitionP =
       productP
           .field("resource", linearResourceP)
@@ -149,7 +140,6 @@ public class SchedulingDSL {
           SumParsers.variant("WindowsExpressionLessThan", ConstraintExpression.LessThan.class, lessThanP),
           SumParsers.variant("WindowsExpressionEqualLinear", ConstraintExpression.EqualLinear.class, equalLinearP),
           SumParsers.variant("WindowsExpressionNotEqualLinear", ConstraintExpression.NotEqualLinear.class, notEqualLinearP),
-          SumParsers.variant("WindowsExpressionBetween", ConstraintExpression.Between.class, betweenP),
           SumParsers.variant("WindowsExpressionTransition", ConstraintExpression.Transition.class, transitionP),
           SumParsers.variant("WindowsExpressionAnd", ConstraintExpression.And.class, windowsAndF(self)),
           SumParsers.variant("WindowsExpressionOr", ConstraintExpression.Or.class, windowsOrF(self)))));
@@ -240,8 +230,6 @@ public class SchedulingDSL {
     record EqualLinear(LinearResource resource, double value) implements ConstraintExpression {}
 
     record NotEqualLinear(LinearResource resource, double value) implements ConstraintExpression {}
-
-    record Between(LinearResource resource, double lowerBound, double upperBound) implements ConstraintExpression {}
 
     record Transition(LinearResource resource, SerializedValue from, SerializedValue to) implements ConstraintExpression {}
 

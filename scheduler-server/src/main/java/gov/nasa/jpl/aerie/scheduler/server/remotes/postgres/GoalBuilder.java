@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.And;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
@@ -12,18 +13,10 @@ import gov.nasa.jpl.aerie.constraints.tree.Or;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
 import gov.nasa.jpl.aerie.constraints.tree.Transition;
-import gov.nasa.jpl.aerie.constraints.time.Window;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.constraints.tree.During;
-import gov.nasa.jpl.aerie.constraints.tree.ForEachActivity;
-import gov.nasa.jpl.aerie.constraints.tree.ViolationsOf;
-import gov.nasa.jpl.aerie.constraints.tree.WindowsOf;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.Range;
-import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
@@ -41,8 +34,6 @@ import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.NotImplementedException;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Function;
 
 public class GoalBuilder {
@@ -138,9 +129,6 @@ public class GoalBuilder {
       return new Equal<>(new RealResource(c.resource().name()), new RealValue(c.value()));
     } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.NotEqualLinear c) {
       return new NotEqual<>(new RealResource(c.resource().name()), new RealValue(c.value()));
-    } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.Between c) {
-      return new And(new GreaterThan(new RealResource(c.resource().name()), new RealValue(c.lowerBound())),
-                     new LessThan(new RealResource(c.resource().name()), new RealValue(c.upperBound())));
     } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.Transition c) {
       return new Transition(new DiscreteResource(c.resource().name()), c.from(), c.to());
     } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.And c) {

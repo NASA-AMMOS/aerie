@@ -56,15 +56,6 @@ export class WindowSet {
     });
   }
 
-  public static between(resource: Resource, lowerBound: Double, upperBound: Double): WindowSet {
-    return WindowSet.new({
-      kind: AST.NodeKind.WindowsExpressionBetween,
-      resource,
-      lowerBound,
-      upperBound
-    });
-  }
-
   public static transition(resource: Resource, from: any, to: any): WindowSet {
     return WindowSet.new({
       kind: AST.NodeKind.WindowsExpressionTransition,
