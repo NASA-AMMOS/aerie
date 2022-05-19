@@ -17,6 +17,15 @@ node {
   download = true
 }
 
+task copyConstraintsTypescript(type: Copy) {
+  from rootDir.toPath().resolve('merlin-server/constraints-dsl-compiler/src/libs')
+  into project.projectDir.toPath().resolve('scheduling-dsl-compiler/src/libs/constraints')
+}
+
+clean {
+  delete project.projectDir.toPath().resolve('scheduling-dsl-compiler/src/libs/constraints')
+}
+
 task assembleSchedulingDSLCompiler(type: NpmTask) {
   dependsOn processResources
   dependsOn npmInstall
