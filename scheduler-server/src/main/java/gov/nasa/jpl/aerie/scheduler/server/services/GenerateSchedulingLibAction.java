@@ -9,9 +9,13 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Objects;
 
-public record GenerateSchedulingLibAction(TypescriptCodeGenerationService typescriptCodeGenerationService) {
+public record GenerateSchedulingLibAction(
+    TypescriptCodeGenerationService typescriptCodeGenerationService,
+    MissionModelService missionModelService
+) {
   public GenerateSchedulingLibAction {
     Objects.requireNonNull(typescriptCodeGenerationService);
+    Objects.requireNonNull(missionModelService);
   }
 
   /**
@@ -36,7 +40,7 @@ public record GenerateSchedulingLibAction(TypescriptCodeGenerationService typesc
       final var schedulerAst = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "scheduler-ast.ts"));
       final var windowsDsl = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "windows-edsl-fluent-api.ts"));
       final var windowsAst = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "windows-expressions-ast.ts"));
-      final var generated = this.typescriptCodeGenerationService.generateTypescriptTypesForMissionModel(missionModelId);
+      final var generated = this.typescriptCodeGenerationService.generateTypescriptTypesForMissionModel(missionModelService, missionModelId);
       return new Response.Success(
           Map.of("scheduling-edsl-fluent-api.ts", schedulingDsl,
                  "mission-model-generated-code.ts", generated,

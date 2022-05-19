@@ -22,23 +22,24 @@ import static org.junit.jupiter.api.Assertions.fail;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SchedulingDSLCompilationServiceTests {
   private static final PlanId PLAN_ID = new PlanId(1L);
+  private static final MissionModelService missionModelService = new MissionModelService() {
+    @Override
+    public MissionModelTypes getMissionModelTypes(final PlanId missionModelId)
+    {
+      return MISSION_MODEL_TYPES;
+    }
+
+    @Override
+    public MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
+    {
+      return MISSION_MODEL_TYPES;
+    }
+  };
   SchedulingDSLCompilationService schedulingDSLCompilationService;
 
   @BeforeAll
   void setUp() throws IOException {
-    schedulingDSLCompilationService = new SchedulingDSLCompilationService(new TypescriptCodeGenerationService(new MissionModelService() {
-      @Override
-      public MissionModelTypes getMissionModelTypes(final PlanId missionModelId)
-      {
-        return MISSION_MODEL_TYPES;
-      }
-
-      @Override
-      public MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
-      {
-        return MISSION_MODEL_TYPES;
-      }
-    }));
+    schedulingDSLCompilationService = new SchedulingDSLCompilationService(new TypescriptCodeGenerationService());
   }
 
   @AfterAll
@@ -51,6 +52,7 @@ class SchedulingDSLCompilationServiceTests {
   {
     final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
     result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
         PLAN_ID, """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
@@ -89,6 +91,7 @@ class SchedulingDSLCompilationServiceTests {
   {
     final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
     result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
         PLAN_ID, """
                 export default function myGoal() {
                   return myHelper(ActivityTemplates.SampleActivity1({
@@ -128,6 +131,7 @@ class SchedulingDSLCompilationServiceTests {
   void testSchedulingDSL_variable_not_defined() {
     final SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error actualErrors;
     actualErrors = (SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error) schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
           PLAN_ID, """
                 export default function myGoal() {
                   const x = 4 - 2
@@ -155,6 +159,7 @@ class SchedulingDSLCompilationServiceTests {
   void testSchedulingDSL_wrong_return_type() {
     final SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error actualErrors;
     actualErrors = (SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error) schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
           PLAN_ID, """
                 export default function myGoal() {
                   return 5
@@ -172,6 +177,7 @@ class SchedulingDSLCompilationServiceTests {
     // This test is intended to create a Goal that is bigger than the node subprocess's standard input buffer
     final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
     result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
         PLAN_ID, """
                 export default function myGoal() {
                   return Goal.ActivityRecurrenceGoal({
@@ -207,7 +213,9 @@ class SchedulingDSLCompilationServiceTests {
 
   @Test
   void testCoexistenceGoalActivityExpression() {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(PLAN_ID, """
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
+        PLAN_ID, """
           export default function() {
             return Goal.CoexistenceGoal({
               activityTemplate: ActivityTemplates.SampleActivity1({
@@ -244,7 +252,10 @@ class SchedulingDSLCompilationServiceTests {
 
   @Test
   void strictTypeCheckingTest_astNode() {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(PLAN_ID, """
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
+        PLAN_ID,
+        """
           interface FakeGoal {
             and(...others: FakeGoal[]): FakeGoal;
             or(...others: FakeGoal[]): FakeGoal;
@@ -273,7 +284,10 @@ class SchedulingDSLCompilationServiceTests {
 
   @Test
   void strictTypeCheckingTest_transition() {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(PLAN_ID, """
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
+        PLAN_ID,
+        """
           export default function() {
             return Goal.CoexistenceGoal({
               activityTemplate: ActivityTemplates.SampleActivity1({
@@ -297,7 +311,10 @@ class SchedulingDSLCompilationServiceTests {
 
   @Test
   void testCoexistenceGoalStateConstraint() {
-    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(PLAN_ID, """
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
+        PLAN_ID,
+        """
           export default function() {
             return Goal.CoexistenceGoal({
               activityTemplate: ActivityTemplates.SampleActivity1({

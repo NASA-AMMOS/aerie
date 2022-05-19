@@ -48,9 +48,9 @@ public class SchedulingDSLCompilationService {
   /**
    * NOTE: This method is not re-entrant (assumes only one call to this method is running at any given time)
    */
-  public SchedulingDSLCompilationResult compileSchedulingGoalDSL(final PlanId planId, final String goalTypescript)
+  public SchedulingDSLCompilationResult compileSchedulingGoalDSL(final MissionModelService missionModelService, final PlanId planId, final String goalTypescript)
   {
-    final var missionModelGeneratedCode = JSONObject.quote(this.typescriptCodeGenerationService.generateTypescriptTypesForPlan(planId));
+    final var missionModelGeneratedCode = JSONObject.quote(this.typescriptCodeGenerationService.generateTypescriptTypesForPlan(missionModelService, planId));
 
     /*
     * PROTOCOL:

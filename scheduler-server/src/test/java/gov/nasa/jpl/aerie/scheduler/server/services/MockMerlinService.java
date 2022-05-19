@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
@@ -33,6 +32,8 @@ import java.util.Optional;
 
 class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
 
+  private Optional<PlanningHorizon> planningHorizon = Optional.empty();
+
   record MissionModelInfo(Path libPath, Path modelPath, String modelName, MissionModelTypes types, Map<String, SerializedValue> config) {}
 
   private Optional<MissionModelInfo> missionModelInfo = Optional.empty();
@@ -51,6 +52,10 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
     this.missionModelInfo = Optional.of(value);
   }
 
+  void setPlanningHorizon(final PlanningHorizon planningHorizon) {
+    this.planningHorizon = Optional.of(planningHorizon);
+  }
+
   @Override
   public long getPlanRevision(final PlanId planId) {
     return 1L;
@@ -61,15 +66,14 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   throws IOException, NoSuchPlanException, PlanServiceException
   {
     if (this.missionModelInfo.isEmpty()) throw new RuntimeException("Make sure to call setMissionModel before running a test");
+    if (this.planningHorizon.isEmpty()) throw new RuntimeException("Make sure to call setPlanningHorizon before running a test");
     // Checked that revision matches
     // Uses model version info to load mission model jar
     // The PlanningHorizon here is not used for scheduling (at least not directly)
     return new PlanMetadata(
         new PlanId(1L),
         1L,
-        new PlanningHorizon(
-            TimeUtility.fromDOY("2021-001T00:00:00"),
-            TimeUtility.fromDOY("2021-005T00:00:00")),
+        planningHorizon.get(),
         1L,
         this.missionModelInfo.get().modelPath(),
         this.missionModelInfo.get().modelName(),

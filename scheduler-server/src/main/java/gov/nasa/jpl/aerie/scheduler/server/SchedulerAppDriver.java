@@ -19,6 +19,7 @@ import gov.nasa.jpl.aerie.scheduler.server.services.CachedSchedulerService;
 import gov.nasa.jpl.aerie.scheduler.server.services.GenerateSchedulingLibAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
 import gov.nasa.jpl.aerie.scheduler.server.services.LocalSpecificationService;
+import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingDSLCompilationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.SynchronousSchedulerAgent;
@@ -53,7 +54,7 @@ public final class SchedulerAppDriver {
     final var config = loadConfiguration();
 
     final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI());
-    final var typescriptCodeGenerationService = new TypescriptCodeGenerationService(merlinService);
+    final var typescriptCodeGenerationService = new TypescriptCodeGenerationService();
 
     final SchedulingDSLCompilationService schedulingDSLCompilationService;
     try {
@@ -64,7 +65,7 @@ public final class SchedulerAppDriver {
 
     Runtime.getRuntime().addShutdownHook(new Thread(schedulingDSLCompilationService::close));
 
-    final var stores = loadStores(config, schedulingDSLCompilationService);
+    final var stores = loadStores(config, schedulingDSLCompilationService, merlinService);
 
     //create objects in each service abstraction layer (mirroring MerlinApp)
     final var specificationService = new LocalSpecificationService(stores.specifications());
@@ -78,7 +79,7 @@ public final class SchedulerAppDriver {
     final var schedulerService = new CachedSchedulerService(stores.results(), scheduleAgent);
     final var scheduleAction = new ScheduleAction(specificationService, schedulerService);
 
-    final var generateSchedulingLibAction = new GenerateSchedulingLibAction(typescriptCodeGenerationService);
+    final var generateSchedulingLibAction = new GenerateSchedulingLibAction(typescriptCodeGenerationService, merlinService);
 
     //establish bindings to the service layers
     final var bindings = new SchedulerBindings(schedulerService, scheduleAction, generateSchedulingLibAction);
@@ -100,7 +101,8 @@ public final class SchedulerAppDriver {
 
   private static Stores loadStores(
       final AppConfiguration config,
-      final SchedulingDSLCompilationService schedulingDSLCompilationService) {
+      final SchedulingDSLCompilationService schedulingDSLCompilationService,
+      final MissionModelService missionModelService) {
     final var store = config.store();
     if (store instanceof final PostgresStore pgStore) {
       final var pgDataSource = new PGDataSource();
@@ -117,7 +119,7 @@ public final class SchedulerAppDriver {
       final var hikariDataSource = new HikariDataSource(hikariConfig);
 
       return new Stores(
-          new PostgresSpecificationRepository(hikariDataSource, schedulingDSLCompilationService),
+          new PostgresSpecificationRepository(hikariDataSource, schedulingDSLCompilationService, missionModelService),
           new PostgresResultsCellRepository(hikariDataSource));
     } else if (store instanceof InMemoryStore) {
       final var inMemorySchedulerRepository = new InMemorySpecificationRepository();

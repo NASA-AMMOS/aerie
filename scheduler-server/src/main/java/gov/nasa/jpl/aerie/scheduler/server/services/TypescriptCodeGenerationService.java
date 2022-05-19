@@ -14,23 +14,17 @@ import java.util.Map;
 
 public class TypescriptCodeGenerationService {
 
-  private final MissionModelService merlinService;
-
-  public TypescriptCodeGenerationService(final MissionModelService merlinService) {
-    this.merlinService = merlinService;
-  }
-
-  public String generateTypescriptTypesForPlan(final PlanId planId) {
+  public String generateTypescriptTypesForPlan(final MissionModelService missionModelService, final PlanId planId) {
     try {
-      return generateTypescriptTypesFromMissionModel(this.merlinService.getMissionModelTypes(planId));
+      return generateTypescriptTypesFromMissionModel(missionModelService.getMissionModelTypes(planId));
     } catch (MissionModelService.MissionModelServiceException | IOException e) {
       throw new Error("Could not fetch mission model types", e);
     }
   }
 
-  public String generateTypescriptTypesForMissionModel(final MissionModelId missionModelId) throws NoSuchMissionModelException {
+  public String generateTypescriptTypesForMissionModel(final MissionModelService missionModelService, final MissionModelId missionModelId) throws NoSuchMissionModelException {
     try {
-      return generateTypescriptTypesFromMissionModel(this.merlinService.getMissionModelTypes(missionModelId));
+      return generateTypescriptTypesFromMissionModel(missionModelService.getMissionModelTypes(missionModelId));
     } catch (MissionModelService.MissionModelServiceException | IOException e) {
       throw new Error("Could not fetch mission model types", e);
     }

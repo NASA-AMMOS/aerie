@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingCompilationError;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
+import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.scheduler.server.services.RevisionData;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingDSLCompilationService;
 
@@ -20,10 +21,12 @@ import java.util.List;
 public final class PostgresSpecificationRepository implements SpecificationRepository {
   private final DataSource dataSource;
   private final SchedulingDSLCompilationService schedulingDSLCompilationService;
+  private final MissionModelService missionModelService;
 
-  public PostgresSpecificationRepository(final DataSource dataSource, final SchedulingDSLCompilationService schedulingDSLCompilationService) {
+  public PostgresSpecificationRepository(final DataSource dataSource, final SchedulingDSLCompilationService schedulingDSLCompilationService, final MissionModelService missionModelService) {
     this.dataSource = dataSource;
     this.schedulingDSLCompilationService = schedulingDSLCompilationService;
+    this.missionModelService = missionModelService;
   }
 
   @Override
@@ -49,6 +52,7 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
     final var goals = postgresGoalRecords
         .stream()
         .map((PostgresGoalRecord pgGoal) -> compileGoalDefinition(
+            missionModelService,
             planId,
             pgGoal,
             this.schedulingDSLCompilationService))
@@ -87,11 +91,13 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
   }
 
   private static GoalCompilationResult compileGoalDefinition(
+      final MissionModelService missionModelService,
       final PlanId planId,
       final PostgresGoalRecord pgGoal,
       final SchedulingDSLCompilationService schedulingDSLCompilationService)
   {
     final var goalCompilationResult = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
         planId,
         pgGoal.definition()
     );
