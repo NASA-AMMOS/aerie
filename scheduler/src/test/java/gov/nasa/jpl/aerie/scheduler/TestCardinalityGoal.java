@@ -12,6 +12,7 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Test;
 
@@ -30,23 +31,25 @@ public class TestCardinalityGoal {
     var periodTre = new TimeRangeExpression.Builder()
         .from(new Windows(period))
         .build();
-    ActivityType actType = new ActivityType("CardGoalActType", null, DurationType.controllable("duration"));
 
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
     CardinalityGoal goal = new CardinalityGoal.Builder()
         .inPeriod(periodTre)
         .duration(Window.between(Duration.of(12, Duration.SECONDS), Duration.of(15, Duration.SECONDS)))
         .occurences(new Range<>(3, 10))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
-                            .ofType(actType)
+                            .ofType(problem.getActivityType("ControllableDurationActivity"))
                             .duration(Duration.of(2, Duration.SECONDS))
                             .build())
         .named("TestCardGoal")
         .forAllTimeIn(period)
         .owned(ChildCustody.Jointly)
         .build();
-
-    Problem problem = new Problem(null, new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25)), null, null);
 
     problem.setGoals(List.of(goal));
 
@@ -69,14 +72,18 @@ public class TestCardinalityGoal {
         .from(new Windows(List.of(period, period2)))
         .build();
 
-    ActivityType actType = new ActivityType("CardGoalActType", null, DurationType.controllable("duration"));
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
     assertThrows(IllegalArgumentException.class, () -> {new CardinalityGoal.Builder()
         .inPeriod(periodTre)
         .duration(Window.between(Duration.of(5, Duration.SECONDS), Duration.of(6, Duration.SECONDS)))
         .occurences(new Range<>(3, 10))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
-                            .ofType(actType)
+                            .ofType(problem.getActivityType("ControllableDurationActivity"))
                             .duration(Window.between(Duration.of(3, Duration.SECONDS), Duration.of(4, Duration.SECONDS)))
                             .build())
         .named("TestCardGoal")

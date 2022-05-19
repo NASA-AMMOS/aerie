@@ -40,7 +40,6 @@ public class AerieLanderRulesTest {
     smallProblem.setInitialPlan(plan);
     rules.getGlobalConstraints().forEach(smallProblem::add);
     var solver = new PrioritySolver(smallProblem);
-    solver.checkSimBeforeInsertingActInPlan();
     plan = solver.getNextSolution().get();
     solver.printEvaluation();
     AerieLanderTestUtility.printPlan(plan);

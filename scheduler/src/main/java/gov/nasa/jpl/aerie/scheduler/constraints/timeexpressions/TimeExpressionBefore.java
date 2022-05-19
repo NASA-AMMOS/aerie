@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
@@ -13,14 +14,14 @@ public class TimeExpressionBefore extends TimeExpression {
   protected final String name;
   protected final TimeExpression expr;
 
-  public TimeExpressionBefore(TimeExpression expr, String name) {
+  public TimeExpressionBefore(final TimeExpression expr, final String name) {
     this.name = name;
     this.expr = expr;
   }
 
   @Override
-  public Window computeTime(Plan plan, Window interval) {
-    var origin =     expr.computeTime(plan, interval);
+  public Window computeTime(final SimulationResults simulationResults, final Plan plan, final Window interval) {
+    var origin =     expr.computeTime(simulationResults, plan, interval);
     assert(origin.isSingleton());
     Duration from = origin.start;
 

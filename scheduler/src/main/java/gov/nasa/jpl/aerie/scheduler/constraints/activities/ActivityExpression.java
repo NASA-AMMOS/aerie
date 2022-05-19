@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -8,7 +9,6 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.Nullable;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.QueriableState;
 import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateQueryParam;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
 
@@ -77,13 +77,13 @@ public class ActivityExpression {
     Map<String, SerializedValue> arguments = new HashMap<>();
     Map<String, VariableArgumentComputer> variableArguments = new HashMap<>();
 
-    public B withArgument(String argument, QueriableState state, TimeExpression timeToQuery) {
-      variableArguments.put(argument, new StateQueryParam(state, timeToQuery));
+    public B withArgument(String argument, String resourceName, TimeExpression timeToQuery) {
+      variableArguments.put(argument, new StateQueryParam(resourceName, timeToQuery));
       return getThis();
     }
 
-    public B withArgument(String argument, QueriableState state) {
-      variableArguments.put(argument, new StateQueryParam(state, TimeExpression.atStart()));
+    public B withArgument(String argument, String resourceName) {
+      variableArguments.put(argument, new StateQueryParam(resourceName, TimeExpression.atStart()));
       return getThis();
     }
 
@@ -485,7 +485,7 @@ public class ActivityExpression {
    *     by this template, or false if it does not meet one or more of
    *     the template criteria
    */
-  public boolean matches(@NotNull ActivityInstance act) {
+  public boolean matches(@NotNull ActivityInstance act, SimulationResults simulationResults) {
     boolean match = true;
 
     //REVIEW: literal object equality is probably correct for type
@@ -547,7 +547,7 @@ public class ActivityExpression {
             //simulation), we check that the value would correspond
             //TODO: value computed at the start time of the activity, per the current behavior of ActivityCreationTemplate/ActivityInstance
             // but should be different and more specialized
-            match = ActivityInstance.getValue(templateParamValue, act.getStartTime()).equals(act.getArguments().get(templateParamName));
+            match = ActivityInstance.getValue(templateParamValue, act.getStartTime(), simulationResults).equals(act.getArguments().get(templateParamName));
         }
         if (!match) {
           break;

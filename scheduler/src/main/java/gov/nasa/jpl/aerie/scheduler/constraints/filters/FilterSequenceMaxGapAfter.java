@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.filters;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -17,12 +18,12 @@ public class FilterSequenceMaxGapAfter implements TimeWindowsFilter {
 
   private final Duration maxDelay;
 
-  public FilterSequenceMaxGapAfter(Duration maxDelay) {
+  public FilterSequenceMaxGapAfter(final Duration maxDelay) {
     this.maxDelay = maxDelay;
   }
 
   @Override
-  public Windows filter(Plan plan, Windows windows) {
+  public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
     List<Window> filtered = new ArrayList<>();
     List<Window> windowsTo = StreamSupport
         .stream(windows.spliterator(), false)

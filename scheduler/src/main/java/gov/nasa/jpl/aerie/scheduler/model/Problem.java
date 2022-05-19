@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.scheduler.model;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.ExternalState;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
@@ -182,10 +181,6 @@ public class Problem {
     }
 
     this.actTypeByName.put(name, actType);
-  }
-
-  public ExternalState getResource(String name){
-    return simulationFacade.getResource(name);
   }
 
   /**

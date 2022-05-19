@@ -1,17 +1,16 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.filters;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateConstraintExpression;
 
 import java.util.function.Function;
 
 //directory class from which the user can create filters
 public class Filters {
-
-
-  public static TimeWindowsFilter withinEach(TimeRangeExpression expr, TimeWindowsFilter filter) {
+  public static TimeWindowsFilter withinEach(final TimeRangeExpression expr, final TimeWindowsFilter filter) {
     return new FilterWithReset(expr, filter);
   }
 
@@ -58,12 +57,12 @@ public class Filters {
     return FilterElementSequence.numbered(i);
   }
 
-  public static FilterFunctional alwaysSatisfied(StateConstraintExpression expr) {
+  public static FilterFunctional alwaysSatisfied(Expression<Windows> expr) {
     return new FilterAlwaysSatisfied(expr);
   }
 
 
-  public static FilterFunctional everViolated(StateConstraintExpression expr) {
+  public static FilterFunctional everViolated(Expression<Windows> expr) {
     return new FilterEverViolated(expr);
   }
 

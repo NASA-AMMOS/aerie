@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
@@ -54,9 +55,13 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
   @Override
   public @NotNull
   Optional<ActivityInstance> createActivity(String name, Windows windows, boolean instantiateVariableArguments, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
-    //TODO: returns first ACT of disjunction, change it
-    return acts.get(0).createActivity(name, windows, instantiateVariableArguments, facade,  plan, planningHorizon);
-
+    for(var act : acts) {
+      final var activityCreation = act.createActivity(name, windows, instantiateVariableArguments, facade, plan, planningHorizon);
+      if(activityCreation.isPresent()){
+        return activityCreation;
+      }
+    }
+    return Optional.empty();
   }
 
   /**
@@ -65,9 +70,9 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
    * @return true if the act instance matches one of the activity expression of the disjunction
    */
   @Override
-  public boolean matches(@NotNull ActivityInstance act) {
+  public boolean matches(@NotNull ActivityInstance act, SimulationResults simulationResults) {
     for (var expr : acts) {
-      if (expr.matches(act)) {
+      if (expr.matches(act, simulationResults)) {
         return true;
       }
     }

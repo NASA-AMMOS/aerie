@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
@@ -13,14 +14,14 @@ public class TimeExpressionRelativeFixed extends TimeExpression {
   protected boolean fixed = true;
   protected final String name;
 
-  public TimeExpressionRelativeFixed(TimeAnchor anchor, boolean fixed, String name) {
+  public TimeExpressionRelativeFixed(final TimeAnchor anchor, final boolean fixed, final String name) {
     this.fixed = fixed;
     this.anchor = anchor;
     this.name = name;
   }
 
   @Override
-  public Window computeTime(Plan plan, Window interval) {
+  public Window computeTime(final SimulationResults simulationResults, final Plan plan, final Window interval) {
     Duration from = null;
     if (anchor == TimeAnchor.START) {
       from = interval.start;

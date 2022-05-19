@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.scheduling;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
@@ -12,7 +13,7 @@ public abstract class GlobalConstraint {
   //todo: probably needs a domain
 
   //is the constraint enforced on its domain
-  public abstract ConstraintState isEnforced(Plan plan, Windows windows);
+  public abstract ConstraintState isEnforced(Plan plan, Windows windows, SimulationResults simulationResults);
 
 
 }

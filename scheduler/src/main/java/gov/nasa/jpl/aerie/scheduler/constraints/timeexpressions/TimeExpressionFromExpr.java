@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
@@ -13,14 +14,14 @@ public class TimeExpressionFromExpr extends TimeExpression {
   protected boolean fixed = true;
   protected final String name;
 
-  public TimeExpressionFromExpr(TimeExpression expression, String name) {
+  public TimeExpressionFromExpr(final TimeExpression expression, final String name) {
     this.expression = expression;
     this.name = name;
   }
 
   @Override
-  public Window computeTime(Plan plan, Window interval) {
-    Window rangeExpr = expression.computeTime(plan, interval);
+  public Window computeTime(final SimulationResults simulationResults, final Plan plan, final Window interval) {
+    Window rangeExpr = expression.computeTime(simulationResults, plan, interval);
     Window retRange = null;
 
     if (rangeExpr != null) {
