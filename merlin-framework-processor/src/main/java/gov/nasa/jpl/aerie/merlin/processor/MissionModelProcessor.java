@@ -1,8 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.processor;
 
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.processor.generator.MissionModelGenerator;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 
 import javax.annotation.processing.Completion;
 import javax.annotation.processing.Filer;
@@ -52,7 +54,8 @@ public final class MissionModelProcessor implements Processor {
   public Set<String> getSupportedAnnotationTypes() {
     return Set.of(
         MissionModel.class.getCanonicalName(),
-        ActivityType.class.getCanonicalName());
+        ActivityType.class.getCanonicalName(),
+        AutoValueMapper.class.getCanonicalName());
   }
 
   @Override
@@ -80,22 +83,41 @@ public final class MissionModelProcessor implements Processor {
     for (final var element : roundEnv.getElementsAnnotatedWith(MissionModel.class)) {
       final var packageElement = (PackageElement) element;
       try {
-        final var missionModelRecord = missionModelParser.parseMissionModel(packageElement);
+        final var missionModelRecord$ = missionModelParser.parseMissionModel(packageElement);
 
         final var generatedFiles = new ArrayList<>(List.of(
-            missionModelGen.generateMerlinPlugin(missionModelRecord),
-            missionModelGen.generateSchedulerPlugin(missionModelRecord)));
+            missionModelGen.generateMerlinPlugin(missionModelRecord$),
+            missionModelGen.generateSchedulerPlugin(missionModelRecord$)));
 
-        missionModelRecord.modelConfigurationType
-            .flatMap(configType -> missionModelGen.generateMissionModelConfigurationMapper(missionModelRecord, configType))
+        missionModelRecord$.modelConfigurationType
+            .flatMap(configType -> missionModelGen.generateMissionModelConfigurationMapper(missionModelRecord$, configType))
             .ifPresent(generatedFiles::add);
 
         generatedFiles.addAll(List.of(
-            missionModelGen.generateMissionModelFactory(missionModelRecord),
-            missionModelGen.generateSchedulerModel(missionModelRecord),
-            missionModelGen.generateActivityActions(missionModelRecord),
-            missionModelGen.generateActivityTypes(missionModelRecord)
+            missionModelGen.generateMissionModelFactory(missionModelRecord$),
+            missionModelGen.generateSchedulerModel(missionModelRecord$),
+            missionModelGen.generateActivityActions(missionModelRecord$),
+            missionModelGen.generateActivityTypes(missionModelRecord$)
         ));
+
+        final var autoValueMappers = missionModelGen.generateAutoValueMappers(
+            missionModelRecord$,
+            missionModelRecord$.autoValueMapperRequests);
+        generatedFiles.add(autoValueMappers.getLeft());
+
+        final var concatenatedTypeRules = new ArrayList<>(missionModelRecord$.typeRules);
+        concatenatedTypeRules.addAll(autoValueMappers.getRight());
+
+        final var missionModelRecord = new MissionModelRecord(
+            missionModelRecord$.$package,
+            missionModelRecord$.topLevelModel,
+            missionModelRecord$.expectsPlanStart,
+            missionModelRecord$.modelConfigurationType,
+            concatenatedTypeRules,
+            missionModelRecord$.activityTypes,
+            missionModelRecord$.autoValueMapperRequests
+        );
+
         for (final var activityRecord : missionModelRecord.activityTypes) {
           this.ownedActivityTypes.add(activityRecord.declaration());
           if (!activityRecord.mapper().isCustom) {
