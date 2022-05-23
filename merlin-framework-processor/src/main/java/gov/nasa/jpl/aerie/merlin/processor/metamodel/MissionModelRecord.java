@@ -52,4 +52,8 @@ public final class MissionModelRecord {
   public ClassName getTypesName() {
     return ClassName.get(this.$package.getQualifiedName() + ".generated", "ActivityTypes");
   }
+
+  public ClassName getAutoValueMappersName() {
+    return ClassName.get(this.$package.getQualifiedName() + ".generated", "AutoValueMappers");
+  }
 }

@@ -1,8 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.processor;
 
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.processor.generator.MissionModelGenerator;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 
 import javax.annotation.processing.Completion;
 import javax.annotation.processing.Filer;
@@ -80,22 +82,48 @@ public final class MissionModelProcessor implements Processor {
     for (final var element : roundEnv.getElementsAnnotatedWith(MissionModel.class)) {
       final var packageElement = (PackageElement) element;
       try {
-        final var missionModelRecord = missionModelParser.parseMissionModel(packageElement);
+        final var missionModelRecord$ = missionModelParser.parseMissionModel(packageElement);
 
         final var generatedFiles = new ArrayList<>(List.of(
-            missionModelGen.generateMerlinPlugin(missionModelRecord),
-            missionModelGen.generateSchedulerPlugin(missionModelRecord)));
+            missionModelGen.generateMerlinPlugin(missionModelRecord$),
+            missionModelGen.generateSchedulerPlugin(missionModelRecord$)));
 
-        missionModelRecord.modelConfigurationType
-            .flatMap(configType -> missionModelGen.generateMissionModelConfigurationMapper(missionModelRecord, configType))
+        missionModelRecord$.modelConfigurationType
+            .flatMap(configType -> missionModelGen.generateMissionModelConfigurationMapper(missionModelRecord$, configType))
             .ifPresent(generatedFiles::add);
 
         generatedFiles.addAll(List.of(
-            missionModelGen.generateMissionModelFactory(missionModelRecord),
-            missionModelGen.generateSchedulerModel(missionModelRecord),
-            missionModelGen.generateActivityActions(missionModelRecord),
-            missionModelGen.generateActivityTypes(missionModelRecord)
+            missionModelGen.generateMissionModelFactory(missionModelRecord$),
+            missionModelGen.generateSchedulerModel(missionModelRecord$),
+            missionModelGen.generateActivityActions(missionModelRecord$),
+            missionModelGen.generateActivityTypes(missionModelRecord$)
         ));
+
+        final var autoValueMapperRequests = roundEnv.getElementsAnnotatedWith(AutoValueMapper.class).stream().map(Element::asType).toList();
+        {
+          final var recordType = elementUtils.getTypeElement("java.lang.Record").asType();
+          for (final var request : autoValueMapperRequests) {
+            if (!typeUtils.isSubtype(request, recordType)) {
+              messager.printError("AutoValueMapper is only allowed on record types. %s is not a record".formatted(request.toString()));
+            }
+          }
+        }
+        final var autoValueMappers = missionModelGen.generateAutoValueMappers(
+            missionModelRecord$,
+            autoValueMapperRequests);
+        generatedFiles.add(autoValueMappers.getLeft());
+
+        final var concatenatedTypeRules = new ArrayList<>(missionModelRecord$.typeRules);
+        concatenatedTypeRules.addAll(autoValueMappers.getRight());
+
+        final var missionModelRecord = new MissionModelRecord(
+            missionModelRecord$.$package,
+            missionModelRecord$.topLevelModel,
+            missionModelRecord$.modelConfigurationType,
+            concatenatedTypeRules,
+            missionModelRecord$.activityTypes
+        );
+
         for (final var activityRecord : missionModelRecord.activityTypes) {
           this.ownedActivityTypes.add(activityRecord.declaration());
           if (!activityRecord.mapper().isCustom) {

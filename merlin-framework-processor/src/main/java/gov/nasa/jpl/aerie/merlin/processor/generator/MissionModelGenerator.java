@@ -11,6 +11,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.RecordValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
@@ -18,6 +19,7 @@ import gov.nasa.jpl.aerie.merlin.framework.Scoping;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.processor.MissionModelProcessor;
 import gov.nasa.jpl.aerie.merlin.processor.Resolver;
+import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ConfigurationTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
@@ -25,6 +27,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
@@ -34,15 +37,21 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.RecordComponentElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -644,6 +653,90 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
         .builder(typeName.packageName(), typeSpec)
         .skipJavaLangImports(true)
         .build();
+  }
+
+  public Pair<JavaFile, List<TypeRule>> generateAutoValueMappers(
+      final MissionModelRecord missionModel,
+      final List<TypeMirror> recordTypes) {
+    final var typeRules = new ArrayList<TypeRule>();
+
+    final var typeName = missionModel.getAutoValueMappersName();
+
+    final var builder =
+        TypeSpec
+            .classBuilder(typeName)
+            .addAnnotation(
+                AnnotationSpec
+                    .builder(javax.annotation.processing.Generated.class)
+                    .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
+                    .build())
+            .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
+
+    for (final var record : recordTypes) {
+      final var methodName = record.toString().replace(".", "_");
+      final var recordTypeElement = elementUtils.getTypeElement(record.toString());
+      final var recordComponents = new ArrayList<Pair<String, TypeMirror>>();
+      for (final var element : recordTypeElement.getEnclosedElements()) {
+        if (!(element instanceof RecordComponentElement el)) continue;
+        recordComponents.add(Pair.of(element.toString(), el.getAccessor().getReturnType()));
+      }
+
+      final var typeRule = new TypeRule(
+          new TypePattern.ClassPattern(ClassName.get(ValueMapper.class), List.of(TypePattern.from(record))),
+          Set.of(),
+          recordComponents
+              .stream()
+              .map(component -> (TypePattern) new TypePattern.ClassPattern(
+                  ClassName.get(ValueMapper.class),
+                  List.of(new TypePattern.ClassPattern((ClassName) ClassName.get(component.getRight()).box(), List.of()))))
+              .toList(),
+          typeName,
+          methodName);
+      typeRules.add(typeRule);
+
+      final var methodBuilder = MethodSpec
+          .methodBuilder(methodName)
+          .addModifiers(Modifier.PUBLIC)
+          .addModifiers(Modifier.STATIC)
+          .returns(ParameterizedTypeName.get(ClassName.get(ValueMapper.class), TypeName.get(record)))
+          .addParameters(
+              recordComponents
+                  .stream()
+                  .map(recordComponent -> ParameterSpec
+                      .builder(
+                          ParameterizedTypeName.get(
+                              ClassName.get(ValueMapper.class),
+                              ClassName.get(recordComponent.getRight()).box()),
+                          recordComponent.getLeft() + "ValueMapper",
+                          Modifier.FINAL)
+                      .build())
+                  .toList());
+
+      final var iter = recordComponents.iterator();
+      final var codeBlockBuilder = CodeBlock.builder();
+      codeBlockBuilder.add("return new $T<>(\n", RecordValueMapper.class);
+      codeBlockBuilder.add("  $L.class,\n", record.toString());
+      codeBlockBuilder.add("  $T.of(\n", List.class);
+
+      while (iter.hasNext()) {
+        final var recordComponent = iter.next();
+        codeBlockBuilder.add("    new $T<>(\n", RecordValueMapper.Component.class);
+        codeBlockBuilder.add("      $S,\n", recordComponent.getLeft());
+        codeBlockBuilder.add("      $L::$L,\n", record.toString(), recordComponent.getLeft());
+        codeBlockBuilder.add("    $L)", recordComponent.getLeft() + "ValueMapper");
+        if (iter.hasNext()) codeBlockBuilder.add(",");
+        codeBlockBuilder.add("\n");
+      }
+      codeBlockBuilder.add("));");
+
+      methodBuilder.addCode(codeBlockBuilder.build());
+      builder.addMethod(methodBuilder.build());
+    }
+
+    return Pair.of(JavaFile
+        .builder(typeName.packageName(), builder.build())
+        .skipJavaLangImports(true)
+        .build(), typeRules);
   }
 
   private record ComputedAttributesCodeBlocks(TypeName typeName, FieldSpec fieldDef, CodeBlock fieldInit) {}
