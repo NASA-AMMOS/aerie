@@ -77,7 +77,7 @@ public class ConstraintsDSLCompilationService {
           try {
             yield new ConstraintsDSLCompilationResult.Error(parseJson(output, ConstraintsCompilationError.constraintsErrorJsonP));
           } catch (InvalidJsonException | InvalidEntityException e) {
-            throw new Error("Could not parse JSON returned from typescript: ", e);
+            throw new Error("Could not parse JSON returned from typescript: " + output, e);
           }
         }
         case "success" -> {
