@@ -13,8 +13,14 @@ export async function insertExpansion(graphqlClient: GraphQLClient): Promise<num
     `,
     {
       activityTypeName: 'PeelBanana',
-      expansionLogic:
-        'ZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gU2luZ2xlQ29tbWFuZEV4cGFuc2lvbihwcm9wczogeyBhY3Rpdml0eUluc3RhbmNlOiBBY3Rpdml0eVR5cGUgfSk6IEV4cGFuc2lvblJldHVybiB7CiAgcmV0dXJuIFsKICAgIFBSRUhFQVRfT1ZFTih7dGVtcGVyYXR1cmU6IDcwfSksCiAgICBQUkVQQVJFX0xPQUYoNTAsIGZhbHNlKSwKICAgIEJBS0VfQlJFQUQsCiAgXTsKfQ==',
+      expansionLogic: `
+        export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+          return [
+            PREHEAT_OVEN({temperature: 70}),
+            PREPARE_LOAF(50, false),
+            BAKE_BREAD,
+          ];
+        }`,
     },
   );
   return res.addCommandExpansionTypeScript.id;
@@ -33,8 +39,10 @@ export async function insertErrorExpansion(graphqlClient: GraphQLClient): Promis
     `,
     {
       activityTypeName: 'BiteBanana',
-      expansionLogic:
-        'ZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gRXJyb3JFeHBhbnNpb24ocHJvcHM6IHsgYWN0aXZpdHlJbnN0YW5jZTogQWN0aXZpdHlUeXBlIH0pOiBFeHBhbnNpb25SZXR1cm4gewogIHRocm93IG5ldyBFcnJvcignTm90IGltcGxlbWVudGVkJyk7Cn0=',
+      expansionLogic:`
+        export default function ErrorExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+          throw new Error('Not implemented');
+        }`,
     },
   );
   return res.addCommandExpansionTypeScript.id;
