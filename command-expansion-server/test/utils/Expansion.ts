@@ -13,14 +13,14 @@ export async function insertExpansion(graphqlClient: GraphQLClient): Promise<num
     `,
     {
       activityTypeName: 'PeelBanana',
-      expansionLogic: `
-        export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
-          return [
-            PREHEAT_OVEN({temperature: 70}),
-            PREPARE_LOAF(50, false),
-            BAKE_BREAD,
-          ];
-        }`,
+      expansionLogic:
+`export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+  return [
+    PREHEAT_OVEN({temperature: 70}),
+    PREPARE_LOAF(50, false),
+    BAKE_BREAD,
+  ];
+}`,
     },
   );
   return res.addCommandExpansionTypeScript.id;
