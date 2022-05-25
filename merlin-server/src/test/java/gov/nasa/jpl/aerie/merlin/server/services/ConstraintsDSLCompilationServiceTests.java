@@ -576,4 +576,98 @@ class ConstraintsDSLCompilationServiceTests {
         new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new During("activity alias 0")))
     );
   }
+
+  @Test
+  void testNestedForEachActivity() {
+    checkSuccessfulCompilation(
+        """
+        export default () => {
+          return Constraint.ForEachActivity(
+            "activity",
+            (alias1) => Constraint.ForEachActivity(
+              "activity",
+              (alias2) => Windows.All(alias1.during(), alias2.during())
+            )
+          )
+        }
+        """,
+        new ForEachActivity("activity", "activity alias 0", new ForEachActivity("activity", "activity alias 1", new ViolationsOf(
+            new And(new During("activity alias 0"), new During("activity alias 1"))
+        )))
+    );
+  }
+
+  // TYPECHECKING FAILURE TESTS
+
+  @Test
+  void testWrongActivityType() {
+    checkFailedCompilation(
+        """
+        export default () => {
+          return Constraint.ForbiddenActivityOverlap(
+            ActivityType.activity,
+            "other activity"
+          );
+        }
+        """,
+        "TypeError: TS2345 Argument of type '\"other activity\"' is not assignable to parameter of type 'ActivityType'."
+    );
+  }
+
+  @Test
+  void testWrongResource() {
+    checkFailedCompilation(
+        """
+        export default () => {
+          return Discrete.Resource("wrong resource").changed()
+        }
+        """,
+        "TypeError: TS2345 Argument of type '\"wrong resource\"' is not assignable to parameter of type 'ResourceName'."
+    );
+  }
+
+  @Test
+  void testWrongRealResource() {
+    checkFailedCompilation(
+        """
+        export default () => {
+          return Real.Resource("mode").changed()
+        }
+        """,
+        "TypeError: TS2345 Argument of type '\"mode\"' is not assignable to parameter of type '\"state of charge\"'."
+    );
+  }
+
+  @Test
+  void testWrongDiscreteSchema() {
+    checkFailedCompilation(
+        """
+        export default () => {
+          return Discrete.Resource("mode").equal(5)
+        }
+        """,
+        "TypeError: TS2345 Argument of type '5' is not assignable to parameter of type '\"Option1\" | \"Option2\" | Discrete<\"Option1\" | \"Option2\">'."
+    );
+
+    checkFailedCompilation(
+        """
+        export default () => {
+          return Discrete.Resource("mode").equal(Discrete.Resource("state of charge"))
+        }
+        """,
+        "TypeError: TS2345 Argument of type 'Discrete<number>' is not assignable to parameter of type '\"Option1\" | \"Option2\" | Discrete<\"Option1\" | \"Option2\">'."
+    );
+
+    checkFailedCompilation(
+        """
+        export default () => {
+          return Constraint.ForEachActivity(
+            ActivityType.activity,
+            (alias) => Discrete.Resource("mode").equal(alias.parameters.Param)
+          )
+        }
+        """,
+        "TypeError: TS2345 Argument of type 'Discrete<string>' is not assignable to parameter of type '\"Option1\" | \"Option2\" | Discrete<\"Option1\" | \"Option2\">'."
+    );
+  }
 }
