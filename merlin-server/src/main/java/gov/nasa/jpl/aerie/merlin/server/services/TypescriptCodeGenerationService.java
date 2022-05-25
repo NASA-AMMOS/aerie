@@ -36,7 +36,7 @@ public final class TypescriptCodeGenerationService {
     for (var resource: resources.keySet()) {
       result.add(indent("R extends \"" + resource + "\" ? " + valueSchemaToTypescript(resources.get(resource)) + " :"));
     }
-    result.add(indent("void;"));
+    result.add(indent("never;"));
 
     result.add("export type RealResourceName = " + String.join(
         " | ",
@@ -58,7 +58,7 @@ public final class TypescriptCodeGenerationService {
       parameterSchema.append("}");
       result.add(indent("A extends \"" + activityType + "\" ? " + parameterSchema + " :"));
     }
-    result.add(indent("void;"));
+    result.add(indent("never;"));
 
     // ActivityInstance
 
@@ -77,7 +77,7 @@ public final class TypescriptCodeGenerationService {
                           }
                           public get parameters(): ActivityParameters<A> {"""));
 
-    result.add(indent(indent("return (")));
+    result.add(indent(indent("let result = (")));
     for (String activityType: activityTypes.keySet()) {
       final var profileObject = new StringBuilder("{");
       for (var parameter: activityTypes.get(activityType).parameters()) {
@@ -103,6 +103,12 @@ public final class TypescriptCodeGenerationService {
       result.add(indent(indent(indent("this.__activityType === \"" + activityType + "\" ? " + profileObject + " :"))));
     }
     result.add(indent(indent(indent("undefined) as ActivityParameters<A>;"))));
+    result.add(indent(indent("""
+                                 if (result === undefined) {
+                                   throw new TypeError("Unreachable state. Activity type was unexpected string in ActivityInstance.parameters(): " + this.__activityType);
+                                 } else {
+                                   return result;
+                                 }""")));
 
     result.add(indent("""
                           }
