@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
@@ -122,7 +123,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * @return A map of validation errors mapping activity instance ID to failure message. If validation succeeds the map is empty.
    */
   @Override
-  public <T> Map<T, String> validateActivityInstantiations(final String missionModelId, final Map<T, SerializedActivity> activities)
+  public Map<ActivityInstanceId, String> validateActivityInstantiations(final String missionModelId, final Map<ActivityInstanceId, SerializedActivity> activities)
   throws NoSuchMissionModelException, MissionModelFacade.MissionModelContractException, MissionModelLoadException
   {
     return this.loadConfiguredMissionModel(missionModelId).validateActivityInstantiations(activities);

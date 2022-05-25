@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
@@ -144,9 +145,9 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public <T> Map<T, String> validateActivityInstantiations(
+  public Map<ActivityInstanceId, String> validateActivityInstantiations(
       final String missionModelId,
-      final Map<T, SerializedActivity> activities)
+      final Map<ActivityInstanceId, SerializedActivity> activities)
   throws NoSuchMissionModelException, MissionModelFacade.MissionModelContractException, LocalMissionModelService.MissionModelLoadException
   {
     return Map.of();
