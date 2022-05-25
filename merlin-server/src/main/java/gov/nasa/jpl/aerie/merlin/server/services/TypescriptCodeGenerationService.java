@@ -106,18 +106,27 @@ public final class TypescriptCodeGenerationService {
 
     result.add(indent("""
                           }
+                          /**
+                           * Produces a window for the duration of the activity.
+                           */
                           public during(): Windows {
                             return new Windows({
                               kind: AST.NodeKind.WindowsExpressionDuring,
                               alias: this.__alias
                             });
                           }
+                          /**
+                           * Produces an instantaneous window at the start of the activity.
+                           */
                           public start(): Windows {
                             return new Windows({
                               kind: AST.NodeKind.WindowsExpressionStartOf,
                               alias: this.__alias
                             });
                           }
+                          /**
+                           * Produces an instantaneous window at the end of the activity.
+                           */
                           public end(): Windows {
                             return new Windows({
                               kind: AST.NodeKind.WindowsExpressionEndOf,

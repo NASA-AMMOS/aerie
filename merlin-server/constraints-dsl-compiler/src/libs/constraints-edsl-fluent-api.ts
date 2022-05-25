@@ -273,7 +273,7 @@ declare global {
      * Check a constraint for each instance of an activity type.
      *
      * @param activityType activity type to check
-     * @param expression
+     * @param expression function of an activity instance that returns a Constraint
      * @constructor
      */
     public static ForEachActivity<A extends Gen.ActivityTypeName>(activityType: A, expression: (instance: Gen.ActivityInstance<A>) => Constraint): Constraint
