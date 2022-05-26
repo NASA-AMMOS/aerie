@@ -92,6 +92,12 @@ type Query {
 }
 
 type Query {
+  resourceSamples(
+    planId: Int!
+  ): ResourceSamplesResponse
+}
+
+type Query {
   validateActivityArguments(
     activityTypeName: String!
     missionModelId: ID!
@@ -242,9 +248,15 @@ type CodeLocation {
   column: Int!
 }
 
+type ResourceSamplesResponse {
+  resourceSamples: ResourceSamples!
+}
+
 scalar ResourceSchema
 
 scalar MerlinSimulationResults
+
+scalar ResourceSamples
 
 scalar MerlinSimulationFailureReason
 

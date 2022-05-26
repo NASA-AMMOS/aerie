@@ -59,6 +59,10 @@ actions:
     definition:
       kind: ""
       handler: http://aerie_merlin:27183/getSimulationResults
+  - name: resourceSamples
+    definition:
+      kind: ""
+      handler: http://aerie_merlin:27183/resourceSamples
   - name: validateActivityArguments
     definition:
       kind: ""
@@ -129,9 +133,11 @@ custom_types:
     - name: CommandSeqJsonTime
     - name: UserCodeError
     - name: CodeLocation
+    - name: ResourceSamplesResponse
   scalars:
     - name: ResourceSchema
     - name: MerlinSimulationResults
+    - name: ResourceSamples
     - name: MerlinSimulationFailureReason
     - name: ModelArguments
     - name: ActivityArguments
