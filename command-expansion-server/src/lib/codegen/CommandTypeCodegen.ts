@@ -91,7 +91,7 @@ ${doc}
 export function ${fswCommandName}<T extends any[]>(args: T[]) {
   return Command.new({
     stem: '${fswCommandName}',
-    arguments: typeof args[0] === 'object' ? args[0] : args,
+    arguments: typeof args[0] === 'object' ? orderCommandArguments(args[0],${fswCommandName}_ARGS_ORDER) : args,
   }) as ${fswCommandName};
 }`;
 
@@ -132,6 +132,7 @@ ${overloadDeclarations.join('')}
   // language=TypeScript
   const value = `
 ${doc}
+const ${fswCommandName}_ARGS_ORDER = [${fswCommand.arguments.map(argument => `'${argument.name}'`).join(', ')}];
 export function ${fswCommandName}(...args: [\n${fswCommand.arguments
     .map(argument => (argument.arg_type === 'repeat' ? '' : `\t${mapArgumentType(argument, enumMap)},\n`))
     .join('')}] | [{\n${fswCommand.arguments
@@ -141,7 +142,7 @@ export function ${fswCommandName}(...args: [\n${fswCommand.arguments
     .join('')}}]): ${fswCommandName} {
   return Command.new({
     stem: '${fswCommand.stem}',
-    arguments: typeof args[0] === 'object' ? args[0] : args,
+    arguments: typeof args[0] === 'object' ? orderCommandArguments(args[0],${fswCommandName}_ARGS_ORDER) : args,
   }) as ${fswCommandName};
 }`;
 
