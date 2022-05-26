@@ -209,6 +209,15 @@ public final class ResponseSerializers {
         .build();
   }
 
+  public static JsonValue serializeResourceSamples(final Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples) {
+    return Json
+        .createObjectBuilder()
+        .add("resourceSamples", serializeMap(
+            elements -> serializeIterable(ResponseSerializers::serializeSample, elements),
+            resourceSamples))
+        .build();
+  }
+
   private static Map<Integer, Pair<String, ValueSchema>> topicsById(List<Triple<Integer, String, ValueSchema>> topics) {
     final Map<Integer, Pair<String, ValueSchema>> topicsById = new HashMap<>();
     for (final var topic : topics) {
