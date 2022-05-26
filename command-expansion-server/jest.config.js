@@ -8,16 +8,19 @@ export default {
   testPathIgnorePatterns: ['/node_modules/', '/build/'],
   coverageReporters: ['html'],
   setupFiles: ['dotenv/config', './src/polyfills.ts'],
-  globalSetup: "./jestGlobalSetup.js",
-  setupFilesAfterEnv: ["jest-extended/all"],
+  globalSetup: './jestGlobalSetup.js',
+  setupFilesAfterEnv: ['jest-extended/all'],
   reporters: [
     'default',
-    ['jest-html-reporters', {
-      publicPath: '<rootDir>',
-      pageTitle: 'command-expansion-server Test Report',
-      filename: 'test-report.html',
-      inlineSource: true
-    }],
+    [
+      'jest-html-reporters',
+      {
+        publicPath: '<rootDir>',
+        pageTitle: 'command-expansion-server Test Report',
+        filename: 'test-report.html',
+        inlineSource: true,
+      },
+    ],
   ],
   transformIgnorePatterns: ['[/\\\\]node_modules[/\\\\].+\\.(js|jsx)$'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
@@ -30,9 +33,9 @@ export default {
   globals: {
     'ts-jest': {
       diagnostics: {
-        ignoreCodes: []
+        ignoreCodes: [],
       },
       useESM: true,
-    }
-  }
+    },
+  },
 };

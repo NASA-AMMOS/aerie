@@ -46,7 +46,9 @@ type Context = {
   commandTypescriptDataLoader: InferredDataloader<typeof commandDictionaryTypescriptBatchLoader>;
   activitySchemaDataLoader: InferredDataloader<typeof activitySchemaBatchLoader>;
   simulatedActivitiesDataLoader: InferredDataloader<typeof simulatedActivitiesBatchLoader>;
-  simulatedActivityInstanceBySimulatedActivityIdDataLoader: InferredDataloader<typeof simulatedActivityInstanceBySimulatedActivityIdBatchLoader>;
+  simulatedActivityInstanceBySimulatedActivityIdDataLoader: InferredDataloader<
+    typeof simulatedActivityInstanceBySimulatedActivityIdBatchLoader
+  >;
   expansionSetDataLoader: InferredDataloader<typeof expansionSetBatchLoader>;
   expansionDataLoader: InferredDataloader<typeof expansionBatchLoader>;
 };
@@ -63,16 +65,28 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
       cacheKeyFn: objectCacheKeyFunction,
     }),
     activitySchemaDataLoader,
-    simulatedActivitiesDataLoader: new DataLoader(simulatedActivitiesBatchLoader({ graphqlClient, activitySchemaDataLoader }), {
-      cacheKeyFn: objectCacheKeyFunction,
-    }),
-    simulatedActivityInstanceBySimulatedActivityIdDataLoader: new DataLoader(simulatedActivityInstanceBySimulatedActivityIdBatchLoader({ graphqlClient, activitySchemaDataLoader }), {
-      cacheKeyFn: objectCacheKeyFunction,
-    }),
+    simulatedActivitiesDataLoader: new DataLoader(
+      simulatedActivitiesBatchLoader({
+        graphqlClient,
+        activitySchemaDataLoader,
+      }),
+      {
+        cacheKeyFn: objectCacheKeyFunction,
+      },
+    ),
+    simulatedActivityInstanceBySimulatedActivityIdDataLoader: new DataLoader(
+      simulatedActivityInstanceBySimulatedActivityIdBatchLoader({
+        graphqlClient,
+        activitySchemaDataLoader,
+      }),
+      {
+        cacheKeyFn: objectCacheKeyFunction,
+      },
+    ),
     expansionSetDataLoader: new DataLoader(expansionSetBatchLoader({ graphqlClient }), {
       cacheKeyFn: objectCacheKeyFunction,
     }),
-    expansionDataLoader: new DataLoader(expansionBatchLoader({graphqlClient}),{
+    expansionDataLoader: new DataLoader(expansionBatchLoader({ graphqlClient }), {
       cacheKeyFn: objectCacheKeyFunction,
     }),
   };
@@ -101,7 +115,7 @@ app.post('/put-dictionary', async (req, res, next) => {
     insert into command_dictionary (command_types_typescript_path, mission, version)
     values ($1, $2, $3)
     on conflict (mission, version) do update
-    set command_types_typescript_path = $1
+      set command_types_typescript_path = $1
     returning id;
   `;
 
@@ -129,7 +143,8 @@ app.post('/put-expansion', async (req, res, next) => {
 
   const { rows } = await db.query(
     `
-    insert into expansion_rule (activity_type, expansion_logic, authoring_command_dict_id, authoring_mission_model_id)
+    insert into expansion_rule (activity_type, expansion_logic, authoring_command_dict_id,
+                                authoring_mission_model_id)
     values ($1, $2, $3, $4)
     returning id;
   `,
@@ -144,19 +159,25 @@ app.post('/put-expansion', async (req, res, next) => {
   logger.info(`POST /put-expansion: Updated expansion in the database: id=${id}`);
 
   if (authoringMissionModelId == null || authoringCommandDictionaryId == null) {
-    res.status(200).json({ id })
+    res.status(200).json({ id });
     return next();
   }
 
   const commandTypes = await context.commandTypescriptDataLoader.load({ dictionaryId: authoringCommandDictionaryId });
-  const activitySchema = await context.activitySchemaDataLoader.load({missionModelId: authoringMissionModelId, activityTypeName });
+  const activitySchema = await context.activitySchemaDataLoader.load({
+    missionModelId: authoringMissionModelId,
+    activityTypeName,
+  });
   const activityTypescript = generateTypescriptForGraphQLActivitySchema(activitySchema);
 
-  const result = await (piscina.run({
-    expansionLogic,
-    commandTypes: commandTypes,
-    activityTypes: activityTypescript,
-  }, { name: 'typecheckExpansion' }) as ReturnType<typeof typecheckExpansion>);
+  const result = await (piscina.run(
+    {
+      expansionLogic,
+      commandTypes: commandTypes,
+      activityTypes: activityTypescript,
+    },
+      { name: 'typecheckExpansion' },
+  ) as ReturnType<typeof typecheckExpansion>);
 
   res.status(200).json({ id, errors: result.errors });
   return next();
@@ -174,20 +195,28 @@ app.post('/put-expansion-set', async (req, res, next) => {
     context.commandTypescriptDataLoader.load({ dictionaryId: commandDictionaryId }),
   ]);
 
-  const typecheckErrorPromises = await Promise.allSettled(expansions.map(async (expansion, index) => {
-    if (expansion instanceof Error) {
-      throw new InheritedError(`Expansion with id: ${expansionIds[index]} could not be loaded`, expansion);
-    }
-    const activitySchema = await context.activitySchemaDataLoader.load({missionModelId, activityTypeName: expansion.activityType });
-    const activityTypescript = generateTypescriptForGraphQLActivitySchema(activitySchema);
-    const result = await (piscina.run({
-      expansionLogic: expansion.expansionLogic,
-      commandTypes: commandTypes,
-      activityTypes: activityTypescript,
-    }, { name: 'typecheckExpansion' }) as ReturnType<typeof typecheckExpansion>);
+  const typecheckErrorPromises = await Promise.allSettled(
+    expansions.map(async (expansion, index) => {
+      if (expansion instanceof Error) {
+        throw new InheritedError(`Expansion with id: ${expansionIds[index]} could not be loaded`, expansion);
+      }
+      const activitySchema = await context.activitySchemaDataLoader.load({
+        missionModelId,
+        activityTypeName: expansion.activityType,
+      });
+      const activityTypescript = generateTypescriptForGraphQLActivitySchema(activitySchema);
+      const result = await (piscina.run(
+        {
+          expansionLogic: expansion.expansionLogic,
+          commandTypes: commandTypes,
+          activityTypes: activityTypescript,
+        },
+        { name: 'typecheckExpansion' },
+      ) as ReturnType<typeof typecheckExpansion>);
 
-    return result.errors;
-  }));
+      return result.errors;
+    }),
+  );
 
   const errors = unwrapPromiseSettledResults(typecheckErrorPromises).reduce((accum, item) => {
     if (item instanceof Error) {
@@ -199,30 +228,32 @@ app.post('/put-expansion-set', async (req, res, next) => {
   }, [] as (Error | ReturnType<UserCodeError['toJSON']>)[]);
 
   if (errors.length > 0) {
-    throw new InheritedError(`Expansion set could not be typechecked`, errors.map(e => ({
-      name: 'TypeCheckError',
-      stack: e.stack,
-      // @ts-ignore  Message is not spread when it comes from an Error object because it's a getter
-      message: e.message,
-      ...e,
-    })));
+    throw new InheritedError(
+      `Expansion set could not be typechecked`,
+      errors.map(e => ({
+        name: 'TypeCheckError',
+        stack: e.stack,
+        // @ts-ignore  Message is not spread when it comes from an Error object because it's a getter
+        message: e.message,
+        ...e,
+      })),
+    );
   }
 
-  const { rows } = await db.query(`
-    with expansion_set_id as (
-      insert into expansion_set (command_dict_id, mission_model_id)
-        values ($1, $2)
-        returning id
-    ),
-         rules as (
-           select id, activity_type from expansion_rule where id = any($3::int[]) order by id
-         )
-    insert into expansion_set_to_rule (set_id, rule_id, activity_type)
-      select a.id, b.id, b.activity_type
-      from (select id from expansion_set_id) a,
-           (select id, activity_type from rules) b
-      returning (select id from expansion_set_id);
-  `,
+  const { rows } = await db.query(
+    `
+        with expansion_set_id as (
+          insert into expansion_set (command_dict_id, mission_model_id)
+            values ($1, $2)
+            returning id),
+             rules as (select id, activity_type from expansion_rule where id = any ($3::int[]) order by id)
+        insert
+        into expansion_set_to_rule (set_id, rule_id, activity_type)
+        select a.id, b.id, b.activity_type
+        from (select id from expansion_set_id) a,
+             (select id, activity_type from rules) b
+        returning (select id from expansion_set_id);
+      `,
     [commandDictionaryId, missionModelId, expansionIds],
   );
 
@@ -292,12 +323,15 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
         };
       }
       const activityTypes = generateTypescriptForGraphQLActivitySchema(activitySchema);
-      return (await piscina.run({
-        expansionLogic: expansion.expansionLogic,
-        activityInstance: simulatedActivity,
-        commandTypes,
-        activityTypes,
-      }, { name: 'executeExpansion' })) as ReturnType<typeof executeExpansion>;
+      return (await piscina.run(
+        {
+          expansionLogic: expansion.expansionLogic,
+          activityInstance: simulatedActivity,
+          commandTypes,
+          activityTypes,
+        },
+        { name: 'executeExpansion' },
+      )) as ReturnType<typeof executeExpansion>;
     }),
   );
 
@@ -319,25 +353,24 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
   // Store expansion run  and activity instance commands in DB
   const { rows } = await db.query(
     `
-    with expansion_run_id as (
-      insert into expansion_run (simulation_dataset_id, expansion_set_id)
-        values ($1, $2)
-        returning id
-    )
-    insert
-    into activity_instance_commands (expansion_run_id,
-                                     activity_instance_id,
-                                     commands,
-                                     errors)
-    select *
-    from unnest(
-        array_fill((select id from expansion_run_id), array [array_length($3::int[], 1)]),
-        $3::int[],
-        $4::jsonb[],
-        $5::jsonb[]
-      )
-    returning (select id from expansion_run_id);
-    `,
+        with expansion_run_id as (
+          insert into expansion_run (simulation_dataset_id, expansion_set_id)
+            values ($1, $2)
+            returning id)
+        insert
+        into activity_instance_commands (expansion_run_id,
+                                         activity_instance_id,
+                                         commands,
+                                         errors)
+        select *
+        from unnest(
+            array_fill((select id from expansion_run_id), array [array_length($3::int[], 1)]),
+            $3::int[],
+            $4::jsonb[],
+            $5::jsonb[]
+          )
+        returning (select id from expansion_run_id);
+      `,
     [
       simulationDatasetId,
       expansionSetId,
@@ -362,9 +395,12 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
 
 export interface SeqBuilder {
   (
-      sortedActivityInstancesWithCommands: (SimulatedActivity & { commands: Command[] | null, errors: ReturnType<UserCodeError['toJSON']>[] | null })[],
-      seqId: string,
-      seqMetadata: Record<string, any>,
+    sortedActivityInstancesWithCommands: (SimulatedActivity & {
+      commands: Command[] | null;
+      errors: ReturnType<UserCodeError['toJSON']>[] | null;
+    })[],
+    seqId: string,
+    seqMetadata: Record<string, any>,
   ): Sequence;
 }
 
@@ -380,58 +416,64 @@ app.post('/get-seqjson-for-sequence', async (req, res, next) => {
   const [{ rows: activityInstanceCommandRows }, { rows: seqRows }] = await Promise.all([
     db.query<{
       metadata: Record<string, unknown>;
-      commands: CommandSeqJson[],
-      activity_instance_id: number,
-      errors: ReturnType<UserCodeError['toJSON']>[] | null,
-    }>(`
-        with
-          joined_table as (
-            select
-              activity_instance_commands.commands,
-              activity_instance_commands.activity_instance_id,
-              activity_instance_commands.errors,
-              activity_instance_commands.expansion_run_id
-            from sequence
-              join sequence_to_simulated_activity
-                on sequence.seq_id = sequence_to_simulated_activity.seq_id and
-                   sequence.simulation_dataset_id = sequence_to_simulated_activity.simulation_dataset_id
-              join activity_instance_commands
-                on sequence_to_simulated_activity.simulated_activity_id = activity_instance_commands.activity_instance_id
-              join expansion_run
-                on activity_instance_commands.expansion_run_id = expansion_run.id
-            where sequence.seq_id = $2
-              and sequence.simulation_dataset_id = $1
-          ),
-          max_values as (
-            select activity_instance_id, max(expansion_run_id) as max_expansion_run_id
-            from joined_table
-            group by activity_instance_id
-          )
-        select
-          joined_table.commands,
-          joined_table.activity_instance_id,
-          joined_table.errors
-        from joined_table, max_values
-        where joined_table.activity_instance_id = max_values.activity_instance_id
-          and joined_table.expansion_run_id = max_values.max_expansion_run_id;
-      `,
-        [simulationDatasetId, seqId],
+      commands: CommandSeqJson[];
+      activity_instance_id: number;
+      errors: ReturnType<UserCodeError['toJSON']>[] | null;
+    }>(
+      `
+          with joined_table as (select activity_instance_commands.commands,
+                                       activity_instance_commands.activity_instance_id,
+                                       activity_instance_commands.errors,
+                                       activity_instance_commands.expansion_run_id
+                                from sequence
+                                       join sequence_to_simulated_activity
+                                            on sequence.seq_id = sequence_to_simulated_activity.seq_id and
+                                               sequence.simulation_dataset_id =
+                                               sequence_to_simulated_activity.simulation_dataset_id
+                                       join activity_instance_commands
+                                            on sequence_to_simulated_activity.simulated_activity_id =
+                                               activity_instance_commands.activity_instance_id
+                                       join expansion_run
+                                            on activity_instance_commands.expansion_run_id = expansion_run.id
+                                where sequence.seq_id = $2
+                                  and sequence.simulation_dataset_id = $1),
+               max_values as (select activity_instance_id, max(expansion_run_id) as max_expansion_run_id
+                              from joined_table
+                              group by activity_instance_id)
+          select joined_table.commands,
+                 joined_table.activity_instance_id,
+                 joined_table.errors
+          from joined_table,
+               max_values
+          where joined_table.activity_instance_id = max_values.activity_instance_id
+            and joined_table.expansion_run_id = max_values.max_expansion_run_id;
+        `,
+      [simulationDatasetId, seqId],
     ),
     db.query<{
-      metadata: Record<string, any>,
-    }>(`
-        select metadata
-        from sequence
-        where sequence.seq_id = $2
-          and sequence.simulation_dataset_id = $1;
-      `,
-        [simulationDatasetId, seqId],
+      metadata: Record<string, any>;
+    }>(
+      `
+          select metadata
+          from sequence
+          where sequence.seq_id = $2
+            and sequence.simulation_dataset_id = $1;
+        `,
+      [simulationDatasetId, seqId],
     ),
   ]);
 
-  const seqMetadata = assertOne(seqRows, `No sequence found with seq_id: ${seqId} and simulation_dataset_id: ${simulationDatasetId}`).metadata;
+  const seqMetadata = assertOne(
+    seqRows,
+    `No sequence found with seq_id: ${seqId} and simulation_dataset_id: ${simulationDatasetId}`,
+  ).metadata;
 
-  const simulatedActivities = await context.simulatedActivityInstanceBySimulatedActivityIdDataLoader.loadMany(activityInstanceCommandRows.map(row => ({ simulationDatasetId, simulatedActivityId: row.activity_instance_id})));
+  const simulatedActivities = await context.simulatedActivityInstanceBySimulatedActivityIdDataLoader.loadMany(
+    activityInstanceCommandRows.map(row => ({
+      simulationDatasetId,
+      simulatedActivityId: row.activity_instance_id,
+    })),
+  );
   const simulatedActivitiesLoadErrors = simulatedActivities.filter(ai => ai instanceof Error);
   if (simulatedActivitiesLoadErrors.length > 0) {
     res.status(500).json({
@@ -441,11 +483,9 @@ app.post('/get-seqjson-for-sequence', async (req, res, next) => {
     return next();
   }
 
-  const sortedActivityInstances = (simulatedActivities as Exclude<typeof simulatedActivities[number], Error>[])
-      .sort((a, b) => Temporal.Duration.compare(
-          a.startOffset,
-          b.startOffset,
-      ));
+  const sortedActivityInstances = (simulatedActivities as Exclude<typeof simulatedActivities[number], Error>[]).sort(
+    (a, b) => Temporal.Duration.compare(a.startOffset, b.startOffset),
+  );
 
   const sortedSimulatedActivitiesWithCommands = sortedActivityInstances.map(ai => {
     const row = activityInstanceCommandRows.find(row => row.activity_instance_id === ai.id);

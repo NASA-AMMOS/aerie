@@ -1,6 +1,10 @@
 import { gql, GraphQLClient } from 'graphql-request';
 
-export async function insertExpansion(graphqlClient: GraphQLClient, activityTypeName: string, expansionLogic: string): Promise<number> {
+export async function insertExpansion(
+  graphqlClient: GraphQLClient,
+  activityTypeName: string,
+  expansionLogic: string,
+): Promise<number> {
   const res = await graphqlClient.request<{
     addCommandExpansionTypeScript: { id: number };
   }>(
@@ -78,27 +82,28 @@ export async function removeExpansionSet(graphqlClient: GraphQLClient, expansion
   );
 }
 
-export async function expand(graphqlClient: GraphQLClient, expansionSetId: number, simulationDatasetId: number): Promise<void> {
+export async function expand(
+  graphqlClient: GraphQLClient,
+  expansionSetId: number,
+  simulationDatasetId: number,
+): Promise<void> {
   await graphqlClient.request<{
     expandAllActivities: {
       id: number;
-    }
-  }>(gql`
-    mutation Expand(
-      $expansionSetId: Int!
-      $simulationDatasetId: Int!
-    ) {
-      expandAllActivities(
-        expansionSetId: $expansionSetId
-        simulationDatasetId: $simulationDatasetId
-      ) {
-        id
+    };
+  }>(
+    gql`
+      mutation Expand($expansionSetId: Int!, $simulationDatasetId: Int!) {
+        expandAllActivities(expansionSetId: $expansionSetId, simulationDatasetId: $simulationDatasetId) {
+          id
+        }
       }
-    }
-  `, {
-    expansionSetId,
-    simulationDatasetId
-  });
+    `,
+    {
+      expansionSetId,
+      simulationDatasetId,
+    },
+  );
 
   return;
 }

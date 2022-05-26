@@ -2,7 +2,6 @@ import { Command, Sequence } from './lib/codegen/CommandEDSLPreface.js';
 import type { SeqBuilder } from './app.js';
 
 export const defaultSeqBuilder: SeqBuilder = (sortedActivityInstancesWithCommands, seqId, seqMetadata) => {
-
   const commands = sortedActivityInstancesWithCommands.flatMap(ai => {
     // No associated Expansion
     if (ai.errors === null) {
@@ -27,4 +26,4 @@ export const defaultSeqBuilder: SeqBuilder = (sortedActivityInstancesWithCommand
     metadata: seqMetadata,
     commands,
   });
-}
+};

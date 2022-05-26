@@ -22,14 +22,13 @@ export default async () => {
     }
     process.env.SSO_TOKEN = ssoToken;
   } catch (e) {
-    await fs.promises.rm(ssoFilePath, {force: true});
+    await fs.promises.rm(ssoFilePath, { force: true });
     const mutableStdout = new Writable({
       write(chunk, encoding, callback) {
-        if (!this.muted)
-          process.stdout.write(chunk, encoding);
+        if (!this.muted) process.stdout.write(chunk, encoding);
         callback();
-      }
-    })
+      },
+    });
     const readlineInterface = readline.createInterface({
       input: process.stdin,
       output: mutableStdout,

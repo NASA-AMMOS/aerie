@@ -10,44 +10,43 @@ export enum TimingTypes {
 }
 
 type SeqJsonTimeType =
-|{
-  type: TimingTypes.ABSOLUTE;
-  tag: DOY_STRING;
-}
-|{
-  type: TimingTypes.COMMAND_RELATIVE;
-  tag: HMS_STRING;
-}
-|{
-  type: TimingTypes.EPOCH_RELATIVE;
-  tag: HMS_STRING;
-}
-|{
-  type: TimingTypes.COMMAND_COMPLETE;
-}
-;
+  | {
+      type: TimingTypes.ABSOLUTE;
+      tag: DOY_STRING;
+    }
+  | {
+      type: TimingTypes.COMMAND_RELATIVE;
+      tag: HMS_STRING;
+    }
+  | {
+      type: TimingTypes.EPOCH_RELATIVE;
+      tag: HMS_STRING;
+    }
+  | {
+      type: TimingTypes.COMMAND_COMPLETE;
+    };
 
 export type CommandOptions<
   A extends ArgType[] | { [argName: string]: any } = [] | {},
-  M extends Record<string, any> = Record<string, any>
-> = { stem: string; arguments: A, metadata?: M } & (
+  M extends Record<string, any> = Record<string, any>,
+> = { stem: string; arguments: A; metadata?: M } & (
   | {
-    absoluteTime: Temporal.Instant;
-  }
+      absoluteTime: Temporal.Instant;
+    }
   | {
-    epochTime: { epochName: string; time: Temporal.Duration };
-  }
+      epochTime: { epochName: string; time: Temporal.Duration };
+    }
   | {
-    relativeTime: Temporal.Duration;
-  }
-    // CommandComplete
+      relativeTime: Temporal.Duration;
+    }
+  // CommandComplete
   | {}
 );
 
 export interface CommandSeqJson<A extends ArgType[] = ArgType[]> {
   args: A;
   stem: string;
-  time: SeqJsonTimeType,
+  time: SeqJsonTimeType;
   type: 'command';
   metadata: Record<string, unknown>;
 }
@@ -56,9 +55,9 @@ export type ArgType = boolean | string | number;
 export type Arrayable<T> = T | Arrayable<T>[];
 
 export interface SequenceSeqJson {
-  id: string,
-  metadata: Record<string, any>,
-  steps: CommandSeqJson[],
+  id: string;
+  metadata: Record<string, any>;
+  steps: CommandSeqJson[];
 }
 
 declare global {
@@ -93,11 +92,13 @@ declare global {
 }
 /** END Preface */
 
-
 const DOY_REGEX = /(\d{4})-(\d{3})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?/;
 const HMS_REGEX = /(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?/;
 
-export class Command<A extends ArgType[] | { [argName: string]: any } = [] | {}, M extends Record<string, any> = Record<string, any>>{
+export class Command<
+  A extends ArgType[] | { [argName: string]: any } = [] | {},
+  M extends Record<string, any> = Record<string, any>,
+> {
   public readonly stem: string;
   public readonly metadata: M;
   public readonly arguments: A;
@@ -108,7 +109,7 @@ export class Command<A extends ArgType[] | { [argName: string]: any } = [] | {},
   private constructor(opts: CommandOptions<A, M>) {
     this.stem = opts.stem;
     this.arguments = opts.arguments;
-    this.metadata = opts.metadata ?? {} as M;
+    this.metadata = opts.metadata ?? ({} as M);
     if ('absoluteTime' in opts) {
       this.absoluteTime = opts.absoluteTime;
     } else if ('epochTime' in opts) {
@@ -144,10 +145,13 @@ export class Command<A extends ArgType[] | { [argName: string]: any } = [] | {},
       args: typeof this.arguments == 'object' ? Object.values(this.arguments) : this.arguments,
       stem: this.stem,
       time:
-          this.absoluteTime !== null ? { type: TimingTypes.ABSOLUTE, tag: Command.instantToDoy(this.absoluteTime) }
-              : this.epochTime !== null ? { type: TimingTypes.EPOCH_RELATIVE, tag: Command.durationToHms(this.epochTime.time)}
-                  : this.relativeTime !== null ? { type: TimingTypes.COMMAND_RELATIVE, tag: Command.durationToHms(this.relativeTime) }
-                      : { type: TimingTypes.COMMAND_COMPLETE },
+        this.absoluteTime !== null
+          ? { type: TimingTypes.ABSOLUTE, tag: Command.instantToDoy(this.absoluteTime) }
+          : this.epochTime !== null
+          ? { type: TimingTypes.EPOCH_RELATIVE, tag: Command.durationToHms(this.epochTime.time) }
+          : this.relativeTime !== null
+          ? { type: TimingTypes.COMMAND_RELATIVE, tag: Command.durationToHms(this.relativeTime) }
+          : { type: TimingTypes.COMMAND_COMPLETE },
       type: 'command',
       metadata: {
         ...(this.epochTime !== null ? { epochName: this.epochTime.epochName } : {}),
@@ -157,16 +161,19 @@ export class Command<A extends ArgType[] | { [argName: string]: any } = [] | {},
 
   public static fromSeqJson<A extends ArgType[]>(json: CommandSeqJson<A>): Command<A> {
     const timeValue =
-        json.time.type === TimingTypes.ABSOLUTE ? { absoluteTime: Command.doyToInstant(json.time.tag) }
-        : json.time.type === TimingTypes.COMMAND_RELATIVE ? { relativeTime: Command.hmsToDuration(json.time.tag) }
-        : json.time.type === TimingTypes.EPOCH_RELATIVE ? { epochTime: { epochName: json.metadata.epochName, time: Command.hmsToDuration(json.time.tag) } }
-        : {}
+      json.time.type === TimingTypes.ABSOLUTE
+        ? { absoluteTime: Command.doyToInstant(json.time.tag) }
+        : json.time.type === TimingTypes.COMMAND_RELATIVE
+        ? { relativeTime: Command.hmsToDuration(json.time.tag) }
+        : json.time.type === TimingTypes.EPOCH_RELATIVE
+        ? { epochTime: { epochName: json.metadata.epochName, time: Command.hmsToDuration(json.time.tag) } }
+        : {};
 
     return Command.new<A>({
       stem: json.stem,
       arguments: json.args as A,
       metadata: json.metadata,
-      ...timeValue
+      ...timeValue,
     });
   }
 
@@ -211,7 +218,15 @@ export class Command<A extends ArgType[] | { [argName: string]: any } = [] | {},
     if (match === null) {
       throw new Error(`Invalid DOY string: ${doy}`);
     }
-    const [, year, doyStr, hour, minute, second, millisecond] = match as [unknown, string, string, string, string, string, string | undefined];
+    const [, year, doyStr, hour, minute, second, millisecond] = match as [
+      unknown,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string | undefined,
+    ];
     return Temporal.ZonedDateTime.from({
       year: parseInt(year, 10),
       dayOfYear: parseInt(doyStr, 10),

@@ -4,7 +4,12 @@ import { activitySchemaBatchLoader } from '../../src/lib/batchLoaders/activitySc
 import { simulatedActivitiesBatchLoader } from '../../src/lib/batchLoaders/simulatedActivityBatchLoader';
 import { assertDefined } from '../../src/utils/assertions';
 
-export async function insertActivity(graphqlClient: GraphQLClient, planId: number, activityType: string, startOffset: string = '30 seconds 0 milliseconds'): Promise<number> {
+export async function insertActivity(
+  graphqlClient: GraphQLClient,
+  planId: number,
+  activityType: string,
+  startOffset: string = '30 seconds 0 milliseconds',
+): Promise<number> {
   const res = await graphqlClient.request<{
     insert_activity_one: { id: number };
   }>(
@@ -42,14 +47,22 @@ export async function removeActivity(graphqlClient: GraphQLClient, activityId: n
   );
 }
 
-export async function convertActivityIdToSimulatedActivityId(graphqlClient: GraphQLClient, simulationDatasetId: number, activityId: number): Promise<number> {
-  const activitySchemaDataLoader = new DataLoader(activitySchemaBatchLoader({graphqlClient}));
+export async function convertActivityIdToSimulatedActivityId(
+  graphqlClient: GraphQLClient,
+  simulationDatasetId: number,
+  activityId: number,
+): Promise<number> {
+  const activitySchemaDataLoader = new DataLoader(activitySchemaBatchLoader({ graphqlClient }));
 
-  const simulatedActivities = (await simulatedActivitiesBatchLoader({ graphqlClient, activitySchemaDataLoader })([{ simulationDatasetId }]))[0];
+  const simulatedActivities = (
+    await simulatedActivitiesBatchLoader({ graphqlClient, activitySchemaDataLoader })([{ simulationDatasetId }])
+  )[0];
 
   if (simulatedActivities instanceof Error) {
     throw simulatedActivities;
   }
 
-  return assertDefined(simulatedActivities.find(simulatedActivity => simulatedActivity.attributes.directiveId === activityId)).id;
+  return assertDefined(
+    simulatedActivities.find(simulatedActivity => simulatedActivity.attributes.directiveId === activityId),
+  ).id;
 }

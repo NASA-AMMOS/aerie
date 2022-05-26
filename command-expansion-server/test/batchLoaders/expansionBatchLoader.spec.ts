@@ -15,9 +15,7 @@ afterAll(async () => {
 });
 
 it('should load expansion data', async () => {
-  const expansions = await expansionBatchLoader({graphqlClient})([
-    { expansionId },
-  ]);
+  const expansions = await expansionBatchLoader({ graphqlClient })([{ expansionId }]);
   if (expansions[0] instanceof Error) {
     throw expansions[0];
   }
