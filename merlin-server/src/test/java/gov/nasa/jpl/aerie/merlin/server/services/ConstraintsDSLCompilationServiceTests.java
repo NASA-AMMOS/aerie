@@ -132,7 +132,7 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default () => Constraint.ForEachActivity(
-              "activity",
+              ActivityType.activity,
               (instance) => instance.parameters.Param.changed()
             )
         """,
@@ -253,7 +253,7 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default () => Constraint.ForEachActivity(
-              "activity",
+              ActivityType.activity,
               (instance) => instance.parameters.AnotherParam.changed()
             )
         """,
@@ -404,7 +404,7 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Constraint.ForEachActivity("activity", (alias) => alias.during());
+            return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.during());
           }
         """,
         new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new During("activity alias 0")))
@@ -416,7 +416,7 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Constraint.ForEachActivity("activity", (alias) => alias.start());
+            return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.start());
           }
         """,
         new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new StartOf("activity alias 0")))
@@ -428,7 +428,7 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Constraint.ForEachActivity("activity", (alias) => alias.end());
+            return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.end());
           }
         """,
         new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new EndOf("activity alias 0")))
@@ -538,7 +538,7 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
         export default () => {
-          return Constraint.ForbiddenActivityOverlap("activity", "activity")
+          return Constraint.ForbiddenActivityOverlap(ActivityType.activity, ActivityType.activity)
         }
         """,
         new ForbiddenActivityOverlap("activity", "activity")
@@ -551,7 +551,7 @@ class ConstraintsDSLCompilationServiceTests {
         """
         export default () => {
           return Constraint.ForEachActivity(
-            "activity",
+            ActivityType.activity,
             (myAlias) => myAlias.during()
           )
         }
@@ -564,12 +564,12 @@ class ConstraintsDSLCompilationServiceTests {
         import * as Gen from './mission-model-generated-code.js';
         export default () => {
           return Constraint.ForEachActivity(
-            "activity",
+            ActivityType.activity,
             myHelperFunction
           )
         }
 
-        function myHelperFunction(instance: Gen.ActivityInstance<"activity">): Constraint {
+        function myHelperFunction(instance: Gen.ActivityInstance<ActivityType.activity>): Constraint {
           return instance.during();
         }
         """,
@@ -583,9 +583,9 @@ class ConstraintsDSLCompilationServiceTests {
         """
         export default () => {
           return Constraint.ForEachActivity(
-            "activity",
+            ActivityType.activity,
             (alias1) => Constraint.ForEachActivity(
-              "activity",
+              ActivityType.activity,
               (alias2) => Windows.All(alias1.during(), alias2.during())
             )
           )

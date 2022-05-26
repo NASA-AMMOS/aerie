@@ -25,11 +25,11 @@ public final class TypescriptCodeGenerationService {
     result.add("import * as AST from './constraints-ast.js';");
     result.add("import { Discrete, Real, Windows } from './constraints-edsl-fluent-api.js';");
 
-    result.add("export type ActivityTypeName =");
+    result.add("export enum ActivityType {");
     for (String activityType: activityTypes.keySet()) {
-      result.add(indent("| \"" + activityType + "\""));
+      result.add(indent(activityType + " = \"" + activityType + "\","));
     }
-    result.add(indent(";"));
+    result.add("}");
 
     result.add("export type ResourceName = " + String.join(" | ", resources.keySet().stream().map($ -> "\"" + $ + "\"").toList()) + ";");
     result.add("export type DiscreteResourceSchema<R extends ResourceName> =");
@@ -45,7 +45,7 @@ public final class TypescriptCodeGenerationService {
 
     // ActivityParameters
 
-    result.add("export type ActivityParameters<A extends ActivityTypeName> =");
+    result.add("export type ActivityParameters<A extends ActivityType> =");
     for (String activityType: activityTypes.keySet()) {
       StringBuilder parameterSchema = new StringBuilder("{");
       for (Parameter parameter: activityTypes.get(activityType).parameters()) {
@@ -56,13 +56,13 @@ public final class TypescriptCodeGenerationService {
             .append(", ");
       }
       parameterSchema.append("}");
-      result.add(indent("A extends \"" + activityType + "\" ? " + parameterSchema + " :"));
+      result.add(indent("A extends ActivityType." + activityType + " ? " + parameterSchema + " :"));
     }
     result.add(indent("never;"));
 
     // ActivityInstance
 
-    result.add("export class ActivityInstance<A extends ActivityTypeName> {");
+    result.add("export class ActivityInstance<A extends ActivityType> {");
     result.add(indent("""
                           private readonly __activityType: A;
                           private readonly __alias: string;
@@ -100,7 +100,7 @@ public final class TypescriptCodeGenerationService {
             .append("), ");
       }
       profileObject.append("}");
-      result.add(indent(indent(indent("this.__activityType === \"" + activityType + "\" ? " + profileObject + " :"))));
+      result.add(indent(indent(indent("this.__activityType === ActivityType." + activityType + " ? " + profileObject + " :"))));
     }
     result.add(indent(indent(indent("undefined) as ActivityParameters<A>;"))));
     result.add(indent(indent("""
@@ -141,6 +141,19 @@ public final class TypescriptCodeGenerationService {
                           }"""));
 
     result.add("}");
+
+    result.add("""
+                   declare global {""");
+    result.add(indent("enum ActivityType {"));
+    for (String activityType: activityTypes.keySet()) {
+      result.add(indent(indent(activityType + " = \"" + activityType + "\",")));
+    }
+    result.add(indent("}"));
+    result.add("""
+                   }
+                   Object.assign(globalThis, {
+                     ActivityType
+                   });""");
 
     result.add("/** End Codegen */");
     return joinLines(result);

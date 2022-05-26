@@ -11,7 +11,7 @@ export class Constraint {
     this.__astNode = astNode;
   }
 
-  public static ForbiddenActivityOverlap(activityType1: Gen.ActivityTypeName, activityType2: Gen.ActivityTypeName): Constraint {
+  public static ForbiddenActivityOverlap(activityType1: Gen.ActivityType, activityType2: Gen.ActivityType): Constraint {
     return new Constraint({
       kind: AST.NodeKind.ForbiddenActivityOverlap,
       activityType1,
@@ -19,7 +19,7 @@ export class Constraint {
     })
   }
 
-  public static ForEachActivity<A extends Gen.ActivityTypeName>(activityType: A, expression: (instance: Gen.ActivityInstance<A>) => Constraint): Constraint {
+  public static ForEachActivity<A extends Gen.ActivityType>(activityType: A, expression: (instance: Gen.ActivityInstance<A>) => Constraint): Constraint {
     let alias = "activity alias " + Constraint.__numGeneratedAliases;
     Constraint.__numGeneratedAliases += 1;
     return new Constraint({
@@ -267,7 +267,7 @@ declare global {
      * @param activityType2
      * @constructor
      */
-    public static ForbiddenActivityOverlap(activityType1: Gen.ActivityTypeName, activityType2: Gen.ActivityTypeName): Constraint
+    public static ForbiddenActivityOverlap(activityType1: Gen.ActivityType, activityType2: Gen.ActivityType): Constraint
 
     /**
      * Check a constraint for each instance of an activity type.
@@ -276,7 +276,7 @@ declare global {
      * @param expression function of an activity instance that returns a Constraint
      * @constructor
      */
-    public static ForEachActivity<A extends Gen.ActivityTypeName>(activityType: A, expression: (instance: Gen.ActivityInstance<A>) => Constraint): Constraint
+    public static ForEachActivity<A extends Gen.ActivityType>(activityType: A, expression: (instance: Gen.ActivityInstance<A>) => Constraint): Constraint
   }
 
   export class Windows {

@@ -74,7 +74,6 @@ class TypescriptCodeGenerationServiceTest {
              }
            }
            declare global {
-
              enum ActivityType {
                activity = "activity",
              }
