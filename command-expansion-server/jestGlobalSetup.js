@@ -5,7 +5,7 @@ import os from 'os';
 import path from 'path';
 import fetch from 'node-fetch';
 import { Writable } from 'stream';
-import readline from 'node:readline/promises';
+import readline from 'node:readline';
 
 process.env.MERLIN_GATEWAY_URL = 'http://localhost:9000';
 process.env.MERLIN_GRAPHQL_URL = 'http://localhost:8080/v1/graphql';
@@ -35,10 +35,10 @@ export default async () => {
       terminal: true,
     });
 
-    const username = await readlineInterface.question('Enter Username: ');
+    const username = await new Promise(resolve => readlineInterface.question('Enter Username: ', resolve));
     mutableStdout.muted = true;
     process.stdout.write('Enter Password: ');
-    const password = await readlineInterface.question('Enter Password: ');
+    const password = await new Promise(resolve => readlineInterface.question('Enter Password: ', resolve));
     readlineInterface.close();
     const response = await fetch(`${process.env.MERLIN_GATEWAY_URL}/auth/login`, {
       method: 'POST',
