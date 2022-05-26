@@ -79,7 +79,7 @@ export const expansionSetBatchLoader: BatchLoader<
         expansionRules: expansionSet.expansion_rules.map(expansionRule => ({
           id: expansionRule.id,
           activityType: expansionRule.activity_type,
-          expansionLogic: Buffer.from(expansionRule.expansion_logic, 'base64').toString('utf8'),
+          expansionLogic: expansionRule.expansion_logic,
         })),
       };
     }),

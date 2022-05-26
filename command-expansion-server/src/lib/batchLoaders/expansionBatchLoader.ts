@@ -39,7 +39,7 @@ export const expansionBatchLoader: BatchLoader<
     return {
       id: expansion.id,
       activityType: expansion.activity_type,
-      expansionLogic: Buffer.from(expansion.expansion_logic, 'base64').toString('utf8'),
+      expansionLogic: expansion.expansion_logic,
     };
   }));
 }

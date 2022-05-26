@@ -74,8 +74,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.post('/put-dictionary', async (req, res, next) => {
-  const base64Dictionary: string = req.body.input.dictionary;
-  const dictionary = Buffer.from(base64Dictionary, 'base64').toString('utf8');
+  const dictionary = req.body.input.dictionary as string;
   logger.info(`Dictionary received`);
 
   const parsedDictionary = ampcs.parse(dictionary);
@@ -112,7 +111,7 @@ app.post('/put-expansion', async (req, res, next) => {
   const context: Context = res.locals.context;
 
   const activityTypeName = req.body.input.activityTypeName as string;
-  const expansionLogicBase64 = req.body.input.expansionLogic as string;
+  const expansionLogic = req.body.input.expansionLogic as string;
   const authoringCommandDictionaryId = req.body.input.authoringCommandDictionaryId as number | null;
   const authoringMissionModelId = req.body.input.authoringMissionModelId as number | null;
 
@@ -122,7 +121,7 @@ app.post('/put-expansion', async (req, res, next) => {
     VALUES ($1, $2, $3, $4)
     RETURNING id;
   `,
-    [activityTypeName, expansionLogicBase64, authoringCommandDictionaryId, authoringMissionModelId],
+    [activityTypeName, expansionLogic, authoringCommandDictionaryId, authoringMissionModelId],
   );
 
   if (rows.length < 1) {
@@ -142,7 +141,7 @@ app.post('/put-expansion', async (req, res, next) => {
   const activityTypescript = generateTypescriptForGraphQLActivitySchema(activitySchema);
 
   const result = await (piscina.run({
-    expansionLogic: Buffer.from(expansionLogicBase64, 'base64').toString('utf8'),
+    expansionLogic,
     commandTypes: commandTypes,
     activityTypes: activityTypescript,
   }, { name: 'typecheckExpansion' }) as ReturnType<typeof typecheckExpansion>);
@@ -229,10 +228,9 @@ app.post('/get-command-typescript', async (req, res, next) => {
 
   const commandDictionaryId = req.body.input.commandDictionaryId as number;
   const commandTypescript = await context.commandTypescriptDataLoader.load({ dictionaryId: commandDictionaryId });
-  const commandTypescriptBase64 = Buffer.from(commandTypescript).toString('base64');
 
   res.status(200).json({
-    typescript: commandTypescriptBase64,
+    typescript: commandTypescript,
   });
   return next();
 });
@@ -245,10 +243,9 @@ app.post('/get-activity-typescript', async (req, res, next) => {
 
   const activitySchema = await context.activitySchemaDataLoader.load({ missionModelId, activityTypeName });
   const activityTypescript = generateTypescriptForGraphQLActivitySchema(activitySchema);
-  const activityTypescriptBase64 = Buffer.from(activityTypescript).toString('base64');
 
   res.status(200).json({
-    typescript: activityTypescriptBase64,
+    typescript: activityTypescript,
   });
   return next();
 });
