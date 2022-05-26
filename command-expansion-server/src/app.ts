@@ -12,12 +12,15 @@ import { generateTypescriptForGraphQLActivitySchema } from './lib/codegen/Activi
 import { InferredDataloader, objectCacheKeyFunction, unwrapPromiseSettledResults } from './lib/batchLoaders/index.js';
 import { commandDictionaryTypescriptBatchLoader } from './lib/batchLoaders/commandDictionaryTypescriptBatchLoader.js';
 import { activitySchemaBatchLoader } from './lib/batchLoaders/activitySchemaBatchLoader.js';
-import { simulatedActivityInstanceBatchLoader } from './lib/batchLoaders/simulatedActivityInstanceBatchLoader.js';
+import {
+  SimulatedActivity,
+  simulatedActivitiesBatchLoader,
+  simulatedActivityInstanceBySimulatedActivityIdBatchLoader,
+} from './lib/batchLoaders/simulatedActivityBatchLoader.js';
 import { expansionSetBatchLoader } from './lib/batchLoaders/expansionSetBatchLoader.js';
 import Piscina from 'piscina';
 import type { executeExpansion, typecheckExpansion } from './worker.js';
 import { isRejected, isResolved } from './utils/typeguards.js';
-import { mapGraphQLActivityInstance } from './lib/mapGraphQLActivityInstance.js';
 import { expansionBatchLoader } from './lib/batchLoaders/expansionBatchLoader.js';
 import type { UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
 import { InheritedError } from './utils/InheritedError.js';
@@ -39,7 +42,8 @@ const piscina = new Piscina({ filename: new URL('worker.js', import.meta.url).pa
 type Context = {
   commandTypescriptDataLoader: InferredDataloader<typeof commandDictionaryTypescriptBatchLoader>;
   activitySchemaDataLoader: InferredDataloader<typeof activitySchemaBatchLoader>;
-  simulatedActivityInstanceDataLoader: InferredDataloader<typeof simulatedActivityInstanceBatchLoader>;
+  simulatedActivitiesDataLoader: InferredDataloader<typeof simulatedActivitiesBatchLoader>;
+  simulatedActivityInstanceBySimulatedActivityIdDataLoader: InferredDataloader<typeof simulatedActivityInstanceBySimulatedActivityIdBatchLoader>;
   expansionSetDataLoader: InferredDataloader<typeof expansionSetBatchLoader>;
   expansionDataLoader: InferredDataloader<typeof expansionBatchLoader>;
 };
@@ -47,14 +51,19 @@ type Context = {
 app.use(async (req: Request, res: Response, next: NextFunction) => {
   const graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL);
 
+  const activitySchemaDataLoader = new DataLoader(activitySchemaBatchLoader({ graphqlClient }), {
+    cacheKeyFn: objectCacheKeyFunction,
+  });
+
   const context: Context = {
     commandTypescriptDataLoader: new DataLoader(commandDictionaryTypescriptBatchLoader({ graphqlClient }), {
       cacheKeyFn: objectCacheKeyFunction,
     }),
-    activitySchemaDataLoader: new DataLoader(activitySchemaBatchLoader({ graphqlClient }), {
+    activitySchemaDataLoader,
+    simulatedActivitiesDataLoader: new DataLoader(simulatedActivitiesBatchLoader({ graphqlClient, activitySchemaDataLoader }), {
       cacheKeyFn: objectCacheKeyFunction,
     }),
-    simulatedActivityInstanceDataLoader: new DataLoader(simulatedActivityInstanceBatchLoader({ graphqlClient }), {
+    simulatedActivityInstanceBySimulatedActivityIdDataLoader: new DataLoader(simulatedActivityInstanceBySimulatedActivityIdBatchLoader({ graphqlClient, activitySchemaDataLoader }), {
       cacheKeyFn: objectCacheKeyFunction,
     }),
     expansionSetDataLoader: new DataLoader(expansionSetBatchLoader({ graphqlClient }), {
@@ -256,27 +265,25 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
   // Query for expansion set data
   const expansionSetId = req.body.input.expansionSetId as number;
   const simulationDatasetId = req.body.input.simulationDatasetId as number;
-  const [expansionSet, simulatedActivityInstances] = await Promise.all([
+  const [expansionSet, simulatedActivities] = await Promise.all([
     context.expansionSetDataLoader.load({ expansionSetId }),
-    context.simulatedActivityInstanceDataLoader.load({ simulationDatasetId }),
+    context.simulatedActivitiesDataLoader.load({ simulationDatasetId }),
   ]);
   const commandTypes = expansionSet.commandDictionary.commandTypesTypeScript;
 
   const settledExpansionResults = await Promise.allSettled(
-    simulatedActivityInstances.map(async simulatedActivityInstance => {
+    simulatedActivities.map(async simulatedActivity => {
       const activitySchema = await context.activitySchemaDataLoader.load({
         missionModelId: expansionSet.missionModel.id,
-        activityTypeName: simulatedActivityInstance.type,
+        activityTypeName: simulatedActivity.activityTypeName,
       });
       const expansion = expansionSet.expansionRules.find(
-        expansionRule => expansionRule.activityType === simulatedActivityInstance.type,
+        expansionRule => expansionRule.activityType === simulatedActivity.activityTypeName,
       );
-
-      const activityInstance = mapGraphQLActivityInstance(simulatedActivityInstance, activitySchema);
 
       if (expansion === undefined) {
         return {
-          activityInstance,
+          activityInstance: simulatedActivity,
           commands: null,
           errors: null,
         };
@@ -284,7 +291,7 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
       const activityTypes = generateTypescriptForGraphQLActivitySchema(activitySchema);
       return (await piscina.run({
         expansionLogic: expansion.expansionLogic,
-        activityInstance,
+        activityInstance: simulatedActivity,
         commandTypes,
         activityTypes,
       }, { name: 'executeExpansion' })) as ReturnType<typeof executeExpansion>;

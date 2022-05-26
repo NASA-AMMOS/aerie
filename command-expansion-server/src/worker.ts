@@ -2,8 +2,8 @@ import './polyfills.js';
 import ts from 'typescript';
 import vm from 'vm';
 import { UserCodeError, UserCodeRunner } from '@nasa-jpl/aerie-ts-user-code-runner';
-import { ActivityInstance } from './lib/mapGraphQLActivityInstance.js';
-import { Command } from './lib/codegen/CommandEDSLPreface.js';
+import type { SimulatedActivity } from './lib/batchLoaders/simulatedActivityBatchLoader';
+import type { Command } from './lib/codegen/CommandEDSLPreface.js';
 import * as fs from 'fs';
 import getLogger from './utils/logger.js';
 
@@ -47,16 +47,16 @@ export async function typecheckExpansion(opts: {
 
 export async function executeExpansion(opts: {
   expansionLogic: string,
-  activityInstance: ActivityInstance,
+  activityInstance: SimulatedActivity,
   commandTypes: string,
   activityTypes: string,
 }): Promise<{
-  activityInstance: ActivityInstance;
+  activityInstance: SimulatedActivity;
   commands: ReturnType<Command['toSeqJson']>[] | null;
   errors: ReturnType<UserCodeError['toJSON']>[];
 }> {
   try {
-    const result = await codeRunner.executeUserCode<[{ activityInstance: ActivityInstance }], ExpansionReturn>(
+    const result = await codeRunner.executeUserCode<[{ activityInstance: SimulatedActivity }], ExpansionReturn>(
       opts.expansionLogic,
       [
         {
