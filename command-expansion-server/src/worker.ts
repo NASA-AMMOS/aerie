@@ -2,8 +2,8 @@ import './polyfills.js';
 import ts from 'typescript';
 import vm from 'vm';
 import { UserCodeError, UserCodeRunner } from '@nasa-jpl/aerie-ts-user-code-runner';
-import { ActivityInstance } from './lib/mapGraphQLActivityInstance.js';
-import { Command } from './lib/codegen/CommandEDSLPreface.js';
+import type { SimulatedActivity } from './lib/batchLoaders/simulatedActivityBatchLoader';
+import type { Command } from './lib/codegen/CommandEDSLPreface.js';
 import * as fs from 'fs';
 import getLogger from './utils/logger.js';
 
@@ -16,47 +16,46 @@ const temporalPolyfillTypes = fs.readFileSync(
 const codeRunner = new UserCodeRunner();
 
 export async function typecheckExpansion(opts: {
-  expansionLogic: string,
-  commandTypes: string,
-  activityTypes: string,
+  expansionLogic: string;
+  commandTypes: string;
+  activityTypes: string;
 }): Promise<{
   errors: ReturnType<UserCodeError['toJSON']>[];
 }> {
   try {
     const result = await codeRunner.preProcess(
-        opts.expansionLogic,
-        'ExpansionReturn',
-        ['{ activityInstance: ActivityType }'],
-        [
-          ts.createSourceFile('command-types.ts', opts.commandTypes, ts.ScriptTarget.ES2021),
-          ts.createSourceFile('activity-types.ts', opts.activityTypes, ts.ScriptTarget.ES2021),
-          ts.createSourceFile('TemporalPolyfillTypes.ts', temporalPolyfillTypes, ts.ScriptTarget.ES2021),
-        ],
+      opts.expansionLogic,
+      'ExpansionReturn',
+      ['{ activityInstance: ActivityType }'],
+      [
+        ts.createSourceFile('command-types.ts', opts.commandTypes, ts.ScriptTarget.ES2021),
+        ts.createSourceFile('activity-types.ts', opts.activityTypes, ts.ScriptTarget.ES2021),
+        ts.createSourceFile('TemporalPolyfillTypes.ts', temporalPolyfillTypes, ts.ScriptTarget.ES2021),
+      ],
     );
     if (result.isOk()) {
       return { errors: [] };
     } else {
       return { errors: result.unwrapErr().map(e => e.toJSON()) };
     }
+  } catch (e: any) {
+    logger.error(e);
+    return { errors: [e?.message ?? 'Unexpected error'] };
   }
-  catch (e: any) {
-      logger.error(e);
-      return { errors: [e?.message ?? "Unexpected error"] };
-    }
 }
 
 export async function executeExpansion(opts: {
-  expansionLogic: string,
-  activityInstance: ActivityInstance,
-  commandTypes: string,
-  activityTypes: string,
+  expansionLogic: string;
+  activityInstance: SimulatedActivity;
+  commandTypes: string;
+  activityTypes: string;
 }): Promise<{
-  activityInstance: ActivityInstance;
+  activityInstance: SimulatedActivity;
   commands: ReturnType<Command['toSeqJson']>[] | null;
   errors: ReturnType<UserCodeError['toJSON']>[];
 }> {
   try {
-    const result = await codeRunner.executeUserCode<[{ activityInstance: ActivityInstance }], ExpansionReturn>(
+    const result = await codeRunner.executeUserCode<[{ activityInstance: SimulatedActivity }], ExpansionReturn>(
       opts.expansionLogic,
       [
         {

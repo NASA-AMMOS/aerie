@@ -7,7 +7,13 @@ let expansionId: number;
 
 beforeAll(async () => {
   graphqlClient = new GraphQLClient(process.env.MERLIN_GRAPHQL_URL as string);
-  expansionId = await insertExpansion(graphqlClient);
+  expansionId = await insertExpansion(graphqlClient, 'PeelBanana', `export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+  return [
+    PREHEAT_OVEN({temperature: 70}),
+    PREPARE_LOAF(50, false),
+    BAKE_BREAD,
+  ];
+}`);
 });
 
 afterAll(async () => {
@@ -15,9 +21,7 @@ afterAll(async () => {
 });
 
 it('should load expansion data', async () => {
-  const expansions = await expansionBatchLoader({graphqlClient})([
-    { expansionId },
-  ]);
+  const expansions = await expansionBatchLoader({ graphqlClient })([{ expansionId }]);
   if (expansions[0] instanceof Error) {
     throw expansions[0];
   }

@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "copy-preface": "cp ./src/lib/codegen/CommandEDSLPreface.ts ./build/lib/codegen/CommandEDSLPreface.ts;",
+    "reformat": "npx prettier --config ./.prettierrc -w ./src",
     "build": "tsc -p tsconfig.build.json; npm run copy-preface;",
     "start": "node --experimental-vm-modules ./build/app.js",
     "ts-watch": "npm run copy-preface; tsc -p tsconfig.build.json --watch",
@@ -46,6 +47,7 @@
     "jest-extended": "^2.0.0",
     "jest-html-reporters": "^3.0.5",
     "node-fetch": "^3.2.3",
+    "prettier": "^2.6.2",
     "supervisor": "^0.12.0",
     "ts-jest": "^27.1.3",
     "ts-node": "^10.7.0"

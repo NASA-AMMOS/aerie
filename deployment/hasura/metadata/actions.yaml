@@ -35,6 +35,10 @@ actions:
     definition:
       kind: ""
       handler: http://aerie_commanding:27184/get-command-typescript
+  - name: getSequenceSeqJson
+    definition:
+      kind: ""
+      handler: http://aerie_commanding:27184/get-seqjson-for-sequence
   - name: resourceTypes
     definition:
       kind: ""
@@ -87,7 +91,7 @@ custom_types:
         - description: null
           is_deprecated: null
           value: incomplete
-    - name: CommandSeqJsonStepType
+    - name: CommandSeqJsonType
       values:
         - description: null
           is_deprecated: null
@@ -96,7 +100,16 @@ custom_types:
       values:
         - description: null
           is_deprecated: null
-          value: COMPLETE
+          value: ABSOLUTE
+        - description: null
+          is_deprecated: null
+          value: COMMAND_RELATIVE
+        - description: null
+          is_deprecated: null
+          value: EPOCH_RELATIVE
+        - description: null
+          is_deprecated: null
+          value: COMMAND_COMPLETE
   input_objects: []
   objects:
     - name: ResourceType
@@ -111,8 +124,8 @@ custom_types:
     - name: TypeScriptResponse
     - name: ExpandAllActivitiesResponse
     - name: ExpandedActivityInstance
+    - name: SequenceSeqJson
     - name: CommandSeqJson
-    - name: CommandSeqJsonStep
     - name: CommandSeqJsonTime
     - name: UserCodeError
     - name: CodeLocation

@@ -106,6 +106,13 @@ type Query {
   ): ValidationResponse
 }
 
+type Query {
+  getSequenceSeqJson(
+    seqId: String!
+    simulationDatasetId: Int!
+  ): SequenceSeqJson!
+}
+
 enum MerlinSimulationStatus {
   complete
   failed
@@ -193,30 +200,35 @@ type ExpandedActivityInstance {
   errors: [UserCodeError!]!
 }
 
-enum CommandSeqJsonStepType {
-  command
+type SequenceSeqJson {
+  id: String!
+  metadata: Any!
+  steps: [CommandSeqJson!]!
 }
 
-enum CommandSeqJsonTimeType {
-  COMPLETE
-}
 
 type CommandSeqJson {
-  id: String!,
-  metadata: Any!,
-  steps: [CommandSeqJsonStep!]!
-}
-
-type CommandSeqJsonStep {
   stem: String!,
   time: CommandSeqJsonTime!,
-  type: CommandSeqJsonStepType!,
+  type: CommandSeqJsonType!,
   metadata: Any!
   args: [Any!]!
 }
 
 type CommandSeqJsonTime {
   type: CommandSeqJsonTimeType!
+  tag: String
+}
+
+enum CommandSeqJsonType {
+  command
+}
+
+enum CommandSeqJsonTimeType {
+  ABSOLUTE
+  COMMAND_RELATIVE
+  EPOCH_RELATIVE
+  COMMAND_COMPLETE
 }
 
 type UserCodeError {
