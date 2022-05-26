@@ -131,11 +131,16 @@ class ConstraintsDSLCompilationServiceTests {
   void testDiscreteParameter() {
     checkSuccessfulCompilation(
         """
-            export default () => {
-              return Discrete.Parameter("my_activity", "my_parameter").changed()
-            }
+            export default () => Constraint.ForEachActivity(
+              "activity",
+              (instance) => instance.parameters.Param.changed()
+            )
         """,
-        new ViolationsOf(new Changed<>(new ProfileExpression<>(new DiscreteParameter("my_activity", "my_parameter"))))
+        new ForEachActivity(
+            "activity",
+            "activity alias 0",
+            new ViolationsOf(new Changed<>(new ProfileExpression<>(new DiscreteParameter("activity alias 0", "Param"))))
+        )
     );
   }
 
@@ -247,11 +252,16 @@ class ConstraintsDSLCompilationServiceTests {
   void testRealParameter() {
     checkSuccessfulCompilation(
         """
-            export default () => {
-              return Real.Parameter("my_activity", "my_parameter").changed()
-            }
+            export default () => Constraint.ForEachActivity(
+              "activity",
+              (instance) => instance.parameters.AnotherParam.changed()
+            )
         """,
-        new ViolationsOf(new Changed<>(new ProfileExpression<>(new RealParameter("my_activity", "my_parameter"))))
+        new ForEachActivity(
+            "activity",
+            "activity alias 0",
+            new ViolationsOf(new Changed<>(new ProfileExpression<>(new RealParameter("activity alias 0", "AnotherParam"))))
+        )
     );
   }
 
@@ -392,42 +402,36 @@ class ConstraintsDSLCompilationServiceTests {
   @Test
   void testDuring() {
     checkSuccessfulCompilation(
-        // The following code will fail at constraint evaluation, but the Typescript should run just fine.
-        // (due to the activity alias not being declared)
         """
           export default () => {
-            return Windows.During("non existent activity");
+            return Constraint.ForEachActivity("activity", (alias) => alias.during());
           }
         """,
-        new ViolationsOf(new During("non existent activity"))
+        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new During("activity alias 0")))
     );
   }
 
   @Test
   void testStartOf() {
     checkSuccessfulCompilation(
-        // The following code will fail at constraint evaluation, but the Typescript should run just fine.
-        // (due to the activity alias not being declared)
         """
           export default () => {
-            return Windows.StartOf("non existent activity");
+            return Constraint.ForEachActivity("activity", (alias) => alias.start());
           }
         """,
-        new ViolationsOf(new StartOf("non existent activity"))
+        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new StartOf("activity alias 0")))
     );
   }
 
   @Test
   void testEndOf() {
     checkSuccessfulCompilation(
-        // The following code will fail at constraint evaluation, but the Typescript should run just fine.
-        // (due to the activity alias not being declared)
         """
           export default () => {
-            return Windows.EndOf("non existent activity");
+            return Constraint.ForEachActivity("activity", (alias) => alias.end());
           }
         """,
-        new ViolationsOf(new EndOf("non existent activity"))
+        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new EndOf("activity alias 0")))
     );
   }
 
@@ -548,12 +552,28 @@ class ConstraintsDSLCompilationServiceTests {
         export default () => {
           return Constraint.ForEachActivity(
             "activity",
-            "activity alias",
-            Windows.During("activity alias")
+            (myAlias) => myAlias.during()
           )
         }
         """,
-        new ForEachActivity("activity", "activity alias", new ViolationsOf(new During("activity alias")))
+        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new During("activity alias 0")))
+    );
+
+    checkSuccessfulCompilation(
+        """
+        import * as Gen from './mission-model-generated-code.js';
+        export default () => {
+          return Constraint.ForEachActivity(
+            "activity",
+            myHelperFunction
+          )
+        }
+
+        function myHelperFunction(instance: Gen.ActivityInstance<"activity">): Constraint {
+          return instance.during();
+        }
+        """,
+        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new During("activity alias 0")))
     );
   }
 }

@@ -5,6 +5,8 @@ export class Constraint {
   /** Internal AST node */
   public readonly __astNode: AST.Constraint;
 
+  private static __numGeneratedAliases: number = 0;
+
   public constructor(astNode: AST.Constraint) {
     this.__astNode = astNode;
   }
@@ -17,12 +19,14 @@ export class Constraint {
     })
   }
 
-  public static ForEachActivity(activityType: Gen.ActivityTypeName, alias: string, constraint: Constraint): Constraint {
+  public static ForEachActivity<A extends Gen.ActivityTypeName>(activityType: A, expression: (instance: Gen.ActivityInstance<A>) => Constraint): Constraint {
+    let alias = "activity alias " + Constraint.__numGeneratedAliases;
+    Constraint.__numGeneratedAliases += 1;
     return new Constraint({
       kind: AST.NodeKind.ForEachActivity,
       activityType,
       alias,
-      expression: constraint.__astNode
+      expression: expression(new Gen.ActivityInstance(activityType, alias)).__astNode
     })
   }
 }
@@ -33,25 +37,6 @@ export class Windows {
 
   public constructor(expression: AST.WindowsExpression) {
     this.__astNode = expression;
-  }
-
-  public static During(alias: string): Windows {
-    return new Windows({
-      kind: AST.NodeKind.WindowsExpressionDuring,
-      alias
-    })
-  }
-  public static StartOf(alias: string): Windows {
-    return new Windows({
-      kind: AST.NodeKind.WindowsExpressionStartOf,
-      alias
-    })
-  }
-  public static EndOf(alias: string): Windows {
-    return new Windows({
-      kind: AST.NodeKind.WindowsExpressionEndOf,
-      alias
-    })
   }
 
   public static All(...windows: Windows[]): Windows {
@@ -116,13 +101,6 @@ export class Real {
     return new Real({
       kind: AST.NodeKind.RealProfileValue,
       value
-    })
-  }
-  public static Parameter(alias: string, name: string): Real {
-    return new Real({
-      kind: AST.NodeKind.RealProfileParameter,
-      alias,
-      name
     })
   }
 
@@ -222,31 +200,22 @@ export class Real {
 
 export class Discrete<Schema> {
   public readonly __astNode: AST.DiscreteProfileExpression
-  private readonly __schemaInstance: Schema;
 
-  public constructor(profile: AST.DiscreteProfileExpression, template: Schema) {
+  public constructor(profile: AST.DiscreteProfileExpression) {
     this.__astNode = profile;
-    this.__schemaInstance = template;
   }
 
   public static Resource<R extends Gen.ResourceName>(name: R): Discrete<Gen.DiscreteResourceSchema<R>> {
     return new Discrete({
       kind: AST.NodeKind.DiscreteProfileResource,
       name
-    }, Gen.discreteResourceSchemaDummyValue<R>(name))
+    })
   }
   public static Value<Schema>(value: Schema): Discrete<Schema> {
     return new Discrete({
       kind: AST.NodeKind.DiscreteProfileValue,
       value
-    }, value)
-  }
-  public static Parameter<Schema>(alias: string, name: string): Discrete<Schema> {
-    return new Discrete({
-      kind: AST.NodeKind.DiscreteProfileParameter,
-      alias,
-      name
-    }, 5 as unknown as Schema) // will fix in next commit
+    })
   }
 
   public transition(from: Schema, to: Schema): Windows {
@@ -304,39 +273,15 @@ declare global {
      * Check a constraint for each instance of an activity type.
      *
      * @param activityType activity type to check
-     * @param alias aliased name of activity instances, referenced by the constraint argument
-     * @param constraint constraint to apply
+     * @param expression
      * @constructor
      */
-    public static ForEachActivity(activityType: Gen.ActivityTypeName, alias: string, constraint: Constraint): Constraint
+    public static ForEachActivity<A extends Gen.ActivityTypeName>(activityType: A, expression: (instance: Gen.ActivityInstance<A>) => Constraint): Constraint
   }
 
   export class Windows {
     /** Internal AST Node */
     public readonly __astNode: AST.WindowsExpression;
-
-    /**
-     * Produce a window for the duration of the aliased activity instance.
-     *
-     * @param alias
-     * @constructor
-     */
-    public static During(alias: string): Windows
-
-    /**
-     * Produce an instantaneous window at the start of the aliased activity instance.
-     *
-     * @param alias
-     * @constructor
-     */
-    public static StartOf(alias: string): Windows
-
-    /**
-     * Produce an instantaneous window at the end of the aliased activity instance.
-     * @param alias
-     * @constructor
-     */
-    public static EndOf(alias: string): Windows
 
     /**
      * Produce a window when all arguments produce a window.
@@ -394,17 +339,6 @@ declare global {
      * @constructor
      */
     public static Value(value: number): Real
-
-    /**
-     * Reference the value of an activity instance parameter as a constant real profile.
-     *
-     * Only valid for the duration of the activity instance.
-     *
-     * @param alias alias of the activity instance
-     * @param name name of the parameter
-     * @constructor
-     */
-    public static Parameter(alias: string, name: string): Real
 
     /**
      * Create a real profile from this profile's derivative.
@@ -468,7 +402,18 @@ declare global {
   export class Discrete<Schema> {
     /** Internal AST Node */
     public readonly __astNode: AST.DiscreteProfileExpression
-    /** Internal instance of the schema to enforce type checking. */
+
+    /**
+     * Internal instance of the Schema type, for type checking.
+     *
+     * It is never assigned or accessed, and is discarded by the end.
+     * This field should remain `undefined` for the full runtime.
+     * It does not even exist in the above implementation class
+     * for Discrete.
+     *
+     * Don't remove it though, it'll break the tests.
+     * @private
+     */
     private readonly __schemaInstance: Schema;
 
     /**
@@ -484,17 +429,6 @@ declare global {
      * @constructor
      */
     public static Value<Schema>(value: Schema): Discrete<Schema>
-
-    /**
-     * Reference the value of an activity instance parameter as a constant discrete profile.
-     *
-     * Only valid for the duration of the activity instance.
-     *
-     * @param alias alias of the activity instance
-     * @param name name of the parameter
-     * @constructor
-     */
-    public static Parameter<Schema>(alias: string, name: string): Discrete<Schema>
 
     /**
      * Produce an instantaneous window whenever this profile makes a specific transition.
@@ -521,6 +455,8 @@ declare global {
      */
     public changed(): Windows
   }
+
+  type Duration = number;
 }
 
 // Make Constraint available on the global object

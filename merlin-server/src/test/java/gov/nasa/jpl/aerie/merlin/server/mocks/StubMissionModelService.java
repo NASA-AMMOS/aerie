@@ -34,7 +34,7 @@ public final class StubMissionModelService implements MissionModelService {
   public static final String NONEXISTENT_ACTIVITY_TYPE = "no-activity";
   public static final ActivityType EXISTENT_ACTIVITY = new ActivityType(
       EXISTENT_ACTIVITY_TYPE,
-      List.of(new Parameter("Param", ValueSchema.STRING)),
+      List.of(new Parameter("Param", ValueSchema.STRING), new Parameter("AnotherParam", ValueSchema.REAL)),
       List.of(),
       new EnumValueMapper<>(Unit.class).getValueSchema());
 

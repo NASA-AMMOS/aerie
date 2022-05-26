@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.ArrayList;
@@ -21,6 +22,8 @@ public final class TypescriptCodeGenerationService {
 
     final var result = new ArrayList<String>();
     result.add("/** Start Codegen */");
+    result.add("import * as AST from './constraints-ast.js';");
+    result.add("import { Discrete, Real, Windows } from './constraints-edsl-fluent-api.js';");
 
     result.add("export type ActivityTypeName =");
     for (String activityType: activityTypes.keySet()) {
@@ -35,19 +38,94 @@ public final class TypescriptCodeGenerationService {
     }
     result.add(indent("void;"));
 
-    result.add("export function discreteResourceSchemaDummyValue<R extends ResourceName>(resource: R): DiscreteResourceSchema<R> {");
-    result.add(indent("return ("));
-    for (var resource: resources.keySet()) {
-      result.add(indent(indent("resource === \"" + resource + "\" ? " + valueSchemaToTypescriptDefault(resources.get(resource)) + " :")));
-    }
-    result.add(indent(indent("undefined")));
-    result.add(indent(") as DiscreteResourceSchema<R>;"));
-    result.add("}");
-
     result.add("export type RealResourceName = " + String.join(
         " | ",
         resources.entrySet().stream().filter($ -> valueSchemaIsReal($.getValue())).map($ -> ("\"" + $.getKey() + "\"")).toList()
     ) + ";");
+
+    // ActivityParameters
+
+    result.add("export type ActivityParameters<A extends ActivityTypeName> =");
+    for (String activityType: activityTypes.keySet()) {
+      StringBuilder parameterSchema = new StringBuilder("{");
+      for (Parameter parameter: activityTypes.get(activityType).parameters()) {
+        parameterSchema
+            .append(parameter.name())
+            .append(": ")
+            .append(valueSchemaToTypescriptProfile(parameter.schema()))
+            .append(", ");
+      }
+      parameterSchema.append("}");
+      result.add(indent("A extends \"" + activityType + "\" ? " + parameterSchema + " :"));
+    }
+    result.add(indent("void;"));
+
+    // ActivityInstance
+
+    result.add("export class ActivityInstance<A extends ActivityTypeName> {");
+    result.add(indent("""
+                          private readonly __activityType: A;
+                          private readonly __alias: string;
+                          constructor(activityType: A, alias: string) {
+                          """));
+
+    result.add(indent(indent("""
+                                 this.__activityType = activityType;
+                                 this.__alias = alias;
+                                 """)));
+    result.add(indent("""
+                          }
+                          public get parameters(): ActivityParameters<A> {"""));
+
+    result.add(indent(indent("return (")));
+    for (String activityType: activityTypes.keySet()) {
+      final var profileObject = new StringBuilder("{");
+      for (var parameter: activityTypes.get(activityType).parameters()) {
+        var parameterProfile = valueSchemaToTypescriptProfile(parameter.schema());
+        String nodeKind;
+        if (parameterProfile.equals("Real")) {
+          nodeKind = "RealProfileParameter";
+        } else {
+          nodeKind = "DiscreteProfileParameter";
+        }
+        profileObject
+            .append(parameter.name())
+            .append(": new ")
+            .append(parameterProfile)
+            .append("({ kind: AST.NodeKind.")
+            .append(nodeKind)
+            .append(", alias: this.__alias, name: \"")
+            .append(parameter.name())
+            .append("\"}")
+            .append("), ");
+      }
+      profileObject.append("}");
+      result.add(indent(indent(indent("this.__activityType === \"" + activityType + "\" ? " + profileObject + " :"))));
+    }
+    result.add(indent(indent(indent("undefined) as ActivityParameters<A>;"))));
+
+    result.add(indent("""
+                          }
+                          public during(): Windows {
+                            return new Windows({
+                              kind: AST.NodeKind.WindowsExpressionDuring,
+                              alias: this.__alias
+                            });
+                          }
+                          public start(): Windows {
+                            return new Windows({
+                              kind: AST.NodeKind.WindowsExpressionStartOf,
+                              alias: this.__alias
+                            });
+                          }
+                          public end(): Windows {
+                            return new Windows({
+                              kind: AST.NodeKind.WindowsExpressionEndOf,
+                              alias: this.__alias
+                            });
+                          }"""));
+
+    result.add("}");
 
     result.add("/** End Codegen */");
     return joinLines(result);
