@@ -1,11 +1,20 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import java.util.List;
+import java.util.Map;
+
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryRevisionData;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.InMemoryResultsCellRepository.InMemoryCell;
+import org.apache.commons.lang3.tuple.Pair;
 
-public record UncachedSimulationService (SimulationAgent action) implements SimulationService {
+public record UncachedSimulationService (
+    SimulationAgent agent
+) implements SimulationService {
+
   @Override
   public ResultsProtocol.State getSimulationResults(final PlanId planId, final RevisionData revisionData) {
     if (!(revisionData instanceof InMemoryRevisionData inMemoryRevisionData)) {
@@ -14,7 +23,7 @@ public record UncachedSimulationService (SimulationAgent action) implements Simu
     final var cell = new InMemoryCell(planId, inMemoryRevisionData.planRevision());
 
     try {
-      this.action.simulate(planId, revisionData, cell);
+      this.agent.simulate(planId, revisionData, cell);
     } catch (final InterruptedException ex) {
       // Do nothing. We'll get the current result (probably an Incomplete)
       // and throw away the cell anyway.
@@ -28,5 +37,12 @@ public record UncachedSimulationService (SimulationAgent action) implements Simu
     cell.cancel();
 
     return result;
+  }
+
+  @Override
+  public Map<String, List<Pair<Duration, SerializedValue>>> getResourceSamples(final PlanId planId, final RevisionData revisionData) {
+    return getSimulationResults(planId, revisionData) instanceof ResultsProtocol.State.Success s ?
+        s.results().resourceSamples :
+        Map.of();
   }
 }

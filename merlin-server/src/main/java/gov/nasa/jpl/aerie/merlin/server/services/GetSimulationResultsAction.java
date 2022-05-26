@@ -12,10 +12,12 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import java.io.StringReader;
@@ -28,7 +30,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class GetSimulationResultsAction {
-  public /*sealed*/ interface Response {
+  public sealed interface Response {
     record Pending() implements Response {}
     record Incomplete() implements Response {}
     record Failed(String reason) implements Response {}
@@ -74,6 +76,13 @@ public final class GetSimulationResultsAction {
     } else {
       throw new UnexpectedSubtypeError(ResultsProtocol.State.class, response);
     }
+  }
+
+  public Map<String, List<Pair<Duration, SerializedValue>>> getResourceSamples(final PlanId planId)
+  throws NoSuchPlanException
+  {
+    final var revisionData = this.planService.getPlanRevisionData(planId);
+    return simulationService.getResourceSamples(planId, revisionData);
   }
 
   public Map<String, List<Violation>> getViolations(final PlanId planId, final SimulationResults results)

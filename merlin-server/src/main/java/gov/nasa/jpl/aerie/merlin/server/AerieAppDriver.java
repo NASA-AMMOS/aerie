@@ -61,7 +61,7 @@ public final class AerieAppDriver {
     final var simulationAgent = ThreadedSimulationAgent.spawn(
         "simulation-agent",
         new SynchronousSimulationAgent(planController, missionModelController));
-    final var simulationController = new CachedSimulationService(stores.results(), simulationAgent);
+    final var simulationController = new CachedSimulationService(simulationAgent, stores.results());
     final var simulationAction = new GetSimulationResultsAction(
         planController,
         missionModelController,
