@@ -83,6 +83,15 @@ export class Windows {
       expression: this.__astNode,
     });
   }
+
+  public shiftBy(fromStart: Duration, fromEnd: Duration) : Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionShiftBy,
+      windowExpression: this.__astNode,
+      fromStart: fromStart,
+      fromEnd: fromEnd
+    })
+  }
 }
 
 export class Real {
@@ -327,6 +336,13 @@ declare global {
      * this method to produce a violation whenever it is NOT satisfied.
      */
     public violations(): Constraint;
+
+    /**
+     * Shift start and end of all windows by a duration
+     * @param fromStart duration to add from the start of the window
+     * @param fromEnd duration to add from the end of the window
+     */
+    public shiftBy(fromStart: number, fromEnd: number): Windows;
   }
 
   export class Real {
