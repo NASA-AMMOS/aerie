@@ -48,7 +48,7 @@ class TypescriptCodeGenerationServiceTest {
              /**
               * Produces a window for the duration of the activity.
               */
-             public during(): Windows {
+             public window(): Windows {
                return new Windows({
                  kind: AST.NodeKind.WindowsExpressionDuring,
                  alias: this.__alias
