@@ -5,4 +5,14 @@ object_relationships:
 - name: expansion_run
   using:
     foreign_key_constraint_on: expansion_run_id
-# TODO: Add relationship to activities through the expansion run -> simulation_dataset_id -> simulated activity instance
+remote_relationships:
+  - name: activity_instance
+    definition:
+      to_source:
+        relationship_type: object
+        source: AerieMerlin
+        table:
+          schema: public
+          name: span
+        field_mapping:
+          activity_instance_id: id

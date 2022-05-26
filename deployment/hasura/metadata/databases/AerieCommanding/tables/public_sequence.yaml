@@ -1,0 +1,24 @@
+table:
+  name: sequence
+  schema: public
+array_relationships:
+- name: activity_instance_joins
+  using:
+    manual_configuration:
+      remote_table:
+        name: sequence_to_simulated_activity
+        schema: public
+      column_mapping:
+        seq_id: seq_id
+        simulation_dataset_id: simulation_dataset_id
+remote_relationships:
+- name: simulation_dataset
+  definition:
+    to_source:
+      relationship_type: object
+      source: AerieMerlin
+      table:
+        schema: public
+        name: simulation_dataset
+      field_mapping:
+        simulation_dataset_id: id
