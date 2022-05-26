@@ -1,6 +1,6 @@
 import { gql, GraphQLClient } from 'graphql-request';
 
-export async function insertExpansion(graphqlClient: GraphQLClient): Promise<number> {
+export async function insertExpansion(graphqlClient: GraphQLClient, activityTypeName: string, expansionLogic: string): Promise<number> {
   const res = await graphqlClient.request<{
     addCommandExpansionTypeScript: { id: number };
   }>(
@@ -12,37 +12,8 @@ export async function insertExpansion(graphqlClient: GraphQLClient): Promise<num
       }
     `,
     {
-      activityTypeName: 'PeelBanana',
-      expansionLogic:
-`export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
-  return [
-    PREHEAT_OVEN({temperature: 70}),
-    PREPARE_LOAF(50, false),
-    BAKE_BREAD,
-  ];
-}`,
-    },
-  );
-  return res.addCommandExpansionTypeScript.id;
-}
-
-export async function insertErrorExpansion(graphqlClient: GraphQLClient): Promise<number> {
-  const res = await graphqlClient.request<{
-    addCommandExpansionTypeScript: { id: number };
-  }>(
-    gql`
-      mutation AddCommandExpansion($activityTypeName: String!, $expansionLogic: String!) {
-        addCommandExpansionTypeScript(activityTypeName: $activityTypeName, expansionLogic: $expansionLogic) {
-          id
-        }
-      }
-    `,
-    {
-      activityTypeName: 'BiteBanana',
-      expansionLogic:`
-        export default function ErrorExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
-          throw new Error('Not implemented');
-        }`,
+      activityTypeName,
+      expansionLogic,
     },
   );
   return res.addCommandExpansionTypeScript.id;
@@ -105,4 +76,29 @@ export async function removeExpansionSet(graphqlClient: GraphQLClient, expansion
       expansionSetId,
     },
   );
+}
+
+export async function expand(graphqlClient: GraphQLClient, expansionSetId: number, simulationDatasetId: number): Promise<void> {
+  await graphqlClient.request<{
+    expandAllActivities: {
+      id: number;
+    }
+  }>(gql`
+    mutation Expand(
+      $expansionSetId: Int!
+      $simulationDatasetId: Int!
+    ) {
+      expandAllActivities(
+        expansionSetId: $expansionSetId
+        simulationDatasetId: $simulationDatasetId
+      ) {
+        id
+      }
+    }
+  `, {
+    expansionSetId,
+    simulationDatasetId
+  });
+
+  return;
 }

@@ -14,7 +14,11 @@ beforeAll(async () => {
   graphqlClient = new GraphQLClient(process.env.MERLIN_GRAPHQL_URL as string);
   missionModelId = await uploadMissionModel(graphqlClient);
   commandDictionaryId = await insertCommandDictionary(graphqlClient);
-  expansionId = await insertExpansion(graphqlClient);
+  expansionId = await insertExpansion(graphqlClient, 'ParameterTest', `
+  export default function ParameterTestExpansion() {
+    return BAKE_BREAD;
+  }
+  `);
   expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
 });
 

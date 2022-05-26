@@ -7,7 +7,7 @@ let expansionId: number;
 
 beforeAll(async () => {
   graphqlClient = new GraphQLClient(process.env.MERLIN_GRAPHQL_URL as string);
-  expansionId = await insertExpansion(graphqlClient);
+  expansionId = await insertExpansion(graphqlClient, 'PeelBanana', ``);
 });
 
 afterAll(async () => {

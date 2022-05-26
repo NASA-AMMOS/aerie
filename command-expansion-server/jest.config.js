@@ -7,7 +7,7 @@ export default {
   testRegex: '((\\.|/)(test|spec))\\.(jsx?|tsx?)$',
   testPathIgnorePatterns: ['/node_modules/', '/build/'],
   coverageReporters: ['html'],
-  setupFiles: ['dotenv/config'],
+  setupFiles: ['dotenv/config', './src/polyfills.ts'],
   globalSetup: "./jestGlobalSetup.js",
   setupFilesAfterEnv: ["jest-extended/all"],
   reporters: [

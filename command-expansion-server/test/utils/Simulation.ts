@@ -41,7 +41,7 @@ export async function executeSimulation(graphqlClient: GraphQLClient, planId: nu
   throw new Error('Simulation timed out');
 }
 
-export async function removeSimulationArtifacts(graphqlClient: GraphQLClient, simulationIds: {simulationId: number, simulationDatasetId: number}): Promise<void> {
+export async function removeSimulationArtifacts(graphqlClient: GraphQLClient, simulationPk: {simulationId: number, simulationDatasetId: number}): Promise<void> {
   /*
    * Remove a plan
    */
@@ -56,7 +56,7 @@ export async function removeSimulationArtifacts(graphqlClient: GraphQLClient, si
       }
     }
   `, {
-    simulationId: simulationIds.simulationId,
-    simulationDatasetId: simulationIds.simulationDatasetId,
+    simulationId: simulationPk.simulationId,
+    simulationDatasetId: simulationPk.simulationDatasetId,
   });
 }
