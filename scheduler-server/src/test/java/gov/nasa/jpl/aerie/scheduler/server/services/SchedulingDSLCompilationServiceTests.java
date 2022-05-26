@@ -227,6 +227,24 @@ class SchedulingDSLCompilationServiceTests {
   }
 
   @Test
+  void testSchedulingDSL_temporal() {
+    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error actualErrors;
+    actualErrors = (SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error) schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        PLAN_ID, """
+                    export default () => Goal.ActivityRecurrenceGoal({
+                      activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                      interval:  Temporal.Duration.from({days: 1})
+                    })
+                    """);
+    assertTrue(
+        actualErrors.errors()
+                    .stream()
+                    .anyMatch(e -> e.message().contains("TypeError: TS2322 Incorrect return type. Expected: 'Goal', Actual: 'number'."))
+    );
+  }
+
+
+  @Test
   void testHugeGoal() {
     // This test is intended to create a Goal that is bigger than the node subprocess's standard input buffer
     final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(

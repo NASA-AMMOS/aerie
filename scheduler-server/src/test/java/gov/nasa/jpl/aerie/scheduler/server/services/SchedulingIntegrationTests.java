@@ -210,7 +210,7 @@ public class SchedulingIntegrationTests {
         List.of(new SchedulingGoal(new GoalId(0L), """
             export default () => Goal.ActivityRecurrenceGoal({
               activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-              interval: 24 * 60 * 60 * 1000 * 1000 // one day in microseconds
+              interval: Temporal.Duration.from({days: 1})
             })
             """, true)),
         PLANNING_HORIZON);

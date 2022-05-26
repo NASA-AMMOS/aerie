@@ -20,7 +20,6 @@ import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.windowsExpre
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
@@ -38,10 +37,9 @@ public class SchedulingDSL {
               $ -> tuple($.activityType(), $.arguments()));
 
   private static final JsonParser<Duration> durationP =
-      longP
-          . map(
-              microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
-              duration -> duration.in(Duration.MICROSECONDS));
+      stringP
+      . map(iso8601String -> Duration.fromISO8601String(iso8601String),
+          duration -> java.time.Duration.ofMillis(duration.in(Duration.MILLISECOND)).toString());
 
   private static final JsonParser<ClosedOpenInterval> intervalP =
       productP

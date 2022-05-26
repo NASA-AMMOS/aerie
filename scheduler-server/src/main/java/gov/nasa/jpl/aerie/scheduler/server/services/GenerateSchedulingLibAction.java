@@ -38,6 +38,7 @@ public record GenerateSchedulingLibAction(
       final var schedulerAst = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "scheduler-ast.ts"));
       final var windowsDsl = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "constraints", "constraints-edsl-fluent-api.ts"));
       final var windowsAst = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "constraints", "constraints-ast.ts"));
+      final var temporalPolyfillTypes = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "TemporalPolyfillTypes.ts"));
 
       final var missionModelTypes = missionModelService.getMissionModelTypes(missionModelId);
 
@@ -52,7 +53,9 @@ public record GenerateSchedulingLibAction(
                  "file:///scheduler-ast.ts", schedulerAst,
                  "file:///constraints-edsl-fluent-api.ts", windowsDsl,
                  "file:///constraints-ast.ts", windowsAst,
-                 "file:///mission-model-generated-code.ts", generatedConstraintsCode));
+                 "file:///mission-model-generated-code.ts", generatedConstraintsCode,
+                 "file:///TemporalPolyfillTypes.ts", temporalPolyfillTypes
+                 ));
     } catch (NoSuchMissionModelException | IOException | MissionModelService.MissionModelServiceException e) {
       return new Response.Failure(e.getMessage());
     }
