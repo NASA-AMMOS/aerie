@@ -1,4 +1,5 @@
 import * as WindowsExpressions from "./constraints-ast";
+import "./TemporalPolyfillTypes.ts";
 
 export interface ActivityTemplate {
   activityType: string,
@@ -6,13 +7,13 @@ export interface ActivityTemplate {
 }
 
 export interface ClosedOpenInterval {
-  start: number
-  end: number
+  start: Temporal.Duration
+  end: Temporal.Duration
 }
 
 export type CardinalityGoalArguments =
-  |  { duration: number, occurrence: number }
-  |  { duration: number }
+  |  { duration: Temporal.Duration, occurrence: number }
+  |  { duration: Temporal.Duration }
   |  { occurrence: number }
 
 export enum NodeKind {
@@ -40,7 +41,7 @@ export type Goal =
 export interface ActivityRecurrenceGoal {
   kind: NodeKind.ActivityRecurrenceGoal,
   activityTemplate: ActivityTemplate,
-  interval: number,
+  interval: Temporal.Duration,
 }
 
 export interface ActivityCardinalityGoal {

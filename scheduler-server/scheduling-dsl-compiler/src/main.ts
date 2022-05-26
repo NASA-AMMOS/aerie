@@ -1,15 +1,19 @@
+import "./libs/polyfills.js"
 import fs from 'fs';
 import * as readline from 'readline';
 import ts from 'typescript';
 import { UserCodeRunner } from '@nasa-jpl/aerie-ts-user-code-runner';
 import type { Goal } from './libs/scheduler-edsl-fluent-api.js';
-
+import vm from "vm";
 const codeRunner = new UserCodeRunner();
 const schedulerEDSL = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/scheduler-edsl-fluent-api.ts`, 'utf8');
 const schedulerAST = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/scheduler-ast.ts`, 'utf8');
 const windowsEDSL = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/constraints/constraints-edsl-fluent-api.ts`, 'utf8');
 const windowsAST = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/constraints/constraints-ast.ts`, 'utf8');
-
+const temporalPolyfillTypes = fs.readFileSync(
+    new URL('../src/libs/TemporalPolyfillTypes.ts', import.meta.url).pathname,
+    'utf8',
+);
 const input = readline.createInterface(process.stdin);
 
 function registerInputCallback(callback: (data: string) => void) {
@@ -59,7 +63,12 @@ async function handleRequest(data: string) {
           ts.createSourceFile('scheduler-ast.ts', schedulerAST, ts.ScriptTarget.ESNext),
           ts.createSourceFile('scheduler-edsl-fluent-api.ts', schedulerEDSL, ts.ScriptTarget.ESNext),
           ts.createSourceFile('scheduler-mission-model-generated-code.ts', schedulerGeneratedCode, ts.ScriptTarget.ESNext),
+          ts.createSourceFile('TemporalPolyfillTypes.ts', temporalPolyfillTypes, ts.ScriptTarget.ES2021),
         ],
+        vm.createContext({
+          Temporal,
+          Date
+        }),
     );
 
     if (result.isErr()) {

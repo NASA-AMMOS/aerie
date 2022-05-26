@@ -184,11 +184,11 @@ public class SchedulingIntegrationTests {
         BANANANATION,
         List.of(new MockMerlinService.PlannedActivityInstance("BiteBanana", Map.of("biteSize", SerializedValue.of(1)), Duration.ZERO)),
         List.of("""
-          export default () => Goal.ActivityRecurrenceGoal({
-            activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-            interval: 24 * 60 * 60 * 1000 * 1000 // one day in microseconds
-          })
-          """));
+                    export default () => Goal.ActivityRecurrenceGoal({
+                      activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                      interval:  Temporal.Duration.from({days: 1})
+                    })
+                    """));
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));

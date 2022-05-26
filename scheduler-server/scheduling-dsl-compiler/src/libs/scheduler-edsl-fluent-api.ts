@@ -37,7 +37,7 @@ export class Goal {
     });
   }
 
-  public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): ActivityRecurrenceGoal {
+  public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Temporal.Duration }): ActivityRecurrenceGoal {
     return Goal.new({
       kind: AST.NodeKind.ActivityRecurrenceGoal,
       activityTemplate: opts.activityTemplate,
@@ -88,7 +88,7 @@ declare global {
 
     public or(...others: Goal[]): Goal
 
-    public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): ActivityRecurrenceGoal
+    public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Temporal.Duration }): ActivityRecurrenceGoal
 
     public static CoexistenceGoal(opts: { activityTemplate: ActivityTemplate, forEach: WindowsEDSL.Windows | ActivityExpression }): ActivityCoexistenceGoal
 

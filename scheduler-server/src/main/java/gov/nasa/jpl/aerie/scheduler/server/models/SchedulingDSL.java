@@ -41,10 +41,10 @@ public class SchedulingDSL {
 
 
   private static final JsonParser<Duration> durationP =
-      longP
+      stringP
       . map(Iso.of(
-          microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
-          duration -> duration.in(Duration.MICROSECONDS)));
+          iso8601String -> Duration.fromISO8601String(iso8601String),
+          duration -> java.time.Duration.ofMillis(duration.in(Duration.MILLISECOND)).toString()));
 
   private static final JsonParser<ClosedOpenInterval> intervalP =
       productP
