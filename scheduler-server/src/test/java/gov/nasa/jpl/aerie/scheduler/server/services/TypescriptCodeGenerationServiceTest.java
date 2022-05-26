@@ -69,7 +69,7 @@ class TypescriptCodeGenerationServiceTest {
             interface SampleActivityEmpty extends ActivityTemplate {}
             const ActivityTemplateConstructors = {
               SampleActivity1: function SampleActivity1Constructor(args: {
-                duration: Duration,
+                duration: Temporal.Duration,
                 fancy: { subfield1: string, subfield2: { subsubfield1: Double, }[], },
                 variant: ("option1" | "option2"),
               }): SampleActivity1 {

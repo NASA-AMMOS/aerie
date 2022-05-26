@@ -69,7 +69,7 @@ test.describe('Scheduling', () => {
                     activityTemplate: ActivityTemplates.PeelBanana({
                       peelDirection: 'fromStem',
                     }),
-                    interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                    interval: Temporal.Duration.from({hours:1})
                   })
                 }`
         };

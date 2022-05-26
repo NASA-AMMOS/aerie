@@ -79,7 +79,7 @@ public class SchedulingIntegrationTests {
           activityTemplate: ActivityTemplates.PeelBanana({
             peelDirection: "fromStem",
           }),
-          interval: 24 * 60 * 60 * 1000 * 1000 // one day in microseconds
+          interval: Temporal.Duration.from({ milliseconds: 24 * 60 * 60 * 1000 })
         })
         """, true)), PLANNING_HORIZON);
     assertEquals(1, results.scheduleResults.goalResults().size());
@@ -108,7 +108,7 @@ public class SchedulingIntegrationTests {
             activityTemplate: ActivityTemplates.PeelBanana({
               peelDirection: "fromStem",
             }),
-            interval: -25 // intentionally invalid interval
+            interval: Temporal.Duration.from({ hours : -4})
           })
           """, true)), PLANNING_HORIZON);
     }
@@ -127,9 +127,9 @@ public class SchedulingIntegrationTests {
                           return Goal.CardinalityGoal({
                             activityTemplate: ActivityTemplates.GrowBanana({
                               quantity: 1,
-                              growingDuration: 1000000,
+                              growingDuration: Temporal.Duration.from({seconds: 1}),
                             }),
-                            specification : {duration: 10 * 1000000}
+                            specification : {duration: Temporal.Duration.from({seconds: 10})}
                           })
         }
           """, true)), PLANNING_HORIZON);
@@ -161,17 +161,19 @@ public class SchedulingIntegrationTests {
 
   @Test
   void testEmptyPlanOccurrenceCardinalityGoal() {
-    final var results = runScheduler(BANANANATION, List.of(), List.of(new SchedulingGoal(new GoalId(0L), """
-        export default function myGoal() {
-                          return Goal.CardinalityGoal({
-                            activityTemplate: ActivityTemplates.GrowBanana({
-                              quantity: 1,
-                              growingDuration: 1000000,
-                            }),
-                            specification : {occurrence: 10}
-                          })
-        }
-          """, true)), PLANNING_HORIZON);
+    final var results = runScheduler(BANANANATION,
+        List.of(),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+                  export default function myGoal() {
+                                    return Goal.CardinalityGoal({
+                                      activityTemplate: ActivityTemplates.GrowBanana({
+                                        quantity: 1,
+                                        growingDuration: Temporal.Duration.from({seconds: 1}),
+                                      }),
+                                      specification : {occurrence: 10}
+                                    })
+                  }
+                    """, true)), PLANNING_HORIZON);
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
@@ -257,7 +259,7 @@ public class SchedulingIntegrationTests {
           export default () => Goal.CoexistenceGoal({
             forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-            startsAt: TimingConstraint.singleton(WindowProperty.END).plus(5 * 60 * 1000 * 1000)
+            startsAt: TimingConstraint.singleton(WindowProperty.END).plus(Temporal.Duration.from({ minutes : 5}))
           })
           """, true)),
         PLANNING_HORIZON);
@@ -303,7 +305,7 @@ public class SchedulingIntegrationTests {
           export default () => Goal.CoexistenceGoal({
             forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-            endsWithin: TimingConstraint.range(WindowProperty.END, Operator.PLUS, 5 * 60 * 1000 * 1000)
+            endsWithin: TimingConstraint.range(WindowProperty.END, Operator.PLUS, Temporal.Duration.from( { minutes: 5 }))
           })
           """, true)),
         PLANNING_HORIZON);
@@ -780,7 +782,7 @@ public class SchedulingIntegrationTests {
         List.of(new SchedulingGoal(new GoalId(0L), """
                   export default () => Goal.ActivityRecurrenceGoal({
                       activityTemplate: ActivityTemplates.ChangeProducer({producer: "Morpheus"}),
-                      interval: 24 * 60 * 60 * 1000 * 1000
+                      interval: Temporal.Duration.from({ hours : 24 })
                     }).applyWhen(Real.Resource("/plant").greaterThan(1.0))""", true)
         ),
         PLANNING_HORIZON
@@ -806,7 +808,7 @@ public class SchedulingIntegrationTests {
         List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.ActivityRecurrenceGoal({
             activityTemplate: ActivityTemplates.ChangeProducer({producer: "Morpheus"}),
-            interval: 24 * 60 * 60 * 1000 * 1000
+            interval: Temporal.Duration.from({days: 1})
           })
           """, true)
         ),
@@ -829,7 +831,7 @@ public class SchedulingIntegrationTests {
         List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.ActivityRecurrenceGoal({
             activityTemplate: ActivityTemplates.ChangeProducer({producer: "Morpheus"}),
-            interval: 24 * 60 * 60 * 1000 * 1000
+            interval: Temporal.Duration.from({days: 1})
           })
           """, true)
         ),
@@ -857,7 +859,7 @@ public class SchedulingIntegrationTests {
         List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.ActivityRecurrenceGoal({
             activityTemplate: ActivityTemplates.ChangeProducer({producer: "Morpheus"}),
-            interval: 24 * 60 * 60 * 1000 * 1000
+            interval: Temporal.Duration.from({days: 1})
           })
           """, true)
         ),
@@ -1021,9 +1023,10 @@ public class SchedulingIntegrationTests {
                  return Goal.CardinalityGoal({
                                       activityTemplate: ActivityTemplates.GrowBanana({
                                         quantity: 1,
-                                        growingDuration: 1000000 * 1800, //30 minutes in microseconds
+                                        growingDuration: Temporal.Duration.from({ minutes : 30 }),
                                       }),
-                                      specification : {duration: 4 * 1000000 * 3600}}) //4 hours
+                                      specification : {duration: Temporal.Duration.from({ hours: 4 })}
+                                      })
                         .and(
                            Goal.CoexistenceGoal({
                              activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
@@ -1074,16 +1077,18 @@ public class SchedulingIntegrationTests {
                  return Goal.CardinalityGoal({
                                       activityTemplate: ActivityTemplates.GrowBanana({
                                         quantity: 1,
-                                       growingDuration: 1000000 * 900, //15 minutes in microseconds
+                                       growingDuration: Temporal.Duration.from({ minutes : 15 }),
                                       }),
-                                      specification : {duration: 4 * 1000000 * 3600}}) //2 hours
+                                      specification : { duration: Temporal.Duration.from({ hours : 4 }) }
+                                      })
                         .or(
                            Goal.CardinalityGoal({
                                       activityTemplate: ActivityTemplates.GrowBanana({
                                         quantity: 1,
-                                        growingDuration: 1000000 * 1800, //30 minutes in microseconds
+                                        growingDuration: Temporal.Duration.from({ minutes : 30}),
                                       }),
-                                      specification : {duration: 4 * 1000000 * 3600}}) //4 hours
+                                      specification : {duration: Temporal.Duration.from({ hours : 4 })}
+                                      })
                         )
                }""", true)),
         planningHorizon);
