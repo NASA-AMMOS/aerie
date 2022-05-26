@@ -24,6 +24,9 @@ import { isRejected, isResolved } from './utils/typeguards.js';
 import { expansionBatchLoader } from './lib/batchLoaders/expansionBatchLoader.js';
 import type { UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
 import { InheritedError } from './utils/InheritedError.js';
+import { defaultSeqBuilder } from './defaultSeqBuilder.js';
+import { CommandSeqJson, Command, Sequence } from './lib/codegen/CommandEDSLPreface.js';
+import { assertOne } from './utils/assertions.js';
 
 const logger = getLogger('app');
 
@@ -126,9 +129,9 @@ app.post('/put-expansion', async (req, res, next) => {
 
   const { rows } = await db.query(
     `
-    INSERT INTO expansion_rule (activity_type, expansion_logic, authoring_command_dict_id, authoring_mission_model_id)
-    VALUES ($1, $2, $3, $4)
-    RETURNING id;
+    insert into expansion_rule (activity_type, expansion_logic, authoring_command_dict_id, authoring_mission_model_id)
+    values ($1, $2, $3, $4)
+    returning id;
   `,
     [activityTypeName, expansionLogic, authoringCommandDictionaryId, authoringMissionModelId],
   );
@@ -206,19 +209,19 @@ app.post('/put-expansion-set', async (req, res, next) => {
   }
 
   const { rows } = await db.query(`
-    WITH expansion_set_id AS (
-      INSERT INTO expansion_set (command_dict_id, mission_model_id)
-        VALUES ($1, $2)
-        RETURNING id
+    with expansion_set_id as (
+      insert into expansion_set (command_dict_id, mission_model_id)
+        values ($1, $2)
+        returning id
     ),
          rules as (
-           SELECT id, activity_type FROM expansion_rule WHERE id = ANY($3::int[]) ORDER BY id
+           select id, activity_type from expansion_rule where id = any($3::int[]) order by id
          )
-    INSERT INTO expansion_set_to_rule (set_id, rule_id, activity_type)
-      SELECT a.id, b.id, b.activity_type
-      FROM (SELECT id from expansion_set_id) a,
-           (SELECT id, activity_type from rules) b
-      RETURNING (SELECT id FROM expansion_set_id);
+    insert into expansion_set_to_rule (set_id, rule_id, activity_type)
+      select a.id, b.id, b.activity_type
+      from (select id from expansion_set_id) a,
+           (select id, activity_type from rules) b
+      returning (select id from expansion_set_id);
   `,
     [commandDictionaryId, missionModelId, expansionIds],
   );
@@ -316,24 +319,24 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
   // Store expansion run  and activity instance commands in DB
   const { rows } = await db.query(
     `
-    WITH expansion_run_id AS (
-      INSERT INTO expansion_run (simulation_dataset_id, expansion_set_id)
-        VALUES ($1, $2)
-        RETURNING id
+    with expansion_run_id as (
+      insert into expansion_run (simulation_dataset_id, expansion_set_id)
+        values ($1, $2)
+        returning id
     )
-    INSERT
-    INTO activity_instance_commands (expansion_run_id,
+    insert
+    into activity_instance_commands (expansion_run_id,
                                      activity_instance_id,
                                      commands,
                                      errors)
-    SELECT *
-    FROM unnest(
-        array_fill((SELECT id FROM expansion_run_id), ARRAY [array_length($3::int[], 1)]),
+    select *
+    from unnest(
+        array_fill((select id from expansion_run_id), array [array_length($3::int[], 1)]),
         $3::int[],
         $4::jsonb[],
         $5::jsonb[]
       )
-    RETURNING (SELECT id FROM expansion_run_id);
+    returning (select id from expansion_run_id);
     `,
     [
       simulationDatasetId,
@@ -354,6 +357,118 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
     id,
     expandedActivityInstances,
   });
+  return next();
+});
+
+export interface SeqBuilder {
+  (
+      sortedActivityInstancesWithCommands: (SimulatedActivity & { commands: Command[] | null, errors: ReturnType<UserCodeError['toJSON']>[] | null })[],
+      seqId: string,
+      seqMetadata: Record<string, any>,
+  ): Sequence;
+}
+
+app.post('/get-seqjson-for-sequence', async (req, res, next) => {
+  // Get the specified sequence + activity instance ids + commands from the latest expansion run for each activity instance (filtered on simulation dataset)
+  // get start time for each activity instance and join with activity instance command data
+  // Create sequence object with all the commands and return the seqjson
+  const context: Context = res.locals.context;
+
+  const seqId = req.body.input.seqId as string;
+  const simulationDatasetId = req.body.input.simulationDatasetId as number;
+
+  const [{ rows: activityInstanceCommandRows }, { rows: seqRows }] = await Promise.all([
+    db.query<{
+      metadata: Record<string, unknown>;
+      commands: CommandSeqJson[],
+      activity_instance_id: number,
+      errors: ReturnType<UserCodeError['toJSON']>[] | null,
+    }>(`
+        with
+          joined_table as (
+            select
+              activity_instance_commands.commands,
+              activity_instance_commands.activity_instance_id,
+              activity_instance_commands.errors,
+              activity_instance_commands.expansion_run_id
+            from sequence
+              join sequence_to_simulated_activity
+                on sequence.seq_id = sequence_to_simulated_activity.seq_id and
+                   sequence.simulation_dataset_id = sequence_to_simulated_activity.simulation_dataset_id
+              join activity_instance_commands
+                on sequence_to_simulated_activity.simulated_activity_id = activity_instance_commands.activity_instance_id
+              join expansion_run
+                on activity_instance_commands.expansion_run_id = expansion_run.id
+            where sequence.seq_id = $2
+              and sequence.simulation_dataset_id = $1
+          ),
+          max_values as (
+            select activity_instance_id, max(expansion_run_id) as max_expansion_run_id
+            from joined_table
+            group by activity_instance_id
+          )
+        select
+          joined_table.commands,
+          joined_table.activity_instance_id,
+          joined_table.errors
+        from joined_table, max_values
+        where joined_table.activity_instance_id = max_values.activity_instance_id
+          and joined_table.expansion_run_id = max_values.max_expansion_run_id;
+      `,
+        [simulationDatasetId, seqId],
+    ),
+    db.query<{
+      metadata: Record<string, any>,
+    }>(`
+        select metadata
+        from sequence
+        where sequence.seq_id = $2
+          and sequence.simulation_dataset_id = $1;
+      `,
+        [simulationDatasetId, seqId],
+    ),
+  ]);
+
+  const seqMetadata = assertOne(seqRows, `No sequence found with seq_id: ${seqId} and simulation_dataset_id: ${simulationDatasetId}`).metadata;
+
+  const simulatedActivities = await context.simulatedActivityInstanceBySimulatedActivityIdDataLoader.loadMany(activityInstanceCommandRows.map(row => ({ simulationDatasetId, simulatedActivityId: row.activity_instance_id})));
+  const simulatedActivitiesLoadErrors = simulatedActivities.filter(ai => ai instanceof Error);
+  if (simulatedActivitiesLoadErrors.length > 0) {
+    res.status(500).json({
+      message: 'Error loading simulated activities',
+      cause: simulatedActivitiesLoadErrors,
+    });
+    return next();
+  }
+
+  const sortedActivityInstances = (simulatedActivities as Exclude<typeof simulatedActivities[number], Error>[])
+      .sort((a, b) => Temporal.Duration.compare(
+          a.startOffset,
+          b.startOffset,
+      ));
+
+  const sortedSimulatedActivitiesWithCommands = sortedActivityInstances.map(ai => {
+    const row = activityInstanceCommandRows.find(row => row.activity_instance_id === ai.id);
+    // Hasn't ever been expanded
+    if (!row) {
+      return {
+        ...ai,
+        commands: null,
+        errors: null,
+      };
+    }
+    return {
+      ...ai,
+      commands: row.commands?.map(Command.fromSeqJson) ?? null,
+      errors: row.errors,
+    };
+  });
+
+  // This is here to easily enable a future feature of allowing the mission to configure their own sequence
+  // building. For now, we just use the 'defaultSeqBuilder' until such a feature request is made.
+  const seqBuilder = defaultSeqBuilder;
+
+  res.status(200).json(seqBuilder(sortedSimulatedActivitiesWithCommands, seqId, seqMetadata).toSeqJson());
   return next();
 });
 
