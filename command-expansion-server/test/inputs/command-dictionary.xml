@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<command_dictionary>
+  <header mission_name="AERIE" version="1.0.0.0" schema_version="1.0">
+    <spacecraft_ids>
+      <spacecraft_id value="62" />
+    </spacecraft_ids>
+  </header>
+  <uplink_file_types>
+    <file_type name="generic" id="0" extension="dat" file_format_spec="None" />
+  </uplink_file_types>
+  <enum_definitions>
+    <enum_table name="boolean">
+      <values>
+        <enum symbol="FALSE" numeric="0" />
+        <enum symbol="TRUE" numeric="1" />
+      </values>
+    </enum_table>
+  </enum_definitions>
+  <command_definitions>
+    <fsw_command opcode="0xFFFF" stem="PREHEAT_OVEN" class="FSW">
+      <arguments>
+        <unsigned_arg name="temperature" bit_length="8" units="none">
+          <range_of_values>
+            <include min="0" max="100" />
+          </range_of_values>
+          <description>Set the oven temperture</description>
+        </unsigned_arg>
+      </arguments>
+      <categories>
+        <module>shell_ctl</module>
+        <ops_category>FSW</ops_category>
+      </categories>
+      <description>This command will turn on the oven</description>
+      <completion>Oven is preheated</completion>
+      <fsw_specification custom_validation_required="No" command_priority="Nominal" />
+      <restricted_modes>
+        <prime_string_restriction prime_string_only="No" />
+      </restricted_modes>
+    </fsw_command>
+    <fsw_command opcode="0xFFFF" stem="PREPARE_LOAF" class="FSW">
+      <arguments>
+        <unsigned_arg name="tb_sugar" bit_length="8" units="priority">
+          <range_of_values>
+            <include min="0" max="100" />
+          </range_of_values>
+          <description>How much sugar is needed</description>
+        </unsigned_arg>
+        <enum_arg name="gluten_free" bit_length="8" enum_name="boolean">
+          <description>Do you hate flavor</description>
+        </enum_arg>
+      </arguments>
+      <categories>
+        <module>shell_ctl</module>
+        <ops_category>FSW</ops_category>
+      </categories>
+      <description>This command make the banana bread dough</description>
+      <completion>The dough mixture is created</completion>
+      <fsw_specification custom_validation_required="No" command_priority="Nominal" />
+      <restricted_modes>
+        <prime_string_restriction prime_string_only="No" />
+      </restricted_modes>
+    </fsw_command>
+    <fsw_command opcode="0xFFFE" stem="BAKE_BREAD" class="FSW">
+      <categories>
+        <module>shell_ctl</module>
+        <ops_category>FSW</ops_category>
+      </categories>
+      <description>This command bakes a bananan bread</description>
+      <completion>Banana bread is done baking</completion>
+      <fsw_specification custom_validation_required="No" command_priority="Nominal" />
+      <restricted_modes>
+        <prime_string_restriction prime_string_only="No" />
+      </restricted_modes>
+    </fsw_command>
+  </command_definitions>
+</command_dictionary>

@@ -7,7 +7,13 @@ let expansionId: number;
 
 beforeAll(async () => {
   graphqlClient = new GraphQLClient(process.env.MERLIN_GRAPHQL_URL as string);
-  expansionId = await insertExpansion(graphqlClient, 'PeelBanana', ``);
+  expansionId = await insertExpansion(graphqlClient, 'PeelBanana', `export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+  return [
+    PREHEAT_OVEN({temperature: 70}),
+    PREPARE_LOAF(50, false),
+    BAKE_BREAD,
+  ];
+}`);
 });
 
 afterAll(async () => {

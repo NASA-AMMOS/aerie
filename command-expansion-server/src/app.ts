@@ -176,7 +176,7 @@ app.post('/put-expansion', async (req, res, next) => {
       commandTypes: commandTypes,
       activityTypes: activityTypescript,
     },
-      { name: 'typecheckExpansion' },
+    { name: 'typecheckExpansion' },
   ) as ReturnType<typeof typecheckExpansion>);
 
   res.status(200).json({ id, errors: result.errors });
