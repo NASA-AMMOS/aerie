@@ -71,7 +71,7 @@ public class SchedulingIntegrationTests {
             activityTemplate: ActivityTemplates.PeelBanana({
               peelDirection: "fromStem",
             }),
-            interval: 24 * 60 * 60 * 1000 * 1000 // one day in microseconds
+            interval: Temporal.Duration.from({ milliseconds: 24 * 60 * 60 * 1000 }) // one day in microseconds
           })
           """));
     assertEquals(1, results.scheduleResults.goalResults().size());
@@ -101,10 +101,10 @@ public class SchedulingIntegrationTests {
                                     return Goal.CardinalityGoal({
                                       activityTemplate: ActivityTemplates.GrowBanana({
                                         quantity: 1,
-                                        growingDuration: 1000000,
+                                        growingDuration: Temporal.Duration.from({seconds: 1}),
                                       }),
-                                      inPeriod: {start :0, end:10000000},
-                                      specification : {duration: 10 * 1000000}
+                                      inPeriod: {start: Temporal.Duration.from({seconds: 0}), end: Temporal.Duration.from({seconds: 10})},
+                                      specification : {duration: Temporal.Duration.from({seconds: 10})}
                                     })
                   }
                     """));
@@ -143,9 +143,9 @@ public class SchedulingIntegrationTests {
                                     return Goal.CardinalityGoal({
                                       activityTemplate: ActivityTemplates.GrowBanana({
                                         quantity: 1,
-                                        growingDuration: 1000000,
+                                        growingDuration: Temporal.Duration.from({seconds: 1}),
                                       }),
-                                      inPeriod: {start :0, end:10000000},
+                                      inPeriod: {start : Temporal.Duration.from({seconds: 0}), end: Temporal.Duration.from({seconds: 10})},
                                       specification : {occurrence: 10}
                                     })
                   }

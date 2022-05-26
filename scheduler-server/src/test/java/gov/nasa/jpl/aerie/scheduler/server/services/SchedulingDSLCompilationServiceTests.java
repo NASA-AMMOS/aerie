@@ -51,7 +51,7 @@ class SchedulingDSLCompilationServiceTests {
   }
 
   @Test
-  void testSchedulingDSL_basic()
+  void  testSchedulingDSL_basic()
   {
     final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
     result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
@@ -62,9 +62,9 @@ class SchedulingDSLCompilationServiceTests {
                     activityTemplate: ActivityTemplates.SampleActivity1({
                       variant: 'option2',
                       fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
-                      duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                      duration: Temporal.Duration.from({ milliseconds: 60 * 60 * 1000 })
                     }),
-                    interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                    interval: Temporal.Duration.from({ milliseconds: 60 * 60 * 1000 })
                   })
                 }
             """);
@@ -77,7 +77,7 @@ class SchedulingDSLCompilationServiceTests {
                     Map.entry("subfield1", SerializedValue.of("value1")),
                     Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
                 )))),
-                Map.entry("duration", SerializedValue.of(60L * 60 * 1000 * 1000))
+                Map.entry("duration", SerializedValue.of("PT3600S"))
             )
         ),
         Duration.HOUR
@@ -100,13 +100,13 @@ class SchedulingDSLCompilationServiceTests {
                   return myHelper(ActivityTemplates.SampleActivity1({
                     variant: 'option2',
                     fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
-                    duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                    duration: Temporal.Duration.from({ milliseconds: 60 * 60 * 1000 })
                   }))
                 }
                 function myHelper(activityTemplate) {
                   return Goal.ActivityRecurrenceGoal({
                     activityTemplate,
-                    interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                    interval: Temporal.Duration.from({ milliseconds: 60 * 60 * 1000 })
                   })
                 }
             """);
@@ -119,7 +119,7 @@ class SchedulingDSLCompilationServiceTests {
                     Map.entry("subfield1", SerializedValue.of("value1")),
                     Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
                     )))),
-                Map.entry("duration", SerializedValue.of(60L * 60 * 1000 * 1000))
+                Map.entry("duration", SerializedValue.of("PT3600S"))
             )
         ),
         Duration.HOUR);
@@ -141,13 +141,13 @@ class SchedulingDSLCompilationServiceTests {
                   return myHelper(ActivityTemplates.SampleActivity1({
                     variant: 'option2',
                     fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
-                    duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                    duration: Temporal.Duration.from({ milliseconds: 60 * 60 * 1000 })
                   }))
                 }
                 function myHelper(activityTemplate) {
                   return Goal.ActivityRecurrenceGoal({
                     activityTemplate,
-                    interval: x // 1 hour in microseconds
+                    interval: x
                   })
                 }
               """);
@@ -177,19 +177,39 @@ class SchedulingDSLCompilationServiceTests {
 
   @Test
   void testSchedulingDSL_temporal() {
-    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error actualErrors;
-    actualErrors = (SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error) schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        PLAN_ID, """
+    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
+    result = (SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success) schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
+        PLAN_ID,
+        """
                     export default () => Goal.ActivityRecurrenceGoal({
-                      activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                      activityTemplate: ActivityTemplates.SampleActivity1({
+                        variant: 'option2',
+                        fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
+                        duration: Temporal.Duration.from({ milliseconds: 60 * 60 * 1000 })
+                      }),
                       interval:  Temporal.Duration.from({days: 1})
                     })
                     """);
-    assertTrue(
-        actualErrors.errors()
-                    .stream()
-                    .anyMatch(e -> e.message().contains("TypeError: TS2322 Incorrect return type. Expected: 'Goal', Actual: 'number'."))
+    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+        new SchedulingDSL.ActivityTemplate(
+            "SampleActivity1",
+            Map.ofEntries(
+                Map.entry("variant", SerializedValue.of("option2")),
+                Map.entry("fancy", SerializedValue.of(Map.ofEntries(
+                    Map.entry("subfield1", SerializedValue.of("value1")),
+                    Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
+                    )))),
+                Map.entry("duration", SerializedValue.of("PT3600S"))
+            )
+        ),
+        Duration.HOURS.times(24)
     );
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+      assertEquals(expectedGoalDefinition, r.goalSpecifier());
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      fail(r.toString());
+    }
   }
 
 
@@ -205,9 +225,9 @@ class SchedulingDSLCompilationServiceTests {
                     activityTemplate: ActivityTemplates.SampleActivity1({
                       variant: 'option2',
                       fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
-                      duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                      duration: Temporal.Duration.from({ milliseconds: 60 * 60 * 1000 })
                     }),
-                    interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                    interval: Temporal.Duration.from({ milliseconds: 60 * 60 * 1000 })
                   })
                 }
             """ + " ".repeat(9001));
@@ -220,7 +240,7 @@ class SchedulingDSLCompilationServiceTests {
                     Map.entry("subfield1", SerializedValue.of("value1")),
                     Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
                     )))),
-                Map.entry("duration", SerializedValue.of(60L * 60 * 1000 * 1000))
+                Map.entry("duration", SerializedValue.of("PT3600S"))
             )
         ),
         Duration.HOUR
@@ -242,7 +262,7 @@ class SchedulingDSLCompilationServiceTests {
               activityTemplate: ActivityTemplates.SampleActivity1({
                 variant: 'option2',
                 fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
-                duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                duration: Temporal.Duration.from({ milliseconds: 60 * 60 * 1000 })
               }),
               forEach: ActivityExpression.ofType(ActivityTypes.SampleActivity2)
             })
@@ -259,7 +279,7 @@ class SchedulingDSLCompilationServiceTests {
                                                          Map.entry("subfield1", SerializedValue.of("value1")),
                                                          Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
                                                          )))),
-                                                     Map.entry("duration", SerializedValue.of(60L * 60 * 1000 * 1000))
+                                                     Map.entry("duration", SerializedValue.of("PT3600S"))
                                                  )
               ),
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2")
@@ -314,7 +334,7 @@ class SchedulingDSLCompilationServiceTests {
               activityTemplate: ActivityTemplates.SampleActivity1({
                 variant: 'option2',
                 fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
-                duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                duration: Temporal.Duration.from({ milliseconds: 60 * 60 * 1000 })
               }),
               forEach: Discrete.Resource(Resources["/sample/resource/1"]).transition("Chiquita", "Dole")
             })
@@ -341,7 +361,7 @@ class SchedulingDSLCompilationServiceTests {
               activityTemplate: ActivityTemplates.SampleActivity1({
                 variant: 'option2',
                 fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
-                duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                duration: Temporal.Duration.from({ milliseconds: 60 * 60 * 1000 })
               }),
               forEach: Real.Resource(Resources["/sample/resource/1"]).greaterThan(50.0)
             })
@@ -358,7 +378,7 @@ class SchedulingDSLCompilationServiceTests {
                                                          Map.entry("subfield1", SerializedValue.of("value1")),
                                                          Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
                                                          )))),
-                                                     Map.entry("duration", SerializedValue.of(60L * 60 * 1000 * 1000))
+                                                     Map.entry("duration", SerializedValue.of("PT3600S"))
                                                  )
               ),
               new SchedulingDSL.ConstraintExpression.WindowsExpression(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)))
