@@ -195,6 +195,31 @@ public final class ResponseSerializers {
                 Collectors.toMap(e -> Long.toString(e.getKey().id()), Map.Entry::getValue)));
   }
 
+  private static JsonValue serializeUnconstructableActivityFailure(final String reason) {
+    return Json
+        .createObjectBuilder()
+        .add("reason", reason)
+        .build();
+  }
+
+  public static JsonValue serializeUnconstructableActivityFailures(final Map<ActivityInstanceId, String> failures) {
+    if (failures.isEmpty()) {
+      return Json.createObjectBuilder()
+        .add("success", JsonValue.TRUE)
+        .build();
+    }
+    return Json.createObjectBuilder()
+        .add("success", JsonValue.FALSE)
+        .add("errors", serializeMap(
+           ResponseSerializers::serializeUnconstructableActivityFailure,
+               failures
+                   .entrySet()
+                   .stream()
+                   .collect(
+                       Collectors.toMap(e -> Long.toString(e.getKey().id()), Map.Entry::getValue))))
+        .build();
+  }
+
   public static JsonValue serializeSimulationResults(final SimulationResults results, final Map<String, List<Violation>> violations) {
     return Json
         .createObjectBuilder()
