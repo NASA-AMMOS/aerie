@@ -422,7 +422,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
     assert plan != null;
 
     //continue creating activities as long as goal wants more and we can do so
-    var missingConflicts = getMissingConflicts(goal);
+    var missingConflicts = getConflicts(goal);
     //setting the number of conflicts detected at first evaluation, will be used at backtracking
     evaluation.forGoal(goal).setNbConflictsDetected(missingConflicts.size());
     assert missingConflicts != null;
@@ -474,11 +474,11 @@ private void satisfyOptionGoal(OptionGoal goal) {
       }//for(missing)
 
       if (madeProgress) {
-        missingConflicts = getMissingConflicts(goal);
+        missingConflicts = getConflicts(goal);
       }
     }//while(missingConflicts&&madeProgress)
 
-    if(missingConflicts.size() > 0 && !goal.isPartiallySatisfiable()){
+    if(!missingConflicts.isEmpty() && !goal.isPartiallySatisfiable()){
       rollback(goal);
     } else{
       evaluation.forGoal(goal).setScore(-missingConflicts.size());
@@ -495,28 +495,15 @@ private void satisfyOptionGoal(OptionGoal goal) {
    *     plan due to the specified goal
    */
   private Collection<Conflict>
-  getMissingConflicts(Goal goal)
+  getConflicts(Goal goal)
   {
     assert goal != null;
     assert plan != null;
-
-    //find all the reasons this goal is crying
     //REVIEW: maybe should have way to request only certain kinds of conflicts
     this.simulationFacade.computeSimulationResultsUntil(this.problem.getPlanningHorizon().getEndAerie());
     final var rawConflicts = goal.getConflicts(plan, this.simulationFacade.getLatestConstraintSimulationResults());
     assert rawConflicts != null;
-
-    //filter out any issues that this simple algorithm can't deal with (ie
-    //anything that doesn't just require throwing more instances in the plan)
-    final var filteredConflicts = new LinkedList<Conflict>();
-    for (final var conflict : rawConflicts) {
-      assert conflict != null;
-      //if( conflict instanceof MissingActivityConflict ) {
-      filteredConflicts.add(conflict);
-      //}
-    }
-
-    return filteredConflicts;
+    return rawConflicts;
   }
 
   /**

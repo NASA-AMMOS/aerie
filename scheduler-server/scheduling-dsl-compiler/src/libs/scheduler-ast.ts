@@ -5,9 +5,20 @@ export interface ActivityTemplate {
   args: {[key: string]: any},
 }
 
+export interface ClosedOpenInterval {
+  start: number
+  end: number
+}
+
+export type CardinalityGoalArguments =
+  |  { duration: number, occurrence: number }
+  |  { duration: number }
+  |  { occurrence: number }
+
 export enum NodeKind {
   ActivityRecurrenceGoal = 'ActivityRecurrenceGoal',
   ActivityCoexistenceGoal = 'ActivityCoexistenceGoal',
+  ActivityCardinalityGoal = 'ActivityCardinalityGoal',
   GoalAnd = 'GoalAnd',
   GoalOr = 'GoalOr'
 }
@@ -22,13 +33,20 @@ export enum NodeKind {
 export type Goal =
   | ActivityRecurrenceGoal
   | ActivityCoexistenceGoal
+  | ActivityCardinalityGoal
   ;
-// TODO cardinality goal
 
 export interface ActivityRecurrenceGoal {
   kind: NodeKind.ActivityRecurrenceGoal,
   activityTemplate: ActivityTemplate,
   interval: number,
+}
+
+export interface ActivityCardinalityGoal {
+  kind: NodeKind.ActivityCardinalityGoal,
+  activityTemplate: ActivityTemplate,
+  specification: CardinalityGoalArguments,
+  inPeriod: ClosedOpenInterval,
 }
 
 export interface ActivityCoexistenceGoal {

@@ -3,6 +3,7 @@ import * as WindowsEDSL from './windows-edsl-fluent-api'
 
 interface ActivityRecurrenceGoal extends Goal {}
 interface ActivityCoexistenceGoal extends Goal {}
+interface ActivityCardinalityGoal extends Goal {}
 
 export class Goal {
   public readonly __astNode: AST.GoalSpecifier;
@@ -49,6 +50,14 @@ export class Goal {
       forEach: opts.forEach.__astnode,
     });
   }
+  public static CardinalityGoal(opts: { activityTemplate: ActivityTemplate, specification: AST.CardinalityGoalArguments, inPeriod: ClosedOpenInterval }): ActivityCardinalityGoal {
+    return Goal.new({
+      kind: AST.NodeKind.ActivityCardinalityGoal,
+      activityTemplate: opts.activityTemplate,
+      specification: opts.specification,
+      inPeriod : opts.inPeriod
+    });
+  }
 }
 
 declare global {
@@ -61,12 +70,15 @@ declare global {
     public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): ActivityRecurrenceGoal
 
     public static CoexistenceGoal(opts: { activityTemplate: ActivityTemplate, forEach: WindowsEDSL.WindowSet }): ActivityCoexistenceGoal
+
+    public static CardinalityGoal(opts: { activityTemplate: ActivityTemplate, specification: AST.CardinalityGoalArguments, inPeriod: ClosedOpenInterval }): ActivityCardinalityGoal
   }
   type Duration = number;
   type Double = number;
   type Integer = number;
 }
 
+export interface ClosedOpenInterval extends AST.ClosedOpenInterval {}
 export interface ActivityTemplate extends AST.ActivityTemplate {}
 
 // Make Goal available on the global object

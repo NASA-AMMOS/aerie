@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.BinaryMutexConstraint;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
@@ -112,6 +113,10 @@ public record SynchronousSchedulerAgent(
 
       //apply constraints/goals to the problem
       loadConstraints(planMetadata, schedulerMissionModel.missionModel()).forEach(problem::add);
+
+      //TODO: workaround to get the Cardinality goal working. To remove once we have global constraints in the eDSL
+      problem.getActivityTypes().forEach(at -> problem.add(BinaryMutexConstraint.buildMutexConstraint(at, at)));
+
       final var orderedGoals = new ArrayList<Goal>();
       final var goals = new HashMap<Goal, GoalId>();
       for (final var goalRecord : specification.goalsByPriority()) {

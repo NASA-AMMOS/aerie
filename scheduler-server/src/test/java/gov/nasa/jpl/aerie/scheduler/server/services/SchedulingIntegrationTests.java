@@ -6,6 +6,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.BinaryMutexConstraint;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
@@ -25,8 +28,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -90,6 +96,92 @@ public class SchedulingIntegrationTests {
       assertEquals(SerializedValue.of("fromStem"), arguments.get("peelDirection"));
     }
   }
+
+  @Test
+  void testEmptyPlanDurationCardinalityGoal() {
+    final var results = runScheduler(BANANANATION,
+        List.of(),
+        List.of("""
+                  export default function myGoal() {
+                                    return Goal.CardinalityGoal({
+                                      activityTemplate: ActivityTemplates.GrowBanana({
+                                        quantity: 1,
+                                        growingDuration: 1000000,
+                                      }),
+                                      inPeriod: {start :0, end:10000000},
+                                      specification : {duration: 10 * 1000000}
+                                    })
+                  }
+                    """));
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(10, goalResult.createdActivities().size());
+    for (final var activity : goalResult.createdActivities()) {
+      assertNotNull(activity);
+    }
+    for (final var activity : goalResult.satisfyingActivities()) {
+      assertNotNull(activity);
+    }
+
+    final var activitiesByType = partitionByActivityType(results.updatedPlan());
+
+    final var growBananas = activitiesByType.get("GrowBanana");
+    assertEquals(10, growBananas.size());
+
+    final var setStartTimes = new HashSet(Stream
+                                              .of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+                                              .map(x -> Duration.of(x, Duration.SECOND)).toList());
+    for (final var growBanana : growBananas) {
+      assertTrue(setStartTimes.remove(growBanana.startTime()));
+      assertEquals(SerializedValue.of(1), growBanana.args().get("quantity"));
+    }
+  }
+
+  @Test
+  void testEmptyPlanOccurrenceCardinalityGoal() {
+    final var results = runScheduler(BANANANATION,
+        List.of(),
+        List.of("""
+                  export default function myGoal() {
+                                    return Goal.CardinalityGoal({
+                                      activityTemplate: ActivityTemplates.GrowBanana({
+                                        quantity: 1,
+                                        growingDuration: 1000000,
+                                      }),
+                                      inPeriod: {start :0, end:10000000},
+                                      specification : {occurrence: 10}
+                                    })
+                  }
+                    """));
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(10, goalResult.createdActivities().size());
+    for (final var activity : goalResult.createdActivities()) {
+      assertNotNull(activity);
+    }
+    for (final var activity : goalResult.satisfyingActivities()) {
+      assertNotNull(activity);
+    }
+
+    final var activitiesByType = partitionByActivityType(results.updatedPlan());
+
+    final var growBananas = activitiesByType.get("GrowBanana");
+    assertEquals(10, growBananas.size());
+
+    final var setStartTimes = new HashSet(Stream
+                                              .of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+                                              .map(x -> Duration.of(x, Duration.SECOND)).toList());
+    for (final var growBanana : growBananas) {
+      assertTrue(setStartTimes.remove(growBanana.startTime()));
+      assertEquals(SerializedValue.of(1), growBanana.args().get("quantity"));
+    }
+  }
+
 
   @Test
   void testSingleActivityPlanSimpleRecurrenceGoal() {

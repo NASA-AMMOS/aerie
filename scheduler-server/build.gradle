@@ -70,7 +70,7 @@ dependencies {
   implementation project(':constraints')
   implementation project(':scheduler')
 
-  runtimeOnly project(':merlin-framework')
+  implementation project(':merlin-framework')
 
   implementation 'org.apache.commons:commons-lang3:3.12.0'
   implementation 'io.javalin:javalin:4.1.1'

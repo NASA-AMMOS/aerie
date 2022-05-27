@@ -12,11 +12,23 @@ import gov.nasa.jpl.aerie.constraints.tree.Or;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
 import gov.nasa.jpl.aerie.constraints.tree.Transition;
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.During;
+import gov.nasa.jpl.aerie.constraints.tree.ForEachActivity;
+import gov.nasa.jpl.aerie.constraints.tree.ViolationsOf;
+import gov.nasa.jpl.aerie.constraints.tree.WindowsOf;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
+import gov.nasa.jpl.aerie.scheduler.Range;
+import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
+import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
@@ -82,6 +94,20 @@ public class GoalBuilder {
                                                  lookupActivityType));
       }
       return builder.build();
+    } else if(goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CardinalityGoalDefinition g){
+      final var builder = new CardinalityGoal.Builder()
+          .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
+          .forAllTimeIn(hor)
+          .inPeriod(new TimeRangeExpression.Builder()
+                           .from(new Windows(Window.betweenClosedOpen(g.inPeriod().start(), g.inPeriod().end())))
+                           .build());
+      if(g.specification().duration().isPresent()){
+        builder.duration(Window.between(g.specification().duration().get(), Duration.MAX_VALUE));
+      }
+      if(g.specification().occurrence().isPresent()){
+        builder.occurences(new Range<>(g.specification().occurrence().get(), Integer.MAX_VALUE));
+      }
+      return builder.build();
     } else {
       throw new Error("Unhandled variant of GoalSpecifier:" + goalSpecifier);
     }
@@ -135,8 +161,16 @@ public class GoalBuilder {
   private static ActivityCreationTemplate makeActivityTemplate(
       final SchedulingDSL.ActivityTemplate activityTemplate,
       final Function<String, ActivityType> lookupActivityType) {
-    var builder = new ActivityCreationTemplate.Builder()
-        .ofType(lookupActivityType.apply(activityTemplate.activityType()));
+    var builder = new ActivityCreationTemplate.Builder();
+    final var type = lookupActivityType.apply(activityTemplate.activityType());
+    if(type.getDurationType() instanceof DurationType.Controllable durationType){
+      //detect duration parameter
+      if(activityTemplate.arguments().containsKey(durationType.parameterName())){
+        builder.duration(new DurationValueMapper().deserializeValue(activityTemplate.arguments().get(durationType.parameterName())).getSuccessOrThrow());
+        activityTemplate.arguments().remove(durationType.parameterName());
+      }
+    }
+    builder = builder.ofType(type);
     for (final var argument : activityTemplate.arguments().entrySet()) {
       builder = builder.withArgument(argument.getKey(), argument.getValue());
     }
