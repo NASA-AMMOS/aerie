@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
@@ -36,7 +37,7 @@ public record SynchronousSimulationAgent (
       final var currentRevisionData = this.planService.getPlanRevisionData(planId);
       final var validationResult = currentRevisionData.matches(revisionData);
       if (validationResult instanceof RevisionData.MatchResult.Failure failure) {
-        writer.failWith(String.format("Simulation request no longer relevant: %s", failure.reason()));
+        writer.failWith("Simulation request no longer relevant: %s".formatted(failure.reason()));
         return;
       }
     } catch (final NoSuchPlanException ex) {
@@ -59,9 +60,7 @@ public record SynchronousSimulationAgent (
                 e -> new SerializedActivity(e.getValue().type, e.getValue().arguments))));
 
         if (!failures.isEmpty()) {
-          writer.failWith(failures.entrySet().stream()
-              .map(e -> "%s: %s".formatted(e.getKey(), e.getValue()))
-              .collect(Collectors.joining(System.lineSeparator())));
+          writer.failWith(ResponseSerializers.serializeUnconstructableActivityFailures(failures).toString());
           return;
         }
       }
