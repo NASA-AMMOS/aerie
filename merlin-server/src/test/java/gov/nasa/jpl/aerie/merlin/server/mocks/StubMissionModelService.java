@@ -19,6 +19,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -50,6 +51,8 @@ public final class StubMissionModelService implements MissionModelService {
       NONEXISTENT_ACTIVITY_TYPE,
       Map.of());
 
+  public static final Map<String, ValueSchema> RESOURCES;
+
   public static final List<String> NO_SUCH_ACTIVITY_TYPE_FAILURES = List.of("no such activity type");
   public static final List<String> INVALID_ACTIVITY_INSTANCE_FAILURES = List.of("just wrong");
   public static final List<String> UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURES = List.of(
@@ -71,6 +74,13 @@ public final class StubMissionModelService implements MissionModelService {
     EXISTENT_MISSION_MODEL.mission = "mission";
     EXISTENT_MISSION_MODEL.owner = "Tester";
     EXISTENT_MISSION_MODEL.path = Path.of("existent-missionModel");
+
+    RESOURCES = new LinkedHashMap<>();
+    RESOURCES.put("mode", ValueSchema.ofVariant(List.of(
+        new ValueSchema.Variant("Option1", "Option1"),
+        new ValueSchema.Variant("Option2", "Option2")
+    )));
+    RESOURCES.put("state of charge", ValueSchema.REAL);
   }
 
   @Override
@@ -98,7 +108,7 @@ public final class StubMissionModelService implements MissionModelService {
       throw new NoSuchMissionModelException(missionModelId);
     }
 
-    return Map.of();
+    return RESOURCES;
   }
 
   @Override

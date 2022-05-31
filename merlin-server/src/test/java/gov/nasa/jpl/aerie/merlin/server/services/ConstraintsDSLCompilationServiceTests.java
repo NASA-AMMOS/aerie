@@ -61,14 +61,14 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
       """
         export default function myConstraint() {
-          return times2(Real.Resource("my_resource")).changed()
+          return times2(Real.Resource("state of charge")).changed()
         }
         function times2(e: Real): Real {
           return e.times(2)
         }
       """,
       new ViolationsOf(
-          new Changed<>(new ProfileExpression<>(new Times(new RealResource("my_resource"), 2.0)))
+          new Changed<>(new ProfileExpression<>(new Times(new RealResource("state of charge"), 2.0)))
       )
     );
   }
@@ -79,7 +79,7 @@ class ConstraintsDSLCompilationServiceTests {
         """
           export default function myConstraint() {
             const x = 5;
-            return times2(Real.Resource("my_resource")).changed()
+            return times2(Real.Resource("mode")).changed()
           }
           function times2(e: Real): Real {
             return e.times(x)
@@ -94,7 +94,7 @@ class ConstraintsDSLCompilationServiceTests {
     checkFailedCompilation(
         """
           export default function myConstraint() {
-             return Real.Resource("my_resource");
+             return Real.Resource("state of charge");
           }
         """,
         "TypeError: TS2322 Incorrect return type. Expected: 'Constraint', Actual: 'Real'."
@@ -108,10 +108,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default () => {
-              return Discrete.Resource("my_resource").changed();
+              return Discrete.Resource("mode").changed();
             }
         """,
-        new ViolationsOf(new Changed<>(new ProfileExpression<>(new DiscreteResource("my_resource"))))
+        new ViolationsOf(new Changed<>(new ProfileExpression<>(new DiscreteResource("mode"))))
     );
   }
 
@@ -144,14 +144,14 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default () => {
-              return Discrete.Resource("my_resource").transition("from one state", "to another");
+              return Discrete.Resource("mode").transition("Option1", "Option2");
             }
         """,
         new ViolationsOf(
             new Transition(
-                new DiscreteResource("my_resource"),
-                SerializedValue.of("from one state"),
-                SerializedValue.of("to another")
+                new DiscreteResource("mode"),
+                SerializedValue.of("Option1"),
+                SerializedValue.of("Option2")
             )
         )
     );
@@ -162,10 +162,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkFailedCompilation(
         """
           export default () => {
-            return Discrete.Resource("my_resource").transition("from one state", 5);
+            return Discrete.Resource("mode").transition("something else", 5);
           }
         """,
-        "TS2345 Argument of type 'number' is not assignable to parameter of type 'string'."
+        "TS2345 Argument of type '\"something else\"' is not assignable to parameter of type '\"Option1\" | \"Option2\"'."
     );
   }
 
@@ -174,10 +174,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
         export default () => {
-          return Discrete.Resource("my_resource").equal(Discrete.Value("hello there"));
+          return Discrete.Resource("mode").equal("Option2");
         }
         """,
-        new ViolationsOf(new Equal<>(new DiscreteResource("my_resource"), new DiscreteValue(SerializedValue.of("hello there"))))
+        new ViolationsOf(new Equal<>(new DiscreteResource("mode"), new DiscreteValue(SerializedValue.of("Option2"))))
     );
   }
 
@@ -186,10 +186,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
         export default () => {
-          return Discrete.Resource("my_resource").notEqual(Discrete.Value("hello there"));
+          return Discrete.Resource("state of charge").notEqual(4.0);
         }
         """,
-        new ViolationsOf(new NotEqual<>(new DiscreteResource("my_resource"), new DiscreteValue(SerializedValue.of("hello there"))))
+        new ViolationsOf(new NotEqual<>(new DiscreteResource("state of charge"), new DiscreteValue(SerializedValue.of(4.0))))
     );
   }
 
@@ -210,10 +210,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Discrete.Resource("my_resource").equal("some value")
+            return Discrete.Resource("mode").equal("Option1")
           }
         """,
-        new ViolationsOf(new Equal<>(new DiscreteResource("my_resource"), new DiscreteValue(SerializedValue.of("some value"))))
+        new ViolationsOf(new Equal<>(new DiscreteResource("mode"), new DiscreteValue(SerializedValue.of("Option1"))))
     );
   }
 
@@ -224,10 +224,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default () => {
-              return Real.Resource("my_resource").changed();
+              return Real.Resource("state of charge").changed();
             }
         """,
-        new ViolationsOf(new Changed<>(new ProfileExpression<>(new RealResource("my_resource"))))
+        new ViolationsOf(new Changed<>(new ProfileExpression<>(new RealResource("state of charge"))))
     );
   }
 
@@ -260,10 +260,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default() => {
-              return Real.Resource("my_resource").rate().equal(Real.Value(4.0))
+              return Real.Resource("state of charge").rate().equal(Real.Value(4.0))
             }
         """,
-        new ViolationsOf(new Equal<>(new Rate(new RealResource("my_resource")), new RealValue(4.0)))
+        new ViolationsOf(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)))
     );
   }
 
@@ -272,10 +272,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default() => {
-              return Real.Resource("my_resource").times(2).equal(Real.Value(4.0))
+              return Real.Resource("state of charge").times(2).equal(Real.Value(4.0))
             }
         """,
-        new ViolationsOf(new Equal<>(new Times(new RealResource("my_resource"), 2.0), new RealValue(4.0)))
+        new ViolationsOf(new Equal<>(new Times(new RealResource("state of charge"), 2.0), new RealValue(4.0)))
     );
   }
 
@@ -284,10 +284,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default() => {
-              return Real.Resource("my_resource").plus(Real.Value(2.0)).equal(Real.Value(4.0))
+              return Real.Resource("state of charge").plus(Real.Value(2.0)).equal(Real.Value(4.0))
             }
         """,
-        new ViolationsOf(new Equal<>(new Plus(new RealResource("my_resource"), new RealValue(2.0)), new RealValue(4.0)))
+        new ViolationsOf(new Equal<>(new Plus(new RealResource("state of charge"), new RealValue(2.0)), new RealValue(4.0)))
     );
   }
 
@@ -296,10 +296,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default() => {
-              return Real.Resource("my_resource").lessThan(Real.Value(2.0))
+              return Real.Resource("state of charge").lessThan(Real.Value(2.0))
             }
         """,
-        new ViolationsOf(new LessThan(new RealResource("my_resource"), new RealValue(2.0)))
+        new ViolationsOf(new LessThan(new RealResource("state of charge"), new RealValue(2.0)))
     );
   }
 
@@ -308,10 +308,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default() => {
-              return Real.Resource("my_resource").lessThanOrEqual(Real.Value(2.0))
+              return Real.Resource("state of charge").lessThanOrEqual(Real.Value(2.0))
             }
         """,
-        new ViolationsOf(new LessThanOrEqual(new RealResource("my_resource"), new RealValue(2.0)))
+        new ViolationsOf(new LessThanOrEqual(new RealResource("state of charge"), new RealValue(2.0)))
     );
   }
 
@@ -320,10 +320,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default() => {
-              return Real.Resource("my_resource").greaterThan(Real.Value(2.0))
+              return Real.Resource("state of charge").greaterThan(Real.Value(2.0))
             }
         """,
-        new ViolationsOf(new GreaterThan(new RealResource("my_resource"), new RealValue(2.0)))
+        new ViolationsOf(new GreaterThan(new RealResource("state of charge"), new RealValue(2.0)))
     );
   }
 
@@ -332,10 +332,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default() => {
-              return Real.Resource("my_resource").greaterThanOrEqual(Real.Value(2.0))
+              return Real.Resource("state of charge").greaterThanOrEqual(Real.Value(2.0))
             }
         """,
-        new ViolationsOf(new GreaterThanOrEqual(new RealResource("my_resource"), new RealValue(2.0)))
+        new ViolationsOf(new GreaterThanOrEqual(new RealResource("state of charge"), new RealValue(2.0)))
     );
   }
 
@@ -344,10 +344,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
         export default () => {
-          return Real.Resource("my_resource").equal(Real.Value(-1));
+          return Real.Resource("state of charge").equal(Real.Value(-1));
         }
         """,
-        new ViolationsOf(new Equal<>(new RealResource("my_resource"), new RealValue(-1.0)))
+        new ViolationsOf(new Equal<>(new RealResource("state of charge"), new RealValue(-1.0)))
     );
   }
 
@@ -356,10 +356,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
         export default () => {
-          return Real.Resource("my_resource").notEqual(Real.Value(-1));
+          return Real.Resource("state of charge").notEqual(Real.Value(-1));
         }
         """,
-        new ViolationsOf(new NotEqual<>(new RealResource("my_resource"), new RealValue(-1.0)))
+        new ViolationsOf(new NotEqual<>(new RealResource("state of charge"), new RealValue(-1.0)))
     );
   }
 
@@ -436,16 +436,16 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Real.Resource("my_real_resource").lessThan(2)
-              .if(Discrete.Resource("my_discrete_resource").changed());
+            return Real.Resource("state of charge").lessThan(2)
+              .if(Discrete.Resource("mode").changed());
           }
         """,
         new ViolationsOf(
             new Or(
                 new Not(new Changed<>(
-                    new ProfileExpression<>(new DiscreteResource("my_discrete_resource"))
+                    new ProfileExpression<>(new DiscreteResource("mode"))
                 )),
-                new LessThan(new RealResource("my_real_resource"), new RealValue(2.0))
+                new LessThan(new RealResource("state of charge"), new RealValue(2.0))
             )
         )
     );
@@ -457,7 +457,7 @@ class ConstraintsDSLCompilationServiceTests {
         """
           export default () => {
             return Windows.All(
-              Real.Resource("my_resource").lessThan(2),
+              Real.Resource("state of charge").lessThan(2),
               Discrete.Value("hello there").notEqual(Discrete.Value("hello there")),
               Real.Value(5).changed()
             );
@@ -466,7 +466,7 @@ class ConstraintsDSLCompilationServiceTests {
         new ViolationsOf(
             new And(
                 java.util.List.of(
-                    new LessThan(new RealResource("my_resource"), new RealValue(2.0)),
+                    new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
                     new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
                     new Changed<>(new ProfileExpression<>(new RealValue(5.0)))
                 )
@@ -481,7 +481,7 @@ class ConstraintsDSLCompilationServiceTests {
         """
           export default () => {
             return Windows.Any(
-              Real.Resource("my_resource").lessThan(2),
+              Real.Resource("state of charge").lessThan(2),
               Discrete.Value("hello there").notEqual(Discrete.Value("hello there")),
               Real.Value(5).changed()
             );
@@ -490,7 +490,7 @@ class ConstraintsDSLCompilationServiceTests {
         new ViolationsOf(
             new Or(
                 java.util.List.of(
-                    new LessThan(new RealResource("my_resource"), new RealValue(2.0)),
+                    new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
                     new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
                     new Changed<>(new ProfileExpression<>(new RealValue(5.0)))
                 )
@@ -504,12 +504,12 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Discrete.Resource("my_resource").changed().not()
+            return Discrete.Resource("mode").changed().not()
           }
         """,
         new ViolationsOf(
             new Not(
-                new Changed<>(new ProfileExpression<>(new DiscreteResource("my_resource")))
+                new Changed<>(new ProfileExpression<>(new DiscreteResource("mode")))
             )
         )
     );
@@ -520,10 +520,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
         export default () => {
-          return Real.Resource("my_resource").equal(Real.Value(-1)).violations();
+          return Real.Resource("state of charge").equal(Real.Value(-1)).violations();
         }
         """,
-        new ViolationsOf(new Equal<>(new RealResource("my_resource"), new RealValue(-1.0)))
+        new ViolationsOf(new Equal<>(new RealResource("state of charge"), new RealValue(-1.0)))
     );
   }
 

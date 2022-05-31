@@ -1,5 +1,5 @@
 import * as AST from './constraints-ast.js';
-import './mission-model-generated-code.js';
+import * as Gen from './mission-model-generated-code.js';
 
 export class Constraint {
   /** Internal AST node */
@@ -9,7 +9,7 @@ export class Constraint {
     this.__astNode = astNode;
   }
 
-  public static ForbiddenActivityOverlap(activityType1: ActivityTypeName, activityType2: ActivityTypeName): Constraint {
+  public static ForbiddenActivityOverlap(activityType1: Gen.ActivityTypeName, activityType2: Gen.ActivityTypeName): Constraint {
     return new Constraint({
       kind: AST.NodeKind.ForbiddenActivityOverlap,
       activityType1,
@@ -17,7 +17,7 @@ export class Constraint {
     })
   }
 
-  public static ForEachActivity(activityType: ActivityTypeName, alias: string, constraint: Constraint): Constraint {
+  public static ForEachActivity(activityType: Gen.ActivityTypeName, alias: string, constraint: Constraint): Constraint {
     return new Constraint({
       kind: AST.NodeKind.ForEachActivity,
       activityType,
@@ -106,7 +106,7 @@ export class Real {
     this.__astNode = profile;
   }
 
-  public static Resource(name: string): Real {
+  public static Resource(name: Gen.RealResourceName): Real {
     return new Real({
       kind: AST.NodeKind.RealProfileResource,
       name
@@ -220,34 +220,36 @@ export class Real {
   }
 }
 
-export class Discrete {
+export class Discrete<Schema> {
   public readonly __astNode: AST.DiscreteProfileExpression
+  private readonly __schemaInstance: Schema;
 
-  public constructor(profile: AST.DiscreteProfileExpression) {
+  public constructor(profile: AST.DiscreteProfileExpression, template: Schema) {
     this.__astNode = profile;
+    this.__schemaInstance = template;
   }
 
-  public static Resource(name: string): Discrete {
+  public static Resource<R extends Gen.ResourceName>(name: R): Discrete<Gen.DiscreteResourceSchema<R>> {
     return new Discrete({
       kind: AST.NodeKind.DiscreteProfileResource,
       name
-    })
+    }, Gen.discreteResourceSchemaDummyValue<R>(name))
   }
-  public static Value(value: any): Discrete {
+  public static Value<Schema>(value: Schema): Discrete<Schema> {
     return new Discrete({
       kind: AST.NodeKind.DiscreteProfileValue,
       value
-    })
+    }, value)
   }
-  public static Parameter(alias: string, name: string): Discrete {
+  public static Parameter<Schema>(alias: string, name: string): Discrete<Schema> {
     return new Discrete({
       kind: AST.NodeKind.DiscreteProfileParameter,
       alias,
       name
-    })
+    }, 5 as unknown as Schema) // will fix in next commit
   }
 
-  public transition(from: any, to: any): Windows {
+  public transition(from: Schema, to: Schema): Windows {
     return new Windows({
       kind: AST.NodeKind.DiscreteProfileTransition,
       profile: this.__astNode,
@@ -256,7 +258,7 @@ export class Discrete {
     })
   }
 
-  public equal(other: any): Windows {
+  public equal(other: Schema | Discrete<Schema>): Windows {
     if (!(other instanceof Discrete)) {
       other = Discrete.Value(other);
     }
@@ -266,7 +268,7 @@ export class Discrete {
       right: other.__astNode
     })
   }
-  public notEqual(other: any): Windows {
+  public notEqual(other: Schema | Discrete<Schema>): Windows {
     if (!(other instanceof Discrete)) {
       other = Discrete.Value(other);
     }
@@ -296,7 +298,7 @@ declare global {
      * @param activityType2
      * @constructor
      */
-    public static ForbiddenActivityOverlap(activityType1: ActivityTypeName, activityType2: ActivityTypeName): Constraint
+    public static ForbiddenActivityOverlap(activityType1: Gen.ActivityTypeName, activityType2: Gen.ActivityTypeName): Constraint
 
     /**
      * Check a constraint for each instance of an activity type.
@@ -306,7 +308,7 @@ declare global {
      * @param constraint constraint to apply
      * @constructor
      */
-    public static ForEachActivity(activityType: ActivityTypeName, alias: string, constraint: Constraint): Constraint
+    public static ForEachActivity(activityType: Gen.ActivityTypeName, alias: string, constraint: Constraint): Constraint
   }
 
   export class Windows {
@@ -384,7 +386,7 @@ declare global {
      * @param name
      * @constructor
      */
-    public static Resource(name: string): Real
+    public static Resource(name: Gen.RealResourceName): Real
 
     /**
      * Create a constant real profile for all time.
@@ -463,23 +465,25 @@ declare global {
     public changed(): Windows
   }
 
-  export class Discrete {
+  export class Discrete<Schema> {
     /** Internal AST Node */
     public readonly __astNode: AST.DiscreteProfileExpression
+    /** Internal instance of the schema to enforce type checking. */
+    private readonly __schemaInstance: Schema;
 
     /**
      * Reference the discrete profile associated with a resource.
      * @param name
      * @constructor
      */
-    public static Resource(name: string): Discrete
+    public static Resource<R extends Gen.ResourceName>(name: R): Discrete<Gen.DiscreteResourceSchema<R>>
 
     /**
      * Create a constant discrete profile for all time.
      * @param value
      * @constructor
      */
-    public static Value(value: any): Discrete
+    public static Value<Schema>(value: Schema): Discrete<Schema>
 
     /**
      * Reference the value of an activity instance parameter as a constant discrete profile.
@@ -490,7 +494,7 @@ declare global {
      * @param name name of the parameter
      * @constructor
      */
-    public static Parameter(alias: string, name: string): Discrete
+    public static Parameter<Schema>(alias: string, name: string): Discrete<Schema>
 
     /**
      * Produce an instantaneous window whenever this profile makes a specific transition.
@@ -498,19 +502,19 @@ declare global {
      * @param from initial value
      * @param to final value
      */
-    public transition<T>(from: T, to: T): Windows
+    public transition(from: Schema, to: Schema): Windows
 
     /**
      * Produce a window whenever this profile is equal to another discrete profile.
      * @param other
      */
-    public equal(other: any): Windows
+    public equal(other: Schema | Discrete<Schema>): Windows
 
     /**
      * Produce a window whenever this profile is not equal to another discrete profile.
      * @param other
      */
-    public notEqual(other: any): Windows
+    public notEqual(other: Schema | Discrete<Schema>): Windows
 
     /**
      * Produce an instantaneous window whenever this profile changes.
