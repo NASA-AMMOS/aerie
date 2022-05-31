@@ -22,7 +22,9 @@ jobs:
           distribution: "temurin"
           java-version: "18"
       - name: Setup Postgres Client (psql)
-        run: sudo apt-get install --yes postgresql-client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v1
       - name: Setup Gradle
