@@ -52,46 +52,70 @@ public final class EffectExpressionDisplay {
    */
   public static <Event> String displayGraph(final EffectExpression<Event> expression, final Function<Event, String> stringifier) {
     return expression
-        .evaluate(new DisplayEffectTrait(), event -> Optional.of($ -> stringifier.apply(event)))
-        .map(f -> f.apply(Parent.Unrestricted))
-        .orElse("");
+        .map(stringifier)
+        .evaluate(new Display.Trait(), Display.Atom::new)
+        .accept(Parent.Unrestricted);
   }
 
   private enum Parent { Unrestricted, Par, Seq }
 
   // An effect algebra for computing string representations of transactions.
-  private static final class DisplayEffectTrait implements EffectTrait<Optional<Function<Parent, String>>> {
-    @Override
-    public Optional<Function<Parent, String>> empty() {
-      return Optional.empty();
+  private sealed interface Display {
+    String accept(Parent parent);
+
+    record Atom(String value) implements Display {
+      @Override
+      public String accept(final Parent parent) {
+        return this.value;
+      }
     }
 
-    @Override
-    public Optional<Function<Parent, String>> sequentially(
-        final Optional<Function<Parent, String>> prefix,
-        final Optional<Function<Parent, String>> suffix
-    ) {
-      if (prefix.isEmpty()) return suffix;
-      if (suffix.isEmpty()) return prefix;
-
-      return Optional.of(ctx -> {
-        final var expr = prefix.get().apply(Parent.Seq) + "; " + suffix.get().apply(Parent.Seq);
-        return (ctx == Parent.Par) ? ("(" + expr + ")") : expr;
-      });
+    record Empty() implements Display {
+      @Override
+      public String accept(final Parent parent) {
+        return "";
+      }
     }
 
-    @Override
-    public Optional<Function<Parent, String>> concurrently(
-        final Optional<Function<Parent, String>> left,
-        final Optional<Function<Parent, String>> right
-    ) {
-      if (left.isEmpty()) return right;
-      if (right.isEmpty()) return left;
+    record Sequentially(Display prefix, Display suffix) implements Display {
+      @Override
+      public String accept(final Parent parent) {
+        final var format = (parent == Parent.Par) ? "(%s; %s)" : "%s; %s";
 
-      return Optional.of(ctx -> {
-        final var expr = left.get().apply(Parent.Par) + " | " + right.get().apply(Parent.Par);
-        return (ctx == Parent.Seq) ? ("(" + expr + ")") : expr;
-      });
+        return format.formatted(this.prefix.accept(Parent.Seq), this.suffix.accept(Parent.Seq));
+      }
+    }
+
+    record Concurrently(Display left, Display right) implements Display {
+      @Override
+      public String accept(final Parent parent) {
+        final var format = (parent == Parent.Seq) ? "(%s | %s)" : "%s | %s";
+
+        return format.formatted(this.left.accept(Parent.Par), this.right.accept(Parent.Par));
+      }
+    }
+
+    record Trait() implements EffectTrait<Display> {
+      @Override
+      public Display empty() {
+        return new Empty();
+      }
+
+      @Override
+      public Display sequentially(final Display prefix, final Display suffix) {
+        if (prefix instanceof Empty) return suffix;
+        if (suffix instanceof Empty) return prefix;
+
+        return new Sequentially(prefix, suffix);
+      }
+
+      @Override
+      public Display concurrently(final Display left, final Display right) {
+        if (left instanceof Empty) return right;
+        if (right instanceof Empty) return left;
+
+        return new Concurrently(left, right);
+      }
     }
   }
 }

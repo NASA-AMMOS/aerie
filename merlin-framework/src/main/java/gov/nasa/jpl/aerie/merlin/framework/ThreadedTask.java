@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 
 import java.util.Objects;
@@ -109,7 +110,7 @@ public final class ThreadedTask<Return> implements Task<Return> {
   }
 
   @Override
-  public void reset() {
+  public void release() {
     if (this.lifecycle == Lifecycle.Running) {
       try {
         // TODO: Add a (configurable) timeout to the `take()` call.
@@ -126,14 +127,14 @@ public final class ThreadedTask<Return> implements Task<Return> {
     this.lifecycle = Lifecycle.Inactive;
   }
 
-  private final class ThreadedTaskHandle implements TaskHandle<Return> {
+  private final class ThreadedTaskHandle implements TaskHandle {
     private boolean isAborting = false;
 
     public TaskResponse<Return> run(final TaskRequest request) {
       if (request instanceof TaskRequest.Resume resume) {
         final var scheduler = resume.scheduler;
 
-        final var context = new ThreadedReactionContext<>(
+        final var context = new ThreadedReactionContext(
             ThreadedTask.this.executor,
             ThreadedTask.this.rootContext,
             scheduler,
@@ -156,8 +157,7 @@ public final class ThreadedTask<Return> implements Task<Return> {
       }
     }
 
-    @Override
-    public Scheduler yield(final TaskStatus<Return> status) {
+    private Scheduler yield(final TaskStatus<Return> status) {
       // If we're in the middle of aborting, just keep trying to bail out.
       if (this.isAborting) throw TaskAbort;
 
@@ -198,6 +198,21 @@ public final class ThreadedTask<Return> implements Task<Return> {
             TaskRequest.class.getCanonicalName(),
             request.getClass().getCanonicalName()));
       }
+    }
+
+    @Override
+    public Scheduler delay(final Duration delay) {
+      return this.yield(TaskStatus.delayed(delay, ThreadedTask.this));
+    }
+
+    @Override
+    public Scheduler await(final String id) {
+      return this.yield(TaskStatus.awaiting(id, ThreadedTask.this));
+    }
+
+    @Override
+    public Scheduler await(final gov.nasa.jpl.aerie.merlin.protocol.model.Condition condition) {
+      return this.yield(TaskStatus.awaiting(condition, ThreadedTask.this));
     }
   }
 

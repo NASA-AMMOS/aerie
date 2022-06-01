@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.RecursiveEventGraphEvaluator;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Selector;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
@@ -27,20 +27,21 @@ public final class MissionModelBuilder implements Initializer {
 
   @Override
   public <CellType> CellType getInitialState(
-      final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<?, ? extends CellType> query)
+      final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<CellType> query)
   {
     return this.state.getInitialState(query);
   }
 
   @Override
   public <EventType, Effect, CellType>
-  gov.nasa.jpl.aerie.merlin.protocol.driver.Query<EventType, CellType> allocate(
+  gov.nasa.jpl.aerie.merlin.protocol.driver.Query<CellType> allocate(
       final CellType initialState,
       final Applicator<Effect, CellType> applicator,
       final EffectTrait<Effect> trait,
-      final Function<EventType, Effect> projection
+      final Function<EventType, Effect> projection,
+      final Topic<EventType> topic
   ) {
-    return this.state.allocate(initialState, applicator, trait, projection);
+    return this.state.allocate(initialState, applicator, trait, projection, topic);
   }
 
   @Override
@@ -51,11 +52,11 @@ public final class MissionModelBuilder implements Initializer {
   @Override
   public <Event> void topic(
       final String name,
-      final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<Event, ?> query,
+      final Topic<Event> topic,
       final ValueSchema schema,
       final Function<Event, SerializedValue> serializer)
   {
-    this.state.topic(name, query, schema, serializer);
+    this.state.topic(name, topic, schema, serializer);
   }
 
   @Override
@@ -89,7 +90,7 @@ public final class MissionModelBuilder implements Initializer {
 
     @Override
     public <CellType> CellType getInitialState(
-        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<?, ? extends CellType> token)
+        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<CellType> token)
     {
       // SAFETY: The only `Query` objects the model should have were returned by `UnbuiltState#allocate`.
       @SuppressWarnings("unchecked")
@@ -102,13 +103,13 @@ public final class MissionModelBuilder implements Initializer {
 
     @Override
     public <EventType, Effect, CellType>
-    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<EventType, CellType> allocate(
+    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<CellType> allocate(
         final CellType initialState,
         final Applicator<Effect, CellType> applicator,
         final EffectTrait<Effect> trait,
-        final Function<EventType, Effect> projection
+        final Function<EventType, Effect> projection,
+        final Topic<EventType> topic
     ) {
-      final var topic = new Topic<EventType>();
       final var selector = new Selector<>(topic, projection);
 
       // TODO: The evaluator should probably be specified later, after the model is built.
@@ -130,11 +131,11 @@ public final class MissionModelBuilder implements Initializer {
     @Override
     public <Event> void topic(
         final String name,
-        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<Event, ?> query,
+        final Topic<Event> topic,
         final ValueSchema schema,
         final Function<Event, SerializedValue> serializer)
     {
-      this.topics.add(new MissionModel.SerializableTopic<>(name, query, schema, serializer));
+      this.topics.add(new MissionModel.SerializableTopic<>(name, topic, schema, serializer));
     }
 
     @Override
@@ -168,18 +169,19 @@ public final class MissionModelBuilder implements Initializer {
   private static final class BuiltState implements MissionModelBuilderState {
     @Override
     public <CellType> CellType getInitialState(
-        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<?, ? extends CellType> query)
+        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<CellType> query)
     {
       throw new IllegalStateException("Cannot interact with the builder after it is built");
     }
 
     @Override
     public <EventType, Effect, CellType>
-    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<EventType, CellType> allocate(
+    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<CellType> allocate(
         final CellType initialState,
         final Applicator<Effect, CellType> applicator,
         final EffectTrait<Effect> trait,
-        final Function<EventType, Effect> projection
+        final Function<EventType, Effect> projection,
+        final Topic<EventType> topic
     ) {
       throw new IllegalStateException("Cells cannot be allocated after the schema is built");
     }
@@ -192,7 +194,7 @@ public final class MissionModelBuilder implements Initializer {
     @Override
     public <Event> void topic(
         final String name,
-        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<Event, ?> query,
+        final Topic<Event> topic,
         final ValueSchema schema,
         final Function<Event, SerializedValue> serializer)
     {

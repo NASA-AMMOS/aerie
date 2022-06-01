@@ -1,195 +1,138 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TreeMap;
+import java.util.Optional;
 
 public final class EventGraphFlattener {
+  private EventGraphFlattener() {}
 
-  static <T> List<Pair<String, T>> flatten(final EventGraph<T> eventGraph) {
-    return EventGraphFlattener.flattenHelper(eventGraph, BranchType.SEQUENTIALLY, new LexicographicTag.Empty());
-  }
+  public static <T> List<Pair<String, T>> flatten(final EventGraph<T> graph) {
+    final var accumulator = new ArrayList<Pair<String, T>>();
 
-  static <T> EventGraph<T> unflatten(final List<Pair<String, T>> flatGraph) throws InvalidTagException {
-    return EventGraphFlattener.unflattenHelper(
-        flatGraph.stream().map(pair -> Pair.of(LexicographicTag.of(pair.getLeft()), pair.getRight())).toList(),
-        BranchType.SEQUENTIALLY);
+    graph.evaluate(new TagLogger.Trait<>(), TagLogger.Atom::new)
+         .accept(Tag.origin(), (tag, event) -> accumulator.add(Pair.of(tag.serialize(), event)));
+
+    return accumulator;
   }
 
   private enum BranchType {
-    SEQUENTIALLY,
-    CONCURRENTLY;
+    Sequentially,
+    Concurrently;
+
     private BranchType opposite() {
-      if (this.equals(SEQUENTIALLY)) {
-        return CONCURRENTLY;
-      } else {
-        return SEQUENTIALLY;
-      }
-    }
-
-    private boolean matchesRootNode(final EventGraph<?> eventGraph) {
-      if (eventGraph instanceof EventGraph.Sequentially) {
-        return this.equals(SEQUENTIALLY);
-      }
-      if (eventGraph instanceof EventGraph.Concurrently) {
-        return this.equals(CONCURRENTLY);
-      }
-      return false;
+      return switch (this) {
+        case Sequentially -> Concurrently;
+        case Concurrently -> Sequentially;
+      };
     }
   }
 
-  private sealed interface LexicographicTag {
-    static LexicographicTag empty() {
-      return new LexicographicTag.Empty();
+  private record Tag(Optional<Tag> prefix, BranchType branchType, int index) {
+    public static Tag origin() {
+      return new Tag(Optional.empty(), BranchType.Sequentially, 1);
     }
 
-    static LexicographicTag of(final String tag) {
-      if (!tag.contains(".")) {
-        return LexicographicTag.empty();
-      }
-      final int periodIndex = tag.indexOf(".", 1);
-      if (periodIndex == -1) {
-        return new Cons(
-            Integer.parseInt(tag.substring(1)),
-            LexicographicTag.empty());
-      } else {
-        return new Cons(
-            Integer.parseInt(tag.substring(1, periodIndex)),
-            LexicographicTag.of(tag.substring(periodIndex))
-        );
-      }
+    public Tag bump() {
+      return new Tag(this.prefix, this.branchType, this.index + 1);
     }
 
-    static LexicographicTag append(final LexicographicTag tag, final int count) {
-      return new Cons(count, tag);
+    public Tag descend() {
+      return new Tag(Optional.of(this), this.branchType.opposite(), 1);
     }
 
-    String serialize();
+    public String serialize() {
+      final var builder = new StringBuilder();
+      this.serialize(builder);
+      return builder.toString();
+    }
 
-    final record Empty() implements LexicographicTag {
+    public void serialize(final StringBuilder builder) {
+      this.prefix.ifPresent($ -> $.serialize(builder));
+      builder.append('.');
+      builder.append(this.index);
+    }
+  }
+
+  private interface Log<T> {
+    void put(Tag tag, T event);
+  }
+
+  private sealed interface TagLogger<T> {
+    Tag accept(Tag tag, Log<T> log);
+
+    record Atom<T>(T event) implements TagLogger<T> {
       @Override
-      public String serialize() {
-        return "";
+      public Tag accept(final Tag tag, final Log<T> log) {
+        log.put(tag, this.event);
+        return tag.bump();
       }
     }
-    final record Cons(int first, LexicographicTag rest) implements LexicographicTag {
+
+    record Empty<T>() implements TagLogger<T> {
       @Override
-      public String serialize() {
-        return this.rest.serialize() + "." + this.first;
+      public Tag accept(final Tag tag, final Log<T> log) {
+        return tag;
       }
     }
-  }
 
-  private static <T> List<Pair<String, T>> flattenHelper(
-      final EventGraph<T> eventGraph,
-      final BranchType branchType,
-      final LexicographicTag tag)
-  {
-    final var result = new ArrayList<Pair<String, T>>();
-    if (eventGraph instanceof EventGraph.Empty) {
-      return result;
-    }
-    if (eventGraph instanceof EventGraph.Atom<T> atom) {
-      result.add(Pair.of(tag.serialize(), atom.atom()));
-      return result;
-    }
+    record Sequentially<T>(TagLogger<T> prefix, TagLogger<T> suffix) implements TagLogger<T> {
+      @Override
+      public Tag accept(final Tag tag, final Log<T> log) {
+        return switch (tag.branchType()) {
+          case Sequentially -> {
+            yield this.suffix.accept(this.prefix.accept(tag, log), log);
+          }
 
-    final var nextLayer = new ArrayList<EventGraph<T>>();
-    absorbSimilarNeighborsIntoRoot(eventGraph, branchType, nextLayer);
-
-    var count = 0;
-    for (final var child : nextLayer) {
-      count += 1;
-      result.addAll(flattenHelper(
-          child,
-          branchType.opposite(),
-          LexicographicTag.append(tag, count)));
-    }
-    return result;
-  }
-
-  /**
-   * Given an eventGraph, start from the root, and combine all adjacent nodes that have the same branch type as the root.
-   *
-   * Writes the children of those nodes to the given result ArrayList.
-   *
-   * An important property is that none of the returned children will match the provided branchType.
-
-   * @param eventGraph the current sub graph (initially the whole graph)
-   * @param branchType the type of the root node of the EventGraph
-   * @param result an ArrayList to which children will be appended
-   */
-  private static <T> void absorbSimilarNeighborsIntoRoot(
-      final EventGraph<T> eventGraph,
-      final BranchType branchType,
-      final ArrayList<EventGraph<T>> result
-  ) {
-    if (branchType.matchesRootNode(eventGraph)) {
-      final var children = getChildren(eventGraph);
-      absorbSimilarNeighborsIntoRoot(children.getLeft(), branchType, result);
-      absorbSimilarNeighborsIntoRoot(children.getRight(), branchType, result);
-    } else {
-      result.add(eventGraph);
-    }
-  }
-
-  private static <T> Pair<EventGraph<T>, EventGraph<T>> getChildren(final EventGraph<T> eventGraph) {
-    if (eventGraph instanceof EventGraph.Sequentially<T> sequentially) {
-      return Pair.of(sequentially.prefix(), sequentially.suffix());
-    } else if (eventGraph instanceof EventGraph.Concurrently<T> concurrently) {
-      return Pair.of(concurrently.left(), concurrently.right());
-    }
-    // As of writing, `getChildren` is only valid to call on a graph that passed `matchesBranchType`
-    throw new IllegalArgumentException("getChildren called on an eventGraph that was neither sequential nor concurrent: " + eventGraph);
-  }
-
-  private static <T> EventGraph<T> unflattenHelper(
-      final List<Pair<LexicographicTag, T>> flatGraph,
-      final BranchType branchType
-  ) throws InvalidTagException {
-    if (flatGraph.size() == 1) {
-      return EventGraph.atom(flatGraph.get(0).getRight());
-    }
-    final var groupedByPrefix = groupByPrefix(flatGraph);
-    var graph = EventGraph.<T>empty();
-    // Note: we're iterating backwards so that the produced binary tree is right-leaning.
-    // This is purely for aesthetics, preferring (a; (b; c)) to the equivalent ((a; b); c)
-    for (final var entry : groupedByPrefix.descendingMap().entrySet()) {
-      graph = makeNode(branchType, unflattenHelper(entry.getValue(), branchType.opposite()), graph);
-    }
-    return graph;
-  }
-
-  private static <T> TreeMap<Integer, List<Pair<LexicographicTag, T>>>
-  groupByPrefix(final List<Pair<LexicographicTag, T>> flatGraph)
-  throws InvalidTagException {
-    final var pairs = new TreeMap<Integer, List<Pair<LexicographicTag, T>>>();
-    for (final var pair : flatGraph) {
-      final var tag = pair.getLeft();
-      if (!(tag instanceof LexicographicTag.Cons nonEmptyTag)) {
-        throw new InvalidTagException("Empty tag encountered before reaching an atom");
+          case Concurrently -> {
+            this.suffix.accept(this.prefix.accept(tag.descend(), log), log);
+            yield tag.bump();
+          }
+        };
       }
-      final var key = nonEmptyTag.first();
-      pairs.computeIfAbsent(key, x -> new ArrayList<>())
-           .add(Pair.of(nonEmptyTag.rest(), pair.getRight()));
     }
-    return pairs;
-  }
 
-  static class InvalidTagException extends Exception {
-    public InvalidTagException(final String s) {
-      super(s);
+    record Concurrently<T>(TagLogger<T> left, TagLogger<T> right) implements TagLogger<T> {
+      @Override
+      public Tag accept(final Tag tag, final Log<T> log) {
+        return switch (tag.branchType()) {
+          case Sequentially -> {
+            this.right.accept(this.left.accept(tag.descend(), log), log);
+            yield tag.bump();
+          }
+
+          case Concurrently -> {
+            yield this.right.accept(this.left.accept(tag, log), log);
+          }
+        };
+      }
     }
-  }
 
-  private static <T> EventGraph<T> makeNode(final BranchType branchType, final EventGraph<T> left, final EventGraph<T> right) {
-    if (branchType == BranchType.SEQUENTIALLY) {
-      return EventGraph.sequentially(left, right);
-    } else {
-      return EventGraph.concurrently(left, right);
+    record Trait<T>() implements EffectTrait<TagLogger<T>> {
+      @Override
+      public TagLogger<T> empty() {
+        return new Empty<>();
+      }
+
+      @Override
+      public TagLogger<T> sequentially(final TagLogger<T> prefix, final TagLogger<T> suffix) {
+        if (prefix instanceof Empty<T>) return suffix;
+        if (suffix instanceof Empty<T>) return prefix;
+
+        return new Sequentially<>(prefix, suffix);
+      }
+
+      @Override
+      public TagLogger<T> concurrently(final TagLogger<T> left, final TagLogger<T> right) {
+        if (left instanceof Empty<T>) return right;
+        if (right instanceof Empty<T>) return left;
+
+        return new Concurrently<>(left, right);
+      }
     }
   }
 }

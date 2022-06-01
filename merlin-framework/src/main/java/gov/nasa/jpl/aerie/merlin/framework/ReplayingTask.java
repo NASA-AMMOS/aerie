@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import org.apache.commons.lang3.mutable.MutableInt;
 
@@ -25,8 +26,8 @@ public final class ReplayingTask<Return> implements Task<Return> {
 
   @Override
   public TaskStatus<Return> step(final Scheduler scheduler) {
-    final var handle = new ReplayingTaskHandle<Return>();
-    final var context = new ReplayingReactionContext<>(this.executor, this.rootContext, this.memory, scheduler, handle);
+    final var handle = new ReplayingTaskHandle();
+    final var context = new ReplayingReactionContext(this.executor, this.rootContext, this.memory, scheduler, handle);
 
     try (final var restore = this.rootContext.set(context)){
       final var returnValue = this.task.get();
@@ -35,22 +36,31 @@ public final class ReplayingTask<Return> implements Task<Return> {
       return TaskStatus.completed(returnValue);
     } catch (final Yield ignored) {
       // If we get here, the activity has suspended.
-      return handle.status;
+      return Objects.requireNonNull(handle.status, "Task status is null, but it should have been assigned a value on yield.");
     }
   }
 
-  @Override
-  public void reset() {
-    this.memory.clear();
-  }
+  private final class ReplayingTaskHandle implements TaskHandle {
+    public TaskStatus<Return> status = null;
 
-  private static final class ReplayingTaskHandle<Return> implements TaskHandle<Return> {
-    public TaskStatus<Return> status = TaskStatus.completed(null);
-
-    @Override
-    public Scheduler yield(final TaskStatus<Return> status) {
+    private Scheduler yield(final TaskStatus<Return> status) {
       this.status = status;
       throw Yield;
+    }
+
+    @Override
+    public Scheduler delay(final Duration delay) {
+      return this.yield(TaskStatus.delayed(delay, ReplayingTask.this));
+    }
+
+    @Override
+    public Scheduler await(final String id) {
+      return this.yield(TaskStatus.awaiting(id, ReplayingTask.this));
+    }
+
+    @Override
+    public Scheduler await(final gov.nasa.jpl.aerie.merlin.protocol.model.Condition condition) {
+      return this.yield(TaskStatus.awaiting(condition, ReplayingTask.this));
     }
   }
 

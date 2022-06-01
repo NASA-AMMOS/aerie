@@ -35,7 +35,7 @@ public final class RecursiveEventGraphEvaluator implements EventGraphEvaluator {
     }
   }
 
-  private <Effect>
+  private static <Effect>
   Optional<Effect> sequence(final EffectTrait<Effect> trait, final Optional<Effect> a, final Optional<Effect> b) {
     if (a.isEmpty()) return b;
     if (b.isEmpty()) return a;
@@ -43,7 +43,7 @@ public final class RecursiveEventGraphEvaluator implements EventGraphEvaluator {
     return Optional.of(trait.sequentially(a.get(), b.get()));
   }
 
-  private <Effect>
+  private static <Effect>
   Optional<Effect> merge(final EffectTrait<Effect> trait, final Optional<Effect> a, final Optional<Effect> b) {
     if (a.isEmpty()) return b;
     if (b.isEmpty()) return a;

@@ -1,8 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
 import java.util.function.Supplier;
 
@@ -17,10 +19,10 @@ public /*non-final*/ class ModelActions {
     return executor -> new ThreadedTask<>(executor, ModelActions.context, task);
   }
 
-  public static Context.TaskFactory<VoidEnum> threaded(final Runnable task) {
+  public static Context.TaskFactory<Unit> threaded(final Runnable task) {
     return threaded(() -> {
       task.run();
-      return VoidEnum.VOID;
+      return Unit.UNIT;
     });
   }
 
@@ -28,11 +30,16 @@ public /*non-final*/ class ModelActions {
     return executor -> new ReplayingTask<>(executor, ModelActions.context, task);
   }
 
-  public static Context.TaskFactory<VoidEnum> replaying(final Runnable task) {
+  public static Context.TaskFactory<Unit> replaying(final Runnable task) {
     return replaying(() -> {
       task.run();
-      return VoidEnum.VOID;
+      return Unit.UNIT;
     });
+  }
+
+
+  public static <T> void emit(final T event, final Topic<T> topic) {
+    context.get().emit(event, topic);
   }
 
 
@@ -43,7 +50,7 @@ public /*non-final*/ class ModelActions {
   public static String spawn(final Runnable task) {
     return spawn(() -> {
       task.run();
-      return VoidEnum.VOID;
+      return Unit.UNIT;
     });
   }
 

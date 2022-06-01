@@ -8,9 +8,13 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -19,21 +23,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
-public class IncrementalSimulationDriver {
+public class IncrementalSimulationDriver<Model> {
 
   private Duration curTime = Duration.ZERO;
   private SimulationEngine engine = new SimulationEngine();
   private LiveCells cells;
   private TemporalEventSource timeline = new TemporalEventSource();
-  private final MissionModel<?> missionModel;
+  private final MissionModel<Model> missionModel;
+
+  private final Topic<ActivityInstanceId> activityTopic = new Topic<>();
 
   //mapping each activity name to its task id (in String form) in the simulation engine
   private final Map<ActivityInstanceId, TaskId> plannedDirectiveToTask;
-  //and the opposite
-  private final Map<TaskId, ActivityInstanceId> taskToPlannedDirective;
 
   //simulation results so far
   private SimulationResults lastSimResults;
@@ -45,17 +48,15 @@ public class IncrementalSimulationDriver {
 
   record SimulatedActivity(Duration start, SerializedActivity activity, ActivityInstanceId id) {}
 
-  public IncrementalSimulationDriver(MissionModel<?> missionModel){
+  public IncrementalSimulationDriver(MissionModel<Model> missionModel){
     this.missionModel = missionModel;
     plannedDirectiveToTask = new HashMap<>();
-    taskToPlannedDirective = new HashMap<>();
     initSimulation();
     simulateUntil(Duration.ZERO);
   }
 
   /*package-private*/ void initSimulation(){
     plannedDirectiveToTask.clear();
-    taskToPlannedDirective.clear();
     lastSimResults = null;
     lastSimResultsEnd = Duration.ZERO;
     if (this.engine != null) this.engine.close();
@@ -77,9 +78,10 @@ public class IncrementalSimulationDriver {
 
     // Start daemon task(s) immediately, before anything else happens.
     {
-      final var daemon = engine.initiateTaskFromSource(missionModel::getDaemon);
-      final var commit = engine.performJobs(Set.of(SimulationEngine.JobId.forTask(daemon)),
-                                            cells, curTime, Duration.MAX_VALUE, missionModel);
+      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
+
+      final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
+      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, missionModel);
       timeline.add(commit);
     }
   }
@@ -147,14 +149,11 @@ public class IncrementalSimulationDriver {
     }
 
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd)) {
-      final Map<String, ActivityInstanceId> convertedTaskToPlannedDir = new HashMap<>();
-      taskToPlannedDirective.forEach((taskId, plannedDirective)->
-                                         convertedTaskToPlannedDir.put(taskId.id(), plannedDirective));
-      lastSimResults = engine.computeResults(
+      lastSimResults = SimulationEngine.computeResults(
           engine,
           Instant.now(),
           endTime,
-          convertedTaskToPlannedDir,
+          activityTopic,
           timeline,
           missionModel);
       lastSimResultsEnd = endTime;
@@ -174,12 +173,13 @@ public class IncrementalSimulationDriver {
     for (final var entry : schedule.entrySet()) {
       final var directiveId = entry.getKey();
       final var startOffset = entry.getValue().getLeft();
-      final var directive = entry.getValue().getRight();
+      final var serializedDirective = entry.getValue().getRight();
 
-      final var taskId = engine.initiateTaskFromInputOrFail(missionModel, directive);
-      engine.scheduleTask(taskId, startOffset);
+      final var directive = missionModel.instantiateDirective(serializedDirective);
+      final var task = directive.createTask(missionModel.getModel());
+      final var taskId = engine.scheduleTask(startOffset, emitAndThen(directiveId, this.activityTopic, task));
+
       plannedDirectiveToTask.put(directiveId,taskId);
-      taskToPlannedDirective.put(taskId, directiveId);
     }
     var allTaskFinished = false;
     while (true) {
@@ -200,7 +200,7 @@ public class IncrementalSimulationDriver {
       timeline.add(commit);
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time
-      if ((taskToPlannedDirective.size() > 0 && taskToPlannedDirective.keySet().stream().allMatch(taskId -> engine.isTaskComplete(taskId)))) {
+      if (!plannedDirectiveToTask.isEmpty() && plannedDirectiveToTask.values().stream().allMatch(engine::isTaskComplete)) {
         allTaskFinished = true;
       }
 
@@ -217,4 +217,19 @@ public class IncrementalSimulationDriver {
     return engine.getTaskDuration(plannedDirectiveToTask.get(activityInstanceId));
   }
 
+  private static <E, T>
+  Task<T> emitAndThen(final E event, final Topic<E> topic, final Task<T> continuation) {
+    return new Task<>() {
+      @Override
+      public TaskStatus<T> step(final Scheduler scheduler) {
+        scheduler.emit(event, topic);
+        return continuation.step(scheduler);
+      }
+
+      @Override
+      public void release() {
+        continuation.release();
+      }
+    };
+  }
 }

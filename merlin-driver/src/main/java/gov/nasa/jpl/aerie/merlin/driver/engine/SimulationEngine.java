@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
-import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
@@ -11,17 +10,16 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -43,6 +41,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -65,49 +64,17 @@ public final class SimulationEngine implements AutoCloseable {
   /** The profiling state for each tracked resource. */
   private final Map<ResourceId, ProfilingState<?>> resources = new HashMap<>();
 
-  /** The task that spawned a given task (if any)). */
+  /** The task that spawned a given task (if any). */
   private final Map<TaskId, TaskId> taskParent = new HashMap<>();
   /** The set of children for each task (if any). */
   @DerivedFrom("taskParent")
   private final Map<TaskId, Set<TaskId>> taskChildren = new HashMap<>();
-  /** The instantiated input provided to the task. Missing entries indicate tasks without input. */
-  private final Map<TaskId, Directive<?, ?, ?>> taskDirective = new HashMap<>();
 
-  /** Construct a task defined by the behavior of a model given a type and arguments. */
-  public <Model>
-  TaskId initiateTaskFromInput(final MissionModel<Model> model, final SerializedActivity input) {
-    try {
-      return initiateTaskFromInputOrFail(model, input);
-    } catch (final TaskSpecType.UnconstructableTaskSpecException | MissingArgumentsException ex) {
-      // All activity instantiations are assumed to be validated by this point
-      throw new Error("Unexpected state: activity instantiation %s failed with: %s"
-          .formatted(input.getTypeName(), ex.toString()));
-    }
-  }
-
-  /** Construct a task defined by the behavior of a model given a type and arguments. */
-  public <Model>
-  TaskId initiateTaskFromInputOrFail(final MissionModel<Model> model, final SerializedActivity input)
-  throws TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException
-  {
-    final var directive  = model.instantiateDirective(input);
-    final var task = TaskId.generate();
-    this.tasks.put(task, new ExecutionState.NotStarted<>(() -> directive.createTask(model.getModel())));
-    this.taskDirective.put(task, directive);
-    return task;
-  }
-
-  /** Define a task given a factory method from which that task can be constructed. */
-  public <Return> TaskId initiateTaskFromSource(final TaskSource<Return> source) {
-    final var task = TaskId.generate();
-    this.tasks.put(task, new ExecutionState.NotStarted<>(source));
-    return task;
-  }
-
-  /** Define a task given a black-box task state. */
-  public <Return> TaskId initiateTask(final Duration startTime, final Task<Return> state) {
+  /** Schedule a new task to be performed at the given time. */
+  public <Return> TaskId scheduleTask(final Duration startTime, final Task<Return> state) {
     final var task = TaskId.generate();
     this.tasks.put(task, new ExecutionState.InProgress<>(startTime, state));
+    this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
     return task;
   }
 
@@ -118,11 +85,6 @@ public final class SimulationEngine implements AutoCloseable {
 
     this.resources.put(id, ProfilingState.create(resource));
     this.scheduledJobs.schedule(JobId.forResource(id), SubInstant.Resources.at(nextQueryTime));
-  }
-
-  /** Schedule a task to be performed at the given time. Overrides any existing scheduling for the given task. */
-  public void scheduleTask(final TaskId task, final Duration scheduleTime) {
-    this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(scheduleTime));
   }
 
   /** Schedules any conditions or resources dependent on the given topic to be re-checked at the given time. */
@@ -221,9 +183,7 @@ public final class SimulationEngine implements AutoCloseable {
       final ExecutionState<Return> lifecycle)
   {
     // Extract the current modeling state.
-    if (lifecycle instanceof ExecutionState.NotStarted<Return> e) {
-      stepEffectModel(task, e.startedAt(currentTime), frame, currentTime, model);
-    } else if (lifecycle instanceof ExecutionState.InProgress<Return> e) {
+    if (lifecycle instanceof ExecutionState.InProgress<Return> e) {
       stepEffectModel(task, e, frame, currentTime, model);
     } else if (lifecycle instanceof ExecutionState.AwaitingChildren<Return> e) {
       stepWaitingTask(task, e, frame, currentTime);
@@ -243,22 +203,11 @@ public final class SimulationEngine implements AutoCloseable {
   ) {
     // Step the modeling state forward.
     final var scheduler = new EngineScheduler(model, currentTime, task, frame);
-    final var state = progress.state();
-    final var status = state.step(scheduler);
+    final var status = progress.state().step(scheduler);
 
     // TODO: Report which topics this activity wrote to at this point in time. This is useful insight for any user.
     // TODO: Report which cells this activity read from at this point in time. This is useful insight for any user.
 
-    this.stepEffectModelHelper(task, progress, currentTime, state, status);
-  }
-
-  private <Return> void stepEffectModelHelper(
-      final TaskId task,
-      final ExecutionState.InProgress<Return> progress,
-      final Duration currentTime,
-      final Task<Return> state,
-      final TaskStatus<Return> status)
-  {
     // Based on the task's return status, update its execution state and schedule its resumption.
     if (status instanceof TaskStatus.Completed<Return> s) {
       final var children = new LinkedList<>(this.taskChildren.getOrDefault(task, Collections.emptySet()));
@@ -266,10 +215,10 @@ public final class SimulationEngine implements AutoCloseable {
       this.tasks.put(task, progress.completedAt(currentTime, s.returnValue(), children));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
     } else if (status instanceof TaskStatus.Delayed<Return> s) {
-      this.tasks.put(task, progress.continueWith(state));
+      this.tasks.put(task, progress.continueWith(s.continuation()));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
     } else if (status instanceof TaskStatus.AwaitingTask<Return> s) {
-      this.tasks.put(task, progress.continueWith(state));
+      this.tasks.put(task, progress.continueWith(s.continuation()));
 
       final var target = new TaskId(s.target());
       final var targetExecution = this.tasks.get(target);
@@ -286,7 +235,7 @@ public final class SimulationEngine implements AutoCloseable {
       this.conditions.put(condition, s.condition());
       this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(currentTime));
 
-      this.tasks.put(task, progress.continueWith(state));
+      this.tasks.put(task, progress.continueWith(s.continuation()));
       this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forCondition(condition)));
     } else {
       throw new IllegalArgumentException("Unknown subclass of %s: %s".formatted(TaskStatus.class, status));
@@ -374,7 +323,7 @@ public final class SimulationEngine implements AutoCloseable {
   public void close() {
     for (final var task : this.tasks.values()) {
       if (task instanceof ExecutionState.InProgress r) {
-        r.state.reset();
+        r.state.release();
       }
     }
   }
@@ -384,6 +333,80 @@ public final class SimulationEngine implements AutoCloseable {
     return (this.tasks.get(task) instanceof ExecutionState.Terminated);
   }
 
+  private record TaskInfo(
+      Map<String, ActivityInstanceId> taskToPlannedDirective,
+      Map<String, SerializedActivity> input,
+      Map<String, SerializedValue> output
+  ) {
+    public TaskInfo() {
+      this(new HashMap<>(), new HashMap<>(), new HashMap<>());
+    }
+
+    public boolean isActivity(final TaskId id) {
+      return this.taskToPlannedDirective.containsKey(id.id());
+    }
+
+    public record Trait(MissionModel<?> missionModel, Topic<ActivityInstanceId> activityTopic)
+        implements EffectTrait<Consumer<TaskInfo>>
+    {
+      @Override
+      public Consumer<TaskInfo> empty() {
+        return taskInfo -> {};
+      }
+
+      @Override
+      public Consumer<TaskInfo> sequentially(final Consumer<TaskInfo> prefix, final Consumer<TaskInfo> suffix) {
+        return taskInfo -> { prefix.accept(taskInfo); suffix.accept(taskInfo); };
+      }
+
+      @Override
+      public Consumer<TaskInfo> concurrently(final Consumer<TaskInfo> left, final Consumer<TaskInfo> right) {
+        // SAFETY: For each task, `left` commutes with `right`, because no task runs concurrently with itself.
+        return taskInfo -> { left.accept(taskInfo); right.accept(taskInfo); };
+      }
+
+      public Consumer<TaskInfo> atom(final Event ev) {
+        return taskInfo -> {
+          // Identify activities.
+          ev.extract(this.activityTopic)
+            .ifPresent(directiveId -> taskInfo.taskToPlannedDirective.put(ev.provenance().id(), directiveId));
+
+          for (final var topic : this.missionModel.getTopics()) {
+            // Identify activity inputs.
+            extractInput(topic, ev, taskInfo);
+
+            // Identify activity outputs.
+            extractOutput(topic, ev, taskInfo);
+          }
+        };
+      }
+
+      private static <T>
+      void extractInput(final MissionModel.SerializableTopic<T> topic, final Event ev, final TaskInfo taskInfo) {
+        if (!topic.name().startsWith("ActivityType.Input.")) return;
+
+        ev.extract(topic.topic()).ifPresent(input -> {
+          final var activityType = topic.name().substring("ActivityType.Input.".length());
+
+          taskInfo.input.put(
+              ev.provenance().id(),
+              new SerializedActivity(activityType, topic.serializer().apply(input).asMap().orElseThrow()));
+        });
+      }
+
+      private static <T>
+      void extractOutput(final MissionModel.SerializableTopic<T> topic, final Event ev, final TaskInfo taskInfo) {
+        if (!topic.name().startsWith("ActivityType.Output.")) return;
+
+        ev.extract(topic.topic()).ifPresent(output -> {
+          taskInfo.output.put(
+              ev.provenance().id(),
+              topic.serializer().apply(output));
+        });
+      }
+    }
+  }
+
   /** Compute a set of results from the current state of simulation. */
   // TODO: Move result extraction out of the SimulationEngine.
   //   The Engine should only need to stream events of interest to a downstream consumer.
@@ -391,13 +414,25 @@ public final class SimulationEngine implements AutoCloseable {
   // TODO: Whatever mechanism replaces `computeResults` also ought to replace `isTaskComplete`.
   // TODO: Produce results for all tasks, not just those that have completed.
   //   Planners need to be aware of failed or unfinished tasks.
-  public SimulationResults computeResults(
+  public static SimulationResults computeResults(
       final SimulationEngine engine,
       final Instant startTime,
       final Duration elapsedTime,
-      final Map<String, ActivityInstanceId> taskToPlannedDirective,
+      final Topic<ActivityInstanceId> activityTopic,
       final TemporalEventSource timeline,
-      final MissionModel<?> missionModel) {
+      final MissionModel<?> missionModel
+  ) {
+    // Collect per-task information from the event graph.
+    final var taskInfo = new TaskInfo();
+
+    for (final var point : timeline) {
+      if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
+
+      final var trait = new TaskInfo.Trait(missionModel, activityTopic);
+      p.events().evaluate(trait, trait::atom).accept(taskInfo);
+    }
+
+    // Extract profiles for every resource.
     final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
     final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
 
@@ -425,6 +460,9 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
 
+
+    // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
+    final var taskToPlannedDirective = new HashMap<>(taskInfo.taskToPlannedDirective);
     final var usedActivityInstanceIds =
         taskToPlannedDirective
             .values()
@@ -433,21 +471,20 @@ public final class SimulationEngine implements AutoCloseable {
             .collect(Collectors.toSet());
     var counter = 1L;
     for (final var task : engine.tasks.keySet()) {
-      final var directive = engine.taskDirective.get(task);
-      if (directive == null) continue;
+      if (!taskInfo.isActivity(task)) continue;
       if (taskToPlannedDirective.containsKey(task.id())) continue;
 
       while (usedActivityInstanceIds.contains(counter)) counter++;
       taskToPlannedDirective.put(task.id(), new ActivityInstanceId(counter++));
     }
 
+    // Identify the nearest ancestor *activity* (excluding intermediate anonymous tasks).
     final var activityParents = new HashMap<ActivityInstanceId, ActivityInstanceId>();
     engine.tasks.forEach((task, state) -> {
-      final var directive = engine.taskDirective.get(task);
-      if (directive == null) return;
+      if (!taskInfo.isActivity(task)) return;
 
       var parent = engine.taskParent.get(task);
-      while (parent != null && !engine.taskDirective.containsKey(parent)) {
+      while (parent != null && !taskInfo.isActivity(parent)) {
         parent = engine.taskParent.get(parent);
       }
 
@@ -464,26 +501,29 @@ public final class SimulationEngine implements AutoCloseable {
     final var simulatedActivities = new HashMap<ActivityInstanceId, SimulatedActivity>();
     final var unfinishedActivities = new HashMap<ActivityInstanceId, UnfinishedActivity>();
     engine.tasks.forEach((task, state) -> {
-      final var directive = engine.taskDirective.get(task);
-      if (directive == null) return;
+      if (!taskInfo.isActivity(task)) return;
 
       final var activityId = taskToPlannedDirective.get(task.id());
 
       if (state instanceof ExecutionState.Terminated<?> e) {
+        final var inputAttributes = taskInfo.input().get(task.id());
+        final var outputAttributes = taskInfo.output().get(task.id());
+
         simulatedActivities.put(activityId, new SimulatedActivity(
-            directive.getType(),
-            directive.getArguments(),
+            inputAttributes.getTypeName(),
+            inputAttributes.getArguments(),
             startTime.plus(e.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
             e.joinOffset().minus(e.startOffset()),
             activityParents.get(activityId),
             activityChildren.getOrDefault(activityId, Collections.emptyList()),
             (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(activityId),
-            serializeReturnValue(directive, e.returnValue())
+            outputAttributes
         ));
       } else if (state instanceof ExecutionState.InProgress<?> e){
+        final var inputAttributes = taskInfo.input().get(task.id());
         unfinishedActivities.put(activityId, new UnfinishedActivity(
-            directive.getType(),
-            directive.getArguments(),
+            inputAttributes.getTypeName(),
+            inputAttributes.getArguments(),
             startTime.plus(e.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
             activityParents.get(activityId),
             activityChildren.getOrDefault(activityId, Collections.emptyList()),
@@ -542,23 +582,9 @@ public final class SimulationEngine implements AutoCloseable {
     return Optional.empty();
   }
 
-  @SuppressWarnings("unchecked")
-  private static <DirectiveReturn, TaskReturn> SerializedValue serializeReturnValue(
-      final Directive<?, ?, DirectiveReturn> directive,
-      final TaskReturn taskReturnValue
-  ) {
-    // SAFETY: Tasks always return the same type as the TaskSpecType that declares them
-    return directive.directiveType().serializeReturnValue((DirectiveReturn) taskReturnValue);
-  }
 
-
-  private <EventType> Optional<SerializedValue> trySerializeEvent(Event event, MissionModel.SerializableTopic<EventType> serializableTopic) {
-    return event.extract(topicOfSerializableTopic(serializableTopic), serializableTopic.serializer());
-  }
-
-  private <EventType> Topic<EventType> topicOfSerializableTopic(MissionModel.SerializableTopic<EventType> serializableTopic) {
-    // SAFETY: All queries available to the model are given to it by the MissionModelBuilder, which always constructs EngineQuery instances.
-    return ((EngineQuery<EventType, ?>) serializableTopic.query()).topic();
+  private static <EventType> Optional<SerializedValue> trySerializeEvent(Event event, MissionModel.SerializableTopic<EventType> serializableTopic) {
+    return event.extract(serializableTopic.topic(), serializableTopic.serializer());
   }
 
   private interface Translator<Target> {
@@ -613,7 +639,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public <State> State getState(final Query<?, State> token) {
+    public <State> State getState(final Query<State> token) {
       // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
       final var query = ((EngineQuery<?, State>) token);
@@ -656,7 +682,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public <State> State get(final Query<?, State> token) {
+    public <State> State get(final Query<State> token) {
       // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
       final var query = ((EngineQuery<?, State>) token);
@@ -668,13 +694,9 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public <EventType> void emit(final EventType event, final Query<? super EventType, ?> token) {
-      // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
-      @SuppressWarnings("unchecked")
-      final var topic = ((EngineQuery<? super EventType, ?>) token).topic();
-
+    public <EventType> void emit(final EventType event, final Topic<EventType> topic) {
       // Append this event to the timeline.
-      this.frame.emit(Event.create(topic, event));
+      this.frame.emit(Event.create(topic, event, this.activeTask));
 
       SimulationEngine.this.invalidateTopic(topic, this.currentTime);
     }
@@ -696,15 +718,8 @@ public final class SimulationEngine implements AutoCloseable {
         final Input input,
         final Task<Output> state)
     {
-      // SAFETY: The only kind of DirectiveTypeId the task should have are those provided by us.
-      final var directiveTypeId = (DirectiveTypeRegistry.DirectiveTypeId<Input, Output>) rawDirectiveTypeId;
-
-      final var directiveType = this.model.getDirectiveTypes().lookup(directiveTypeId);
-      final var directive = new Directive<>(directiveType, directiveTypeId.name, input);
-
       final var task = TaskId.generate();
       SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state));
-      SimulationEngine.this.taskDirective.put(task, directive);
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       this.frame.signal(JobId.forTask(task));
@@ -746,20 +761,11 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** The lifecycle stages every task passes through. */
   private sealed interface ExecutionState<Return> {
-    /** The task has not yet started. */
-    record NotStarted<Return>(TaskSource<Return> source)
-        implements ExecutionState<Return>
-    {
-      public InProgress<Return> startedAt(final Duration startOffset) {
-        return new InProgress<>(startOffset, this.source.createTask());
-      }
-    }
-
     /** The task is in its primary operational phase. */
     record InProgress<Return>(Duration startOffset, Task<Return> state)
         implements ExecutionState<Return>
     {
-      public <Return> AwaitingChildren<Return> completedAt(
+      public AwaitingChildren<Return> completedAt(
           final Duration endOffset,
           final Return returnValue,
           final LinkedList<TaskId> remainingChildren) {

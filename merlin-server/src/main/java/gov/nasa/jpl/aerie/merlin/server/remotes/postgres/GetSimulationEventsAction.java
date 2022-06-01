@@ -57,8 +57,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
         try {
           eventPoints
               .computeIfAbsent(time, x -> new ArrayList<>())
-              .add(EventGraphFlattener.unflatten(value));
-        } catch (final EventGraphFlattener.InvalidTagException e) {
+              .add(EventGraphUnflattener.unflatten(value));
+        } catch (final EventGraphUnflattener.InvalidTagException e) {
           throw new Error("Failed to unflatten EventGraph due to invalid tag at time point " + time, e);
         }
       });

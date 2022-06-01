@@ -1,12 +1,14 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SlabList;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 
+import java.util.Iterator;
 import java.util.Set;
 
-public record TemporalEventSource(SlabList<TimePoint> points) implements EventSource {
+public record TemporalEventSource(SlabList<TimePoint> points) implements EventSource, Iterable<TemporalEventSource.TimePoint> {
   public TemporalEventSource() {
     this(new SlabList<>());
   }
@@ -19,6 +21,11 @@ public record TemporalEventSource(SlabList<TimePoint> points) implements EventSo
   public void add(final EventGraph<Event> graph) {
     if (graph instanceof EventGraph.Empty) return;
     this.points.append(new TimePoint.Commit(graph, extractTopics(graph)));
+  }
+
+  @Override
+  public Iterator<TimePoint> iterator() {
+    return TemporalEventSource.this.points.iterator();
   }
 
   @Override

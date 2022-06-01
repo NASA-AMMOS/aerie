@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.Directive;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.Collections;
@@ -65,16 +66,9 @@ public final class MissionModel<Model> {
   }
 
   public Task<Unit> getDaemon() {
-    return new Task<>() {
-      @Override
-      public TaskStatus<Unit> step(final Scheduler scheduler) {
-        MissionModel.this.daemons.forEach(daemon -> scheduler.spawn(daemon.create()));
-        return TaskStatus.completed(Unit.UNIT);
-      }
-
-      @Override
-      public void reset() {
-      }
+    return scheduler -> {
+      MissionModel.this.daemons.forEach(daemon -> scheduler.spawn(daemon.create()));
+      return TaskStatus.completed(Unit.UNIT);
     };
   }
 
@@ -92,7 +86,7 @@ public final class MissionModel<Model> {
 
   public record SerializableTopic<EventType> (
       String name,
-      gov.nasa.jpl.aerie.merlin.protocol.driver.Query<EventType, ?> query,
+      Topic<EventType> topic,
       ValueSchema valueSchema,
       Function<EventType, SerializedValue> serializer
   ) {}

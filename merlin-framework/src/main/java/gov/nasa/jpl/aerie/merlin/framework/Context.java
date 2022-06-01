@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
@@ -17,19 +18,20 @@ public interface Context {
   ContextType getContextType();
 
   // Usable during both initialization & simulation
-  <CellType> CellType ask(Query<?, CellType> query);
+  <CellType> CellType ask(Query<CellType> query);
 
   // Usable during initialization
   <Event, Effect, CellType>
-  Query<Event, CellType>
+  Query<CellType>
   allocate(
       CellType initialState,
       Applicator<Effect, CellType> applicator,
       EffectTrait<Effect> trait,
-      Function<Event, Effect> projection);
+      Function<Event, Effect> projection,
+      Topic<Event> topic);
 
   // Usable during simulation
-  <Event> void emit(Event event, Query<Event, ?> query);
+  <Event> void emit(Event event, Topic<Event> topic);
 
   interface TaskFactory<Return> { Task<Return> create(ExecutorService executor); }
 

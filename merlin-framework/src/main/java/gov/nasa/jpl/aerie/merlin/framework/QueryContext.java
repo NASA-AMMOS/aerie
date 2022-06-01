@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
@@ -23,22 +24,23 @@ public final class QueryContext implements Context {
   }
 
   @Override
-  public <CellType> CellType ask(final Query<?, CellType> query) {
+  public <CellType> CellType ask(final Query<CellType> query) {
     return this.querier.getState(query);
   }
 
   @Override
-  public <Event, Effect, CellType> Query<Event, CellType> allocate(
+  public <Event, Effect, CellType> Query<CellType> allocate(
       final CellType initialState,
       final Applicator<Effect, CellType> applicator,
       final EffectTrait<Effect> trait,
-      final Function<Event, Effect> projection)
+      final Function<Event, Effect> projection,
+      final Topic<Event> topic)
   {
     throw new IllegalStateException("Cannot allocate in a query-only context");
   }
 
   @Override
-  public <Event> void emit(final Event event, final Query<Event, ?> query) {
+  public <Event> void emit(final Event event, final Topic<Event> topic) {
     throw new IllegalStateException("Cannot update simulation state in a query-only context");
   }
 

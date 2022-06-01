@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.processor.metamodel;
 
+import com.squareup.javapoet.TypeName;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
 import javax.lang.model.element.TypeElement;
 import java.util.List;
@@ -13,4 +15,12 @@ public record ActivityTypeRecord(
     MapperRecord mapper,
     ExportDefaultsStyle defaultsStyle,
     Optional<EffectModelRecord> effectModel
-  ) implements ExportTypeRecord { }
+  ) implements ExportTypeRecord {
+  public TypeName getOutputTypeName() {
+    return this.effectModel
+        .flatMap(EffectModelRecord::returnType)
+        .map(TypeName::get)
+        .map(TypeName::box)
+        .orElseGet(() -> TypeName.get(Unit.class));
+  }
+}

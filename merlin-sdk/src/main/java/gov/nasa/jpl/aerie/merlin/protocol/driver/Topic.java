@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.driver.timeline;
+package gov.nasa.jpl.aerie.merlin.protocol.driver;
 
 /**
  * An unforgeable token identifying a particular family of events.

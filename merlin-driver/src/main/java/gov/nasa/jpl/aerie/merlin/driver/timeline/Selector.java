@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 
 import java.util.Collection;

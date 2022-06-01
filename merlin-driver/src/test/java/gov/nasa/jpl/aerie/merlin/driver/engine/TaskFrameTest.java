@@ -9,7 +9,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.RecursiveEventGraphEvaluator;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Selector;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -28,6 +28,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public final class TaskFrameTest {
+  private static final TaskId ORIGIN = TaskId.generate();
+
   // This regression test identified a bug in the LiveCells-chain-avoidance optimization in TaskFrame.
   @Test
   public void consecutiveSpawnsShareHistory() {
@@ -71,7 +73,7 @@ public final class TaskFrameTest {
     if (graph instanceof EventGraph.Empty) {
       return;
     } else if (graph instanceof EventGraph.Atom<Integer> g) {
-      frame.emit(Event.create(topic, g.atom()));
+      frame.emit(Event.create(topic, g.atom(), ORIGIN));
     } else if (graph instanceof EventGraph.Sequentially<Integer> g) {
       runGraph(topic, frame, g.prefix());
       runGraph(topic, frame, g.suffix());
@@ -113,7 +115,7 @@ public final class TaskFrameTest {
       return;
     } else if (graph instanceof EventGraph.Atom<Pair<EventGraph<Integer>, Integer>> g) {
       assertEquals(g.atom().getLeft().toString(), frame.getState(query).orElseThrow().toString());
-      frame.emit(Event.create(topic, g.atom().getRight()));
+      frame.emit(Event.create(topic, g.atom().getRight(), ORIGIN));
     } else if (graph instanceof EventGraph.Sequentially<Pair<EventGraph<Integer>, Integer>> g) {
       checkHistory(topic, query, frame, g.prefix());
       checkHistory(topic, query, frame, g.suffix());

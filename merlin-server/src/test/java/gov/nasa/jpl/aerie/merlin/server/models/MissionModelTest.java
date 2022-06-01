@@ -6,11 +6,11 @@ import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.framework.VoidEnum;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,7 +58,7 @@ public final class MissionModelTest {
                     new Parameter("y", ValueSchema.STRING),
                     new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
                 List.of(),
-                new EnumValueMapper<>(VoidEnum.class).getValueSchema()
+                new EnumValueMapper<>(Unit.class).getValueSchema()
             ));
 
         // WHEN
@@ -78,7 +78,7 @@ public final class MissionModelTest {
                 new Parameter("y", ValueSchema.STRING),
                 new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
             List.of(),
-            new EnumValueMapper<>(VoidEnum.class).getValueSchema()
+            new EnumValueMapper<>(Unit.class).getValueSchema()
         );
 
         // WHEN
