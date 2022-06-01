@@ -19,12 +19,13 @@ class TypescriptCodeGenerationServiceTest {
            export enum ActivityType {
              activity = "activity",
            }
-           export type ResourceName = "mode" | "state of charge";
+           export type ResourceName = "mode" | "state of charge" | "an integer";
            export type DiscreteResourceSchema<R extends ResourceName> =
              R extends "mode" ? ( | "Option1" | "Option2") :
              R extends "state of charge" ? number :
+             R extends "an integer" ? number :
              never;
-           export type RealResourceName = "state of charge";
+           export type RealResourceName = "state of charge" | "an integer";
            export type ActivityParameters<A extends ActivityType> =
              A extends ActivityType.activity ? {Param: Discrete<string>, AnotherParam: Real, } :
              never;

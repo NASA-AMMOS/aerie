@@ -81,6 +81,7 @@ public final class StubMissionModelService implements MissionModelService {
         new ValueSchema.Variant("Option2", "Option2")
     )));
     RESOURCES.put("state of charge", ValueSchema.REAL);
+    RESOURCES.put("an integer", ValueSchema.INT);
   }
 
   @Override

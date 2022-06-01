@@ -40,7 +40,7 @@ public final class TypescriptCodeGenerationService {
 
     result.add("export type RealResourceName = " + String.join(
         " | ",
-        resources.entrySet().stream().filter($ -> valueSchemaIsReal($.getValue())).map($ -> ("\"" + $.getKey() + "\"")).toList()
+        resources.entrySet().stream().filter($ -> valueSchemaIsNumeric($.getValue())).map($ -> ("\"" + $.getKey() + "\"")).toList()
     ) + ";");
 
     // ActivityParameters
@@ -247,7 +247,7 @@ public final class TypescriptCodeGenerationService {
     }
   }
 
-  private static boolean valueSchemaIsReal(final ValueSchema valueSchema) {
+  private static boolean valueSchemaIsNumeric(final ValueSchema valueSchema) {
     return valueSchema.match(new ValueSchema.DefaultVisitor<>() {
       @Override
       protected Boolean onDefault() {
@@ -256,6 +256,11 @@ public final class TypescriptCodeGenerationService {
 
       @Override
       public Boolean onReal() {
+        return true;
+      }
+
+      @Override
+      public Boolean onInt() {
         return true;
       }
     });

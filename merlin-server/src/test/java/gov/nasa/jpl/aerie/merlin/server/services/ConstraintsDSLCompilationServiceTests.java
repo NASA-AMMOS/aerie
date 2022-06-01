@@ -366,10 +366,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
         export default () => {
-          return Real.Resource("state of charge").notEqual(Real.Value(-1));
+          return Real.Resource("an integer").notEqual(Real.Value(-1));
         }
         """,
-        new ViolationsOf(new NotEqual<>(new RealResource("state of charge"), new RealValue(-1.0)))
+        new ViolationsOf(new NotEqual<>(new RealResource("an integer"), new RealValue(-1.0)))
     );
   }
 
@@ -634,7 +634,7 @@ class ConstraintsDSLCompilationServiceTests {
           return Real.Resource("mode").changed()
         }
         """,
-        "TypeError: TS2345 Argument of type '\"mode\"' is not assignable to parameter of type '\"state of charge\"'."
+        "TypeError: TS2345 Argument of type '\"mode\"' is not assignable to parameter of type 'RealResourceName'."
     );
   }
 
