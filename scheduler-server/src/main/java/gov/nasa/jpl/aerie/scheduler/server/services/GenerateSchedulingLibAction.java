@@ -43,7 +43,7 @@ public record GenerateSchedulingLibAction(
       final var generated = this.typescriptCodeGenerationService.generateTypescriptTypesForMissionModel(missionModelService, missionModelId);
       return new Response.Success(
           Map.of("scheduling-edsl-fluent-api.ts", schedulingDsl,
-                 "mission-model-generated-code.ts", generated,
+                 "scheduler-mission-model-generated-code.ts", generated,
                  "scheduler-ast.ts", schedulerAst,
                  "windows-edsl-fluent-api.ts", windowsDsl,
                  "windows-expressions-ast.ts", windowsAst));

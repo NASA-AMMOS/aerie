@@ -1,5 +1,5 @@
 import * as AST from './windows-expressions-ast'
-import { ActivityType, Resource, transition } from "./mission-model-generated-code";
+import { ActivityType, Resource, transition } from "./scheduler-mission-model-generated-code";
 
 export class WindowSet {
   public readonly __astnode: AST.WindowsExpression;

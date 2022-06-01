@@ -57,7 +57,7 @@ async function handleRequest(data: string) {
           ts.createSourceFile('windows-edsl-fluent-api.ts', windowsEDSL, ts.ScriptTarget.ESNext),
           ts.createSourceFile('scheduler-ast.ts', schedulerAST, ts.ScriptTarget.ESNext),
           ts.createSourceFile('scheduler-edsl-fluent-api.ts', schedulerEDSL, ts.ScriptTarget.ESNext),
-          ts.createSourceFile('mission-model-generated-code.ts', missionModelGeneratedCode, ts.ScriptTarget.ESNext),
+          ts.createSourceFile('scheduler-mission-model-generated-code.ts', missionModelGeneratedCode, ts.ScriptTarget.ESNext),
         ],
     );
 
