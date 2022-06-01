@@ -7,13 +7,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public final class TypescriptCodeGenerationService {
+public final class TypescriptCodeGenerationService implements ConstraintsCodeGenService {
   private final MissionModelService missionModelService;
 
   public TypescriptCodeGenerationService(final MissionModelService missionModelService) {
     this.missionModelService = missionModelService;
   }
 
+  @Override
   public String generateTypescriptTypesFromMissionModel(final String missionModelId)
   throws MissionModelService.NoSuchMissionModelException
   {

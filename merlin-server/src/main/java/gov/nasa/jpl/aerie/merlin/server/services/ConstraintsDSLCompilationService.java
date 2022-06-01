@@ -1,13 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.constraints.json.ConstraintsDSL;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
-import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ConstraintsCompilationError;
-import gov.nasa.jpl.aerie.constraints.json.ConstraintsDSL;
 import org.json.JSONObject;
 
 import javax.json.Json;
@@ -21,9 +20,9 @@ import java.util.Objects;
 public class ConstraintsDSLCompilationService {
 
   private final Process nodeProcess;
-  private final TypescriptCodeGenerationService typescriptCodeGenerationService;
+  private final ConstraintsCodeGenService typescriptCodeGenerationService;
 
-  public ConstraintsDSLCompilationService(final TypescriptCodeGenerationService typescriptCodeGenerationService)
+  public ConstraintsDSLCompilationService(final ConstraintsCodeGenService typescriptCodeGenerationService)
   throws IOException
   {
     this.typescriptCodeGenerationService = typescriptCodeGenerationService;
