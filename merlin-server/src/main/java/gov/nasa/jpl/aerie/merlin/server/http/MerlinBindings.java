@@ -161,6 +161,8 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final NoSuchPlanException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
+    } catch (final MissionModelService.NoSuchMissionModelException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
     }
   }
 

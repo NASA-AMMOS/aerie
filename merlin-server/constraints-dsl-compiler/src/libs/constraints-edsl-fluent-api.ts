@@ -1,4 +1,5 @@
 import * as AST from './constraints-ast.js';
+import './mission-model-generated-code.js';
 
 export class Constraint {
   /** Internal AST node */

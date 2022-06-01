@@ -55,7 +55,7 @@ public final class GetSimulationResultsAction {
     this.useNewConstraintPipeline = useNewConstraintPipeline;
   }
 
-  public Response run(final PlanId planId) throws NoSuchPlanException {
+  public Response run(final PlanId planId) throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException {
     final var revisionData = this.planService.getPlanRevisionData(planId);
 
     final var response = this.simulationService.getSimulationResults(planId, revisionData);
@@ -77,7 +77,7 @@ public final class GetSimulationResultsAction {
   }
 
   public Map<String, List<Violation>> getViolations(final PlanId planId, final SimulationResults results)
-  throws NoSuchPlanException
+  throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException
   {
     final var plan = this.planService.getPlan(planId);
 
@@ -172,7 +172,7 @@ public final class GetSimulationResultsAction {
 
         // TODO: cache these results
         final var constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(
-            planId,
+            plan.missionModelId,
             constraint.definition()
         );
 

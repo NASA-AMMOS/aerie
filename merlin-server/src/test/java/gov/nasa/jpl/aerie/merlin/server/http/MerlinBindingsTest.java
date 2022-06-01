@@ -41,7 +41,7 @@ public final class MerlinBindingsTest {
     final var planApp = new StubPlanService();
     final var missionModelApp = new StubMissionModelService();
 
-    final var typescriptCodeGenerationService = new TypescriptCodeGenerationService();
+    final var typescriptCodeGenerationService = new TypescriptCodeGenerationService(missionModelApp);
 
     final ConstraintsDSLCompilationService constraintsDSLCompilationService;
     try {

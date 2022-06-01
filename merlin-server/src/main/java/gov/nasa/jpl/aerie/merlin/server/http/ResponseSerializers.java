@@ -18,6 +18,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.MissionModelFacade;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelAccessException;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
+import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -404,7 +405,15 @@ public final class ResponseSerializers {
         .build();
   }
 
-  private static final class ValueSchemaSerializer implements ValueSchema.Visitor<JsonValue> {
+  public static JsonValue serializeNoSuchMissionModelException(final MissionModelService.NoSuchMissionModelException ex) {
+    // TODO: Improve diagnostic information
+    return Json.createObjectBuilder()
+               .add("message", "no such mission model")
+               .build();
+  }
+
+
+    private static final class ValueSchemaSerializer implements ValueSchema.Visitor<JsonValue> {
     @Override
     public JsonValue onReal() {
       return Json

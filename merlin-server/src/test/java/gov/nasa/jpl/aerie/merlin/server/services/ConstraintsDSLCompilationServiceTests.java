@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.constraints.tree.*;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -20,7 +22,9 @@ class ConstraintsDSLCompilationServiceTests {
 
   @BeforeAll
   void setUp() throws IOException {
-    constraintsDSLCompilationService = new ConstraintsDSLCompilationService(new TypescriptCodeGenerationService());
+    constraintsDSLCompilationService = new ConstraintsDSLCompilationService(
+        new TypescriptCodeGenerationService(new StubMissionModelService())
+    );
   }
 
   @AfterAll
@@ -28,9 +32,10 @@ class ConstraintsDSLCompilationServiceTests {
     constraintsDSLCompilationService.close();
   }
 
-  private <T> void checkSuccessfulCompilation(String constraint, Expression<T> expected) {
+  private <T> void checkSuccessfulCompilation(String constraint, Expression<T> expected)
+  {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult result;
-    result = constraintsDSLCompilationService.compileConstraintsDSL(PLAN_ID, constraint);
+    result = assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL("abc", constraint));
     if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
       assertEquals(expected, r.constraintExpression());
     } else if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error r) {
@@ -40,9 +45,9 @@ class ConstraintsDSLCompilationServiceTests {
 
   private void checkFailedCompilation(String constraint, String error) {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error actualErrors;
-    actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) constraintsDSLCompilationService.compileConstraintsDSL(
-        PLAN_ID, constraint
-    );
+    actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL(
+        "abc", constraint
+    ));
     if (actualErrors.errors()
                     .stream()
                     .noneMatch(e -> e.message().contains(error))) {
@@ -529,10 +534,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
         export default () => {
-          return Constraint.ForbiddenActivityOverlap("some activity", "some other activity")
+          return Constraint.ForbiddenActivityOverlap("activity", "activity")
         }
         """,
-        new ForbiddenActivityOverlap("some activity", "some other activity")
+        new ForbiddenActivityOverlap("activity", "activity")
     );
   }
 
@@ -542,13 +547,13 @@ class ConstraintsDSLCompilationServiceTests {
         """
         export default () => {
           return Constraint.ForEachActivity(
-            "activity type",
+            "activity",
             "activity alias",
             Windows.During("activity alias")
           )
         }
         """,
-        new ForEachActivity("activity type", "activity alias", new ViolationsOf(new During("activity alias")))
+        new ForEachActivity("activity", "activity alias", new ViolationsOf(new During("activity alias")))
     );
   }
 }

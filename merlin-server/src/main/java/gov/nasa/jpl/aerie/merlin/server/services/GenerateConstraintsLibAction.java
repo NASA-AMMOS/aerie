@@ -31,12 +31,12 @@ public record GenerateConstraintsLibAction(TypescriptCodeGenerationService types
       final var constraintsDslCompilerRoot = System.getenv("CONSTRAINTS_DSL_COMPILER_ROOT");
       final var constraintsApi = Files.readString(Paths.get(constraintsDslCompilerRoot, "src", "libs", "constraints-edsl-fluent-api.ts"));
       final var constraintsAst = Files.readString(Paths.get(constraintsDslCompilerRoot, "src", "libs", "constraints-ast.ts"));
-      final var generated = TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel();
+      final var generated = typescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelId);
       return new Response.Success(
           Map.of("constraints-edsl-fluent-api.ts", constraintsApi,
                  "mission-model-generated-code.ts", generated,
                  "constraints-ast.ts", constraintsAst));
-    } catch (IOException e) {
+    } catch (MissionModelService.NoSuchMissionModelException | IOException e) {
       return new Response.Failure(e.getMessage());
     }
   }

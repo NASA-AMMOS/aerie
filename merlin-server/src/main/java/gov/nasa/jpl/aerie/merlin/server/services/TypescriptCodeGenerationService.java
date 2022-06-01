@@ -1,25 +1,23 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
 
-public class TypescriptCodeGenerationService {
-  public record ActivityType(String name, Map<String, ValueSchema> parameters) {}
-  public record ResourceType(String name, String type, ValueSchema schema) {}
-  public record MissionModelTypes(Collection<ActivityType> activityTypes, Collection<ResourceType> resourceTypes) {}
+public final class TypescriptCodeGenerationService {
+  private final MissionModelService missionModelService;
 
-  public TypescriptCodeGenerationService() {}
-
-  public String generateTypescriptTypesForPlan(final PlanId planId) {
-    return generateTypescriptTypesFromMissionModel();
+  public TypescriptCodeGenerationService(final MissionModelService missionModelService) {
+    this.missionModelService = missionModelService;
   }
 
-  public static String generateTypescriptTypesFromMissionModel() {
+  public String generateTypescriptTypesFromMissionModel(final String missionModelId)
+  throws MissionModelService.NoSuchMissionModelException
+  {
+    final var activityTypes = this.missionModelService.getActivityTypes(missionModelId);
+
+
+
     final var result = new ArrayList<String>();
     result.add("/** Start Codegen */");
     result.add("/** End Codegen */");
