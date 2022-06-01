@@ -234,7 +234,6 @@ enum CommandSeqJsonTimeType {
 type UserCodeError {
   message: String!
   stack: String!
-  sourceContext: String!
   location: CodeLocation
 }
 
