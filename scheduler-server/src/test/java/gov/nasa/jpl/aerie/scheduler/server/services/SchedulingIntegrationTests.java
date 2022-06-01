@@ -130,7 +130,7 @@ public class SchedulingIntegrationTests {
     final var growBananas = activitiesByType.get("GrowBanana");
     assertEquals(10, growBananas.size());
 
-    final var setStartTimes = new HashSet(Stream
+    final var setStartTimes = new HashSet<>(Stream
                                               .of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
                                               .map(x -> Duration.of(x, Duration.SECOND)).toList());
     for (final var growBanana : growBananas) {
@@ -173,7 +173,7 @@ public class SchedulingIntegrationTests {
     final var growBananas = activitiesByType.get("GrowBanana");
     assertEquals(10, growBananas.size());
 
-    final var setStartTimes = new HashSet(Stream
+    final var setStartTimes = new HashSet<>(Stream
                                               .of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
                                               .map(x -> Duration.of(x, Duration.SECOND)).toList());
     for (final var growBanana : growBananas) {
