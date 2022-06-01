@@ -22,7 +22,7 @@ dependencies {
 
   testImplementation project(':merlin-framework-junit')
   testImplementation project(':contrib')
-  testImplementation 'org.assertj:assertj-core:3.21.0'
+  testImplementation 'org.assertj:assertj-core:3.23.1'
 
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
 }
