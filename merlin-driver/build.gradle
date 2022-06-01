@@ -35,7 +35,7 @@ dependencies {
   testImplementation project(':merlin-framework-junit')
   testImplementation project(':contrib')
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
-  testImplementation "net.jqwik:jqwik:1.6.1"
+  testImplementation "net.jqwik:jqwik:1.6.5"
 }
 
 publishing {
