@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.ArrayList;
@@ -8,8 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 public final class TypescriptCodeGenerationService {
+  public record Parameter(String name, ValueSchema schema) {}
+  public record ActivityType(List<Parameter> parameters) {}
+
   public static String generateTypescriptTypes(
-      final Map<String, gov.nasa.jpl.aerie.merlin.server.models.ActivityType> activityTypes,
+      final Map<String, ActivityType> activityTypes,
       final Map<String, ValueSchema> resources
   ) {
     final var result = new ArrayList<String>();
