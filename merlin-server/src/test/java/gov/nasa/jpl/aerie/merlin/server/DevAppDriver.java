@@ -12,7 +12,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
-import gov.nasa.jpl.aerie.merlin.server.services.TypescriptCodeGenerationService;
+import gov.nasa.jpl.aerie.merlin.server.services.TypescriptCodeGenerationServiceAdapter;
 import gov.nasa.jpl.aerie.merlin.server.services.UncachedSimulationService;
 import io.javalin.Javalin;
 
@@ -28,7 +28,7 @@ public final class DevAppDriver {
     final var missionModelController = new LocalMissionModelService(Path.of("/dev/null"), new InMemoryMissionModelRepository());
     final var planController = new LocalPlanService(fixtures.planRepository);
 
-    final var typescriptCodeGenerationService = new TypescriptCodeGenerationService(missionModelController);
+    final var typescriptCodeGenerationService = new TypescriptCodeGenerationServiceAdapter(missionModelController);
 
     final ConstraintsDSLCompilationService constraintsDSLCompilationService;
     try {

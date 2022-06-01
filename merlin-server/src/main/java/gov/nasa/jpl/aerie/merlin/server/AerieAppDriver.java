@@ -28,7 +28,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationAgent;
-import gov.nasa.jpl.aerie.merlin.server.services.TypescriptCodeGenerationService;
+import gov.nasa.jpl.aerie.merlin.server.services.TypescriptCodeGenerationServiceAdapter;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
 import org.slf4j.LoggerFactory;
@@ -45,7 +45,7 @@ public final class AerieAppDriver {
 
     final var missionModelController = new LocalMissionModelService(configuration.merlinFileStore(), stores.missionModels());
 
-    final var typescriptCodeGenerationService = new TypescriptCodeGenerationService(missionModelController);
+    final var typescriptCodeGenerationService = new TypescriptCodeGenerationServiceAdapter(missionModelController);
 
     final ConstraintsDSLCompilationService constraintsDSLCompilationService;
     try {
