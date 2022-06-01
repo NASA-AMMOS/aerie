@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.server.services;
+package gov.nasa.jpl.aerie.constraints;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
