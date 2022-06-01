@@ -7,20 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public final class TypescriptCodeGenerationService implements ConstraintsCodeGenService {
-  private final MissionModelService missionModelService;
-
-  public TypescriptCodeGenerationService(final MissionModelService missionModelService) {
-    this.missionModelService = missionModelService;
-  }
-
-  @Override
-  public String generateTypescriptTypesFromMissionModel(final String missionModelId)
-  throws MissionModelService.NoSuchMissionModelException
-  {
-    final var activityTypes = this.missionModelService.getActivityTypes(missionModelId);
-    final var resources = this.missionModelService.getStatesSchemas(missionModelId);
-
+public final class TypescriptCodeGenerationService {
+  public static String generateTypescriptTypes(
+      final Map<String, gov.nasa.jpl.aerie.merlin.server.models.ActivityType> activityTypes,
+      final Map<String, ValueSchema> resources
+  ) {
     final var result = new ArrayList<String>();
     result.add("/** Start Codegen */");
     result.add("import * as AST from './constraints-ast.js';");

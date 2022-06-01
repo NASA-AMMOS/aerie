@@ -11,7 +11,9 @@ public class TypescriptCodeGenerationServiceAdapter implements ConstraintsCodeGe
   public String generateTypescriptTypesFromMissionModel(final String missionModelId)
   throws MissionModelService.NoSuchMissionModelException
   {
-    return new TypescriptCodeGenerationService(missionModelService).generateTypescriptTypesFromMissionModel(missionModelId);
+    return TypescriptCodeGenerationService.generateTypescriptTypes(
+            missionModelService.getActivityTypes(missionModelId),
+            missionModelService.getStatesSchemas(missionModelId));
   }
 }
 
