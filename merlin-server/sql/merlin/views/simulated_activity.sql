@@ -6,7 +6,8 @@ create view simulated_activity as
          span.start_offset as start_offset,
          span.duration as duration,
          span.attributes as attributes,
-         span.type as activity_type_name
+         span.type as activity_type_name,
+         span.attributes#>>'{directiveId}' as directive_id
 
    from span
      join dataset on span.dataset_id = dataset.id
