@@ -46,10 +46,10 @@ class CommandExpansionDatabaseTests {
     void shouldModifyUpdatedAtTimeOnUpdate() throws SQLException {
       try(final var statement = connection.createStatement()) {
         final var insertRes = statement.executeQuery("""
-        insert into expansion_rule (activity_type, expansion_logic)
-        values ('test-activity-type', 'test-activity-logic')
-        returning id, created_at, updated_at
-      """);
+          insert into expansion_rule (activity_type, expansion_logic)
+          values ('test-activity-type', 'test-activity-logic')
+          returning id, created_at, updated_at
+        """);
         insertRes.next();
         final var id = insertRes.getInt("id");
         final var created_at = insertRes.getTimestamp("created_at");
@@ -58,10 +58,10 @@ class CommandExpansionDatabaseTests {
         assertEquals(created_at, updated_at);
 
         final var updateRes = statement.executeQuery("""
-        update expansion_rule set expansion_logic = 'updated-logic'
-        where id = %d
-        returning created_at, updated_at
-      """.formatted(id));
+          update expansion_rule set expansion_logic = 'updated-logic'
+          where id = %d
+          returning created_at, updated_at
+        """.formatted(id));
         updateRes.next();
         final var created_at2 = updateRes.getTimestamp("created_at");
         final var updated_at2 = updateRes.getTimestamp("updated_at");
@@ -92,10 +92,10 @@ class CommandExpansionDatabaseTests {
         assertEquals(created_at, updated_at);
 
         final var updateRes = statement.executeQuery("""
-        update sequence set metadata = '{"key": "value"}'
-        where seq_id = '%s' and simulation_dataset_id = %d
-        returning created_at, updated_at
-      """.formatted(seq_id, simulation_dataset_id));
+          update sequence set metadata = '{"key": "value"}'
+          where seq_id = '%s' and simulation_dataset_id = %d
+          returning created_at, updated_at
+        """.formatted(seq_id, simulation_dataset_id));
         updateRes.next();
         final var created_at2 = updateRes.getTimestamp("created_at");
         final var updated_at2 = updateRes.getTimestamp("updated_at");

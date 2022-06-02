@@ -5,6 +5,8 @@ create table command_dictionary (
   mission text not null,
   version text not null,
 
+  created_at timestamptz not null default now(),
+
   constraint command_dictionary_synthetic_key
       primary key (id),
   constraint command_dictionary_natural_key

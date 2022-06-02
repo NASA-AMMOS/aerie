@@ -4,6 +4,8 @@ create table expansion_set (
   command_dict_id integer not null,
   mission_model_id integer not null,
 
+  created_at timestamptz not null default now(),
+
   constraint expansion_set_primary_key
     primary key (id),
 

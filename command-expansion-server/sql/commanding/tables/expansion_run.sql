@@ -4,6 +4,8 @@ create table expansion_run (
   simulation_dataset_id integer not null,
   expansion_set_id integer not null,
 
+  created_at timestamptz not null default now(),
+
   constraint expansion_run_primary_key
     primary key (id),
 
