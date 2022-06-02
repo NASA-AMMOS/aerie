@@ -43,7 +43,9 @@ public final class AerieAppDriver {
     final var configuration = loadConfiguration();
     final var stores = loadStores(configuration);
 
-    final var typescriptCodeGenerationService = new TypescriptCodeGenerationService();
+    final var missionModelController = new LocalMissionModelService(configuration.merlinFileStore(), stores.missionModels());
+
+    final var typescriptCodeGenerationService = new TypescriptCodeGenerationService(missionModelController);
 
     final ConstraintsDSLCompilationService constraintsDSLCompilationService;
     try {
@@ -55,7 +57,6 @@ public final class AerieAppDriver {
     Runtime.getRuntime().addShutdownHook(new Thread(constraintsDSLCompilationService::close));
 
     // Assemble the core non-web object graph.
-    final var missionModelController = new LocalMissionModelService(configuration.merlinFileStore(), stores.missionModels());
     final var planController = new LocalPlanService(stores.plans());
     final var simulationAgent = ThreadedSimulationAgent.spawn(
         "simulation-agent",
@@ -68,12 +69,12 @@ public final class AerieAppDriver {
         constraintsDSLCompilationService,
         configuration.useNewConstraintPipeline()
     );
-    final var generateSchedulingLibAction = new GenerateConstraintsLibAction(typescriptCodeGenerationService);
+    final var generateConstraintsLibAction = new GenerateConstraintsLibAction(typescriptCodeGenerationService);
     final var merlinBindings = new MerlinBindings(
         missionModelController,
         planController,
         simulationAction,
-        generateSchedulingLibAction
+        generateConstraintsLibAction
     );
 
     // Configure an HTTP server.

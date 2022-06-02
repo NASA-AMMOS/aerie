@@ -1,28 +1,36 @@
 import * as AST from './constraints-ast.js';
+import * as Gen from './mission-model-generated-code.js';
 
 export class Constraint {
   /** Internal AST node */
   public readonly __astNode: AST.Constraint;
 
+  private static __numGeneratedAliases: number = 0;
+
   public constructor(astNode: AST.Constraint) {
     this.__astNode = astNode;
   }
 
-  public static ForbiddenActivityOverlap(activityType1: string, activityType2: string): Constraint {
+  public static ForbiddenActivityOverlap(activityType1: Gen.ActivityType, activityType2: Gen.ActivityType): Constraint {
     return new Constraint({
       kind: AST.NodeKind.ForbiddenActivityOverlap,
       activityType1,
-      activityType2
-    })
+      activityType2,
+    });
   }
 
-  public static ForEachActivity(activityType: string, alias: string, constraint: Constraint): Constraint {
+  public static ForEachActivity<A extends Gen.ActivityType>(
+    activityType: A,
+    expression: (instance: Gen.ActivityInstance<A>) => Constraint,
+  ): Constraint {
+    let alias = 'activity alias ' + Constraint.__numGeneratedAliases;
+    Constraint.__numGeneratedAliases += 1;
     return new Constraint({
       kind: AST.NodeKind.ForEachActivity,
       activityType,
       alias,
-      expression: constraint.__astNode
-    })
+      expression: expression(new Gen.ActivityInstance(activityType, alias)).__astNode,
+    });
   }
 }
 
@@ -34,39 +42,16 @@ export class Windows {
     this.__astNode = expression;
   }
 
-  public static During(alias: string): Windows {
-    return new Windows({
-      kind: AST.NodeKind.WindowsExpressionDuring,
-      alias
-    })
-  }
-  public static StartOf(alias: string): Windows {
-    return new Windows({
-      kind: AST.NodeKind.WindowsExpressionStartOf,
-      alias
-    })
-  }
-  public static EndOf(alias: string): Windows {
-    return new Windows({
-      kind: AST.NodeKind.WindowsExpressionEndOf,
-      alias
-    })
-  }
-
   public static All(...windows: Windows[]): Windows {
     return new Windows({
       kind: AST.NodeKind.WindowsExpressionAll,
-      expressions: [
-        ...windows.map(other => other.__astNode),
-      ],
+      expressions: [...windows.map(other => other.__astNode)],
     });
   }
   public static Any(...windows: Windows[]): Windows {
     return new Windows({
       kind: AST.NodeKind.WindowsExpressionAny,
-      expressions: [
-        ...windows.map(other => other.__astNode),
-      ],
+      expressions: [...windows.map(other => other.__astNode)],
     });
   }
 
@@ -76,25 +61,25 @@ export class Windows {
       expressions: [
         {
           kind: AST.NodeKind.WindowsExpressionNot,
-          expression: condition.__astNode
+          expression: condition.__astNode,
         },
-        this.__astNode
-      ]
-    })
+        this.__astNode,
+      ],
+    });
   }
 
   public not(): Windows {
     return new Windows({
       kind: AST.NodeKind.WindowsExpressionNot,
-      expression: this.__astNode
-    })
+      expression: this.__astNode,
+    });
   }
 
   public violations(): Constraint {
     return new Constraint({
       kind: AST.NodeKind.ViolationsOf,
-      expression: this.__astNode
-    })
+      expression: this.__astNode,
+    });
   }
 }
 
@@ -105,38 +90,31 @@ export class Real {
     this.__astNode = profile;
   }
 
-  public static Resource(name: string): Real {
+  public static Resource(name: Gen.RealResourceName): Real {
     return new Real({
       kind: AST.NodeKind.RealProfileResource,
-      name
-    })
+      name,
+    });
   }
   public static Value(value: number): Real {
     return new Real({
       kind: AST.NodeKind.RealProfileValue,
-      value
-    })
-  }
-  public static Parameter(alias: string, name: string): Real {
-    return new Real({
-      kind: AST.NodeKind.RealProfileParameter,
-      alias,
-      name
-    })
+      value,
+    });
   }
 
   public rate(): Real {
     return new Real({
       kind: AST.NodeKind.RealProfileRate,
-      profile: this.__astNode
-    })
+      profile: this.__astNode,
+    });
   }
   public times(multiplier: number): Real {
     return new Real({
       kind: AST.NodeKind.RealProfileTimes,
       multiplier,
-      profile: this.__astNode
-    })
+      profile: this.__astNode,
+    });
   }
   public plus(other: Real | number): Real {
     if (!(other instanceof Real)) {
@@ -145,8 +123,8 @@ export class Real {
     return new Real({
       kind: AST.NodeKind.RealProfilePlus,
       left: this.__astNode,
-      right: other.__astNode
-    })
+      right: other.__astNode,
+    });
   }
 
   public lessThan(other: Real | number): Windows {
@@ -156,8 +134,8 @@ export class Real {
     return new Windows({
       kind: AST.NodeKind.RealProfileLessThan,
       left: this.__astNode,
-      right: other.__astNode
-    })
+      right: other.__astNode,
+    });
   }
   public lessThanOrEqual(other: Real | number): Windows {
     if (!(other instanceof Real)) {
@@ -166,8 +144,8 @@ export class Real {
     return new Windows({
       kind: AST.NodeKind.RealProfileLessThanOrEqual,
       left: this.__astNode,
-      right: other.__astNode
-    })
+      right: other.__astNode,
+    });
   }
   public greaterThan(other: Real | number): Windows {
     if (!(other instanceof Real)) {
@@ -176,8 +154,8 @@ export class Real {
     return new Windows({
       kind: AST.NodeKind.RealProfileGreaterThan,
       left: this.__astNode,
-      right: other.__astNode
-    })
+      right: other.__astNode,
+    });
   }
   public greaterThanOrEqual(other: Real | number): Windows {
     if (!(other instanceof Real)) {
@@ -186,8 +164,8 @@ export class Real {
     return new Windows({
       kind: AST.NodeKind.RealProfileGreaterThanOrEqual,
       left: this.__astNode,
-      right: other.__astNode
-    })
+      right: other.__astNode,
+    });
   }
 
   public equal(other: Real | number): Windows {
@@ -197,8 +175,8 @@ export class Real {
     return new Windows({
       kind: AST.NodeKind.ExpressionEqual,
       left: this.__astNode,
-      right: other.__astNode
-    })
+      right: other.__astNode,
+    });
   }
   public notEqual(other: Real | number): Windows {
     if (!(other instanceof Real)) {
@@ -207,80 +185,73 @@ export class Real {
     return new Windows({
       kind: AST.NodeKind.ExpressionNotEqual,
       left: this.__astNode,
-      right: other.__astNode
-    })
+      right: other.__astNode,
+    });
   }
 
   public changed(): Windows {
     return new Windows({
       kind: AST.NodeKind.ProfileChanged,
-      expression: this.__astNode
-    })
+      expression: this.__astNode,
+    });
   }
 }
 
-export class Discrete {
-  public readonly __astNode: AST.DiscreteProfileExpression
+export class Discrete<Schema> {
+  public readonly __astNode: AST.DiscreteProfileExpression;
 
   public constructor(profile: AST.DiscreteProfileExpression) {
     this.__astNode = profile;
   }
 
-  public static Resource(name: string): Discrete {
+  public static Resource<R extends Gen.ResourceName>(name: R): Discrete<Gen.DiscreteResourceSchema<R>> {
     return new Discrete({
       kind: AST.NodeKind.DiscreteProfileResource,
-      name
-    })
+      name,
+    });
   }
-  public static Value(value: any): Discrete {
+  public static Value<Schema>(value: Schema): Discrete<Schema> {
     return new Discrete({
       kind: AST.NodeKind.DiscreteProfileValue,
-      value
-    })
-  }
-  public static Parameter(alias: string, name: string): Discrete {
-    return new Discrete({
-      kind: AST.NodeKind.DiscreteProfileParameter,
-      alias,
-      name
-    })
+      value,
+    });
   }
 
-  public transition(from: any, to: any): Windows {
+  public transition(from: Schema, to: Schema): Windows {
     return new Windows({
       kind: AST.NodeKind.DiscreteProfileTransition,
       profile: this.__astNode,
       from,
-      to
-    })
+      to,
+    });
   }
 
-  public equal(other: any): Windows {
+  public equal(other: Schema | Discrete<Schema>): Windows {
     if (!(other instanceof Discrete)) {
       other = Discrete.Value(other);
     }
     return new Windows({
       kind: AST.NodeKind.ExpressionEqual,
       left: this.__astNode,
-      right: other.__astNode
-    })
+      right: other.__astNode,
+    });
   }
-  public notEqual(other: any): Windows {
+  public notEqual(other: Schema | Discrete<Schema>): Windows {
     if (!(other instanceof Discrete)) {
       other = Discrete.Value(other);
     }
     return new Windows({
       kind: AST.NodeKind.ExpressionNotEqual,
       left: this.__astNode,
-      right: other.__astNode
-    })
+      right: other.__astNode,
+    });
   }
 
   public changed(): Windows {
     return new Windows({
       kind: AST.NodeKind.ProfileChanged,
-      expression: this.__astNode
-    })
+      expression: this.__astNode,
+    });
   }
 }
 
@@ -295,45 +266,27 @@ declare global {
      * @param activityType2
      * @constructor
      */
-    public static ForbiddenActivityOverlap(activityType1: string, activityType2: string): Constraint
+    public static ForbiddenActivityOverlap(
+      activityType1: Gen.ActivityType,
+      activityType2: Gen.ActivityType,
+    ): Constraint;
 
     /**
      * Check a constraint for each instance of an activity type.
      *
      * @param activityType activity type to check
-     * @param alias aliased name of activity instances, referenced by the constraint argument
-     * @param constraint constraint to apply
+     * @param expression function of an activity instance that returns a Constraint
      * @constructor
      */
-    public static ForEachActivity(activityType: string, alias: string, constraint: Constraint): Constraint
+    public static ForEachActivity<A extends Gen.ActivityType>(
+      activityType: A,
+      expression: (instance: Gen.ActivityInstance<A>) => Constraint,
+    ): Constraint;
   }
 
   export class Windows {
     /** Internal AST Node */
     public readonly __astNode: AST.WindowsExpression;
-
-    /**
-     * Produce a window for the duration of the aliased activity instance.
-     *
-     * @param alias
-     * @constructor
-     */
-    public static During(alias: string): Windows
-
-    /**
-     * Produce an instantaneous window at the start of the aliased activity instance.
-     *
-     * @param alias
-     * @constructor
-     */
-    public static StartOf(alias: string): Windows
-
-    /**
-     * Produce an instantaneous window at the end of the aliased activity instance.
-     * @param alias
-     * @constructor
-     */
-    public static EndOf(alias: string): Windows
 
     /**
      * Produce a window when all arguments produce a window.
@@ -342,7 +295,7 @@ declare global {
      *
      * @param windows any number of windows expressions
      */
-    public static All(...windows: Windows[]): Windows
+    public static All(...windows: Windows[]): Windows;
 
     /**
      * Produce a window when any argument produces a window.
@@ -351,19 +304,19 @@ declare global {
      *
      * @param windows one or more windows expressions
      */
-    public static Any(...windows: Windows[]): Windows
+    public static Any(...windows: Windows[]): Windows;
 
     /**
      * Only check this expression of the condition argument produces a window.
      *
      * @param condition
      */
-    public if(condition: Windows): Windows
+    public if(condition: Windows): Windows;
 
     /**
      * Negate all the windows produced this.
      */
-    public not(): Windows
+    public not(): Windows;
 
     /**
      * Produce a constraint violation whenever this does NOT produce a window.
@@ -371,7 +324,7 @@ declare global {
      * Essentially, express the condition you want to be satisfied, then use
      * this method to produce a violation whenever it is NOT satisfied.
      */
-    public violations(): Constraint
+    public violations(): Constraint;
   }
 
   export class Real {
@@ -383,113 +336,104 @@ declare global {
      * @param name
      * @constructor
      */
-    public static Resource(name: string): Real
+    public static Resource(name: Gen.RealResourceName): Real;
 
     /**
      * Create a constant real profile for all time.
      * @param value
      * @constructor
      */
-    public static Value(value: number): Real
-
-    /**
-     * Reference the value of an activity instance parameter as a constant real profile.
-     *
-     * Only valid for the duration of the activity instance.
-     *
-     * @param alias alias of the activity instance
-     * @param name name of the parameter
-     * @constructor
-     */
-    public static Parameter(alias: string, name: string): Real
+    public static Value(value: number): Real;
 
     /**
      * Create a real profile from this profile's derivative.
      */
-    public rate(): Real
+    public rate(): Real;
 
     /**
      * Create a real profile by multiplying this profile by a constant
      * @param multiplier
      */
-    public times(multiplier: number): Real
+    public times(multiplier: number): Real;
 
     /**
      * Create a real profile by adding this and another real profile together.
      * @param other
      */
-    public plus(other: Real | number): Real
+    public plus(other: Real | number): Real;
 
     /**
      * Produce a window whenever this profile is less than another real profile.
      * @param other
      */
-    public lessThan(other: Real | number): Windows
+    public lessThan(other: Real | number): Windows;
 
     /**
      * Produce a window whenever this profile is less than or equal to another real profile.
      * @param other
      */
-    public lessThanOrEqual(other: Real | number): Windows
+    public lessThanOrEqual(other: Real | number): Windows;
 
     /**
      * Produce a window whenever this profile is greater than to another real profile.
      * @param other
      */
-    public greaterThan(other: Real | number): Windows
+    public greaterThan(other: Real | number): Windows;
 
     /**
      * Produce a window whenever this profile is greater than or equal to another real profile.
      * @param other
      */
-    public greaterThanOrEqual(other: Real | number): Windows
+    public greaterThanOrEqual(other: Real | number): Windows;
 
     /**
      * Produce a window whenever this profile is equal to another real profile.
      * @param other
      */
-    public equal(other: Real | number): Windows
+    public equal(other: Real | number): Windows;
 
     /**
      * Produce a window whenever this profile is not equal to another real profile.
      * @param other
      */
-    public notEqual(other: Real | number): Windows
+    public notEqual(other: Real | number): Windows;
 
     /**
      * Produce an instantaneous window whenever this profile changes.
      */
-    public changed(): Windows
+    public changed(): Windows;
   }
 
-  export class Discrete {
+  export class Discrete<Schema> {
     /** Internal AST Node */
-    public readonly __astNode: AST.DiscreteProfileExpression
+    public readonly __astNode: AST.DiscreteProfileExpression;
+
+    /**
+     * Internal instance of the Schema type, for type checking.
+     *
+     * It is never assigned or accessed, and is discarded by the end.
+     * This field should remain `undefined` for the full runtime.
+     * It does not even exist in the above implementation class
+     * for Discrete.
+     *
+     * Don't remove it though, it'll break the tests.
+     * @private
+     */
+    private readonly __schemaInstance: Schema;
 
     /**
      * Reference the discrete profile associated with a resource.
      * @param name
      * @constructor
      */
-    public static Resource(name: string): Discrete
+    public static Resource<R extends Gen.ResourceName>(name: R): Discrete<Gen.DiscreteResourceSchema<R>>;
 
     /**
      * Create a constant discrete profile for all time.
      * @param value
      * @constructor
      */
-    public static Value(value: any): Discrete
-
-    /**
-     * Reference the value of an activity instance parameter as a constant discrete profile.
-     *
-     * Only valid for the duration of the activity instance.
-     *
-     * @param alias alias of the activity instance
-     * @param name name of the parameter
-     * @constructor
-     */
-    public static Parameter(alias: string, name: string): Discrete
+    public static Value<Schema>(value: Schema): Discrete<Schema>;
 
     /**
      * Produce an instantaneous window whenever this profile makes a specific transition.
@@ -497,26 +441,28 @@ declare global {
      * @param from initial value
      * @param to final value
      */
-    public transition<T>(from: T, to: T): Windows
+    public transition(from: Schema, to: Schema): Windows;
 
     /**
      * Produce a window whenever this profile is equal to another discrete profile.
      * @param other
      */
-    public equal(other: any): Windows
+    public equal(other: Schema | Discrete<Schema>): Windows;
 
     /**
      * Produce a window whenever this profile is not equal to another discrete profile.
      * @param other
      */
-    public notEqual(other: any): Windows
+    public notEqual(other: Schema | Discrete<Schema>): Windows;
 
     /**
      * Produce an instantaneous window whenever this profile changes.
      */
-    public changed(): Windows
+    public changed(): Windows;
   }
+
+  type Duration = number;
 }
 
 // Make Constraint available on the global object
-Object.assign(globalThis, {Constraint, Windows, Real, Discrete});
+Object.assign(globalThis, { Constraint, Windows, Real, Discrete });

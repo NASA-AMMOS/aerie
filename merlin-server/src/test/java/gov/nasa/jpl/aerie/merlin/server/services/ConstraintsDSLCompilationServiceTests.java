@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.constraints.tree.*;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -20,7 +22,9 @@ class ConstraintsDSLCompilationServiceTests {
 
   @BeforeAll
   void setUp() throws IOException {
-    constraintsDSLCompilationService = new ConstraintsDSLCompilationService(new TypescriptCodeGenerationService());
+    constraintsDSLCompilationService = new ConstraintsDSLCompilationService(
+        new TypescriptCodeGenerationService(new StubMissionModelService())
+    );
   }
 
   @AfterAll
@@ -28,9 +32,10 @@ class ConstraintsDSLCompilationServiceTests {
     constraintsDSLCompilationService.close();
   }
 
-  private <T> void checkSuccessfulCompilation(String constraint, Expression<T> expected) {
+  private <T> void checkSuccessfulCompilation(String constraint, Expression<T> expected)
+  {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult result;
-    result = constraintsDSLCompilationService.compileConstraintsDSL(PLAN_ID, constraint);
+    result = assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL("abc", constraint));
     if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
       assertEquals(expected, r.constraintExpression());
     } else if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error r) {
@@ -40,9 +45,9 @@ class ConstraintsDSLCompilationServiceTests {
 
   private void checkFailedCompilation(String constraint, String error) {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error actualErrors;
-    actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) constraintsDSLCompilationService.compileConstraintsDSL(
-        PLAN_ID, constraint
-    );
+    actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL(
+        "abc", constraint
+    ));
     if (actualErrors.errors()
                     .stream()
                     .noneMatch(e -> e.message().contains(error))) {
@@ -56,14 +61,14 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
       """
         export default function myConstraint() {
-          return times2(Real.Resource("my_resource")).changed()
+          return times2(Real.Resource("state of charge")).changed()
         }
         function times2(e: Real): Real {
           return e.times(2)
         }
       """,
       new ViolationsOf(
-          new Changed<>(new ProfileExpression<>(new Times(new RealResource("my_resource"), 2.0)))
+          new Changed<>(new ProfileExpression<>(new Times(new RealResource("state of charge"), 2.0)))
       )
     );
   }
@@ -74,7 +79,7 @@ class ConstraintsDSLCompilationServiceTests {
         """
           export default function myConstraint() {
             const x = 5;
-            return times2(Real.Resource("my_resource")).changed()
+            return times2(Real.Resource("mode")).changed()
           }
           function times2(e: Real): Real {
             return e.times(x)
@@ -89,7 +94,7 @@ class ConstraintsDSLCompilationServiceTests {
     checkFailedCompilation(
         """
           export default function myConstraint() {
-             return Real.Resource("my_resource");
+             return Real.Resource("state of charge");
           }
         """,
         "TypeError: TS2322 Incorrect return type. Expected: 'Constraint', Actual: 'Real'."
@@ -103,10 +108,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default () => {
-              return Discrete.Resource("my_resource").changed();
+              return Discrete.Resource("mode").changed();
             }
         """,
-        new ViolationsOf(new Changed<>(new ProfileExpression<>(new DiscreteResource("my_resource"))))
+        new ViolationsOf(new Changed<>(new ProfileExpression<>(new DiscreteResource("mode"))))
     );
   }
 
@@ -126,11 +131,16 @@ class ConstraintsDSLCompilationServiceTests {
   void testDiscreteParameter() {
     checkSuccessfulCompilation(
         """
-            export default () => {
-              return Discrete.Parameter("my_activity", "my_parameter").changed()
-            }
+            export default () => Constraint.ForEachActivity(
+              ActivityType.activity,
+              (instance) => instance.parameters.Param.changed()
+            )
         """,
-        new ViolationsOf(new Changed<>(new ProfileExpression<>(new DiscreteParameter("my_activity", "my_parameter"))))
+        new ForEachActivity(
+            "activity",
+            "activity alias 0",
+            new ViolationsOf(new Changed<>(new ProfileExpression<>(new DiscreteParameter("activity alias 0", "Param"))))
+        )
     );
   }
 
@@ -139,14 +149,14 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default () => {
-              return Discrete.Resource("my_resource").transition("from one state", "to another");
+              return Discrete.Resource("mode").transition("Option1", "Option2");
             }
         """,
         new ViolationsOf(
             new Transition(
-                new DiscreteResource("my_resource"),
-                SerializedValue.of("from one state"),
-                SerializedValue.of("to another")
+                new DiscreteResource("mode"),
+                SerializedValue.of("Option1"),
+                SerializedValue.of("Option2")
             )
         )
     );
@@ -157,10 +167,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkFailedCompilation(
         """
           export default () => {
-            return Discrete.Resource("my_resource").transition("from one state", 5);
+            return Discrete.Resource("mode").transition("something else", 5);
           }
         """,
-        "TS2345 Argument of type 'number' is not assignable to parameter of type 'string'."
+        "TS2345 Argument of type '\"something else\"' is not assignable to parameter of type '\"Option1\" | \"Option2\"'."
     );
   }
 
@@ -169,10 +179,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
         export default () => {
-          return Discrete.Resource("my_resource").equal(Discrete.Value("hello there"));
+          return Discrete.Resource("mode").equal("Option2");
         }
         """,
-        new ViolationsOf(new Equal<>(new DiscreteResource("my_resource"), new DiscreteValue(SerializedValue.of("hello there"))))
+        new ViolationsOf(new Equal<>(new DiscreteResource("mode"), new DiscreteValue(SerializedValue.of("Option2"))))
     );
   }
 
@@ -181,10 +191,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
         export default () => {
-          return Discrete.Resource("my_resource").notEqual(Discrete.Value("hello there"));
+          return Discrete.Resource("state of charge").notEqual(4.0);
         }
         """,
-        new ViolationsOf(new NotEqual<>(new DiscreteResource("my_resource"), new DiscreteValue(SerializedValue.of("hello there"))))
+        new ViolationsOf(new NotEqual<>(new DiscreteResource("state of charge"), new DiscreteValue(SerializedValue.of(4.0))))
     );
   }
 
@@ -205,10 +215,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Discrete.Resource("my_resource").equal("some value")
+            return Discrete.Resource("mode").equal("Option1")
           }
         """,
-        new ViolationsOf(new Equal<>(new DiscreteResource("my_resource"), new DiscreteValue(SerializedValue.of("some value"))))
+        new ViolationsOf(new Equal<>(new DiscreteResource("mode"), new DiscreteValue(SerializedValue.of("Option1"))))
     );
   }
 
@@ -219,10 +229,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default () => {
-              return Real.Resource("my_resource").changed();
+              return Real.Resource("state of charge").changed();
             }
         """,
-        new ViolationsOf(new Changed<>(new ProfileExpression<>(new RealResource("my_resource"))))
+        new ViolationsOf(new Changed<>(new ProfileExpression<>(new RealResource("state of charge"))))
     );
   }
 
@@ -242,11 +252,16 @@ class ConstraintsDSLCompilationServiceTests {
   void testRealParameter() {
     checkSuccessfulCompilation(
         """
-            export default () => {
-              return Real.Parameter("my_activity", "my_parameter").changed()
-            }
+            export default () => Constraint.ForEachActivity(
+              ActivityType.activity,
+              (instance) => instance.parameters.AnotherParam.changed()
+            )
         """,
-        new ViolationsOf(new Changed<>(new ProfileExpression<>(new RealParameter("my_activity", "my_parameter"))))
+        new ForEachActivity(
+            "activity",
+            "activity alias 0",
+            new ViolationsOf(new Changed<>(new ProfileExpression<>(new RealParameter("activity alias 0", "AnotherParam"))))
+        )
     );
   }
 
@@ -255,10 +270,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default() => {
-              return Real.Resource("my_resource").rate().equal(Real.Value(4.0))
+              return Real.Resource("state of charge").rate().equal(Real.Value(4.0))
             }
         """,
-        new ViolationsOf(new Equal<>(new Rate(new RealResource("my_resource")), new RealValue(4.0)))
+        new ViolationsOf(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)))
     );
   }
 
@@ -267,10 +282,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default() => {
-              return Real.Resource("my_resource").times(2).equal(Real.Value(4.0))
+              return Real.Resource("state of charge").times(2).equal(Real.Value(4.0))
             }
         """,
-        new ViolationsOf(new Equal<>(new Times(new RealResource("my_resource"), 2.0), new RealValue(4.0)))
+        new ViolationsOf(new Equal<>(new Times(new RealResource("state of charge"), 2.0), new RealValue(4.0)))
     );
   }
 
@@ -279,10 +294,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default() => {
-              return Real.Resource("my_resource").plus(Real.Value(2.0)).equal(Real.Value(4.0))
+              return Real.Resource("state of charge").plus(Real.Value(2.0)).equal(Real.Value(4.0))
             }
         """,
-        new ViolationsOf(new Equal<>(new Plus(new RealResource("my_resource"), new RealValue(2.0)), new RealValue(4.0)))
+        new ViolationsOf(new Equal<>(new Plus(new RealResource("state of charge"), new RealValue(2.0)), new RealValue(4.0)))
     );
   }
 
@@ -291,10 +306,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default() => {
-              return Real.Resource("my_resource").lessThan(Real.Value(2.0))
+              return Real.Resource("state of charge").lessThan(Real.Value(2.0))
             }
         """,
-        new ViolationsOf(new LessThan(new RealResource("my_resource"), new RealValue(2.0)))
+        new ViolationsOf(new LessThan(new RealResource("state of charge"), new RealValue(2.0)))
     );
   }
 
@@ -303,10 +318,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default() => {
-              return Real.Resource("my_resource").lessThanOrEqual(Real.Value(2.0))
+              return Real.Resource("state of charge").lessThanOrEqual(Real.Value(2.0))
             }
         """,
-        new ViolationsOf(new LessThanOrEqual(new RealResource("my_resource"), new RealValue(2.0)))
+        new ViolationsOf(new LessThanOrEqual(new RealResource("state of charge"), new RealValue(2.0)))
     );
   }
 
@@ -315,10 +330,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default() => {
-              return Real.Resource("my_resource").greaterThan(Real.Value(2.0))
+              return Real.Resource("state of charge").greaterThan(Real.Value(2.0))
             }
         """,
-        new ViolationsOf(new GreaterThan(new RealResource("my_resource"), new RealValue(2.0)))
+        new ViolationsOf(new GreaterThan(new RealResource("state of charge"), new RealValue(2.0)))
     );
   }
 
@@ -327,10 +342,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default() => {
-              return Real.Resource("my_resource").greaterThanOrEqual(Real.Value(2.0))
+              return Real.Resource("state of charge").greaterThanOrEqual(Real.Value(2.0))
             }
         """,
-        new ViolationsOf(new GreaterThanOrEqual(new RealResource("my_resource"), new RealValue(2.0)))
+        new ViolationsOf(new GreaterThanOrEqual(new RealResource("state of charge"), new RealValue(2.0)))
     );
   }
 
@@ -339,10 +354,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
         export default () => {
-          return Real.Resource("my_resource").equal(Real.Value(-1));
+          return Real.Resource("state of charge").equal(Real.Value(-1));
         }
         """,
-        new ViolationsOf(new Equal<>(new RealResource("my_resource"), new RealValue(-1.0)))
+        new ViolationsOf(new Equal<>(new RealResource("state of charge"), new RealValue(-1.0)))
     );
   }
 
@@ -351,10 +366,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
         export default () => {
-          return Real.Resource("my_resource").notEqual(Real.Value(-1));
+          return Real.Resource("an integer").notEqual(Real.Value(-1));
         }
         """,
-        new ViolationsOf(new NotEqual<>(new RealResource("my_resource"), new RealValue(-1.0)))
+        new ViolationsOf(new NotEqual<>(new RealResource("an integer"), new RealValue(-1.0)))
     );
   }
 
@@ -387,42 +402,36 @@ class ConstraintsDSLCompilationServiceTests {
   @Test
   void testDuring() {
     checkSuccessfulCompilation(
-        // The following code will fail at constraint evaluation, but the Typescript should run just fine.
-        // (due to the activity alias not being declared)
         """
           export default () => {
-            return Windows.During("non existent activity");
+            return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.window());
           }
         """,
-        new ViolationsOf(new During("non existent activity"))
+        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new During("activity alias 0")))
     );
   }
 
   @Test
   void testStartOf() {
     checkSuccessfulCompilation(
-        // The following code will fail at constraint evaluation, but the Typescript should run just fine.
-        // (due to the activity alias not being declared)
         """
           export default () => {
-            return Windows.StartOf("non existent activity");
+            return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.start());
           }
         """,
-        new ViolationsOf(new StartOf("non existent activity"))
+        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new StartOf("activity alias 0")))
     );
   }
 
   @Test
   void testEndOf() {
     checkSuccessfulCompilation(
-        // The following code will fail at constraint evaluation, but the Typescript should run just fine.
-        // (due to the activity alias not being declared)
         """
           export default () => {
-            return Windows.EndOf("non existent activity");
+            return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.end());
           }
         """,
-        new ViolationsOf(new EndOf("non existent activity"))
+        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new EndOf("activity alias 0")))
     );
   }
 
@@ -431,16 +440,16 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Real.Resource("my_real_resource").lessThan(2)
-              .if(Discrete.Resource("my_discrete_resource").changed());
+            return Real.Resource("state of charge").lessThan(2)
+              .if(Discrete.Resource("mode").changed());
           }
         """,
         new ViolationsOf(
             new Or(
                 new Not(new Changed<>(
-                    new ProfileExpression<>(new DiscreteResource("my_discrete_resource"))
+                    new ProfileExpression<>(new DiscreteResource("mode"))
                 )),
-                new LessThan(new RealResource("my_real_resource"), new RealValue(2.0))
+                new LessThan(new RealResource("state of charge"), new RealValue(2.0))
             )
         )
     );
@@ -452,7 +461,7 @@ class ConstraintsDSLCompilationServiceTests {
         """
           export default () => {
             return Windows.All(
-              Real.Resource("my_resource").lessThan(2),
+              Real.Resource("state of charge").lessThan(2),
               Discrete.Value("hello there").notEqual(Discrete.Value("hello there")),
               Real.Value(5).changed()
             );
@@ -461,7 +470,7 @@ class ConstraintsDSLCompilationServiceTests {
         new ViolationsOf(
             new And(
                 java.util.List.of(
-                    new LessThan(new RealResource("my_resource"), new RealValue(2.0)),
+                    new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
                     new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
                     new Changed<>(new ProfileExpression<>(new RealValue(5.0)))
                 )
@@ -476,7 +485,7 @@ class ConstraintsDSLCompilationServiceTests {
         """
           export default () => {
             return Windows.Any(
-              Real.Resource("my_resource").lessThan(2),
+              Real.Resource("state of charge").lessThan(2),
               Discrete.Value("hello there").notEqual(Discrete.Value("hello there")),
               Real.Value(5).changed()
             );
@@ -485,7 +494,7 @@ class ConstraintsDSLCompilationServiceTests {
         new ViolationsOf(
             new Or(
                 java.util.List.of(
-                    new LessThan(new RealResource("my_resource"), new RealValue(2.0)),
+                    new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
                     new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
                     new Changed<>(new ProfileExpression<>(new RealValue(5.0)))
                 )
@@ -499,12 +508,12 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Discrete.Resource("my_resource").changed().not()
+            return Discrete.Resource("mode").changed().not()
           }
         """,
         new ViolationsOf(
             new Not(
-                new Changed<>(new ProfileExpression<>(new DiscreteResource("my_resource")))
+                new Changed<>(new ProfileExpression<>(new DiscreteResource("mode")))
             )
         )
     );
@@ -515,10 +524,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
         export default () => {
-          return Real.Resource("my_resource").equal(Real.Value(-1)).violations();
+          return Real.Resource("state of charge").equal(Real.Value(-1)).violations();
         }
         """,
-        new ViolationsOf(new Equal<>(new RealResource("my_resource"), new RealValue(-1.0)))
+        new ViolationsOf(new Equal<>(new RealResource("state of charge"), new RealValue(-1.0)))
     );
   }
 
@@ -529,10 +538,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
         export default () => {
-          return Constraint.ForbiddenActivityOverlap("some activity", "some other activity")
+          return Constraint.ForbiddenActivityOverlap(ActivityType.activity, ActivityType.activity)
         }
         """,
-        new ForbiddenActivityOverlap("some activity", "some other activity")
+        new ForbiddenActivityOverlap("activity", "activity")
     );
   }
 
@@ -542,13 +551,123 @@ class ConstraintsDSLCompilationServiceTests {
         """
         export default () => {
           return Constraint.ForEachActivity(
-            "activity type",
-            "activity alias",
-            Windows.During("activity alias")
+            ActivityType.activity,
+            (myAlias) => myAlias.window()
           )
         }
         """,
-        new ForEachActivity("activity type", "activity alias", new ViolationsOf(new During("activity alias")))
+        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new During("activity alias 0")))
+    );
+
+    checkSuccessfulCompilation(
+        """
+        import * as Gen from './mission-model-generated-code.js';
+        export default () => {
+          return Constraint.ForEachActivity(
+            ActivityType.activity,
+            myHelperFunction
+          )
+        }
+
+        function myHelperFunction(instance: Gen.ActivityInstance<ActivityType.activity>): Constraint {
+          return instance.window();
+        }
+        """,
+        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new During("activity alias 0")))
+    );
+  }
+
+  @Test
+  void testNestedForEachActivity() {
+    checkSuccessfulCompilation(
+        """
+        export default () => {
+          return Constraint.ForEachActivity(
+            ActivityType.activity,
+            (alias1) => Constraint.ForEachActivity(
+              ActivityType.activity,
+              (alias2) => Windows.All(alias1.window(), alias2.window())
+            )
+          )
+        }
+        """,
+        new ForEachActivity("activity", "activity alias 0", new ForEachActivity("activity", "activity alias 1", new ViolationsOf(
+            new And(new During("activity alias 0"), new During("activity alias 1"))
+        )))
+    );
+  }
+
+  // TYPECHECKING FAILURE TESTS
+
+  @Test
+  void testWrongActivityType() {
+    checkFailedCompilation(
+        """
+        export default () => {
+          return Constraint.ForbiddenActivityOverlap(
+            ActivityType.activity,
+            "other activity"
+          );
+        }
+        """,
+        "TypeError: TS2345 Argument of type '\"other activity\"' is not assignable to parameter of type 'ActivityType'."
+    );
+  }
+
+  @Test
+  void testWrongResource() {
+    checkFailedCompilation(
+        """
+        export default () => {
+          return Discrete.Resource("wrong resource").changed()
+        }
+        """,
+        "TypeError: TS2345 Argument of type '\"wrong resource\"' is not assignable to parameter of type 'ResourceName'."
+    );
+  }
+
+  @Test
+  void testWrongRealResource() {
+    checkFailedCompilation(
+        """
+        export default () => {
+          return Real.Resource("mode").changed()
+        }
+        """,
+        "TypeError: TS2345 Argument of type '\"mode\"' is not assignable to parameter of type 'RealResourceName'."
+    );
+  }
+
+  @Test
+  void testWrongDiscreteSchema() {
+    checkFailedCompilation(
+        """
+        export default () => {
+          return Discrete.Resource("mode").equal(5)
+        }
+        """,
+        "TypeError: TS2345 Argument of type '5' is not assignable to parameter of type '\"Option1\" | \"Option2\" | Discrete<\"Option1\" | \"Option2\">'."
+    );
+
+    checkFailedCompilation(
+        """
+        export default () => {
+          return Discrete.Resource("mode").equal(Discrete.Resource("state of charge"))
+        }
+        """,
+        "TypeError: TS2345 Argument of type 'Discrete<number>' is not assignable to parameter of type '\"Option1\" | \"Option2\" | Discrete<\"Option1\" | \"Option2\">'."
+    );
+
+    checkFailedCompilation(
+        """
+        export default () => {
+          return Constraint.ForEachActivity(
+            ActivityType.activity,
+            (alias) => Discrete.Resource("mode").equal(alias.parameters.Param)
+          )
+        }
+        """,
+        "TypeError: TS2345 Argument of type 'Discrete<string>' is not assignable to parameter of type '\"Option1\" | \"Option2\" | Discrete<\"Option1\" | \"Option2\">'."
     );
   }
 }
