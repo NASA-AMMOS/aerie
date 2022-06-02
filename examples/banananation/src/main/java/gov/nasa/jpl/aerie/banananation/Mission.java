@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.banananation;
 
+import gov.nasa.jpl.aerie.contrib.models.Accumulator;
 import gov.nasa.jpl.aerie.contrib.models.Register;
 import gov.nasa.jpl.aerie.contrib.models.counters.Counter;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
@@ -14,7 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class Mission {
-  public final AdditiveRegister fruit = AdditiveRegister.create(4.0);
+  public final Accumulator fruit = new Accumulator(4.0, 0.0);
   public final AdditiveRegister peel = AdditiveRegister.create(4.0);
   public final Register<Flag> flag = Register.forImmutable(Flag.A);
   public final Register<Integer> lineCount = Register.forImmutable(0);
@@ -30,7 +31,7 @@ public final class Mission {
     registrar.discrete("/flag", this.flag, new EnumValueMapper<>(Flag.class));
     registrar.discrete("/flag/conflicted", this.flag::isConflicted, new BooleanValueMapper());
     registrar.discrete("/peel", this.peel, new DoubleValueMapper());
-    registrar.discrete("/fruit", this.fruit, new DoubleValueMapper());
+    registrar.real("/fruit", this.fruit);
     registrar.discrete("/plant", this.plant, new IntegerValueMapper());
     registrar.discrete("/producer", this.producer, new StringValueMapper());
     registrar.discrete("/data/line_count", this.dataLineCount, new IntegerValueMapper());
