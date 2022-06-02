@@ -10,11 +10,11 @@ import java.util.Map;
 import java.util.Objects;
 
 public record GenerateSchedulingLibAction(
-    TypescriptCodeGenerationService typescriptCodeGenerationService,
+    TypescriptCodeGenerationService schedulingCodeGenService,
     MissionModelService missionModelService
 ) {
   public GenerateSchedulingLibAction {
-    Objects.requireNonNull(typescriptCodeGenerationService);
+    Objects.requireNonNull(schedulingCodeGenService);
     Objects.requireNonNull(missionModelService);
   }
 
@@ -40,15 +40,24 @@ public record GenerateSchedulingLibAction(
       final var schedulerAst = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "scheduler-ast.ts"));
       final var windowsDsl = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "constraints", "constraints-edsl-fluent-api.ts"));
       final var windowsAst = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "constraints", "constraints-ast.ts"));
-      final var generated = this.typescriptCodeGenerationService.generateTypescriptTypesForMissionModel(missionModelService, missionModelId);
+      final var generatedSchedulerCode = this.schedulingCodeGenService.generateTypescriptTypesForMissionModel(missionModelService, missionModelId);
+
+      final var missionModelTypes = missionModelService.getMissionModelTypes(missionModelId);
+
+      final var generatedConstraintsCode = gov.nasa.jpl.aerie.constraints.TypescriptCodeGenerationService
+          .generateTypescriptTypes(
+              SchedulingDSLCompilationService.activityTypes(missionModelTypes),
+              SchedulingDSLCompilationService.resources(missionModelTypes));
       return new Response.Success(
           Map.of("scheduling-edsl-fluent-api.ts", schedulingDsl,
-                 "scheduler-mission-model-generated-code.ts", generated,
+                 "scheduler-mission-model-generated-code.ts", generatedSchedulerCode,
                  "scheduler-ast.ts", schedulerAst,
                  "constraints-edsl-fluent-api.ts", windowsDsl,
-                 "constraints-ast.ts", windowsAst));
-    } catch (NoSuchMissionModelException | IOException e) {
+                 "constraints-ast.ts", windowsAst,
+                 "mission-model-generated-code.ts", generatedConstraintsCode));
+    } catch (NoSuchMissionModelException | IOException | MissionModelService.MissionModelServiceException e) {
       return new Response.Failure(e.getMessage());
     }
   }
+
 }

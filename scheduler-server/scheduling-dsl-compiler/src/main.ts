@@ -44,7 +44,7 @@ process.on('uncaughtException', (err) => {
 
 async function handleRequest(data: string) {
   try {
-    const { goalCode, missionModelGeneratedCode } = JSON.parse(data) as { goalCode: string, missionModelGeneratedCode: string };
+    const { goalCode, schedulerGeneratedCode, constraintsGeneratedCode } = JSON.parse(data) as { goalCode: string, schedulerGeneratedCode: string, constraintsGeneratedCode: string };
 
     const result = await codeRunner.executeUserCode<[], Goal>(
         goalCode,
@@ -55,9 +55,10 @@ async function handleRequest(data: string) {
         [
           ts.createSourceFile('constraints-ast.ts', windowsAST, ts.ScriptTarget.ESNext),
           ts.createSourceFile('constraints-edsl-fluent-api.ts', windowsEDSL, ts.ScriptTarget.ESNext),
+          ts.createSourceFile('mission-model-generated-code.ts', constraintsGeneratedCode, ts.ScriptTarget.ESNext),
           ts.createSourceFile('scheduler-ast.ts', schedulerAST, ts.ScriptTarget.ESNext),
           ts.createSourceFile('scheduler-edsl-fluent-api.ts', schedulerEDSL, ts.ScriptTarget.ESNext),
-          ts.createSourceFile('scheduler-mission-model-generated-code.ts', missionModelGeneratedCode, ts.ScriptTarget.ESNext),
+          ts.createSourceFile('scheduler-mission-model-generated-code.ts', schedulerGeneratedCode, ts.ScriptTarget.ESNext),
         ],
     );
 
