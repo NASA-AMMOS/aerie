@@ -7,6 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 public final class TypescriptCodeGenerationService {
+
+  private static final ValueSchema LINEAR_RESOURCE_SCHEMA = ValueSchema.ofStruct(Map.of(
+      "initial", ValueSchema.REAL,
+      "rate", ValueSchema.REAL));
+
   public record Parameter(String name, ValueSchema schema) {}
   public record ActivityType(List<Parameter> parameters) {}
 
@@ -242,21 +247,8 @@ public final class TypescriptCodeGenerationService {
   }
 
   private static boolean valueSchemaIsNumeric(final ValueSchema valueSchema) {
-    return valueSchema.match(new ValueSchema.DefaultVisitor<>() {
-      @Override
-      protected Boolean onDefault() {
-        return false;
-      }
-
-      @Override
-      public Boolean onReal() {
-        return true;
-      }
-
-      @Override
-      public Boolean onInt() {
-        return true;
-      }
-    });
+    return valueSchema.equals(ValueSchema.INT)
+        || valueSchema.equals(ValueSchema.REAL)
+        || valueSchema.equals(LINEAR_RESOURCE_SCHEMA);
   }
 }
