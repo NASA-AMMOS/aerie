@@ -34,7 +34,7 @@ export type CommandOptions<
       absoluteTime: Temporal.Instant;
     }
   | {
-      epochTime: { epochName: string; time: Temporal.Duration };
+      epochTime: Temporal.Duration;
     }
   | {
       relativeTime: Temporal.Duration;
@@ -68,7 +68,7 @@ declare global {
 
     public absoluteTiming(absoluteTime: Temporal.Instant): Command<A>;
 
-    public epochTiming(epochName: string, epochTime: Temporal.Duration): Command<A>;
+    public epochTiming(epochTime: Temporal.Duration): Command<A>;
 
     public relativeTiming(relativeTime: Temporal.Duration): Command<A>;
   }
@@ -103,7 +103,7 @@ export class Command<
   public readonly metadata: M;
   public readonly arguments: A;
   public readonly absoluteTime: Temporal.Instant | null = null;
-  public readonly epochTime: { epochName: string; time: Temporal.Duration } | null = null;
+  public readonly epochTime: Temporal.Duration | null = null;
   public readonly relativeTime: Temporal.Duration | null = null;
 
   private constructor(opts: CommandOptions<A, M>) {
@@ -148,14 +148,12 @@ export class Command<
         this.absoluteTime !== null
           ? { type: TimingTypes.ABSOLUTE, tag: Command.instantToDoy(this.absoluteTime) }
           : this.epochTime !== null
-          ? { type: TimingTypes.EPOCH_RELATIVE, tag: Command.durationToHms(this.epochTime.time) }
+          ? { type: TimingTypes.EPOCH_RELATIVE, tag: Command.durationToHms(this.epochTime) }
           : this.relativeTime !== null
           ? { type: TimingTypes.COMMAND_RELATIVE, tag: Command.durationToHms(this.relativeTime) }
           : { type: TimingTypes.COMMAND_COMPLETE },
       type: 'command',
-      metadata: {
-        ...(this.epochTime !== null ? { epochName: this.epochTime.epochName } : {}),
-      },
+      metadata: {},
     };
   }
 
@@ -185,11 +183,11 @@ export class Command<
     });
   }
 
-  public epochTiming(epochName: string, epochTime: Temporal.Duration): Command<A> {
+  public epochTiming(epochTime: Temporal.Duration): Command<A> {
     return Command.new({
       stem: this.stem,
       arguments: this.arguments,
-      epochTime: { epochName, time: epochTime },
+      epochTime: epochTime,
     });
   }
 
