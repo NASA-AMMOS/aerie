@@ -326,4 +326,24 @@ function orderCommandArguments(args: { [argName: string]: any }, order: string[]
   return order.map(key => args[key]);
 }
 
+function findAndOrderCommandArguments(
+  commandName: string,
+  args: { [argName: string]: any },
+  argumentOrders: string[][],
+): any {
+  for (const argumentOrder of argumentOrders) {
+    if (argumentOrder.length === Object.keys(args).length) {
+      let difference = argumentOrder
+        .filter((value: string) => !Object.keys(args).includes(value))
+        .concat(Object.keys(args).filter((value: string) => !argumentOrder.includes(value))).length;
+
+      // found correct argument order to apply
+      if (difference === 0) {
+        return orderCommandArguments(args, argumentOrder);
+      }
+    }
+  }
+  throw new Error(`Could not find correct argument order for command: ${commandName}`);
+}
+
 /** END Preface */
