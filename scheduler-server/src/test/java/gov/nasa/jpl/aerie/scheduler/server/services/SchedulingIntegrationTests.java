@@ -339,6 +339,78 @@ public class SchedulingIntegrationTests {
   }
 
   @Test
+  void testLinear_atChangePoints() {
+    // Initial fruit count is 4.0 in default configuration
+    // BiteBanana takes away 1.0
+    // The constraint should be satisfied between the two BiteBananaActivities
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(
+            new MockMerlinService.PlannedActivityInstance(
+                "BiteBanana",
+                Map.of("biteSize", SerializedValue.of(1.0)),
+                Duration.of(2, Duration.HOURS)),
+            new MockMerlinService.PlannedActivityInstance(
+                "BiteBanana",
+                Map.of("biteSize", SerializedValue.of(1.0)),
+                Duration.of(4, Duration.HOURS))
+        ),
+
+        List.of("""
+                export default (): Goal => {
+                 return Goal.CoexistenceGoal({
+                   activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                   forEach: Windows.All(
+                     Real.Resource("/fruit").lessThan(4.0),
+                     Real.Resource("/fruit").greaterThan(2.0)
+                   )
+                 })
+               }"""));
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    assertEquals(3, results.updatedPlan().size());
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
+    assertTrue(peelBanana.startTime().noShorterThan(Duration.of(2, Duration.HOURS)), "PeelBanana was placed at %s which is before the start/end of BiteBanana at %s".formatted(peelBanana.startTime(), Duration.of(2, Duration.HOURS)));
+    assertTrue(peelBanana.startTime().noLongerThan(Duration.of(4, Duration.HOURS)), "PeelBanana was placed at %s which is before the start/end of BiteBanana at %s".formatted(peelBanana.startTime(), Duration.of(4, Duration.HOURS)));
+    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.args());
+  }
+
+  @Test
+  void testLinear_interpolated() {
+    // Initial fruit count is 4.0 in default configuration
+    // GrowBanana takes it from 4.0 to 7.0 in 3 hours
+    // The constraint should be satisfied between the two BiteBananaActivities
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(
+            new MockMerlinService.PlannedActivityInstance(
+                "GrowBanana",
+                Map.of("quantity", SerializedValue.of(3.0),
+                       "growingDuration", new DurationValueMapper().serializeValue(Duration.of(3, Duration.HOURS))),
+                Duration.of(1, Duration.HOURS))),
+
+        List.of("""
+                export default (): Goal => {
+                 return Goal.CoexistenceGoal({
+                   activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromTip"}),
+                   forEach: Windows.All(
+                     Real.Resource("/fruit").greaterThan(5.0),
+                     Real.Resource("/fruit").lessThan(6.0),
+                   )
+                 })
+               }"""));
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    assertEquals(2, results.updatedPlan().size());
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
+    assertTrue(peelBanana.startTime().noShorterThan(Duration.of(2, Duration.HOURS)), "PeelBanana was placed at %s which is before the start/end of GrowBanana at %s".formatted(peelBanana.startTime(), Duration.of(2, Duration.HOURS)));
+    assertTrue(peelBanana.startTime().noLongerThan(Duration.of(3, Duration.HOURS)), "PeelBanana was placed at %s which is before the start/end of GrowBanana at %s".formatted(peelBanana.startTime(), Duration.of(3, Duration.HOURS)));
+    assertEquals(Map.of("peelDirection", SerializedValue.of("fromTip")), peelBanana.args());
+  }
+
+  @Test
   void testEqualTo_satsified() {
     // Initial plant count is 200 in default configuration
     // PickBanana removes 100
