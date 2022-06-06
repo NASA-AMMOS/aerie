@@ -27,6 +27,7 @@ import { InheritedError } from './utils/InheritedError.js';
 import { defaultSeqBuilder } from './defaultSeqBuilder.js';
 import { CommandSeqJson, Command, Sequence } from './lib/codegen/CommandEDSLPreface.js';
 import { assertOne } from './utils/assertions.js';
+import { Status } from './common.js';
 
 const logger = getLogger('app');
 
@@ -270,11 +271,25 @@ app.post('/get-command-typescript', async (req, res, next) => {
   const context: Context = res.locals.context;
 
   const commandDictionaryId = req.body.input.commandDictionaryId as number;
-  const commandTypescript = await context.commandTypescriptDataLoader.load({ dictionaryId: commandDictionaryId });
 
-  res.status(200).json({
-    typescript: commandTypescript,
-  });
+  try {
+    const commandTypescript = await context.commandTypescriptDataLoader.load({ dictionaryId: commandDictionaryId });
+
+    res.status(200).json({
+      status: Status.SUCCESS,
+      typescriptFiles: [{
+        filePath: 'command-types.ts',
+        content: commandTypescript,
+      }],
+      reason: null,
+    });
+  } catch (e) {
+    res.status(200).json({
+      status: Status.FAILURE,
+      typescriptFiles: null,
+      reason: (e as Error).message,
+    });
+  }
   return next();
 });
 
@@ -288,7 +303,12 @@ app.post('/get-activity-typescript', async (req, res, next) => {
   const activityTypescript = generateTypescriptForGraphQLActivitySchema(activitySchema);
 
   res.status(200).json({
-    typescript: activityTypescript,
+    status: Status.SUCCESS,
+    typescriptFiles: [{
+      filePath: 'activity-types.ts',
+      content: activityTypescript,
+    }],
+    reason: null,
   });
   return next();
 });

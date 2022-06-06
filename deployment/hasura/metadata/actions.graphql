@@ -53,12 +53,13 @@ type Query {
   getActivityTypeScript(
     missionModelId: Int!
     activityTypeName: String!
-  ): TypeScriptResponse
+  ): DslTypescriptResponse
 }
 
 type Query {
   getCommandTypeScript(
-  commandDictionaryId: Int!): TypeScriptResponse
+    commandDictionaryId: Int!
+  ): DslTypescriptResponse
 }
 
 type Query {
@@ -170,7 +171,7 @@ type SchedulingResponse {
 
 type DslTypescriptResponse {
   status: DslTypescriptResponseStatus!
-  typescriptFiles: [TypescriptFile]
+  typescriptFiles: [TypescriptFile!]
   reason: String
 }
 
@@ -195,10 +196,6 @@ type ExpansionSetResponse {
 type AddCommandExpansionResponse {
   id: Int!
   errors: [UserCodeError!]
-}
-
-type TypeScriptResponse {
-  typescript: String!
 }
 
 type ExpandAllActivitiesResponse {
