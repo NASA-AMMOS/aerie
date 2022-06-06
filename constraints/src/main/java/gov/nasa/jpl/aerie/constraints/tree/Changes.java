@@ -10,10 +10,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class Changed<P extends Profile<P>> implements Expression<Windows> {
+public final class Changes<P extends Profile<P>> implements Expression<Windows> {
   public final ProfileExpression<P> expression;
 
-  public Changed(final ProfileExpression<P> expression) {
+  public Changes(final ProfileExpression<P> expression) {
     this.expression = expression;
   }
 
@@ -38,8 +38,8 @@ public final class Changed<P extends Profile<P>> implements Expression<Windows> 
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof Changed)) return false;
-    final var o = (Changed<?>)obj;
+    if (!(obj instanceof Changes)) return false;
+    final var o = (Changes<?>)obj;
 
     return Objects.equals(this.expression, o.expression);
   }

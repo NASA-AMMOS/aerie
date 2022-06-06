@@ -191,9 +191,9 @@ export class Real {
     });
   }
 
-  public changed(): Windows {
+  public changes(): Windows {
     return new Windows({
-      kind: AST.NodeKind.ProfileChanged,
+      kind: AST.NodeKind.ProfileChanges,
       expression: this.__astNode,
     });
   }
@@ -249,9 +249,9 @@ export class Discrete<Schema> {
     });
   }
 
-  public changed(): Windows {
+  public changes(): Windows {
     return new Windows({
-      kind: AST.NodeKind.ProfileChanged,
+      kind: AST.NodeKind.ProfileChanges,
       expression: this.__astNode,
     });
   }
@@ -403,7 +403,7 @@ declare global {
     /**
      * Produce an instantaneous window whenever this profile changes.
      */
-    public changed(): Windows;
+    public changes(): Windows;
   }
 
   export class Discrete<Schema> {
@@ -460,7 +460,7 @@ declare global {
     /**
      * Produce an instantaneous window whenever this profile changes.
      */
-    public changed(): Windows;
+    public changes(): Windows;
   }
 
   type Duration = number;

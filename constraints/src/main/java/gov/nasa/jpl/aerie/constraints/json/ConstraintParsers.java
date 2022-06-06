@@ -254,12 +254,12 @@ public final class ConstraintParsers {
             $ -> tuple(Unit.UNIT, $.activityType, $.alias, $.expression)));
   }
 
-  static final JsonParser<Changed<?>> changedP =
+  static final JsonParser<Changes<?>> changesP =
       productP
-          .field("kind", literalP("ProfileChanged"))
+          .field("kind", literalP("ProfileChanges"))
           .field("expression", profileExpressionP)
           .map(Iso.of(
-              untuple((kind, expression) -> new Changed<>(expression)),
+              untuple((kind, expression) -> new Changes<>(expression)),
               $ -> tuple(Unit.UNIT, $.expression)));
 
   public static final JsonParser<Expression<Windows>> windowsExpressionP =
@@ -267,7 +267,7 @@ public final class ConstraintParsers {
           activityWindowP,
           startOfP,
           endOfP,
-          changedP,
+          changesP,
           lessThanP,
           lessThanOrEqualP,
           greaterThanOrEqualP,

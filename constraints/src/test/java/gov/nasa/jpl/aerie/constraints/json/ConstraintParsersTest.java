@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.json;
 
 import gov.nasa.jpl.aerie.constraints.tree.All;
-import gov.nasa.jpl.aerie.constraints.tree.Changed;
+import gov.nasa.jpl.aerie.constraints.tree.Changes;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
@@ -51,10 +51,10 @@ public final class ConstraintParsersTest {
   }
 
   @Test
-  public void testParseChanged() {
+  public void testParseChanges() {
     final var json = Json
         .createObjectBuilder()
-        .add("kind", "ProfileChanged")
+        .add("kind", "ProfileChanges")
         .add("expression", Json
             .createObjectBuilder()
             .add("kind", "DiscreteProfileValue")
@@ -63,7 +63,7 @@ public final class ConstraintParsersTest {
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
 
     final var expected =
-        new Changed<>(
+        new Changes<>(
             new ProfileExpression<>(
                 new DiscreteValue(SerializedValue.of(false))));
 

@@ -22,7 +22,7 @@ export enum NodeKind {
   WindowsExpressionAny = 'WindowsExpressionAny',
   WindowsExpressionInvert = 'WindowsExpressionInvert',
   ForEachActivity = 'ForEachActivity',
-  ProfileChanged = 'ProfileChanged',
+  ProfileChanges = 'ProfileChanges',
   ViolationsOf = 'ViolationsOf',
 }
 
@@ -44,7 +44,7 @@ export type WindowsExpression =
   | WindowsExpressionActivityWindow
   | WindowsExpressionStartOf
   | WindowsExpressionEndOf
-  | ProfileChanged
+  | ProfileChanges
   | RealProfileLessThan
   | RealProfileLessThanOrEqual
   | RealProfileGreaterThan
@@ -58,8 +58,8 @@ export type WindowsExpression =
   | WindowsExpressionAny
   | WindowsExpressionInvert;
 
-export interface ProfileChanged {
-  kind: NodeKind.ProfileChanged;
+export interface ProfileChanges {
+  kind: NodeKind.ProfileChanges;
   expression: ProfileExpression;
 }
 
