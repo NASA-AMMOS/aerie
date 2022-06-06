@@ -9,7 +9,6 @@ import gov.nasa.jpl.aerie.constraints.tree.During;
 import gov.nasa.jpl.aerie.constraints.tree.EndOf;
 import gov.nasa.jpl.aerie.constraints.tree.Equal;
 import gov.nasa.jpl.aerie.constraints.tree.ForEachActivity;
-import gov.nasa.jpl.aerie.constraints.tree.ForbiddenActivityOverlap;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.LessThan;
@@ -605,21 +604,6 @@ public final class ConstraintParsersTest {
                             new DiscreteParameter("B", "b"))),
                     new Not(new During("A")),
                     new Not(new During("B"))))));
-
-    assertEquivalent(expected, result);
-  }
-
-  @Test
-  public void testForbiddenActivityOverlap() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "ForbiddenActivityOverlap")
-        .add("activityType1", "A")
-        .add("activityType2", "B")
-        .build();
-    final var result = constraintP.parse(json).getSuccessOrThrow();
-
-    final var expected = new ForbiddenActivityOverlap("A", "B");
 
     assertEquivalent(expected, result);
   }

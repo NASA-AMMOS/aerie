@@ -23,21 +23,14 @@ export enum NodeKind {
   WindowsExpressionNot = 'WindowsExpressionNot',
   ForEachActivity = 'ForEachActivity',
   ProfileChanged = 'ProfileChanged',
-  ForbiddenActivityOverlap = 'ForbiddenActivityOverlap',
   ViolationsOf = 'ViolationsOf',
 }
 
-export type Constraint = ViolationsOf | ForbiddenActivityOverlap | ForEachActivity | WindowsExpression;
+export type Constraint = ViolationsOf | ForEachActivity | WindowsExpression;
 
 export interface ViolationsOf {
   kind: NodeKind.ViolationsOf;
   expression: WindowsExpression;
-}
-
-export interface ForbiddenActivityOverlap {
-  kind: NodeKind.ForbiddenActivityOverlap;
-  activityType1: string;
-  activityType2: string;
 }
 
 export interface ForEachActivity {

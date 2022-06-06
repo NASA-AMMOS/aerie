@@ -541,7 +541,15 @@ class ConstraintsDSLCompilationServiceTests {
           return Constraint.ForbiddenActivityOverlap(ActivityType.activity, ActivityType.activity)
         }
         """,
-        new ForbiddenActivityOverlap("activity", "activity")
+        new ForEachActivity(
+            "activity",
+            "activity alias 0",
+            new ForEachActivity(
+                "activity",
+                "activity alias 1",
+                new ViolationsOf(new Not(new And(new During("activity alias 0"), new During("activity alias 1"))))
+            )
+        )
     );
   }
 

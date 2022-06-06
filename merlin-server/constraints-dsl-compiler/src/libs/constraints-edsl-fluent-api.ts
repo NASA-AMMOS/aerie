@@ -12,11 +12,13 @@ export class Constraint {
   }
 
   public static ForbiddenActivityOverlap(activityType1: Gen.ActivityType, activityType2: Gen.ActivityType): Constraint {
-    return new Constraint({
-      kind: AST.NodeKind.ForbiddenActivityOverlap,
-      activityType1,
-      activityType2,
-    });
+    return Constraint.ForEachActivity(
+        activityType1,
+        activity1 => Constraint.ForEachActivity(
+            activityType2,
+            activity2 => Windows.All(activity1.window(), activity2.window()).not()
+        )
+    )
   }
 
   public static ForEachActivity<A extends Gen.ActivityType>(

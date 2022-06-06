@@ -281,15 +281,6 @@ public final class ConstraintParsers {
           anyF(selfP),
           notF(selfP)));
 
-  static final JsonParser<ForbiddenActivityOverlap> forbiddenActivityOverlapP =
-      productP
-          .field("kind", literalP("ForbiddenActivityOverlap"))
-          .field("activityType1", stringP)
-          .field("activityType2", stringP)
-          .map(Iso.of(
-              untuple((kind, act1, act2) -> new ForbiddenActivityOverlap(act1, act2)),
-              $ -> tuple(Unit.UNIT, $.activityType1, $.activityType2)));
-
   static final JsonParser<ViolationsOf> violationsOfP =
       productP
           .field("kind", literalP("ViolationsOf"))
@@ -304,6 +295,5 @@ public final class ConstraintParsers {
       recursiveP(selfP -> chooseP(
           forEachActivityF(selfP),
           windowsExpressionP.map(Iso.of(ViolationsOf::new, $ -> $.expression)),
-          violationsOfP,
-          forbiddenActivityOverlapP));
+          violationsOfP));
 }
