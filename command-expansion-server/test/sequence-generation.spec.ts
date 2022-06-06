@@ -67,6 +67,7 @@ afterEach(async () => {
   await removeExpansionSet(graphqlClient, expansionSetId);
   await removeExpansion(graphqlClient, expansionId1);
   await removeExpansion(graphqlClient, expansionId2);
+  await removeCommandDictionary(graphqlClient, commandDictionaryId);
 });
 
 it('should return sequence seqjson', async () => {
@@ -123,7 +124,6 @@ it('should return sequence seqjson', async () => {
 
   // Cleanup
   {
-    await removeCommandDictionary(graphqlClient, commandDictionaryId);
     await removeSequence(graphqlClient, sequencePk);
   }
 }, 10000);
@@ -208,7 +208,6 @@ it('should work for throwing expansions', async () => {
 
   // Cleanup
   {
-    await removeCommandDictionary(graphqlClient, commandDictionaryId);
     await removeSequence(graphqlClient, sequencePk);
     await removeExpansion(graphqlClient, expansionId3);
   }
@@ -271,7 +270,6 @@ it('should work for non-existent expansions', async () => {
 
   // Cleanup
   {
-    await removeCommandDictionary(graphqlClient, commandDictionaryId);
     await removeSequence(graphqlClient, sequencePk);
   }
 }, 10000);
