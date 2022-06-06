@@ -7,7 +7,7 @@ create view simulated_activity as
          span.duration as duration,
          span.attributes as attributes,
          span.type as activity_type_name,
-         span.attributes#>>'{directiveId}' as directive_id
+         (span.attributes#>>'{directiveId}')::integer as directive_id
 
    from span
      join dataset on span.dataset_id = dataset.id
