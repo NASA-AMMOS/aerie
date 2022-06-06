@@ -9,10 +9,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class Not implements Expression<Windows> {
+public final class Invert implements Expression<Windows> {
   public final Expression<Windows> expression;
 
-  public Not(final Expression<Windows> expression) {
+  public Invert(final Expression<Windows> expression) {
     this.expression = expression;
   }
 
@@ -39,8 +39,8 @@ public final class Not implements Expression<Windows> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof Not)) return false;
-    final var o = (Not)obj;
+    if (!(obj instanceof Invert)) return false;
+    final var o = (Invert)obj;
 
     return Objects.equals(this.expression, o.expression);
   }

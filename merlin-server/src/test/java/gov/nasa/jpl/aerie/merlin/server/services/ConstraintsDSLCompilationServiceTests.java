@@ -446,7 +446,7 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOf(
             new Any(
-                new Not(new Changed<>(
+                new Invert(new Changed<>(
                     new ProfileExpression<>(new DiscreteResource("mode"))
                 )),
                 new LessThan(new RealResource("state of charge"), new RealValue(2.0))
@@ -504,15 +504,15 @@ class ConstraintsDSLCompilationServiceTests {
   }
 
   @Test
-  void testNot() {
+  void testInvert() {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Discrete.Resource("mode").changed().not()
+            return Discrete.Resource("mode").changed().invert()
           }
         """,
         new ViolationsOf(
-            new Not(
+            new Invert(
                 new Changed<>(new ProfileExpression<>(new DiscreteResource("mode")))
             )
         )
@@ -547,7 +547,7 @@ class ConstraintsDSLCompilationServiceTests {
             new ForEachActivity(
                 "activity",
                 "activity alias 1",
-                new ViolationsOf(new Not(new All(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))))
+                new ViolationsOf(new Invert(new All(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))))
             )
         )
     );

@@ -39,7 +39,7 @@ public class ASTTests {
     windows.add(Window.between(10, Exclusive, 15, Exclusive, SECONDS));
     windows.add(Window.at(20, SECONDS));
 
-    final var result = new Not(Supplier.of(windows)).evaluate(simResults, Map.of());
+    final var result = new Invert(Supplier.of(windows)).evaluate(simResults, Map.of());
 
     final var expected = new Windows();
     expected.add(Window.between(5, Inclusive, 10, Inclusive, SECONDS));

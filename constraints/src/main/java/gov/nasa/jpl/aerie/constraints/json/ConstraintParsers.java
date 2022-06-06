@@ -234,12 +234,12 @@ public final class ConstraintParsers {
             $ -> tuple(Unit.UNIT, $.expressions)));
   }
 
-  static JsonParser<Not> notF(final JsonParser<Expression<Windows>> windowsExpressionP) {
+  static JsonParser<Invert> invertF(final JsonParser<Expression<Windows>> windowsExpressionP) {
     return productP
-        .field("kind", literalP("WindowsExpressionNot"))
+        .field("kind", literalP("WindowsExpressionInvert"))
         .field("expression", windowsExpressionP)
         .map(Iso.of(
-            untuple((kind, expr) -> new Not(expr)),
+            untuple((kind, expr) -> new Invert(expr)),
             $ -> tuple(Unit.UNIT, $.expression)));
   }
 
@@ -279,7 +279,7 @@ public final class ConstraintParsers {
           notEqualF(discreteProfileExprP),
           allF(selfP),
           anyF(selfP),
-          notF(selfP)));
+          invertF(selfP)));
 
   static final JsonParser<ViolationsOf> violationsOfP =
       productP

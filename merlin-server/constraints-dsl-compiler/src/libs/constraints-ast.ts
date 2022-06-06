@@ -20,7 +20,7 @@ export enum NodeKind {
   RealProfileGreaterThanOrEqual = 'RealProfileGreaterThanOrEqual',
   WindowsExpressionAll = 'WindowsExpressionAll',
   WindowsExpressionAny = 'WindowsExpressionAny',
-  WindowsExpressionNot = 'WindowsExpressionNot',
+  WindowsExpressionInvert = 'WindowsExpressionInvert',
   ForEachActivity = 'ForEachActivity',
   ProfileChanged = 'ProfileChanged',
   ViolationsOf = 'ViolationsOf',
@@ -56,15 +56,15 @@ export type WindowsExpression =
   | ExpressionNotEqual<DiscreteProfileExpression>
   | WindowsExpressionAll
   | WindowsExpressionAny
-  | WindowsExpressionNot;
+  | WindowsExpressionInvert;
 
 export interface ProfileChanged {
   kind: NodeKind.ProfileChanged;
   expression: ProfileExpression;
 }
 
-export interface WindowsExpressionNot {
-  kind: NodeKind.WindowsExpressionNot;
+export interface WindowsExpressionInvert {
+  kind: NodeKind.WindowsExpressionInvert;
   expression: WindowsExpression;
 }
 

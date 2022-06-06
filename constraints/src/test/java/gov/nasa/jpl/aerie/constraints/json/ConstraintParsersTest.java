@@ -13,7 +13,7 @@ import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.LessThan;
 import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
-import gov.nasa.jpl.aerie.constraints.tree.Not;
+import gov.nasa.jpl.aerie.constraints.tree.Invert;
 import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
 import gov.nasa.jpl.aerie.constraints.tree.Any;
 import gov.nasa.jpl.aerie.constraints.tree.Plus;
@@ -471,10 +471,10 @@ public final class ConstraintParsersTest {
   }
 
   @Test
-  public void testParseNot() {
+  public void testParseInvert() {
     final var json = Json
         .createObjectBuilder()
-        .add("kind", "WindowsExpressionNot")
+        .add("kind", "WindowsExpressionInvert")
         .add("expression", Json
             .createObjectBuilder()
             .add("kind", "WindowsExpressionActivityWindow")
@@ -484,7 +484,7 @@ public final class ConstraintParsersTest {
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
 
     final var expected =
-        new Not(
+        new Invert(
             new ActivityWindow("A"));
 
     assertEquivalent(expected, result);
@@ -538,7 +538,7 @@ public final class ConstraintParsersTest {
                                  .createArrayBuilder()
                                  .add(Json
                                           .createObjectBuilder()
-                                          .add("kind", "WindowsExpressionNot")
+                                          .add("kind", "WindowsExpressionInvert")
                                           .add("expression", Json
                                               .createObjectBuilder()
                                               .add("kind", "RealProfileLessThan")
@@ -569,14 +569,14 @@ public final class ConstraintParsersTest {
                                               .add("name", "b")))))
                     .add(Json
                              .createObjectBuilder()
-                             .add("kind", "WindowsExpressionNot")
+                             .add("kind", "WindowsExpressionInvert")
                              .add("expression", Json
                                  .createObjectBuilder()
                                  .add("kind", "WindowsExpressionActivityWindow")
                                  .add("alias", "A")))
                     .add(Json
                              .createObjectBuilder()
-                             .add("kind", "WindowsExpressionNot")
+                             .add("kind", "WindowsExpressionInvert")
                              .add("expression", Json
                                  .createObjectBuilder()
                                  .add("kind", "WindowsExpressionActivityWindow")
@@ -593,7 +593,7 @@ public final class ConstraintParsersTest {
             new ViolationsOf(
                 new Any(
                     new Any(
-                        new Not(
+                        new Invert(
                             new LessThan(
                                 new Times(
                                     new RealResource("ResC"),
@@ -602,8 +602,8 @@ public final class ConstraintParsersTest {
                         new Equal<>(
                             new DiscreteValue(SerializedValue.of(false)),
                             new DiscreteParameter("B", "b"))),
-                    new Not(new ActivityWindow("A")),
-                    new Not(new ActivityWindow("B"))))));
+                    new Invert(new ActivityWindow("A")),
+                    new Invert(new ActivityWindow("B"))))));
 
     assertEquivalent(expected, result);
   }
