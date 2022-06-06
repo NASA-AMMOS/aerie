@@ -142,7 +142,10 @@ export class Command<
 
   public toSeqJson(): CommandSeqJson {
     return {
-      args: typeof this.arguments == 'object' ? Object.values(this.arguments) : this.arguments,
+      args:
+        typeof this.arguments == 'object'
+          ? this.serializeArguments(Object.values(this.arguments))
+          : this.serializeArguments(this.arguments),
       stem: this.stem,
       time:
         this.absoluteTime !== null
@@ -155,6 +158,16 @@ export class Command<
       type: 'command',
       metadata: {},
     };
+  }
+
+  private serializeArguments(args: ArgType[]): ArgType[] {
+    return args.map(arg => {
+      if (typeof arg == 'boolean') {
+        // Europa Clipper boolean values are 0 or 1
+        return arg ? 1 : 0;
+      }
+      return arg;
+    });
   }
 
   public static fromSeqJson<A extends ArgType[]>(json: CommandSeqJson<A>): Command<A> {
