@@ -164,7 +164,7 @@ export class Command<
         : json.time.type === TimingTypes.COMMAND_RELATIVE
         ? { relativeTime: Command.hmsToDuration(json.time.tag) }
         : json.time.type === TimingTypes.EPOCH_RELATIVE
-        ? { epochTime: { epochName: json.metadata.epochName, time: Command.hmsToDuration(json.time.tag) } }
+        ? { epochTime: Command.hmsToDuration(json.time.tag) }
         : {};
 
     return Command.new<A>({
