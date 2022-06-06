@@ -66,8 +66,7 @@ public final class AerieAppDriver {
         planController,
         missionModelController,
         simulationController,
-        constraintsDSLCompilationService,
-        configuration.useNewConstraintPipeline()
+        constraintsDSLCompilationService
     );
     final var generateConstraintsLibAction = new GenerateConstraintsLibAction(typescriptCodeGenerationService);
     final var merlinBindings = new MerlinBindings(
@@ -141,8 +140,7 @@ public final class AerieAppDriver {
                           getEnv("MERLIN_DB_USER","aerie"),
                           Integer.parseInt(getEnv("MERLIN_DB_PORT","5432")),
                           getEnv("MERLIN_DB_PASSWORD","aerie"),
-                          getEnv("MERLIN_DB","aerie_merlin")),
-        Boolean.parseBoolean(getEnv("MERLIN_USE_NEW_CONSTRAINT_PIPELINE", "false"))
+                          getEnv("MERLIN_DB","aerie_merlin"))
     );
   }
 }
