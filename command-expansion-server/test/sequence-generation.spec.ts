@@ -48,7 +48,7 @@ beforeEach(async () => {
     return [
       PREHEAT_OVEN({temperature: 70}),
       BAKE_BREAD,
-      PREPARE_LOAF(50, false),
+      PREPARE_LOAF(50, true),
     ];
   }
   `,
@@ -111,11 +111,11 @@ it('should return sequence seqjson', async () => {
   expect(getSequenceSeqJson.metadata).toEqual({});
   expect(getSequenceSeqJson.steps).toEqual([
     { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: {} },
-    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: {} },
+    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, 0], metadata: {} },
     { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: {} },
     { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: {} },
     { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: {} },
-    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: {} },
+    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, 1], metadata: {} },
   ]);
 
   // Cleanup
@@ -185,11 +185,11 @@ it('should work for throwing expansions', async () => {
   expect(getSequenceSeqJson.metadata).toEqual({});
   expect(getSequenceSeqJson.steps).toEqual([
     { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: {} },
-    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: {} },
+    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, 0], metadata: {} },
     { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: {} },
     { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: {} },
     { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: {} },
-    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: {} },
+    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, 1], metadata: {} },
     {
       type: 'command',
       stem: '$$ERROR$$',
@@ -252,11 +252,11 @@ it('should work for non-existent expansions', async () => {
   expect(getSequenceSeqJson.metadata).toEqual({});
   expect(getSequenceSeqJson.steps).toEqual([
     { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: {} },
-    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: {} },
+    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, 0], metadata: {} },
     { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: {} },
     { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: {} },
     { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: {} },
-    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: {} },
+    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, 1], metadata: {} },
   ]);
 
   // Cleanup
