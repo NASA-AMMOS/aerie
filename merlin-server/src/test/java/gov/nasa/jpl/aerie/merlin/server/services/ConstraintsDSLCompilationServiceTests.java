@@ -191,10 +191,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
         export default () => {
-          return Discrete.Resource("state of charge").notEqual(4.0);
+          return Discrete.Resource("an integer").notEqual(4.0);
         }
         """,
-        new ViolationsOf(new NotEqual<>(new DiscreteResource("state of charge"), new DiscreteValue(SerializedValue.of(4.0))))
+        new ViolationsOf(new NotEqual<>(new DiscreteResource("an integer"), new DiscreteValue(SerializedValue.of(4.0))))
     );
   }
 
@@ -663,7 +663,7 @@ class ConstraintsDSLCompilationServiceTests {
           return Discrete.Resource("mode").equal(Discrete.Resource("state of charge"))
         }
         """,
-        "TypeError: TS2345 Argument of type 'Discrete<number>' is not assignable to parameter of type '\"Option1\" | \"Option2\" | Discrete<\"Option1\" | \"Option2\">'."
+        "TypeError: TS2345 Argument of type 'Discrete<{ initial: number; rate: number; }>' is not assignable to parameter of type '\"Option1\" | \"Option2\" | Discrete<\"Option1\" | \"Option2\">'."
     );
 
     checkFailedCompilation(

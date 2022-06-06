@@ -80,7 +80,10 @@ public final class StubMissionModelService implements MissionModelService {
         new ValueSchema.Variant("Option1", "Option1"),
         new ValueSchema.Variant("Option2", "Option2")
     )));
-    RESOURCES.put("state of charge", ValueSchema.REAL);
+    final var stateOfChargeStruct = new LinkedHashMap<String, ValueSchema>();
+    stateOfChargeStruct.put("initial", ValueSchema.REAL);
+    stateOfChargeStruct.put("rate", ValueSchema.REAL);
+    RESOURCES.put("state of charge", ValueSchema.ofStruct(stateOfChargeStruct));
     RESOURCES.put("an integer", ValueSchema.INT);
   }
 
