@@ -385,7 +385,7 @@ public class ASTTests {
             Window.between(4, 8, SECONDS))
     );
 
-    final var result = new During("act").evaluate(simResults, environment);
+    final var result = new ActivityWindow("act").evaluate(simResults, environment);
 
     final var expected = new Windows(Window.between(4, 8, SECONDS));
 

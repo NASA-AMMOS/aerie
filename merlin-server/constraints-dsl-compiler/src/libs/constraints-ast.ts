@@ -9,7 +9,7 @@ export enum NodeKind {
   RealProfileTimes = 'RealProfileTimes',
   RealProfileRate = 'RealProfileRate',
   DiscreteProfileTransition = 'DiscreteProfileTransition',
-  WindowsExpressionDuring = 'WindowsExpressionDuring',
+  WindowsExpressionActivityWindow = 'WindowsExpressionActivityWindow',
   WindowsExpressionStartOf = 'WindowsExpressionStartOf',
   WindowsExpressionEndOf = 'WindowsExpressionEndOf',
   ExpressionEqual = 'ExpressionEqual',
@@ -41,7 +41,7 @@ export interface ForEachActivity {
 }
 
 export type WindowsExpression =
-  | WindowsExpressionDuring
+  | WindowsExpressionActivityWindow
   | WindowsExpressionStartOf
   | WindowsExpressionEndOf
   | ProfileChanged
@@ -124,8 +124,8 @@ export interface WindowsExpressionStartOf {
   alias: string;
 }
 
-export interface WindowsExpressionDuring {
-  kind: NodeKind.WindowsExpressionDuring;
+export interface WindowsExpressionActivityWindow {
+  kind: NodeKind.WindowsExpressionActivityWindow;
   alias: string;
 }
 

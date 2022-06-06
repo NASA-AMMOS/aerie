@@ -136,12 +136,12 @@ public final class ConstraintParsers {
               untuple((kind, profile, from, to) -> new Transition(profile, from, to)),
               $ -> tuple(Unit.UNIT, $.profile, $.oldState, $.newState)));
 
-  static final JsonParser<During> duringP =
+  static final JsonParser<ActivityWindow> activityWindowP =
       productP
-          .field("kind", literalP("WindowsExpressionDuring"))
+          .field("kind", literalP("WindowsExpressionActivityWindow"))
           .field("alias", stringP)
           .map(Iso.of(
-              untuple((kind, alias) -> new During(alias)),
+              untuple((kind, alias) -> new ActivityWindow(alias)),
               $ -> tuple(Unit.UNIT, $.activityAlias)));
 
   static final JsonParser<StartOf> startOfP =
@@ -264,7 +264,7 @@ public final class ConstraintParsers {
 
   public static final JsonParser<Expression<Windows>> windowsExpressionP =
       recursiveP(selfP -> chooseP(
-          duringP,
+          activityWindowP,
           startOfP,
           endOfP,
           changedP,

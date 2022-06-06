@@ -407,7 +407,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.window());
           }
         """,
-        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new During("activity alias 0")))
+        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new ActivityWindow("activity alias 0")))
     );
   }
 
@@ -547,7 +547,7 @@ class ConstraintsDSLCompilationServiceTests {
             new ForEachActivity(
                 "activity",
                 "activity alias 1",
-                new ViolationsOf(new Not(new All(new During("activity alias 0"), new During("activity alias 1"))))
+                new ViolationsOf(new Not(new All(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))))
             )
         )
     );
@@ -564,7 +564,7 @@ class ConstraintsDSLCompilationServiceTests {
           )
         }
         """,
-        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new During("activity alias 0")))
+        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new ActivityWindow("activity alias 0")))
     );
 
     checkSuccessfulCompilation(
@@ -581,7 +581,7 @@ class ConstraintsDSLCompilationServiceTests {
           return instance.window();
         }
         """,
-        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new During("activity alias 0")))
+        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new ActivityWindow("activity alias 0")))
     );
   }
 
@@ -600,7 +600,7 @@ class ConstraintsDSLCompilationServiceTests {
         }
         """,
         new ForEachActivity("activity", "activity alias 0", new ForEachActivity("activity", "activity alias 1", new ViolationsOf(
-            new All(new During("activity alias 0"), new During("activity alias 1"))
+            new All(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))
         )))
     );
   }

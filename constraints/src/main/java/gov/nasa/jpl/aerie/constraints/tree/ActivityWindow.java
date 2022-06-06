@@ -9,10 +9,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class During implements Expression<Windows> {
+public final class ActivityWindow implements Expression<Windows> {
   public final String activityAlias;
 
-  public During(final String activityAlias) {
+  public ActivityWindow(final String activityAlias) {
     this.activityAlias = activityAlias;
   }
 
@@ -36,8 +36,8 @@ public final class During implements Expression<Windows> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof During)) return false;
-    final var o = (During)obj;
+    if (!(obj instanceof ActivityWindow)) return false;
+    final var o = (ActivityWindow)obj;
 
     return Objects.equals(this.activityAlias, o.activityAlias);
   }

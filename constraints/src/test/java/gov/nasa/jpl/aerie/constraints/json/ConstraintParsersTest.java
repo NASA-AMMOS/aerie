@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Changed;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
-import gov.nasa.jpl.aerie.constraints.tree.During;
+import gov.nasa.jpl.aerie.constraints.tree.ActivityWindow;
 import gov.nasa.jpl.aerie.constraints.tree.EndOf;
 import gov.nasa.jpl.aerie.constraints.tree.Equal;
 import gov.nasa.jpl.aerie.constraints.tree.ForEachActivity;
@@ -219,12 +219,12 @@ public final class ConstraintParsersTest {
   public void testParseDuring() {
     final var json = Json
         .createObjectBuilder()
-        .add("kind", "WindowsExpressionDuring")
+        .add("kind", "WindowsExpressionActivityWindow")
         .add("alias", "TEST")
         .build();
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
 
-    final var expected = new During("TEST");
+    final var expected = new ActivityWindow("TEST");
 
     assertEquivalent(expected, result);
   }
@@ -425,11 +425,11 @@ public final class ConstraintParsersTest {
             .createArrayBuilder()
             .add(Json
                      .createObjectBuilder()
-                     .add("kind", "WindowsExpressionDuring")
+                     .add("kind", "WindowsExpressionActivityWindow")
                      .add("alias", "A"))
             .add(Json
                      .createObjectBuilder()
-                     .add("kind", "WindowsExpressionDuring")
+                     .add("kind", "WindowsExpressionActivityWindow")
                      .add("alias", "B")))
         .build();
 
@@ -437,8 +437,8 @@ public final class ConstraintParsersTest {
 
     final var expected =
         new All(
-            new During("A"),
-            new During("B"));
+            new ActivityWindow("A"),
+            new ActivityWindow("B"));
 
     assertEquivalent(expected, result);
   }
@@ -452,11 +452,11 @@ public final class ConstraintParsersTest {
             .createArrayBuilder()
             .add(Json
                      .createObjectBuilder()
-                     .add("kind", "WindowsExpressionDuring")
+                     .add("kind", "WindowsExpressionActivityWindow")
                      .add("alias", "A"))
             .add(Json
                      .createObjectBuilder()
-                     .add("kind", "WindowsExpressionDuring")
+                     .add("kind", "WindowsExpressionActivityWindow")
                      .add("alias", "B")))
         .build();
 
@@ -464,8 +464,8 @@ public final class ConstraintParsersTest {
 
     final var expected =
         new Any(
-            new During("A"),
-            new During("B"));
+            new ActivityWindow("A"),
+            new ActivityWindow("B"));
 
     assertEquivalent(expected, result);
   }
@@ -477,7 +477,7 @@ public final class ConstraintParsersTest {
         .add("kind", "WindowsExpressionNot")
         .add("expression", Json
             .createObjectBuilder()
-            .add("kind", "WindowsExpressionDuring")
+            .add("kind", "WindowsExpressionActivityWindow")
             .add("alias", "A"))
         .build();
 
@@ -485,7 +485,7 @@ public final class ConstraintParsersTest {
 
     final var expected =
         new Not(
-            new During("A"));
+            new ActivityWindow("A"));
 
     assertEquivalent(expected, result);
   }
@@ -499,7 +499,7 @@ public final class ConstraintParsersTest {
         .add("alias", "A")
         .add("expression", Json
             .createObjectBuilder()
-            .add("kind", "WindowsExpressionDuring")
+            .add("kind", "WindowsExpressionActivityWindow")
             .add("alias", "A"))
         .build();
     final var result = constraintP.parse(json).getSuccessOrThrow();
@@ -509,7 +509,7 @@ public final class ConstraintParsersTest {
             "TypeA",
             "A",
             new ViolationsOf(
-                new During("A")));
+                new ActivityWindow("A")));
 
     assertEquivalent(expected, result);
   }
@@ -572,14 +572,14 @@ public final class ConstraintParsersTest {
                              .add("kind", "WindowsExpressionNot")
                              .add("expression", Json
                                  .createObjectBuilder()
-                                 .add("kind", "WindowsExpressionDuring")
+                                 .add("kind", "WindowsExpressionActivityWindow")
                                  .add("alias", "A")))
                     .add(Json
                              .createObjectBuilder()
                              .add("kind", "WindowsExpressionNot")
                              .add("expression", Json
                                  .createObjectBuilder()
-                                 .add("kind", "WindowsExpressionDuring")
+                                 .add("kind", "WindowsExpressionActivityWindow")
                                  .add("alias", "B"))))))
         .build();
     final var result = constraintP.parse(json).getSuccessOrThrow();
@@ -602,8 +602,8 @@ public final class ConstraintParsersTest {
                         new Equal<>(
                             new DiscreteValue(SerializedValue.of(false)),
                             new DiscreteParameter("B", "b"))),
-                    new Not(new During("A")),
-                    new Not(new During("B"))))));
+                    new Not(new ActivityWindow("A")),
+                    new Not(new ActivityWindow("B"))))));
 
     assertEquivalent(expected, result);
   }

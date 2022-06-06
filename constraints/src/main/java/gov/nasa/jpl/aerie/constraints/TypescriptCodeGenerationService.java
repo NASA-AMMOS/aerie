@@ -116,7 +116,7 @@ public final class TypescriptCodeGenerationService {
                            */
                           public window(): Windows {
                             return new Windows({
-                              kind: AST.NodeKind.WindowsExpressionDuring,
+                              kind: AST.NodeKind.WindowsExpressionActivityWindow,
                               alias: this.__alias
                             });
                           }
