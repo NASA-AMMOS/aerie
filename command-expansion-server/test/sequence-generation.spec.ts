@@ -1,7 +1,7 @@
 import { gql, GraphQLClient } from 'graphql-request';
 import { removeMissionModel, uploadMissionModel } from './utils/MissionModel.js';
 import { createPlan, removePlan } from './utils/Plan.js';
-import { insertActivity, removeActivity } from './utils/Activity.js';
+import { convertActivityIdToSimulatedActivityId, insertActivity, removeActivity } from './utils/Activity.js';
 import { executeSimulation, removeSimulationArtifacts } from './utils/Simulation.js';
 import { expand, insertExpansion, insertExpansionSet, removeExpansion, removeExpansionSet } from './utils/Expansion.js';
 import { insertCommandDictionary, removeCommandDictionary } from './utils/CommandDictionary.js';
@@ -82,6 +82,9 @@ it('should return sequence seqjson', async () => {
     await linkActivityInstance(graphqlClient, sequencePk, activityId2);
   }
 
+  const simulatedActivityId1 = await convertActivityIdToSimulatedActivityId(graphqlClient, simulationArtifactPk.simulationDatasetId, activityId1);
+  const simulatedActivityId2 = await convertActivityIdToSimulatedActivityId(graphqlClient, simulationArtifactPk.simulationDatasetId, activityId2);
+
   const { getSequenceSeqJson } = await graphqlClient.request<{ getSequenceSeqJson: SequenceSeqJson }>(
     gql`
       query GetSeqJsonForSequence($seqId: String!, $simulationDatasetId: Int!) {
@@ -110,12 +113,12 @@ it('should return sequence seqjson', async () => {
   expect(getSequenceSeqJson.id).toBe('test00000');
   expect(getSequenceSeqJson.metadata).toEqual({});
   expect(getSequenceSeqJson.steps).toEqual([
-    { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: {} },
-    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: {} },
-    { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: {} },
-    { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: {} },
-    { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: {} },
-    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: {} },
+    { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: { simulatedActivityId: simulatedActivityId1 } },
+    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: { simulatedActivityId: simulatedActivityId1 } },
+    { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: { simulatedActivityId: simulatedActivityId1 } },
+    { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: { simulatedActivityId: simulatedActivityId2 } },
+    { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: { simulatedActivityId: simulatedActivityId2 } },
+    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: { simulatedActivityId: simulatedActivityId2 } },
   ]);
 
   // Cleanup
@@ -156,6 +159,10 @@ it('should work for throwing expansions', async () => {
     await linkActivityInstance(graphqlClient, sequencePk, activityId3);
   }
 
+  const simulatedActivityId1 = await convertActivityIdToSimulatedActivityId(graphqlClient, simulationArtifactPk.simulationDatasetId, activityId1);
+  const simulatedActivityId2 = await convertActivityIdToSimulatedActivityId(graphqlClient, simulationArtifactPk.simulationDatasetId, activityId2);
+  const simulatedActivityId3 = await convertActivityIdToSimulatedActivityId(graphqlClient, simulationArtifactPk.simulationDatasetId, activityId3);
+
   const { getSequenceSeqJson } = await graphqlClient.request<{ getSequenceSeqJson: SequenceSeqJson }>(
     gql`
       query GetSeqJsonForSequence($seqId: String!, $simulationDatasetId: Int!) {
@@ -184,18 +191,18 @@ it('should work for throwing expansions', async () => {
   expect(getSequenceSeqJson.id).toBe('test00000');
   expect(getSequenceSeqJson.metadata).toEqual({});
   expect(getSequenceSeqJson.steps).toEqual([
-    { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: {} },
-    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: {} },
-    { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: {} },
-    { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: {} },
-    { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: {} },
-    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: {} },
+    { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: { simulatedActivityId: simulatedActivityId1 } },
+    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: { simulatedActivityId: simulatedActivityId1 } },
+    { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: { simulatedActivityId: simulatedActivityId1 } },
+    { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: { simulatedActivityId: simulatedActivityId2 } },
+    { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: { simulatedActivityId: simulatedActivityId2 } },
+    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: { simulatedActivityId: simulatedActivityId2 } },
     {
       type: 'command',
       stem: '$$ERROR$$',
       time: { type: 'COMMAND_COMPLETE' },
       args: ['Error: Unimplemented'],
-      metadata: {},
+      metadata: { simulatedActivityId: simulatedActivityId3 },
     },
   ]);
 
@@ -223,6 +230,9 @@ it('should work for non-existent expansions', async () => {
     await linkActivityInstance(graphqlClient, sequencePk, activityId3);
   }
 
+  const simulatedActivityId1 = await convertActivityIdToSimulatedActivityId(graphqlClient, simulationArtifactPk.simulationDatasetId, activityId1);
+  const simulatedActivityId2 = await convertActivityIdToSimulatedActivityId(graphqlClient, simulationArtifactPk.simulationDatasetId, activityId2);
+
   const { getSequenceSeqJson } = await graphqlClient.request<{ getSequenceSeqJson: SequenceSeqJson }>(
     gql`
       query GetSeqJsonForSequence($seqId: String!, $simulationDatasetId: Int!) {
@@ -251,12 +261,12 @@ it('should work for non-existent expansions', async () => {
   expect(getSequenceSeqJson.id).toBe('test00000');
   expect(getSequenceSeqJson.metadata).toEqual({});
   expect(getSequenceSeqJson.steps).toEqual([
-    { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: {} },
-    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: {} },
-    { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: {} },
-    { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: {} },
-    { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: {} },
-    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: {} },
+    { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: { simulatedActivityId: simulatedActivityId1 } },
+    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: { simulatedActivityId: simulatedActivityId1 } },
+    { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: { simulatedActivityId: simulatedActivityId1 } },
+    { type: 'command', stem: 'PREHEAT_OVEN', time: { type: 'COMMAND_COMPLETE' }, args: [70], metadata: { simulatedActivityId: simulatedActivityId2 } },
+    { type: 'command', stem: 'BAKE_BREAD', time: { type: 'COMMAND_COMPLETE' }, args: [], metadata: { simulatedActivityId: simulatedActivityId2 } },
+    { type: 'command', stem: 'PREPARE_LOAF', time: { type: 'COMMAND_COMPLETE' }, args: [50, false], metadata: { simulatedActivityId: simulatedActivityId2 } },
   ]);
 
   // Cleanup

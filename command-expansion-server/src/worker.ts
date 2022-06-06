@@ -6,6 +6,7 @@ import type { SimulatedActivity } from './lib/batchLoaders/simulatedActivityBatc
 import type { Command } from './lib/codegen/CommandEDSLPreface.js';
 import * as fs from 'fs';
 import getLogger from './utils/logger.js';
+import type { Mutable } from './lib/codegen/CodegenHelpers';
 
 const logger = getLogger('worker');
 
@@ -81,6 +82,12 @@ export async function executeExpansion(opts: {
         commands = [commands];
       }
       const commandsFlat = commands.flat() as Command[];
+      for (const command of commandsFlat) {
+        (command as Mutable<Command>).metadata  = {
+          ...command.metadata,
+          simulatedActivityId: opts.activityInstance.id,
+        };
+      }
       return { activityInstance: opts.activityInstance, commands: commandsFlat.map(c => c.toSeqJson()), errors: [] };
     } else {
       return {
