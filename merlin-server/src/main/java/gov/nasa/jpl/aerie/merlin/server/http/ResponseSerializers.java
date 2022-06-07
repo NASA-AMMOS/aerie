@@ -240,6 +240,15 @@ public final class ResponseSerializers {
         .build();
   }
 
+  public static JsonValue serializeConstraintViolations(final Map<String, List<Violation>> violations) {
+    return Json
+        .createObjectBuilder()
+        .add("constraintViolations", serializeMap(
+            v -> serializeIterable(ResponseSerializers::serializeConstraintViolation, v),
+            violations))
+        .build();
+  }
+
   private static Map<Integer, Pair<String, ValueSchema>> topicsById(List<Triple<Integer, String, ValueSchema>> topics) {
     final Map<Integer, Pair<String, ValueSchema>> topicsById = new HashMap<>();
     for (final var topic : topics) {
