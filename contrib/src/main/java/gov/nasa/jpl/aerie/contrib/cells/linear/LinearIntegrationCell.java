@@ -52,6 +52,7 @@ public final class LinearIntegrationCell {
 
     @Override
     public void apply(final LinearIntegrationCell cell, final LinearAccumulationEffect effect) {
+      cell.accumulatedVolume += effect.deltaVolume;
       cell.rate += effect.deltaRate;
       if (effect.clearVolume) {
         cell.initialVolume = 0;

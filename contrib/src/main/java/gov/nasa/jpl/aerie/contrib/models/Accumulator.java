@@ -1,15 +1,14 @@
 package gov.nasa.jpl.aerie.contrib.models;
 
 import gov.nasa.jpl.aerie.contrib.cells.linear.LinearAccumulationEffect;
+import gov.nasa.jpl.aerie.contrib.cells.linear.LinearAccumulationEvent;
 import gov.nasa.jpl.aerie.contrib.cells.linear.LinearIntegrationCell;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 
-import java.util.function.Function;
-
 public final class Accumulator implements RealResource {
-  private final CellRef<LinearAccumulationEffect, LinearIntegrationCell> ref;
+  private final CellRef<LinearAccumulationEvent, LinearIntegrationCell> ref;
 
   public final Rate rate = new Rate();
 
@@ -18,7 +17,15 @@ public final class Accumulator implements RealResource {
   }
 
   public Accumulator(final double initialVolume, final double initialRate) {
-    this.ref = LinearIntegrationCell.allocate(initialVolume, initialRate, Function.identity());
+    this.ref = LinearIntegrationCell.allocate(initialVolume, initialRate, LinearAccumulationEffect::of);
+  }
+
+  public void add(final double deltaVolume) {
+    this.ref.emit(new LinearAccumulationEvent.AddVolume(deltaVolume));
+  }
+
+  public void subtract(final double deltaVolume) {
+    this.ref.emit(new LinearAccumulationEvent.AddVolume(-deltaVolume));
   }
 
   @Override
@@ -40,7 +47,7 @@ public final class Accumulator implements RealResource {
     }
 
     public void add(final double delta) {
-      Accumulator.this.ref.emit(LinearAccumulationEffect.addRate(delta));
+      Accumulator.this.ref.emit(new LinearAccumulationEvent.AddRate(delta));
     }
 
     @Deprecated

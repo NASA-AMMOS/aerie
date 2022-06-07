@@ -1,5 +1,6 @@
 import * as AST from './scheduler-ast.js';
-import * as WindowsEDSL from './windows-edsl-fluent-api'
+import * as WindowsEDSL from './constraints-edsl-fluent-api'
+import {ActivityType} from "./scheduler-mission-model-generated-code";
 
 interface ActivityRecurrenceGoal extends Goal {}
 interface ActivityCoexistenceGoal extends Goal {}
@@ -43,11 +44,11 @@ export class Goal {
       interval: opts.interval,
     });
   }
-  public static CoexistenceGoal(opts: { activityTemplate: ActivityTemplate, forEach: WindowsEDSL.WindowSet }): ActivityCoexistenceGoal {
+  public static CoexistenceGoal(opts: { activityTemplate: ActivityTemplate, forEach: WindowsEDSL.Windows | ActivityExpression }): ActivityCoexistenceGoal {
     return Goal.new({
       kind: AST.NodeKind.ActivityCoexistenceGoal,
       activityTemplate: opts.activityTemplate,
-      forEach: opts.forEach.__astnode,
+      forEach: opts.forEach.__astNode
     });
   }
   public static CardinalityGoal(opts: { activityTemplate: ActivityTemplate, specification: AST.CardinalityGoalArguments, inPeriod: ClosedOpenInterval }): ActivityCardinalityGoal {
@@ -60,6 +61,26 @@ export class Goal {
   }
 }
 
+class ActivityExpression {
+  public readonly __astNode: AST.ActivityExpression;
+
+  private constructor(__astNode: AST.ActivityExpression) {
+    this.__astNode = __astNode;
+  }
+
+  private static new(__astNode: AST.ActivityExpression): ActivityExpression {
+    return new ActivityExpression(__astNode);
+  }
+
+  public static ofType(activityType: ActivityType): ActivityExpression {
+    return ActivityExpression.new({
+      kind: AST.NodeKind.ActivityExpression,
+      type: activityType
+    })
+  }
+}
+
+
 declare global {
   class Goal {
     public readonly __astNode: AST.GoalSpecifier;
@@ -69,11 +90,13 @@ declare global {
 
     public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): ActivityRecurrenceGoal
 
-    public static CoexistenceGoal(opts: { activityTemplate: ActivityTemplate, forEach: WindowsEDSL.WindowSet }): ActivityCoexistenceGoal
+    public static CoexistenceGoal(opts: { activityTemplate: ActivityTemplate, forEach: WindowsEDSL.Windows | ActivityExpression }): ActivityCoexistenceGoal
 
     public static CardinalityGoal(opts: { activityTemplate: ActivityTemplate, specification: AST.CardinalityGoalArguments, inPeriod: ClosedOpenInterval }): ActivityCardinalityGoal
   }
-  type Duration = number;
+  class ActivityExpression {
+    public static ofType(activityType: ActivityType): ActivityExpression
+  }
   type Double = number;
   type Integer = number;
 }
@@ -82,4 +105,4 @@ export interface ClosedOpenInterval extends AST.ClosedOpenInterval {}
 export interface ActivityTemplate extends AST.ActivityTemplate {}
 
 // Make Goal available on the global object
-Object.assign(globalThis, { Goal });
+Object.assign(globalThis, { Goal, ActivityExpression });

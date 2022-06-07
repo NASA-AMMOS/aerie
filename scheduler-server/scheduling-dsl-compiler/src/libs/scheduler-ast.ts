@@ -1,4 +1,4 @@
-import * as WindowsExpressions from "./windows-expressions-ast";
+import * as WindowsExpressions from "./constraints-ast";
 
 export interface ActivityTemplate {
   activityType: string,
@@ -19,6 +19,7 @@ export enum NodeKind {
   ActivityRecurrenceGoal = 'ActivityRecurrenceGoal',
   ActivityCoexistenceGoal = 'ActivityCoexistenceGoal',
   ActivityCardinalityGoal = 'ActivityCardinalityGoal',
+  ActivityExpression = 'ActivityExpression',
   GoalAnd = 'GoalAnd',
   GoalOr = 'GoalOr'
 }
@@ -52,7 +53,12 @@ export interface ActivityCardinalityGoal {
 export interface ActivityCoexistenceGoal {
   kind: NodeKind.ActivityCoexistenceGoal,
   activityTemplate: ActivityTemplate,
-  forEach: WindowsExpressions.WindowsExpression
+  forEach: WindowsExpressions.WindowsExpression | ActivityExpression
+}
+
+export interface ActivityExpression {
+  kind: NodeKind.ActivityExpression
+  type: string
 }
 
 export type GoalSpecifier =

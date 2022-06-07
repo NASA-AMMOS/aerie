@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
@@ -14,17 +15,19 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class SchedulingDSLCompilationService {
 
   private final Process nodeProcess;
-  private final TypescriptCodeGenerationService typescriptCodeGenerationService;
+  private final TypescriptCodeGenerationService schedulerCodeGenService;
 
-  public SchedulingDSLCompilationService(final TypescriptCodeGenerationService typescriptCodeGenerationService)
+  public SchedulingDSLCompilationService(final TypescriptCodeGenerationService schedulerCodeGenService)
   throws IOException
   {
-    this.typescriptCodeGenerationService = typescriptCodeGenerationService;
+    this.schedulerCodeGenService = schedulerCodeGenService;
     final var schedulingDslCompilerRoot = System.getenv("SCHEDULING_DSL_COMPILER_ROOT");
     final var schedulingDslCompilerCommand = System.getenv("SCHEDULING_DSL_COMPILER_COMMAND");
     final var nodePath = System.getenv("NODE_PATH");
@@ -48,9 +51,19 @@ public class SchedulingDSLCompilationService {
   /**
    * NOTE: This method is not re-entrant (assumes only one call to this method is running at any given time)
    */
-  public SchedulingDSLCompilationResult compileSchedulingGoalDSL(final PlanId planId, final String goalTypescript)
+  public SchedulingDSLCompilationResult compileSchedulingGoalDSL(final MissionModelService missionModelService, final PlanId planId, final String goalTypescript)
   {
-    final var missionModelGeneratedCode = JSONObject.quote(this.typescriptCodeGenerationService.generateTypescriptTypesForPlan(planId));
+    final MissionModelService.MissionModelTypes missionModelTypes;
+    try {
+      missionModelTypes = missionModelService.getMissionModelTypes(planId);
+    } catch (IOException | MissionModelService.MissionModelServiceException e) {
+      throw new Error(e);
+    }
+    final var schedulerGeneratedCode = JSONObject.quote(TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelTypes));
+    final var debug = gov.nasa.jpl.aerie.constraints.TypescriptCodeGenerationService.generateTypescriptTypes(
+        activityTypes(missionModelTypes),
+        resources(missionModelTypes));
+    final var constraintsGeneratedCode = JSONObject.quote(debug);
 
     /*
     * PROTOCOL:
@@ -64,7 +77,7 @@ public class SchedulingDSLCompilationService {
     final var outputReader = this.nodeProcess.inputReader();
     final var quotedGoalTypescript = JSONObject.quote(goalTypescript); // adds extra quotes to start and end
     try {
-      inputWriter.write("{ \"goalCode\": " + quotedGoalTypescript + ", \"missionModelGeneratedCode\": " + missionModelGeneratedCode + " }\n");
+      inputWriter.write("{ \"goalCode\": " + quotedGoalTypescript + ", \"schedulerGeneratedCode\": " + schedulerGeneratedCode + ", \"constraintsGeneratedCode\": " + constraintsGeneratedCode + " }\n");
       inputWriter.flush();
       final var status = outputReader.readLine();
       return switch (status) {
@@ -106,6 +119,32 @@ public class SchedulingDSLCompilationService {
     } catch (JsonParsingException e) {
       throw new InvalidJsonException(e);
     }
+  }
+
+  static Map<String, gov.nasa.jpl.aerie.constraints.TypescriptCodeGenerationService.ActivityType> activityTypes(final MissionModelService.MissionModelTypes missionModelTypes) {
+    return missionModelTypes
+        .activityTypes()
+        .stream()
+        .map(activityType -> Map.entry(
+            activityType.name(),
+            new gov.nasa.jpl.aerie.constraints.TypescriptCodeGenerationService.ActivityType(
+                activityType
+                    .parameters()
+                    .entrySet()
+                    .stream()
+                    .map(entry -> new gov.nasa.jpl.aerie.constraints.TypescriptCodeGenerationService.Parameter(
+                        entry.getKey(),
+                        entry.getValue()))
+                    .toList())))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+  }
+
+  static Map<String, ValueSchema> resources(final MissionModelService.MissionModelTypes missionModelTypes) {
+    return missionModelTypes
+        .resourceTypes()
+        .stream()
+        .map(resourceType -> Map.entry(resourceType.name(), resourceType.schema()))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
   public sealed interface SchedulingDSLCompilationResult {

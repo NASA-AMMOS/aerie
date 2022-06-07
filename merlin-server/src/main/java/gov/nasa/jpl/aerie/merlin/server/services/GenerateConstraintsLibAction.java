@@ -6,7 +6,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Objects;
 
-public record GenerateConstraintsLibAction(TypescriptCodeGenerationService typescriptCodeGenerationService) {
+public record GenerateConstraintsLibAction(ConstraintsCodeGenService typescriptCodeGenerationService) {
   public GenerateConstraintsLibAction {
     Objects.requireNonNull(typescriptCodeGenerationService);
   }

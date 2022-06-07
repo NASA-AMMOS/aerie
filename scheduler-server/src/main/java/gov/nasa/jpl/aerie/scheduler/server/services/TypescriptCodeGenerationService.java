@@ -14,23 +14,17 @@ import java.util.Map;
 
 public class TypescriptCodeGenerationService {
 
-  private final MissionModelService merlinService;
-
-  public TypescriptCodeGenerationService(final MissionModelService merlinService) {
-    this.merlinService = merlinService;
-  }
-
-  public String generateTypescriptTypesForPlan(final PlanId planId) {
+  public String generateTypescriptTypesForPlan(final MissionModelService missionModelService, final PlanId planId) {
     try {
-      return generateTypescriptTypesFromMissionModel(this.merlinService.getMissionModelTypes(planId));
+      return generateTypescriptTypesFromMissionModel(missionModelService.getMissionModelTypes(planId));
     } catch (MissionModelService.MissionModelServiceException | IOException e) {
       throw new Error("Could not fetch mission model types", e);
     }
   }
 
-  public String generateTypescriptTypesForMissionModel(final MissionModelId missionModelId) throws NoSuchMissionModelException {
+  public String generateTypescriptTypesForMissionModel(final MissionModelService missionModelService, final MissionModelId missionModelId) throws NoSuchMissionModelException {
     try {
-      return generateTypescriptTypesFromMissionModel(this.merlinService.getMissionModelTypes(missionModelId));
+      return generateTypescriptTypesFromMissionModel(missionModelService.getMissionModelTypes(missionModelId));
     } catch (MissionModelService.MissionModelServiceException | IOException e) {
       throw new Error("Could not fetch mission model types", e);
     }
@@ -44,7 +38,7 @@ public class TypescriptCodeGenerationService {
     final var result = new ArrayList<String>();
     result.add("/** Start Codegen */");
     result.add("import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';");
-    result.add("import type { WindowSet } from './windows-edsl-fluent-api.js';");
+    result.add("import type { Windows } from './constraints-edsl-fluent-api.js';");
     result.add(generateActivityTypeEnum(activityTypeCodes));
     for (final var activityTypeCode : activityTypeCodes) {
       result.add("interface %s extends ActivityTemplate {}".formatted(activityTypeCode.activityTypeName()));
@@ -52,17 +46,6 @@ public class TypescriptCodeGenerationService {
     result.add(generateActivityTemplateConstructors(activityTypeCodes));
 
     result.add(generateResourceTypes(missionModelTypes.resourceTypes()));
-
-    final var resourceConditionalType = indent(indent(generateResourceConditionalType(missionModelTypes.resourceTypes()))).trim();
-    result.add("""
-                  export function transition<T extends ResourceUnion>(
-                    resource: T,
-                    from: %s,
-                    to: %s
-                  ): WindowSet {
-                    throw new Error("This function exists for type checking purposes only");
-                  }
-                  """.formatted(resourceConditionalType, resourceConditionalType));
 
     result.add("declare global {");
     result.add(indent("var ActivityTemplates: typeof ActivityTemplateConstructors;"));
@@ -79,15 +62,6 @@ public class TypescriptCodeGenerationService {
     return joinLines(result);
   }
 
-  private static String generateResourceConditionalType(final Iterable<MissionModelService.ResourceType> resourceTypes) {
-    final var result = new ArrayList<String>();
-    for (final var resource : resourceTypes) {
-      result.add("T extends \"%s\" ? %s :".formatted(resource.name(), TypescriptType.toString(valueSchemaToTypescriptType(resource.schema()))));
-    }
-    result.add("never");
-    return joinLines(result);
-  }
-
   private static String generateResourceTypes(final Collection<MissionModelService.ResourceType> resourceTypes) {
     final var result = new ArrayList<String>();
     result.add("export enum Resource {");
@@ -95,11 +69,7 @@ public class TypescriptCodeGenerationService {
       result.add(indent("\"%s\" = \"%s\",".formatted(resourceType.name(), resourceType.name())));
     }
     result.add("};");
-    result.add("type ResourceUnion =");
-    for (final var resourceType : resourceTypes) {
-      result.add(indent("| \"%s\"".formatted(resourceType.name())));
-    }
-    return joinLines(result) + ";";
+    return joinLines(result);
   }
 
   private static String generateActivityTypeEnum(ArrayList<ActivityTypeCode> activityTypeCodes) {

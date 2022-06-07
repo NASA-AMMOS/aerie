@@ -23,7 +23,7 @@ class ConstraintsDSLCompilationServiceTests {
   @BeforeAll
   void setUp() throws IOException {
     constraintsDSLCompilationService = new ConstraintsDSLCompilationService(
-        new TypescriptCodeGenerationService(new StubMissionModelService())
+        new TypescriptCodeGenerationServiceAdapter(new StubMissionModelService())
     );
   }
 

@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.ConstraintsDSLCompilationServic
 import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
-import gov.nasa.jpl.aerie.merlin.server.services.TypescriptCodeGenerationService;
+import gov.nasa.jpl.aerie.merlin.server.services.TypescriptCodeGenerationServiceAdapter;
 import gov.nasa.jpl.aerie.merlin.server.services.UncachedSimulationService;
 import gov.nasa.jpl.aerie.merlin.server.utils.HttpRequester;
 import io.javalin.Javalin;
@@ -41,7 +41,7 @@ public final class MerlinBindingsTest {
     final var planApp = new StubPlanService();
     final var missionModelApp = new StubMissionModelService();
 
-    final var typescriptCodeGenerationService = new TypescriptCodeGenerationService(missionModelApp);
+    final var typescriptCodeGenerationService = new TypescriptCodeGenerationServiceAdapter(missionModelApp);
 
     final ConstraintsDSLCompilationService constraintsDSLCompilationService;
     try {

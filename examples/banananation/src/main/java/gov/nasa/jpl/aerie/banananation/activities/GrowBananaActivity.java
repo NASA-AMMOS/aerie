@@ -33,7 +33,10 @@ public record GrowBananaActivity(int quantity, Duration growingDuration) {
   @EffectModel
   @ControllableDuration(parameterName = "growingDuration")
   public void run(final Mission mission) {
+    final var rate = this.quantity() / (double) this.growingDuration().in(Duration.SECONDS);
+    mission.fruit.rate.add(rate);
     delay(this.growingDuration());
+    mission.fruit.rate.add(-rate);
     mission.plant.add(this.quantity());
   }
 }

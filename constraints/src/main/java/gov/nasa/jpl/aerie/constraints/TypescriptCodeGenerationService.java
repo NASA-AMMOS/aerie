@@ -1,6 +1,5 @@
-package gov.nasa.jpl.aerie.merlin.server.services;
+package gov.nasa.jpl.aerie.constraints;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.ArrayList;
@@ -8,18 +7,18 @@ import java.util.List;
 import java.util.Map;
 
 public final class TypescriptCodeGenerationService {
-  private final MissionModelService missionModelService;
 
-  public TypescriptCodeGenerationService(final MissionModelService missionModelService) {
-    this.missionModelService = missionModelService;
-  }
+  private static final ValueSchema LINEAR_RESOURCE_SCHEMA = ValueSchema.ofStruct(Map.of(
+      "initial", ValueSchema.REAL,
+      "rate", ValueSchema.REAL));
 
-  public String generateTypescriptTypesFromMissionModel(final String missionModelId)
-  throws MissionModelService.NoSuchMissionModelException
-  {
-    final var activityTypes = this.missionModelService.getActivityTypes(missionModelId);
-    final var resources = this.missionModelService.getStatesSchemas(missionModelId);
+  public record Parameter(String name, ValueSchema schema) {}
+  public record ActivityType(List<Parameter> parameters) {}
 
+  public static String generateTypescriptTypes(
+      final Map<String, ActivityType> activityTypes,
+      final Map<String, ValueSchema> resources
+  ) {
     final var result = new ArrayList<String>();
     result.add("/** Start Codegen */");
     result.add("import * as AST from './constraints-ast.js';");
@@ -248,21 +247,8 @@ public final class TypescriptCodeGenerationService {
   }
 
   private static boolean valueSchemaIsNumeric(final ValueSchema valueSchema) {
-    return valueSchema.match(new ValueSchema.DefaultVisitor<>() {
-      @Override
-      protected Boolean onDefault() {
-        return false;
-      }
-
-      @Override
-      public Boolean onReal() {
-        return true;
-      }
-
-      @Override
-      public Boolean onInt() {
-        return true;
-      }
-    });
+    return valueSchema.equals(ValueSchema.INT)
+        || valueSchema.equals(ValueSchema.REAL)
+        || valueSchema.equals(LINEAR_RESOURCE_SCHEMA);
   }
 }

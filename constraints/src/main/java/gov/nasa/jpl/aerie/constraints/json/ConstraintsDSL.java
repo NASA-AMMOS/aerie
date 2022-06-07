@@ -262,7 +262,7 @@ public final class ConstraintsDSL {
               untuple((kind, expression) -> new Changed<>(expression)),
               $ -> tuple(Unit.UNIT, $.expression)));
 
-  static final JsonParser<Expression<Windows>> windowsExpressionP =
+  public static final JsonParser<Expression<Windows>> windowsExpressionP =
       recursiveP(selfP -> chooseP(
           duringP,
           startOfP,

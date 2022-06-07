@@ -9,7 +9,7 @@ class TypescriptCodeGenerationServiceTest {
 
   @Test
   void testCodeGen() throws MissionModelService.NoSuchMissionModelException {
-    final var codeGenService = new TypescriptCodeGenerationService(new StubMissionModelService());
+    final var codeGenService = new TypescriptCodeGenerationServiceAdapter(new StubMissionModelService());
 
     assertEquals(
         """
