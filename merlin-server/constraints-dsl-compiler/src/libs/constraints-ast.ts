@@ -9,7 +9,7 @@ export enum NodeKind {
   RealProfileTimes = 'RealProfileTimes',
   RealProfileRate = 'RealProfileRate',
   DiscreteProfileTransition = 'DiscreteProfileTransition',
-  WindowsExpressionDuring = 'WindowsExpressionDuring',
+  WindowsExpressionActivityWindow = 'WindowsExpressionActivityWindow',
   WindowsExpressionStartOf = 'WindowsExpressionStartOf',
   WindowsExpressionEndOf = 'WindowsExpressionEndOf',
   ExpressionEqual = 'ExpressionEqual',
@@ -20,24 +20,17 @@ export enum NodeKind {
   RealProfileGreaterThanOrEqual = 'RealProfileGreaterThanOrEqual',
   WindowsExpressionAll = 'WindowsExpressionAll',
   WindowsExpressionAny = 'WindowsExpressionAny',
-  WindowsExpressionNot = 'WindowsExpressionNot',
+  WindowsExpressionInvert = 'WindowsExpressionInvert',
   ForEachActivity = 'ForEachActivity',
-  ProfileChanged = 'ProfileChanged',
-  ForbiddenActivityOverlap = 'ForbiddenActivityOverlap',
+  ProfileChanges = 'ProfileChanges',
   ViolationsOf = 'ViolationsOf',
 }
 
-export type Constraint = ViolationsOf | ForbiddenActivityOverlap | ForEachActivity | WindowsExpression;
+export type Constraint = ViolationsOf | ForEachActivity | WindowsExpression;
 
 export interface ViolationsOf {
   kind: NodeKind.ViolationsOf;
   expression: WindowsExpression;
-}
-
-export interface ForbiddenActivityOverlap {
-  kind: NodeKind.ForbiddenActivityOverlap;
-  activityType1: string;
-  activityType2: string;
 }
 
 export interface ForEachActivity {
@@ -48,10 +41,10 @@ export interface ForEachActivity {
 }
 
 export type WindowsExpression =
-  | WindowsExpressionDuring
+  | WindowsExpressionActivityWindow
   | WindowsExpressionStartOf
   | WindowsExpressionEndOf
-  | ProfileChanged
+  | ProfileChanges
   | RealProfileLessThan
   | RealProfileLessThanOrEqual
   | RealProfileGreaterThan
@@ -63,15 +56,15 @@ export type WindowsExpression =
   | ExpressionNotEqual<DiscreteProfileExpression>
   | WindowsExpressionAll
   | WindowsExpressionAny
-  | WindowsExpressionNot;
+  | WindowsExpressionInvert;
 
-export interface ProfileChanged {
-  kind: NodeKind.ProfileChanged;
+export interface ProfileChanges {
+  kind: NodeKind.ProfileChanges;
   expression: ProfileExpression;
 }
 
-export interface WindowsExpressionNot {
-  kind: NodeKind.WindowsExpressionNot;
+export interface WindowsExpressionInvert {
+  kind: NodeKind.WindowsExpressionInvert;
   expression: WindowsExpression;
 }
 
@@ -131,8 +124,8 @@ export interface WindowsExpressionStartOf {
   alias: string;
 }
 
-export interface WindowsExpressionDuring {
-  kind: NodeKind.WindowsExpressionDuring;
+export interface WindowsExpressionActivityWindow {
+  kind: NodeKind.WindowsExpressionActivityWindow;
   alias: string;
 }
 

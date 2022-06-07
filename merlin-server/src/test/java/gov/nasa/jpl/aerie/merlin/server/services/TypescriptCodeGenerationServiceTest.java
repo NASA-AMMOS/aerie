@@ -22,7 +22,7 @@ class TypescriptCodeGenerationServiceTest {
            export type ResourceName = "mode" | "state of charge" | "an integer";
            export type DiscreteResourceSchema<R extends ResourceName> =
              R extends "mode" ? ( | "Option1" | "Option2") :
-             R extends "state of charge" ? number :
+             R extends "state of charge" ? {initial: number, rate: number, } :
              R extends "an integer" ? number :
              never;
            export type RealResourceName = "state of charge" | "an integer";
@@ -51,7 +51,7 @@ class TypescriptCodeGenerationServiceTest {
               */
              public window(): Windows {
                return new Windows({
-                 kind: AST.NodeKind.WindowsExpressionDuring,
+                 kind: AST.NodeKind.WindowsExpressionActivityWindow,
                  alias: this.__alias
                });
              }

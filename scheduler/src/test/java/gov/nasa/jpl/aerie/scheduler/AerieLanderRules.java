@@ -2,11 +2,11 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.constraints.tree.And;
+import gov.nasa.jpl.aerie.constraints.tree.All;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
 import gov.nasa.jpl.aerie.constraints.tree.Equal;
-import gov.nasa.jpl.aerie.constraints.tree.Or;
+import gov.nasa.jpl.aerie.constraints.tree.Any;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -554,14 +554,14 @@ public class AerieLanderRules extends Problem {
 
     //the dsn visibility activities from generateDSNVisibilityAllocationGoal are required for the following goals
 
-    var sc1 = new And(new Equal<>(new DiscreteResource("/dsn/visible/Canberra"),new DiscreteValue(SerializedValue.of("InView"))),
+    var sc1 = new All(new Equal<>(new DiscreteResource("/dsn/visible/Canberra"),new DiscreteValue(SerializedValue.of("InView"))),
                       new Equal<>(new DiscreteResource("/dsn/allocated/Canberra"),new DiscreteValue(SerializedValue.of("Allocated"))));
-    var sc2 = new And(new Equal<>(new DiscreteResource("/dsn/visible/Madrid"),new DiscreteValue(SerializedValue.of("InView"))),
+    var sc2 = new All(new Equal<>(new DiscreteResource("/dsn/visible/Madrid"),new DiscreteValue(SerializedValue.of("InView"))),
                       new Equal<>(new DiscreteResource("/dsn/allocated/Madrid"),new DiscreteValue(SerializedValue.of("Allocated"))));
-    var sc3 = new And(new Equal<>(new DiscreteResource("/dsn/visible/Goldstone"),new DiscreteValue(SerializedValue.of("InView"))),
+    var sc3 = new All(new Equal<>(new DiscreteResource("/dsn/visible/Goldstone"),new DiscreteValue(SerializedValue.of("InView"))),
                       new Equal<>(new DiscreteResource("/dsn/allocated/Goldstone"),new DiscreteValue(SerializedValue.of("Allocated"))));
 
-    var disj = new Or(sc1, sc2, sc3);
+    var disj = new Any(sc1, sc2, sc3);
 
     TimeRangeExpression expr = new TimeRangeExpression.Builder()
         .from(disj)

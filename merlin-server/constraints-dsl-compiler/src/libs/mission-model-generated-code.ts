@@ -1,6 +1,9 @@
 // The following are only to satisfy the type checker before any code is generated.
 // All of this will be overwritten before any constraints are evaluated.
 
+import { Windows } from "./constraints-edsl-fluent-api.js";
+import * as AST from "./constraints-ast.js";
+
 export type ResourceName = string;
 export type DiscreteResourceSchema<R extends ResourceName> = any;
 export type RealResourceName = string;
@@ -19,5 +22,12 @@ export class ActivityInstance<A extends ActivityType> {
     this.__activityType = activityType;
     this.__alias = alias;
     this.parameters = 5;
+  }
+
+  public window(): Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionActivityWindow,
+      alias: this.__alias
+    });
   }
 }

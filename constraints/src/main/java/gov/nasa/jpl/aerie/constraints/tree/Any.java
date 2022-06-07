@@ -9,15 +9,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class Or implements Expression<Windows> {
+public final class Any implements Expression<Windows> {
   public final List<Expression<Windows>> expressions;
 
-  public Or(final List<Expression<Windows>> expressions) {
+  public Any(final List<Expression<Windows>> expressions) {
     this.expressions = expressions;
   }
 
   @SafeVarargs
-  public Or(final Expression<Windows>... expressions) {
+  public Any(final Expression<Windows>... expressions) {
     this(List.of(expressions));
   }
 
@@ -56,8 +56,8 @@ public final class Or implements Expression<Windows> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof Or)) return false;
-    Or o = (Or)obj;
+    if (!(obj instanceof Any)) return false;
+    Any o = (Any)obj;
 
     return Objects.equals(this.expressions, o.expressions);
   }

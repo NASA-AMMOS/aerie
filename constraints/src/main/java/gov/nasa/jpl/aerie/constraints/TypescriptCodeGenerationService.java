@@ -116,7 +116,7 @@ public final class TypescriptCodeGenerationService {
                            */
                           public window(): Windows {
                             return new Windows({
-                              kind: AST.NodeKind.WindowsExpressionDuring,
+                              kind: AST.NodeKind.WindowsExpressionActivityWindow,
                               alias: this.__alias
                             });
                           }
@@ -208,7 +208,7 @@ public final class TypescriptCodeGenerationService {
       public String onStruct(final Map<String, ValueSchema> values) {
         final var result = new StringBuilder("{");
 
-        for (final var member: values.keySet()) {
+        for (final var member: values.keySet().stream().sorted().toList()) {
           result
               .append(member)
               .append(": ")

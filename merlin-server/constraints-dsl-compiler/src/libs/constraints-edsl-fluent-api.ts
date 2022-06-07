@@ -12,11 +12,13 @@ export class Constraint {
   }
 
   public static ForbiddenActivityOverlap(activityType1: Gen.ActivityType, activityType2: Gen.ActivityType): Constraint {
-    return new Constraint({
-      kind: AST.NodeKind.ForbiddenActivityOverlap,
-      activityType1,
-      activityType2,
-    });
+    return Constraint.ForEachActivity(
+        activityType1,
+        activity1 => Constraint.ForEachActivity(
+            activityType2,
+            activity2 => Windows.All(activity1.window(), activity2.window()).invert()
+        )
+    )
   }
 
   public static ForEachActivity<A extends Gen.ActivityType>(
@@ -60,7 +62,7 @@ export class Windows {
       kind: AST.NodeKind.WindowsExpressionAny,
       expressions: [
         {
-          kind: AST.NodeKind.WindowsExpressionNot,
+          kind: AST.NodeKind.WindowsExpressionInvert,
           expression: condition.__astNode,
         },
         this.__astNode,
@@ -68,9 +70,9 @@ export class Windows {
     });
   }
 
-  public not(): Windows {
+  public invert(): Windows {
     return new Windows({
-      kind: AST.NodeKind.WindowsExpressionNot,
+      kind: AST.NodeKind.WindowsExpressionInvert,
       expression: this.__astNode,
     });
   }
@@ -189,9 +191,9 @@ export class Real {
     });
   }
 
-  public changed(): Windows {
+  public changes(): Windows {
     return new Windows({
-      kind: AST.NodeKind.ProfileChanged,
+      kind: AST.NodeKind.ProfileChanges,
       expression: this.__astNode,
     });
   }
@@ -247,9 +249,9 @@ export class Discrete<Schema> {
     });
   }
 
-  public changed(): Windows {
+  public changes(): Windows {
     return new Windows({
-      kind: AST.NodeKind.ProfileChanged,
+      kind: AST.NodeKind.ProfileChanges,
       expression: this.__astNode,
     });
   }
@@ -314,9 +316,9 @@ declare global {
     public if(condition: Windows): Windows;
 
     /**
-     * Negate all the windows produced this.
+     * Invert all the windows produced this.
      */
-    public not(): Windows;
+    public invert(): Windows;
 
     /**
      * Produce a constraint violation whenever this does NOT produce a window.
@@ -401,7 +403,7 @@ declare global {
     /**
      * Produce an instantaneous window whenever this profile changes.
      */
-    public changed(): Windows;
+    public changes(): Windows;
   }
 
   export class Discrete<Schema> {
@@ -458,7 +460,7 @@ declare global {
     /**
      * Produce an instantaneous window whenever this profile changes.
      */
-    public changed(): Windows;
+    public changes(): Windows;
   }
 
   type Duration = number;

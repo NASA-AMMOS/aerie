@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
-import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
@@ -10,16 +9,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class Changed<P extends Profile<P>> implements Expression<Windows> {
-  public final ProfileExpression<P> expression;
+public final class Invert implements Expression<Windows> {
+  public final Expression<Windows> expression;
 
-  public Changed(final ProfileExpression<P> expression) {
+  public Invert(final Expression<Windows> expression) {
     this.expression = expression;
   }
 
   @Override
   public Windows evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
-    return this.expression.evaluate(results, bounds, environment).changePoints(bounds);
+    return Windows.minus(
+        new Windows(bounds),
+        this.expression.evaluate(results, bounds, environment));
   }
 
   @Override
@@ -30,7 +31,7 @@ public final class Changed<P extends Profile<P>> implements Expression<Windows> 
   @Override
   public String prettyPrint(final String prefix) {
     return String.format(
-        "\n%s(changed %s)",
+        "\n%s(not %s)",
         prefix,
         this.expression.prettyPrint(prefix + "  ")
     );
@@ -38,8 +39,8 @@ public final class Changed<P extends Profile<P>> implements Expression<Windows> 
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof Changed)) return false;
-    final var o = (Changed<?>)obj;
+    if (!(obj instanceof Invert)) return false;
+    final var o = (Invert)obj;
 
     return Objects.equals(this.expression, o.expression);
   }

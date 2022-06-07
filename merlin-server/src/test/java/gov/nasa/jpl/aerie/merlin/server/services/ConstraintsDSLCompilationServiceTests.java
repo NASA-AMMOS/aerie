@@ -61,14 +61,14 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
       """
         export default function myConstraint() {
-          return times2(Real.Resource("state of charge")).changed()
+          return times2(Real.Resource("state of charge")).changes()
         }
         function times2(e: Real): Real {
           return e.times(2)
         }
       """,
       new ViolationsOf(
-          new Changed<>(new ProfileExpression<>(new Times(new RealResource("state of charge"), 2.0)))
+          new Changes<>(new ProfileExpression<>(new Times(new RealResource("state of charge"), 2.0)))
       )
     );
   }
@@ -79,7 +79,7 @@ class ConstraintsDSLCompilationServiceTests {
         """
           export default function myConstraint() {
             const x = 5;
-            return times2(Real.Resource("mode")).changed()
+            return times2(Real.Resource("mode")).changes()
           }
           function times2(e: Real): Real {
             return e.times(x)
@@ -108,10 +108,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default () => {
-              return Discrete.Resource("mode").changed();
+              return Discrete.Resource("mode").changes();
             }
         """,
-        new ViolationsOf(new Changed<>(new ProfileExpression<>(new DiscreteResource("mode"))))
+        new ViolationsOf(new Changes<>(new ProfileExpression<>(new DiscreteResource("mode"))))
     );
   }
 
@@ -120,10 +120,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default () => {
-              return Discrete.Value(5).changed()
+              return Discrete.Value(5).changes()
             }
         """,
-        new ViolationsOf(new Changed<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(5)))))
+        new ViolationsOf(new Changes<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(5)))))
     );
   }
 
@@ -133,13 +133,13 @@ class ConstraintsDSLCompilationServiceTests {
         """
             export default () => Constraint.ForEachActivity(
               ActivityType.activity,
-              (instance) => instance.parameters.Param.changed()
+              (instance) => instance.parameters.Param.changes()
             )
         """,
         new ForEachActivity(
             "activity",
             "activity alias 0",
-            new ViolationsOf(new Changed<>(new ProfileExpression<>(new DiscreteParameter("activity alias 0", "Param"))))
+            new ViolationsOf(new Changes<>(new ProfileExpression<>(new DiscreteParameter("activity alias 0", "Param"))))
         )
     );
   }
@@ -191,22 +191,22 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
         export default () => {
-          return Discrete.Resource("state of charge").notEqual(4.0);
+          return Discrete.Resource("an integer").notEqual(4.0);
         }
         """,
-        new ViolationsOf(new NotEqual<>(new DiscreteResource("state of charge"), new DiscreteValue(SerializedValue.of(4.0))))
+        new ViolationsOf(new NotEqual<>(new DiscreteResource("an integer"), new DiscreteValue(SerializedValue.of(4.0))))
     );
   }
 
   @Test
-  void testDiscreteChanged() {
+  void testDiscreteChanges() {
     checkSuccessfulCompilation(
         """
             export default () => {
-              return Discrete.Value(4).changed()
+              return Discrete.Value(4).changes()
             }
         """,
-        new ViolationsOf(new Changed<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(4)))))
+        new ViolationsOf(new Changes<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(4)))))
     );
   }
 
@@ -229,10 +229,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default () => {
-              return Real.Resource("state of charge").changed();
+              return Real.Resource("state of charge").changes();
             }
         """,
-        new ViolationsOf(new Changed<>(new ProfileExpression<>(new RealResource("state of charge"))))
+        new ViolationsOf(new Changes<>(new ProfileExpression<>(new RealResource("state of charge"))))
     );
   }
 
@@ -241,10 +241,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default () => {
-              return Real.Value(5).changed()
+              return Real.Value(5).changes()
             }
         """,
-        new ViolationsOf(new Changed<>(new ProfileExpression<>(new RealValue(5.0))))
+        new ViolationsOf(new Changes<>(new ProfileExpression<>(new RealValue(5.0))))
     );
   }
 
@@ -254,13 +254,13 @@ class ConstraintsDSLCompilationServiceTests {
         """
             export default () => Constraint.ForEachActivity(
               ActivityType.activity,
-              (instance) => instance.parameters.AnotherParam.changed()
+              (instance) => instance.parameters.AnotherParam.changes()
             )
         """,
         new ForEachActivity(
             "activity",
             "activity alias 0",
-            new ViolationsOf(new Changed<>(new ProfileExpression<>(new RealParameter("activity alias 0", "AnotherParam"))))
+            new ViolationsOf(new Changes<>(new ProfileExpression<>(new RealParameter("activity alias 0", "AnotherParam"))))
         )
     );
   }
@@ -374,14 +374,14 @@ class ConstraintsDSLCompilationServiceTests {
   }
 
   @Test
-  void testRealChanged() {
+  void testRealChanges() {
     checkSuccessfulCompilation(
         """
             export default () => {
-              return Real.Value(4).changed()
+              return Real.Value(4).changes()
             }
         """,
-        new ViolationsOf(new Changed<>(new ProfileExpression<>(new RealValue(4.0))))
+        new ViolationsOf(new Changes<>(new ProfileExpression<>(new RealValue(4.0))))
     );
   }
 
@@ -407,7 +407,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.window());
           }
         """,
-        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new During("activity alias 0")))
+        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new ActivityWindow("activity alias 0")))
     );
   }
 
@@ -441,12 +441,12 @@ class ConstraintsDSLCompilationServiceTests {
         """
           export default () => {
             return Real.Resource("state of charge").lessThan(2)
-              .if(Discrete.Resource("mode").changed());
+              .if(Discrete.Resource("mode").changes());
           }
         """,
         new ViolationsOf(
-            new Or(
-                new Not(new Changed<>(
+            new Any(
+                new Invert(new Changes<>(
                     new ProfileExpression<>(new DiscreteResource("mode"))
                 )),
                 new LessThan(new RealResource("state of charge"), new RealValue(2.0))
@@ -463,16 +463,16 @@ class ConstraintsDSLCompilationServiceTests {
             return Windows.All(
               Real.Resource("state of charge").lessThan(2),
               Discrete.Value("hello there").notEqual(Discrete.Value("hello there")),
-              Real.Value(5).changed()
+              Real.Value(5).changes()
             );
           }
         """,
         new ViolationsOf(
-            new And(
+            new All(
                 java.util.List.of(
                     new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
                     new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
-                    new Changed<>(new ProfileExpression<>(new RealValue(5.0)))
+                    new Changes<>(new ProfileExpression<>(new RealValue(5.0)))
                 )
             )
         )
@@ -487,16 +487,16 @@ class ConstraintsDSLCompilationServiceTests {
             return Windows.Any(
               Real.Resource("state of charge").lessThan(2),
               Discrete.Value("hello there").notEqual(Discrete.Value("hello there")),
-              Real.Value(5).changed()
+              Real.Value(5).changes()
             );
           }
         """,
         new ViolationsOf(
-            new Or(
+            new Any(
                 java.util.List.of(
                     new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
                     new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
-                    new Changed<>(new ProfileExpression<>(new RealValue(5.0)))
+                    new Changes<>(new ProfileExpression<>(new RealValue(5.0)))
                 )
             )
         )
@@ -504,16 +504,16 @@ class ConstraintsDSLCompilationServiceTests {
   }
 
   @Test
-  void testNot() {
+  void testInvert() {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Discrete.Resource("mode").changed().not()
+            return Discrete.Resource("mode").changes().invert()
           }
         """,
         new ViolationsOf(
-            new Not(
-                new Changed<>(new ProfileExpression<>(new DiscreteResource("mode")))
+            new Invert(
+                new Changes<>(new ProfileExpression<>(new DiscreteResource("mode")))
             )
         )
     );
@@ -541,7 +541,15 @@ class ConstraintsDSLCompilationServiceTests {
           return Constraint.ForbiddenActivityOverlap(ActivityType.activity, ActivityType.activity)
         }
         """,
-        new ForbiddenActivityOverlap("activity", "activity")
+        new ForEachActivity(
+            "activity",
+            "activity alias 0",
+            new ForEachActivity(
+                "activity",
+                "activity alias 1",
+                new ViolationsOf(new Invert(new All(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))))
+            )
+        )
     );
   }
 
@@ -556,7 +564,7 @@ class ConstraintsDSLCompilationServiceTests {
           )
         }
         """,
-        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new During("activity alias 0")))
+        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new ActivityWindow("activity alias 0")))
     );
 
     checkSuccessfulCompilation(
@@ -573,7 +581,7 @@ class ConstraintsDSLCompilationServiceTests {
           return instance.window();
         }
         """,
-        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new During("activity alias 0")))
+        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new ActivityWindow("activity alias 0")))
     );
   }
 
@@ -592,7 +600,7 @@ class ConstraintsDSLCompilationServiceTests {
         }
         """,
         new ForEachActivity("activity", "activity alias 0", new ForEachActivity("activity", "activity alias 1", new ViolationsOf(
-            new And(new During("activity alias 0"), new During("activity alias 1"))
+            new All(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))
         )))
     );
   }
@@ -619,7 +627,7 @@ class ConstraintsDSLCompilationServiceTests {
     checkFailedCompilation(
         """
         export default () => {
-          return Discrete.Resource("wrong resource").changed()
+          return Discrete.Resource("wrong resource").changes()
         }
         """,
         "TypeError: TS2345 Argument of type '\"wrong resource\"' is not assignable to parameter of type 'ResourceName'."
@@ -631,7 +639,7 @@ class ConstraintsDSLCompilationServiceTests {
     checkFailedCompilation(
         """
         export default () => {
-          return Real.Resource("mode").changed()
+          return Real.Resource("mode").changes()
         }
         """,
         "TypeError: TS2345 Argument of type '\"mode\"' is not assignable to parameter of type 'RealResourceName'."
@@ -655,7 +663,7 @@ class ConstraintsDSLCompilationServiceTests {
           return Discrete.Resource("mode").equal(Discrete.Resource("state of charge"))
         }
         """,
-        "TypeError: TS2345 Argument of type 'Discrete<number>' is not assignable to parameter of type '\"Option1\" | \"Option2\" | Discrete<\"Option1\" | \"Option2\">'."
+        "TypeError: TS2345 Argument of type 'Discrete<{ initial: number; rate: number; }>' is not assignable to parameter of type '\"Option1\" | \"Option2\" | Discrete<\"Option1\" | \"Option2\">'."
     );
 
     checkFailedCompilation(

@@ -56,8 +56,7 @@ public final class MerlinBindingsTest {
         planApp,
         missionModelApp,
         new UncachedSimulationService(new SynchronousSimulationAgent(planApp, missionModelApp)),
-        constraintsDSLCompilationService,
-        false
+        constraintsDSLCompilationService
     );
 
     final var generateConstraintsLibAction = new GenerateConstraintsLibAction(typescriptCodeGenerationService);

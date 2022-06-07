@@ -43,8 +43,7 @@ public final class DevAppDriver {
         planController,
         missionModelController,
         new UncachedSimulationService(new SynchronousSimulationAgent(planController, missionModelController)),
-        constraintsDSLCompilationService,
-        false
+        constraintsDSLCompilationService
     );
 
     final var generateConstraintsLibAction = new GenerateConstraintsLibAction(typescriptCodeGenerationService);

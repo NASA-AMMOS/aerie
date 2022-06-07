@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
-import gov.nasa.jpl.aerie.constraints.json.ConstraintParsers;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
@@ -19,8 +18,6 @@ import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.apache.commons.lang3.tuple.Pair;
 
-import javax.json.Json;
-import java.io.StringReader;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,20 +38,17 @@ public final class GetSimulationResultsAction {
   private final MissionModelService missionModelService;
   private final SimulationService simulationService;
   private final ConstraintsDSLCompilationService constraintsDSLCompilationService;
-  private final boolean useNewConstraintPipeline;
 
   public GetSimulationResultsAction(
       final PlanService planService,
       final MissionModelService missionModelService,
       final SimulationService simulationService,
-      final ConstraintsDSLCompilationService constraintsDSLCompilationService,
-      final boolean useNewConstraintPipeline
+      final ConstraintsDSLCompilationService constraintsDSLCompilationService
   ) {
     this.planService = Objects.requireNonNull(planService);
     this.missionModelService = Objects.requireNonNull(missionModelService);
     this.simulationService = Objects.requireNonNull(simulationService);
     this.constraintsDSLCompilationService = Objects.requireNonNull(constraintsDSLCompilationService);
-    this.useNewConstraintPipeline = useNewConstraintPipeline;
   }
 
   public Response run(final PlanId planId) throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException {
@@ -177,32 +171,21 @@ public final class GetSimulationResultsAction {
       // and the else branch of this if statement.
       final var constraint = entry.getValue();
       final Expression<List<Violation>> expression;
-      if (this.useNewConstraintPipeline) {
 
-        // TODO: cache these results
-        final var constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(
-            plan.missionModelId,
-            constraint.definition()
-        );
+      // TODO: cache these results
+      final var constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(
+          plan.missionModelId,
+          constraint.definition()
+      );
 
-        if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success success) {
-          expression = success.constraintExpression();
-        } else if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error error) {
-          throw new Error("Constraint compilation failed: " + error);
-        } else {
-          throw new Error("Unhandled variant of ConstraintsDSLCompilationResult: " + constraintCompilationResult);
-        }
-
+      if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success success) {
+        expression = success.constraintExpression();
+      } else if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error error) {
+        throw new Error("Constraint compilation failed: " + error);
       } else {
-        final var subject = Json.createReader(new StringReader(entry.getValue().definition())).readValue();
-        final var constraintParseResult = ConstraintParsers.constraintP.parse(subject);
-
-        if (constraintParseResult.isFailure()) {
-          throw new Error(entry.getValue().definition());
-        }
-
-        expression = constraintParseResult.getSuccessOrThrow();
+        throw new Error("Unhandled variant of ConstraintsDSLCompilationResult: " + constraintCompilationResult);
       }
+
       final var violationEvents = new ArrayList<Violation>();
       try {
         violationEvents.addAll(expression.evaluate(preparedResults));

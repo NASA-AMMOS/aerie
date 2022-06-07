@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
+import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
@@ -9,18 +10,16 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class Not implements Expression<Windows> {
-  public final Expression<Windows> expression;
+public final class Changes<P extends Profile<P>> implements Expression<Windows> {
+  public final ProfileExpression<P> expression;
 
-  public Not(final Expression<Windows> expression) {
+  public Changes(final ProfileExpression<P> expression) {
     this.expression = expression;
   }
 
   @Override
   public Windows evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
-    return Windows.minus(
-        new Windows(bounds),
-        this.expression.evaluate(results, bounds, environment));
+    return this.expression.evaluate(results, bounds, environment).changePoints(bounds);
   }
 
   @Override
@@ -31,7 +30,7 @@ public final class Not implements Expression<Windows> {
   @Override
   public String prettyPrint(final String prefix) {
     return String.format(
-        "\n%s(not %s)",
+        "\n%s(changed %s)",
         prefix,
         this.expression.prettyPrint(prefix + "  ")
     );
@@ -39,8 +38,8 @@ public final class Not implements Expression<Windows> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof Not)) return false;
-    final var o = (Not)obj;
+    if (!(obj instanceof Changes)) return false;
+    final var o = (Changes<?>)obj;
 
     return Objects.equals(this.expression, o.expression);
   }

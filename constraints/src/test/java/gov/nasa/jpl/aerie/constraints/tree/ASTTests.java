@@ -39,7 +39,7 @@ public class ASTTests {
     windows.add(Window.between(10, Exclusive, 15, Exclusive, SECONDS));
     windows.add(Window.at(20, SECONDS));
 
-    final var result = new Not(Supplier.of(windows)).evaluate(simResults, Map.of());
+    final var result = new Invert(Supplier.of(windows)).evaluate(simResults, Map.of());
 
     final var expected = new Windows();
     expected.add(Window.between(5, Inclusive, 10, Inclusive, SECONDS));
@@ -70,7 +70,7 @@ public class ASTTests {
     right.add(Window.between(10, Inclusive, 12, Inclusive, SECONDS));
     right.add(Window.between(15, Inclusive, 20, Exclusive, SECONDS));
 
-    final var result = new And(Supplier.of(left), Supplier.of(right)).evaluate(simResults, Map.of());
+    final var result = new All(Supplier.of(left), Supplier.of(right)).evaluate(simResults, Map.of());
 
     final var expected = new Windows();
     expected.add(Window.between( 0, Inclusive,  5, Exclusive, SECONDS));
@@ -102,7 +102,7 @@ public class ASTTests {
     right.add(Window.between(10, Inclusive, 12, Inclusive, SECONDS));
     right.add(Window.between(15, Inclusive, 20, Exclusive, SECONDS));
 
-    final var result = new Or(Supplier.of(left), Supplier.of(right)).evaluate(simResults, Map.of());
+    final var result = new Any(Supplier.of(left), Supplier.of(right)).evaluate(simResults, Map.of());
 
     final var expected = new Windows();
     expected.add(Window.between(  0, Inclusive,   5, Inclusive, SECONDS));
@@ -385,7 +385,7 @@ public class ASTTests {
             Window.between(4, 8, SECONDS))
     );
 
-    final var result = new During("act").evaluate(simResults, environment);
+    final var result = new ActivityWindow("act").evaluate(simResults, environment);
 
     final var expected = new Windows(Window.between(4, 8, SECONDS));
 
