@@ -8,7 +8,7 @@ public record HasuraAction<I extends HasuraAction.Input>(String name, I input, S
 {
   public record Session(String hasuraRole, String hasuraUserId) { }
 
-  public interface Input { }
+  public sealed interface Input { }
 
   public record MissionModelInput(String missionModelId) implements Input { }
   public record PlanInput(PlanId planId) implements Input { }

@@ -70,6 +70,9 @@ public final class MerlinBindings implements Plugin {
       path("getSimulationResults", () -> {
         post(this::getSimulationResults);
       });
+      path("resourceSamples", () -> {
+        post(this::getResourceSamples);
+      });
       path("refreshModelParameters", () -> {
         post(this::postRefreshModelParameters);
       });
@@ -165,6 +168,22 @@ public final class MerlinBindings implements Plugin {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
     }
   }
+
+  private void getResourceSamples(final Context ctx) {
+    try {
+      final var planId = parseJson(ctx.body(), hasuraPlanActionP).input().planId();
+
+      final var resourceSamples = this.simulationAction.getResourceSamples(planId);
+
+      ctx.result(ResponseSerializers.serializeResourceSamples(resourceSamples).toString());
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    } catch (final NoSuchPlanException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
+    }
+}
 
   private void validateActivityArguments(final Context ctx) {
     try {
