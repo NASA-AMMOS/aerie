@@ -216,21 +216,21 @@ public final class ConstraintParsers {
               untuple((kind, left, right) -> new GreaterThanOrEqual(left, right)),
               $ -> tuple(Unit.UNIT, $.left, $.right)));
 
-  static JsonParser<And> allF(final JsonParser<Expression<Windows>> windowsExpressionP) {
+  static JsonParser<All> allF(final JsonParser<Expression<Windows>> windowsExpressionP) {
     return productP
         .field("kind", literalP("WindowsExpressionAll"))
         .field("expressions", listP(windowsExpressionP))
         .map(Iso.of(
-            untuple((kind, expressions) -> new And(expressions)),
+            untuple((kind, expressions) -> new All(expressions)),
             $ -> tuple(Unit.UNIT, $.expressions)));
   }
 
-  static JsonParser<Or> anyF(final JsonParser<Expression<Windows>> windowsExpressionP) {
+  static JsonParser<Any> anyF(final JsonParser<Expression<Windows>> windowsExpressionP) {
     return productP
         .field("kind", literalP("WindowsExpressionAny"))
         .field("expressions", listP(windowsExpressionP))
         .map(Iso.of(
-            untuple((kind, expressions) -> new Or(expressions)),
+            untuple((kind, expressions) -> new Any(expressions)),
             $ -> tuple(Unit.UNIT, $.expressions)));
   }
 

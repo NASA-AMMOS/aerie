@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.constraints.tree.And;
+import gov.nasa.jpl.aerie.constraints.tree.All;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
 import gov.nasa.jpl.aerie.constraints.tree.Equal;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
@@ -209,7 +209,7 @@ public class SimulationFacadeTest {
   public void whenValueBetweenDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
-    var actual = new And(new GreaterThanOrEqual(getFruitRes(), new RealValue(3.0)), new LessThanOrEqual(getFruitRes(), new RealValue(3.99))).evaluate(facade.getLatestConstraintSimulationResults());
+    var actual = new All(new GreaterThanOrEqual(getFruitRes(), new RealValue(3.0)), new LessThanOrEqual(getFruitRes(), new RealValue(3.99))).evaluate(facade.getLatestConstraintSimulationResults());
     var expected = new Windows(Window.betweenClosedOpen(t1, t2));
     assertThat(actual).isEqualTo(expected);
   }
@@ -245,7 +245,7 @@ public class SimulationFacadeTest {
      * fruit:|4.0-------|3.0-------|2.9------->
      * </pre>
      **/
-    final var constraint = new And(
+    final var constraint = new All(
         new LessThanOrEqual(new RealResource("/peel"), new RealValue(3.0)),
         new LessThanOrEqual(new RealResource("/fruit"), new RealValue(2.9))
     );
@@ -274,7 +274,7 @@ public class SimulationFacadeTest {
   public void testProceduralGoalWithResourceConstraint() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
 
-    final var constraint = new And(
+    final var constraint = new All(
         new LessThanOrEqual(new RealResource("/peel"), new RealValue(3.0)),
         new LessThanOrEqual(new RealResource("/fruit"), new RealValue(2.9))
     );
@@ -314,7 +314,7 @@ public class SimulationFacadeTest {
   public void testActivityTypeWithResourceConstraint() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
 
-    final var constraint = new And(
+    final var constraint = new All(
         new LessThanOrEqual(new RealResource("/peel"), new RealValue(3.0)),
         new LessThanOrEqual(new RealResource("/fruit"), new RealValue(2.9))
     );

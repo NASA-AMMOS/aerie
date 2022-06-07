@@ -445,7 +445,7 @@ class ConstraintsDSLCompilationServiceTests {
           }
         """,
         new ViolationsOf(
-            new Or(
+            new Any(
                 new Not(new Changed<>(
                     new ProfileExpression<>(new DiscreteResource("mode"))
                 )),
@@ -468,7 +468,7 @@ class ConstraintsDSLCompilationServiceTests {
           }
         """,
         new ViolationsOf(
-            new And(
+            new All(
                 java.util.List.of(
                     new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
                     new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
@@ -492,7 +492,7 @@ class ConstraintsDSLCompilationServiceTests {
           }
         """,
         new ViolationsOf(
-            new Or(
+            new Any(
                 java.util.List.of(
                     new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
                     new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
@@ -547,7 +547,7 @@ class ConstraintsDSLCompilationServiceTests {
             new ForEachActivity(
                 "activity",
                 "activity alias 1",
-                new ViolationsOf(new Not(new And(new During("activity alias 0"), new During("activity alias 1"))))
+                new ViolationsOf(new Not(new All(new During("activity alias 0"), new During("activity alias 1"))))
             )
         )
     );
@@ -600,7 +600,7 @@ class ConstraintsDSLCompilationServiceTests {
         }
         """,
         new ForEachActivity("activity", "activity alias 0", new ForEachActivity("activity", "activity alias 1", new ViolationsOf(
-            new And(new During("activity alias 0"), new During("activity alias 1"))
+            new All(new During("activity alias 0"), new During("activity alias 1"))
         )))
     );
   }

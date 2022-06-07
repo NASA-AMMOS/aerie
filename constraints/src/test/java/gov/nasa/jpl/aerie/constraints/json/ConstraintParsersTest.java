@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.json;
 
-import gov.nasa.jpl.aerie.constraints.tree.And;
+import gov.nasa.jpl.aerie.constraints.tree.All;
 import gov.nasa.jpl.aerie.constraints.tree.Changed;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
@@ -15,7 +15,7 @@ import gov.nasa.jpl.aerie.constraints.tree.LessThan;
 import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.Not;
 import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
-import gov.nasa.jpl.aerie.constraints.tree.Or;
+import gov.nasa.jpl.aerie.constraints.tree.Any;
 import gov.nasa.jpl.aerie.constraints.tree.Plus;
 import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
 import gov.nasa.jpl.aerie.constraints.tree.Rate;
@@ -436,7 +436,7 @@ public final class ConstraintParsersTest {
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
 
     final var expected =
-        new And(
+        new All(
             new During("A"),
             new During("B"));
 
@@ -463,7 +463,7 @@ public final class ConstraintParsersTest {
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
 
     final var expected =
-        new Or(
+        new Any(
             new During("A"),
             new During("B"));
 
@@ -591,8 +591,8 @@ public final class ConstraintParsersTest {
             "TypeB",
             "B",
             new ViolationsOf(
-                new Or(
-                    new Or(
+                new Any(
+                    new Any(
                         new Not(
                             new LessThan(
                                 new Times(

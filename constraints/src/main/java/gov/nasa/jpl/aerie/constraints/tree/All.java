@@ -10,15 +10,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class And implements Expression<Windows> {
+public final class All implements Expression<Windows> {
   public final List<Expression<Windows>> expressions;
 
-  public And(final List<Expression<Windows>> expressions) {
+  public All(final List<Expression<Windows>> expressions) {
     this.expressions = expressions;
   }
 
   @SafeVarargs
-  public And(final Expression<Windows>... expressions) {
+  public All(final Expression<Windows>... expressions) {
     this(List.of(expressions));
   }
 
@@ -57,8 +57,8 @@ public final class And implements Expression<Windows> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof And)) return false;
-    final var o = (And)obj;
+    if (!(obj instanceof All)) return false;
+    final var o = (All)obj;
 
     return Objects.equals(this.expressions, o.expressions);
   }
