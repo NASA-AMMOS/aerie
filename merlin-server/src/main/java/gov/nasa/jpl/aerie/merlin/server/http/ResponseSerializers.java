@@ -199,9 +199,6 @@ public final class ResponseSerializers {
     return Json
         .createObjectBuilder()
         .add("start", serializeTimestamp(results.startTime))
-        .add("resources", serializeMap(
-            elements -> serializeIterable(ResponseSerializers::serializeSample, elements),
-            results.resourceSamples))
         .add("constraints", serializeMap(v -> serializeIterable(ResponseSerializers::serializeConstraintViolation, v), violations))
         .add("activities", serializeSimulatedActivities(results.simulatedActivities))
         .add("unfinishedActivities", serializeUnfinishedActivities(results.unfinishedActivities))
