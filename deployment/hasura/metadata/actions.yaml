@@ -63,6 +63,10 @@ actions:
     definition:
       kind: ""
       handler: http://aerie_merlin:27183/resourceSamples
+  - name: constraintViolations
+    definition:
+      kind: ""
+      handler: http://aerie_merlin:27183/constraintViolations
   - name: validateActivityArguments
     definition:
       kind: ""
@@ -137,10 +141,12 @@ custom_types:
     - name: UserCodeError
     - name: CodeLocation
     - name: ResourceSamplesResponse
+    - name: ConstraintViolationsResponse
   scalars:
     - name: ResourceSchema
     - name: MerlinSimulationResults
     - name: ResourceSamples
+    - name: ConstraintViolations
     - name: MerlinSimulationFailureReason
     - name: ModelArguments
     - name: ActivityArguments
