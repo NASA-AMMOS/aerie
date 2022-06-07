@@ -9,7 +9,7 @@ create table event
   topic_index integer not null,
 
   constraint event_natural_key
-    primary key (dataset_id, real_time, causal_time),
+    primary key (dataset_id, real_time, transaction_index, causal_time),
   constraint event_owned_by_topic
     foreign key (dataset_id, topic_index)
       references topic

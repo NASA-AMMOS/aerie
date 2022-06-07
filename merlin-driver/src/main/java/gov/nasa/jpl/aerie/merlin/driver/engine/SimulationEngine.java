@@ -343,7 +343,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     public boolean isActivity(final TaskId id) {
-      return this.taskToPlannedDirective.containsKey(id.id());
+      return this.input.containsKey(id.id());
     }
 
     public record Trait(MissionModel<?> missionModel, Topic<ActivityInstanceId> activityTopic)
