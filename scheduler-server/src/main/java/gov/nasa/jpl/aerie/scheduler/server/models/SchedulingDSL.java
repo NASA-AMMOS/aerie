@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
-import static gov.nasa.jpl.aerie.constraints.json.ConstraintsDSL.windowsExpressionP;
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.windowsExpressionP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;

@@ -5,35 +5,7 @@ import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.constraints.tree.And;
-import gov.nasa.jpl.aerie.constraints.tree.Changed;
-import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
-import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
-import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
-import gov.nasa.jpl.aerie.constraints.tree.During;
-import gov.nasa.jpl.aerie.constraints.tree.EndOf;
-import gov.nasa.jpl.aerie.constraints.tree.Equal;
-import gov.nasa.jpl.aerie.constraints.tree.Expression;
-import gov.nasa.jpl.aerie.constraints.tree.ForEachActivity;
-import gov.nasa.jpl.aerie.constraints.tree.ForbiddenActivityOverlap;
-import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
-import gov.nasa.jpl.aerie.constraints.tree.GreaterThanOrEqual;
-import gov.nasa.jpl.aerie.constraints.tree.IfThen;
-import gov.nasa.jpl.aerie.constraints.tree.LessThan;
-import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
-import gov.nasa.jpl.aerie.constraints.tree.Not;
-import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
-import gov.nasa.jpl.aerie.constraints.tree.Or;
-import gov.nasa.jpl.aerie.constraints.tree.Plus;
-import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
-import gov.nasa.jpl.aerie.constraints.tree.Rate;
-import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
-import gov.nasa.jpl.aerie.constraints.tree.RealResource;
-import gov.nasa.jpl.aerie.constraints.tree.RealValue;
-import gov.nasa.jpl.aerie.constraints.tree.StartOf;
-import gov.nasa.jpl.aerie.constraints.tree.Times;
-import gov.nasa.jpl.aerie.constraints.tree.Transition;
-import gov.nasa.jpl.aerie.constraints.tree.ViolationsOf;
+import gov.nasa.jpl.aerie.constraints.tree.*;
 import gov.nasa.jpl.aerie.json.BasicParsers;
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
@@ -55,92 +27,92 @@ import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 public final class ConstraintParsers {
   private ConstraintParsers() {}
 
-  private static final JsonParser<DiscreteResource> discreteResourceP =
+  static final JsonParser<DiscreteResource> discreteResourceP =
       productP
-          .field("type", literalP("DiscreteResource"))
+          .field("kind", literalP("DiscreteProfileResource"))
           .field("name", stringP)
           .map(Iso.of(
-              untuple((type, name) -> new DiscreteResource(name)),
+              untuple((kind, name) -> new DiscreteResource(name)),
               $ -> tuple(Unit.UNIT, $.name)));
 
-  private static final JsonParser<RealResource> realResourceP =
+  static final JsonParser<DiscreteValue> discreteValueP =
       productP
-          .field("type", literalP("RealResource"))
-          .field("name", stringP)
-          .map(Iso.of(
-              untuple((type, name) -> new RealResource(name)),
-              $ -> tuple(Unit.UNIT, $.name)));
-
-  private static final JsonParser<DiscreteValue> discreteValueP =
-      productP
-          .field("type", literalP("DiscreteValue"))
+          .field("kind", literalP("DiscreteProfileValue"))
           .field("value", serializedValueP)
           .map(Iso.of(
-              untuple((type, value) -> new DiscreteValue(value)),
+              untuple((kind, value) -> new DiscreteValue(value)),
               $ -> tuple(Unit.UNIT, $.value)));
 
-  private static final JsonParser<DiscreteParameter> discreteParameterP =
+  static final JsonParser<DiscreteParameter> discreteParameterP =
       productP
-          .field("type", literalP("DiscreteParameter"))
+          .field("kind", literalP("DiscreteProfileParameter"))
           .field("alias", stringP)
           .field("name", stringP)
           .map(Iso.of(
-              untuple((type, alias, name) -> new DiscreteParameter(alias, name)),
+              untuple((kind, alias, name) -> new DiscreteParameter(alias, name)),
               $ -> tuple(Unit.UNIT, $.activityAlias, $.parameterName)));
 
-  private static final JsonParser<Expression<DiscreteProfile>> discreteProfileExprP =
+  static final JsonParser<Expression<DiscreteProfile>> discreteProfileExprP =
       recursiveP(selfP -> chooseP(
           discreteResourceP,
           discreteValueP,
           discreteParameterP));
 
-  private static final JsonParser<RealValue> realValueP =
+  static final JsonParser<RealResource> realResourceP =
       productP
-          .field("type", literalP("RealValue"))
+          .field("kind", literalP("RealProfileResource"))
+          .field("name", stringP)
+          .map(Iso.of(
+              untuple((kind, name) -> new RealResource(name)),
+              $ -> tuple(Unit.UNIT, $.name)));
+
+  static final JsonParser<RealValue> realValueP =
+      productP
+          .field("kind", literalP("RealProfileValue"))
           .field("value", doubleP)
           .map(Iso.of(
-              untuple((type, value) -> new RealValue(value)),
+              untuple((kind, value) -> new RealValue(value)),
               $ -> tuple(Unit.UNIT, $.value)));
 
-  private static JsonParser<Plus> plusF(final JsonParser<Expression<LinearProfile>> linearProfileExpressionP) {
-      return productP
-          .field("type", literalP("Plus"))
-          .field("left", linearProfileExpressionP)
-          .field("right", linearProfileExpressionP)
-          .map(Iso.of(
-              untuple((type, left, right) -> new Plus(left, right)),
-              $ -> tuple(Unit.UNIT, $.left, $.right)));
-  }
-
-  private static JsonParser<Times> timesF(final JsonParser<Expression<LinearProfile>> linearProfileExpressionP) {
-    return productP
-        .field("type", literalP("Times"))
-        .field("profile", linearProfileExpressionP)
-        .field("multiplier", doubleP)
-        .map(Iso.of(
-            untuple((type, profile, multiplier) -> new Times(profile, multiplier)),
-            $ -> tuple(Unit.UNIT, $.profile, $.multiplier)));
-  }
-
-  private static JsonParser<Rate> rateF(final JsonParser<Expression<LinearProfile>> linearProfileExpressionP) {
-    return productP
-        .field("type", literalP("Rate"))
-        .field("profile", linearProfileExpressionP)
-        .map(Iso.of(
-            untuple((type, profile) -> new Rate(profile)),
-            $ -> tuple(Unit.UNIT, $.profile)));
-  }
-
-  private static final JsonParser<RealParameter> realParameterP =
+  static final JsonParser<RealParameter> realParameterP =
       productP
-          .field("type", literalP("RealParameter"))
+          .field("kind", literalP("RealProfileParameter"))
           .field("alias", stringP)
           .field("name", stringP)
           .map(Iso.of(
-              untuple((type, alias, name) -> new RealParameter(alias, name)),
+              untuple((kind, alias, name) -> new RealParameter(alias, name)),
               $ -> tuple(Unit.UNIT, $.activityAlias, $.parameterName)));
 
-  private static final JsonParser<Expression<LinearProfile>> linearProfileExprP =
+  static JsonParser<Plus> plusF(final JsonParser<Expression<LinearProfile>> linearProfileExpressionP) {
+    return productP
+        .field("kind", literalP("RealProfilePlus"))
+        .field("left", linearProfileExpressionP)
+        .field("right", linearProfileExpressionP)
+        .map(Iso.of(
+            untuple((kind, left, right) -> new Plus(left, right)),
+            $ -> tuple(Unit.UNIT, $.left, $.right)));
+  }
+
+  static JsonParser<Times> timesF(final JsonParser<Expression<LinearProfile>> linearProfileExpressionP) {
+    return productP
+        .field("kind", literalP("RealProfileTimes"))
+        .field("profile", linearProfileExpressionP)
+        .field("multiplier", doubleP)
+        .map(Iso.of(
+            untuple((kind, profile, multiplier) -> new Times(profile, multiplier)),
+            $ -> tuple(Unit.UNIT, $.profile, $.multiplier)));
+  }
+
+  static JsonParser<Rate> rateF(final JsonParser<Expression<LinearProfile>> linearProfileExpressionP) {
+    return productP
+        .field("kind", literalP("RealProfileRate"))
+        .field("profile", linearProfileExpressionP)
+        .map(Iso.of(
+            untuple((kind, profile) -> new Rate(profile)),
+            $ -> tuple(Unit.UNIT, $.profile)));
+  }
+
+  static final JsonParser<Expression<LinearProfile>> linearProfileExprP =
       recursiveP(selfP -> chooseP(
           realResourceP,
           realValueP,
@@ -149,161 +121,148 @@ public final class ConstraintParsers {
           timesF(selfP),
           rateF(selfP)));
 
-  private static final JsonParser<ProfileExpression<?>> profileExpressionP =
+  static final JsonParser<ProfileExpression<?>> profileExpressionP =
       BasicParsers.<ProfileExpression<?>>chooseP(
           linearProfileExprP.map(Iso.of(ProfileExpression::new, $ -> $.expression)),
           discreteProfileExprP.map(Iso.of(ProfileExpression::new, $ -> $.expression)));
 
-  private static final JsonParser<Transition> transitionP =
+  static final JsonParser<Transition> transitionP =
       productP
-          .field("type", literalP("Transition"))
+          .field("kind", literalP("DiscreteProfileTransition"))
           .field("profile", discreteProfileExprP)
           .field("from", serializedValueP)
           .field("to", serializedValueP)
           .map(Iso.of(
-              untuple((type, profile, from, to) -> new Transition(profile, from, to)),
+              untuple((kind, profile, from, to) -> new Transition(profile, from, to)),
               $ -> tuple(Unit.UNIT, $.profile, $.oldState, $.newState)));
 
-  private static final JsonParser<During> duringP =
+  static final JsonParser<During> duringP =
       productP
-          .field("type", literalP("During"))
+          .field("kind", literalP("WindowsExpressionDuring"))
           .field("alias", stringP)
           .map(Iso.of(
-              untuple((type, alias) -> new During(alias)),
+              untuple((kind, alias) -> new During(alias)),
               $ -> tuple(Unit.UNIT, $.activityAlias)));
 
-  private static final JsonParser<StartOf> startOfP =
+  static final JsonParser<StartOf> startOfP =
       productP
-          .field("type", literalP("StartOf"))
+          .field("kind", literalP("WindowsExpressionStartOf"))
           .field("alias", stringP)
           .map(Iso.of(
-              untuple((type, alias) -> new StartOf(alias)),
+              untuple((kind, alias) -> new StartOf(alias)),
               $ -> tuple(Unit.UNIT, $.activityAlias)));
 
-  private static final JsonParser<EndOf> endOfP =
+  static final JsonParser<EndOf> endOfP =
       productP
-          .field("type", literalP("EndOf"))
+          .field("kind", literalP("WindowsExpressionEndOf"))
           .field("alias", stringP)
           .map(Iso.of(
-              untuple((type, alias) -> new EndOf(alias)),
+              untuple((kind, alias) -> new EndOf(alias)),
               $ -> tuple(Unit.UNIT, $.activityAlias)));
 
-  private static <P extends Profile<P>> JsonParser<Equal<P>> equalF(final JsonParser<Expression<P>> expressionParser) {
+  static <P extends Profile<P>> JsonParser<Equal<P>> equalF(final JsonParser<Expression<P>> expressionParser) {
     return productP
-        .field("type", literalP("Equal"))
+        .field("kind", literalP("ExpressionEqual"))
         .field("left", expressionParser)
         .field("right", expressionParser)
         .map(Iso.of(
-            untuple((type, left, right) -> new Equal<>(left, right)),
+            untuple((kind, left, right) -> new Equal<>(left, right)),
             $ -> tuple(Unit.UNIT, $.left, $.right)));
   }
 
-  private static <P extends Profile<P>> JsonParser<NotEqual<P>> notEqualF(final JsonParser<Expression<P>> expressionParser) {
+  static <P extends Profile<P>> JsonParser<NotEqual<P>> notEqualF(final JsonParser<Expression<P>> expressionParser) {
     return productP
-        .field("type", literalP("NotEqual"))
+        .field("kind", literalP("ExpressionNotEqual"))
         .field("left", expressionParser)
         .field("right", expressionParser)
         .map(Iso.of(
-            untuple((type, left, right) -> new NotEqual<>(left, right)),
+            untuple((kind, left, right) -> new NotEqual<>(left, right)),
             $ -> tuple(Unit.UNIT, $.left, $.right)));
   }
 
-  private static final JsonParser<LessThan> lessThanP =
+  static final JsonParser<LessThan> lessThanP =
       productP
-          .field("type", literalP("LessThan"))
+          .field("kind", literalP("RealProfileLessThan"))
           .field("left", linearProfileExprP)
           .field("right", linearProfileExprP)
           .map(Iso.of(
-              untuple((type, left, right) -> new LessThan(left, right)),
+              untuple((kind, left, right) -> new LessThan(left, right)),
               $ -> tuple(Unit.UNIT, $.left, $.right)));
 
-  private static final JsonParser<LessThanOrEqual> lessThanOrEqualP =
+  static final JsonParser<LessThanOrEqual> lessThanOrEqualP =
       productP
-          .field("type", literalP("LessThanOrEqual"))
+          .field("kind", literalP("RealProfileLessThanOrEqual"))
           .field("left", linearProfileExprP)
           .field("right", linearProfileExprP)
           .map(Iso.of(
-              untuple((type, left, right) -> new LessThanOrEqual(left, right)),
+              untuple((kind, left, right) -> new LessThanOrEqual(left, right)),
               $ -> tuple(Unit.UNIT, $.left, $.right)));
 
-  private static final JsonParser<GreaterThan> greaterThanP =
+  static final JsonParser<GreaterThan> greaterThanP =
       productP
-          .field("type", literalP("GreaterThan"))
+          .field("kind", literalP("RealProfileGreaterThan"))
           .field("left", linearProfileExprP)
           .field("right", linearProfileExprP)
           .map(Iso.of(
-              untuple((type, left, right) -> new GreaterThan(left, right)),
+              untuple((kind, left, right) -> new GreaterThan(left, right)),
               $ -> tuple(Unit.UNIT, $.left, $.right)));
 
-  private static final JsonParser<GreaterThanOrEqual> greaterThanOrEqualP =
+  static final JsonParser<GreaterThanOrEqual> greaterThanOrEqualP =
       productP
-          .field("type", literalP("GreaterThanOrEqual"))
+          .field("kind", literalP("RealProfileGreaterThanOrEqual"))
           .field("left", linearProfileExprP)
           .field("right", linearProfileExprP)
           .map(Iso.of(
-              untuple((type, left, right) -> new GreaterThanOrEqual(left, right)),
+              untuple((kind, left, right) -> new GreaterThanOrEqual(left, right)),
               $ -> tuple(Unit.UNIT, $.left, $.right)));
 
-  private static JsonParser<And> andF(final JsonParser<Expression<Windows>> windowsExpressionP) {
+  static JsonParser<And> allF(final JsonParser<Expression<Windows>> windowsExpressionP) {
     return productP
-        .field("type", literalP("And"))
+        .field("kind", literalP("WindowsExpressionAll"))
         .field("expressions", listP(windowsExpressionP))
         .map(Iso.of(
-            untuple((type, expressions) -> new And(expressions)),
+            untuple((kind, expressions) -> new And(expressions)),
             $ -> tuple(Unit.UNIT, $.expressions)));
   }
 
-  private static JsonParser<Or> orF(final JsonParser<Expression<Windows>> windowsExpressionP) {
+  static JsonParser<Or> anyF(final JsonParser<Expression<Windows>> windowsExpressionP) {
     return productP
-        .field("type", literalP("Or"))
+        .field("kind", literalP("WindowsExpressionAny"))
         .field("expressions", listP(windowsExpressionP))
         .map(Iso.of(
-            untuple((type, expressions) -> new Or(expressions)),
+            untuple((kind, expressions) -> new Or(expressions)),
             $ -> tuple(Unit.UNIT, $.expressions)));
   }
 
-  private static JsonParser<Not> notF(final JsonParser<Expression<Windows>> windowsExpressionP) {
+  static JsonParser<Not> notF(final JsonParser<Expression<Windows>> windowsExpressionP) {
     return productP
-        .field("type", literalP("Not"))
+        .field("kind", literalP("WindowsExpressionNot"))
         .field("expression", windowsExpressionP)
         .map(Iso.of(
-            untuple((type, expr) -> new Not(expr)),
+            untuple((kind, expr) -> new Not(expr)),
             $ -> tuple(Unit.UNIT, $.expression)));
   }
 
-  private static JsonParser<IfThen> ifThenF(final JsonParser<Expression<Windows>> windowsExpressionP) {
+  static JsonParser<ForEachActivity> forEachActivityF(final JsonParser<Expression<List<Violation>>> violationListExpressionP) {
     return productP
-        .field("type", literalP("IfThen"))
-        .field("condition", windowsExpressionP)
-        .field("expression", windowsExpressionP)
-        .map(Iso.of(
-            untuple((type, cond, expr) -> new IfThen(cond, expr)),
-            $ -> tuple(Unit.UNIT, $.condition, $.expression)));
-  }
-
-  private static JsonParser<ForEachActivity> forEachActivityF(final JsonParser<Expression<List<Violation>>> violationListExpressionP) {
-    return productP
-        .field("type", literalP("ForEachActivity"))
+        .field("kind", literalP("ForEachActivity"))
         .field("activityType", stringP)
         .field("alias", stringP)
         .field("expression", violationListExpressionP)
         .map(Iso.of(
-            untuple((type, actType, alias, expression) -> new ForEachActivity(actType, alias, expression)),
+            untuple((kind, actType, alias, expression) -> new ForEachActivity(actType, alias, expression)),
             $ -> tuple(Unit.UNIT, $.activityType, $.alias, $.expression)));
   }
 
-  private static final JsonParser<Changed<?>> changedP =
+  static final JsonParser<Changed<?>> changedP =
       productP
-          .field("type", literalP("Changed"))
+          .field("kind", literalP("ProfileChanged"))
           .field("expression", profileExpressionP)
           .map(Iso.of(
-              untuple((type, expression) -> new Changed<>(expression)),
+              untuple((kind, expression) -> new Changed<>(expression)),
               $ -> tuple(Unit.UNIT, $.expression)));
 
-  static final JsonParser<Expression<LinearProfile>> linearProfileExpressionP = linearProfileExprP;
-  static final JsonParser<Expression<DiscreteProfile>> discreteProfileExpressionP = discreteProfileExprP;
-
-  static final JsonParser<Expression<Windows>> windowsExpressionP =
+  public static final JsonParser<Expression<Windows>> windowsExpressionP =
       recursiveP(selfP -> chooseP(
           duringP,
           startOfP,
@@ -318,25 +277,33 @@ public final class ConstraintParsers {
           equalF(discreteProfileExprP),
           notEqualF(linearProfileExprP),
           notEqualF(discreteProfileExprP),
-          andF(selfP),
-          orF(selfP),
-          notF(selfP),
-          ifThenF(selfP)));
+          allF(selfP),
+          anyF(selfP),
+          notF(selfP)));
 
-  private static final JsonParser<ForbiddenActivityOverlap> forbiddenActivityOverlapP =
+  static final JsonParser<ForbiddenActivityOverlap> forbiddenActivityOverlapP =
       productP
-          .field("type", literalP("ForbiddenActivityOverlap"))
+          .field("kind", literalP("ForbiddenActivityOverlap"))
           .field("activityType1", stringP)
           .field("activityType2", stringP)
           .map(Iso.of(
-              untuple((type, act1, act2) -> new ForbiddenActivityOverlap(act1, act2)),
+              untuple((kind, act1, act2) -> new ForbiddenActivityOverlap(act1, act2)),
               $ -> tuple(Unit.UNIT, $.activityType1, $.activityType2)));
 
-  static final JsonParser<Expression<List<Violation>>> violationListExpressionP =
+  static final JsonParser<ViolationsOf> violationsOfP =
+      productP
+          .field("kind", literalP("ViolationsOf"))
+          .field("expression", windowsExpressionP)
+          .map(Iso.of(
+              untuple((kind, expression) -> new ViolationsOf(expression)),
+              $ -> tuple(Unit.UNIT, $.expression)
+          ));
+
+
+  public static final JsonParser<Expression<List<Violation>>> constraintP =
       recursiveP(selfP -> chooseP(
           forEachActivityF(selfP),
           windowsExpressionP.map(Iso.of(ViolationsOf::new, $ -> $.expression)),
+          violationsOfP,
           forbiddenActivityOverlapP));
-
-  public static final JsonParser<Expression<List<Violation>>> constraintP = violationListExpressionP;
 }

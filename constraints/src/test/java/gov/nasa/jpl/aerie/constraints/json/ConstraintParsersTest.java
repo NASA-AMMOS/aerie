@@ -33,20 +33,17 @@ import org.junit.jupiter.api.Test;
 import javax.json.Json;
 
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
-import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.discreteProfileExpressionP;
-import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.linearProfileExpressionP;
-import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.violationListExpressionP;
-import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.windowsExpressionP;
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.*;
 
 public final class ConstraintParsersTest {
   @Test
   public void testParseDiscreteValue() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "DiscreteValue")
+        .add("kind", "DiscreteProfileValue")
         .add("value", false)
         .build();
-    final var result = discreteProfileExpressionP.parse(json).getSuccessOrThrow();
+    final var result = discreteProfileExprP.parse(json).getSuccessOrThrow();
 
     final var expected =
         new DiscreteValue(SerializedValue.of(false));
@@ -58,10 +55,10 @@ public final class ConstraintParsersTest {
   public void testParseChanged() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "Changed")
+        .add("kind", "ProfileChanged")
         .add("expression", Json
             .createObjectBuilder()
-            .add("type", "DiscreteValue")
+            .add("kind", "DiscreteProfileValue")
             .add("value", false))
         .build();
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
@@ -78,10 +75,10 @@ public final class ConstraintParsersTest {
   public void testParseDiscreteResource() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "DiscreteResource")
+        .add("kind", "DiscreteProfileResource")
         .add("name", "ResA")
         .build();
-    final var result = discreteProfileExpressionP.parse(json).getSuccessOrThrow();
+    final var result = discreteResourceP.parse(json).getSuccessOrThrow();
 
     final var expected =
         new DiscreteResource("ResA");
@@ -93,10 +90,10 @@ public final class ConstraintParsersTest {
   public void testParseTransition() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "Transition")
+        .add("kind", "DiscreteProfileTransition")
         .add("profile", Json
             .createObjectBuilder()
-            .add("type", "DiscreteResource")
+            .add("kind", "DiscreteProfileResource")
             .add("name", "ResA"))
         .add("from", "old")
         .add("to", "new")
@@ -116,11 +113,11 @@ public final class ConstraintParsersTest {
   public void testParseRealParameter() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "RealParameter")
+        .add("kind", "RealProfileParameter")
         .add("alias", "act")
         .add("name", "pJones")
         .build();
-    final var result = linearProfileExpressionP.parse(json).getSuccessOrThrow();
+    final var result = linearProfileExprP.parse(json).getSuccessOrThrow();
 
     final var expected = new RealParameter("act", "pJones");
 
@@ -131,10 +128,10 @@ public final class ConstraintParsersTest {
   public void testParseRealValue() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "RealValue")
+        .add("kind", "RealProfileValue")
         .add("value", 3.4)
         .build();
-    final var result = linearProfileExpressionP.parse(json).getSuccessOrThrow();
+    final var result = linearProfileExprP.parse(json).getSuccessOrThrow();
 
     final var expected = new RealValue(3.4);
 
@@ -145,10 +142,10 @@ public final class ConstraintParsersTest {
   public void testParseRealResource() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "RealResource")
+        .add("kind", "RealProfileResource")
         .add("name", "ResA")
         .build();
-    final var result = linearProfileExpressionP.parse(json).getSuccessOrThrow();
+    final var result = linearProfileExprP.parse(json).getSuccessOrThrow();
 
     final var expected = new RealResource("ResA");
 
@@ -159,17 +156,17 @@ public final class ConstraintParsersTest {
   public void testParsePlus() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "Plus")
+        .add("kind", "RealProfilePlus")
         .add("left", Json
             .createObjectBuilder()
-            .add("type", "RealResource")
+            .add("kind", "RealProfileResource")
             .add("name", "ResA"))
         .add("right", Json
             .createObjectBuilder()
-            .add("type", "RealResource")
+            .add("kind", "RealProfileResource")
             .add("name", "ResB"))
         .build();
-    final var result = linearProfileExpressionP.parse(json).getSuccessOrThrow();
+    final var result = linearProfileExprP.parse(json).getSuccessOrThrow();
 
     final var expected =
         new Plus(
@@ -183,14 +180,14 @@ public final class ConstraintParsersTest {
   public void testParseTimes() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "Times")
+        .add("kind", "RealProfileTimes")
         .add("profile", Json
             .createObjectBuilder()
-            .add("type", "RealResource")
+            .add("kind", "RealProfileResource")
             .add("name", "ResA"))
         .add("multiplier", 2.7)
         .build();
-    final var result = linearProfileExpressionP.parse(json).getSuccessOrThrow();
+    final var result = linearProfileExprP.parse(json).getSuccessOrThrow();
 
     final var expected =
         new Times(
@@ -204,13 +201,13 @@ public final class ConstraintParsersTest {
   public void testParseRate() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "Rate")
+        .add("kind", "RealProfileRate")
         .add("profile", Json
             .createObjectBuilder()
-            .add("type", "RealResource")
+            .add("kind", "RealProfileResource")
             .add("name", "ResA"))
         .build();
-    final var result = linearProfileExpressionP.parse(json).getSuccessOrThrow();
+    final var result = linearProfileExprP.parse(json).getSuccessOrThrow();
 
     final var expected =
         new Rate(
@@ -223,7 +220,7 @@ public final class ConstraintParsersTest {
   public void testParseDuring() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "During")
+        .add("kind", "WindowsExpressionDuring")
         .add("alias", "TEST")
         .build();
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
@@ -237,7 +234,7 @@ public final class ConstraintParsersTest {
   public void testParseStartOf() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "StartOf")
+        .add("kind", "WindowsExpressionStartOf")
         .add("alias", "TEST")
         .build();
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
@@ -251,7 +248,7 @@ public final class ConstraintParsersTest {
   public void testParseEndOf() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "EndOf")
+        .add("kind", "WindowsExpressionEndOf")
         .add("alias", "TEST")
         .build();
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
@@ -265,11 +262,11 @@ public final class ConstraintParsersTest {
   public void testParseParameter() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "DiscreteParameter")
+        .add("kind", "DiscreteProfileParameter")
         .add("alias", "TEST")
         .add("name", "paramesan")
         .build();
-    final var result = discreteProfileExpressionP.parse(json).getSuccessOrThrow();
+    final var result = discreteProfileExprP.parse(json).getSuccessOrThrow();
 
     final var expected = new DiscreteParameter("TEST", "paramesan");
 
@@ -280,14 +277,14 @@ public final class ConstraintParsersTest {
   public void testParseEqual() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "Equal")
+        .add("kind", "ExpressionEqual")
         .add("left", Json
             .createObjectBuilder()
-            .add("type", "RealResource")
+            .add("kind", "RealProfileResource")
             .add("name", "ResA"))
         .add("right", Json
             .createObjectBuilder()
-            .add("type", "RealResource")
+            .add("kind", "RealProfileResource")
             .add("name", "ResB"))
         .build();
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
@@ -304,14 +301,14 @@ public final class ConstraintParsersTest {
   public void testParseNotEqual() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "NotEqual")
+        .add("kind", "ExpressionNotEqual")
         .add("left", Json
             .createObjectBuilder()
-            .add("type", "RealResource")
+            .add("kind", "RealProfileResource")
             .add("name", "ResA"))
         .add("right", Json
             .createObjectBuilder()
-            .add("type", "RealResource")
+            .add("kind", "RealProfileResource")
             .add("name", "ResB"))
         .build();
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
@@ -328,14 +325,14 @@ public final class ConstraintParsersTest {
   public void testParseLessThan() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "LessThan")
+        .add("kind", "RealProfileLessThan")
         .add("left", Json
             .createObjectBuilder()
-            .add("type", "RealResource")
+            .add("kind", "RealProfileResource")
             .add("name", "ResA"))
         .add("right", Json
             .createObjectBuilder()
-            .add("type", "RealResource")
+            .add("kind", "RealProfileResource")
             .add("name", "ResB"))
         .build();
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
@@ -352,14 +349,14 @@ public final class ConstraintParsersTest {
   public void testParseLessThanOrEqual() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "LessThanOrEqual")
+        .add("kind", "RealProfileLessThanOrEqual")
         .add("left", Json
             .createObjectBuilder()
-            .add("type", "RealResource")
+            .add("kind", "RealProfileResource")
             .add("name", "ResA"))
         .add("right", Json
             .createObjectBuilder()
-            .add("type", "RealResource")
+            .add("kind", "RealProfileResource")
             .add("name", "ResB"))
         .build();
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
@@ -376,14 +373,14 @@ public final class ConstraintParsersTest {
   public void testParseGreaterThanOrEqual() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "GreaterThanOrEqual")
+        .add("kind", "RealProfileGreaterThanOrEqual")
         .add("left", Json
             .createObjectBuilder()
-            .add("type", "RealResource")
+            .add("kind", "RealProfileResource")
             .add("name", "ResA"))
         .add("right", Json
             .createObjectBuilder()
-            .add("type", "RealResource")
+            .add("kind", "RealProfileResource")
             .add("name", "ResB"))
         .build();
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
@@ -400,14 +397,14 @@ public final class ConstraintParsersTest {
   public void testParseGreaterThan() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "GreaterThan")
+        .add("kind", "RealProfileGreaterThan")
         .add("left", Json
             .createObjectBuilder()
-            .add("type", "RealResource")
+            .add("kind", "RealProfileResource")
             .add("name", "ResA"))
         .add("right", Json
             .createObjectBuilder()
-            .add("type", "RealResource")
+            .add("kind", "RealProfileResource")
             .add("name", "ResB"))
         .build();
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
@@ -421,20 +418,20 @@ public final class ConstraintParsersTest {
   }
 
   @Test
-  public void testParseAnd() {
+  public void testParseAll() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "And")
+        .add("kind", "WindowsExpressionAll")
         .add("expressions", Json
             .createArrayBuilder()
             .add(Json
-                .createObjectBuilder()
-                .add("type", "During")
-                .add("alias", "A"))
+                     .createObjectBuilder()
+                     .add("kind", "WindowsExpressionDuring")
+                     .add("alias", "A"))
             .add(Json
-                .createObjectBuilder()
-                .add("type", "During")
-                .add("alias", "B")))
+                     .createObjectBuilder()
+                     .add("kind", "WindowsExpressionDuring")
+                     .add("alias", "B")))
         .build();
 
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
@@ -448,20 +445,20 @@ public final class ConstraintParsersTest {
   }
 
   @Test
-  public void testParseOr() {
+  public void testParseAny() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "Or")
+        .add("kind", "WindowsExpressionAny")
         .add("expressions", Json
             .createArrayBuilder()
             .add(Json
-                .createObjectBuilder()
-                .add("type", "During")
-                .add("alias", "A"))
+                     .createObjectBuilder()
+                     .add("kind", "WindowsExpressionDuring")
+                     .add("alias", "A"))
             .add(Json
-                .createObjectBuilder()
-                .add("type", "During")
-                .add("alias", "B")))
+                     .createObjectBuilder()
+                     .add("kind", "WindowsExpressionDuring")
+                     .add("alias", "B")))
         .build();
 
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
@@ -478,10 +475,10 @@ public final class ConstraintParsersTest {
   public void testParseNot() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "Not")
+        .add("kind", "WindowsExpressionNot")
         .add("expression", Json
             .createObjectBuilder()
-            .add("type", "During")
+            .add("kind", "WindowsExpressionDuring")
             .add("alias", "A"))
         .build();
 
@@ -498,15 +495,15 @@ public final class ConstraintParsersTest {
   public void testForEachActivity() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "ForEachActivity")
+        .add("kind", "ForEachActivity")
         .add("activityType", "TypeA")
         .add("alias", "A")
         .add("expression", Json
             .createObjectBuilder()
-            .add("type", "During")
+            .add("kind", "WindowsExpressionDuring")
             .add("alias", "A"))
         .build();
-    final var result = violationListExpressionP.parse(json).getSuccessOrThrow();
+    final var result = constraintP.parse(json).getSuccessOrThrow();
 
     final var expected =
         new ForEachActivity(
@@ -522,71 +519,71 @@ public final class ConstraintParsersTest {
   public void testParseMassiveExpression() {
     var json = Json
         .createObjectBuilder()
-        .add("type", "ForEachActivity")
+        .add("kind", "ForEachActivity")
         .add("activityType", "TypeA")
         .add("alias", "A")
         .add("expression", Json
             .createObjectBuilder()
-            .add("type", "ForEachActivity")
+            .add("kind", "ForEachActivity")
             .add("activityType", "TypeB")
             .add("alias", "B")
             .add("expression", Json
                 .createObjectBuilder()
-                .add("type", "Or")
+                .add("kind", "WindowsExpressionAny")
                 .add("expressions", Json
                     .createArrayBuilder()
                     .add(Json
-                        .createObjectBuilder()
-                        .add("type", "Or")
-                        .add("expressions", Json
-                            .createArrayBuilder()
-                            .add(Json
-                                .createObjectBuilder()
-                                .add("type", "Not")
-                                .add("expression", Json
-                                    .createObjectBuilder()
-                                    .add("type", "LessThan")
-                                    .add("left", Json
-                                        .createObjectBuilder()
-                                        .add("type", "Times")
-                                        .add("profile", Json
-                                            .createObjectBuilder()
-                                            .add("type", "RealResource")
-                                            .add("name", "ResC"))
-                                        .add("multiplier", 2.0))
-                                    .add("right", Json
-                                        .createObjectBuilder()
-                                        .add("type", "RealParameter")
-                                        .add("alias", "A")
-                                        .add("name", "a"))))
-                            .add(Json
-                                .createObjectBuilder()
-                                .add("type", "Equal")
-                                .add("left", Json
-                                    .createObjectBuilder()
-                                    .add("type", "DiscreteValue")
-                                    .add("value", false))
-                                .add("right", Json
-                                    .createObjectBuilder()
-                                    .add("type", "DiscreteParameter")
-                                    .add("alias", "B")
-                                    .add("name", "b")))))
+                             .createObjectBuilder()
+                             .add("kind", "WindowsExpressionAny")
+                             .add("expressions", Json
+                                 .createArrayBuilder()
+                                 .add(Json
+                                          .createObjectBuilder()
+                                          .add("kind", "WindowsExpressionNot")
+                                          .add("expression", Json
+                                              .createObjectBuilder()
+                                              .add("kind", "RealProfileLessThan")
+                                              .add("left", Json
+                                                  .createObjectBuilder()
+                                                  .add("kind", "RealProfileTimes")
+                                                  .add("profile", Json
+                                                      .createObjectBuilder()
+                                                      .add("kind", "RealProfileResource")
+                                                      .add("name", "ResC"))
+                                                  .add("multiplier", 2.0))
+                                              .add("right", Json
+                                                  .createObjectBuilder()
+                                                  .add("kind", "RealProfileParameter")
+                                                  .add("alias", "A")
+                                                  .add("name", "a"))))
+                                 .add(Json
+                                          .createObjectBuilder()
+                                          .add("kind", "ExpressionEqual")
+                                          .add("left", Json
+                                              .createObjectBuilder()
+                                              .add("kind", "DiscreteProfileValue")
+                                              .add("value", false))
+                                          .add("right", Json
+                                              .createObjectBuilder()
+                                              .add("kind", "DiscreteProfileParameter")
+                                              .add("alias", "B")
+                                              .add("name", "b")))))
                     .add(Json
-                        .createObjectBuilder()
-                        .add("type", "Not")
-                        .add("expression", Json
-                            .createObjectBuilder()
-                            .add("type", "During")
-                            .add("alias", "A")))
+                             .createObjectBuilder()
+                             .add("kind", "WindowsExpressionNot")
+                             .add("expression", Json
+                                 .createObjectBuilder()
+                                 .add("kind", "WindowsExpressionDuring")
+                                 .add("alias", "A")))
                     .add(Json
-                        .createObjectBuilder()
-                        .add("type", "Not")
-                        .add("expression", Json
-                            .createObjectBuilder()
-                            .add("type", "During")
-                            .add("alias", "B"))))))
+                             .createObjectBuilder()
+                             .add("kind", "WindowsExpressionNot")
+                             .add("expression", Json
+                                 .createObjectBuilder()
+                                 .add("kind", "WindowsExpressionDuring")
+                                 .add("alias", "B"))))))
         .build();
-    final var result = violationListExpressionP.parse(json).getSuccessOrThrow();
+    final var result = constraintP.parse(json).getSuccessOrThrow();
 
     final var expected = new ForEachActivity(
         "TypeA",
@@ -616,11 +613,11 @@ public final class ConstraintParsersTest {
   public void testForbiddenActivityOverlap() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "ForbiddenActivityOverlap")
+        .add("kind", "ForbiddenActivityOverlap")
         .add("activityType1", "A")
         .add("activityType2", "B")
         .build();
-    final var result = violationListExpressionP.parse(json).getSuccessOrThrow();
+    final var result = constraintP.parse(json).getSuccessOrThrow();
 
     final var expected = new ForbiddenActivityOverlap("A", "B");
 
