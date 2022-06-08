@@ -76,7 +76,7 @@ public final class GetSimulationResultsAction {
   throws NoSuchPlanException
   {
     final var revisionData = this.planService.getPlanRevisionData(planId);
-    return simulationService.getResourceSamples(planId, revisionData);
+    return simulationService.get(planId, revisionData, r -> r.resourceSamples).orElseGet(Map::of);
   }
 
   public Map<String, List<Violation>> getViolations(final PlanId planId, final SimulationResults results)
