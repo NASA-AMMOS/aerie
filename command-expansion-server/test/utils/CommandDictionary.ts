@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import { gql, GraphQLClient } from 'graphql-request';
 
 const commandDictionaryString = fs.readFileSync(
-    new URL('../inputs/command-dictionary.xml', import.meta.url).pathname,
-    'utf-8',
+  new URL('../../cdict/command_banananation.xml', import.meta.url).pathname,
+  'utf-8',
 );
 
 export async function insertCommandDictionary(graphqlClient: GraphQLClient): Promise<number> {
