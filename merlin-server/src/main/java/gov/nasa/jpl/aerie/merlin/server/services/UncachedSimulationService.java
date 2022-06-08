@@ -2,7 +2,10 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
@@ -40,9 +43,10 @@ public record UncachedSimulationService (
   }
 
   @Override
-  public Map<String, List<Pair<Duration, SerializedValue>>> getResourceSamples(final PlanId planId, final RevisionData revisionData) {
-    return getSimulationResults(planId, revisionData) instanceof ResultsProtocol.State.Success s ?
-        s.results().resourceSamples :
-        Map.of();
+  public <T> Optional<T> get(final PlanId planId, final RevisionData revisionData, final Function<SimulationResults, T> getter) {
+    return Optional.ofNullable(
+        getSimulationResults(planId, revisionData) instanceof ResultsProtocol.State.Success s ?
+            getter.apply(s.results()) :
+            null);
   }
 }

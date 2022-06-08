@@ -17,6 +17,8 @@ import javax.json.Json;
 import javax.json.stream.JsonParsingException;
 import java.io.StringReader;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraExternalDatasetActionP;
@@ -84,6 +86,9 @@ public final class MerlinBindings implements Plugin {
       });
       path("validateModelArguments", () -> {
         post(this::validateModelArguments);
+      });
+      path("validatePlan", () -> {
+        post(this::validatePlan);
       });
       path("getModelEffectiveArguments", () -> {
         post(this::getModelEffectiveArguments);
@@ -228,6 +233,28 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    }
+  }
+
+  private void validatePlan(final Context ctx) {
+    try {
+      final var planId = parseJson(ctx.body(), hasuraPlanActionP).input().planId();
+
+      final var plan = this.planService.getPlan(planId);
+      final var activities = plan.activityInstances.entrySet().stream().collect(Collectors.toMap(
+          Map.Entry::getKey,
+          e -> new SerializedActivity(e.getValue().type, e.getValue().arguments)));
+      final var failures = this.missionModelService.validateActivityInstantiations(plan.missionModelId, activities);
+
+      ctx.result(ResponseSerializers.serializeUnconstructableActivityFailures(failures).toString());
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    } catch (final NoSuchPlanException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
+    } catch (final MissionModelService.NoSuchMissionModelException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
     }
   }
 

@@ -131,9 +131,9 @@ public final class MissionModelFacade {
   }
 
   /** Get activity instantiation failure messages as a mapping of activity instance ID to failure. */
-  public <T> Map<T, String> validateActivityInstantiations(final Map<T, SerializedActivity> activities)
+  public Map<ActivityInstanceId, String> validateActivityInstantiations(final Map<ActivityInstanceId, SerializedActivity> activities)
   {
-    final var failures = new HashMap<T, String>();
+    final var failures = new HashMap<ActivityInstanceId, String>();
 
     activities.forEach((id, act) -> {
       try {

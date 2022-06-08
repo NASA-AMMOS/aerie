@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
@@ -33,7 +34,7 @@ public interface MissionModelService {
   List<String> validateActivityArguments(String missionModelId, SerializedActivity activity)
   throws NoSuchMissionModelException, TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException;
 
-  <T> Map<T, String> validateActivityInstantiations(String missionModelId, Map<T, SerializedActivity> activities)
+  Map<ActivityInstanceId, String> validateActivityInstantiations(String missionModelId, Map<ActivityInstanceId, SerializedActivity> activities)
   throws NoSuchMissionModelException, MissionModelFacade.MissionModelContractException,
          LocalMissionModelService.MissionModelLoadException;
 

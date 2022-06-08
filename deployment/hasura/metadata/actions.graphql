@@ -113,6 +113,12 @@ type Query {
 }
 
 type Query {
+  validatePlan(
+    planId: Int!
+  ): ValidationResponse
+}
+
+type Query {
   getSequenceSeqJson(
     seqId: String!
     simulationDatasetId: Int!

@@ -2,7 +2,10 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
@@ -30,13 +33,11 @@ public record CachedSimulationService (
   }
 
   @Override
-  public Map<String, List<Pair<Duration, SerializedValue>>> getResourceSamples(final PlanId planId, final RevisionData revisionData) {
+  public <T> Optional<T> get(final PlanId planId, final RevisionData revisionData, final Function<SimulationResults, T> getter) {
     return this.store.lookup(planId) // Only return results that have already been cached
         .map(ResultsProtocol.ReaderRole::get)
-        .map(state -> {
-            if (!(state instanceof final ResultsProtocol.State.Success s)) return null;
-            return s.results().resourceSamples;
-        })
-        .orElseGet(Map::of);
+        .map(state -> state instanceof final ResultsProtocol.State.Success s ?
+            getter.apply(s.results()) :
+            null);
   }
 }
