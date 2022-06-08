@@ -1,16 +1,28 @@
 import fetch, { FormData, fileFrom } from 'node-fetch';
 import { gql, GraphQLClient } from 'graphql-request';
 import { randomUUID } from 'crypto';
+import { waitMs } from './testUtils';
+import fs from 'node:fs/promises';
 
 export async function uploadMissionModel(graphqlClient: GraphQLClient): Promise<number> {
   /*
    * Insert a mission model
    */
-  const bananaNationMissionModelUrl = new URL('../inputs/banananation-0.11.3-SNAPSHOT.jar', import.meta.url);
+  const banananationBuildDir = new URL('../../../examples/banananation/build/libs', import.meta.url);
+  const banananationListings = await fs.readdir(banananationBuildDir.pathname);
+
+  const banananationStats = await Promise.all(banananationListings.map(async listing => {
+    const path = banananationBuildDir.pathname + '/' + listing;
+    return {
+      path,
+      stats: await fs.stat(path),
+    }
+  }));
+  const latestBuild = banananationStats.sort((a, b) => a.stats.mtime.getTime() - b.stats.mtime.getTime()).reverse()[0];
 
   const formData = new FormData();
-  const file = await fileFrom(bananaNationMissionModelUrl.pathname);
-  formData.set('file', file, 'banananation-0.11.3-SNAPSHOT.jar');
+  const file = await fileFrom(latestBuild.path);
+  formData.set('file', file, 'banananation-latest.jar');
 
   const uploadRes = await fetch(`${process.env.MERLIN_GATEWAY_URL}/file`, {
     method: 'POST',
@@ -40,7 +52,7 @@ export async function uploadMissionModel(graphqlClient: GraphQLClient): Promise<
       },
     },
   );
-  await new Promise(resolve => setTimeout(resolve, 3000));
+  await waitMs(3000);
   return (res.insert_mission_model_one as { id: number } as { id: number }).id;
 }
 

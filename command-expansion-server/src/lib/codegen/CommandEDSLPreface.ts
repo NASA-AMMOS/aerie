@@ -153,7 +153,7 @@ export class Command<
           ? { type: TimingTypes.COMMAND_RELATIVE, tag: Command.durationToHms(this.relativeTime) }
           : { type: TimingTypes.COMMAND_COMPLETE },
       type: 'command',
-      metadata: {},
+      metadata: this.metadata,
     };
   }
 
