@@ -62,13 +62,28 @@ beforeEach(async () => {
     graphqlClient,
     'ThrowBanana',
     `
-  export default function TimeCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+  export default function TimeDynamicCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
     return [
       ADD_WATER.absoluteTiming(Temporal.Instant.from("2022-04-20T20:17:13Z")),
       ADD_WATER.absoluteTiming(Temporal.Instant.from("2020-02-29T03:45:19Z")),
       ADD_WATER.absoluteTiming(Temporal.Instant.from("2025-12-24T12:01:59Z")),
       EAT_BANANA.relativeTiming(Temporal.Duration.from({ minutes: 15, seconds: 30 })),
       EAT_BANANA.epochTiming(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })),
+      PACKAGE_BANANA({
+        bundle_name1: "Chiquita",
+        number_of_bananas1: 43,
+        bundle_name2: "Dole",
+        number_of_bananas2: 12,
+        lot_number: 1093,
+      }),
+      PACKAGE_BANANA({
+        bundle_name2: "Dole",
+        number_of_bananas1: 43,
+        bundle_name1: "Chiquita",
+        lot_number: 1093,
+        number_of_bananas2: 12
+      }),
+      PACKAGE_BANANA("Chiquita",43,"Dole",12,"Blue",1,1093)
     ];
   }
   `,
@@ -151,6 +166,7 @@ it('should return sequence seqjson', async () => {
   expect(getSequenceSeqJson.metadata).toEqual({});
   expect(getSequenceSeqJson.steps).toEqual([
     {
+      // expansion 1
       type: 'command',
       stem: 'PREHEAT_OVEN',
       time: { type: 'COMMAND_COMPLETE' },
@@ -172,6 +188,7 @@ it('should return sequence seqjson', async () => {
       metadata: { simulatedActivityId: simulatedActivityId1 },
     },
     {
+      // expansion 2
       type: 'command',
       stem: 'PREHEAT_OVEN',
       time: { type: 'COMMAND_COMPLETE' },
@@ -191,8 +208,9 @@ it('should return sequence seqjson', async () => {
       time: { type: 'COMMAND_COMPLETE' },
       args: [50, false],
       metadata: { simulatedActivityId: simulatedActivityId2 },
-    }, // expansion 4
+    },
     {
+      // expansion 4
       type: 'command',
       stem: 'ADD_WATER',
       time: {
@@ -240,6 +258,27 @@ it('should return sequence seqjson', async () => {
         type: 'EPOCH_RELATIVE',
       },
       args: [],
+      metadata: { simulatedActivityId: simulatedActivityId4 },
+    },
+    {
+      type: 'command',
+      stem: 'PACKAGE_BANANA',
+      time: { type: 'COMMAND_COMPLETE' },
+      args: ['Chiquita', 43, 'Dole', 12, 1093],
+      metadata: { simulatedActivityId: simulatedActivityId4 },
+    },
+    {
+      type: 'command',
+      stem: 'PACKAGE_BANANA',
+      time: { type: 'COMMAND_COMPLETE' },
+      args: ['Chiquita', 43, 'Dole', 12, 1093],
+      metadata: { simulatedActivityId: simulatedActivityId4 },
+    },
+    {
+      type: 'command',
+      stem: 'PACKAGE_BANANA',
+      time: { type: 'COMMAND_COMPLETE' },
+      args: ['Chiquita', 43, 'Dole', 12, 'Blue', 1, 1093],
       metadata: { simulatedActivityId: simulatedActivityId4 },
     },
   ]);

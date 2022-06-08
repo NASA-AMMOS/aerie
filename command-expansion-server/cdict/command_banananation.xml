@@ -26,11 +26,11 @@
     <command_definitions>
         <fsw_command opcode="0xFFFF" stem="PREHEAT_OVEN" class="FSW">
             <arguments>
-                <unsigned_arg name="temperture" bit_length="8" units="none">
+                <unsigned_arg name="temperature" bit_length="8" units="none">
                     <range_of_values>
                         <include min="0" max="100" />
                     </range_of_values>
-                    <description>Set the oven temperture</description>
+                    <description>Set the oven temperature</description>
                 </unsigned_arg>
             </arguments>
             <categories>
@@ -154,6 +154,35 @@
                 <prime_string_restriction prime_string_only="No" />
             </restricted_modes>
         </fsw_command>
+      <fsw_command opcode="0xFFFE" stem="PACKAGE_BANANA" class="FSW">
+        <arguments>
+          <unsigned_arg name="lot_number" bit_length="16" units="Opcode">
+            <description>Identification number assigned to a particular quantity</description>
+          </unsigned_arg>
+          <repeat_arg name="bundle" prefix_bit_length="8" cts_encoding="chunked_hexed">
+            <description>A repeated set of strings and integer containing the arguments to the lot</description>
+            <repeat min="1" max="7">
+              <arguments>
+                <var_string_arg name="bundle_name" prefix_bit_length="8" max_bit_length="1024" cts_item_type="dynamic_arg">
+                  <description>Name of the banana bundle</description>
+                </var_string_arg>
+                <unsigned_arg name="number_of_bananas" bit_length="8" units="priority">
+                  <range_of_values>
+                    <include min="0" max="100" />
+                  </range_of_values>
+                  <description>How many banana in a bundle</description>
+                </unsigned_arg>
+              </arguments>
+            </repeat>
+          </repeat_arg>
+        </arguments>
+        <description>Dynamically bundle bananas into lots</description>
+        <completion>When the banana are packaged up</completion>
+        <fsw_specification custom_validation_required="No" command_priority="Nominal" />
+        <restricted_modes>
+          <prime_string_restriction prime_string_only="No"/>
+        </restricted_modes>
+      </fsw_command>
         <fsw_command opcode="0xFFFE" stem="PICK_BANANA" class="FSW">
             <categories>
                 <module>shell_ctl</module>
