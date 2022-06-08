@@ -20,6 +20,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -64,7 +65,7 @@ public final class GetSimulationResultsAction {
       return new Response.Failed(r.reason());
     } else if (response instanceof ResultsProtocol.State.Success r) {
       final var results = r.results();
-      final var violations = getViolations(planId, results);
+      final var violations = getViolations(planId);
 
       return new Response.Complete(results, violations);
     } else {
@@ -76,13 +77,17 @@ public final class GetSimulationResultsAction {
   throws NoSuchPlanException
   {
     final var revisionData = this.planService.getPlanRevisionData(planId);
-    return simulationService.get(planId, revisionData, r -> r.resourceSamples).orElseGet(Map::of);
+    return this.simulationService
+        .get(planId, revisionData)
+        .map(r -> r.resourceSamples)
+        .orElseGet(Collections::emptyMap);
   }
 
-  public Map<String, List<Violation>> getViolations(final PlanId planId, final SimulationResults results)
+  public Map<String, List<Violation>> getViolations(final PlanId planId)
   throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException
   {
     final var plan = this.planService.getPlan(planId);
+    final var revisionData = this.planService.getPlanRevisionData(planId);
 
     final var constraintJsons = new HashMap<String, Constraint>();
 
@@ -97,9 +102,13 @@ public final class GetSimulationResultsAction {
       throw new RuntimeException("Assumption falsified -- mission model for existing plan does not exist");
     }
 
+    final var results$ = this.simulationService.get(planId, revisionData);
 
     final var activities = new ArrayList<ActivityInstance>();
-    for (final var entry : results.simulatedActivities.entrySet()) {
+    final var simulatedActivities = results$
+        .map(r -> r.simulatedActivities)
+        .orElseGet(Collections::emptyMap);
+    for (final var entry : simulatedActivities.entrySet()) {
       final var id = entry.getKey();
       final var activity = entry.getValue();
 
@@ -113,9 +122,11 @@ public final class GetSimulationResultsAction {
           activity.arguments(),
           Window.between(activityOffset, activityOffset.plus(activity.duration()))));
     }
-
-    final var discreteProfiles = new HashMap<String, DiscreteProfile>(results.discreteProfiles.size());
-    for (final var entry : results.discreteProfiles.entrySet()) {
+    final var _discreteProfiles = results$
+        .map(r -> r.discreteProfiles)
+        .orElseGet(Collections::emptyMap);
+    final var discreteProfiles = new HashMap<String, DiscreteProfile>(_discreteProfiles.size());
+    for (final var entry : _discreteProfiles.entrySet()) {
       final var pieces = new ArrayList<DiscreteProfilePiece>(entry.getValue().getRight().size());
 
       var elapsed = Duration.ZERO;
@@ -132,9 +143,11 @@ public final class GetSimulationResultsAction {
 
       discreteProfiles.put(entry.getKey(), new DiscreteProfile(pieces));
     }
-
+    final var _realProfiles = results$
+        .map(r -> r.realProfiles)
+        .orElseGet(Collections::emptyMap);
     final var realProfiles = new HashMap<String, LinearProfile>();
-    for (final var entry : results.realProfiles.entrySet()) {
+    for (final var entry : _realProfiles.entrySet()) {
       final var pieces = new ArrayList<LinearProfilePiece>(entry.getValue().size());
 
       var elapsed = Duration.ZERO;
