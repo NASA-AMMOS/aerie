@@ -1,6 +1,7 @@
 @MissionModel(model = Mission.class)
 
 @WithMappers(BasicValueMappers.class)
+@WithMappers(BanananationValueMappers.class)
 
 @WithConfiguration(Configuration.class)
 
@@ -29,6 +30,7 @@ import gov.nasa.jpl.aerie.banananation.activities.ParameterTestActivity;
 import gov.nasa.jpl.aerie.banananation.activities.PeelBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.PickBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.ThrowBananaActivity;
+import gov.nasa.jpl.aerie.banananation.activities.mappers.BanananationValueMappers;
 import gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel.WithActivityType;

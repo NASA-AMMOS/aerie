@@ -26,8 +26,13 @@ public final class BiteBananaActivity {
   }
 
   @EffectModel
-  public void run(final Mission mission) {
-    mission.flag.set((biteSize > 1.0) ? Flag.B : Flag.A);
+  public ComputedAttributes run(final Mission mission) {
+    final var biteSizeWasBig = biteSize > 1.0;
+    final var newFlag = biteSizeWasBig ? Flag.B : Flag.A;
+    mission.flag.set(newFlag);
     mission.fruit.subtract(biteSize);
+    return new ComputedAttributes(biteSizeWasBig, newFlag);
   }
+
+  public record ComputedAttributes(boolean biteSizeWasBig, Flag newFlag) {}
 }
