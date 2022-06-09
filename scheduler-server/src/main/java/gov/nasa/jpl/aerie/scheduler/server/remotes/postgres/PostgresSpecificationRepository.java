@@ -105,7 +105,7 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
     if (goalCompilationResult instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error g) {
       return new GoalCompilationResult.Failure(g.errors());
     } else if (goalCompilationResult instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success g) {
-      return new GoalCompilationResult.Success(new GoalRecord(new GoalId(pgGoal.id()), g.goalSpecifier()));
+      return new GoalCompilationResult.Success(new GoalRecord(new GoalId(pgGoal.id()), g.goalSpecifier(), pgGoal.enabled()));
     } else {
       throw new Error("Unhandled variant of SchedulingDSLCompilationResult: " + goalCompilationResult);
     }

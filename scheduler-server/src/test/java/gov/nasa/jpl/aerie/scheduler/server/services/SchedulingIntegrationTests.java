@@ -43,6 +43,8 @@ public class SchedulingIntegrationTests {
 
   private record MissionModelDescription(String name, Map<String, SerializedValue> config, Path libPath) {}
 
+  private record SchedulingGoal(GoalId goalId, String definition, boolean enabled) {};
+
   private static final MissionModelDescription BANANANATION = new MissionModelDescription(
       "bananantion",
       Map.of("initialDataPath", SerializedValue.of("/etc/hosts")),
@@ -66,14 +68,14 @@ public class SchedulingIntegrationTests {
     final var results = runScheduler(
         BANANANATION,
         List.of(),
-        List.of("""
+        List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.ActivityRecurrenceGoal({
             activityTemplate: ActivityTemplates.PeelBanana({
               peelDirection: "fromStem",
             }),
             interval: 24 * 60 * 60 * 1000 * 1000 // one day in microseconds
           })
-          """));
+          """, true)));
     assertEquals(1, results.scheduleResults.goalResults().size());
     final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
     assertTrue(goalResult.satisfied());
@@ -96,7 +98,7 @@ public class SchedulingIntegrationTests {
   void testEmptyPlanDurationCardinalityGoal() {
     final var results = runScheduler(BANANANATION,
         List.of(),
-        List.of("""
+        List.of(new SchedulingGoal(new GoalId(0L), """
                   export default function myGoal() {
                                     return Goal.CardinalityGoal({
                                       activityTemplate: ActivityTemplates.GrowBanana({
@@ -107,7 +109,7 @@ public class SchedulingIntegrationTests {
                                       specification : {duration: 10 * 1000000}
                                     })
                   }
-                    """));
+                    """, true)));
     assertEquals(1, results.scheduleResults.goalResults().size());
     final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
 
@@ -138,7 +140,7 @@ public class SchedulingIntegrationTests {
   void testEmptyPlanOccurrenceCardinalityGoal() {
     final var results = runScheduler(BANANANATION,
         List.of(),
-        List.of("""
+        List.of(new SchedulingGoal(new GoalId(0L), """
                   export default function myGoal() {
                                     return Goal.CardinalityGoal({
                                       activityTemplate: ActivityTemplates.GrowBanana({
@@ -149,7 +151,7 @@ public class SchedulingIntegrationTests {
                                       specification : {occurrence: 10}
                                     })
                   }
-                    """));
+                    """, true)));
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
@@ -183,12 +185,12 @@ public class SchedulingIntegrationTests {
     final var results = runScheduler(
         BANANANATION,
         List.of(new MockMerlinService.PlannedActivityInstance("BiteBanana", Map.of("biteSize", SerializedValue.of(1)), Duration.ZERO)),
-        List.of("""
+        List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.ActivityRecurrenceGoal({
             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
             interval: 24 * 60 * 60 * 1000 * 1000 // one day in microseconds
           })
-          """));
+          """, true)));
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
@@ -228,12 +230,12 @@ public class SchedulingIntegrationTests {
                 "quantity", SerializedValue.of(1),
                 "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
             Duration.ZERO)),
-        List.of("""
+        List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.CoexistenceGoal({
             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
             forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
           })
-          """));
+          """, true)));
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
@@ -280,13 +282,13 @@ public class SchedulingIntegrationTests {
                     "PickBanana",
                     Map.of("quantity", SerializedValue.of(100)),
                     Duration.of(4, Duration.HOURS))),
-        List.of("""
+        List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
                    forEach: Real.Resource("/plant").greaterThan(201.0)
                  })
-               }"""));
+               }""", true)));
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     assertEquals(3, results.updatedPlan().size());
@@ -319,13 +321,13 @@ public class SchedulingIntegrationTests {
                         "quantity", SerializedValue.of(100),
                         "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
                     Duration.of(4, Duration.HOURS))),
-        List.of("""
+        List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
                    forEach: Real.Resource("/plant").lessThan(199.0)
                  })
-               }"""));
+               }""", true)));
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     assertEquals(3, results.updatedPlan().size());
@@ -356,7 +358,7 @@ public class SchedulingIntegrationTests {
                 Duration.of(4, Duration.HOURS))
         ),
 
-        List.of("""
+        List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
@@ -365,7 +367,7 @@ public class SchedulingIntegrationTests {
                      Real.Resource("/fruit").greaterThan(2.0)
                    )
                  })
-               }"""));
+               }""", true)));
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     assertEquals(3, results.updatedPlan().size());
@@ -390,7 +392,7 @@ public class SchedulingIntegrationTests {
                        "growingDuration", new DurationValueMapper().serializeValue(Duration.of(3, Duration.HOURS))),
                 Duration.of(1, Duration.HOURS))),
 
-        List.of("""
+        List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromTip"}),
@@ -399,7 +401,7 @@ public class SchedulingIntegrationTests {
                      Real.Resource("/fruit").lessThan(6.0),
                    )
                  })
-               }"""));
+               }""", true)));
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     assertEquals(2, results.updatedPlan().size());
@@ -430,13 +432,13 @@ public class SchedulingIntegrationTests {
                     "quantity", SerializedValue.of(100),
                     "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
                 Duration.of(4, Duration.HOURS))),
-        List.of("""
+        List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
                    forEach: Real.Resource("/plant").equal(100.0)
                  })
-               }"""));
+               }""", true)));
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     assertEquals(3, results.updatedPlan().size());
@@ -469,13 +471,13 @@ public class SchedulingIntegrationTests {
                     "quantity", SerializedValue.of(100),
                     "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
                 Duration.of(4, Duration.HOURS))),
-        List.of("""
+        List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
                    forEach: Real.Resource("/plant").equal(100.0)
                  })
-               }"""));
+               }""", true)));
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     assertEquals(2, results.updatedPlan().size());
@@ -506,13 +508,13 @@ public class SchedulingIntegrationTests {
                     "quantity", SerializedValue.of(100),
                     "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
                 Duration.of(4, Duration.HOURS))),
-        List.of("""
+        List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
                    forEach: Real.Resource("/plant").notEqual(200.0)
                  })
-               }"""));
+               }""", true)));
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     assertEquals(3, results.updatedPlan().size());
@@ -545,7 +547,7 @@ public class SchedulingIntegrationTests {
                     "quantity", SerializedValue.of(100),
                     "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
                 Duration.of(4, Duration.HOURS))),
-        List.of("""
+        List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
@@ -554,7 +556,7 @@ public class SchedulingIntegrationTests {
                      Real.Resource("/plant").lessThan(150.0),
                    )
                  })
-               }"""));
+               }""", true)));
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     assertEquals(3, results.updatedPlan().size());
@@ -587,7 +589,7 @@ public class SchedulingIntegrationTests {
                     "quantity", SerializedValue.of(100),
                     "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
                 Duration.of(4, Duration.HOURS))),
-        List.of("""
+        List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
@@ -596,7 +598,7 @@ public class SchedulingIntegrationTests {
                      Real.Resource("/plant").equal(100.0),
                    )
                  })
-               }"""));
+               }""", true)));
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     assertEquals(3, results.updatedPlan().size());
@@ -621,13 +623,13 @@ public class SchedulingIntegrationTests {
                 "ChangeProducer",
                 Map.of(),
                 Duration.of(2, Duration.HOURS))),
-        List.of("""
+        List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
                    forEach: Discrete.Resource(Resources["/producer"]).transition("Chiquita", "Dole")
                  })
-               }"""));
+               }""", true)));
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     assertEquals(2, results.updatedPlan().size());
@@ -650,13 +652,13 @@ public class SchedulingIntegrationTests {
                 "ChangeProducer",
                 Map.of("producer", SerializedValue.of("Fyffes")),
                 Duration.of(2, Duration.HOURS))),
-        List.of("""
+        List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
                    forEach: Discrete.Resource(Resources["/producer"]).transition("Chiquita", "Dole")
                  })
-               }"""));
+               }""", true)));
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     assertEquals(1, results.updatedPlan().size());
@@ -700,7 +702,7 @@ public class SchedulingIntegrationTests {
   private SchedulingRunResults runScheduler(
       final MissionModelDescription desc,
       final List<MockMerlinService.PlannedActivityInstance> plannedActivities,
-      final Iterable<String> goals
+      final Iterable<SchedulingGoal> goals
   ) {
     final var mockMerlinService = new MockMerlinService();
     mockMerlinService.setMissionModel(getMissionModelInfo(desc));
@@ -710,11 +712,11 @@ public class SchedulingIntegrationTests {
         TimeUtility.fromDOY("2021-005T00:00:00")));
     final var planId = new PlanId(1L);
     final var goalsByPriority = new ArrayList<GoalRecord>();
-    var goalId = 0L;
+
     for (final var goal : goals) {
-      final var goalResult = schedulingDSLCompiler.compileSchedulingGoalDSL(mockMerlinService, planId, goal);
+      final var goalResult = schedulingDSLCompiler.compileSchedulingGoalDSL(mockMerlinService, planId, goal.definition());
       if (goalResult instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success s) {
-        goalsByPriority.add(new GoalRecord(new GoalId(goalId++), s.goalSpecifier()));
+        goalsByPriority.add(new GoalRecord(goal.goalId(), s.goalSpecifier(), goal.enabled()));
       } else if (goalResult instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error e) {
         fail(e.toString());
       }
