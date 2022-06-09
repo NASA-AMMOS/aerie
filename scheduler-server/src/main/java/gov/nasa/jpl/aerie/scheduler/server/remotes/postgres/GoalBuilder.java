@@ -133,7 +133,7 @@ public class GoalBuilder {
     if(type.getDurationType() instanceof DurationType.Controllable durationType){
       //detect duration parameter
       if(activityTemplate.arguments().containsKey(durationType.parameterName())){
-        builder.duration(Duration.of(activityTemplate.arguments().get(durationType.parameterName()).asInt().orElseThrow(), Duration.MICROSECONDS));
+        builder.duration(Duration.fromISO8601String(activityTemplate.arguments().get(durationType.parameterName()).asString().get()));
         activityTemplate.arguments().remove(durationType.parameterName());
       }
     }
