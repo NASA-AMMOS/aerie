@@ -51,6 +51,7 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
 
     final var goals = postgresGoalRecords
         .stream()
+        .filter(PostgresGoalRecord::enabled)
         .map((PostgresGoalRecord pgGoal) -> compileGoalDefinition(
             missionModelService,
             planId,
