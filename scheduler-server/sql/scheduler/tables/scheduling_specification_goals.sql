@@ -6,6 +6,7 @@ create table scheduling_specification_goals (
     default null -- Nulls are detected and replaced with the next
                  -- available priority by the insert trigger
     constraint non_negative_specification_goal_priority check (priority >= 0),
+  enabled boolean default true,
 
   constraint scheduling_specification_goals_primary_key
     primary key (specification_id, goal_id),
