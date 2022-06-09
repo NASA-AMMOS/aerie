@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.time.Window;
-import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.StringValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.Range;
@@ -115,7 +115,8 @@ public class GoalBuilder {
     if(type.getDurationType() instanceof DurationType.Controllable durationType){
       //detect duration parameter
       if(activityTemplate.arguments().containsKey(durationType.parameterName())){
-        builder.duration(new DurationValueMapper().deserializeValue(activityTemplate.arguments().get(durationType.parameterName())).getSuccessOrThrow());
+        builder.duration(Duration.fromISO8601String(
+            new StringValueMapper().deserializeValue(activityTemplate.arguments().get(durationType.parameterName())).getSuccessOrThrow()));
         activityTemplate.arguments().remove(durationType.parameterName());
       }
     }
