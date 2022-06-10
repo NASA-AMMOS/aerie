@@ -4,5 +4,6 @@ public record PostgresGoalRecord(
     long id,
     long revision,
     String name,
-    String definition
+    String definition,
+    boolean enabled
 ) {}

@@ -16,6 +16,7 @@ import java.util.List;
             s.specification_id,
             s.goal_id,
             s.priority,
+            s.enabled,
             g.name,
             g.definition,
             g.revision
@@ -26,7 +27,8 @@ import java.util.List;
       g.goal_id,
       g.name,
       g.definition,
-      g.revision
+      g.revision,
+      g.enabled
     from goals as g
       where g.specification_id = ?
       order by g.priority asc
@@ -48,7 +50,8 @@ import java.util.List;
       final var revision = resultSet.getLong("revision");
       final var name = resultSet.getString("name");
       final var definition = resultSet.getString("definition");
-      goals.add(new PostgresGoalRecord(id, revision, name, definition));
+      final var enabled = resultSet.getBoolean("enabled");
+      goals.add(new PostgresGoalRecord(id, revision, name, definition, enabled));
     }
 
     return goals;
