@@ -129,7 +129,6 @@ custom_types:
     - name: DslTypescriptResponse
     - name: CommandDictionaryResponse
     - name: AddCommandExpansionResponse
-    - name: TypeScriptResponse
     - name: ExpandAllActivitiesResponse
     - name: ExpandedActivityInstance
     - name: SequenceSeqJson
