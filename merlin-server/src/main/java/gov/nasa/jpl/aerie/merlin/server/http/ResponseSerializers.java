@@ -220,11 +220,10 @@ public final class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeSimulationResults(final SimulationResults results, final Map<String, List<Violation>> violations) {
+  public static JsonValue serializeSimulationResults(final SimulationResults results) {
     return Json
         .createObjectBuilder()
         .add("start", serializeTimestamp(results.startTime))
-        .add("constraints", serializeMap(v -> serializeIterable(ResponseSerializers::serializeConstraintViolation, v), violations))
         .add("activities", serializeSimulatedActivities(results.simulatedActivities))
         .add("unfinishedActivities", serializeUnfinishedActivities(results.unfinishedActivities))
         .add("events", serializeSimulationEvents(results.events, topicsById(results.topics), results.startTime))
@@ -320,7 +319,7 @@ public final class ResponseSerializers {
       return Json
           .createObjectBuilder()
           .add("status", "complete")
-          .add("results", serializeSimulationResults(r.results(), r.violations()))
+          .add("results", serializeSimulationResults(r.results()))
           .build();
      } else {
       throw new UnexpectedSubtypeError(GetSimulationResultsAction.Response.class, response);
