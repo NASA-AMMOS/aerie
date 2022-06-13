@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresSimulationNotificationPayload;
+import io.javalin.Javalin;
 
 import java.nio.file.Path;
 import java.util.Optional;
@@ -56,6 +57,9 @@ public final class MerlinWorkerAppDriver {
         new LinkedBlockingQueue<>();
     final var listenAction = new ListenSimulationCapability(hikariDataSource, notificationQueue);
     listenAction.registerListener();
+
+    final var app = Javalin.create().start(8080);
+    app.get("/health", ctx -> ctx.status(200));
 
     while (true) {
       final var notification = notificationQueue.take();
