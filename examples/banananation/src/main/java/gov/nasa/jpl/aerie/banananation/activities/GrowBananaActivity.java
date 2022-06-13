@@ -22,12 +22,17 @@ import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 public record GrowBananaActivity(int quantity, Duration growingDuration) {
 
   public static @Template GrowBananaActivity defaults() {
-    return new GrowBananaActivity(0, Duration.ZERO);
+    return new GrowBananaActivity(1, Duration.of(1, Duration.HOUR));
   }
 
   @Validation("Quantity must be positive")
-  public boolean validateBiteSize() {
+  public boolean validateQuantity() {
     return this.quantity() > 0;
+  }
+
+  @Validation("Growing Duration must be positive")
+  public boolean validateGrowingDuration() {
+    return this.growingDuration().longerThan(Duration.ZERO);
   }
 
   @EffectModel
