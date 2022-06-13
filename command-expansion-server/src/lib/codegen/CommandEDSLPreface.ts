@@ -225,9 +225,26 @@ export class Command<
       string,
       string | undefined,
     ];
+
+    //use to convert doy to month and day
+    const doyDate = new Date(parseInt(year, 10), 0, parseInt(doyStr, 10));
+    // convert to UTC Date
+    const utcDoyDate = new Date(
+      Date.UTC(
+        doyDate.getUTCFullYear(),
+        doyDate.getUTCMonth(),
+        doyDate.getUTCDate(),
+        doyDate.getUTCHours(),
+        doyDate.getUTCMinutes(),
+        doyDate.getUTCSeconds(),
+        doyDate.getUTCMilliseconds(),
+      ),
+    );
+
     return Temporal.ZonedDateTime.from({
       year: parseInt(year, 10),
-      dayOfYear: parseInt(doyStr, 10),
+      month: utcDoyDate.getUTCMonth() + 1,
+      day: utcDoyDate.getUTCDate(),
       hour: parseInt(hour, 10),
       minute: parseInt(minute, 10),
       second: parseInt(second, 10),
