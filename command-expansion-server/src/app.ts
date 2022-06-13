@@ -100,6 +100,10 @@ app.get('/', (_: Request, res: Response) => {
   res.send('Aerie Command Service');
 });
 
+app.get('/health', (_: Request, res: Response) => {
+  res.status(200).send();
+});
+
 app.post('/put-dictionary', async (req, res, next) => {
   const dictionary = req.body.input.dictionary as string;
   logger.info(`Dictionary received`);
