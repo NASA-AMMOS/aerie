@@ -6,7 +6,7 @@ let graphqlClient: GraphQLClient;
 let missionModelId: number;
 
 beforeAll(async () => {
-  graphqlClient = new GraphQLClient(process.env.MERLIN_GRAPHQL_URL as string);
+  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string);
   missionModelId = await uploadMissionModel(graphqlClient);
 }, 10000);
 afterAll(async () => {
@@ -22,5 +22,5 @@ it('should load command typescript', async () => {
   if (firstSchema instanceof Error) {
     throw firstSchema;
   }
-  expect(firstSchema.name).toBe('ParameterTest');
+  expect(firstSchema?.name).toBe('ParameterTest');
 });

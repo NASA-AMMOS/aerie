@@ -1,7 +1,7 @@
-import { BatchLoader } from './index';
+import type { BatchLoader } from './index';
 import { gql, GraphQLClient } from 'graphql-request';
 import { ErrorWithStatusCode } from '../../utils/ErrorWithStatusCode.js';
-import { GraphQLActivitySchema } from './activitySchemaBatchLoader.js';
+import type { GraphQLActivitySchema } from './activitySchemaBatchLoader.js';
 import fs from 'fs';
 
 export const expansionSetBatchLoader: BatchLoader<

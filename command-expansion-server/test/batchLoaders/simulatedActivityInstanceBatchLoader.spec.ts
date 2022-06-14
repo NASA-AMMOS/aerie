@@ -17,7 +17,7 @@ let activityId: number;
 let simulationArtifactIds: { simulationId: number; simulationDatasetId: number };
 
 beforeAll(async () => {
-  graphqlClient = new GraphQLClient(process.env.MERLIN_GRAPHQL_URL as string);
+  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string);
   missionModelId = await uploadMissionModel(graphqlClient);
   planId = await createPlan(graphqlClient, missionModelId);
   activityId = await insertActivity(graphqlClient, planId, 'ParameterTest');
@@ -39,7 +39,7 @@ it('should load simulated activity instances for simulation_dataset', async () =
   if (simulatedActivities[0] instanceof Error) {
     throw simulatedActivities[0];
   }
-  expect(simulatedActivities[0][0].activityTypeName).toBe('ParameterTest');
+  expect(simulatedActivities[0]?.[0]?.activityTypeName).toBe('ParameterTest');
 });
 
 it('should load simulated activity instance for simulation_dataset and simulated activity id', async () => {
@@ -58,5 +58,5 @@ it('should load simulated activity instance for simulation_dataset and simulated
   if (activityInstances[0] instanceof Error) {
     throw activityInstances[0];
   }
-  expect(activityInstances[0].activityTypeName).toBe('ParameterTest');
+  expect(activityInstances[0]?.activityTypeName).toBe('ParameterTest');
 });

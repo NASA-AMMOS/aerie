@@ -25,7 +25,7 @@ let expansionSetId: number;
 let sequencePk: { seqId: string; simulationDatasetId: number };
 
 beforeEach(async () => {
-  graphqlClient = new GraphQLClient(process.env.MERLIN_GRAPHQL_URL as string);
+  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string);
   missionModelId = await uploadMissionModel(graphqlClient);
   planId = await createPlan(graphqlClient, missionModelId);
   activityId1 = await insertActivity(graphqlClient, planId, 'GrowBanana');

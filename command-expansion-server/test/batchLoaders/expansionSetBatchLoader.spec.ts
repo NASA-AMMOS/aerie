@@ -11,7 +11,7 @@ let expansionSetId: number;
 let commandDictionaryId: number;
 
 beforeAll(async () => {
-  graphqlClient = new GraphQLClient(process.env.MERLIN_GRAPHQL_URL as string);
+  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string);
   missionModelId = await uploadMissionModel(graphqlClient);
   commandDictionaryId = await insertCommandDictionary(graphqlClient);
   expansionId = await insertExpansion(
@@ -40,5 +40,5 @@ it.skip('[XFAIL] should load expansion set data', async () => {
   if (expansionSets[0] instanceof Error) {
     throw expansionSets[0];
   }
-  expect(expansionSets[0].expansionRules[0].activityType).toBe('ParameterTest');
+  expect(expansionSets[0]?.expansionRules[0]?.activityType).toBe('ParameterTest');
 });

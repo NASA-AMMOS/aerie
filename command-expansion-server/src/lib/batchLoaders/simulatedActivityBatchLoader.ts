@@ -1,9 +1,9 @@
-import { BatchLoader, InferredDataloader } from './index.js';
+import type { BatchLoader, InferredDataloader } from './index.js';
 import { gql, GraphQLClient } from 'graphql-request';
 import { ErrorWithStatusCode } from '../../utils/ErrorWithStatusCode.js';
 import parse from 'postgres-interval';
 import { GraphQLActivitySchema, Schema, SchemaTypes } from './activitySchemaBatchLoader.js';
-import { activitySchemaBatchLoader } from './activitySchemaBatchLoader.js';
+import type { activitySchemaBatchLoader } from './activitySchemaBatchLoader.js';
 
 export const simulatedActivitiesBatchLoader: BatchLoader<
   { simulationDatasetId: number },
@@ -136,8 +136,8 @@ export interface SimulatedActivityAttributes<
   ActivityComputedAttributes extends Record<string, unknown> = Record<string, unknown>,
 > {
   arguments: ActivityArguments;
-  directiveId?: number;
-  computedAttributes?: ActivityComputedAttributes;
+  directiveId: number | undefined;
+  computedAttributes: ActivityComputedAttributes | undefined;
 }
 
 export interface SimulatedActivity<
@@ -183,10 +183,14 @@ export function mapGraphQLActivityInstance(
     activityTypeName: activityInstance.activity_type_name,
     attributes: {
       arguments: Object.entries(activityInstance.attributes.arguments).reduce((acc, [key, value]) => {
-        acc[key] = convertType(value, activitySchema.parameters[key].schema);
+        const param = activitySchema.parameters[key];
+        if (param !== undefined) {
+          acc[key] = convertType(value, param.schema);
+        }
         return acc;
       }, {} as { [attributeName: string]: any }),
       directiveId: activityInstance.attributes.directiveId,
+      computedAttributes: undefined, // TODO: Need to handle computed attributes
     },
   };
 }
@@ -215,7 +219,7 @@ function convertType(value: any, schema: Schema): any {
       }
       return struct;
     case SchemaTypes.Variant:
-      if (schema.variants.length === 1 && schema.variants[0].key === 'VOID') {
+      if (schema.variants.length === 1 && schema.variants[0]?.key === 'VOID') {
         return null;
       }
       return value;
