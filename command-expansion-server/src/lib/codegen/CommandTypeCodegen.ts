@@ -85,25 +85,21 @@ ${doc}
     const minRepeat = repeatArg.repeat?.min ?? 0;
     const maxRepeat = repeatArg.repeat?.max ?? 10;
 
-    // language=TypeScript
-    const value = `
-${doc}
-export function ${fswCommandName}<T extends any[]>(args: T[]) {
-  return Command.new({
-    stem: '${fswCommandName}',
-    arguments: typeof args[0] === 'object' ? orderCommandArguments(args[0],${fswCommandName}_ARGS_ORDER) : args,
-  }) as ${fswCommandName};
-}`;
-
     const overloadDeclarations: string[] = [];
+    let argsOrder: string[] = [];
     for (let i = minRepeat; i <= maxRepeat; i++) {
       // language=TypeScript
       let repeatArgsDeclaration = '';
+      let repeatArgsNames: string[] = [];
       for (let n = 1; n < i; n++) {
+        if (repeatArg.repeat) {
+          repeatArgsNames = repeatArgsNames.concat(repeatArg.repeat?.arguments.map(arg => `"${arg.name}${n}"`));
+        }
         repeatArgsDeclaration += repeatArg.repeat?.arguments
           .map(arg => `\t${arg.name}${n}: ${mapArgumentType(arg, enumMap)},\n`)
           .join('');
       }
+      argsOrder = argsOrder.concat(`[${repeatArgsNames.concat(otherArgs.map(arg => `"${arg.name}"`))}]`);
       // language=TypeScript
       const overloadPositionalDeclaration = `
 ${doc}
@@ -119,6 +115,18 @@ ${repeatArgsDeclaration}${otherArgs.map(arg => `\t${arg.name}: ${mapArgumentType
       overloadDeclarations.push(overloadPositionalDeclaration);
       overloadDeclarations.push(overloadNamedDeclaration);
     }
+
+    // language=TypeScript
+    const value = `
+${doc}
+const ${fswCommandName}_ARGS_ORDERS = [${argsOrder.join(',')}];
+export function ${fswCommandName}<T extends any[]>(...args: T[]) {
+  return Command.new({
+    stem: '${fswCommandName}',
+    arguments: typeof args[0] === 'object' ? findAndOrderCommandArguments("${fswCommandName}",args[0],${fswCommandName}_ARGS_ORDERS) : args,
+  }) as ${fswCommandName};
+}`;
+
     const declaration = `
 ${overloadDeclarations.join('')}
 \tinterface ${fswCommandName} extends Command<any[]> {}`;
