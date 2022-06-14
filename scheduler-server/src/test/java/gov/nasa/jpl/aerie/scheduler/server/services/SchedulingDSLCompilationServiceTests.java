@@ -230,7 +230,7 @@ class SchedulingDSLCompilationServiceTests {
                 duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
               }),
               forEach: ActivityExpression.ofType(ActivityTypes.SampleActivity2),
-                startsAt: TimingConstraint.singleton(WindowProperty.START, Operator.PLUS, 100000000)
+              startsAt: TimingConstraint.singleton(WindowProperty.START).plus(100000000)
             })
           }
         """);
@@ -305,7 +305,7 @@ class SchedulingDSLCompilationServiceTests {
                 duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
               }),
               forEach: Discrete.Resource(Resources["/sample/resource/1"]).transition("Chiquita", "Dole"),
-              startsAt: TimingConstraint.singleton(WindowProperty.END, Operator.PLUS, 0)
+              startsAt: TimingConstraint.singleton(WindowProperty.END)
             })
           }
         """);
@@ -333,7 +333,7 @@ class SchedulingDSLCompilationServiceTests {
                 duration: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
               }),
               forEach: Real.Resource(Resources["/sample/resource/1"]).greaterThan(50.0),
-              startsAt: TimingConstraint.singleton(WindowProperty.END, Operator.PLUS, 0)
+              startsAt: TimingConstraint.singleton(WindowProperty.END)
             })
           }
         """);

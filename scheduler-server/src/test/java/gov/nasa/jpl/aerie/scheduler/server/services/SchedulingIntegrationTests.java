@@ -234,7 +234,7 @@ public class SchedulingIntegrationTests {
           export default () => Goal.CoexistenceGoal({
             forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-            startsAt: TimingConstraint.singleton(WindowProperty.END, Operator.PLUS, 5 * 60 * 1000 * 1000)
+            startsAt: TimingConstraint.singleton(WindowProperty.END).plus(5 * 60 * 1000 * 1000)
           })
           """, true)));
 
@@ -334,7 +334,7 @@ public class SchedulingIntegrationTests {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
                    forEach: Real.Resource("/plant").greaterThan(201.0),
-                   startsAt: TimingConstraint.singleton(WindowProperty.START, Operator.PLUS, 0)
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -374,7 +374,7 @@ public class SchedulingIntegrationTests {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
                    forEach: Real.Resource("/plant").lessThan(199.0),
-                   startsAt: TimingConstraint.singleton(WindowProperty.START, Operator.PLUS, 0)
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -415,7 +415,7 @@ public class SchedulingIntegrationTests {
                      Real.Resource("/fruit").lessThan(4.0),
                      Real.Resource("/fruit").greaterThan(2.0)
                    ),
-                   startsAt: TimingConstraint.singleton(WindowProperty.START, Operator.PLUS, 0)
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -450,7 +450,7 @@ public class SchedulingIntegrationTests {
                      Real.Resource("/fruit").greaterThan(5.0),
                      Real.Resource("/fruit").lessThan(6.0),
                    ),
-                   startsAt: TimingConstraint.singleton(WindowProperty.START, Operator.PLUS, 0)
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -488,7 +488,7 @@ public class SchedulingIntegrationTests {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
                    forEach: Real.Resource("/plant").equal(100.0),
-                   startsAt: TimingConstraint.singleton(WindowProperty.START, Operator.PLUS, 0)
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -528,7 +528,7 @@ public class SchedulingIntegrationTests {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
                    forEach: Real.Resource("/plant").equal(100.0),
-                   startsAt: TimingConstraint.singleton(WindowProperty.START, Operator.PLUS, 0)
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -566,7 +566,7 @@ public class SchedulingIntegrationTests {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
                    forEach: Real.Resource("/plant").notEqual(200.0),
-                   startsAt: TimingConstraint.singleton(WindowProperty.START, Operator.PLUS, 0)
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -609,7 +609,7 @@ public class SchedulingIntegrationTests {
                      Real.Resource("/plant").greaterThan(50.0),
                      Real.Resource("/plant").lessThan(150.0),
                    ),
-                   startsAt: TimingConstraint.singleton(WindowProperty.START, Operator.PLUS, 0)
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -652,7 +652,7 @@ public class SchedulingIntegrationTests {
                      Real.Resource("/plant").equal(999.0),
                      Real.Resource("/plant").equal(100.0),
                    ),
-                   startsAt: TimingConstraint.singleton(WindowProperty.START, Operator.PLUS, 0)
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -684,7 +684,7 @@ public class SchedulingIntegrationTests {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
                    forEach: Discrete.Resource(Resources["/producer"]).transition("Chiquita", "Dole"),
-                   startsAt: TimingConstraint.singleton(WindowProperty.START, Operator.PLUS, 0)
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -714,7 +714,7 @@ public class SchedulingIntegrationTests {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
                    forEach: Discrete.Resource(Resources["/producer"]).transition("Chiquita", "Dole"),
-                   startsAt: TimingConstraint.singleton(WindowProperty.START, Operator.PLUS, 0)
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 

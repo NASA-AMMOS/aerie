@@ -69,8 +69,8 @@ export class Goal {
   }
 }
 
-type StartTimingConstraint = { startsAt: SingletonTimingConstraint } | { startsWithin: RangeTimingConstraint }
-type EndTimingConstraint = { endsAt: SingletonTimingConstraint } | {endsWithin: RangeTimingConstraint }
+type StartTimingConstraint = { startsAt: SingletonTimingConstraint | SingletonTimingConstraintNoOperator } | { startsWithin: RangeTimingConstraint }
+type EndTimingConstraint = { endsAt: SingletonTimingConstraint | SingletonTimingConstraintNoOperator } | {endsWithin: RangeTimingConstraint }
 type CoexistenceGoalTimingConstraints = StartTimingConstraint | EndTimingConstraint | (StartTimingConstraint & EndTimingConstraint)
 
 class ActivityExpression {
@@ -93,13 +93,8 @@ class ActivityExpression {
 }
 
 class TimingConstraint {
-  public static singleton(windowProperty: WindowProperty, operator: TimingConstraintOperator, operand: Duration): SingletonTimingConstraint {
-    return SingletonTimingConstraint.new({
-      windowProperty,
-      operator,
-      operand,
-      singleton: true
-    })
+  public static singleton(windowProperty: WindowProperty): SingletonTimingConstraintNoOperator {
+    return SingletonTimingConstraintNoOperator.new(windowProperty);
   }
   public static range(windowProperty: WindowProperty, operator: TimingConstraintOperator, operand: Duration): RangeTimingConstraint {
     return RangeTimingConstraint.new({
@@ -107,6 +102,35 @@ class TimingConstraint {
       operator,
       operand,
       singleton: false
+    })
+  }
+}
+
+class SingletonTimingConstraintNoOperator {
+  public readonly __astNode: AST.ActivityTimingConstraintSingleton
+  private constructor(__astNode: AST.ActivityTimingConstraintSingleton) {
+    this.__astNode = __astNode;
+  }
+  public static new(windowProperty: WindowProperty): SingletonTimingConstraintNoOperator {
+    return new SingletonTimingConstraintNoOperator({
+      windowProperty,
+      operator: AST.TimingConstraintOperator.PLUS,
+      operand: 0,
+      singleton: true
+    });
+  }
+  public plus(operand: Duration): SingletonTimingConstraint {
+    return SingletonTimingConstraint.new({
+      ...this.__astNode,
+      operator: AST.TimingConstraintOperator.PLUS,
+      operand
+    })
+  }
+  public minus(operand: Duration): SingletonTimingConstraint {
+    return SingletonTimingConstraint.new({
+      ...this.__astNode,
+      operator: AST.TimingConstraintOperator.MINUS,
+      operand
     })
   }
 }
@@ -155,7 +179,7 @@ declare global {
     public static ofType(activityType: ActivityType): ActivityExpression
   }
   class TimingConstraint {
-    public static singleton(windowProperty: WindowProperty, operator: TimingConstraintOperator, operand: Duration): SingletonTimingConstraint
+    public static singleton(windowProperty: WindowProperty): SingletonTimingConstraintNoOperator
     public static range(windowProperty: WindowProperty, operator: TimingConstraintOperator, operand: Duration): RangeTimingConstraint
   }
   var WindowProperty: typeof AST.WindowProperty
