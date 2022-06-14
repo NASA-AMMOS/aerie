@@ -9,7 +9,7 @@ import gov.nasa.jpl.aerie.scheduler.Range;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeFixed;
 import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
@@ -48,11 +48,29 @@ public class GoalBuilder {
               g.forEach(),
               lookupActivityType))
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType));
-      // TODO: This if statement should be removed when the DSL supports time expressions.
-      if (g.forEach() instanceof SchedulingDSL.ConstraintExpression.ActivityExpression) {
-        builder = builder.startsAt(TimeAnchor.END);
-      } else {
-        builder = builder.startsAt(TimeAnchor.START);
+
+      if (g.startConstraint().isPresent()) {
+        final var startConstraint = g.startConstraint().get();
+        final var timeExpression = new TimeExpressionRelativeFixed(
+            startConstraint.windowProperty(),
+            startConstraint.singleton(),
+            "George");
+        timeExpression.addOperation(startConstraint.operator(), startConstraint.operand());
+        builder.startsAt(timeExpression);
+      }
+
+      if (g.endConstraint().isPresent()) {
+        final var startConstraint = g.endConstraint().get();
+        final var timeExpression = new TimeExpressionRelativeFixed(
+            startConstraint.windowProperty(),
+            startConstraint.singleton(),
+            "George");
+        timeExpression.addOperation(startConstraint.operator(), startConstraint.operand());
+        builder.endsAt(timeExpression);
+      }
+
+      if (g.startConstraint().isEmpty() && g.endConstraint().isEmpty()) {
+        throw new Error("Both start and end constraints were empty. This should have been disallowed at the type level.");
       }
       return builder.build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalAnd g) {
