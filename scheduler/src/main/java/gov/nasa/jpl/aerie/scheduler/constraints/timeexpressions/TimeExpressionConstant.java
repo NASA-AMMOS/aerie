@@ -21,12 +21,4 @@ public class TimeExpressionConstant extends TimeExpression {
   public Window computeTime(final SimulationResults simulationResults, final Plan plan, final Window interval) {
     return Window.at(this.instant);
   }
-
-  @Override
-  public boolean equals(final Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    TimeExpressionConstant that = (TimeExpressionConstant) o;
-    return Objects.equals(instant, that.instant) && Objects.equals(operations, that.operations);
-  }
 }
