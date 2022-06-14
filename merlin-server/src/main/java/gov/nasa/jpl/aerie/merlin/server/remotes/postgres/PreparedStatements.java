@@ -23,7 +23,7 @@ public final class PreparedStatements {
 
   public static void setTimestamp(final PreparedStatement statement, final int parameter, final Timestamp argument)
   throws SQLException {
-    statement.setString(parameter, TIMESTAMP_FORMAT.format(argument.time));
+    statement.setString(parameter, TIMESTAMP_FORMAT.format(argument.time()));
   }
 
   public static void setParameters(final PreparedStatement statement, final int parameter, final List<Parameter> parameters)
