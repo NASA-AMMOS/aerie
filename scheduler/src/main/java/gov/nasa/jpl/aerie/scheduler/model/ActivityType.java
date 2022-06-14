@@ -150,4 +150,8 @@ public class ActivityType {
            && Objects.equals(this.specType, that.specType);
   }
 
+  @Override
+  public int hashCode() {
+    return name.hashCode();
+  }
 }
