@@ -6,8 +6,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
-import java.util.Map;
-
 public class TimeExpressionFromExpr extends TimeExpression {
 
   protected final TimeExpression expression;
@@ -27,7 +25,7 @@ public class TimeExpressionFromExpr extends TimeExpression {
     if (rangeExpr != null) {
       Duration resMin = rangeExpr.start;
       Duration resMax = rangeExpr.end;
-      for (Map.Entry<TimeUtility.Operator, Duration> entry : this.operations.entrySet()) {
+      for (final var entry : this.operations) {
         resMin = TimeUtility.performOperation(entry.getKey(), resMin, entry.getValue());
         resMax = TimeUtility.performOperation(entry.getKey(), resMax, entry.getValue());
       }
