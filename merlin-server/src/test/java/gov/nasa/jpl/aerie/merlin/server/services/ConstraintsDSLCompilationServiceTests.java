@@ -195,7 +195,7 @@ class ConstraintsDSLCompilationServiceTests {
           return Discrete.Resource("an integer").notEqual(4.0);
         }
         """,
-        new ViolationsOf(new NotEqual<>(new DiscreteResource("an integer"), new DiscreteValue(SerializedValue.of(4.0))))
+        new ViolationsOf(new NotEqual<>(new DiscreteResource("an integer"), new DiscreteValue(SerializedValue.of(4))))
     );
   }
 
