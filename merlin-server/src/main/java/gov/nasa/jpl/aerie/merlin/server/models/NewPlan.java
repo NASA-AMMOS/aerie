@@ -66,4 +66,16 @@ public final class NewPlan {
         && Objects.equals(this.configuration, other.configuration)
         );
   }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+        name,
+        missionModelId,
+        startTimestamp,
+        endTimestamp,
+        activityInstances,
+        configuration
+    );
+  }
 }
