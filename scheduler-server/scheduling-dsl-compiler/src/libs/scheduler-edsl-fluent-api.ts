@@ -1,6 +1,6 @@
 import * as AST from './scheduler-ast.js';
-import * as WindowsEDSL from './constraints-edsl-fluent-api'
-import {ActivityType} from "./scheduler-mission-model-generated-code";
+import type * as WindowsEDSL from './constraints-edsl-fluent-api'
+import type {ActivityType} from "./scheduler-mission-model-generated-code";
 
 interface ActivityRecurrenceGoal extends Goal {}
 interface ActivityCoexistenceGoal extends Goal {}

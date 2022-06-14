@@ -5,10 +5,22 @@ import { UserCodeRunner } from '@nasa-jpl/aerie-ts-user-code-runner';
 import type { Goal } from './libs/scheduler-edsl-fluent-api.js';
 
 const codeRunner = new UserCodeRunner();
-const schedulerEDSL = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/scheduler-edsl-fluent-api.ts`, 'utf8');
-const schedulerAST = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/scheduler-ast.ts`, 'utf8');
-const windowsEDSL = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/constraints/constraints-edsl-fluent-api.ts`, 'utf8');
-const windowsAST = fs.readFileSync(`${process.env.SCHEDULING_DSL_COMPILER_ROOT}/src/libs/constraints/constraints-ast.ts`, 'utf8');
+const schedulerEDSL = fs.readFileSync(
+  `${process.env["SCHEDULING_DSL_COMPILER_ROOT"]}/src/libs/scheduler-edsl-fluent-api.ts`,
+  "utf8"
+);
+const schedulerAST = fs.readFileSync(
+  `${process.env["SCHEDULING_DSL_COMPILER_ROOT"]}/src/libs/scheduler-ast.ts`,
+  "utf8"
+);
+const windowsEDSL = fs.readFileSync(
+  `${process.env["SCHEDULING_DSL_COMPILER_ROOT"]}/src/libs/constraints/constraints-edsl-fluent-api.ts`,
+  "utf8"
+);
+const windowsAST = fs.readFileSync(
+  `${process.env["SCHEDULING_DSL_COMPILER_ROOT"]}/src/libs/constraints/constraints-ast.ts`,
+  "utf8"
+);
 
 const input = readline.createInterface(process.stdin);
 
