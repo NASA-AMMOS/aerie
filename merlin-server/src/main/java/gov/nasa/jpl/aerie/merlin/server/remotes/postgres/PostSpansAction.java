@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,7 +49,11 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
       setTimestamp(statement, 2, startTimestamp);
       setTimestamp(statement, 3, simulationStart);
 
-      if (endTimestamp.isPresent()) setTimestamp(statement, 4, endTimestamp.get());
+      if (endTimestamp.isPresent()) {
+        setTimestamp(statement, 4, endTimestamp.get());
+      } else {
+        statement.setNull(4, Types.TIMESTAMP_WITH_TIMEZONE);
+      }
 
       setTimestamp(statement, 5, startTimestamp);
       statement.setString(6, act.type());
