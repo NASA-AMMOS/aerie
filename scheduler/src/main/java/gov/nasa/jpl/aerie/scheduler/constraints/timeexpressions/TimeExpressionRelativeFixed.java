@@ -10,12 +10,10 @@ public class TimeExpressionRelativeFixed extends TimeExpression {
 
   protected final TimeAnchor anchor;
   protected boolean fixed = true;
-  protected final String name;
 
-  public TimeExpressionRelativeFixed(final TimeAnchor anchor, final boolean fixed, final String name) {
+  public TimeExpressionRelativeFixed(final TimeAnchor anchor, final boolean fixed) {
     this.fixed = fixed;
     this.anchor = anchor;
-    this.name = name;
   }
 
   @Override

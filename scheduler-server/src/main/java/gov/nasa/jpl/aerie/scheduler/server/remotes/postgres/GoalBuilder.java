@@ -53,8 +53,8 @@ public class GoalBuilder {
         final var startConstraint = g.startConstraint().get();
         final var timeExpression = new TimeExpressionRelativeFixed(
             startConstraint.windowProperty(),
-            startConstraint.singleton(),
-            "George");
+            startConstraint.singleton()
+        );
         timeExpression.addOperation(startConstraint.operator(), startConstraint.operand());
         builder.startsAt(timeExpression);
       }
@@ -63,8 +63,8 @@ public class GoalBuilder {
         final var startConstraint = g.endConstraint().get();
         final var timeExpression = new TimeExpressionRelativeFixed(
             startConstraint.windowProperty(),
-            startConstraint.singleton(),
-            "George");
+            startConstraint.singleton()
+        );
         timeExpression.addOperation(startConstraint.operator(), startConstraint.operand());
         builder.endsAt(timeExpression);
       }
