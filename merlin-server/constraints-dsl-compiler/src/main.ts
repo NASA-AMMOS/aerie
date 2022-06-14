@@ -6,11 +6,11 @@ import * as readline from 'readline';
 
 const codeRunner = new UserCodeRunner();
 const constraintsEDSL = fs.readFileSync(
-  `${process.env.CONSTRAINTS_DSL_COMPILER_ROOT}/src/libs/constraints-edsl-fluent-api.ts`,
+  `${process.env['CONSTRAINTS_DSL_COMPILER_ROOT']}/src/libs/constraints-edsl-fluent-api.ts`,
   'utf8',
 );
 const constraintsAST = fs.readFileSync(
-  `${process.env.CONSTRAINTS_DSL_COMPILER_ROOT}/src/libs/constraints-ast.ts`,
+  `${process.env['CONSTRAINTS_DSL_COMPILER_ROOT']}/src/libs/constraints-ast.ts`,
   'utf8',
 );
 
