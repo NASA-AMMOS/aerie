@@ -99,6 +99,12 @@ type Query {
 }
 
 type Query {
+  constraintViolations(
+    planId: Int!
+  ): ConstraintViolationsResponse
+}
+
+type Query {
   validateActivityArguments(
     activityTypeName: String!
     missionModelId: ID!
@@ -255,11 +261,17 @@ type ResourceSamplesResponse {
   resourceSamples: ResourceSamples!
 }
 
+type ConstraintViolationsResponse {
+  constraintViolations: ConstraintViolations!
+}
+
 scalar ResourceSchema
 
 scalar MerlinSimulationResults
 
 scalar ResourceSamples
+
+scalar ConstraintViolations
 
 scalar MerlinSimulationFailureReason
 

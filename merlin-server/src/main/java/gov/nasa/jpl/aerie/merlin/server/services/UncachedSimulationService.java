@@ -1,18 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryRevisionData;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.InMemoryResultsCellRepository.InMemoryCell;
-import org.apache.commons.lang3.tuple.Pair;
 
 public record UncachedSimulationService (
     SimulationAgent agent
@@ -43,10 +37,10 @@ public record UncachedSimulationService (
   }
 
   @Override
-  public <T> Optional<T> get(final PlanId planId, final RevisionData revisionData, final Function<SimulationResults, T> getter) {
+  public Optional<SimulationResults> get(final PlanId planId, final RevisionData revisionData) {
     return Optional.ofNullable(
         getSimulationResults(planId, revisionData) instanceof ResultsProtocol.State.Success s ?
-            getter.apply(s.results()) :
+            s.results() :
             null);
   }
 }
