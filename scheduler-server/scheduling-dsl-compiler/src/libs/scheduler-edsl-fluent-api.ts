@@ -1,5 +1,5 @@
-import * as AST from './scheduler-ast.js';
-import type * as WindowsEDSL from './constraints-edsl-fluent-api'
+import * as AST from "./scheduler-ast";
+import type * as WindowsEDSL from "./constraints-edsl-fluent-api";
 import type {ActivityType} from "./scheduler-mission-model-generated-code";
 
 type WindowProperty = AST.WindowProperty

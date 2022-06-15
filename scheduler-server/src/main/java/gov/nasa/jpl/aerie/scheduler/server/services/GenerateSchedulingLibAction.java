@@ -49,12 +49,12 @@ public record GenerateSchedulingLibAction(
               SchedulingDSLCompilationService.activityTypes(missionModelTypes),
               SchedulingDSLCompilationService.resources(missionModelTypes));
       return new Response.Success(
-          Map.of("scheduling-edsl-fluent-api.ts", schedulingDsl,
-                 "scheduler-mission-model-generated-code.ts", generatedSchedulerCode,
-                 "scheduler-ast.ts", schedulerAst,
-                 "constraints-edsl-fluent-api.ts", windowsDsl,
-                 "constraints-ast.ts", windowsAst,
-                 "mission-model-generated-code.ts", generatedConstraintsCode));
+          Map.of("file:///scheduler-edsl-fluent-api.ts", schedulingDsl,
+                 "file:///scheduler-mission-model-generated-code.ts", generatedSchedulerCode,
+                 "file:///scheduler-ast.ts", schedulerAst,
+                 "file:///constraints-edsl-fluent-api.ts", windowsDsl,
+                 "file:///constraints-ast.ts", windowsAst,
+                 "file:///mission-model-generated-code.ts", generatedConstraintsCode));
     } catch (NoSuchMissionModelException | IOException | MissionModelService.MissionModelServiceException e) {
       return new Response.Failure(e.getMessage());
     }

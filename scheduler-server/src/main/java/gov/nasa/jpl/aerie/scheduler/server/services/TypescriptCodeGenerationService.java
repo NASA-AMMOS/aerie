@@ -37,8 +37,8 @@ public class TypescriptCodeGenerationService {
     }
     final var result = new ArrayList<String>();
     result.add("/** Start Codegen */");
-    result.add("import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';");
-    result.add("import type { Windows } from './constraints-edsl-fluent-api.js';");
+    result.add("import type { ActivityTemplate } from './scheduler-edsl-fluent-api';");
+    result.add("import type { Windows } from './constraints-edsl-fluent-api';");
     result.add(generateActivityTypeEnum(activityTypeCodes));
     for (final var activityTypeCode : activityTypeCodes) {
       result.add("interface %s extends ActivityTemplate {}".formatted(activityTypeCode.activityTypeName()));
