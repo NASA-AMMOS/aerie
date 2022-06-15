@@ -179,7 +179,22 @@ declare global {
     public static ofType(activityType: ActivityType): ActivityExpression
   }
   class TimingConstraint {
+    /**
+     * The singleton timing constraint represents a precise time point
+     * at some offset from either the start or end of a window.
+     * @param windowProperty either WindowProperty.START or WindowProperty.END
+     */
     public static singleton(windowProperty: WindowProperty): SingletonTimingConstraintNoOperator
+
+    /**
+     * The range timing constraint represents a range of acceptable times
+     * relative to either the start or end of the window. The range will
+     * be between the window "anchor" and the new point defined by the operator
+     * and the offset.
+     * @param windowProperty either WindowProperty.START or WindowProperty.END
+     * @param operator either Operator.PLUS or Operator.MINUS
+     * @param operand the duration offset
+     */
     public static range(windowProperty: WindowProperty, operator: TimingConstraintOperator, operand: Duration): RangeTimingConstraint
   }
   var WindowProperty: typeof AST.WindowProperty
