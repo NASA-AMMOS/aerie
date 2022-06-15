@@ -51,7 +51,7 @@ function convertSchemaType(schema: Schema): string {
           .join('\n'),
       );
     case SchemaTypes.Variant:
-      if (schema.variants.length === 1 && schema.variants[0].key === 'VOID') {
+      if (schema.variants.length === 1 && schema.variants[0]?.key === 'VOID') {
         return 'null';
       }
       return `(${schema.variants.map(variant => `'${variant.label}'`).join(' | ')})`;

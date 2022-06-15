@@ -1,6 +1,6 @@
 /** Assertion error that has the associated object being asserted attached */
 export class AssertionError<T> extends Error {
-  public context?: T;
+  public context: T | undefined;
   constructor(message: string, context?: T) {
     super(message);
     this.context = context;

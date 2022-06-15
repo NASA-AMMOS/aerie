@@ -16,6 +16,7 @@
     "typescript-json-schema": "^0.53.0"
   },
   "devDependencies": {
+    "@tsconfig/node16-strictest-esm": "^1.0.2",
     "@types/node": "^17.0.21"
   }
 }

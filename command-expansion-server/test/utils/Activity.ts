@@ -63,6 +63,6 @@ export async function convertActivityIdToSimulatedActivityId(
   }
 
   return assertDefined(
-    simulatedActivities.find(simulatedActivity => simulatedActivity.attributes.directiveId === activityId),
+    simulatedActivities?.find(simulatedActivity => simulatedActivity.attributes.directiveId === activityId),
   ).id;
 }

@@ -6,7 +6,7 @@ let graphqlClient: GraphQLClient;
 let commandDictionaryId: number;
 
 beforeEach(async () => {
-  graphqlClient = new GraphQLClient(process.env.MERLIN_GRAPHQL_URL as string);
+  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string);
   commandDictionaryId = await insertCommandDictionary(graphqlClient);
 });
 

@@ -20,14 +20,18 @@ export async function uploadMissionModel(graphqlClient: GraphQLClient): Promise<
   }));
   const latestBuild = banananationStats.sort((a, b) => a.stats.mtime.getTime() - b.stats.mtime.getTime()).reverse()[0];
 
+  if (latestBuild === undefined) {
+    throw new Error('No banananation build found');
+  }
+
   const formData = new FormData();
   const file = await fileFrom(latestBuild.path);
   formData.set('file', file, 'banananation-latest.jar');
 
-  const uploadRes = await fetch(`${process.env.MERLIN_GATEWAY_URL}/file`, {
+  const uploadRes = await fetch(`${process.env['MERLIN_GATEWAY_URL']}/file`, {
     method: 'POST',
     body: formData,
-    headers: { 'x-auth-sso-token': process.env.SSO_TOKEN as string },
+    headers: { 'x-auth-sso-token': process.env['SSO_TOKEN'] as string },
   });
   if (!uploadRes.ok) {
     throw new Error(`Failed to upload mission model: ${uploadRes.statusText}`);

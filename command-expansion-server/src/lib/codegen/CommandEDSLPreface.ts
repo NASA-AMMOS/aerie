@@ -321,6 +321,7 @@ export class Sequence {
 }
 
 //helper functions
+// @ts-ignore
 function orderCommandArguments(args: { [argName: string]: any }, order: string[]): any {
   return order.map(key => args[key]);
 }

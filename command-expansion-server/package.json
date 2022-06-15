@@ -34,6 +34,7 @@
   },
   "devDependencies": {
     "@microsoft/tsdoc": "^0.13.2",
+    "@tsconfig/node16-strictest-esm": "^1.0.2",
     "@types/express": "^4.17.13",
     "@types/jest": "^27.4.0",
     "@types/node": "^17.0.21",

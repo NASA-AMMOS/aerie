@@ -1,4 +1,4 @@
-import * as WindowsExpressions from "./constraints-ast";
+import type * as WindowsExpressions from "./constraints-ast";
 
 export interface ActivityTemplate {
   activityType: string,

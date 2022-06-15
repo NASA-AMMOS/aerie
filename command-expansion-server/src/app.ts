@@ -54,7 +54,7 @@ type Context = {
   expansionDataLoader: InferredDataloader<typeof expansionBatchLoader>;
 };
 
-app.use(async (req: Request, res: Response, next: NextFunction) => {
+app.use(async (_: Request, res: Response, next: NextFunction) => {
   const graphqlClient = new GraphQLClient(getEnv().MERLIN_GRAPHQL_URL);
 
   const activitySchemaDataLoader = new DataLoader(activitySchemaBatchLoader({ graphqlClient }), {
@@ -92,11 +92,11 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
     }),
   };
 
-  res.locals.context = context;
+  res.locals['context'] = context;
   return next();
 });
 
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (_: Request, res: Response) => {
   res.send('Aerie Command Service');
 });
 
@@ -135,7 +135,7 @@ app.post('/put-dictionary', async (req, res, next) => {
 });
 
 app.post('/put-expansion', async (req, res, next) => {
-  const context: Context = res.locals.context;
+  const context: Context = res.locals['context'];
 
   const activityTypeName = req.body.input.activityTypeName as string;
   const expansionLogic = req.body.input.expansionLogic as string;
@@ -185,7 +185,7 @@ app.post('/put-expansion', async (req, res, next) => {
 });
 
 app.post('/put-expansion-set', async (req, res, next) => {
-  const context: Context = res.locals.context;
+  const context: Context = res.locals['context'];
 
   const commandDictionaryId = req.body.input.commandDictionaryId as number;
   const missionModelId = req.body.input.missionModelId as number;
@@ -233,7 +233,7 @@ app.post('/put-expansion-set', async (req, res, next) => {
       `Expansion set could not be typechecked`,
       errors.map(e => ({
         name: 'TypeCheckError',
-        stack: e.stack,
+        stack: e.stack ?? null,
         // @ts-ignore  Message is not spread when it comes from an Error object because it's a getter
         message: e.message,
         ...e,
@@ -268,7 +268,7 @@ app.post('/put-expansion-set', async (req, res, next) => {
 });
 
 app.post('/get-command-typescript', async (req, res, next) => {
-  const context: Context = res.locals.context;
+  const context: Context = res.locals['context'];
 
   const commandDictionaryId = req.body.input.commandDictionaryId as number;
 
@@ -294,7 +294,7 @@ app.post('/get-command-typescript', async (req, res, next) => {
 });
 
 app.post('/get-activity-typescript', async (req, res, next) => {
-  const context: Context = res.locals.context;
+  const context: Context = res.locals['context'];
 
   const missionModelId = req.body.input.missionModelId as number;
   const activityTypeName = req.body.input.activityTypeName as string;
@@ -314,7 +314,7 @@ app.post('/get-activity-typescript', async (req, res, next) => {
 });
 
 app.post('/expand-all-activity-instances', async (req, res, next) => {
-  const context: Context = res.locals.context;
+  const context: Context = res.locals['context'];
 
   // Query for expansion set data
   const expansionSetId = req.body.input.expansionSetId as number;
@@ -428,7 +428,7 @@ app.post('/get-seqjson-for-sequence', async (req, res, next) => {
   // Get the specified sequence + activity instance ids + commands from the latest expansion run for each activity instance (filtered on simulation dataset)
   // get start time for each activity instance and join with activity instance command data
   // Create sequence object with all the commands and return the seqjson
-  const context: Context = res.locals.context;
+  const context: Context = res.locals['context'];
 
   const seqId = req.body.input.seqId as string;
   const simulationDatasetId = req.body.input.simulationDatasetId as number;
@@ -533,7 +533,7 @@ app.post('/get-seqjson-for-sequence', async (req, res, next) => {
 });
 
 // General error handler
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+app.use((err: any, _: Request, res: Response, next: NextFunction) => {
   logger.error(err);
   res.status(err.status ?? err.statusCode ?? 500).send({ message: err.message });
   return next();

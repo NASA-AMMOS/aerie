@@ -6,7 +6,7 @@ let graphqlClient: GraphQLClient;
 let expansionId: number;
 
 beforeAll(async () => {
-  graphqlClient = new GraphQLClient(process.env.MERLIN_GRAPHQL_URL as string);
+  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string);
   expansionId = await insertExpansion(graphqlClient, 'PeelBanana', `export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
   return [
     PREHEAT_OVEN({temperature: 70}),
@@ -25,8 +25,8 @@ it('should load expansion data', async () => {
   if (expansions[0] instanceof Error) {
     throw expansions[0];
   }
-  expect(expansions[0].activityType).toBe('PeelBanana');
-  expect(expansions[0].expansionLogic).toBe(`export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+  expect(expansions[0]?.activityType).toBe('PeelBanana');
+  expect(expansions[0]?.expansionLogic).toBe(`export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
   return [
     PREHEAT_OVEN({temperature: 70}),
     PREPARE_LOAF(50, false),
