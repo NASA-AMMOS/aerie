@@ -22,10 +22,7 @@ import java.util.Optional;
  */
 // TODO: We will likely want to extend ValueSchema to support common semantic types
 //   such as DateTime objects (which might otherwise be serialized as strings).
-public abstract class ValueSchema {
-  // Closed type family -- the only legal subclasses are those defined within the body of
-  // this class definition.
-  private ValueSchema() {}
+public sealed interface ValueSchema {
 
   /**
    * Calls the appropriate method of the passed Visitor depending on the kind of data
@@ -36,7 +33,7 @@ public abstract class ValueSchema {
    * @return The result of calling `visitor.onX()`, where `X` depends on the kind of data
    *   contained in this object.
    */
-  public abstract <T> T match(Visitor<T> visitor);
+  <T> T match(Visitor<T> visitor);
 
   /**
    * An operation to be performed over the schema described by a ValueSchema.
@@ -50,7 +47,7 @@ public abstract class ValueSchema {
    *
    * @param <T> The return type of the operation represented by this Visitor.
    */
-  public interface Visitor<T> {
+  interface Visitor<T> {
     T onReal();
     T onInt();
     T onBoolean();
@@ -62,88 +59,66 @@ public abstract class ValueSchema {
     T onVariant(List<Variant> variants);
   }
 
-  /**
-   * Creates a {@link ValueSchema} representing the domain of real numbers.
-   *
-   * @return A new {@link ValueSchema} representing the domain of real numbers.
-   */
-  private static ValueSchema ofReal() {
-    return new ValueSchema() {
-      @Override
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onReal();
-      }
-    };
+  record RealSchema() implements ValueSchema {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onReal();
+    }
   }
 
-  /**
-   * Creates a {@link ValueSchema} representing the domain of integers.
-   *
-   * @return A new {@link ValueSchema} representing the domain of integers.
-   */
-  private static ValueSchema ofInt() {
-    return new ValueSchema() {
-      @Override
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onInt();
-      }
-    };
+  record IntSchema() implements ValueSchema {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onInt();
+    }
   }
 
-  /**
-   * Creates a {@link ValueSchema} representing a {@link boolean} type.
-   *
-   * @return A new {@link ValueSchema} representing a {@link boolean} type.
-   */
-  private static ValueSchema ofBoolean() {
-    return new ValueSchema() {
-      @Override
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onBoolean();
-      }
-    };
+  record BooleanSchema() implements ValueSchema {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onBoolean();
+    }
   }
 
-  /**
-   * Creates a {@link ValueSchema} representing a {@link String} type.
-   *
-   * @return A new {@link ValueSchema} representing a {@link String} type.
-   */
-  private static ValueSchema ofString() {
-    return new ValueSchema() {
-      @Override
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onString();
-      }
-    };
+  record StringSchema() implements ValueSchema {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onString();
+    }
   }
 
-  /**
-   * Creates a {@link ValueSchema} representing a {@link Duration} type.
-   *
-   * @return A new {@link ValueSchema} representing a {@link Duration} type.
-   */
-  private static ValueSchema ofDuration() {
-    return new ValueSchema() {
-      @Override
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onDuration();
-      }
-    };
+  record DurationSchema() implements ValueSchema {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onDuration();
+    }
   }
 
-  /**
-   * Creates a {@link ValueSchema} representing a {@link Path} type.
-   *
-   * @return A new {@link ValueSchema} representing a {@link Path} type.
-   */
-  private static ValueSchema ofPath() {
-    return new ValueSchema() {
-      @Override
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onPath();
-      }
-    };
+  record PathSchema() implements ValueSchema {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onPath();
+    }
+  }
+
+  record SeriesSchema(ValueSchema value) implements ValueSchema {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onSeries(value);
+    }
+  }
+
+  record StructSchema(Map<String, ValueSchema> value) implements ValueSchema {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onStruct(value);
+    }
+  }
+
+  record VariantSchema(List<Variant> variants) implements ValueSchema {
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onVariant(variants);
+    }
   }
 
   /**
@@ -153,14 +128,9 @@ public abstract class ValueSchema {
    * @param value A {@link ValueSchema}.
    * @return A new {@link ValueSchema} representing a homogeneous list of elements.
    */
-  public static ValueSchema ofSeries(final ValueSchema value) {
+  static ValueSchema ofSeries(final ValueSchema value) {
     Objects.requireNonNull(value);
-    return new ValueSchema() {
-      @Override
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onSeries(value);
-      }
-    };
+    return new SeriesSchema(value);
   }
 
   /**
@@ -170,15 +140,10 @@ public abstract class ValueSchema {
    * @param map Any set of named {@link ValueSchema}s.
    * @return A new {@link ValueSchema} representing a heterogeneous set of named {@link ValueSchema}s.
    */
-  public static ValueSchema ofStruct(final Map<String, ValueSchema> map) {
+  static ValueSchema ofStruct(final Map<String, ValueSchema> map) {
     for (final var v : Objects.requireNonNull(map).values()) Objects.requireNonNull(v);
     final var value = Map.copyOf(map);
-    return new ValueSchema() {
-      @Override
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onStruct(value);
-      }
-    };
+    return new StructSchema(value);
   }
 
   /**
@@ -186,21 +151,17 @@ public abstract class ValueSchema {
    *
    * @return A new {@link ValueSchema} representing an {@link Enum} type.
    */
-  public static ValueSchema ofVariant(final List<Variant> variants) {
+  static ValueSchema ofVariant(final List<Variant> variants) {
     Objects.requireNonNull(variants);
-    return new ValueSchema() {
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onVariant(variants);
-      }
-    };
+    return new VariantSchema(variants);
   }
 
-  public static final ValueSchema REAL = ofReal();
-  public static final ValueSchema INT = ofInt();
-  public static final ValueSchema BOOLEAN = ofBoolean();
-  public static final ValueSchema STRING = ofString();
-  public static final ValueSchema DURATION = ofDuration();
-  public static final ValueSchema PATH = ofPath();
+  ValueSchema REAL = new RealSchema();
+  ValueSchema INT = new IntSchema();
+  ValueSchema BOOLEAN = new BooleanSchema();
+  ValueSchema STRING = new StringSchema();
+  ValueSchema DURATION = new DurationSchema();
+  ValueSchema PATH = new PathSchema();
 
   /**
    * Provides a default case on top of the base Visitor.
@@ -210,7 +171,7 @@ public abstract class ValueSchema {
    *
    * @param <T> The return type of the operation represented by this {@link Visitor}.
    */
-  public static abstract class DefaultVisitor<T> implements Visitor<T> {
+  abstract class DefaultVisitor<T> implements Visitor<T> {
     protected abstract T onDefault();
 
     @Override
@@ -282,7 +243,7 @@ public abstract class ValueSchema {
    * @return A non-empty {@link Optional} if this object represents a real number.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<Unit> asReal() {
+  default Optional<Unit> asReal() {
     return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Unit> onReal() {
@@ -297,7 +258,7 @@ public abstract class ValueSchema {
    * @return A non-empty {@link Optional} if this object represents an integer.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<Unit> asInt() {
+  default Optional<Unit> asInt() {
     return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Unit> onInt() {
@@ -312,7 +273,7 @@ public abstract class ValueSchema {
    * @return A non-empty {@link Optional} if this object represents an boolean.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<Unit> asBoolean() {
+  default Optional<Unit> asBoolean() {
     return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Unit> onBoolean() {
@@ -327,7 +288,7 @@ public abstract class ValueSchema {
    * @return A non-empty {@link Optional} if this object represents a String.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<Unit> asString() {
+  default Optional<Unit> asString() {
     return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Unit> onString() {
@@ -342,7 +303,7 @@ public abstract class ValueSchema {
    * @return A non-empty {@link Optional} if this object represents a Duration.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<Unit> asDuration() {
+  default Optional<Unit> asDuration() {
     return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Unit> onDuration() {
@@ -357,7 +318,7 @@ public abstract class ValueSchema {
    * @return A non-empty {@link Optional} if this object represents a Path.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<Unit> asPath() {
+  default Optional<Unit> asPath() {
     return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Unit> onPath() {
@@ -372,7 +333,7 @@ public abstract class ValueSchema {
    * @return An {@link Optional} containing a schema for elements of a homogeneous list if this
    *   object represents a series. Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<ValueSchema> asSeries() {
+  default Optional<ValueSchema> asSeries() {
     return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<ValueSchema> onSeries(final ValueSchema value) {
@@ -387,7 +348,7 @@ public abstract class ValueSchema {
    * @return An {@link Optional} containing a map if this object represents a map.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<Map<String, ValueSchema>> asStruct() {
+  default Optional<Map<String, ValueSchema>> asStruct() {
     return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Map<String, ValueSchema>> onStruct(final Map<String, ValueSchema> value) {
@@ -402,7 +363,7 @@ public abstract class ValueSchema {
    * @return An {@link Optional} containing an enum if this object represents an enumeration.
    *   Otherwise, returns an empty {@link Optional}
    */
-  public Optional<List<Variant>> asVariant() {
+  default Optional<List<Variant>> asVariant() {
     return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<List<Variant>> onVariant(final List<Variant> variants) {
@@ -410,113 +371,9 @@ public abstract class ValueSchema {
       }
     });
   }
-
-  @Override
-  public String toString() {
-    return this.match(new Visitor<>() {
-      @Override
-      public String onReal() {
-        return "ValueSchema.REAL";
-      }
-
-      @Override
-      public String onInt() {
-        return "ValueSchema.INT";
-      }
-
-      @Override
-      public String onBoolean() {
-        return "ValueSchema.BOOLEAN";
-      }
-
-      @Override
-      public String onString() {
-        return "ValueSchema.STRING";
-      }
-
-      @Override
-      public String onDuration() {
-        return "ValueSchema.DURATION";
-      }
-
-      @Override
-      public String onPath() {
-        return "ValueSchema.PATH";
-      }
-
-      @Override
-      public String onSeries(final ValueSchema value) {
-        return "[" + value + "]";
-      }
-
-      @Override
-      public String onStruct(final Map<String, ValueSchema> value) {
-        return String.valueOf(value);
-      }
-
-      @Override
-      public String onVariant(final List<Variant> variants) {
-        return "ValueSchema.VARIANT(" + variants.toString() + ")";
-      }
-    });
-  }
-
-  @Override
-  public boolean equals(final Object o) {
-    if (!(o instanceof ValueSchema)) return false;
-    final var other = (ValueSchema) o;
-
-    return this.match(new Visitor<>() {
-      @Override
-      public Boolean onReal() {
-        return other.asReal().isPresent();
-      }
-
-      @Override
-      public Boolean onInt() {
-        return other.asInt().isPresent();
-      }
-
-      @Override
-      public Boolean onBoolean() {
-        return other.asBoolean().isPresent();
-      }
-
-      @Override
-      public Boolean onString() {
-        return other.asString().isPresent();
-      }
-
-      @Override
-      public Boolean onDuration() {
-        return other.asDuration().isPresent();
-      }
-
-      @Override
-      public Boolean onPath() {
-        return other.asPath().isPresent();
-      }
-
-      @Override
-      public Boolean onSeries(final ValueSchema value) {
-        return other.asSeries().map(x -> x.equals(value)).orElse(false);
-      }
-
-      @Override
-      public Boolean onStruct(final Map<String, ValueSchema> value) {
-        return other.asStruct().map(x -> x.equals(value)).orElse(false);
-      }
-
-      @Override
-      public Boolean onVariant(final List<Variant> variants) {
-        return other.asVariant().map(x -> x.equals(variants)).orElse(false);
-      }
-    });
-  }
-
   /**
    * @param key The unique internal name of this variant
    * @param label The user-facing presentation of this variant
    */
-  public record Variant(String key, String label) {}
+  record Variant(String key, String label) {}
 }
