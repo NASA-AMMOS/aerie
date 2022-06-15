@@ -52,8 +52,8 @@ class TypescriptCodeGenerationServiceTest {
     assertEquals(
         """
             /** Start Codegen */
-            import type { ActivityTemplate } from './scheduler-edsl-fluent-api';
-            import type { Windows } from './constraints-edsl-fluent-api';
+            import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';
+            import type { Windows } from './constraints-edsl-fluent-api.js';
             export enum ActivityType {
               SampleActivity1 = 'SampleActivity1',
               SampleActivity2 = 'SampleActivity2',

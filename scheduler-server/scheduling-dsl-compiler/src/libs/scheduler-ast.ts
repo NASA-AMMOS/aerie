@@ -1,5 +1,5 @@
-import type * as WindowsExpressions from "./constraints-ast";
-import "./constraints-edsl-fluent-api";
+import type * as WindowsExpressions from "./constraints-ast.js";
+import "./constraints-edsl-fluent-api.js";
 
 export interface ActivityTemplate {
   activityType: string,

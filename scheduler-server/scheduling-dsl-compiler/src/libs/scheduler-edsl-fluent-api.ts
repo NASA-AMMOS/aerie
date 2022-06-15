@@ -1,6 +1,6 @@
-import * as AST from "./scheduler-ast";
-import type * as WindowsEDSL from "./constraints-edsl-fluent-api";
-import type {ActivityType} from "./scheduler-mission-model-generated-code";
+import * as AST from "./scheduler-ast.js";
+import type * as WindowsEDSL from "./constraints-edsl-fluent-api.js";
+import type {ActivityType} from "./scheduler-mission-model-generated-code.js";
 
 type WindowProperty = AST.WindowProperty
 type TimingConstraintOperator = AST.TimingConstraintOperator
