@@ -232,8 +232,9 @@ public class SchedulingIntegrationTests {
             Duration.ZERO)),
         List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.CoexistenceGoal({
-            activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
             forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+            activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+            startsAt: TimingConstraint.singleton(WindowProperty.END).plus(5 * 60 * 1000 * 1000)
           })
           """, true)));
 
@@ -260,7 +261,53 @@ public class SchedulingIntegrationTests {
     assertEquals(SerializedValue.of("fromStem"), peelBanana.args().get("peelDirection"));
     assertEquals(SerializedValue.of(1), growBanana.args().get("quantity"));
 
-    assertEquals(growBanana.startTime().plus(growBananaDuration), peelBanana.startTime());
+    assertEquals(growBanana.startTime().plus(growBananaDuration).plus(Duration.of(5, Duration.MINUTES)), peelBanana.startTime());
+  }
+
+  @Test
+  void testSingleActivityPlanSimpleCoexistenceGoal_constrainEndTime() {
+    final var growBananaDuration = Duration.of(1, Duration.HOUR);
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(new MockMerlinService.PlannedActivityInstance(
+            "GrowBanana",
+            Map.of(
+                "quantity", SerializedValue.of(1),
+                "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+            Duration.of(5, Duration.MINUTES))),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+          export default () => Goal.CoexistenceGoal({
+            forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+            activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+            endsWithin: TimingConstraint.range(WindowProperty.END, Operator.PLUS, 5 * 60 * 1000 * 1000)
+          })
+          """, true)));
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(1, goalResult.createdActivities().size());
+    for (final var activity : goalResult.createdActivities()) {
+      assertNotNull(activity);
+    }
+    for (final var activity : goalResult.satisfyingActivities()) {
+      assertNotNull(activity);
+    }
+
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var peelBananas = planByActivityType.get("PeelBanana");
+    final var growBananas = planByActivityType.get("GrowBanana");
+    assertEquals(1, peelBananas.size());
+    assertEquals(1, growBananas.size());
+    final var peelBanana = peelBananas.iterator().next();
+    final var growBanana = growBananas.iterator().next();
+
+    assertEquals(SerializedValue.of("fromStem"), peelBanana.args().get("peelDirection"));
+    assertEquals(SerializedValue.of(1), growBanana.args().get("quantity"));
+
+    assertTrue(growBanana.startTime().plus(growBananaDuration).plus(Duration.of(5, Duration.MINUTES)).noShorterThan(peelBanana.startTime()));
+    assertTrue(growBanana.startTime().plus(growBananaDuration).noLongerThan(peelBanana.startTime()));
   }
 
   @Test
@@ -286,7 +333,8 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: Real.Resource("/plant").greaterThan(201.0)
+                   forEach: Real.Resource("/plant").greaterThan(201.0),
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -325,7 +373,8 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: Real.Resource("/plant").lessThan(199.0)
+                   forEach: Real.Resource("/plant").lessThan(199.0),
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -365,7 +414,8 @@ public class SchedulingIntegrationTests {
                    forEach: Windows.All(
                      Real.Resource("/fruit").lessThan(4.0),
                      Real.Resource("/fruit").greaterThan(2.0)
-                   )
+                   ),
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -399,7 +449,8 @@ public class SchedulingIntegrationTests {
                    forEach: Windows.All(
                      Real.Resource("/fruit").greaterThan(5.0),
                      Real.Resource("/fruit").lessThan(6.0),
-                   )
+                   ),
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -436,7 +487,8 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: Real.Resource("/plant").equal(100.0)
+                   forEach: Real.Resource("/plant").equal(100.0),
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -475,7 +527,8 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: Real.Resource("/plant").equal(100.0)
+                   forEach: Real.Resource("/plant").equal(100.0),
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -512,7 +565,8 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: Real.Resource("/plant").notEqual(200.0)
+                   forEach: Real.Resource("/plant").notEqual(200.0),
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -554,7 +608,8 @@ public class SchedulingIntegrationTests {
                    forEach: Windows.All(
                      Real.Resource("/plant").greaterThan(50.0),
                      Real.Resource("/plant").lessThan(150.0),
-                   )
+                   ),
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -596,7 +651,8 @@ public class SchedulingIntegrationTests {
                    forEach: Windows.Any(
                      Real.Resource("/plant").equal(999.0),
                      Real.Resource("/plant").equal(100.0),
-                   )
+                   ),
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -627,7 +683,8 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: Discrete.Resource(Resources["/producer"]).transition("Chiquita", "Dole")
+                   forEach: Discrete.Resource(Resources["/producer"]).transition("Chiquita", "Dole"),
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 
@@ -656,7 +713,8 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: Discrete.Resource(Resources["/producer"]).transition("Chiquita", "Dole")
+                   forEach: Discrete.Resource(Resources["/producer"]).transition("Chiquita", "Dole"),
+                   startsAt: TimingConstraint.singleton(WindowProperty.START)
                  })
                }""", true)));
 

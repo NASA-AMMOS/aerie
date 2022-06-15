@@ -6,18 +6,14 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
-import java.util.Map;
-
 public class TimeExpressionRelativeFixed extends TimeExpression {
 
   protected final TimeAnchor anchor;
   protected boolean fixed = true;
-  protected final String name;
 
-  public TimeExpressionRelativeFixed(final TimeAnchor anchor, final boolean fixed, final String name) {
+  public TimeExpressionRelativeFixed(final TimeAnchor anchor, final boolean fixed) {
     this.fixed = fixed;
     this.anchor = anchor;
-    this.name = name;
   }
 
   @Override
@@ -30,7 +26,7 @@ public class TimeExpressionRelativeFixed extends TimeExpression {
     }
 
     Duration res = from;
-    for (Map.Entry<TimeUtility.Operator, Duration> entry : this.operations.entrySet()) {
+    for (final var entry : this.operations) {
       res = TimeUtility.performOperation(entry.getKey(), res, entry.getValue());
     }
 

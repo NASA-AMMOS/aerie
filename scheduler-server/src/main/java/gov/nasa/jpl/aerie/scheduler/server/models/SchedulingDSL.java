@@ -9,12 +9,16 @@ import gov.nasa.jpl.aerie.json.SumParsers;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.scheduler.TimeUtility;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.enumP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.windowsExpressionP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
@@ -90,15 +94,29 @@ public class SchedulingDSL {
               ConstraintExpression.WindowsExpression::new,
               ConstraintExpression.WindowsExpression::expression)));
 
+  private static final JsonParser<ActivityTimingConstraint> activityTimingConstraintP =
+      productP
+          .field("windowProperty", enumP(TimeAnchor.class, Enum::name))
+          .field("operator", enumP(TimeUtility.Operator.class, Enum::name))
+          .field("operand", durationP)
+          .field("singleton", boolP)
+          .map(Iso.of(
+              untuple(ActivityTimingConstraint::new),
+              $ -> tuple($.windowProperty(), $.operator(), $.operand(), $.singleton())));
+
   private static final ProductParsers.JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP =
       productP
           .field("activityTemplate", activityTemplateP)
           .field("forEach", constraintExpressionP)
+          .optionalField("startConstraint", activityTimingConstraintP)
+          .optionalField("endConstraint", activityTimingConstraintP)
           .map(Iso.of(
               untuple(GoalSpecifier.CoexistenceGoalDefinition::new),
               goalDefinition -> tuple(
                   goalDefinition.activityTemplate(),
-                  goalDefinition.forEach())));
+                  goalDefinition.forEach(),
+                  goalDefinition.startConstraint(),
+                  goalDefinition.endConstraint())));
 
   private static final ProductParsers.JsonObjectParser<GoalSpecifier.CardinalityGoalDefinition> cardinalityGoalDefinitionP =
       productP
@@ -147,7 +165,9 @@ public class SchedulingDSL {
     ) implements GoalSpecifier {}
     record CoexistenceGoalDefinition(
         ActivityTemplate activityTemplate,
-        ConstraintExpression forEach
+        ConstraintExpression forEach,
+        Optional<ActivityTimingConstraint> startConstraint,
+        Optional<ActivityTimingConstraint> endConstraint
     ) implements GoalSpecifier {}
     record CardinalityGoalDefinition(
         ActivityTemplate activityTemplate,
@@ -169,4 +189,6 @@ public class SchedulingDSL {
 
     record WindowsExpression(Expression<Windows> expression) implements ConstraintExpression {}
   }
+
+  public record ActivityTimingConstraint(TimeAnchor windowProperty, TimeUtility.Operator operator, Duration operand, boolean singleton) {}
 }

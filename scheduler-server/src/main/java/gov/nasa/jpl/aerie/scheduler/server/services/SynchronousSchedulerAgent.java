@@ -257,8 +257,14 @@ public record SynchronousSchedulerAgent(
         schedulingIdToMerlinId.put(act.getId(), elem.getKey());
         if (schedulerActType.getDurationType() instanceof DurationType.Controllable s) {
           final var serializedDuration = activity.arguments().get(s.parameterName());
-          final var duration = Duration.of(serializedDuration.asInt().orElseThrow(() -> new Exception("Controllable Duration parameter was not an Int")), Duration.MICROSECONDS);
-          act.setDuration(duration);
+          if (serializedDuration != null) {
+            final var duration = Duration.of(
+                serializedDuration
+                    .asInt()
+                    .orElseThrow(() -> new Exception("Controllable Duration parameter was not an Int")),
+                Duration.MICROSECONDS);
+            act.setDuration(duration);
+          }
         } else if (schedulerActType.getDurationType() instanceof DurationType.Uncontrollable s) {
           // Do nothing
         } else {

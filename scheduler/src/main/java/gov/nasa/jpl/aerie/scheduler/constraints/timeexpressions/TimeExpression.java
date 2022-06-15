@@ -4,10 +4,12 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
-import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * class allowing to define dynamic expressions of timepoints, relative to time anchors
@@ -24,11 +26,15 @@ public abstract class TimeExpression {
   public abstract Window computeTime(final SimulationResults simulationResults, final Plan plan, final Window interval);
 
 
-  protected LinkedHashMap<TimeUtility.Operator, Duration> operations = new LinkedHashMap<>();
+  protected final List<Pair<TimeUtility.Operator, Duration>> operations = new ArrayList<>();
 
 
   public static TimeExpression fromAnchor(TimeAnchor anchor) {
-    return new TimeExpressionRelativeFixed(anchor, true, DEF_NAME);
+    return new TimeExpressionRelativeFixed(anchor, true);
+  }
+
+  public void addOperation(final TimeUtility.Operator operator, final Duration operand) {
+    this.operations.add(Pair.of(operator, operand));
   }
 
   /**
@@ -63,62 +69,62 @@ public abstract class TimeExpression {
   }
 
   public static TimeExpression atStart() {
-    return new TimeExpressionRelativeFixed(TimeAnchor.START, true, DEF_NAME);
+    return new TimeExpressionRelativeFixed(TimeAnchor.START, true);
   }
 
   public static TimeExpression offsetByAfterStart(Duration dur) {
-    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.START, true, DEF_NAME);
-    te.operations.put(TimeUtility.Operator.PLUS, dur);
+    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.START, true);
+    te.operations.add(Pair.of(TimeUtility.Operator.PLUS, dur));
     return te;
   }
 
 
   public static TimeExpression offsetByBeforeStart(Duration dur) {
-    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.START, true, DEF_NAME);
-    te.operations.put(TimeUtility.Operator.MINUS, dur);
+    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.START, true);
+    te.operations.add(Pair.of(TimeUtility.Operator.MINUS, dur));
     return te;
   }
 
 
   public static TimeExpression offsetByAfterEnd(Duration dur) {
-    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.END, true, DEF_NAME);
-    te.operations.put(TimeUtility.Operator.PLUS, dur);
+    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.END, true);
+    te.operations.add(Pair.of(TimeUtility.Operator.PLUS, dur));
     return te;
   }
 
 
   public static TimeExpression offsetByBeforeEnd(Duration dur) {
-    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.END, true, DEF_NAME);
-    te.operations.put(TimeUtility.Operator.MINUS, dur);
+    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.END, true);
+    te.operations.add(Pair.of(TimeUtility.Operator.MINUS, dur));
     return te;
   }
 
   public static TimeExpression beforeEnd() {
-    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.END, false, DEF_NAME);
-    te.operations.put(TimeUtility.Operator.MINUS, Duration.MAX_VALUE);
+    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.END, false);
+    te.operations.add(Pair.of(TimeUtility.Operator.MINUS, Duration.MAX_VALUE));
     return te;
   }
 
   public static TimeExpression beforeStart() {
-    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.START, false, DEF_NAME);
-    te.operations.put(TimeUtility.Operator.MINUS,Duration.MAX_VALUE);
+    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.START, false);
+    te.operations.add(Pair.of(TimeUtility.Operator.MINUS,Duration.MAX_VALUE));
     return te;
   }
 
   public static TimeExpression afterEnd() {
-    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.END, false, DEF_NAME);
-    te.operations.put(TimeUtility.Operator.PLUS, Duration.MAX_VALUE);
+    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.END, false);
+    te.operations.add(Pair.of(TimeUtility.Operator.PLUS, Duration.MAX_VALUE));
     return te;
   }
 
   public static TimeExpression afterStart() {
-    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.START, false, DEF_NAME);
-    te.operations.put(TimeUtility.Operator.PLUS, Duration.MAX_VALUE);
+    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.START, false);
+    te.operations.add(Pair.of(TimeUtility.Operator.PLUS, Duration.MAX_VALUE));
     return te;
   }
 
   public static TimeExpression endsBefore(TimeExpression expr){
-    //te.operations.put(Time.Operator.MINUS,Duration.MAX_VALUE);
+    //te.operations.add(Pair.of(Time.Operator.MINUS,Duration.MAX_VALUE));
     return new TimeExpressionBefore(expr, DEF_NAME);
   }
 
@@ -154,7 +160,7 @@ public abstract class TimeExpression {
     TimeAnchor fromAnchor;
 
     public Builder minus(Duration dur) {
-      operations.put(TimeUtility.Operator.MINUS, dur);
+      operations.add(Pair.of(TimeUtility.Operator.MINUS, dur));
       return getThis();
     }
 
@@ -164,20 +170,20 @@ public abstract class TimeExpression {
     }
 
     public Builder plus(Duration dur) {
-      operations.put(TimeUtility.Operator.PLUS, dur);
+      operations.add(Pair.of(TimeUtility.Operator.PLUS, dur));
       return getThis();
     }
 
-    protected final LinkedHashMap<TimeUtility.Operator, Duration> operations = new LinkedHashMap<>();
+    protected final List<Pair<TimeUtility.Operator, Duration>> operations = new ArrayList<>();
 
     public TimeExpression build() {
       if (fromExpression != null) {
         var expr = new TimeExpressionFromExpr(fromExpression, name);
-        expr.operations = operations;
+        expr.operations.addAll(operations);
         return expr;
       } else if (fromAnchor != null) {
-        var expr = new TimeExpressionRelativeFixed(fromAnchor, interval, name);
-        expr.operations = operations;
+        var expr = new TimeExpressionRelativeFixed(fromAnchor, interval);
+        expr.operations.addAll(operations);
         return expr;
       } else {
         throw new RuntimeException("Time expression must either be another time expression or a time anchor");
