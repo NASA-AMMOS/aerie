@@ -32,7 +32,7 @@ public final class GetSimulationResultsAction {
     record Pending() implements Response {}
     record Incomplete() implements Response {}
     record Failed(String reason) implements Response {}
-    record Complete(SimulationResults results) implements Response {}
+    record Complete() implements Response {}
   }
 
   private final PlanService planService;
@@ -64,8 +64,7 @@ public final class GetSimulationResultsAction {
     } else if (response instanceof ResultsProtocol.State.Failed r) {
       return new Response.Failed(r.reason());
     } else if (response instanceof ResultsProtocol.State.Success r) {
-
-      return new Response.Complete(r.results());
+      return new Response.Complete();
     } else {
       throw new UnexpectedSubtypeError(ResultsProtocol.State.class, response);
     }
