@@ -16,4 +16,24 @@ test.describe('Health', () => {
     const healthy = await req.healthUI(request);
     expect(healthy).toBeTruthy();
   });
+
+  test('Merlin is healthy', async ({ request }) => {
+    const healthy = await req.healthMerlin(request);
+    expect(healthy).toBeTruthy();
+  });
+
+  test('Commanding is healthy', async ({ request }) => {
+    const healthy = await req.healthCommanding(request);
+    expect(healthy).toBeTruthy();
+  });
+
+  test('Scheduler is healthy', async ({ request }) => {
+    const healthy = await req.healthScheduler(request);
+    expect(healthy).toBeTruthy();
+  });
+
+  test('Worker is healthy', async ({ request }) => {
+    const healthy = await req.healthWorker(request);
+    expect(healthy).toBeTruthy();
+  });
 });
