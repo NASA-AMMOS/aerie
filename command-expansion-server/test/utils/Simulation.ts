@@ -15,7 +15,6 @@ export async function executeSimulation(
         query SimulatePlan($planId: Int!) {
           simulate(planId: $planId) {
             status
-            results
             reason
           }
         }
@@ -25,6 +24,9 @@ export async function executeSimulation(
       },
     );
     const status = simulationRes.simulate.status;
+    if (status === 'failed') {
+      throw new Error(simulationRes.simulate.reason);
+    }
     if (status !== 'pending' && status !== 'incomplete') {
       const getSimulationRes = await graphqlClient.request(
         gql`
