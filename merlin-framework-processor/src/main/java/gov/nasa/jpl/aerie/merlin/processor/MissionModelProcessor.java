@@ -15,6 +15,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -54,7 +55,8 @@ public final class MissionModelProcessor implements Processor {
   public Set<String> getSupportedAnnotationTypes() {
     return Set.of(
         MissionModel.class.getCanonicalName(),
-        ActivityType.class.getCanonicalName());
+        ActivityType.class.getCanonicalName(),
+        AutoValueMapper.class.getCanonicalName());
   }
 
   @Override
@@ -99,12 +101,14 @@ public final class MissionModelProcessor implements Processor {
             missionModelGen.generateActivityTypes(missionModelRecord$)
         ));
 
-        final var autoValueMapperRequests = roundEnv.getElementsAnnotatedWith(AutoValueMapper.class).stream().map(Element::asType).toList();
+        final var autoValueMapperRequests = roundEnv.getElementsAnnotatedWith(AutoValueMapper.class);
         {
-          final var recordType = elementUtils.getTypeElement("java.lang.Record").asType();
           for (final var request : autoValueMapperRequests) {
-            if (!typeUtils.isSubtype(request, recordType)) {
-              messager.printError("AutoValueMapper is only allowed on record types. %s is not a record".formatted(request.toString()));
+            if (request.getKind() != ElementKind.RECORD) {
+              messager.printError(
+                  "@%s is only allowed on record types. %s is not a record"
+                      .formatted(AutoValueMapper.class.getSimpleName(), request.getSimpleName()),
+                  request);
             }
           }
         }

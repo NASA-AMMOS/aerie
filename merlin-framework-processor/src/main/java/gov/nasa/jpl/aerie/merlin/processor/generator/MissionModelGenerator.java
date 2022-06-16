@@ -40,6 +40,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.processing.Messager;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.type.TypeMirror;
@@ -657,7 +658,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
 
   public Pair<JavaFile, List<TypeRule>> generateAutoValueMappers(
       final MissionModelRecord missionModel,
-      final List<TypeMirror> recordTypes) {
+      final Iterable<? extends Element> recordTypes) {
     final var typeRules = new ArrayList<TypeRule>();
 
     final var typeName = missionModel.getAutoValueMappersName();
@@ -682,7 +683,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
       }
 
       final var typeRule = new TypeRule(
-          new TypePattern.ClassPattern(ClassName.get(ValueMapper.class), List.of(TypePattern.from(record))),
+          new TypePattern.ClassPattern(ClassName.get(ValueMapper.class), List.of(TypePattern.from(record.asType()))),
           Set.of(),
           recordComponents
               .stream()
@@ -696,9 +697,8 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
 
       final var methodBuilder = MethodSpec
           .methodBuilder(methodName)
-          .addModifiers(Modifier.PUBLIC)
-          .addModifiers(Modifier.STATIC)
-          .returns(ParameterizedTypeName.get(ClassName.get(ValueMapper.class), TypeName.get(record)))
+          .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+          .returns(ParameterizedTypeName.get(ClassName.get(ValueMapper.class), TypeName.get(record.asType())))
           .addParameters(
               recordComponents
                   .stream()
