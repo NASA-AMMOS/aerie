@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 
 import java.util.List;
 
@@ -207,6 +208,26 @@ public final class ConstraintParsers {
               untuple((kind, left, right) -> new LessThan(left, right)),
               $ -> tuple(Unit.UNIT, $.left, $.right)));
 
+  static JsonParser<LongerThan> longerThanP(JsonParser<Expression<Windows>> windowsExpressionP) {
+    return productP
+            .field("kind", literalP("WindowsExpressionLongerThan"))
+            .field("windowExpression", windowsExpressionP)
+            .field("duration", durationP)
+            .map(Iso.of(
+                untuple((kind, windowsExpression, duration) -> new LongerThan(windowsExpression, duration)),
+                $ -> tuple(Unit.UNIT, $.windows, $.duration)));
+  }
+
+  static JsonParser<ShorterThan> shorterThanP(JsonParser<Expression<Windows>> windowsExpressionP) {
+    return productP
+        .field("kind", literalP("WindowsExpressionShorterThan"))
+        .field("windowExpression", windowsExpressionP)
+        .field("duration", durationP)
+        .map(Iso.of(
+            untuple((kind, windowsExpression, duration) -> new ShorterThan(windowsExpression, duration)),
+            $ -> tuple(Unit.UNIT, $.windows, $.duration)));
+  }
+
   static final JsonParser<LessThanOrEqual> lessThanOrEqualP =
       productP
           .field("kind", literalP("RealProfileLessThanOrEqual"))
@@ -288,6 +309,8 @@ public final class ConstraintParsers {
           changesP,
           lessThanP,
           lessThanOrEqualP,
+          longerThanP(selfP),
+          shorterThanP(selfP),
           greaterThanOrEqualP,
           greaterThanP,
           transitionP,

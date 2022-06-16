@@ -279,6 +279,30 @@ class ConstraintsDSLCompilationServiceTests {
   }
 
   @Test
+  void testLongerThan() {
+    checkSuccessfulCompilation(
+        """
+            export default() => {
+              return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).longerThan(1000)
+            }
+        """,
+        new ViolationsOf(new LongerThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), Duration.of(1000, Duration.MICROSECOND)))
+    );
+  }
+
+  @Test
+  void testShorterThan() {
+    checkSuccessfulCompilation(
+        """
+            export default() => {
+              return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).shorterThan(1000)
+            }
+        """,
+        new ViolationsOf(new ShorterThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), Duration.of(1000, Duration.MICROSECOND)))
+    );
+  }
+
+  @Test
   void testShiftBy() {
     checkSuccessfulCompilation(
         """

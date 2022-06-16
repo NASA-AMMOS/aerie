@@ -21,6 +21,7 @@ import java.util.Set;
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -496,6 +497,59 @@ public class ASTTests {
     final var result = new EndOf("act").evaluate(simResults, environment);
 
     final var expected = new Windows(Window.at(8, SECONDS));
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testLongerThan() {
+    final var simResults = new SimulationResults(
+        Window.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var left = new Windows();
+    left.add(Window.between(0, Inclusive, 5, Exclusive, SECONDS));
+    left.add(Window.between(6, Inclusive, 7, Inclusive, SECONDS));
+    left.add(Window.between(8, Exclusive, 9, Exclusive, SECONDS));
+    left.add(Window.between(10, Exclusive, 15, Exclusive, SECONDS));
+    left.add(Window.at(20, SECONDS));
+
+    final var right = Duration.of(2, SECONDS);
+    final var result = new LongerThan(Supplier.of(left), right).evaluate(simResults, Map.of());
+
+    final var expected = new Windows();
+    expected.add(Window.between(0, Inclusive, 5, Exclusive, SECONDS));
+    expected.add(Window.between(10, Exclusive, 15, Exclusive, SECONDS));
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testShorterThan() {
+    final var simResults = new SimulationResults(
+        Window.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var left = new Windows();
+    left.add(Window.between(0, Inclusive, 5, Exclusive, SECONDS));
+    left.add(Window.between(6, Inclusive, 7, Inclusive, SECONDS));
+    left.add(Window.between(8, Exclusive, 9, Exclusive, SECONDS));
+    left.add(Window.between(10, Exclusive, 15, Exclusive, SECONDS));
+    left.add(Window.at(20, SECONDS));
+
+    final var right = Duration.of(2, SECONDS);
+    final var result = new ShorterThan(Supplier.of(left), right).evaluate(simResults, Map.of());
+
+    final var expected = new Windows();
+    expected.add(Window.between(6, Inclusive, 7, Inclusive, SECONDS));
+    expected.add(Window.between(8, Exclusive, 9, Exclusive, SECONDS));
+    expected.add(Window.at(20, SECONDS));
 
     assertEquivalent(expected, result);
   }

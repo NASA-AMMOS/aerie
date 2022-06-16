@@ -104,12 +104,11 @@ public final class Windows implements Iterable<Window> {
   }
 
   public Windows filterByDuration(Duration minDur, Duration maxDur){
-    Windows ret = new Windows();
-    for(var win : windows.ascendingOrder()){
-      if(win.duration().noShorterThan(minDur) && win.duration().noLongerThan(maxDur)){
-        ret.add(win);
-      }
-    }
+    final var ret = new Windows();
+    StreamSupport
+        .stream(windows.ascendingOrder().spliterator(), false)
+        .filter(win -> win.duration().noShorterThan(minDur) && win.duration().noLongerThan(maxDur))
+        .forEach(ret::add);
     return ret;
   }
 
