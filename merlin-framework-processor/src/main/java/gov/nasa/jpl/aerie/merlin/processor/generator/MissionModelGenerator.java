@@ -25,9 +25,9 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ConfigurationTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
@@ -673,23 +673,29 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .build())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
+    record ComponentMapperNamePair(String componentName, String mapperName) {}
     for (final var record : recordTypes) {
       final var methodName = record.toString().replace(".", "_");
-      final var recordTypeElement = elementUtils.getTypeElement(record.toString());
-      final var recordComponents = new ArrayList<Pair<String, TypeMirror>>();
-      for (final var element : recordTypeElement.getEnclosedElements()) {
+      final var componentToMapperName = new ArrayList<ComponentMapperNamePair>();
+      final var necessaryMappers = new HashMap<TypeMirror, String>();
+      for (final var element : record.getEnclosedElements()) {
         if (!(element instanceof RecordComponentElement el)) continue;
-        recordComponents.add(Pair.of(element.toString(), el.getAccessor().getReturnType()));
+        final var typeMirror = el.getAccessor().getReturnType();
+        final var elementName = element.toString();
+        final var valueMapperIdentifier = typeMirror.toString().replace(".", "_") + "ValueMapper";
+        componentToMapperName.add(new ComponentMapperNamePair(elementName, valueMapperIdentifier));
+        necessaryMappers.put(typeMirror, valueMapperIdentifier);
       }
 
       final var typeRule = new TypeRule(
           new TypePattern.ClassPattern(ClassName.get(ValueMapper.class), List.of(TypePattern.from(record.asType()))),
           Set.of(),
-          recordComponents
+          necessaryMappers
+              .keySet()
               .stream()
               .map(component -> (TypePattern) new TypePattern.ClassPattern(
                   ClassName.get(ValueMapper.class),
-                  List.of(new TypePattern.ClassPattern((ClassName) ClassName.get(component.getRight()).box(), List.of()))))
+                  List.of(new TypePattern.ClassPattern((ClassName) ClassName.get(component).box(), List.of()))))
               .toList(),
           typeName,
           methodName);
@@ -700,19 +706,20 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
           .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
           .returns(ParameterizedTypeName.get(ClassName.get(ValueMapper.class), TypeName.get(record.asType())))
           .addParameters(
-              recordComponents
+              necessaryMappers
+                  .entrySet()
                   .stream()
-                  .map(recordComponent -> ParameterSpec
+                  .map(mapperRequest -> ParameterSpec
                       .builder(
                           ParameterizedTypeName.get(
                               ClassName.get(ValueMapper.class),
-                              ClassName.get(recordComponent.getRight()).box()),
-                          recordComponent.getLeft() + "ValueMapper",
+                              ClassName.get(mapperRequest.getKey()).box()),
+                          mapperRequest.getValue(),
                           Modifier.FINAL)
                       .build())
                   .toList());
 
-      final var iter = recordComponents.iterator();
+      final var iter = componentToMapperName.iterator();
       final var codeBlockBuilder = CodeBlock.builder();
       codeBlockBuilder.add("return new $T<>(\n", RecordValueMapper.class);
       codeBlockBuilder.add("  $L.class,\n", record.toString());
@@ -721,9 +728,9 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
       while (iter.hasNext()) {
         final var recordComponent = iter.next();
         codeBlockBuilder.add("    new $T<>(\n", RecordValueMapper.Component.class);
-        codeBlockBuilder.add("      $S,\n", recordComponent.getLeft());
-        codeBlockBuilder.add("      $L::$L,\n", record.toString(), recordComponent.getLeft());
-        codeBlockBuilder.add("    $L)", recordComponent.getLeft() + "ValueMapper");
+        codeBlockBuilder.add("      $S,\n", recordComponent.componentName());
+        codeBlockBuilder.add("      $L::$L,\n", record.toString(), recordComponent.componentName());
+        codeBlockBuilder.add("    $L)", recordComponent.mapperName());
         if (iter.hasNext()) codeBlockBuilder.add(",");
         codeBlockBuilder.add("\n");
       }
