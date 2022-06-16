@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.constraints.tree.*;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
@@ -274,6 +275,21 @@ class ConstraintsDSLCompilationServiceTests {
             }
         """,
         new ViolationsOf(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)))
+    );
+  }
+
+  @Test
+  void testShiftBy() {
+    checkSuccessfulCompilation(
+        """
+            export default() => {
+              return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).shiftBy(1000, -200)
+            }
+        """,
+        new ViolationsOf(new ShiftBy(
+            new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)),
+            Duration.of(1000, Duration.MICROSECOND),
+            Duration.of(-200, Duration.MICROSECOND)))
     );
   }
 

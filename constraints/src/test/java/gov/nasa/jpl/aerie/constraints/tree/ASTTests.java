@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Test;
 
@@ -109,6 +110,63 @@ public class ASTTests {
     expected.add(Window.between(  6, Inclusive,   8, Exclusive, SECONDS));
     expected.add(Window.between(  8, Exclusive,   9, Exclusive, SECONDS));
     expected.add(Window.between( 10, Inclusive,  20, Inclusive, SECONDS));
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testExpandBy() {
+    final var simResults = new SimulationResults(
+        Window.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var left = new Windows();
+    left.add(Window.between(0, Inclusive, 5, Exclusive, SECONDS));
+    left.add(Window.between(6, Inclusive, 7, Inclusive, SECONDS));
+    left.add(Window.between(8, Exclusive, 9, Exclusive, SECONDS));
+    left.add(Window.between(10, Exclusive, 15, Exclusive, SECONDS));
+    left.add(Window.at(20, SECONDS));
+
+    final var expandByFromStart = Duration.negate(Duration.of(1, SECONDS));
+    final var expandByFromEnd = Duration.of(0, SECONDS);
+
+    final var result = new ShiftBy(Supplier.of(left), expandByFromStart, expandByFromEnd).evaluate(simResults, Map.of());
+
+    final var expected = new Windows();
+    expected.add(Window.between(-1, Inclusive, 9, Exclusive, SECONDS));
+    expected.add(Window.between(9, Exclusive, 15, Exclusive, SECONDS));
+    expected.add(Window.between(19, Inclusive, 20, Inclusive, SECONDS));
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testShiftBy() {
+    final var simResults = new SimulationResults(
+        Window.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var left = new Windows();
+    left.add(Window.between(0, Inclusive, 5, Exclusive, SECONDS));
+    left.add(Window.between(6, Inclusive, 7, Inclusive, SECONDS));
+    left.add(Window.between(8, Exclusive, 9, Exclusive, SECONDS));
+    left.add(Window.between(10, Exclusive, 15, Exclusive, SECONDS));
+    left.add(Window.at(20, SECONDS));
+
+    final var clampFromStart = Duration.of(1, SECONDS);
+    final var clampFromEnd = Duration.negate(Duration.of(1, SECONDS));
+
+    final var result = new ShiftBy(Supplier.of(left), clampFromStart, clampFromEnd).evaluate(simResults, Map.of());
+
+    final var expected = new Windows();
+    expected.add(Window.between(1, Inclusive, 4, Exclusive, SECONDS));
+    expected.add(Window.between(11, Exclusive, 14, Exclusive, SECONDS));
 
     assertEquivalent(expected, result);
   }

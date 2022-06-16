@@ -19,7 +19,7 @@ public class TransformerBeforeEach implements TimeWindowsTransformer {
     var retWin = new Windows(windows);
     retWin = retWin.complement();
     retWin = retWin.removeLast();
-    retWin = retWin.contractBy(Duration.ZERO, dur);
+    retWin = retWin.shiftBy(Duration.ZERO, Duration.negate(dur));
     return retWin;
   }
 }

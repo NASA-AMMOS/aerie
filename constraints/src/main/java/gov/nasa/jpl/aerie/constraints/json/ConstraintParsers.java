@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.json.BasicParsers;
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.Unit;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.List;
 
@@ -18,6 +19,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.doubleP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
@@ -152,6 +154,22 @@ public final class ConstraintParsers {
               untuple((kind, alias) -> new StartOf(alias)),
               $ -> tuple(Unit.UNIT, $.activityAlias)));
 
+  static final JsonParser<Duration> durationP =
+      longP
+          . map(Iso.of(
+              microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
+              duration -> duration.in(Duration.MICROSECONDS)));
+
+  static JsonParser<ShiftBy> shiftByF(JsonParser<Expression<Windows>> windowsExpressionP) {
+    return productP
+        .field("kind", literalP("WindowsExpressionShiftBy"))
+        .field("windowExpression", windowsExpressionP)
+        .field("fromStart", durationP)
+        .field("fromEnd", durationP)
+        .map(Iso.of(
+            untuple((kind, windowsExpression, fromStart, fromEnd) -> new ShiftBy(windowsExpression, fromStart, fromEnd)),
+            $ -> tuple(Unit.UNIT, $.windows, $.fromStart, $.fromEnd)));
+  }
   static final JsonParser<EndOf> endOfP =
       productP
           .field("kind", literalP("WindowsExpressionEndOf"))
@@ -279,7 +297,8 @@ public final class ConstraintParsers {
           notEqualF(discreteProfileExprP),
           allF(selfP),
           anyF(selfP),
-          invertF(selfP)));
+          invertF(selfP),
+          shiftByF(selfP)));
 
   static final JsonParser<ViolationsOf> violationsOfP =
       productP
