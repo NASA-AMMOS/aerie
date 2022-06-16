@@ -40,9 +40,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.processing.Messager;
-import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.RecordComponentElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -658,7 +658,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
 
   public Pair<JavaFile, List<TypeRule>> generateAutoValueMappers(
       final MissionModelRecord missionModel,
-      final Iterable<? extends Element> recordTypes) {
+      final Iterable<TypeElement> recordTypes) {
     final var typeRules = new ArrayList<TypeRule>();
 
     final var typeName = missionModel.getAutoValueMappersName();

@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.processor.metamodel;
 
 import com.squareup.javapoet.ClassName;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import java.util.Collection;
@@ -15,7 +14,7 @@ public final class MissionModelRecord {
   public final TypeElement topLevelModel;
   public final List<TypeRule> typeRules;
   public final List<ActivityTypeRecord> activityTypes;
-  public final Collection<? extends Element> autoValueMapperRequests;
+  public final Collection<TypeElement> autoValueMapperRequests;
   public final Optional<ConfigurationTypeRecord> modelConfigurationType;
 
   public MissionModelRecord(
@@ -24,7 +23,7 @@ public final class MissionModelRecord {
       final Optional<ConfigurationTypeRecord> modelConfigurationType,
       final List<TypeRule> typeRules,
       final List<ActivityTypeRecord> activityTypes,
-      final Collection<? extends Element> autoValueMapperRequests)
+      final Collection<TypeElement> autoValueMapperRequests)
   {
     this.$package = Objects.requireNonNull($package);
     this.topLevelModel = Objects.requireNonNull(topLevelModel);
