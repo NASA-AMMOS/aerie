@@ -15,7 +15,6 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -101,20 +100,9 @@ public final class MissionModelProcessor implements Processor {
             missionModelGen.generateActivityTypes(missionModelRecord$)
         ));
 
-        final var autoValueMapperRequests = roundEnv.getElementsAnnotatedWith(AutoValueMapper.class);
-        {
-          for (final var request : autoValueMapperRequests) {
-            if (request.getKind() != ElementKind.RECORD) {
-              messager.printError(
-                  "@%s is only allowed on record types. %s is not a record"
-                      .formatted(AutoValueMapper.class.getSimpleName(), request.getSimpleName()),
-                  request);
-            }
-          }
-        }
         final var autoValueMappers = missionModelGen.generateAutoValueMappers(
             missionModelRecord$,
-            autoValueMapperRequests);
+            missionModelRecord$.autoValueMapperRequests);
         generatedFiles.add(autoValueMappers.getLeft());
 
         final var concatenatedTypeRules = new ArrayList<>(missionModelRecord$.typeRules);
@@ -125,7 +113,8 @@ public final class MissionModelProcessor implements Processor {
             missionModelRecord$.topLevelModel,
             missionModelRecord$.modelConfigurationType,
             concatenatedTypeRules,
-            missionModelRecord$.activityTypes
+            missionModelRecord$.activityTypes,
+            missionModelRecord$.autoValueMapperRequests
         );
 
         for (final var activityRecord : missionModelRecord.activityTypes) {
