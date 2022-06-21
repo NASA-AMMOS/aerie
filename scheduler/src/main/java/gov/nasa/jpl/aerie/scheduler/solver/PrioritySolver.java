@@ -47,6 +47,11 @@ public class PrioritySolver implements Solver {
   boolean checkSimBeforeInsertingActivities;
 
   /**
+   * boolean stating whether only conflict analysis should be performed or not
+   */
+  final boolean analysisOnly;
+
+  /**
    * description of the planning problem to solve
    *
    * remains constant throughout solver lifetime
@@ -78,11 +83,16 @@ public class PrioritySolver implements Solver {
    * @param problem IN, STORED description of the planning problem to be
    *     solved, which must not change
    */
-  public PrioritySolver(Problem problem) {
+  public PrioritySolver(final Problem problem, final boolean analysisOnly) {
     checkNotNull(problem, "creating solver with null input problem descriptor");
     this.checkSimBeforeInsertingActivities = true;
     this.problem = problem;
     this.simulationFacade = problem.getSimulationFacade();
+    this.analysisOnly = analysisOnly;
+  }
+
+  public PrioritySolver(final Problem problem) {
+    this(problem, false);
   }
 
   //TODO: should probably be part of sched configuration; maybe even per rule
@@ -435,7 +445,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
         assert missing != null;
 
         //determine the best activities to satisfy the conflict
-        if (missing instanceof MissingActivityInstanceConflict || missing instanceof MissingActivityTemplateConflict) {
+        if (!analysisOnly && (missing instanceof MissingActivityInstanceConflict || missing instanceof MissingActivityTemplateConflict)) {
           final var acts = getBestNewActivities((MissingActivityConflict) missing);
           assert acts != null;
           //add the activities to the output plan
