@@ -20,7 +20,8 @@ import java.util.Optional;
       spec.plan_revision,
       to_char(spec.horizon_start, 'YYYY-DDD"T"HH24:MI:SS.FF6') as horizon_start,
       to_char(spec.horizon_end, 'YYYY-DDD"T"HH24:MI:SS.FF6') as horizon_end,
-      spec.simulation_arguments
+      spec.simulation_arguments,
+      spec.analysis_only
     from scheduling_specification as spec
       where spec.id = ?
     """;
@@ -45,6 +46,7 @@ import java.util.Optional;
     final var horizonStart = Timestamp.fromString(resultSet.getString("horizon_start"));
     final var horizonEnd = Timestamp.fromString(resultSet.getString("horizon_end"));
     final var arguments = parseSimulationArguments(resultSet.getCharacterStream("simulation_arguments"));
+    final var analysisOnly = resultSet.getBoolean("analysis_only");
 
     return Optional.of(new SpecificationRecord(
         specificationId,
@@ -53,7 +55,8 @@ import java.util.Optional;
         planRevision,
         horizonStart,
         horizonEnd,
-        arguments
+        arguments,
+        analysisOnly
     ));
   }
 

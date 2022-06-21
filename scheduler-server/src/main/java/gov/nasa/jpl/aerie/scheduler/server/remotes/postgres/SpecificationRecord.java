@@ -12,5 +12,6 @@ public final record SpecificationRecord(
     long planRevision,
     Timestamp horizonStartTimestamp,
     Timestamp horizonEndTimestamp,
-    Map<String, SerializedValue> simulationArguments
+    Map<String, SerializedValue> simulationArguments,
+    boolean analysisOnly
 ) {}
