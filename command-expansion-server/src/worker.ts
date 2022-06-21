@@ -1,12 +1,15 @@
 import './polyfills.js';
+
+import vm from 'node:vm';
+import * as fs from 'node:fs';
+
 import ts from 'typescript';
-import vm from 'vm';
 import { UserCodeError, UserCodeRunner } from '@nasa-jpl/aerie-ts-user-code-runner';
-import type { SimulatedActivity } from './lib/batchLoaders/simulatedActivityBatchLoader';
-import type { Command } from './lib/codegen/CommandEDSLPreface.js';
-import * as fs from 'fs';
+
 import getLogger from './utils/logger.js';
-import type { Mutable } from './lib/codegen/CodegenHelpers';
+import type { SimulatedActivity } from './lib/batchLoaders/simulatedActivityBatchLoader.js';
+import type { Command } from './lib/codegen/CommandEDSLPreface.js';
+import type { Mutable } from './lib/codegen/CodegenHelpers.js';
 
 const logger = getLogger('worker');
 
@@ -14,6 +17,10 @@ const temporalPolyfillTypes = fs.readFileSync(
   new URL('../src/TemporalPolyfillTypes.ts', import.meta.url).pathname,
   'utf8',
 );
+const tsConfig = JSON.parse(fs.readFileSync(new URL('../tsconfig.json', import.meta.url).pathname, 'utf-8'));
+const { options } = ts.parseJsonConfigFileContent(tsConfig, ts.sys, '');
+const compilerTarget = options.target ?? ts.ScriptTarget.ES2021
+
 const codeRunner = new UserCodeRunner();
 
 export async function typecheckExpansion(opts: {
@@ -29,9 +36,9 @@ export async function typecheckExpansion(opts: {
       'ExpansionReturn',
       ['{ activityInstance: ActivityType }'],
       [
-        ts.createSourceFile('command-types.ts', opts.commandTypes, ts.ScriptTarget.ES2021),
-        ts.createSourceFile('activity-types.ts', opts.activityTypes, ts.ScriptTarget.ES2021),
-        ts.createSourceFile('TemporalPolyfillTypes.ts', temporalPolyfillTypes, ts.ScriptTarget.ES2021),
+        ts.createSourceFile('command-types.ts', opts.commandTypes, compilerTarget),
+        ts.createSourceFile('activity-types.ts', opts.activityTypes, compilerTarget),
+        ts.createSourceFile('TemporalPolyfillTypes.ts', temporalPolyfillTypes, compilerTarget),
       ],
     );
     if (result.isOk()) {
@@ -67,9 +74,9 @@ export async function executeExpansion(opts: {
       ['{ activityInstance: ActivityType }'],
       3000,
       [
-        ts.createSourceFile('command-types.ts', opts.commandTypes, ts.ScriptTarget.ES2021),
-        ts.createSourceFile('activity-types.ts', opts.activityTypes, ts.ScriptTarget.ES2021),
-        ts.createSourceFile('TemporalPolyfillTypes.ts', temporalPolyfillTypes, ts.ScriptTarget.ES2021),
+        ts.createSourceFile('command-types.ts', opts.commandTypes, compilerTarget),
+        ts.createSourceFile('activity-types.ts', opts.activityTypes, compilerTarget),
+        ts.createSourceFile('TemporalPolyfillTypes.ts', temporalPolyfillTypes, compilerTarget),
       ],
       vm.createContext({
         Temporal,

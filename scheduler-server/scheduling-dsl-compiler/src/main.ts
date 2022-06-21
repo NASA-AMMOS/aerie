@@ -21,6 +21,9 @@ const windowsAST = fs.readFileSync(
   `${process.env["SCHEDULING_DSL_COMPILER_ROOT"]}/src/libs/constraints/constraints-ast.ts`,
   "utf8"
 );
+const tsConfig = JSON.parse(fs.readFileSync(new URL('../tsconfig.json', import.meta.url).pathname, 'utf-8'));
+const { options } = ts.parseJsonConfigFileContent(tsConfig, ts.sys, '');
+const compilerTarget = options.target ?? ts.ScriptTarget.ES2021
 
 const input = readline.createInterface(process.stdin);
 
@@ -65,12 +68,12 @@ async function handleRequest(data: string) {
         [],
         10000,
         [
-          ts.createSourceFile('constraints-ast.ts', windowsAST, ts.ScriptTarget.ESNext),
-          ts.createSourceFile('constraints-edsl-fluent-api.ts', windowsEDSL, ts.ScriptTarget.ESNext),
-          ts.createSourceFile('mission-model-generated-code.ts', constraintsGeneratedCode, ts.ScriptTarget.ESNext),
-          ts.createSourceFile('scheduler-ast.ts', schedulerAST, ts.ScriptTarget.ESNext),
-          ts.createSourceFile('scheduler-edsl-fluent-api.ts', schedulerEDSL, ts.ScriptTarget.ESNext),
-          ts.createSourceFile('scheduler-mission-model-generated-code.ts', schedulerGeneratedCode, ts.ScriptTarget.ESNext),
+          ts.createSourceFile('constraints-ast.ts', windowsAST, compilerTarget),
+          ts.createSourceFile('constraints-edsl-fluent-api.ts', windowsEDSL, compilerTarget),
+          ts.createSourceFile('mission-model-generated-code.ts', constraintsGeneratedCode, compilerTarget),
+          ts.createSourceFile('scheduler-ast.ts', schedulerAST, compilerTarget),
+          ts.createSourceFile('scheduler-edsl-fluent-api.ts', schedulerEDSL, compilerTarget),
+          ts.createSourceFile('scheduler-mission-model-generated-code.ts', schedulerGeneratedCode, compilerTarget),
         ],
     );
 

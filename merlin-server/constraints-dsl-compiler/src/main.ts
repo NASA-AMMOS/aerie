@@ -13,6 +13,9 @@ const constraintsAST = fs.readFileSync(
   `${process.env['CONSTRAINTS_DSL_COMPILER_ROOT']}/src/libs/constraints-ast.ts`,
   'utf8',
 );
+const tsConfig = JSON.parse(fs.readFileSync(new URL('../tsconfig.json', import.meta.url).pathname, 'utf-8'));
+const { options } = ts.parseJsonConfigFileContent(tsConfig, ts.sys, '');
+const compilerTarget = options.target ?? ts.ScriptTarget.ES2021
 
 process.on('uncaughtException', err => {
   console.error('uncaughtException');
@@ -40,9 +43,9 @@ async function handleRequest(data: Buffer) {
     };
 
     const result = await codeRunner.executeUserCode<[], Constraint>(constraintCode, [], 'Constraint', [], 10000, [
-      ts.createSourceFile('constraints-ast.ts', constraintsAST, ts.ScriptTarget.ESNext),
-      ts.createSourceFile('constraints-edsl-fluent-api.ts', constraintsEDSL, ts.ScriptTarget.ESNext),
-      ts.createSourceFile('mission-model-generated-code.ts', missionModelGeneratedCode, ts.ScriptTarget.ESNext),
+      ts.createSourceFile('constraints-ast.ts', constraintsAST, compilerTarget),
+      ts.createSourceFile('constraints-edsl-fluent-api.ts', constraintsEDSL, compilerTarget),
+      ts.createSourceFile('mission-model-generated-code.ts', missionModelGeneratedCode, compilerTarget),
     ]);
 
     if (result.isErr()) {

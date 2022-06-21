@@ -1,10 +1,10 @@
 {
   "extends": "@tsconfig/node16-strictest-esm/tsconfig.json",
   "compilerOptions": {
-    "rootDir": "./src",                                  /* Specify the root folder within your source files. */
-    "outDir": "./build",                                   /* Specify an output folder for all emitted files. */
+    "rootDir": "./src",
+    "outDir": "./build",
 
     "noUnusedParameters": false,
-    "noUnusedLocals": false,
-  },
+    "noUnusedLocals": false
+  }
 }
