@@ -144,7 +144,6 @@ custom_types:
     - name: ConstraintViolationsResponse
   scalars:
     - name: ResourceSchema
-    - name: MerlinSimulationResults
     - name: ResourceSamples
     - name: ConstraintViolations
     - name: MerlinSimulationFailureReason

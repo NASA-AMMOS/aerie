@@ -220,17 +220,6 @@ public final class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeSimulationResults(final SimulationResults results, final Map<String, List<Violation>> violations) {
-    return Json
-        .createObjectBuilder()
-        .add("start", serializeTimestamp(results.startTime))
-        .add("constraints", serializeMap(v -> serializeIterable(ResponseSerializers::serializeConstraintViolation, v), violations))
-        .add("activities", serializeSimulatedActivities(results.simulatedActivities))
-        .add("unfinishedActivities", serializeUnfinishedActivities(results.unfinishedActivities))
-        .add("events", serializeSimulationEvents(results.events, topicsById(results.topics), results.startTime))
-        .build();
-  }
-
   public static JsonValue serializeResourceSamples(final Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples) {
     return Json
         .createObjectBuilder()
@@ -247,56 +236,6 @@ public final class ResponseSerializers {
             v -> serializeIterable(ResponseSerializers::serializeConstraintViolation, v),
             violations))
         .build();
-  }
-
-  private static Map<Integer, Pair<String, ValueSchema>> topicsById(List<Triple<Integer, String, ValueSchema>> topics) {
-    final Map<Integer, Pair<String, ValueSchema>> topicsById = new HashMap<>();
-    for (final var topic : topics) {
-      topicsById.put(topic.getLeft(), Pair.of(topic.getMiddle(), topic.getRight()));
-    }
-    return topicsById;
-  }
-
-  private static JsonValue serializeSimulationEvents(
-      Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events,
-      final Map<Integer, Pair<String, ValueSchema>> topics,
-      final Instant startTime) {
-    var arrayBuilder = Json.createArrayBuilder();
-    for (final var eventPoint : events.entrySet()) {
-      final var transactionPoints = eventPoint.getValue();
-      for (final var eventGraph : transactionPoints) {
-        arrayBuilder = arrayBuilder.add(
-            Json.createObjectBuilder()
-                .add("time", serializeTimestamp(startTime.plus(eventPoint.getKey().in(Duration.MICROSECONDS), ChronoUnit.MICROS)))
-                .add("graph", serializeEventGraph(eventGraph, topics)).build());
-      }
-    }
-    return arrayBuilder.build();
-  }
-
-  private static JsonValue serializeEventGraph(
-      EventGraph<Pair<Integer, SerializedValue>> eventGraph,
-      final Map<Integer, Pair<String, ValueSchema>> topics) {
-    var objectBuilder = Json.createObjectBuilder();
-    if (eventGraph instanceof EventGraph.Atom<Pair<Integer, SerializedValue>> atom) {
-      final var event = atom.atom();
-      objectBuilder = objectBuilder
-          .add("type", "atom")
-          .add("value", serializedValueP.unparse(event.getRight()))
-          .add("schema", valueSchemaP.unparse(topics.get(event.getLeft()).getRight()))
-          .add("topic", stringP.unparse(topics.get(event.getLeft()).getLeft()));
-    } else if (eventGraph instanceof EventGraph.Sequentially<Pair<Integer, SerializedValue>> sequentially) {
-      objectBuilder = objectBuilder
-          .add("type", "sequentially")
-          .add("prefix", serializeEventGraph(sequentially.prefix(), topics))
-          .add("suffix", serializeEventGraph(sequentially.suffix(), topics));
-    } else if (eventGraph instanceof EventGraph.Concurrently<Pair<Integer, SerializedValue>> concurrently) {
-      objectBuilder = objectBuilder
-          .add("type", "concurrently")
-          .add("left", serializeEventGraph(concurrently.left(), topics))
-          .add("right", serializeEventGraph(concurrently.right(), topics));
-    }
-    return objectBuilder.build();
   }
 
   public static JsonValue serializeSimulationResultsResponse(final GetSimulationResultsAction.Response response) {
@@ -320,7 +259,6 @@ public final class ResponseSerializers {
       return Json
           .createObjectBuilder()
           .add("status", "complete")
-          .add("results", serializeSimulationResults(r.results(), r.violations()))
           .build();
      } else {
       throw new UnexpectedSubtypeError(GetSimulationResultsAction.Response.class, response);

@@ -151,7 +151,6 @@ type ResourceType {
 
 type MerlinSimulationResponse {
   status: MerlinSimulationStatus!
-  results: MerlinSimulationResults
   reason: MerlinSimulationFailureReason
 }
 
@@ -266,8 +265,6 @@ type ConstraintViolationsResponse {
 }
 
 scalar ResourceSchema
-
-scalar MerlinSimulationResults
 
 scalar ResourceSamples
 
