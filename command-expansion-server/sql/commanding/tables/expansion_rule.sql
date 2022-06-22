@@ -18,7 +18,7 @@ create table expansion_rule (
 
   foreign key (authoring_command_dict_id)
     references command_dictionary (id)
-    on delete cascade
+    on delete set null
 );
 comment on table expansion_rule is e''
   'The user defined logic to expand an activity type.';
