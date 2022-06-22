@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
@@ -149,7 +150,7 @@ public class IncrementalSimulationDriver<Model> {
     }
 
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd)) {
-      lastSimResults = SimulationEngine.computeResults(
+      lastSimResults = SimulationDriver.computeResults(
           engine,
           Instant.now(),
           endTime,

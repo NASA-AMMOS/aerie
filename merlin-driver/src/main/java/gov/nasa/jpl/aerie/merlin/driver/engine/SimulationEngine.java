@@ -58,14 +58,14 @@ public final class SimulationEngine implements AutoCloseable {
   private final Subscriptions<Topic<?>, ResourceId> waitingResources = new Subscriptions<>();
 
   /** The execution state for every task. */
-  private final Map<TaskId, ExecutionState<?>> tasks = new HashMap<>();
+  public final Map<TaskId, ExecutionState<?>> tasks = new HashMap<>();
   /** The getter for each tracked condition. */
   private final Map<ConditionId, Condition> conditions = new HashMap<>();
   /** The profiling state for each tracked resource. */
-  private final Map<ResourceId, ProfilingState<?>> resources = new HashMap<>();
+  public final Map<ResourceId, ProfilingState<?>> resources = new HashMap<>();
 
   /** The task that spawned a given task (if any). */
-  private final Map<TaskId, TaskId> taskParent = new HashMap<>();
+  public final Map<TaskId, TaskId> taskParent = new HashMap<>();
   /** The set of children for each task (if any). */
   @DerivedFrom("taskParent")
   private final Map<TaskId, Set<TaskId>> taskChildren = new HashMap<>();
@@ -333,7 +333,7 @@ public final class SimulationEngine implements AutoCloseable {
     return (this.tasks.get(task) instanceof ExecutionState.Terminated);
   }
 
-  private record TaskInfo(
+  public record TaskInfo(
       Map<String, ActivityInstanceId> taskToPlannedDirective,
       Map<String, SerializedActivity> input,
       Map<String, SerializedValue> output
@@ -407,173 +407,6 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
-  /** Compute a set of results from the current state of simulation. */
-  // TODO: Move result extraction out of the SimulationEngine.
-  //   The Engine should only need to stream events of interest to a downstream consumer.
-  //   The Engine cannot be cognizant of all downstream needs.
-  // TODO: Whatever mechanism replaces `computeResults` also ought to replace `isTaskComplete`.
-  // TODO: Produce results for all tasks, not just those that have completed.
-  //   Planners need to be aware of failed or unfinished tasks.
-  public static SimulationResults computeResults(
-      final SimulationEngine engine,
-      final Instant startTime,
-      final Duration elapsedTime,
-      final Topic<ActivityInstanceId> activityTopic,
-      final TemporalEventSource timeline,
-      final MissionModel<?> missionModel
-  ) {
-    // Collect per-task information from the event graph.
-    final var taskInfo = new TaskInfo();
-
-    for (final var point : timeline) {
-      if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
-
-      final var trait = new TaskInfo.Trait(missionModel, activityTopic);
-      p.events().evaluate(trait, trait::atom).accept(taskInfo);
-    }
-
-    // Extract profiles for every resource.
-    final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
-    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
-
-    for (final var entry : engine.resources.entrySet()) {
-      final var id = entry.getKey();
-      final var state = entry.getValue();
-
-      final var name = id.id();
-      final var resource = state.resource();
-
-      switch (resource.getType()) {
-        case "real" -> realProfiles.put(
-            name,
-            serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics));
-
-        case "discrete" -> discreteProfiles.put(
-            name,
-            Pair.of(
-                state.resource().getSchema(),
-                serializeProfile(elapsedTime, state, Resource::serialize)));
-
-        default ->
-            throw new IllegalArgumentException(
-                "Resource `%s` has unknown type `%s`".formatted(name, resource.getType()));
-      }
-    }
-
-
-    // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
-    final var taskToPlannedDirective = new HashMap<>(taskInfo.taskToPlannedDirective);
-    final var usedActivityInstanceIds =
-        taskToPlannedDirective
-            .values()
-            .stream()
-            .map(ActivityInstanceId::id)
-            .collect(Collectors.toSet());
-    var counter = 1L;
-    for (final var task : engine.tasks.keySet()) {
-      if (!taskInfo.isActivity(task)) continue;
-      if (taskToPlannedDirective.containsKey(task.id())) continue;
-
-      while (usedActivityInstanceIds.contains(counter)) counter++;
-      taskToPlannedDirective.put(task.id(), new ActivityInstanceId(counter++));
-    }
-
-    // Identify the nearest ancestor *activity* (excluding intermediate anonymous tasks).
-    final var activityParents = new HashMap<ActivityInstanceId, ActivityInstanceId>();
-    engine.tasks.forEach((task, state) -> {
-      if (!taskInfo.isActivity(task)) return;
-
-      var parent = engine.taskParent.get(task);
-      while (parent != null && !taskInfo.isActivity(parent)) {
-        parent = engine.taskParent.get(parent);
-      }
-
-      if (parent != null) {
-        activityParents.put(taskToPlannedDirective.get(task.id()), taskToPlannedDirective.get(parent.id()));
-      }
-    });
-
-    final var activityChildren = new HashMap<ActivityInstanceId, List<ActivityInstanceId>>();
-    activityParents.forEach((task, parent) -> {
-      activityChildren.computeIfAbsent(parent, $ -> new LinkedList<>()).add(task);
-    });
-
-    final var simulatedActivities = new HashMap<ActivityInstanceId, SimulatedActivity>();
-    final var unfinishedActivities = new HashMap<ActivityInstanceId, UnfinishedActivity>();
-    engine.tasks.forEach((task, state) -> {
-      if (!taskInfo.isActivity(task)) return;
-
-      final var activityId = taskToPlannedDirective.get(task.id());
-
-      if (state instanceof ExecutionState.Terminated<?> e) {
-        final var inputAttributes = taskInfo.input().get(task.id());
-        final var outputAttributes = taskInfo.output().get(task.id());
-
-        simulatedActivities.put(activityId, new SimulatedActivity(
-            inputAttributes.getTypeName(),
-            inputAttributes.getArguments(),
-            startTime.plus(e.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
-            e.joinOffset().minus(e.startOffset()),
-            activityParents.get(activityId),
-            activityChildren.getOrDefault(activityId, Collections.emptyList()),
-            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(activityId),
-            outputAttributes
-        ));
-      } else if (state instanceof ExecutionState.InProgress<?> e){
-        final var inputAttributes = taskInfo.input().get(task.id());
-        unfinishedActivities.put(activityId, new UnfinishedActivity(
-            inputAttributes.getTypeName(),
-            inputAttributes.getArguments(),
-            startTime.plus(e.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
-            activityParents.get(activityId),
-            activityChildren.getOrDefault(activityId, Collections.emptyList()),
-            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(activityId)
-        ));
-      }
-    });
-
-    final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
-    final var serializableTopicToId = new HashMap<MissionModel.SerializableTopic<?>, Integer>();
-    for (final var serializableTopic : missionModel.getTopics()) {
-      serializableTopicToId.put(serializableTopic, topics.size());
-      topics.add(Triple.of(topics.size(), serializableTopic.name(), serializableTopic.valueSchema()));
-    }
-
-    final var serializedTimeline = new TreeMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
-    var time = Duration.ZERO;
-    for (var point : timeline.points()) {
-      if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
-        time = time.plus(delta.delta());
-      } else if (point instanceof TemporalEventSource.TimePoint.Commit commit) {
-        final var serializedEventGraph = commit.events().substitute(
-            event -> {
-              EventGraph<Pair<Integer, SerializedValue>> output = EventGraph.empty();
-              for (final var serializableTopic : missionModel.getTopics()) {
-                Optional<SerializedValue> serializedEvent = trySerializeEvent(event, serializableTopic);
-                if (serializedEvent.isPresent()) {
-                  output = EventGraph.concurrently(output, EventGraph.atom(Pair.of(serializableTopicToId.get(serializableTopic), serializedEvent.get())));
-                }
-              }
-              return output;
-            }
-        ).evaluate(new EventGraph.IdentityTrait<>(), EventGraph::atom);
-        if (!(serializedEventGraph instanceof EventGraph.Empty)) {
-          serializedTimeline
-              .computeIfAbsent(time, x -> new ArrayList<>())
-              .add(serializedEventGraph);
-        }
-      }
-    }
-
-    return new SimulationResults(realProfiles,
-                                 discreteProfiles,
-                                 simulatedActivities,
-                                 unfinishedActivities,
-                                 startTime,
-                                 topics,
-                                 serializedTimeline);
-  }
-
   public Optional<Duration> getTaskDuration(TaskId taskId){
     final var state = tasks.get(taskId);
     if (state instanceof ExecutionState.Terminated e) {
@@ -582,50 +415,8 @@ public final class SimulationEngine implements AutoCloseable {
     return Optional.empty();
   }
 
-
-  private static <EventType> Optional<SerializedValue> trySerializeEvent(Event event, MissionModel.SerializableTopic<EventType> serializableTopic) {
-    return event.extract(serializableTopic.topic(), serializableTopic.serializer());
-  }
-
   private interface Translator<Target> {
     <Dynamics> Target apply(Resource<Dynamics> resource, Dynamics dynamics);
-  }
-
-  private static <Target, Dynamics>
-  List<Pair<Duration, Target>> serializeProfile(
-      final Duration elapsedTime,
-      final ProfilingState<Dynamics> state,
-      final Translator<Target> translator
-  ) {
-    final var profile = new ArrayList<Pair<Duration, Target>>(state.profile().segments().size());
-
-    final var iter = state.profile().segments().iterator();
-    if (iter.hasNext()) {
-      var segment = iter.next();
-      while (iter.hasNext()) {
-        final var nextSegment = iter.next();
-
-        profile.add(Pair.of(
-            nextSegment.startOffset().minus(segment.startOffset()),
-            translator.apply(state.resource(), segment.dynamics())));
-        segment = nextSegment;
-      }
-
-      profile.add(Pair.of(
-          elapsedTime.minus(segment.startOffset()),
-          translator.apply(state.resource(), segment.dynamics())));
-    }
-
-    return profile;
-  }
-
-  private static <Dynamics>
-  RealDynamics extractRealDynamics(final Resource<Dynamics> resource, final Dynamics dynamics) {
-    final var serializedSegment = resource.serialize(dynamics).asMap().orElseThrow();
-    final var initial = serializedSegment.get("initial").asReal().orElseThrow();
-    final var rate = serializedSegment.get("rate").asReal().orElseThrow();
-
-    return RealDynamics.linear(initial, rate);
   }
 
   /** A handle for processing requests from a modeled resource or condition. */
@@ -760,9 +551,9 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** The lifecycle stages every task passes through. */
-  private sealed interface ExecutionState<Return> {
+  public sealed interface ExecutionState<Return> {
     /** The task is in its primary operational phase. */
-    record InProgress<Return>(Duration startOffset, Task<Return> state)
+    public record InProgress<Return>(Duration startOffset, Task<Return> state)
         implements ExecutionState<Return>
     {
       public AwaitingChildren<Return> completedAt(
@@ -778,7 +569,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     /** The task has completed its primary operation, but has unfinished children. */
-    record AwaitingChildren<Return>(
+    public record AwaitingChildren<Return>(
         Duration startOffset,
         Duration endOffset,
         Return returnValue,
@@ -791,7 +582,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     /** The task and all its delegated children have completed. */
-    record Terminated<Return>(
+    public record Terminated<Return>(
         Duration startOffset,
         Duration endOffset,
         Duration joinOffset,
