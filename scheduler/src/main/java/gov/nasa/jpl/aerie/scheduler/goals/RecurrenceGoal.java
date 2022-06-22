@@ -20,6 +20,14 @@ import java.util.List;
 public class RecurrenceGoal extends ActivityTemplateGoal {
 
   /**
+   * A tuple-like type to store two allowable durations for the recurrence interval - a minimum and a maximum,
+   * which will eventually be supported by the scheduler. Default behavior for now should be to set min and max equal.
+   * @param min the minimum allowable duration to use (for the recurrence interval)
+   * @param max the maximum allowable duration to use (for the recurrence interval)
+   */
+  public record MinMaxAllowableRecurrenceInterval(Duration min, Duration max) {}
+
+  /**
    * the builder can construct goals piecemeal via a series of method calls
    */
   public static class Builder extends ActivityTemplateGoal.Builder<Builder> {
@@ -37,11 +45,11 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
      * @return this builder, ready for additional specification
      */
     public Builder repeatingEvery(Duration interval) {
-      this.every = Window.at(interval);
+      this.every = new MinMaxAllowableRecurrenceInterval(interval, interval);
       return getThis();
     }
 
-    protected Window every;
+    protected MinMaxAllowableRecurrenceInterval every;
 
     /**
      * {@inheritDoc}
@@ -69,8 +77,13 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
       super.fill(goal);
 
       if (every == null) {
-        throw new IllegalArgumentException(
-            "creating recurrence goal requires non-null \"every\" duration interval");
+        throw new IllegalArgumentException("creating recurrence goal requires non-null \"every\" duration interval");
+      }
+      if (every.min.isNegative()) {
+        throw new IllegalArgumentException("Duration passed to RecurrenceGoal as the goal's minimum recurrence interval cannot be negative!");
+      }
+      else if (every.max.isNegative()) {
+        throw new IllegalArgumentException("Duration passed to RecurrenceGoal as the goal's maximum recurrence interval cannot be negative!");
       }
       goal.recurrenceInterval = every;
 
@@ -111,7 +124,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
       //check if the inter-activity gap is too large
       //REVIEW: should do any check based on min gap duration?
       final var strideDur = actStartT.minus(prevStartT);
-      if (strideDur.compareTo(recurrenceInterval.end) > 0) {
+      if (strideDur.compareTo(recurrenceInterval.max) > 0) {
         //fill conflicts for all the missing activities in that long span
         conflicts.addAll(makeRecurrenceConflicts(prevStartT, actStartT));
 
@@ -143,10 +156,11 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
 
   /**
    * the allowable range of durations over which a target activity must repeat
+   * Of type: MinMaxAllowableRecurrenceInterval
    *
    * REVIEW: need to work out semantics of min on recurrenceInterval
    */
-  protected Window recurrenceInterval;
+  protected MinMaxAllowableRecurrenceInterval recurrenceInterval;
 
   /**
    * creates conflicts for missing activities in the provided span
@@ -163,15 +177,15 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
   {
     final var conflicts = new java.util.LinkedList<MissingActivityConflict>();
 
-    if(end.minus(start).noLongerThan(recurrenceInterval.end)){
+    if(end.minus(start).noLongerThan(recurrenceInterval.max)){
       return conflicts;
     }
 
-    for (var intervalT = start.plus(recurrenceInterval.end);
+    for (var intervalT = start.plus(recurrenceInterval.max);
          ;
-         intervalT = intervalT.plus(recurrenceInterval.end)
+         intervalT = intervalT.plus(recurrenceInterval.max)
     ) {
-      var interval = Window.between(intervalT.minus(recurrenceInterval.end), Duration.min(intervalT, end));
+      var interval = Window.between(intervalT.minus(recurrenceInterval.max), Duration.min(intervalT, end));
         conflicts.add(new MissingActivityTemplateConflict(
             this, new Windows(
             interval), this.getActTemplate()));
