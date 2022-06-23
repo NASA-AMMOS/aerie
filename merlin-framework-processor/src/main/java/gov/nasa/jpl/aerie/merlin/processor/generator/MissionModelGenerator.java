@@ -17,6 +17,7 @@ import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
 import gov.nasa.jpl.aerie.merlin.framework.Scoping;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.processor.MissionModelProcessor;
 import gov.nasa.jpl.aerie.merlin.processor.Resolver;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
@@ -40,6 +41,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.processing.Messager;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.element.TypeElement;
@@ -675,6 +677,10 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
 
     record ComponentMapperNamePair(String componentName, String mapperName) {}
     for (final var record : recordTypes) {
+      if (record.getKind() != ElementKind.RECORD) {
+        messager().printError("@%s is only allowed on records".formatted(AutoValueMapper.class.getSimpleName()), record);
+      }
+
       final var methodName = record.toString().replace(".", "_");
       final var componentToMapperName = new ArrayList<ComponentMapperNamePair>();
       final var necessaryMappers = new HashMap<TypeMirror, String>();
