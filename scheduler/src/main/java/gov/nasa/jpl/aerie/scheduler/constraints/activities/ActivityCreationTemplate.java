@@ -316,7 +316,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
           act.setDuration(result.fx().minus(result.x()));
         }
         return Optional.of(act);
-      } catch (EquationSolvingAlgorithms.ZeroDerivative zeroDerivative) {
+      } catch (EquationSolvingAlgorithms.ZeroOrInfiniteDerivativeException zeroOrInfiniteDerivativeException) {
         logger.debug("Rootfinding encountered a zero-derivative");
       } catch (EquationSolvingAlgorithms.DivergenceException e) {
         logger.debug("Rootfinding diverged");

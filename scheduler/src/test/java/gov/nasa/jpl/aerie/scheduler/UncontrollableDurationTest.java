@@ -6,10 +6,13 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeFixed;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
@@ -84,12 +87,11 @@ public class UncontrollableDurationTest {
     final var solver = new PrioritySolver(problem);
     final var plan = solver.getNextSolution().get();
     solver.printEvaluation();
-    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT1M51S"), planningHorizon.fromStart("PT6M51S"), problem.getActivityType("SolarPanelNonLinear")));
-    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT35M11S"), planningHorizon.fromStart("PT40M11S"), problem.getActivityType("SolarPanelNonLinear")));
-    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT18M31S"), planningHorizon.fromStart("PT23M31S"), problem.getActivityType("SolarPanelNonLinear")));
-    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT23M31S"), planningHorizon.fromStart("PT25M"), problem.getActivityType("SolarPanelNonLinear")));
-    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT6M51S"), planningHorizon.fromStart("PT8M20S"), problem.getActivityType("SolarPanelNonLinear")));
-    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT40M11S"), planningHorizon.fromStart("PT41M40S"), problem.getActivityType("SolarPanelNonLinear")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT11M40S"), planningHorizon.fromStart("PT16M40S"), problem.getActivityType("SolarPanelNonLinear")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT28M20S"), planningHorizon.fromStart("PT33M20S"), problem.getActivityType("SolarPanelNonLinear")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT0S"), planningHorizon.fromStart("PT1M29S"), problem.getActivityType("SolarPanelNonLinear")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT16M40S"), planningHorizon.fromStart("PT18M9S"), problem.getActivityType("SolarPanelNonLinear")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT33M20S"), planningHorizon.fromStart("PT34M49S"), problem.getActivityType("SolarPanelNonLinear")));
   }
 
   @Test
@@ -134,12 +136,47 @@ public class UncontrollableDurationTest {
     final var solver = new PrioritySolver(problem);
     final var plan = solver.getNextSolution().get();
     solver.printEvaluation();
-    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT3M57.222965S"), planningHorizon.fromStart("PT6M40.222965S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
-    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT21M57.209547S"), planningHorizon.fromStart("PT23M15.209547S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
-    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT34M06.190019S"), planningHorizon.fromStart("PT38M1.190019S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
-    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT6M40.222965S"), planningHorizon.fromStart("PT09M58.222965S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
-    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT23M15.209547S"), planningHorizon.fromStart("PT24M7.209547S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
-    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT38M1.190019S"), planningHorizon.fromStart("PT39M41.190019S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT0S"), planningHorizon.fromStart("PT0S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT11M57S"), planningHorizon.fromStart("PT16M40S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT28M34S"), planningHorizon.fromStart("PT33M20S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT33M20S"), planningHorizon.fromStart("PT36M47S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT0S"), planningHorizon.fromStart("PT2M21S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
+    assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT16M40S"), planningHorizon.fromStart("PT17M18S"), problem.getActivityType("SolarPanelNonLinearTimeDependent")));
   }
 
+  @Test
+  public void testBug(){
+    final var controllableDurationActivity = new ActivityInstance(problem.getActivityType("ControllableDurationActivity"),
+                                                                   Duration.of(1, Duration.MICROSECONDS),
+                                                                   Duration.of(3, Duration.MICROSECONDS));
+
+    final var zeroDurationUncontrollableActivity = new ActivityCreationTemplate.Builder()
+        .ofType(problem.getActivityType("ZeroDurationUncontrollableActivity"))
+        .withTimingPrecision(Duration.of(1, Duration.MICROSECONDS))
+        .build();
+
+    //this time expression produces an interval [TimeAnchor.END, TimeAnchor.END + 2 Ms]
+    final var intervalStartTimeExpression = new TimeExpressionRelativeFixed(TimeAnchor.END, false);
+    intervalStartTimeExpression.addOperation(TimeUtility.Operator.PLUS, Duration.of(2, Duration.MICROSECONDS));
+
+    final var coexistenceControllable = new CoexistenceGoal.Builder()
+        .thereExistsOne(zeroDurationUncontrollableActivity)
+        .forAllTimeIn(planningHorizon.getHor())
+        .forEach(ActivityExpression.ofType(problem.getActivityType("ControllableDurationActivity")))
+        .startsAt(intervalStartTimeExpression)
+        .build();
+
+    problem.setGoals(List.of(coexistenceControllable));
+    final var initialPlan = new PlanInMemory();
+    initialPlan.add(controllableDurationActivity);
+    problem.setInitialPlan(initialPlan);
+
+    final var solver = new PrioritySolver(problem);
+    final var plan = solver.getNextSolution().get();
+    solver.printEvaluation();
+    assertTrue(TestUtility.containsActivity(plan,
+                                            planningHorizon.fromStart("PT0.000004S"),
+                                            planningHorizon.fromStart("PT0.000004S"),
+                                            problem.getActivityType("ZeroDurationUncontrollableActivity")));
+  }
 }
