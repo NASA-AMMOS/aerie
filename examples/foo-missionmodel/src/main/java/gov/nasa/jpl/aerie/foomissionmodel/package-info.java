@@ -13,6 +13,7 @@
 @WithActivityType(ControllableDurationActivity.class)
 @WithActivityType(OtherControllableDurationActivity.class)
 @WithActivityType(BasicFooActivity.class)
+@WithActivityType(ZeroDurationUncontrollableActivity.class)
 
 @WithActivityType(DecompositionTestActivities.ParentActivity.class)
 @WithActivityType(DecompositionTestActivities.ChildActivity.class)
@@ -29,6 +30,7 @@ import gov.nasa.jpl.aerie.foomissionmodel.activities.FooActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.OtherControllableDurationActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.SolarPanelNonLinear;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.SolarPanelNonLinearTimeDependent;
+import gov.nasa.jpl.aerie.foomissionmodel.activities.ZeroDurationUncontrollableActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel.WithActivityType;
