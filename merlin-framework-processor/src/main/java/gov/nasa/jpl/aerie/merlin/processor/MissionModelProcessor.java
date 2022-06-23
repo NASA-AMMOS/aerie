@@ -15,6 +15,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -37,6 +38,9 @@ public final class MissionModelProcessor implements Processor {
 
   private final Set<Element> foundActivityTypes = new HashSet<>();
   private final Set<Element> ownedActivityTypes = new HashSet<>();
+
+  private final Set<Element> foundAutoValueMapperRequests = new HashSet<>();
+  private final Set<Element> ownedAutoValueMapperRequests = new HashSet<>();
 
   // Effectively final, late-initialized
   private Messager messager = null;
@@ -75,6 +79,7 @@ public final class MissionModelProcessor implements Processor {
   public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     // Accumulate any information added in this round.
     this.foundActivityTypes.addAll(roundEnv.getElementsAnnotatedWith(ActivityType.class));
+    this.foundAutoValueMapperRequests.addAll(roundEnv.getElementsAnnotatedWith(AutoValueMapper.class));
 
     final var missionModelParser = new MissionModelParser(elementUtils, typeUtils);
     final var missionModelGen = new MissionModelGenerator(elementUtils, typeUtils, messager);
@@ -84,6 +89,7 @@ public final class MissionModelProcessor implements Processor {
       final var packageElement = (PackageElement) element;
       try {
         final var missionModelRecord$ = missionModelParser.parseMissionModel(packageElement);
+        this.ownedAutoValueMapperRequests.addAll(missionModelRecord$.autoValueMapperRequests);
 
         final var generatedFiles = new ArrayList<>(List.of(
             missionModelGen.generateMerlinPlugin(missionModelRecord$),
@@ -167,6 +173,24 @@ public final class MissionModelProcessor implements Processor {
             Diagnostic.Kind.WARNING,
             "@ActivityType-annotated class is not referenced by any @WithActivity",
             foundActivityType);
+      }
+
+      for (final var foundAutoValueMapperRequest : this.foundAutoValueMapperRequests) {
+        if (this.ownedAutoValueMapperRequests.contains(foundAutoValueMapperRequest)) continue;
+
+        this.messager.printMessage(
+            Diagnostic.Kind.WARNING,
+            "@%s-annotated class is not the return type from any effect model. No value mappper was generated"
+                .formatted(AutoValueMapper.class.getSimpleName()),
+            foundAutoValueMapperRequest);
+
+
+        if (foundAutoValueMapperRequest.getKind() != ElementKind.RECORD) {
+          this.messager.printMessage(
+              Diagnostic.Kind.WARNING,
+              "@%s is only allowed on records".formatted(AutoValueMapper.class.getSimpleName()),
+              foundAutoValueMapperRequest);
+        }
       }
     }
 

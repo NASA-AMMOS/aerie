@@ -72,6 +72,9 @@ import java.util.stream.Collectors;
       final var typeElement = elementUtils.getTypeElement(typeName.toString());
       final var annotation = typeElement.getAnnotation(AutoValueMapper.class);
       if (annotation == null) continue;
+      if (typeElement.getKind() != ElementKind.RECORD) {
+        throw new InvalidMissionModelException("@%s is only allowed on records, but was used on %s".formatted(AutoValueMapper.class.getSimpleName(), typeElement.getQualifiedName()));
+      }
       autoValueMapperRequests.add(typeElement);
     }
 
