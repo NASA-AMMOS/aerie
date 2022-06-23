@@ -86,8 +86,8 @@ export async function expand(
   graphqlClient: GraphQLClient,
   expansionSetId: number,
   simulationDatasetId: number,
-): Promise<void> {
-  await graphqlClient.request<{
+): Promise<number> {
+  const result = await graphqlClient.request<{
     expandAllActivities: {
       id: number;
     };
@@ -103,6 +103,30 @@ export async function expand(
       expansionSetId,
       simulationDatasetId,
     },
+  );
+
+  return result.expandAllActivities.id;
+}
+
+export async function removeExpansionRun(
+    graphqlClient: GraphQLClient,
+    expansionRunId: number,
+): Promise<void> {
+  await graphqlClient.request<{
+    delete_expansion_run_by_pk: {
+      id: number;
+    };
+  }>(
+      gql`
+        mutation deleteExpansionRun($expansionRunId: Int!) {
+          delete_expansion_run_by_pk(id: $expansionRunId) {
+            id
+          }
+        }
+      `,
+      {
+        expansionRunId,
+      },
   );
 
   return;

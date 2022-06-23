@@ -1,5 +1,5 @@
 import { GraphQLClient } from 'graphql-request';
-import { insertExpansion, removeExpansion } from '../utils/Expansion';
+import { insertExpansion, removeExpansion } from '../testUtils/Expansion';
 import { expansionBatchLoader } from '../../src/lib/batchLoaders/expansionBatchLoader';
 
 let graphqlClient: GraphQLClient;
