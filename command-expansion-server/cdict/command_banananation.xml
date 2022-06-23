@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <command_dictionary>
-    <header mission_name="AERIE" version="1.0.0.0" schema_version="1.0">
+    <header mission_name="Banana Nation" version="1.0.0.0" schema_version="1.0">
         <spacecraft_ids>
             <spacecraft_id value="62" />
         </spacecraft_ids>
@@ -86,9 +86,9 @@
                     <range_of_values>
                         <include min="0" max="100" />
                     </range_of_values>
-                    <description>Number of bananans to grow</description>
+                    <description>Number of bananas to grow</description>
                 </unsigned_arg>
-                <unsigned_arg name="duration" bit_length="8" units="none">
+                <unsigned_arg name="durationSecs" bit_length="8" units="none">
                     <range_of_values>
                         <include min="0" max="100" />
                     </range_of_values>
@@ -99,8 +99,8 @@
                 <module>shell_ctl</module>
                 <ops_category>FSW</ops_category>
             </categories>
-            <description>This command will turn on the oven</description>
-            <completion>Oven is preheated</completion>
+            <description>This command will grow bananas</description>
+            <completion>Bananas are grown</completion>
             <fsw_specification custom_validation_required="No" command_priority="Nominal" />
             <restricted_modes>
                 <prime_string_restriction prime_string_only="No" />
@@ -139,8 +139,8 @@
                 <module>shell_ctl</module>
                 <ops_category>FSW</ops_category>
             </categories>
-            <description>This command make the banana bread dough</description>
-            <completion>The dough mixture is created</completion>
+            <description>This command peels a single banana</description>
+            <completion>The banana is peeled</completion>
             <fsw_specification custom_validation_required="No" command_priority="Nominal" />
             <restricted_modes>
                 <prime_string_restriction prime_string_only="No" />
@@ -151,7 +151,7 @@
                 <module>shell_ctl</module>
                 <ops_category>FSW</ops_category>
             </categories>
-            <description>This command bakes a bananan bread</description>
+            <description>This command bakes a banana bread</description>
             <completion>Banana bread is done baking</completion>
             <fsw_specification custom_validation_required="No" command_priority="Nominal" />
             <restricted_modes>
@@ -170,7 +170,7 @@
                 <prime_string_restriction prime_string_only="No" />
             </restricted_modes>
         </fsw_command>
-      <fsw_command opcode="0xFFFE" stem="PACKAGE_BANANA" class="FSW">
+        <fsw_command opcode="0xFFFE" stem="PACKAGE_BANANA" class="FSW">
         <arguments>
           <unsigned_arg name="lot_number" bit_length="16" units="Opcode">
             <description>Identification number assigned to a particular quantity</description>
@@ -193,7 +193,7 @@
           </repeat_arg>
         </arguments>
         <description>Dynamically bundle bananas into lots</description>
-        <completion>When the banana are packaged up</completion>
+        <completion>The bananas are packaged up</completion>
         <fsw_specification custom_validation_required="No" command_priority="Nominal" />
         <restricted_modes>
           <prime_string_restriction prime_string_only="No"/>
@@ -205,7 +205,7 @@
                 <ops_category>FSW</ops_category>
             </categories>
             <description>Pick a banana</description>
-            <completion>You have a single bananana</completion>
+            <completion>You have a single banana</completion>
             <fsw_specification custom_validation_required="No" command_priority="Nominal" />
             <restricted_modes>
                 <prime_string_restriction prime_string_only="No" />
