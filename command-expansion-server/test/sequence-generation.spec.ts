@@ -14,6 +14,7 @@ import {
 import { insertCommandDictionary, removeCommandDictionary } from './testUtils/CommandDictionary.js';
 import type { SequenceSeqJson } from '../src/lib/codegen/CommandEDSLPreface.js';
 import { insertSequence, linkActivityInstance, removeSequence } from './testUtils/Sequence.js';
+import { TimingTypes } from '../src/lib/codegen/CommandEDSLPreface.js';
 
 let planId: number;
 let graphqlClient: GraphQLClient;
@@ -549,3 +550,61 @@ describe('sequence generation', () => {
     }
   }, 30000);
 });
+
+describe('expansion regressions', () => {
+  test('start_offset undefined regression', async () => {
+    // Setup
+    const activityId = await insertActivity(graphqlClient, planId, 'GrowBanana', '1 hours');
+    const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
+    const expansionId = await insertExpansion(
+        graphqlClient,
+        'GrowBanana',
+        `
+    export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+      return [
+        PREHEAT_OVEN({temperature: 70}).relativeTiming(props.activityInstance.startOffset),
+        PREHEAT_OVEN({temperature: 70}).relativeTiming(props.activityInstance.duration),
+      ];
+    }
+    `,
+    );
+    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
+      expansionId,
+    ]);
+    const expansionRunId = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
+
+    const simulatedActivityId = await convertActivityIdToSimulatedActivityId(graphqlClient, simulationArtifactPk.simulationDatasetId, activityId);
+
+    const { activity_instance_commands } = await graphqlClient.request<{ activity_instance_commands: { commands: ReturnType<Command['toSeqJson']>, errors: string[] }[] }>(
+        gql`
+          query getExpandedCommands($expansionRunId: Int!, $simulatedActivityId:Int!) {
+            activity_instance_commands(where: {_and: {expansion_run_id: {_eq: $expansionRunId}, activity_instance_id: {_eq: $simulatedActivityId}}}) {
+              commands
+              errors
+            }
+          }
+        `,
+        {
+          expansionRunId,
+          simulatedActivityId,
+        },
+    );
+
+    expect(activity_instance_commands.length).toBe(1);
+    if (activity_instance_commands[0]?.errors.length !== 0) {
+      throw new Error(activity_instance_commands[0]?.errors.join('\n'));
+    }
+    expect(activity_instance_commands[0]?.commands).toEqual([
+      { args: [70], metadata: { simulatedActivityId}, stem: 'PREHEAT_OVEN', time: { tag: '01:00:00.000', type: TimingTypes.COMMAND_RELATIVE }, type: 'command' },
+      { args: [70], metadata: { simulatedActivityId}, stem: 'PREHEAT_OVEN', time: { tag: '01:00:00.000', type: TimingTypes.COMMAND_RELATIVE }, type: 'command' },
+    ]);
+
+    // Cleanup
+    await removeActivity(graphqlClient, activityId);
+    await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
+    await removeExpansion(graphqlClient, expansionId);
+    await removeExpansionSet(graphqlClient, expansionSetId);
+    await removeExpansionRun(graphqlClient, expansionRunId);
+  }, 10000);
+});
+
