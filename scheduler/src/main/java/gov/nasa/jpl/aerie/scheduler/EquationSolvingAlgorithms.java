@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.analysis.solvers.BrentSolver;
 import org.apache.commons.math3.exception.NoBracketingException;
@@ -8,13 +9,14 @@ import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EquationSolvingAlgorithms {
 
   private static final Logger logger = LoggerFactory.getLogger(EquationSolvingAlgorithms.class);
 
-  public record History<T> (LinkedHashMap<T, T> history){}
+  public record History<T> (List<Pair<T, T>> history){}
   public record RootFindingResult<T>(T x, T fx, History<T> history){}
 
   public interface BracketingAlgorithm<T>{
@@ -52,7 +54,7 @@ public class EquationSolvingAlgorithms {
                                   T toleranceYHigh,
                                   T dxLow,
                                   T dxHigh,
-                                  int maxNbIterations) throws ZeroDerivative, DivergenceException,
+                                  int maxNbIterations) throws ZeroOrInfiniteDerivativeException, DivergenceException,
                                                               ExceededMaxIterationException, NoSolutionException;
   }
 
@@ -70,7 +72,7 @@ public class EquationSolvingAlgorithms {
                                   T toleranceYHigh,
                                   T dxLow,
                                   T dxHigh,
-                                  int maxNbIterations) throws DivergenceException, ZeroDerivative,
+                                  int maxNbIterations) throws DivergenceException, ZeroOrInfiniteDerivativeException,
                                                               ExceededMaxIterationException;
   }
 
@@ -83,8 +85,8 @@ public class EquationSolvingAlgorithms {
     T derivativeAt(T x);
   }
 
-  public static class ZeroDerivative extends Exception{
-    public ZeroDerivative() {}
+  public static class ZeroOrInfiniteDerivativeException extends Exception{
+    public ZeroOrInfiniteDerivativeException() {}
   }
 
   public static class DivergenceException extends Exception{
@@ -281,9 +283,9 @@ public class EquationSolvingAlgorithms {
         Double dxLow,
         Double dxHigh,
         int maxNbIterations)
-    throws ZeroDerivative, DivergenceException, ExceededMaxIterationException
+    throws ZeroOrInfiniteDerivativeException, ExceededMaxIterationException
     {
-      var history = new LinkedHashMap<Double, Double>();
+      var history = new ArrayList<Pair<Double, Double>>();
 
       var x_nminus1 = x0;
       //we make the assumption that a very local derivative will be representative
@@ -301,22 +303,31 @@ public class EquationSolvingAlgorithms {
         }
       };
 
-      double ff_x_nminus1 = ff.valueAt(x_nminus1), ff_x_n = ff.valueAt(x_n);
+      var ff_x_nminus1 = ff.valueAt(x_nminus1);
+      if (ff_x_nminus1 >= - toleranceYLow &&
+          ff_x_nminus1 <= toleranceYHigh
+          && (x_nminus1 >= dxLow && x_nminus1 <= dxHigh)) {
+        return new RootFindingResult<>(x_nminus1, ff_x_nminus1 + y, new History<>(history));
+      }
+      var ff_x_n = ff.valueAt(x_n);
+      if (ff_x_n >= - toleranceYLow &&
+          ff_x_n <= toleranceYHigh
+          && (x_n >= dxLow && x_n <= dxHigh)) {
+        return new RootFindingResult<>(x_n, ff_x_n + y, new History<>(history));
+      }
       for (int nbIt = 0; nbIt < maxNbIterations; nbIt++) {
         final var localDerivative = (ff_x_n - ff_x_nminus1) / (x_n - x_nminus1);
-        if (localDerivative == 0) {
-          throw new ZeroDerivative();
+        if (localDerivative == 0 || Double.isNaN(localDerivative)) {
+          throw new ZeroOrInfiniteDerivativeException();
         }
         x_nminus1 = x_n;
         ff_x_nminus1 = ff_x_n;
         x_n = x_n - (ff_x_nminus1 / localDerivative);
-        //outside of domain, diverging
-        if (x_n < dxLow || x_n > dxHigh) {
-          throw new DivergenceException("Looking for root out of prescribed domain :[" + dxLow + "," + dxHigh + "]");
-        }
         ff_x_n = ff.valueAt(x_n);
-        history.put(x_n, ff_x_n);
-        if (ff_x_n >= - toleranceYLow && ff_x_n <= toleranceYHigh) {
+        history.add(Pair.of(x_n, ff_x_n));
+        if (ff_x_n >= - toleranceYLow &&
+            ff_x_n <= toleranceYHigh
+        && (x_n >= dxLow && x_n <= dxHigh)) {
           return new RootFindingResult<>(x_n, ff_x_n + y, new History<>(history));
         }
       }
@@ -338,9 +349,9 @@ public class EquationSolvingAlgorithms {
         Duration dxLow,
         Duration dxHigh,
         int maxNbIterations)
-    throws ZeroDerivative, DivergenceException, ExceededMaxIterationException, NoSolutionException
+    throws ZeroOrInfiniteDerivativeException, DivergenceException, ExceededMaxIterationException, NoSolutionException
     {
-      final var history = new LinkedHashMap<Duration, Duration>();
+      final var history = new ArrayList<Pair<Duration, Duration>>();
 
       final var ff = new Function<Duration>(){
         @Override
@@ -354,14 +365,6 @@ public class EquationSolvingAlgorithms {
         }
       };
 
-      if (x0.isEqualTo(x1)) {
-        //particular : only one start possible, derivative would be 0
-        final var val = ff.valueAt(x0);
-        if (val.noShorterThan(Duration.negate(toleranceYLow)) && val.noLongerThan(toleranceYHigh)) {
-          return new RootFindingResult<>(x0, val.plus(y),null);
-        }
-        throw new NoSolutionException();
-      }
       double x_nminus1_double = x0.in(Duration.MICROSECONDS);
       double x_n_double = x1.in(Duration.MICROSECONDS);
       var x_n = x1;
@@ -371,13 +374,27 @@ public class EquationSolvingAlgorithms {
       if (x_n_double < dxLow_long || x_n_double > dxHigh_long) {
         throw new DivergenceException("Looking for root out of prescribed domain :[" + dxLow + "," + dxHigh + "]");
       }
-      Duration ff_x_nminus1 = ff.valueAt(x0), ff_x_n = ff.valueAt(x_n);
+      //We check whether the initial bounds might satisfy the exit criteria.
+      var ff_x_nminus1 = ff.valueAt(x0);
+      if (ff_x_nminus1.noShorterThan(Duration.negate(toleranceYLow)) && ff_x_nminus1.noLongerThan(toleranceYHigh)) {
+        return new RootFindingResult<>(x0, ff_x_nminus1.plus(y), null);
+      }
+      var ff_x_n = ff.valueAt(x_n);
+      if (ff_x_n.noShorterThan(Duration.negate(toleranceYLow)) && ff_x_n.noLongerThan(toleranceYHigh)) {
+        return new RootFindingResult<>(x_n, ff_x_n.plus(y), null);
+      }
+      // After these checks, we can be sure that if the two bounds are the same, the derivative will be 0, and thus throw an exception.
+      if (x0.isEqualTo(x1)) {
+        throw new NoSolutionException();
+      }
+      history.add(Pair.of(x0, ff_x_nminus1));
+      history.add(Pair.of(x1, ff_x_n));
       for (int nbIt = 0; nbIt < maxNbIterations; nbIt++) {
         //(f(xn) - f(xn_m1)) / (xn - xn_m1)
         final double localDerivative =
             (float) (ff_x_n.minus(ff_x_nminus1)).in(Duration.MICROSECONDS) / (x_n_double - x_nminus1_double);
-        if (localDerivative == 0) {
-          throw new ZeroDerivative();
+        if (localDerivative == 0 || Double.isNaN(localDerivative)) {
+          throw new ZeroOrInfiniteDerivativeException();
         }
         x_nminus1_double = x_n_double;
         ff_x_nminus1 = ff_x_n;
@@ -385,14 +402,12 @@ public class EquationSolvingAlgorithms {
         //localDerivative has been computed with what is now xn_m1 and xn_m2
         x_n_double = x_n_double - (ff_x_nminus1.in(Duration.MICROSECONDS) / localDerivative);
         x_n = Duration.of((long) x_n_double, Duration.MICROSECONDS);
-        //outside of domain, diverging
-        if (x_n_double < dxLow_long || x_n_double > dxHigh_long) {
-          throw new DivergenceException("Looking for root out of prescribed domain :[" + dxLow + "," + dxHigh + "]",
-                                        new History<>(history));
-        }
         ff_x_n = ff.valueAt(x_n);
-        history.put(x_n, ff_x_n);
-        if (ff_x_n.noShorterThan(Duration.negate(toleranceYLow)) && ff_x_n.noLongerThan(toleranceYHigh)) {
+        history.add(Pair.of(x_n, ff_x_n));
+        //The final solution needs to be in the given bounds which is why this check is added here.
+        if (ff_x_n.noShorterThan(Duration.negate(toleranceYLow)) &&
+            ff_x_n.noLongerThan(toleranceYHigh) &&
+            (x_n_double >= dxLow_long && x_n_double <= dxHigh_long)){
           logger.debug("Root found after " + nbIt + " iterations");
           return new RootFindingResult<>(x_n, ff_x_n.plus(y), new History<>(history));
         }
@@ -411,9 +426,9 @@ public class EquationSolvingAlgorithms {
         Double dxLow,
         Double dxHigh,
         int maxNbIterations)
-    throws DivergenceException, ZeroDerivative, ExceededMaxIterationException
+    throws DivergenceException, ZeroOrInfiniteDerivativeException, ExceededMaxIterationException
     {
-      var history = new LinkedHashMap<Double, Double>();
+      var history = new ArrayList<Pair<Double, Double>>();
 
       final var ff = new FunctionWithDerivative<Double>(){
         @Override
@@ -440,7 +455,7 @@ public class EquationSolvingAlgorithms {
       for (int nbIt = 0; nbIt < maxNbIterations; nbIt++) {
         var localDerivative = ff.derivativeAt(x_n);
         if (localDerivative == 0.) {
-          throw new ZeroDerivative();
+          throw new ZeroOrInfiniteDerivativeException();
         }
         x_n = x_n - ((ff_x_n - y) / localDerivative);
         ff_x_n = ff.valueAt(x_n);
