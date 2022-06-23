@@ -18,12 +18,28 @@
         <enum_table name="string">
             <values>
                 <enum symbol="fromStem" numeric="0" />
-                <enum symbol="fromBase" numeric="1" />
-                <enum symbol="fromCenter" numeric="2" />
+                <enum symbol="fromTip" numeric="1" />
             </values>
         </enum_table>
     </enum_definitions>
     <command_definitions>
+        <fsw_command opcode="0xFFFF" stem="ECHO" class="FSW">
+          <arguments>
+            <var_string_arg name="echo_string" prefix_bit_length="8" max_bit_length="1024" cts_item_type="dynamic_arg">
+              <description>String to echo back</description>
+            </var_string_arg>
+          </arguments>
+          <categories>
+            <module>shell_ctl</module>
+            <ops_category>FSW</ops_category>
+          </categories>
+          <description>This command will echo back a string</description>
+          <completion>String is echoed back</completion>
+          <fsw_specification custom_validation_required="No" command_priority="Nominal" />
+          <restricted_modes>
+            <prime_string_restriction prime_string_only="No" />
+          </restricted_modes>
+        </fsw_command>
         <fsw_command opcode="0xFFFF" stem="PREHEAT_OVEN" class="FSW">
             <arguments>
                 <unsigned_arg name="temperature" bit_length="8" units="none">
