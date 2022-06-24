@@ -22,7 +22,8 @@ export enum NodeKind {
   ActivityCardinalityGoal = 'ActivityCardinalityGoal',
   ActivityExpression = 'ActivityExpression',
   GoalAnd = 'GoalAnd',
-  GoalOr = 'GoalOr'
+  GoalOr = 'GoalOr',
+  ApplyWhen = 'ApplyWhen'
 }
 
 /**
@@ -118,6 +119,7 @@ export interface ActivityTimingConstraintRange {
 export type GoalSpecifier =
   | Goal
   | GoalComposition
+  | GoalQualification
   ;
 
 
@@ -139,4 +141,17 @@ export interface GoalAnd {
 export interface GoalOr {
   kind: NodeKind.GoalOr,
   goals: GoalSpecifier[],
+}
+
+/**
+ * Goal Qualification
+ *
+ * Modify goals
+ */
+export type GoalQualification = ApplyWhen;
+
+export interface ApplyWhen {
+  kind: NodeKind.ApplyWhen,
+  goal: GoalSpecifier,
+  window: WindowsExpressions.WindowsExpression
 }
