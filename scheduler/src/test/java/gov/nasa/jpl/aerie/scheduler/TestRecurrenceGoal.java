@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
@@ -29,7 +31,7 @@ public class TestRecurrenceGoal {
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
-        .forAllTimeIn(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(20, Duration.SECONDS)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(20, Duration.SECONDS)))))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .duration(Duration.of(2, Duration.SECONDS))
                             .ofType(activityType)
@@ -63,8 +65,8 @@ public class TestRecurrenceGoal {
       final var activityType = problem.getActivityType("ControllableDurationActivity");
       final var goal = new RecurrenceGoal.Builder()
           .named("Test recurrence goal")
-          .forAllTimeIn(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS),
-                                                 Duration.of(20, Duration.SECONDS)))
+          .forAllTimeIn(new WindowsWrapperExpression(new Windows(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS),
+                                                 Duration.of(20, Duration.SECONDS)))))
           .thereExistsOne(new ActivityCreationTemplate.Builder()
                               .duration(Duration.of(2, Duration.SECONDS))
                               .ofType(activityType)

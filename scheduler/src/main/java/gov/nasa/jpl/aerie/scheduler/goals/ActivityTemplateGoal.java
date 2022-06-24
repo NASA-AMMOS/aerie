@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
@@ -63,6 +64,8 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
       }
       goal.desiredActTemplate = thereExists;
 
+      goal.initiallyEvaluatedTemporalContext = null;
+
       return goal;
     }
 
@@ -111,7 +114,6 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
     return desiredActTemplate.createActivity(actName, facade, plan, planningHorizon);
   }
 
-
   /**
    * ctor creates new empty goal without identification / specification
    *
@@ -124,5 +126,12 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
    * create new instances if none already exist
    */
   protected ActivityCreationTemplate desiredActTemplate;
+
+  /**
+   * checked by getConflicts every time it is invoked to see if the Window(s)
+   * corresponding to when this goal has changed, which is unexpected behavior
+   * that needs to be caught
+   */
+  protected Windows initiallyEvaluatedTemporalContext;
 
 }

@@ -157,10 +157,42 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
    * should probably be created!)
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
-  public java.util.Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
-    final var conflicts = new java.util.LinkedList<Conflict>();
+  public java.util.Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) { //TODO: check if window gets split and if so, notify user?
 
-    Windows anchors = expr.computeRange(simulationResults, plan, new Windows(this.temporalContext));
+    //NOTE: temporalContext IS A WINDOWS OVER WHICH THE GOAL APPLIES, USUALLY SOMETHING BROAD LIKE A MISSION PHASE
+    //NOTE: expr IS A WINDOWS OVER WHICH A COEXISTENCEGOAL APPLIES, FOR EXAMPLE THE WINDOWS CORRESPONDING TO 5 SECONDS AFTER EVERY BASICACTIVITY IS SCHEDULED
+    //NOTE: IF temporalContext IS SMALLER THAN expr OR SOMEHOW BISECTS IT, ODDS ARE THIS ISN'T ANTICIPATED USER BEHAVIOR. GENERALLY, ANALYZEWHEN SHOULDN'T BE PROVIDING
+    //        A SMALLER WINDOW, AND HONESTLY DOESN'T MAKE SENSE TO USE ON TOP BUT IS SUPPORTED TO MAKE CODE MORE CONSISTENT. IF ONE NEEDS TO USE ANALYZEWHEN ON TOP
+    //        OF COEXISTENCEGOAL THEY SHOULD PROBABLY REFACTOR THEIR COEXISTENCE GOAL. ONE SUCH USE WOULD BE IF THE COEXISTENCEGOAL WAS SPECIFIED IN TERMS OF
+    //        AN ACTIVITYEXPRESSION AND THEN ANALYZEWHEN WAS A MISSION PHASE, ALTHOUGH IT IS POSSIBLE TO JUST SPECIFY AN EXPRESSION<WINDOWS> THAT COMBINES THOSE.
+
+    //unwrap temporalContext
+    final var windows = getTemporalContext().evaluate(simulationResults);
+
+    //make sure it hasn't changed
+    if (this.initiallyEvaluatedTemporalContext != null && !windows.includes(this.initiallyEvaluatedTemporalContext)) {
+      throw new UnexpectedTemporalContextChangeException("The temporalContext Windows has changed from: " + this.initiallyEvaluatedTemporalContext.toString() + " to " + windows.toString());
+    }
+    else if (this.initiallyEvaluatedTemporalContext == null) {
+      this.initiallyEvaluatedTemporalContext = windows;
+    }
+
+    Windows anchors = expr.computeRange(simulationResults, plan, windows);
+
+    //make sure expr hasn't changed either as that could yield unexpected behavior
+    if (this.evaluatedExpr != null && !anchors.includes(this.evaluatedExpr)) {
+      throw new UnexpectedTemporalContextChangeException("The expr Windows has changed from: " + this.expr.toString() + " to " + anchors.toString());
+    }
+    else if (this.initiallyEvaluatedTemporalContext == null) {
+      this.evaluatedExpr = anchors;
+    }
+
+    // can only check if bisection has happened if you can extract the window from expr like you do in computeRange but without the final windows parameter,
+    //    then use that and compare it to local variable windows to check for bisection;
+    //    I can add that, but it doesn't seem necessary for now.
+
+    //the rest is the same if no such bisection has happened
+    final var conflicts = new java.util.LinkedList<Conflict>();
     for (var window : anchors) {
 
       boolean disj = false;
@@ -220,7 +252,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       if (!alreadyOneActivityAssociated) {
         //create conflict if no matching target activity found
         if (existingActs.isEmpty()) {
-          conflicts.add(new MissingActivityTemplateConflict(this, new Windows(this.temporalContext), temp));
+          conflicts.add(new MissingActivityTemplateConflict(this, this.temporalContext.evaluate(simulationResults), temp));
         } else {
           conflicts.add(new MissingAssociationConflict(this, missingActAssociations));
         }
@@ -242,6 +274,11 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
    * the pattern used to locate anchor activity instances in the plan
    */
   protected TimeRangeExpression expr;
+
+  /**
+   * used to check this hasn't changed, as if it did, that's probably unanticipated behavior
+   */
+  protected Windows evaluatedExpr;
 
 
 }

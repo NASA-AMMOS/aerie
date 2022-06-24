@@ -12,6 +12,7 @@ import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
+import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -145,7 +146,7 @@ public class SimulationFacadeTest {
 
     final var goal = new CoexistenceGoal.Builder()
         .forEach(ActivityExpression.ofType(actTypePeel))
-        .forAllTimeIn(horizon.getHor())
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(horizon.getHor())))
         .thereExistsOne(new ActivityCreationTemplate.Builder().
                            ofType(actTypeBite)
                            .withArgument("biteSize", SerializedValue.of(0.1))
@@ -253,7 +254,7 @@ public class SimulationFacadeTest {
     final var actTypePeel = problem.getActivityType("PeelBanana");
 
     CoexistenceGoal cg = new CoexistenceGoal.Builder()
-        .forAllTimeIn(horizon.getHor())
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(horizon.getHor())))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(actTypePeel)
                             .withArgument("peelDirection", SerializedValue.of("fromStem"))
@@ -296,7 +297,7 @@ public class SimulationFacadeTest {
         = (p) -> externalActs;
 
     final var proceduralGoalWithConstraints = new ProceduralCreationGoal.Builder()
-        .forAllTimeIn(horizon.getHor())
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(horizon.getHor())))
         .attachStateConstraint(constraint)
         .generateWith(fixedGenerator)
         .owned(ChildCustody.Jointly)
@@ -338,7 +339,7 @@ public class SimulationFacadeTest {
         = (p) -> externalActs;
 
     final var proceduralgoalwithoutconstraints = new ProceduralCreationGoal.Builder()
-        .forAllTimeIn(horizon.getHor())
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(horizon.getHor())))
         .generateWith(fixedGenerator)
         .owned(ChildCustody.Jointly)
         .build();

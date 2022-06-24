@@ -111,7 +111,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
 
     //run the generator to see what acts are still desired
     //REVIEW: maybe some caching on plan hash here?
-    final var requestedActs = getRelevantGeneratedActivities(plan);
+    final var requestedActs = getRelevantGeneratedActivities(plan, simulationResults);
 
     //walk each requested act and try to find an exact match in the plan
     for (final var requestedAct : requestedActs) {
@@ -200,16 +200,16 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
    *     are deemed relevant to this goal (eg within the temporal context
    *     of this goal)
    */
-  private Collection<ActivityInstance> getRelevantGeneratedActivities(Plan plan) {
+  private Collection<ActivityInstance> getRelevantGeneratedActivities(Plan plan, SimulationResults simulationResults) {
 
     //run the generator in the plan context
     final var allActs = generator.apply(plan);
 
     //filter out acts that don't have a start time within the goal purview
-    final var goalContext = getTemporalContext();
+    final var evaluatedGoalContext = getTemporalContext().evaluate(simulationResults);
     final var filteredActs = allActs.stream().filter(
         act -> ((act.getStartTime() != null)
-                && goalContext.contains(act.getStartTime()))
+                && evaluatedGoalContext.includesPoint(0,act.getStartTime()))
     ).collect(java.util.stream.Collectors.toList());
 
     return filteredActs;

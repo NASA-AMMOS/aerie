@@ -5,9 +5,11 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.All;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
+import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import org.apache.commons.math3.analysis.function.Exp;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -105,12 +107,12 @@ public class Goal {
      * @param range IN the time range that the goal is relevant
      * @return this builder, ready for additional specification
      */
-    public T forAllTimeIn(Window range) {
+    public T forAllTimeIn(Expression<Windows> range) {
       this.range = range;
       return getThis();
     }
 
-    protected Window range;
+    protected Expression<Windows> range;
 
 
     /**
@@ -187,7 +189,7 @@ public class Goal {
       if (range != null) {
         goal.temporalContext = range;
       } else {
-        goal.temporalContext = Window.between(starting, ending);
+        goal.temporalContext = new WindowsWrapperExpression(new Windows(Window.between(starting, ending)));
       }
 
       return goal;
@@ -206,11 +208,18 @@ public class Goal {
   }
 
   /**
-   * fetch the contiguous range of time over which the goal applies
+   * fetch the (dis)contiguous range of time over which the goal applies
    *
-   * @return the contiguous range of time over which the goal applies
+   * @return the (dis)contiguous range of time over which the goal applies
    */
-  public Window getTemporalContext() { return temporalContext; }
+  public Expression<Windows> getTemporalContext() { return temporalContext; }
+
+  /**
+   * set the (dis)contiguous range of time over which the goal applies
+   *
+   * @return none.
+   */
+  public void setTemporalContext(Expression<Windows> tc) { temporalContext = tc; }
 
   /**
    * identifies issues in a plan that diminishes this goal's satisfaction
@@ -263,7 +272,7 @@ public class Goal {
   /**
    * the contiguous range of time over which the goal applies
    */
-  protected Window temporalContext;
+  protected Expression<Windows> temporalContext;
 
   /**
    * state constraints applying to the goal
