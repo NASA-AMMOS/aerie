@@ -28,3 +28,8 @@ task clean(type: Delete) {
   dependsOn undoDistributeSql
   delete 'build'
 }
+
+task e2eTest(type: NpmTask) {
+  dependsOn npmInstall
+  args = ['run', 'test']
+}
