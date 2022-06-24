@@ -24,7 +24,6 @@ services:
     ports: ['27184:27184']
     restart: always
     volumes:
-      - ./../command-expansion-server:/app:cached
       - aerie_file_store:/usr/src/app/commanding_file_store
   aerie_gateway:
     container_name: aerie_gateway

@@ -287,7 +287,7 @@ it('should return sequence seqjson', async () => {
   {
     await removeSequence(graphqlClient, sequencePk);
   }
-}, 10000);
+}, 30000);
 
 it('should work for throwing expansions', async () => {
   // Setup
@@ -418,7 +418,7 @@ it('should work for throwing expansions', async () => {
     await removeSequence(graphqlClient, sequencePk);
     await removeExpansion(graphqlClient, expansionId3);
   }
-}, 10000);
+}, 30000);
 
 it('should work for non-existent expansions', async () => {
   let activityId3: number;
@@ -523,4 +523,4 @@ it('should work for non-existent expansions', async () => {
   {
     await removeSequence(graphqlClient, sequencePk);
   }
-}, 10000);
+}, 30000);
