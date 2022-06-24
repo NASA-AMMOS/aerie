@@ -38,7 +38,12 @@ class TypescriptCodeGenerationServiceTest {
                           "quantity",
                           ValueSchema.REAL
                       )
-                  )),
+                  ),
+                  new MissionModelService.ActivityType(
+                      "SampleActivityEmpty",
+                      Map.of()
+                  )
+          ),
           List.of(new MissionModelService.ResourceType("/sample/resource/1", ValueSchema.REAL),
                   new MissionModelService.ResourceType("/sample/resource/2", ValueSchema.ofStruct(
                       Map.of("field1", ValueSchema.BOOLEAN,
@@ -57,9 +62,11 @@ class TypescriptCodeGenerationServiceTest {
             export enum ActivityType {
               SampleActivity1 = 'SampleActivity1',
               SampleActivity2 = 'SampleActivity2',
+              SampleActivityEmpty = 'SampleActivityEmpty',
             }
             interface SampleActivity1 extends ActivityTemplate {}
             interface SampleActivity2 extends ActivityTemplate {}
+            interface SampleActivityEmpty extends ActivityTemplate {}
             const ActivityTemplateConstructors = {
               SampleActivity1: function SampleActivity1Constructor(args: {
                 duration: Duration,
@@ -72,6 +79,9 @@ class TypescriptCodeGenerationServiceTest {
                 quantity: Double,
               }): SampleActivity2 {
                 return { activityType: ActivityType.SampleActivity2, args };
+              },
+              SampleActivityEmpty: function SampleActivityEmptyConstructor(): SampleActivityEmpty {
+                return { activityType: ActivityType.SampleActivityEmpty, args: {} };
               },
             };
             export enum Resource {

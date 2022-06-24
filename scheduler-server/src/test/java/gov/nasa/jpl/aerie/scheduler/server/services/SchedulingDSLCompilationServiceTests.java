@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
+import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingCompilationError;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -317,6 +318,67 @@ class SchedulingDSLCompilationServiceTests {
           "TypeError: TS2345 Argument of type 'string' is not assignable to parameter of type 'number'.",
           r.errors().get(0).message()
       );
+    }
+  }
+
+  @Test
+  void testSchedulingDSL_emptyActivityCorrect()
+  {
+    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
+    result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
+        PLAN_ID, """
+                export default function myGoal() {
+                  return Goal.ActivityRecurrenceGoal({
+                    activityTemplate: ActivityTemplates.SampleActivityEmpty(),
+                    interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                  })
+                }
+            """);
+    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+        new SchedulingDSL.ActivityTemplate(
+            "SampleActivityEmpty",
+            Map.of()
+        ),
+        Duration.HOUR
+    );
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+      assertEquals(expectedGoalDefinition, r.goalSpecifier());
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      fail(r.toString());
+    }
+  }
+
+  @Test
+  void testSchedulingDSL_emptyActivityBogus()
+  {
+    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
+    result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
+        PLAN_ID, """
+                export default function myGoal() {
+                  return Goal.ActivityRecurrenceGoal({
+                    activityTemplate: ActivityTemplates.SampleActivityEmpty({ fake: "bogus" }),
+                    interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                  })
+                }
+            """);
+    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+        new SchedulingDSL.ActivityTemplate(
+            "SampleActivityEmpty",
+            Map.of()
+        ),
+        Duration.HOUR
+    );
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      assertEquals(1, r.errors().size());
+      assertEquals(
+          "TypeError: TS2554 Expected 0 arguments, but got 1.",
+          r.errors().get(0).message()
+      );
+    }
+    else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+      fail(r.goalSpecifier().toString());
     }
   }
 
