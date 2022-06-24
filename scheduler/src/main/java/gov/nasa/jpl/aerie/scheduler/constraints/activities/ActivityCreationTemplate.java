@@ -225,9 +225,9 @@ public class ActivityCreationTemplate extends ActivityExpression {
   /**
    * create activity if possible
    *
-   * @param name
-   * @param windows
-   * @return
+   * @param name the activity name
+   * @param windows the windows in which the activity can be instantiated
+   * @return the instance of the activity (if successful; else, an empty object) wrapped as an Optional.
    */
   public @NotNull
   Optional<ActivityInstance> createActivity(String name, Windows windows, boolean instantiateVariableArguments, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
@@ -263,7 +263,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
     }
     final var success = tnw.solveConstraints();
     if (!success) {
-      logger.warn("Inconsistent temporal constraints, returning empty activity");
+      logger.warn("Inconsistent temporal constraints, returning Optional.empty() instead of activity");
       return Optional.empty();
     }
     final var solved = tnw.getAllData(name);

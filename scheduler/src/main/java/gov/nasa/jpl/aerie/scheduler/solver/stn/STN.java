@@ -96,8 +96,7 @@ public class STN {
       var a = algo.getPaths(graph.vertexSet().iterator().next());
       ret = true;
     } catch (NegativeCycleDetectedException e) {
-      logger.error("Negative cycle ");
-      StackTraceLogger.log(e, logger);
+      logger.debug("Negative cycle ", e); //this is normal behavior, shouldn't be flagged as an error! If debugging is on, drop the stack trace.
     }
     latestComputation = algo;
     return ret;
