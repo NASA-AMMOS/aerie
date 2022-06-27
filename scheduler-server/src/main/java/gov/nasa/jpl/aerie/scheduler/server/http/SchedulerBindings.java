@@ -27,6 +27,7 @@ import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraSp
 import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
+import static io.javalin.apibuilder.ApiBuilder.get;
 
 /**
  * set up mapping between scheduler http endpoints and java method calls
@@ -57,6 +58,7 @@ public record SchedulerBindings(
       before(ctx -> ctx.contentType("application/json"));
 
       path("schedule", () -> post(this::schedule));
+      path("health", () -> get(ctx -> ctx.status(200)));
       path("schedulingDslTypescript", () -> post(this::getSchedulingDslTypescript));
     });
   }

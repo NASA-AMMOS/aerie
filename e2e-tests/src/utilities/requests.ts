@@ -2,7 +2,7 @@ import type { APIRequestContext } from '@playwright/test';
 import { sync as glob } from 'fast-glob';
 import { createReadStream } from 'fs';
 import { basename, resolve } from 'path';
-import { GATEWAY_URL, HASURA_URL, UI_URL } from '../utilities/urls';
+import * as urls from '../utilities/urls';
 import gql from './gql';
 import {request} from "@playwright/test";
 import time from "./time";
@@ -32,7 +32,7 @@ const req = {
     variables: Record<string, unknown> = {},
   ): Promise<T> {
     const options = { data: { query, variables } };
-    const response = await request.post(`${HASURA_URL}/v1/graphql`, options);
+    const response = await request.post(`${urls.HASURA_URL}/v1/graphql`, options);
 
     if (response.ok()) {
       const json = await response.json();
@@ -53,18 +53,39 @@ const req = {
   },
 
   async healthGateway(request: APIRequestContext): Promise<boolean> {
-    const response = await request.get(`${GATEWAY_URL}/health`);
+    const response = await request.get(`${urls.GATEWAY_URL}/health`);
     return response.ok();
   },
 
   async healthHasura(request: APIRequestContext): Promise<boolean> {
-    const response = await request.get(`${HASURA_URL}/healthz`);
+    const response = await request.get(`${urls.HASURA_URL}/healthz`);
     return response.ok();
   },
 
   async healthUI(request: APIRequestContext): Promise<boolean> {
-    const response = await request.get(`${UI_URL}/health`);
+    const response = await request.get(`${urls.UI_URL}/health`);
     return response.ok();
+  },
+
+  async healthMerlin(request: APIRequestContext): Promise<boolean> {
+    const response = await request.get(`${urls.MERLIN_URL}/health`);
+    return response.ok();
+  },
+
+  async healthCommanding(request: APIRequestContext): Promise<boolean> {
+    const response = await request.get(`${urls.COMMANDING_URL}/health`);
+    return response.ok();
+  },
+
+  async healthScheduler(request: APIRequestContext): Promise<boolean> {
+    const response = await request.get(`${urls.SCHEDULER_URL}/health`);
+    return response.ok();
+  },
+
+  async healthWorker(request: APIRequestContext): Promise<boolean> {
+    const workerOneResponse = await request.get(`${urls.WORKER_1_URL}/health`);
+    const workerTwoResponse = await request.get(`${urls.WORKER_2_URL}/health`);
+    return workerOneResponse.ok() && workerTwoResponse.ok();
   },
 
   /**
@@ -81,7 +102,7 @@ const req = {
     const name = basename(jarPath);
     const mimeType = 'application/java-archive';
     const multipart = { buffer, mimeType, name };
-    const response = await request.post(`${GATEWAY_URL}/file`, { multipart });
+    const response = await request.post(`${urls.GATEWAY_URL}/file`, { multipart });
 
     if (response.ok()) {
       const json = await response.json();

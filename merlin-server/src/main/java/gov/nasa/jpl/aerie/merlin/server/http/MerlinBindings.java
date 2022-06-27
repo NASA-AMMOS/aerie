@@ -29,6 +29,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraPlanActi
 import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
+import static io.javalin.apibuilder.ApiBuilder.get;
 
 /**
  * Lift native Java agents into an HTTP-oriented service.
@@ -104,6 +105,9 @@ public final class MerlinBindings implements Plugin {
       });
       path("constraintsDslTypescript", () -> {
         post(this::getConstraintsDslTypescript);
+      });
+      path("health", () -> {
+        get(ctx -> ctx.status(200));
       });
     });
 
