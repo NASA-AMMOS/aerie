@@ -44,17 +44,32 @@ public final class SimulationEngine implements AutoCloseable {
   private final Subscriptions<Topic<?>, ResourceId> waitingResources = new Subscriptions<>();
 
   /** The execution state for every task. */
-  public final Map<TaskId, ExecutionState<?>> tasks = new HashMap<>();
+  private final Map<TaskId, ExecutionState<?>> tasks = new HashMap<>();
   /** The getter for each tracked condition. */
   private final Map<ConditionId, Condition> conditions = new HashMap<>();
   /** The profiling state for each tracked resource. */
-  public final Map<ResourceId, ProfilingState<?>> resources = new HashMap<>();
+  private final Map<ResourceId, ProfilingState<?>> resources = new HashMap<>();
 
   /** The task that spawned a given task (if any). */
-  public final Map<TaskId, TaskId> taskParent = new HashMap<>();
+  private final Map<TaskId, TaskId> taskParent = new HashMap<>();
   /** The set of children for each task (if any). */
   @DerivedFrom("taskParent")
   private final Map<TaskId, Set<TaskId>> taskChildren = new HashMap<>();
+
+  public Map<ResourceId, ProfilingState<?>> getResources() {
+    // return immuatable copy
+    return Collections.unmodifiableMap(this.resources);
+  }
+
+  public Map<TaskId, ExecutionState<?>> getTasks() {
+    // return immuatable copy
+    return Collections.unmodifiableMap(this.tasks);
+  }
+
+  public Map<TaskId, TaskId> getTaskParent() {
+    // return immuatable copy
+    return Collections.unmodifiableMap(this.taskParent);
+  }
 
   /** Schedule a new task to be performed at the given time. */
   public <Return> TaskId scheduleTask(final Duration startTime, final Task<Return> state) {

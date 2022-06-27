@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 public final class SimulationDriver {
@@ -144,10 +145,7 @@ public final class SimulationDriver {
     final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
     final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
 
-    for (final var entry : engine.resources.entrySet()) {
-      final var id = entry.getKey();
-      final var state = entry.getValue();
-
+    engine.getResources().forEach((id, state) -> {
       final var name = id.id();
       final var resource = state.resource();
 
@@ -166,7 +164,7 @@ public final class SimulationDriver {
             throw new IllegalArgumentException(
                 "Resource `%s` has unknown type `%s`".formatted(name, resource.getType()));
       }
-    }
+    });
 
     // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
     final var taskToPlannedDirective = new HashMap<>(taskInfo.taskToPlannedDirective());
@@ -177,9 +175,17 @@ public final class SimulationDriver {
             .map(ActivityInstanceId::id)
             .collect(Collectors.toSet());
 
+    // Grab all tasks that are activities, so we don't have to check later
+    final var activityTasks =
+        engine
+            .getTasks()
+            .entrySet()
+            .stream()
+            .filter(e -> taskInfo.isActivity(e.getKey()))
+            .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+
     var counter = 1L;
-    for (final var task : engine.tasks.keySet()) {
-      if (!taskInfo.isActivity(task)) continue;
+    for (final var task : activityTasks.keySet()) {
       if (taskToPlannedDirective.containsKey(task.id())) continue;
 
       while (usedActivityInstanceIds.contains(counter)) counter++;
@@ -188,12 +194,11 @@ public final class SimulationDriver {
 
     // Identify the nearest ancestor *activity* (excluding intermediate anonymous tasks).
     final var activityParents = new HashMap<ActivityInstanceId, ActivityInstanceId>();
-    engine.tasks.forEach((task, state) -> {
-      if (!taskInfo.isActivity(task)) return;
-
-      var parent = engine.taskParent.get(task);
+    final var taskParent = engine.getTaskParent();
+    activityTasks.forEach((task, state) -> {
+      var parent = taskParent.get(task);
       while (parent != null && !taskInfo.isActivity(parent)) {
-        parent = engine.taskParent.get(parent);
+        parent = taskParent.get(parent);
       }
 
       if (parent != null) {
@@ -208,9 +213,7 @@ public final class SimulationDriver {
 
     final var simulatedActivities = new HashMap<ActivityInstanceId, SimulatedActivity>();
     final var unfinishedActivities = new HashMap<ActivityInstanceId, UnfinishedActivity>();
-    engine.tasks.forEach((task, state) -> {
-      if (!taskInfo.isActivity(task)) return;
-
+    activityTasks.forEach((task, state) -> {
       final var activityId = taskToPlannedDirective.get(task.id());
 
       if (state instanceof ExecutionState.Terminated<?> e) {
