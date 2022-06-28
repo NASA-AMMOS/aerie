@@ -86,11 +86,23 @@ public class TypescriptCodeGenerationService {
     final var result = new ArrayList<String>();
     result.add("const ActivityTemplateConstructors = {");
     for (final var activityTypeCode : activityTypeCodes) {
-      result.add(indent("%s: function %sConstructor(args: {".formatted(activityTypeCode.activityTypeName(), activityTypeCode.activityTypeName())));
-      result.add(indent(indent(generateActivityArgumentTypes(activityTypeCode.parameterTypes()))));
-      result.add(indent("}): %s {".formatted(activityTypeCode.activityTypeName())));
-      result.add(indent(indent("return { activityType: ActivityType.%s, args };".formatted(activityTypeCode.activityTypeName()))));
-      result.add(indent("},"));
+      if(activityTypeCode.parameterTypes().isEmpty()) {
+        result.add(indent("%s: function %sConstructor(): %s {".formatted(
+            activityTypeCode.activityTypeName(),
+            activityTypeCode.activityTypeName(),
+            activityTypeCode.activityTypeName())));
+        result.add(indent(indent("return { activityType: ActivityType.%s, args: {} };".formatted(activityTypeCode.activityTypeName()))));
+        result.add(indent("},"));
+      }
+      else {
+        result.add(indent("%s: function %sConstructor(args: {".formatted(
+            activityTypeCode.activityTypeName(),
+            activityTypeCode.activityTypeName())));
+        result.add(indent(indent(generateActivityArgumentTypes(activityTypeCode.parameterTypes()))));
+        result.add(indent("}): %s {".formatted(activityTypeCode.activityTypeName())));
+        result.add(indent(indent("return { activityType: ActivityType.%s, args };".formatted(activityTypeCode.activityTypeName()))));
+        result.add(indent("},"));
+      }
     }
     result.add("};");
     return joinLines(result);
