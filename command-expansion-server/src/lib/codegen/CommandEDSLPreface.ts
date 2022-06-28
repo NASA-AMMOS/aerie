@@ -326,6 +326,7 @@ function orderCommandArguments(args: { [argName: string]: any }, order: string[]
   return order.map(key => args[key]);
 }
 
+// @ts-ignore: Used in generated code
 function findAndOrderCommandArguments(
   commandName: string,
   args: { [argName: string]: any },

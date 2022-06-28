@@ -9,7 +9,8 @@ import { UserCodeError, UserCodeRunner } from '@nasa-jpl/aerie-ts-user-code-runn
 import getLogger from './utils/logger.js';
 import type { SimulatedActivity } from './lib/batchLoaders/simulatedActivityBatchLoader.js';
 import type { Command } from './lib/codegen/CommandEDSLPreface.js';
-import type { Mutable } from './lib/codegen/CodegenHelpers.js';
+import type { Mutable } from './lib/codegen/CodegenHelpers';
+import { deserializeWithTemporal } from './utils/temporalSerializers.js';
 
 const logger = getLogger('worker');
 
@@ -54,7 +55,7 @@ export async function typecheckExpansion(opts: {
 
 export async function executeExpansion(opts: {
   expansionLogic: string;
-  activityInstance: SimulatedActivity;
+  serializedActivityInstance: SimulatedActivity;
   commandTypes: string;
   activityTypes: string;
 }): Promise<{
@@ -62,12 +63,13 @@ export async function executeExpansion(opts: {
   commands: ReturnType<Command['toSeqJson']>[] | null;
   errors: ReturnType<UserCodeError['toJSON']>[];
 }> {
+  const activityInstance = deserializeWithTemporal(opts.serializedActivityInstance) as SimulatedActivity;
   try {
     const result = await codeRunner.executeUserCode<[{ activityInstance: SimulatedActivity }], ExpansionReturn>(
       opts.expansionLogic,
       [
         {
-          activityInstance: opts.activityInstance,
+          activityInstance,
         },
       ],
       'ExpansionReturn',
@@ -92,19 +94,19 @@ export async function executeExpansion(opts: {
       for (const command of commandsFlat) {
         (command as Mutable<Command>).metadata  = {
           ...command.metadata,
-          simulatedActivityId: opts.activityInstance.id,
+          simulatedActivityId: activityInstance.id,
         };
       }
-      return { activityInstance: opts.activityInstance, commands: commandsFlat.map(c => c.toSeqJson()), errors: [] };
+      return { activityInstance, commands: commandsFlat.map(c => c.toSeqJson()), errors: [] };
     } else {
       return {
-        activityInstance: opts.activityInstance,
+        activityInstance,
         commands: null,
         errors: result.unwrapErr().map(err => err.toJSON()),
       };
     }
   } catch (e: any) {
     logger.error(e);
-    return { activityInstance: opts.activityInstance, commands: null, errors: [e?.message ?? 'Unexpected error'] };
+    return { activityInstance, commands: null, errors: [e?.message ?? 'Unexpected error'] };
   }
 }

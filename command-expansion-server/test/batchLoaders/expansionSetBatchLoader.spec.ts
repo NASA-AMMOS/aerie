@@ -1,8 +1,8 @@
 import { GraphQLClient } from 'graphql-request';
 import { expansionSetBatchLoader } from '../../src/lib/batchLoaders/expansionSetBatchLoader.js';
-import { removeMissionModel, uploadMissionModel } from '../utils/MissionModel.js';
-import { insertExpansion, insertExpansionSet, removeExpansion, removeExpansionSet } from '../utils/Expansion';
-import { insertCommandDictionary, removeCommandDictionary } from '../utils/CommandDictionary';
+import { removeMissionModel, uploadMissionModel } from '../testUtils/MissionModel.js';
+import { insertExpansion, insertExpansionSet, removeExpansion, removeExpansionSet } from '../testUtils/Expansion';
+import { insertCommandDictionary, removeCommandDictionary } from '../testUtils/CommandDictionary';
 
 let graphqlClient: GraphQLClient;
 let missionModelId: number;

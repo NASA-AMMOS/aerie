@@ -1,6 +1,6 @@
 import { gql, GraphQLClient } from 'graphql-request';
 import { Status } from '../src/common.js';
-import { removeMissionModel, uploadMissionModel } from './utils/MissionModel';
+import { removeMissionModel, uploadMissionModel } from './testUtils/MissionModel';
 
 let graphqlClient: GraphQLClient;
 let missionModelId: number;

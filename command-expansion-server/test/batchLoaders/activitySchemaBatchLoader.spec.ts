@@ -1,6 +1,6 @@
 import { GraphQLClient } from 'graphql-request';
 import { activitySchemaBatchLoader } from '../../src/lib/batchLoaders/activitySchemaBatchLoader.js';
-import { removeMissionModel, uploadMissionModel } from '../utils/MissionModel.js';
+import { removeMissionModel, uploadMissionModel } from '../testUtils/MissionModel.js';
 
 let graphqlClient: GraphQLClient;
 let missionModelId: number;

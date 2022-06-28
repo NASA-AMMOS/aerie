@@ -28,6 +28,7 @@ import { defaultSeqBuilder } from './defaultSeqBuilder.js';
 import { CommandSeqJson, Command, Sequence } from './lib/codegen/CommandEDSLPreface.js';
 import { assertOne } from './utils/assertions.js';
 import { Status } from './common.js';
+import { serializeWithTemporal } from './utils/temporalSerializers.js';
 
 const logger = getLogger('app');
 
@@ -350,7 +351,7 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
       return (await piscina.run(
         {
           expansionLogic: expansion.expansionLogic,
-          activityInstance: simulatedActivity,
+          serializedActivityInstance: serializeWithTemporal(simulatedActivity),
           commandTypes,
           activityTypes,
         },

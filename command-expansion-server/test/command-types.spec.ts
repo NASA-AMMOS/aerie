@@ -1,5 +1,5 @@
 import { gql, GraphQLClient } from 'graphql-request';
-import { insertCommandDictionary, removeCommandDictionary } from './utils/CommandDictionary.js';
+import { insertCommandDictionary, removeCommandDictionary } from './testUtils/CommandDictionary.js';
 import { Status } from '../src/common.js';
 
 let graphqlClient: GraphQLClient;
