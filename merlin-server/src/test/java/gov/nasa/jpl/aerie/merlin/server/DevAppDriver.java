@@ -32,7 +32,7 @@ public final class DevAppDriver {
 
     final ConstraintsDSLCompilationService constraintsDSLCompilationService;
     try {
-      constraintsDSLCompilationService = new ConstraintsDSLCompilationService(typescriptCodeGenerationService);
+      constraintsDSLCompilationService = new ConstraintsDSLCompilationService(typescriptCodeGenerationService, fixtures.planRepository);
     } catch (IOException e) {
       throw new Error("Failed to start ConstraintsDSLCompilationService", e);
     }

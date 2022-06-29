@@ -26,7 +26,7 @@ public interface MissionModelService {
   Map<String, Constraint> getConstraints(String missionModelId)
   throws NoSuchMissionModelException;
 
-  Map<String, ValueSchema> getStatesSchemas(String missionModelId)
+  Map<String, ValueSchema> getStatesSchemas(final String missionModelId)
   throws NoSuchMissionModelException;
   Map<String, ActivityType> getActivityTypes(String missionModelId)
   throws NoSuchMissionModelException;

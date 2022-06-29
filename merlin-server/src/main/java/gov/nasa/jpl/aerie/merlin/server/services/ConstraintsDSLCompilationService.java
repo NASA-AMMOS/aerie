@@ -3,10 +3,14 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.merlin.server.models.ConstraintsCompilationError;
 import gov.nasa.jpl.aerie.constraints.json.ConstraintParsers;
+import gov.nasa.jpl.aerie.merlin.server.models.Plan;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import org.json.JSONObject;
 
 import javax.json.Json;
@@ -21,8 +25,9 @@ public class ConstraintsDSLCompilationService {
 
   private final Process nodeProcess;
   private final ConstraintsCodeGenService typescriptCodeGenerationService;
+  private final PlanRepository planRepository;
 
-  public ConstraintsDSLCompilationService(final ConstraintsCodeGenService typescriptCodeGenerationService)
+  public ConstraintsDSLCompilationService(final ConstraintsCodeGenService typescriptCodeGenerationService, final PlanRepository planRepository)
   throws IOException
   {
     this.typescriptCodeGenerationService = typescriptCodeGenerationService;
@@ -40,6 +45,8 @@ public class ConstraintsDSLCompilationService {
     if (!Objects.equals(this.nodeProcess.inputReader().readLine(), "pong")) {
       throw new Error("Could not create node subprocess");
     }
+
+    this.planRepository = planRepository;
   }
 
   public void close() {
@@ -49,10 +56,11 @@ public class ConstraintsDSLCompilationService {
   /**
    * NOTE: This method is not re-entrant (assumes only one call to this method is running at any given time)
    */
-  synchronized public ConstraintsDSLCompilationResult compileConstraintsDSL(final String missionModelId, final String constraintTypescript)
-  throws MissionModelService.NoSuchMissionModelException
+  synchronized public ConstraintsDSLCompilationResult compileConstraintsDSL(final PlanId planId, final String missionModelId, final String constraintTypescript)
+  throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException
   {
-    final var missionModelGeneratedCode = JSONObject.quote(this.typescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelId));
+    final var missionModelGeneratedCode = JSONObject.quote(this.typescriptCodeGenerationService.generateTypescriptTypesFromPlan(planId, missionModelId, this.planRepository));
+
 
     /*
      * PROTOCOL:
