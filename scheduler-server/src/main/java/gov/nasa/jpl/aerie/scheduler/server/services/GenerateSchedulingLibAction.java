@@ -10,11 +10,9 @@ import java.util.Map;
 import java.util.Objects;
 
 public record GenerateSchedulingLibAction(
-    TypescriptCodeGenerationService schedulingCodeGenService,
     MissionModelService missionModelService
 ) {
   public GenerateSchedulingLibAction {
-    Objects.requireNonNull(schedulingCodeGenService);
     Objects.requireNonNull(missionModelService);
   }
 

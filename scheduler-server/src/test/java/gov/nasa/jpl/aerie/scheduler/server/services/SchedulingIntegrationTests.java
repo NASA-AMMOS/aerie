@@ -54,7 +54,7 @@ public class SchedulingIntegrationTests {
 
   @BeforeAll
   void setup() throws IOException {
-    this.schedulingDSLCompiler = new SchedulingDSLCompilationService(new TypescriptCodeGenerationService());
+    this.schedulingDSLCompiler = new SchedulingDSLCompilationService();
   }
 
   @Test
