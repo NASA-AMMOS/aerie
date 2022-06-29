@@ -41,10 +41,9 @@ public record GenerateSchedulingLibAction(
       final var windowsDsl = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "constraints", "constraints-edsl-fluent-api.ts"));
       final var windowsAst = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "constraints", "constraints-ast.ts"));
 
-      final var generatedSchedulerCode = TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelService.getMissionModelTypes(missionModelId));
-
       final var missionModelTypes = missionModelService.getMissionModelTypes(missionModelId);
 
+      final var generatedSchedulerCode = TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelTypes);
       final var generatedConstraintsCode = gov.nasa.jpl.aerie.constraints.TypescriptCodeGenerationService
           .generateTypescriptTypes(
               SchedulingDSLCompilationService.activityTypes(missionModelTypes),
