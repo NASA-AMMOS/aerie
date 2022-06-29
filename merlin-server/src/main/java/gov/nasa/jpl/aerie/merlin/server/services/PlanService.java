@@ -23,5 +23,5 @@ public interface PlanService {
 
   long addExternalDataset(PlanId planId, Timestamp datasetStart, ProfileSet profileSet) throws NoSuchPlanException;
 
-  Pair<Map<String, List<Pair<Duration, RealDynamics>>>, Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>> getExternalProfiles(PlanId planId) throws NoSuchPlanException;
+  ProfileSet getExternalProfiles(PlanId planId) throws NoSuchPlanException;
 }

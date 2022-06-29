@@ -105,6 +105,9 @@ public final class GetSimulationResultsAction {
 
     final var results$ = this.simulationService.get(planId, revisionData);
 
+    //grab external profiles, as a tuple of sets of real and discrete profiles. results$ doesn't contain this.
+    final var externalProfiles = this.planService.getExternalProfiles(planId);
+
     final var activities = new ArrayList<ActivityInstance>();
     final var simulatedActivities = results$
         .map(r -> r.simulatedActivities)
@@ -123,9 +126,16 @@ public final class GetSimulationResultsAction {
           activity.arguments(),
           Window.between(activityOffset, activityOffset.plus(activity.duration()))));
     }
-    final var _discreteProfiles = results$
+
+
+    final var _discreteProfiles = new HashMap<>(results$
         .map(r -> r.discreteProfiles)
-        .orElseGet(Collections::emptyMap);
+        .orElseGet(Collections::emptyMap));
+    //add in the external profiles as they require the same treatment
+    for (final var toMerge : externalProfiles.discreteProfiles().entrySet()) {
+      _discreteProfiles.put(toMerge.getKey(), toMerge.getValue());
+    }
+
     final var discreteProfiles = new HashMap<String, DiscreteProfile>(_discreteProfiles.size());
     for (final var entry : _discreteProfiles.entrySet()) {
       final var pieces = new ArrayList<DiscreteProfilePiece>(entry.getValue().getRight().size());
@@ -144,10 +154,18 @@ public final class GetSimulationResultsAction {
 
       discreteProfiles.put(entry.getKey(), new DiscreteProfile(pieces));
     }
-    final var _realProfiles = results$
+
+
+    final var _realProfiles = new HashMap<>(results$
         .map(r -> r.realProfiles)
-        .orElseGet(Collections::emptyMap);
-    final var realProfiles = new HashMap<String, LinearProfile>();
+        .orElseGet(Collections::emptyMap));
+    final var realProfiles = new HashMap<String, LinearProfile>(); //TODO: update this when more profile types are added
+
+    //add in the external profiles as they require the same treatment
+    for (final var toMerge : externalProfiles.realProfiles().entrySet()) {
+      _realProfiles.put(toMerge.getKey(), toMerge.getValue());
+    }
+
     for (final var entry : _realProfiles.entrySet()) {
       final var pieces = new ArrayList<LinearProfilePiece>(entry.getValue().size());
 
@@ -167,18 +185,6 @@ public final class GetSimulationResultsAction {
       realProfiles.put(entry.getKey(), new LinearProfile(pieces));
     }
 
-    /* INPUT: planid, OUTPUT: profiles, potentially returned as a pair
-    1. get dataset ids of external profiles, using planid as input
-    2a. get all profile ids associated with each dataset id
-    2b. get all the segments using said profile ids. the actual data is stored in dynamics, as a Dynamics object
-
-    final var _externalRealProfiles = new HashMap<>()
-        for( entry: )
-          put from query
-
-      do same for discrete external :)
-    */
-    final var externalProfiles = this.planService.getExternalProfiles(planId);
 
     final var planDuration = Duration.of(
         plan.startTimestamp.toInstant().until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS),

@@ -289,7 +289,7 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Pair<Map<String, List<Pair<Duration, RealDynamics>>>, Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>> getExternalProfiles(final PlanId planId) throws NoSuchPlanException
+  public ProfileSet getExternalProfiles(final PlanId planId) throws NoSuchPlanException
   {
 
 
@@ -305,19 +305,33 @@ public final class PostgresPlanRepository implements PlanRepository {
 
       final var planRecord = getPlanRecord(connection, planId);
       final var window = new Window(planRecord.startTime(), planRecord.endTime()); //TODO: get window from plan_dataset table; the dataset does not necessarily start at plan start (we desire to use offset_from_plan_start)
-      //now, using this window, make use of the method that takes window and plan record stuff to get profile ids
-      //then get segments, create a duration,dynamics tuple list for real and not real per that method
+
+      //now, using this window, make use of the method that takes window and plan record stuff to get profiles (including segments)
+      Map<String, List<Pair<Duration, RealDynamics>>> realProfiles = new HashMap<>(Map.of());
+      Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles = new HashMap<>(Map.of());
+
+      for (long datasetId : datasetIds) {
+        final var profiles = ProfileRepository.getProfiles(connection, datasetId, window);
+        for (var discProf : profiles.discreteProfiles().entrySet()) {
+          if (!discProf.getValue().getRight().isEmpty()) {
+            discreteProfiles.put(discProf.getKey(), discProf.getValue());
+          }
+        }
+        for (var realProf : profiles.realProfiles().entrySet()) {
+          if(!realProf.getValue().isEmpty()) {
+            realProfiles.put(realProf.getKey(), realProf.getValue());
+          }
+        }
+      }
+
       //return the map
-
-
+      return new ProfileSet(realProfiles, discreteProfiles);
 
     } catch (final SQLException ex) {
-      throw new DatabaseException(
-          "Failed to add external dataset to plan with id `%s`".formatted(planId), ex);
+      throw new DatabaseException("Failed to add external dataset to plan with id `%s`".formatted(planId), ex);
+    } catch (final Exception e) {
+      throw e;
     }
-
-
-    return null;
   }
 
   private PlanRecord getPlanRecord(
@@ -398,9 +412,9 @@ public final class PostgresPlanRepository implements PlanRepository {
   private static List<Long> getPlanDataset(
       final Connection connection,
       final PlanId planId
-  ) throws SQLException {
+  ) throws SQLException, NoSuchPlanException {
     try (final var getPlanDatasetAction = new GetPlanDatasetAction(connection)) {
-      return getPlanDatasetAction.get(planId);
+      return getPlanDatasetAction.get(planId.id());
     }
   }
 

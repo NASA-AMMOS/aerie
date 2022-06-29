@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
+import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
@@ -80,9 +81,9 @@ public final class StubPlanService implements PlanService {
   }
 
   @Override
-  public Pair<Map<String, List<Pair<Duration, RealDynamics>>>, Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>> getExternalProfiles(
+  public ProfileSet getExternalProfiles(
       final PlanId planId) throws NoSuchPlanException
   {
-    return Pair.of(Map.of(), Map.of());
+    return new ProfileSet(Map.of(), Map.of());
   }
 }
