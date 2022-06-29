@@ -47,7 +47,7 @@ public final class PostgresParsers {
           realProfileTypeP);
 
   public static Duration parseOffset(final ResultSet resultSet, final int index, final Timestamp epoch) throws SQLException {
-    final var interval = Interval.parse(resultSet.getString(index));
+    final var interval = Interval.parse(resultSet.getString(index)); //startOffset
     final Timestamp end = new Timestamp((Instant)interval.addTo(epoch.toInstant()));
     return Duration.of(epoch.microsUntil(end), Duration.MICROSECONDS);
   }

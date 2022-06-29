@@ -3,7 +3,10 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
@@ -17,6 +20,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.stream.JsonParsingException;
@@ -284,6 +288,38 @@ public final class PostgresPlanRepository implements PlanRepository {
     }
   }
 
+  @Override
+  public Pair<Map<String, List<Pair<Duration, RealDynamics>>>, Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>> getExternalProfiles(final PlanId planId) throws NoSuchPlanException
+  {
+
+
+    try (final var connection = this.dataSource.getConnection()) {
+      /*
+      INPUT: planid, OUTPUT: profiles, potentially returned as a pair
+      1. get dataset ids of external profiles, using planid as input
+      2a. get all profile ids associated with each dataset id
+      2b. get all the segments using said profile ids. the actual data is stored in dynamics, as a Dynamics object
+       */
+
+      final var datasetIds = getPlanDataset(connection, planId);
+
+      final var planRecord = getPlanRecord(connection, planId);
+      final var window = new Window(planRecord.startTime(), planRecord.endTime()); //TODO: get window from plan_dataset table; the dataset does not necessarily start at plan start (we desire to use offset_from_plan_start)
+      //now, using this window, make use of the method that takes window and plan record stuff to get profile ids
+      //then get segments, create a duration,dynamics tuple list for real and not real per that method
+      //return the map
+
+
+
+    } catch (final SQLException ex) {
+      throw new DatabaseException(
+          "Failed to add external dataset to plan with id `%s`".formatted(planId), ex);
+    }
+
+
+    return null;
+  }
+
   private PlanRecord getPlanRecord(
       final Connection connection,
       final PlanId planId
@@ -356,6 +392,15 @@ public final class PostgresPlanRepository implements PlanRepository {
       final var pdr = createPlanDatasetAction.apply(planId.id(), planStart, datasetStart);
       createProfileSegmentPartitionAction.apply(pdr.datasetId());
       return pdr;
+    }
+  }
+
+  private static List<Long> getPlanDataset(
+      final Connection connection,
+      final PlanId planId
+  ) throws SQLException {
+    try (final var getPlanDatasetAction = new GetPlanDatasetAction(connection)) {
+      return getPlanDatasetAction.get(planId);
     }
   }
 

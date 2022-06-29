@@ -11,7 +11,9 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
@@ -28,6 +30,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class GetSimulationResultsAction {
+
   public sealed interface Response {
     record Pending(long simulationDatasetId) implements Response {}
     record Incomplete(long simulationDatasetId) implements Response {}
@@ -36,6 +39,7 @@ public final class GetSimulationResultsAction {
   }
 
   private final PlanService planService;
+
   private final MissionModelService missionModelService;
   private final SimulationService simulationService;
   private final ConstraintsDSLCompilationService constraintsDSLCompilationService;
@@ -162,6 +166,19 @@ public final class GetSimulationResultsAction {
 
       realProfiles.put(entry.getKey(), new LinearProfile(pieces));
     }
+
+    /* INPUT: planid, OUTPUT: profiles, potentially returned as a pair
+    1. get dataset ids of external profiles, using planid as input
+    2a. get all profile ids associated with each dataset id
+    2b. get all the segments using said profile ids. the actual data is stored in dynamics, as a Dynamics object
+
+    final var _externalRealProfiles = new HashMap<>()
+        for( entry: )
+          put from query
+
+      do same for discrete external :)
+    */
+    final var externalProfiles = this.planService.getExternalProfiles(planId);
 
     final var planDuration = Duration.of(
         plan.startTimestamp.toInstant().until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS),

@@ -1,7 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
@@ -11,7 +14,9 @@ import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
+import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -74,4 +79,10 @@ public final class StubPlanService implements PlanService {
     return 0;
   }
 
+  @Override
+  public Pair<Map<String, List<Pair<Duration, RealDynamics>>>, Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>> getExternalProfiles(
+      final PlanId planId) throws NoSuchPlanException
+  {
+    return Pair.of(Map.of(), Map.of());
+  }
 }
