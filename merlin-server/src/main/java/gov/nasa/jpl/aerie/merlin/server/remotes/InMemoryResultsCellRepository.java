@@ -79,7 +79,7 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
 
   public static final class InMemoryCell implements ResultsProtocol.OwnerRole {
     private volatile boolean canceled = false;
-    private volatile ResultsProtocol.State state = new ResultsProtocol.State.Incomplete();
+    private volatile ResultsProtocol.State state = new ResultsProtocol.State.Incomplete(0);
     public final PlanId planId;
     public final long planRevision;
 
@@ -110,7 +110,7 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
             this.state.getClass().getCanonicalName()));
       }
 
-      this.state = new ResultsProtocol.State.Success(results);
+      this.state = new ResultsProtocol.State.Success(0, results);
     }
 
     @Override
@@ -120,7 +120,7 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
             this.state.getClass().getCanonicalName()));
       }
 
-      this.state = new ResultsProtocol.State.Failed(reason);
+      this.state = new ResultsProtocol.State.Failed(0, reason);
     }
 
     public boolean isEqualTo(final InMemoryCell other) {

@@ -7,16 +7,16 @@ public final class ResultsProtocol {
 
   public sealed interface State {
     /** Simulation in enqueued. */
-    record Pending() implements State {}
+    record Pending(long simulationDatasetId) implements State {}
 
     /** Simulation in progress, but no results to share yet. */
-    record Incomplete() implements State {}
+    record Incomplete(long simulationDatasetId) implements State {}
 
     /** Simulation complete -- results now available. */
-    record Success(SimulationResults results) implements State {}
+    record Success(long simulationDatasetId, SimulationResults results) implements State {}
 
     /** Simulation failed -- don't try to re-run without changing some of the inputs. */
-    record Failed(String reason) implements State {}
+    record Failed(long simulationDatasetId, String reason) implements State {}
   }
 
   public interface ReaderRole {
