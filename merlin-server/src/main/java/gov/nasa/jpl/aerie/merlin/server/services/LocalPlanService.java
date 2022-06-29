@@ -48,7 +48,7 @@ public final class LocalPlanService implements PlanService {
   }
 
   @Override
-  public Pair<Map<String, List<Pair<Duration, RealDynamics>>>, Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>> getExternalProfiles(
+  public ProfileSet getExternalProfiles(
       final PlanId planId) throws NoSuchPlanException
   {
     return this.planRepository.getExternalProfiles(planId);

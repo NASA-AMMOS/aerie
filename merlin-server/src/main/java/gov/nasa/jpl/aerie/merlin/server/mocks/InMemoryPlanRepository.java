@@ -1,10 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
@@ -165,9 +162,9 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Pair<Map<String, List<Pair<Duration, RealDynamics>>>, Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>> getExternalProfiles(final PlanId planId) throws NoSuchPlanException
+  public ProfileSet getExternalProfiles(final PlanId planId) throws NoSuchPlanException
   {
-    return Pair.of(Map.of(), Map.of());
+    return new ProfileSet(Map.of(), Map.of());
   }
 
   private class MockPlanTransaction implements PlanTransaction {
