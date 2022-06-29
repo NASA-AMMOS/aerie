@@ -49,7 +49,7 @@ public final class AerieAppDriver {
 
     final ConstraintsDSLCompilationService constraintsDSLCompilationService;
     try {
-      constraintsDSLCompilationService = new ConstraintsDSLCompilationService(typescriptCodeGenerationService);
+      constraintsDSLCompilationService = new ConstraintsDSLCompilationService(typescriptCodeGenerationService, stores.plans());
     } catch (IOException e) {
       throw new Error("Failed to start ConstraintsDSLCompilationService", e);
     }

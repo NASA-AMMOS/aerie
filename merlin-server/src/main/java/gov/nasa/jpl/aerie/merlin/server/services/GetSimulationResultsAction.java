@@ -207,6 +207,7 @@ public final class GetSimulationResultsAction {
 
       // TODO: cache these results
       final var constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(
+          planId,
           plan.missionModelId,
           constraint.definition()
       );

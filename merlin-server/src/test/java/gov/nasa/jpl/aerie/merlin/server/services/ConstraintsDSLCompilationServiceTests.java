@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.constraints.tree.*;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryPlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.junit.jupiter.api.AfterAll;
@@ -24,7 +25,8 @@ class ConstraintsDSLCompilationServiceTests {
   @BeforeAll
   void setUp() throws IOException {
     constraintsDSLCompilationService = new ConstraintsDSLCompilationService(
-        new TypescriptCodeGenerationServiceAdapter(new StubMissionModelService())
+        new TypescriptCodeGenerationServiceAdapter(new StubMissionModelService()),
+        new InMemoryPlanRepository()
     );
   }
 
@@ -36,7 +38,7 @@ class ConstraintsDSLCompilationServiceTests {
   private <T> void checkSuccessfulCompilation(String constraint, Expression<T> expected)
   {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult result;
-    result = assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL("abc", constraint));
+    result = assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL(new PlanId(1), "abc", constraint));
     if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
       assertEquals(expected, r.constraintExpression());
     } else if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error r) {
@@ -47,7 +49,9 @@ class ConstraintsDSLCompilationServiceTests {
   private void checkFailedCompilation(String constraint, String error) {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error actualErrors;
     actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL(
-        "abc", constraint
+        new PlanId(1),
+        "abc",
+        constraint
     ));
     if (actualErrors.errors()
                     .stream()

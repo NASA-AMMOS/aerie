@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.server.mocks.FakeFile;
+import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryPlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.ConstraintsDSLCompilationService;
@@ -40,12 +41,13 @@ public final class MerlinBindingsTest {
   public static void setupServer() {
     final var planApp = new StubPlanService();
     final var missionModelApp = new StubMissionModelService();
+    final var planRepository = new InMemoryPlanRepository();
 
     final var typescriptCodeGenerationService = new TypescriptCodeGenerationServiceAdapter(missionModelApp);
 
     final ConstraintsDSLCompilationService constraintsDSLCompilationService;
     try {
-      constraintsDSLCompilationService = new ConstraintsDSLCompilationService(typescriptCodeGenerationService);
+      constraintsDSLCompilationService = new ConstraintsDSLCompilationService(typescriptCodeGenerationService, planRepository);
     } catch (IOException e) {
       throw new Error("Failed to start ConstraintsDSLCompilationService", e);
     }
