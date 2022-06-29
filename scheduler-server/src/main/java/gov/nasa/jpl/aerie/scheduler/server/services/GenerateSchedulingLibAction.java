@@ -40,7 +40,8 @@ public record GenerateSchedulingLibAction(
       final var schedulerAst = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "scheduler-ast.ts"));
       final var windowsDsl = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "constraints", "constraints-edsl-fluent-api.ts"));
       final var windowsAst = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "constraints", "constraints-ast.ts"));
-      final var generatedSchedulerCode = this.schedulingCodeGenService.generateTypescriptTypesForMissionModel(missionModelService, missionModelId);
+
+      final var generatedSchedulerCode = TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelService.getMissionModelTypes(missionModelId));
 
       final var missionModelTypes = missionModelService.getMissionModelTypes(missionModelId);
 
