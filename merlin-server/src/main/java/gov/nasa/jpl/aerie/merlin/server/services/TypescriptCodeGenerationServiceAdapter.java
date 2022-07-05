@@ -29,9 +29,11 @@ public class TypescriptCodeGenerationServiceAdapter implements ConstraintsCodeGe
   }
 
   @Override
-  public String generateTypescriptTypesFromPlan(PlanId planId, final String missionModelId, PlanRepository planRepository)
+  public String generateTypescriptTypesFromPlan(PlanId planId, PlanRepository planRepository)
   throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException
   {
+    //TODO: grab mission model id.
+    String missionModelId = planRepository.getPlan(planId).missionModelId;
     return TypescriptCodeGenerationService
         .generateTypescriptTypes(
             activityTypes(missionModelService, missionModelId),

@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 
 public interface ConstraintsCodeGenService {
-  String generateTypescriptTypesFromPlan(PlanId planId, String missionModelId, PlanRepository planRepository)
+  String generateTypescriptTypesFromPlan(PlanId planId, PlanRepository planRepository)
   throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException;
 
   String generateTypescriptTypesFromMissionModel(String missionModelId)

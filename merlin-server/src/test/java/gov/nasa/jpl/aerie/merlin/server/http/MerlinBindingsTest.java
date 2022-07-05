@@ -66,7 +66,7 @@ public final class MerlinBindingsTest {
     SERVER = Javalin.create(config -> {
       config.showJavalinBanner = false;
       config.enableCorsForAllOrigins();
-      config.registerPlugin(new MerlinBindings(missionModelApp, planApp, simulationAction, generateConstraintsLibAction));
+      config.registerPlugin(new MerlinBindings(missionModelApp, planApp, simulationAction, generateConstraintsLibAction, planRepository));
     });
 
     SERVER.start(54321); // Use likely unused port to avoid clash with any currently hosted port 80 services

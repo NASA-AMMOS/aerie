@@ -53,15 +53,25 @@ public class ConstraintsDSLCompilationService {
     this.nodeProcess.destroy();
   }
 
+  synchronized public ConstraintsDSLCompilationResult compilePlanConstraintsDSL(final PlanId planId, final String constraintTypescript)
+  throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException
+  {
+    final var missionModelGeneratedCode = JSONObject.quote(this.typescriptCodeGenerationService.generateTypescriptTypesFromPlan(planId, this.planRepository));
+    return compileConstraintsDSL(constraintTypescript, missionModelGeneratedCode);
+  }
+
+  synchronized public ConstraintsDSLCompilationResult compileModelConstraintsDSL(final String missionModelId, final String constraintTypescript)
+  throws MissionModelService.NoSuchMissionModelException
+  {
+    final var missionModelGeneratedCode = JSONObject.quote(this.typescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelId));
+    return compileConstraintsDSL(constraintTypescript, missionModelGeneratedCode);
+  }
+
   /**
    * NOTE: This method is not re-entrant (assumes only one call to this method is running at any given time)
    */
-  synchronized public ConstraintsDSLCompilationResult compileConstraintsDSL(final PlanId planId, final String missionModelId, final String constraintTypescript)
-  throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException
+  synchronized public ConstraintsDSLCompilationResult compileConstraintsDSL(final String constraintTypescript, final String missionModelGeneratedCode)
   {
-    final var missionModelGeneratedCode = JSONObject.quote(this.typescriptCodeGenerationService.generateTypescriptTypesFromPlan(planId, missionModelId, this.planRepository));
-
-
     /*
      * PROTOCOL:
      *   denote this java program as JAVA, and the node subprocess as NODE

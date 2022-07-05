@@ -73,7 +73,8 @@ public final class AerieAppDriver {
         missionModelController,
         planController,
         simulationAction,
-        generateConstraintsLibAction
+        generateConstraintsLibAction,
+        stores.plans()
     );
 
     // Configure an HTTP server.

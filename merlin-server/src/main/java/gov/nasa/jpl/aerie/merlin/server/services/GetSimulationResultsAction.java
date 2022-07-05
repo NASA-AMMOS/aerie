@@ -90,14 +90,15 @@ public final class GetSimulationResultsAction {
     final var plan = this.planService.getPlan(planId);
     final var revisionData = this.planService.getPlanRevisionData(planId);
 
-    final var constraintJsons = new HashMap<String, Constraint>();
+    final var modelConstraintJsons = new HashMap<String, Constraint>();
+    final var planConstraintJsons = new HashMap<String, Constraint>();
 
     try {
       this.missionModelService.getConstraints(plan.missionModelId).forEach(
-          (name, constraint) -> constraintJsons.put("model/" + name, constraint)
+          (name, constraint) -> modelConstraintJsons.put("model/" + name, constraint)
       );
       this.planService.getConstraintsForPlan(planId).forEach(
-          (name, constraint) -> constraintJsons.put("plan/" + name, constraint)
+          (name, constraint) -> planConstraintJsons.put("plan/" + name, constraint)
       );
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       throw new RuntimeException("Assumption falsified -- mission model for existing plan does not exist");
@@ -197,7 +198,7 @@ public final class GetSimulationResultsAction {
         discreteProfiles);
 
     final var violations = new HashMap<String, List<Violation>>();
-    for (final var entry : constraintJsons.entrySet()) {
+    for (final var entry : planConstraintJsons.entrySet()) {
 
       // Pipeline switch
       // To remove the old constraints pipeline, delete the `useNewConstraintPipeline` variable
@@ -205,9 +206,60 @@ public final class GetSimulationResultsAction {
       final var constraint = entry.getValue();
       final Expression<List<Violation>> expression;
 
+      //TODO: add switch to check if this is model or plan
       // TODO: cache these results
-      final var constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(
+      final var constraintCompilationResult = constraintsDSLCompilationService.compilePlanConstraintsDSL(
           planId,
+          constraint.definition()
+      );
+
+      if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success success) {
+        expression = success.constraintExpression();
+      } else if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error error) {
+        throw new Error("Constraint compilation failed: " + error);
+      } else {
+        throw new Error("Unhandled variant of ConstraintsDSLCompilationResult: " + constraintCompilationResult);
+      }
+
+      final var violationEvents = new ArrayList<Violation>();
+      try {
+        violationEvents.addAll(expression.evaluate(preparedResults));
+      } catch (final InputMismatchException ex) {
+        // @TODO Need a better way to catch and propagate the exception to the
+        // front end and to log the evaluation failure. This is captured in AERIE-1285.
+      }
+
+
+      if (violationEvents.isEmpty()) continue;
+
+      /* TODO: constraint.evaluate returns an List<Violations> with a single empty unpopulated Violation
+          which prevents the above condition being sufficient in all cases. A ticket AERIE-1230 has been
+          created to account for refactoring and removing the need for this condition. */
+      if (violationEvents.size() == 1 && violationEvents.get(0).violationWindows.isEmpty()) continue;
+
+      final var names = new HashSet<String>();
+      expression.extractResources(names);
+      final var resourceNames = new ArrayList<>(names);
+      final var violationEventsWithNames = new ArrayList<Violation>();
+      violationEvents.forEach(violation -> violationEventsWithNames.add(new Violation(
+          violation.activityInstanceIds,
+          resourceNames,
+          violation.violationWindows)));
+
+      violations.put(entry.getKey(), violationEventsWithNames);
+    }
+
+    for (final var entry : modelConstraintJsons.entrySet()) {
+
+      // Pipeline switch
+      // To remove the old constraints pipeline, delete the `useNewConstraintPipeline` variable
+      // and the else branch of this if statement.
+      final var constraint = entry.getValue();
+      final Expression<List<Violation>> expression;
+
+      //TODO: add switch to check if this is model or plan
+      // TODO: cache these results
+      final var constraintCompilationResult = constraintsDSLCompilationService.compileModelConstraintsDSL(
           plan.missionModelId,
           constraint.definition()
       );

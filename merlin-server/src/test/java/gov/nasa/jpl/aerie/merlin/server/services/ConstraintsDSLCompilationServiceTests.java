@@ -38,7 +38,7 @@ class ConstraintsDSLCompilationServiceTests {
   private <T> void checkSuccessfulCompilation(String constraint, Expression<T> expected)
   {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult result;
-    result = assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL(new PlanId(1), "abc", constraint));
+    result = assertDoesNotThrow(() -> constraintsDSLCompilationService.compilePlanConstraintsDSL(new PlanId(1), constraint));
     if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
       assertEquals(expected, r.constraintExpression());
     } else if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error r) {
@@ -48,9 +48,8 @@ class ConstraintsDSLCompilationServiceTests {
 
   private void checkFailedCompilation(String constraint, String error) {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error actualErrors;
-    actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL(
+    actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) assertDoesNotThrow(() -> constraintsDSLCompilationService.compilePlanConstraintsDSL(
         new PlanId(1),
-        "abc",
         constraint
     ));
     if (actualErrors.errors()

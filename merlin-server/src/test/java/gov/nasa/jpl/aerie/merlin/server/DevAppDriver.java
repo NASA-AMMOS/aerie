@@ -52,7 +52,8 @@ public final class DevAppDriver {
     final Javalin javalin = Javalin.create(config -> {
         config.enableDevLogging();
         config.enableCorsForAllOrigins();
-        config.registerPlugin(new MerlinBindings(missionModelController, planController, simulationAction, generateConstraintsLibAction));
+        config.registerPlugin(new MerlinBindings(missionModelController, planController, simulationAction, generateConstraintsLibAction,
+                                                 fixtures.planRepository));
         config.registerPlugin(new LocalAppExceptionBindings());
         config.registerPlugin(new MissionModelRepositoryExceptionBindings());
         config.registerPlugin(new MissionModelExceptionBindings());
