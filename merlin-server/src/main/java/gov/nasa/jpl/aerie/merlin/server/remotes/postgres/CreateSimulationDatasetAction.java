@@ -23,7 +23,8 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
       dataset_id,
       status,
       reason,
-      canceled
+      canceled,
+      id
     """;
 
   private final PreparedStatement statement;
@@ -60,12 +61,15 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
         reason);
     final var canceled = results.getBoolean(4);
 
+    final var simulationDatasetId = results.getLong(5);
+
     return new SimulationDatasetRecord(
         simulationId,
         datasetId,
         state,
         canceled,
-        offsetFromPlanStart
+        offsetFromPlanStart,
+        simulationDatasetId
     );
   }
 

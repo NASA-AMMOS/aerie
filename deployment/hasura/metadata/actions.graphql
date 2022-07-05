@@ -151,6 +151,7 @@ type ResourceType {
 
 type MerlinSimulationResponse {
   status: MerlinSimulationStatus!
+  simulationDatasetId: Int!
   reason: MerlinSimulationFailureReason
 }
 

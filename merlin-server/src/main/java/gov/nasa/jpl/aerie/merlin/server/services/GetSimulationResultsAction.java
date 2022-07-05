@@ -29,10 +29,10 @@ import java.util.Objects;
 
 public final class GetSimulationResultsAction {
   public sealed interface Response {
-    record Pending() implements Response {}
-    record Incomplete() implements Response {}
-    record Failed(String reason) implements Response {}
-    record Complete() implements Response {}
+    record Pending(long simulationDatasetId) implements Response {}
+    record Incomplete(long simulationDatasetId) implements Response {}
+    record Failed(long simulationDatasetId, String reason) implements Response {}
+    record Complete(long simulationDatasetId) implements Response {}
   }
 
   private final PlanService planService;
@@ -57,14 +57,14 @@ public final class GetSimulationResultsAction {
 
     final var response = this.simulationService.getSimulationResults(planId, revisionData);
 
-    if (response instanceof ResultsProtocol.State.Pending) {
-      return new Response.Pending();
-    } else if (response instanceof ResultsProtocol.State.Incomplete) {
-      return new Response.Incomplete();
+    if (response instanceof ResultsProtocol.State.Pending r) {
+      return new Response.Pending(r.simulationDatasetId());
+    } else if (response instanceof ResultsProtocol.State.Incomplete r) {
+      return new Response.Incomplete(r.simulationDatasetId());
     } else if (response instanceof ResultsProtocol.State.Failed r) {
-      return new Response.Failed(r.reason());
+      return new Response.Failed(r.simulationDatasetId(), r.reason());
     } else if (response instanceof ResultsProtocol.State.Success r) {
-      return new Response.Complete();
+      return new Response.Complete(r.simulationDatasetId());
     } else {
       throw new UnexpectedSubtypeError(ResultsProtocol.State.class, response);
     }

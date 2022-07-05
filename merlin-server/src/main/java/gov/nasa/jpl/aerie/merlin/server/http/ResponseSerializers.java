@@ -239,26 +239,30 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeSimulationResultsResponse(final GetSimulationResultsAction.Response response) {
-    if (response instanceof GetSimulationResultsAction.Response.Pending) {
+    if (response instanceof GetSimulationResultsAction.Response.Pending r) {
       return Json
           .createObjectBuilder()
           .add("status", "pending")
+          .add("simulationDatasetId", r.simulationDatasetId())
           .build();
-    } else if (response instanceof GetSimulationResultsAction.Response.Incomplete) {
+    } else if (response instanceof GetSimulationResultsAction.Response.Incomplete r) {
       return Json
           .createObjectBuilder()
           .add("status", "incomplete")
+          .add("simulationDatasetId", r.simulationDatasetId())
           .build();
     } else if (response instanceof GetSimulationResultsAction.Response.Failed r) {
       return Json
           .createObjectBuilder()
           .add("status", "failed")
+          .add("simulationDatasetId", r.simulationDatasetId())
           .add("reason", r.reason())
           .build();
     } else if (response instanceof GetSimulationResultsAction.Response.Complete r) {
       return Json
           .createObjectBuilder()
           .add("status", "complete")
+          .add("simulationDatasetId", r.simulationDatasetId())
           .build();
      } else {
       throw new UnexpectedSubtypeError(GetSimulationResultsAction.Response.class, response);

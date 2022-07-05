@@ -290,10 +290,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
     return Optional.of(
         switch (record.state().status()) {
-          case PENDING -> new ResultsProtocol.State.Pending();
-          case INCOMPLETE -> new ResultsProtocol.State.Incomplete();
-          case FAILED -> new ResultsProtocol.State.Failed(record.state().reason());
-          case SUCCESS -> new ResultsProtocol.State.Success(getSimulationResults(connection, record, planId));
+          case PENDING -> new ResultsProtocol.State.Pending(record.simulationDatasetId());
+          case INCOMPLETE -> new ResultsProtocol.State.Incomplete(record.simulationDatasetId());
+          case FAILED -> new ResultsProtocol.State.Failed(record.simulationDatasetId(), record.state().reason());
+          case SUCCESS -> new ResultsProtocol.State.Success(record.simulationDatasetId(), getSimulationResults(connection, record, planId));
         });
   }
 
