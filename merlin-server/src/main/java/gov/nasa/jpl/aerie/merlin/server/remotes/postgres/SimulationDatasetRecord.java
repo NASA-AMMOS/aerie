@@ -7,4 +7,5 @@ public final record SimulationDatasetRecord(
     long datasetId,
     SimulationStateRecord state,
     boolean canceled,
-    Duration offsetFromPlanStart) {}
+    Duration offsetFromPlanStart,
+    long simulationDatasetId) {}

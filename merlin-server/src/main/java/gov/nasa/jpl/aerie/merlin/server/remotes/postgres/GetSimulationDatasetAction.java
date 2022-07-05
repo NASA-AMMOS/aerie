@@ -16,7 +16,8 @@ import java.util.Optional;
           d.status,
           d.reason,
           d.canceled,
-          d.offset_from_plan_start
+          d.offset_from_plan_start,
+          d.id
       from simulation_dataset as d
       where
         d.dataset_id = ?
@@ -48,6 +49,7 @@ import java.util.Optional;
     final var reason = results.getString(3);
     final var canceled = results.getBoolean(4);
     final var offsetFromPlanStart = PostgresParsers.parseOffset(results, 5, planStart);
+    final var simulationDatasetId = results.getLong(6);
     final var state = new SimulationStateRecord(
         status,
         reason);
@@ -58,7 +60,8 @@ import java.util.Optional;
             datasetId,
             state,
             canceled,
-            offsetFromPlanStart));
+            offsetFromPlanStart,
+            simulationDatasetId));
   }
 
   @Override
