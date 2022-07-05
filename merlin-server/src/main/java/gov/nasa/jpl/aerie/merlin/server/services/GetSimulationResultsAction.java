@@ -6,10 +6,10 @@ import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -17,6 +17,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -199,107 +200,63 @@ public final class GetSimulationResultsAction {
 
     final var violations = new HashMap<String, List<Violation>>();
     for (final var entry : planConstraintJsons.entrySet()) {
-
-      // Pipeline switch
-      // To remove the old constraints pipeline, delete the `useNewConstraintPipeline` variable
-      // and the else branch of this if statement.
-      final var constraint = entry.getValue();
-      final Expression<List<Violation>> expression;
-
-      //TODO: add switch to check if this is model or plan
-      // TODO: cache these results
-      final var constraintCompilationResult = constraintsDSLCompilationService.compilePlanConstraintsDSL(
-          planId,
-          constraint.definition()
-      );
-
-      if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success success) {
-        expression = success.constraintExpression();
-      } else if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error error) {
-        throw new Error("Constraint compilation failed: " + error);
-      } else {
-        throw new Error("Unhandled variant of ConstraintsDSLCompilationResult: " + constraintCompilationResult);
-      }
-
-      final var violationEvents = new ArrayList<Violation>();
-      try {
-        violationEvents.addAll(expression.evaluate(preparedResults));
-      } catch (final InputMismatchException ex) {
-        // @TODO Need a better way to catch and propagate the exception to the
-        // front end and to log the evaluation failure. This is captured in AERIE-1285.
-      }
-
-
-      if (violationEvents.isEmpty()) continue;
-
-      /* TODO: constraint.evaluate returns an List<Violations> with a single empty unpopulated Violation
-          which prevents the above condition being sufficient in all cases. A ticket AERIE-1230 has been
-          created to account for refactoring and removing the need for this condition. */
-      if (violationEvents.size() == 1 && violationEvents.get(0).violationWindows.isEmpty()) continue;
-
-      final var names = new HashSet<String>();
-      expression.extractResources(names);
-      final var resourceNames = new ArrayList<>(names);
-      final var violationEventsWithNames = new ArrayList<Violation>();
-      violationEvents.forEach(violation -> violationEventsWithNames.add(new Violation(
-          violation.activityInstanceIds,
-          resourceNames,
-          violation.violationWindows)));
-
-      violations.put(entry.getKey(), violationEventsWithNames);
+      addViolation(entry, plan, preparedResults, violations);
     }
 
     for (final var entry : modelConstraintJsons.entrySet()) {
+      addViolation(entry, plan, preparedResults, violations);
+    }
 
-      // Pipeline switch
-      // To remove the old constraints pipeline, delete the `useNewConstraintPipeline` variable
-      // and the else branch of this if statement.
-      final var constraint = entry.getValue();
-      final Expression<List<Violation>> expression;
+    return violations;
+  }
 
-      //TODO: add switch to check if this is model or plan
-      // TODO: cache these results
-      final var constraintCompilationResult = constraintsDSLCompilationService.compileModelConstraintsDSL(
-          plan.missionModelId,
-          constraint.definition()
-      );
+  public void addViolation(Map.Entry<String, Constraint> entry, Plan plan, SimulationResults preparedResults, Map<String, List<Violation>> violations)
+  throws MissionModelService.NoSuchMissionModelException {
+    // Pipeline switch
+    // To remove the old constraints pipeline, delete the `useNewConstraintPipeline` variable
+    // and the else branch of this if statement.
+    final var constraint = entry.getValue();
+    final Expression<List<Violation>> expression;
 
-      if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success success) {
-        expression = success.constraintExpression();
-      } else if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error error) {
-        throw new Error("Constraint compilation failed: " + error);
-      } else {
-        throw new Error("Unhandled variant of ConstraintsDSLCompilationResult: " + constraintCompilationResult);
-      }
+    // TODO: cache these results
+    final var constraintCompilationResult = constraintsDSLCompilationService.compileModelConstraintsDSL(
+        plan.missionModelId,
+        constraint.definition()
+    );
 
-      final var violationEvents = new ArrayList<Violation>();
-      try {
-        violationEvents.addAll(expression.evaluate(preparedResults));
-      } catch (final InputMismatchException ex) {
-        // @TODO Need a better way to catch and propagate the exception to the
-        // front end and to log the evaluation failure. This is captured in AERIE-1285.
-      }
+    if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success success) {
+      expression = success.constraintExpression();
+    } else if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error error) {
+      throw new Error("Constraint compilation failed: " + error);
+    } else {
+      throw new Error("Unhandled variant of ConstraintsDSLCompilationResult: " + constraintCompilationResult);
+    }
+
+    final var violationEvents = new ArrayList<Violation>();
+    try {
+      violationEvents.addAll(expression.evaluate(preparedResults));
+    } catch (final InputMismatchException ex) {
+      // @TODO Need a better way to catch and propagate the exception to the
+      // front end and to log the evaluation failure. This is captured in AERIE-1285.
+    }
 
 
-      if (violationEvents.isEmpty()) continue;
+    if (violationEvents.isEmpty()) return;
 
       /* TODO: constraint.evaluate returns an List<Violations> with a single empty unpopulated Violation
           which prevents the above condition being sufficient in all cases. A ticket AERIE-1230 has been
           created to account for refactoring and removing the need for this condition. */
-      if (violationEvents.size() == 1 && violationEvents.get(0).violationWindows.isEmpty()) continue;
+    if (violationEvents.size() == 1 && violationEvents.get(0).violationWindows.isEmpty()) return;
 
-      final var names = new HashSet<String>();
-      expression.extractResources(names);
-      final var resourceNames = new ArrayList<>(names);
-      final var violationEventsWithNames = new ArrayList<Violation>();
-      violationEvents.forEach(violation -> violationEventsWithNames.add(new Violation(
-          violation.activityInstanceIds,
-          resourceNames,
-          violation.violationWindows)));
+    final var names = new HashSet<String>();
+    expression.extractResources(names);
+    final var resourceNames = new ArrayList<>(names);
+    final var violationEventsWithNames = new ArrayList<Violation>();
+    violationEvents.forEach(violation -> violationEventsWithNames.add(new Violation(
+        violation.activityInstanceIds,
+        resourceNames,
+        violation.violationWindows)));
 
-      violations.put(entry.getKey(), violationEventsWithNames);
-    }
-
-    return violations;
+    violations.put(entry.getKey(), violationEventsWithNames);
   }
 }
