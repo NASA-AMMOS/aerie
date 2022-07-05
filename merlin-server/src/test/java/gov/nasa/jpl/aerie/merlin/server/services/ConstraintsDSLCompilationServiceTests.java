@@ -3,8 +3,10 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.constraints.tree.*;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.server.mocks.Fixtures;
 import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryPlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
+import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -21,12 +23,14 @@ import static org.junit.jupiter.api.Assertions.fail;
 class ConstraintsDSLCompilationServiceTests {
   private static final PlanId PLAN_ID = new PlanId(1L);
   ConstraintsDSLCompilationService constraintsDSLCompilationService;
+  Fixtures fixtures;
 
   @BeforeAll
   void setUp() throws IOException {
+    fixtures = new Fixtures();
     constraintsDSLCompilationService = new ConstraintsDSLCompilationService(
         new TypescriptCodeGenerationServiceAdapter(new StubMissionModelService()),
-        new InMemoryPlanRepository()
+        fixtures.planRepository
     );
   }
 
@@ -38,7 +42,7 @@ class ConstraintsDSLCompilationServiceTests {
   private <T> void checkSuccessfulCompilation(String constraint, Expression<T> expected)
   {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult result;
-    result = assertDoesNotThrow(() -> constraintsDSLCompilationService.compilePlanConstraintsDSL(new PlanId(1), constraint));
+    result = assertDoesNotThrow(() -> constraintsDSLCompilationService.compilePlanConstraintsDSL(PLAN_ID, constraint));
     if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
       assertEquals(expected, r.constraintExpression());
     } else if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error r) {
@@ -49,7 +53,7 @@ class ConstraintsDSLCompilationServiceTests {
   private void checkFailedCompilation(String constraint, String error) {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error actualErrors;
     actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) assertDoesNotThrow(() -> constraintsDSLCompilationService.compilePlanConstraintsDSL(
-        new PlanId(1),
+        PLAN_ID,
         constraint
     ));
     if (actualErrors.errors()
