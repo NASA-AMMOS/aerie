@@ -51,6 +51,12 @@ public abstract class HasuraParsers {
           untuple((name, planId, session, requestQuery) -> new HasuraAction<>(name, new HasuraAction.PlanInput(planId), session)),
           $ -> tuple($.name(), $.input().planId(), $.session(), "")));
 
+  public static final JsonParser<HasuraAction<HasuraAction.PlanInput>> hasuraPlanRepositoryActionP
+      = hasuraActionP(productP.field("planId", planIdP).field("missionModelId", stringP))
+      . map(Iso.of(
+          untuple((name, planId, missionModelId, session, requestQuery) -> new HasuraAction<>(name, new HasuraAction.PlanRepositoryInput(planId, missionModelId), session)),
+          $ -> tuple($.name(), $.input().planId(), $.input().missionModelId(), $.session(), "")));
+
   public static final JsonParser<HasuraMissionModelEvent> hasuraMissionModelEventTriggerP
       = productP
       . field("event", productP
