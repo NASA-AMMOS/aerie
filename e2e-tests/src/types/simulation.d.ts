@@ -36,3 +36,33 @@ type SimulationResponseActivity = Omit<Activity, 'id' | 'startTime'> & {
   computedAttributes: string;
   startTimestamp: string;
 };
+
+
+//TODO: adjust this when more than just linear dynamics are possible!
+type RealDynamics = {
+  initial: number;
+  rate: number;
+};
+
+type DiscreteDynamics = true | false;
+
+type Segment = {
+  duration: number;
+  dynamics: RealDynamics | DiscreteDynamics;
+};
+
+type ProfileType = "real" | "discrete"
+
+
+type ProfileSet = {
+  name: string;
+  type: ProfileType;
+  schema?: ValueSchema; //if discrete
+  segments: Segment[];
+};
+
+type ExternalDataset = {
+  plan_id: number;
+  datasetStart: string;
+  profileSet: string;
+};

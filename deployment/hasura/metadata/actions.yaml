@@ -51,10 +51,6 @@ actions:
     definition:
       kind: ""
       handler: http://aerie_scheduler:27185/schedulingDslTypescript
-  - name: constraintsDslTypescript
-    definition:
-      kind: ""
-      handler: http://aerie_merlin:27183/constraintsDslTypescript
   - name: simulate
     definition:
       kind: ""
@@ -79,6 +75,14 @@ actions:
     definition:
       kind: ""
       handler: http://aerie_merlin:27183/validatePlan
+  - name: modelConstraintsDslTypescript
+    definition:
+      kind: ""
+      handler: http://aerie_merlin:27183/modelConstraintsDslTypescript
+  - name: planConstraintsDslTypescript
+    definition:
+      kind: ""
+      handler: http://aerie_merlin:27183/planConstraintsDslTypescript
 custom_types:
   enums:
     - name: MerlinSimulationStatus

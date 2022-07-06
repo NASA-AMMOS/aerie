@@ -41,7 +41,9 @@ const req = {
         const { data } = json;
         return data as T;
       } else if (json?.errors) {
-        console.error(json.errors);
+        console.log(json.errors);
+        console.log(json.errors[0].extensions.internal);
+        console.log(json.errors[0].extensions.internal.response.body.failures);
         const [{ message }] = json.errors;
         throw new Error(message);
       } else {
@@ -58,7 +60,7 @@ const req = {
   },
 
   async healthHasura(request: APIRequestContext): Promise<boolean> {
-    const response = await request.get(`${urls.HASURA_URL}/healthz`);
+    const response = await request.get(`${HASURA_URL}/health`); //NOTE: resource does not exist!
     return response.ok();
   },
 
@@ -192,6 +194,113 @@ const req = {
       startTime: time.getDoyTime(startTime),
     };
   },
+
+  async addActivity(request: APIRequestContext, activity: ActivityInsertInput){
+    const data = await req.hasura(request, gql.ADD_ACTIVITY, { activity });
+    const { id: id, start_offset: start_offset} = data.insert_activity.returning[0];
+    return id;
+  },
+
+  async addExternalProfile(request: APIRequestContext, externalDataset: ExternalDataset) {
+    //TODO: unpack externalProfile - just doing any
+    /*const ADD_EXTERNAL_DATASET = `#graphql
+    mutation addExternalDataset($planId: Int!, $datasetStart: String!){
+      addExternalDataset(
+        planId: $planId,
+        datasetStart: $datasetStart,
+        profileSet: ${externalDataset.profileSet}
+      ) {
+        datasetId
+      }
+    }
+    `*/
+    const ADD_EXTERNAL_DATASET = `#graphql
+    mutation {
+      addExternalDataset(
+        planId: ${externalDataset.plan_id},
+        datasetStart: "2021-001T02:00:00",
+        profileSet: {
+          externalProfile1: {
+            type: "real",
+            segments:[
+              {
+                duration: 30000000,
+                dynamics: {
+                  initial: 50,
+                  rate: -0.5
+                }
+              }
+            ]
+          }
+        }
+      ) {
+        datasetId
+      }
+    }
+    `
+    const data = await req.hasura(request, ADD_EXTERNAL_DATASET, {});
+    const id = data.addExternalDataset.datasetId;
+    return id;
+  },
+
+  async addConstraint(request: APIRequestContext, constraint: Constraint) {
+    const query = `#graphql
+    mutation CreateConstraint($constraint: condition_insert_input!) {
+      createConstraint: insert_condition_one(object: $constraint) {
+        id
+      }
+    }`;
+    const data = await req.hasura(request, query, {constraint});
+    const id = data.createConstraint.id;
+    return id;
+  },
+
+  async getPlanConstraintsDsl(request: APIRequestContext, planId: number) {
+    const query = `#graphql
+    query GetPlanConstraints($planId: Int!) {
+      planConstraintsDslTypescript(
+        planId: $planId
+      ) {
+        typescriptFiles {
+          content
+          filePath
+        }
+      }
+    }`;
+    const data = await req.hasura(request, query, {planId});
+    return data.planConstraintsDslTypescript.typescriptFiles;
+  },
+
+  async getModelConstraintsDsl(request: APIRequestContext, missionModelId: String) {
+    const query = `#graphql
+    query GetModelConstraints($missionModelId: String!) {
+      modelConstraintsDslTypescript(
+        missionModelId: $missionModelId
+      ) {
+        typescriptFiles {
+          content
+          filePath
+        }
+      }
+    }`;
+
+    const data = await req.hasura(request, query, {missionModelId});
+    return data.modelConstraintsDslTypescript.typescriptFiles;
+  },
+
+  async getViolations(request: APIRequestContext, planId: number) {
+    const query = `#graphql
+    query GetViolations($planId: Int!) {
+      constraintViolations(planId: $planId) {
+        constraintViolations
+      }
+    }
+    `
+    const data = await req.hasura(request, query, {planId});
+    console.log(planId);
+    console.log(data);
+    return -1;
+  }
 
 };
 /**

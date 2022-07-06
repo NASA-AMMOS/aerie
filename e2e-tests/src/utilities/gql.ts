@@ -169,6 +169,30 @@ const gql = {
     }
   `,
 
+  ADD_EXTERNAL_DATASET: `#graphql
+  mutation addExternalDataset($planId: Int!, $datasetStart: String!){
+      addExternalDataset(
+        planId: $planId,
+        datasetStart: $datasetStart,
+        profileSet: $profileSet
+      ) {
+        datasetId
+      }
+    }
+  `,
+
+  ADD_ACTIVITY: `#graphql
+  mutation addActivity($activity: activity_insert_input!) {
+    insert_activity(
+      objects: [$activity]
+    ) {
+      returning {
+        id
+        start_offset
+      }
+    }
+  }`
+
 };
 
 export default gql;

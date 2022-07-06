@@ -1,7 +1,7 @@
 type Constraint = {
   definition: string;
   description: string;
-  id: number;
+  //id: number;
   model_id: number | null;
   name: string;
   plan_id: number | null;

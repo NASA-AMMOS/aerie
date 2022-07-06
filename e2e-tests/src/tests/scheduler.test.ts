@@ -157,7 +157,7 @@ test.describe('Scheduling', () => {
     expect(deleted_mission_model_id).toEqual(mission_model_id);
   });
 
-  });
+});
 
 function delay(ms: number) {
   return new Promise( resolve => setTimeout(resolve, ms) );

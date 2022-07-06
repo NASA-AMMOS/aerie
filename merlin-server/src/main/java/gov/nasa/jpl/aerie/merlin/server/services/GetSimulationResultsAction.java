@@ -200,29 +200,39 @@ public final class GetSimulationResultsAction {
 
     final var violations = new HashMap<String, List<Violation>>();
     for (final var entry : planConstraintJsons.entrySet()) {
-      addViolation(entry, plan, preparedResults, violations);
+      addViolation(entry, planId, plan, preparedResults, violations, false);
     }
 
     for (final var entry : modelConstraintJsons.entrySet()) {
-      addViolation(entry, plan, preparedResults, violations);
+      addViolation(entry, planId, plan, preparedResults, violations, true);
     }
 
     return violations;
   }
 
-  public void addViolation(Map.Entry<String, Constraint> entry, Plan plan, SimulationResults preparedResults, Map<String, List<Violation>> violations)
-  throws MissionModelService.NoSuchMissionModelException {
+  public void addViolation(Map.Entry<String, Constraint> entry, PlanId planId, Plan plan, SimulationResults preparedResults, Map<String, List<Violation>> violations, boolean missionConstraint)
+  throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException
+  {
     // Pipeline switch
     // To remove the old constraints pipeline, delete the `useNewConstraintPipeline` variable
     // and the else branch of this if statement.
     final var constraint = entry.getValue();
     final Expression<List<Violation>> expression;
+    ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult constraintCompilationResult;
 
-    // TODO: cache these results
-    final var constraintCompilationResult = constraintsDSLCompilationService.compileModelConstraintsDSL(
-        plan.missionModelId,
-        constraint.definition()
-    );
+    if (missionConstraint) {
+      // TODO: cache these results
+      constraintCompilationResult = constraintsDSLCompilationService.compileModelConstraintsDSL(
+          plan.missionModelId,
+          constraint.definition()
+      );
+    }
+    else {
+      constraintCompilationResult = constraintsDSLCompilationService.compilePlanConstraintsDSL(
+          planId,
+          constraint.definition()
+      );
+    }
 
     if (constraintCompilationResult instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success success) {
       expression = success.constraintExpression();
