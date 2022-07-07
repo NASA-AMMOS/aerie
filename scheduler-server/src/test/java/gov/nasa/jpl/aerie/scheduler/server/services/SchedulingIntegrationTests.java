@@ -95,6 +95,29 @@ public class SchedulingIntegrationTests {
   }
 
   @Test
+  void testRecurrenceGoalNegative() {
+    try {
+      final var results = runScheduler(
+          BANANANATION,
+          List.of(),
+          List.of(new SchedulingGoal(new GoalId(0L), """
+              export default () => Goal.ActivityRecurrenceGoal({
+                activityTemplate: ActivityTemplates.PeelBanana({
+                  peelDirection: "fromStem",
+                }),
+                interval: -25 // one day in microseconds
+              })
+              """, true)));
+    }
+    catch (IllegalArgumentException e) {
+      assertTrue(e.getMessage().contains("Duration passed to RecurrenceGoal as the goal's minimum recurrence interval cannot be negative!"));
+    }
+    catch (Exception e) {
+      fail(e.getMessage());
+    }
+  }
+
+  @Test
   void testEmptyPlanDurationCardinalityGoal() {
     final var results = runScheduler(BANANANATION,
         List.of(),
