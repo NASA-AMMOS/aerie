@@ -41,9 +41,9 @@ const req = {
         const { data } = json;
         return data as T;
       } else if (json?.errors) {
-        console.log(json.errors);
-        console.log(json.errors[0].extensions.internal);
-        console.log(json.errors[0].extensions.internal.response.body.failures);
+        // console.log(json.errors);
+        // console.log(json.errors[0].extensions.internal);
+        // console.log(json.errors[0].extensions.internal.response.body.failures);
         const [{ message }] = json.errors;
         throw new Error(message);
       } else {
@@ -243,6 +243,18 @@ const req = {
     return id;
   },
 
+  async runSimulation(request: APIRequestContext, planId: number) {
+    const query = `#graphql
+    query Simulate($planId: Int!) {
+      simulate(planId: $planId) {
+        status
+      }
+    }
+    `
+    const data = await req.hasura(request, query, {planId});
+    return data.simulate.status;
+  },
+
   async addConstraint(request: APIRequestContext, constraint: Constraint) {
     const query = `#graphql
     mutation CreateConstraint($constraint: condition_insert_input!) {
@@ -297,9 +309,7 @@ const req = {
     }
     `
     const data = await req.hasura(request, query, {planId});
-    console.log(planId);
-    console.log(data);
-    return -1;
+    return data.constraintViolations.constraintViolations;
   }
 
 };

@@ -126,17 +126,6 @@ test.describe('Constraints', () => {
     //}
   });
 
-  test('Create Simulation', async ({request}) => {
-    const simulation: SimulationCreation = {
-      plan_id: plan_id,
-      arguments: {},
-    };
-    const simulation_id = await req.createSimulation(request, simulation);
-    expect(simulation_id).not.toBeNull();
-    expect(simulation_id).toBeDefined();
-    expect(typeof simulation_id).toEqual("number");
-  });
-
   //TODO: check EDSL for constraints - planConstraintsDslTypescript, modelConstraintsDslTypescript
   test('Check eDSL for plan', async ({ request }) => {
     //make sure it has externalProfile1 in it
@@ -145,6 +134,7 @@ test.describe('Constraints', () => {
     expect(plan_edsl).toBeDefined();
     for (let elem of plan_edsl) {
       if (elem.filePath === 'mission-model-generated-code.ts') {
+        //console.log(elem.content);
         expect(elem.content.includes("externalProfile1")).toBeTruthy();
       }
     }
@@ -162,28 +152,48 @@ test.describe('Constraints', () => {
     }
   });
 
+  test('Create Simulation', async ({request}) => {
+    const simulation: SimulationCreation = {
+      plan_id: plan_id,
+      arguments: {},
+    };
+    const simulation_id = await req.createSimulation(request, simulation);
+    expect(simulation_id).not.toBeNull();
+    expect(simulation_id).toBeDefined();
+    expect(typeof simulation_id).toEqual("number");
+  });
 
-  test('Add Constraints', async ({request}) => {
+  test('Run Simulation', async ({request}) => {
+    var simulation_status;
+    do {
+      simulation_status = await req.runSimulation(request, plan_id);
+      expect(simulation_status).not.toBeNull();
+      expect(simulation_status).toBeDefined();
+    }
+    while (simulation_status === "pending" || simulation_status === "incomplete")
+  });
 
+  /* There are 4 things we try, 3 of which are valid:
+      - a mission constraint using only mission model resources (valid)
+      - a plan constraint using only mission model resources (valid)
+      - a plan constraint using plan resources (valid)
+      - a mission constraint using plan resources (invalid)
+      Because the first three should pass constraints checking, they are added and constraints are
+        checked right after.
+      Then separately, the fourth constraint is added, constraints are checked, but thhen failure is expected.
+   */
+  test('Add Valid Constraints', async ({request}) => {
     const constraints: Constraint[] = [
       {
-        definition:"export default (): Constraint => Real.Resource(\"/plant\").greaterThan(196.0)",
+        definition:"export default (): Constraint => Real.Resource(\"/plant\").greaterThan(198.0)",
         description:"test1",
         model_id:mission_model_id,
         name:"MMR.MC",
         plan_id:null,
         summary:"Mission Model Resource, Mission Constraint"
       },
-      /*{
-        definition:"export default (): Constraint => {Real.Resource(\"/externalProfile1\").greaterThan(90.0)}",
-        description:"test2",
-        model_id:mission_model_id,
-        name:"PR.MC",
-        plan_id:null,
-        summary:"Plan Resource, Mission Constraint"
-      },*/
       {
-        definition:"export default (): Constraint => {Real.Resource(\"/plant\").greaterThan(196.0)}",
+        definition:"export default (): Constraint => Real.Resource(\"/plant\").greaterThan(198.0)",
         description:"test3",
         model_id:null,
         name:"MMR.PC",
@@ -191,29 +201,13 @@ test.describe('Constraints', () => {
         summary:"Mission Model Resource, Plan Constraint"
       },
       {
-        definition:"export default (): Constraint => {Real.Resource(\"/externalProfile1\").greaterThan(90.0)}",
+        definition:"export default (): Constraint => Real.Resource(\"externalProfile1\").greaterThan(90.0)",
         description:"test4",
         model_id:null,
         name:"PR.PC",
         plan_id:plan_id,
         summary:"PlanResource, Plan Constraint"
-      }/*,
-      {
-        definition:"export default (): Constraint => {\n\n}",
-        description:"sad",
-        model_id:1,
-        name:"please help me",
-        plan_id:null,
-        summary:"asd"
-      },
-      {
-        definition:"export default (): Constraint => {\n\n}",
-        description:"sad",
-        model_id:1,
-        name:"please help me",
-        plan_id:null,
-        summary:"asd"
-      }*/
+      }
     ];
     for (const constraint of constraints) {
       const simulation_id = await req.addConstraint(request, constraint);
@@ -223,13 +217,41 @@ test.describe('Constraints', () => {
     }
   });
 
-
-  //TODO: compile/check constraints - getViolations
-  test('Compile/Get Violations', async ({ request }) => {
-    console.log(await req.getViolations(request, plan_id));
+  test('Compile/Check Valid Constraints', async ({ request }) => {
+    const constraint_violations = await req.getViolations(request, plan_id);
+    expect(constraint_violations).not.toBeNull();
+    expect(constraint_violations).toBeDefined();
+    expect(constraint_violations["model/MMR.MC"]).not.toBeNull();
+    expect(constraint_violations["plan/MMR.PC"]).not.toBeNull();
+    expect(constraint_violations["plan/PR.PC"]).not.toBeNull();
   });
 
 
+  test('Add Invalid Constraints', async ({request}) => {
+    const constraint: Constraint =
+        {
+          definition:"export default (): Constraint => Real.Resource(\"externalProfile1\").greaterThan(90.0)",
+          description:"test2",
+          model_id:mission_model_id,
+          name:"PR.MC",
+          plan_id:null,
+          summary:"Plan Resource, Mission Constraint"
+        }
+    const simulation_id = await req.addConstraint(request, constraint);
+    expect(simulation_id).not.toBeNull();
+    expect(simulation_id).toBeDefined();
+    expect(typeof simulation_id).toEqual("number");
+  });
+
+  test('Compile/Check Invalid Constraints', async ({ request }) => {
+    try {
+      await req.getViolations(request, plan_id);
+      expect(1).toEqual(2); //should not get here
+    }
+    catch (error) {
+      expect(error.message).toContain("not a valid json response from webhook");
+    }
+  });
 
   test('Delete plan', async ({ request }) => {
     //delete plan
