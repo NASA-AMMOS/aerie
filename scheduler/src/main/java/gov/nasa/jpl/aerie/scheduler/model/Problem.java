@@ -46,7 +46,6 @@ public class Problem {
    * container of all goals in the problem, indexed by name
    */
   protected final List<Goal> goalsOrderedByPriority = new ArrayList<>();
-  private final java.util.HashMap<String, Goal> goalsByName = new java.util.HashMap<>();
 
   /**
    * activity type definitions in the mission model, indexed by name

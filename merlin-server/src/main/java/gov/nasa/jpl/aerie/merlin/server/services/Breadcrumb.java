@@ -1,64 +1,33 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import java.util.Objects;
+public interface Breadcrumb {
 
-public abstract class Breadcrumb {
-  private Breadcrumb() {}
-
-  public interface Visitor<T> {
+  interface Visitor<T> {
     T onListIndex(int index);
     T onMapIndex(String index);
   }
 
-  public abstract <T> T match(final Visitor<T> visitor);
+  <T> T match(final Visitor<T> visitor);
 
-  static public Breadcrumb of(final String index) {
-    final class MapBreadcrumb extends Breadcrumb {
-      private String getIndex() {
-        return index;
-      }
-
+  static Breadcrumb of(final String index) {
+    record MapBreadcrumb(String index) implements Breadcrumb {
       @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onMapIndex(index);
       }
-
-      @Override
-      public boolean equals(final Object object) {
-        return (object instanceof MapBreadcrumb && Objects.equals(((MapBreadcrumb)object).getIndex(), index));
-      }
-
-      @Override
-      public String toString() {
-        return "\"" + index + "\"";
-      }
     }
 
-    return new MapBreadcrumb();
+    return new MapBreadcrumb(index);
   }
 
-  static public Breadcrumb of(final int index) {
-    final class ListBreadcrumb extends Breadcrumb {
-      private int getIndex() {
-        return index;
-      }
-
+  static Breadcrumb of(final int index) {
+    record ListBreadcrumb(int index) implements Breadcrumb {
       @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onListIndex(index);
       }
-
-      @Override
-      public boolean equals(final Object object) {
-        return (object instanceof ListBreadcrumb && Objects.equals(((ListBreadcrumb)object).getIndex(), index));
-      }
-
-      @Override
-      public String toString() {
-        return String.valueOf(index);
-      }
     }
 
-    return new ListBreadcrumb();
+    return new ListBreadcrumb(index);
   }
 }

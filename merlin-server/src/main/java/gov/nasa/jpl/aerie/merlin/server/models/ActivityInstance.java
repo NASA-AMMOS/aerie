@@ -38,4 +38,9 @@ public final class ActivityInstance {
         && Objects.equals(this.arguments, other.arguments)
         );
   }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(type, startTimestamp, arguments);
+  }
 }

@@ -10,7 +10,7 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 
-public class Timestamp {
+public record Timestamp(ZonedDateTime time) {
   // This builder must be used to get optional subsecond values
   // See: https://stackoverflow.com/questions/30090710/java-8-datetimeformatter-parsing-for-optional-fractional-seconds-of-varying-sign
   public static final DateTimeFormatter format =
@@ -19,18 +19,12 @@ public class Timestamp {
           .appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true)
           .toFormatter();
 
-  public final ZonedDateTime time;
-
-  private Timestamp(final ZonedDateTime timestamp) {
-    this.time = timestamp;
-  }
-
   private Timestamp(String timestamp) throws DateTimeParseException {
-    time = LocalDateTime.parse(timestamp, format).atZone(ZoneOffset.UTC);
+    this(LocalDateTime.parse(timestamp, format).atZone(ZoneOffset.UTC));
   }
 
   public Timestamp(Instant instant) {
-    time = instant.atZone(ZoneOffset.UTC);
+    this(instant.atZone(ZoneOffset.UTC));
   }
 
   public static Timestamp fromString(String timestamp) throws DateTimeParseException {
@@ -49,16 +43,8 @@ public class Timestamp {
     return time.toInstant();
   }
 
+  @Override
   public String toString() {
     return format.format(time);
-  }
-
-  public boolean equals(final Object object) {
-    if (!(object instanceof Timestamp)) {
-      return false;
-    }
-
-    final var other = (Timestamp)object;
-    return this.time.equals(other.time);
   }
 }

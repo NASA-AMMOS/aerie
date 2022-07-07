@@ -117,7 +117,7 @@ public class PlanInMemory implements Plan {
     actsById.remove(act.getId());
     var acts = actsByTime.get(act.getStartTime());
     if (acts != null) acts.remove(act);
-    acts = actsByType.get(act.getType().getName());
+    acts = actsByType.get(act.getType());
     if (acts != null) acts.remove(act);
     actsSet.remove(act);
   }

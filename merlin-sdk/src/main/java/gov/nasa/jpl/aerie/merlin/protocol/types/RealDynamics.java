@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol.types;
 
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -27,15 +28,15 @@ public final class RealDynamics {
   }
 
 
-  public final RealDynamics scaledBy(final double scalar) {
+  public RealDynamics scaledBy(final double scalar) {
     return linear(this.initial * scalar, this.rate * scalar);
   }
 
-  public final RealDynamics plus(final RealDynamics other) {
+  public RealDynamics plus(final RealDynamics other) {
     return linear(this.initial + other.initial, this.rate + other.rate);
   }
 
-  public final RealDynamics minus(final RealDynamics other) {
+  public RealDynamics minus(final RealDynamics other) {
     return this.plus(other.scaledBy(-1.0));
   }
 
@@ -94,15 +95,20 @@ public final class RealDynamics {
 
 
   @Override
-  public final String toString() {
+  public String toString() {
     return "λt. " + this.initial + " + t * " + this.rate;
   }
 
   @Override
-  public final boolean equals(final Object o) {
+  public boolean equals(final Object o) {
     if (!(o instanceof RealDynamics)) return false;
     final var other = (RealDynamics) o;
 
     return (this.initial == other.initial) && (this.rate == other.rate);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(initial, rate);
   }
 }

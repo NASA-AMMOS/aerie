@@ -20,31 +20,17 @@ public class TimeExpressionBefore extends TimeExpression {
 
   @Override
   public Window computeTime(final SimulationResults simulationResults, final Plan plan, final Window interval) {
-    var origin =     expr.computeTime(simulationResults, plan, interval);
+    final var origin = expr.computeTime(simulationResults, plan, interval);
     assert(origin.isSingleton());
-    Duration from = origin.start;
+    final var from = origin.start;
 
     Duration res = from;
     for (final var entry : this.operations) {
       res = TimeUtility.performOperation(entry.getKey(), res, entry.getValue());
     }
 
-    Window retRange;
-
-  //if we want an range of possibles
-    if (res.compareTo(from) > 0) {
-      retRange = Window.between(from, res);
-    } else {
-      retRange = Window.between(res, from);
-    }
-    return retRange;
-  }
-
-  @Override
-  public boolean equals(final Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    TimeExpressionBefore that = (TimeExpressionBefore) o;
-    return Objects.equals(expr, that.expr) && Objects.equals(operations, that.operations);
+    return res.compareTo(from) > 0 ? // If we want a range of possibles
+        Window.between(from, res) :
+        Window.between(res, from);
   }
 }
