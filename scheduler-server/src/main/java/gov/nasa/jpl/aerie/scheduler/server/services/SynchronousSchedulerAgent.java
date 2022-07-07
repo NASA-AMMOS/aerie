@@ -131,7 +131,7 @@ public record SynchronousSchedulerAgent(
       }
       problem.setGoals(orderedGoals);
 
-      final var scheduler = createScheduler(planMetadata, problem);
+      final var scheduler = createScheduler(planMetadata, problem, specification.analysisOnly());
       //run the scheduler to find a solution to the posed problem, if any
       final var solutionPlan = scheduler.getNextSolution().orElseThrow(
           () -> new ResultsProtocolFailure("scheduler returned no solution"));
@@ -219,10 +219,10 @@ public record SynchronousSchedulerAgent(
    * @param problem specification of the scheduling problem that needs to be solved
    * @return a new scheduler that is set up to begin providing solutions to the problem
    */
-  private Solver createScheduler(final PlanMetadata planMetadata, final Problem problem) {
+  private Solver createScheduler(final PlanMetadata planMetadata, final Problem problem, final boolean analysisOnly) {
     //TODO: allow for separate control of windows for constraint analysis vs ability to schedule activities
     //      (eg constraint may need view into immutable past to know how to schedule things in the future)
-    final var solver = new PrioritySolver(problem);
+    final var solver = new PrioritySolver(problem, analysisOnly);
     return solver;
   }
 

@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AerieLanderRulesTest {
@@ -36,19 +38,32 @@ public class AerieLanderRulesTest {
     return new PlanInMemory();
   }
 
-  public void schedule(){
+  public void schedule(final boolean analysisOnly){
     smallProblem.setInitialPlan(plan);
     rules.getGlobalConstraints().forEach(smallProblem::add);
-    var solver = new PrioritySolver(smallProblem);
+    var solver = new PrioritySolver(smallProblem, analysisOnly);
     plan = solver.getNextSolution().get();
     solver.printEvaluation();
     AerieLanderTestUtility.printPlan(plan);
   }
 
   @Test
+  public void secondRuleAnalysis(){
+    final var goals = new ArrayList<>(rules.getSecondRuleGoals().values());
+    smallProblem.setGoals(goals);
+    final var activityInstancePresent = new ActivityInstance(rules.getActivityType("IDAMoveArm"), planningHorizon.fromStart("P1D"), Duration.of(20, Duration.MINUTE));
+    plan.add(activityInstancePresent);
+    schedule(true);
+    //assert than the procedural goal has a score equal to 0, that the association has been performed
+    assertEquals(0, plan.getEvaluation().forGoal(goals.get(0)).getScore());
+    //...but that no other activity was inserted to satisfy other goals (as this is analysis-only)
+    assertEquals(1, plan.getActivitiesByTime().size());
+  }
+
+  @Test
   public void firstRule() {
     smallProblem.setGoals(new ArrayList<>(rules.getFirstRuleGoals().values()));
-    schedule();
+    schedule(false);
     var time = planningHorizon.getStartAerie().plus(Duration.MINUTE);
     assertTrue(TestUtility.activityStartingAtTime(plan, time, rules.getActivityType("SSAMonitoring")));
     assertTrue(TestUtility.activityStartingAtTime(plan, time, rules.getActivityType("HeatProbeTemP")));
@@ -59,7 +74,7 @@ public class AerieLanderRulesTest {
   @Test
   public void secondRule() {
     smallProblem.setGoals(new ArrayList<>(rules.getSecondRuleGoals().values()));
-    schedule();
+    schedule(false);
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT23H27M"),
                                         planningHorizon.fromStart("PT23H30M"), rules.getActivityType("IDAHeatersOn")));
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("PT23H29M"),
@@ -100,7 +115,7 @@ public class AerieLanderRulesTest {
     goals.add(rules.generateDSNVisibilityAllocationGoal().getValue());
     goals.addAll(rules.getThirdRuleGoals().values());
     smallProblem.setGoals(goals);
-    schedule();
+    schedule(false);
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1D"),
                                         planningHorizon.fromStart("P1DT8H"), rules.getActivityType("AllocateDSNStation")));
     assertTrue(TestUtility.containsActivity(plan, planningHorizon.fromStart("P1D"),

@@ -7,7 +7,7 @@ create table scheduling_specification (
   horizon_start timestamptz not null,
   horizon_end timestamptz not null,
   simulation_arguments jsonb not null,
-
+  analysis_only boolean not null,
   constraint scheduling_specification_synthetic_key
     primary key(id)
 );
@@ -26,6 +26,8 @@ comment on column scheduling_specification.horizon_end is e''
   'The end of the scheduling horizon within which the scheduler may place activities.';
 comment on column scheduling_specification.simulation_arguments is e''
   'The arguments to use for simulation during scheduling.';
+comment on column scheduling_specification.analysis_only is e''
+  'The boolean stating whether this is an analysis run only';
 
 create function increment_revision_on_update()
   returns trigger

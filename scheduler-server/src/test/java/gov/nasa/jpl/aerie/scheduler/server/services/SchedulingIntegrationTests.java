@@ -808,7 +808,8 @@ public class SchedulingIntegrationTests {
         goalsByPriority,
         Timestamp.fromString("2021-001T00:00:00"),
         Timestamp.fromString("2021-005T00:00:00"),
-        Map.of())));
+        Map.of(),
+        false)));
     final var agent = new SynchronousSchedulerAgent(
         specificationService,
         mockMerlinService,

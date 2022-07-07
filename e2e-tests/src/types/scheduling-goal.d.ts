@@ -44,6 +44,7 @@ type SchedulingSpec = {
   plan_revision: number;
   revision: number;
   simulation_arguments: ArgumentsMap;
+  analysis_only: boolean;
 };
 
 type SchedulingSpecInsertInput = Omit<SchedulingSpec, 'id' | 'revision'>;

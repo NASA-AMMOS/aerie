@@ -45,8 +45,8 @@ class SchedulerDatabaseTests {
     try(final var statement = connection.createStatement()) {
       final var res = statement.executeQuery("""
         insert into scheduling_specification(
-          revision, plan_id, plan_revision, horizon_start, horizon_end, simulation_arguments
-        ) values (0, 0, 0, now(), now(), '{}') returning id;
+          revision, plan_id, plan_revision, horizon_start, horizon_end, simulation_arguments, analysis_only
+        ) values (0, 0, 0, now(), now(), '{}', false) returning id;
       """);
       res.next();
       return res.getInt("id");

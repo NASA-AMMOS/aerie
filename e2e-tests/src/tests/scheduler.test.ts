@@ -93,7 +93,8 @@ test.describe('Scheduling', () => {
       horizon_start: plan_start_timestamp,
       plan_id : plan_id,
       plan_revision : plan_revision,
-      simulation_arguments : {}
+      simulation_arguments : {},
+      analysis_only: false
     }
     specification_id = await req.insertSchedulingSpecification(request, schedulingSpecification);
     expect(specification_id).not.toBeNull();
