@@ -37,7 +37,7 @@ type SimulationResponseActivity = Omit<Activity, 'id' | 'startTime'> & {
   startTimestamp: string;
 };
 
-
+/*
 //TODO: adjust this when more than just linear dynamics are possible!
 type RealDynamics = {
   initial: number;
@@ -60,9 +60,11 @@ type ProfileSet = {
   schema?: ValueSchema; //if discrete
   segments: Segment[];
 };
+*/
 
 type ExternalDataset = {
   plan_id: number;
   datasetStart: string;
-  profileSet: string;
+  profileSet: string; //I was unsuccessful in expanding this into a proper profile set object with respect to getting
+                      // the graphql types right as well. As a result, it is passed as a string and is string formatted!
 };

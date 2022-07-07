@@ -304,22 +304,50 @@ public final class PostgresPlanRepository implements PlanRepository {
       final var datasetIds = getPlanDataset(connection, planId);
 
       final var planRecord = getPlanRecord(connection, planId);
-      final var window = new Window(planRecord.startTime(), planRecord.endTime()); //TODO: get window from plan_dataset table; the dataset does not necessarily start at plan start (we desire to use offset_from_plan_start)
 
       //now, using this window, make use of the method that takes window and plan record stuff to get profiles (including segments)
       Map<String, List<Pair<Duration, RealDynamics>>> realProfiles = new HashMap<>(Map.of());
       Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles = new HashMap<>(Map.of());
 
       for (long datasetId : datasetIds) {
+        final var startOffset = getPlanDatasetStartOffset(connection, planId, datasetId);
+        //final var window = new Window(planRecord.startTime(), planRecord.endTime()); //TODO: get window from plan_dataset table; the dataset does not necessarily start at plan start (we desire to use offset_from_plan_start)
+        final var window = new Window(startOffset, planRecord.endTime());
         final var profiles = ProfileRepository.getProfiles(connection, datasetId, window);
         for (var discProf : profiles.discreteProfiles().entrySet()) {
+          //checks if the same key, this means its a sparse dataset, then make it a sparse set instead of replacing
           if (!discProf.getValue().getRight().isEmpty()) {
-            discreteProfiles.put(discProf.getKey(), discProf.getValue());
+            //if key exists
+            if(discreteProfiles.containsKey(discProf.getKey())) {
+              //grab arraylist for given key
+              var existingIntervals = discreteProfiles.get(discProf.getValue()).getRight();
+              //append new arraylist to that one
+              existingIntervals.addAll(discProf.getValue().getRight());
+              //make a new pair
+              final var newPair = Pair.of(discProf.getValue().getLeft(), existingIntervals);
+              //call put again
+              discreteProfiles.put(discProf.getKey(), newPair);
+            }
+            else { //else, just add the key-value pair like normal
+              discreteProfiles.put(discProf.getKey(), discProf.getValue());
+            }
           }
         }
         for (var realProf : profiles.realProfiles().entrySet()) {
+          //checks if the same key, this means its a sparse dataset, then make it a sparse set instead of replacing
           if(!realProf.getValue().isEmpty()) {
-            realProfiles.put(realProf.getKey(), realProf.getValue());
+            //if key exists
+            if(realProfiles.containsKey(realProf.getKey())) {
+              //grab arraylist for given key
+              var existingIntervals = realProfiles.get(realProf.getKey());
+              //append new arraylist to that one
+              existingIntervals.addAll(realProf.getValue());
+              //call put again
+              realProfiles.put(realProf.getKey(), existingIntervals);
+            }
+            else { //else, just add the key-value pair like normal
+              realProfiles.put(realProf.getKey(), realProf.getValue());
+            }
           }
         }
       }
@@ -415,6 +443,16 @@ public final class PostgresPlanRepository implements PlanRepository {
   ) throws SQLException, NoSuchPlanException {
     try (final var getPlanDatasetAction = new GetPlanDatasetAction(connection)) {
       return getPlanDatasetAction.get(planId.id());
+    }
+  }
+
+  private static Timestamp getPlanDatasetStartOffset(
+      final Connection connection,
+      final PlanId planId,
+      final long dataset_id
+  ) throws SQLException, NoSuchPlanException {
+    try (final var getPlanDatasetStartOffsetAction = new GetPlanDatasetStartOffsetAction(connection)) {
+      return getPlanDatasetStartOffsetAction.get(planId.id(), dataset_id);
     }
   }
 

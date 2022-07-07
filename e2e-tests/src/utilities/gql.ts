@@ -170,15 +170,15 @@ const gql = {
   `,
 
   ADD_EXTERNAL_DATASET: `#graphql
-  mutation addExternalDataset($planId: Int!, $datasetStart: String!){
-      addExternalDataset(
-        planId: $planId,
-        datasetStart: $datasetStart,
-        profileSet: $profileSet
-      ) {
-        datasetId
-      }
+  mutation {
+    addExternalDataset(
+      planId: [0],
+      datasetStart: \"[1]\",
+      profileSet: [2]
+    ) {
+      datasetId
     }
+  }
   `,
 
   ADD_ACTIVITY: `#graphql

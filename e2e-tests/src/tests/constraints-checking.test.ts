@@ -77,16 +77,48 @@ test.describe('Constraints', () => {
     const profiles: ExternalDataset[] = [
       {
         plan_id: plan_id,
-        datasetStart: "00:00:00.000",
+        datasetStart: "2021-001T02:00:00",
         profileSet: `{
           externalProfile1: {
             type: "real",
             segments: [
               {
-                duration: 43200000000,
+                duration: 30000000,
                 dynamics: {
-                  initial: 500,
-                  rate: -0.555555
+                  initial: 50,
+                  rate: -1
+                }
+              },
+              {
+                duration: 30000000,
+                dynamics: {
+                  initial: 35,
+                  rate: -0.5
+                }
+              }
+            ]
+          }
+        }`
+      },
+      { //attempt to make sparse dataset for externalProfile1... fails and overwrites, and datasetStart doesn't even work
+        plan_id: plan_id,
+        datasetStart: "2021-001T04:00:00",
+        profileSet: `{
+          externalProfile1: {
+            type: "real",
+            segments: [
+              {
+                duration: 30000000,
+                dynamics: {
+                  initial: 20,
+                  rate: -1
+                }
+              },
+              {
+                duration: 30000000,
+                dynamics: {
+                  initial: 69,
+                  rate: -0.5
                 }
               }
             ]
@@ -95,7 +127,7 @@ test.describe('Constraints', () => {
       },
       {
         plan_id: plan_id,
-        datasetStart: "8:00:00.000",
+        datasetStart: "2021-001T04:00:00",
         profileSet: `{
           externalProfile2: {
             type: "discrete",
@@ -116,13 +148,14 @@ test.describe('Constraints', () => {
         }`
       }
     ];
-    //TODO: Fix.
-    //for (const profile of profiles) {
-      const dataset_id = await req.addExternalProfile(request, profiles[0]);
+
+
+    for (const profile of profiles) {
+      const dataset_id = await req.addExternalProfile(request, profile);
       expect(dataset_id).not.toBeNull();
       expect(dataset_id).toBeDefined();
       expect(typeof dataset_id).toEqual("number");
-    //}
+    }
   });
 
   test('Check eDSL for plan', async ({ request }) => {
@@ -179,10 +212,10 @@ test.describe('Constraints', () => {
       Because the first three should pass constraints checking, they are added and constraints are
         checked right after.
       Then separately, the fourth constraint is added, constraints are checked, but thhen failure is expected.
-   */
+   *
   test('Add Valid Constraints', async ({request}) => {
     const constraints: Constraint[] = [
-      {
+      /*{
         definition:"export default (): Constraint => Real.Resource(\"/plant\").greaterThan(198.0)",
         description:"test1",
         model_id:mission_model_id,
@@ -197,7 +230,7 @@ test.describe('Constraints', () => {
         name:"MMR.PC",
         plan_id:plan_id,
         summary:"Mission Model Resource, Plan Constraint"
-      },
+      },*
       {
         definition:"export default (): Constraint => Real.Resource(\"externalProfile1\").greaterThan(90.0)",
         description:"test4",
@@ -265,7 +298,7 @@ test.describe('Constraints', () => {
     expect(deleted_mission_model_id).not.toBeNull();
     expect(deleted_mission_model_id).toBeDefined();
     expect(deleted_mission_model_id).toEqual(mission_model_id);
-  });
+  });*/
 
 
 });

@@ -6,6 +6,7 @@ import * as urls from '../utilities/urls';
 import gql from './gql';
 import {request} from "@playwright/test";
 import time from "./time";
+import StringFormat from '../utilities/string';
 
 /**
  * Aerie API request functions.
@@ -41,9 +42,9 @@ const req = {
         const { data } = json;
         return data as T;
       } else if (json?.errors) {
-        // console.log(json.errors);
-        // console.log(json.errors[0].extensions.internal);
-        // console.log(json.errors[0].extensions.internal.response.body.failures);
+        console.log(json.errors);
+        console.log(json.errors[0].extensions.internal);
+        console.log(json.errors[0].extensions.internal.response.body.failures);
         const [{ message }] = json.errors;
         throw new Error(message);
       } else {
@@ -60,7 +61,7 @@ const req = {
   },
 
   async healthHasura(request: APIRequestContext): Promise<boolean> {
-    const response = await request.get(`${HASURA_URL}/health`); //NOTE: resource does not exist!
+    const response = await request.get(`${urls.HASURA_URL}/health`); //NOTE: resource does not exist!
     return response.ok();
   },
 
@@ -202,50 +203,13 @@ const req = {
   },
 
   async addExternalProfile(request: APIRequestContext, externalDataset: ExternalDataset) {
-    //TODO: unpack externalProfile - just doing any
-    /*const ADD_EXTERNAL_DATASET = `#graphql
-    mutation addExternalDataset($planId: Int!, $datasetStart: String!){
-      addExternalDataset(
-        planId: $planId,
-        datasetStart: $datasetStart,
-        profileSet: ${externalDataset.profileSet}
-      ) {
-        datasetId
-      }
-    }
-    `*/
-    const ADD_EXTERNAL_DATASET = `#graphql
-    mutation {
-      addExternalDataset(
-        planId: ${externalDataset.plan_id},
-        datasetStart: "2021-001T00:00:00",
-        profileSet: {
-          externalProfile1: {
-            type: "real",
-            segments: [
-              {
-                duration: 30000000,
-                dynamics: {
-                  initial: 50,
-                  rate: -1
-                }
-              },
-              {
-                duration: 30000000,
-                dynamics: {
-                  initial: 35,
-                  rate: -0.5
-                }
-              }
-            ]
-          }
-        }
-      ) {
-        datasetId
-      }
-    }
-    `
-    const data = await req.hasura(request, ADD_EXTERNAL_DATASET, {});
+    const reqTest = StringFormat(
+        gql.ADD_EXTERNAL_DATASET,
+        externalDataset.plan_id.toString(),
+        externalDataset.datasetStart.toString(),
+        externalDataset.profileSet.toString());
+    console.log(reqTest);
+    const data = await req.hasura(request, reqTest, {});
     const id = data.addExternalDataset.datasetId;
     return id;
   },
