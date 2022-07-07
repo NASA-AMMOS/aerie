@@ -218,15 +218,22 @@ const req = {
     mutation {
       addExternalDataset(
         planId: ${externalDataset.plan_id},
-        datasetStart: "2021-001T02:00:00",
+        datasetStart: "2021-001T00:00:00",
         profileSet: {
           externalProfile1: {
             type: "real",
-            segments:[
+            segments: [
               {
                 duration: 30000000,
                 dynamics: {
                   initial: 50,
+                  rate: -1
+                }
+              },
+              {
+                duration: 30000000,
+                dynamics: {
+                  initial: 35,
                   rate: -0.5
                 }
               }

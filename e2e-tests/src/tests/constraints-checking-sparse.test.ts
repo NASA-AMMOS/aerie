@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import req from '../utilities/requests';
 import time from '../utilities/time';
 
-test.describe('Constraints', () => {
+test.describe('Sparse', () => {
   const rd = Math.random() * 100;
   const plan_start_timestamp = "2021-001T00:00:00.000";
   const plan_end_timestamp = "2021-001T12:00:00.000";
@@ -73,6 +73,7 @@ test.describe('Constraints', () => {
     }
   });
 
+  //TODO: add external profile
   test('Add External Profile', async  ({request}) => {
     const profiles: ExternalDataset[] = [
       {
@@ -83,10 +84,17 @@ test.describe('Constraints', () => {
             type: "real",
             segments: [
               {
-                duration: 43200000000,
+                duration: 21600000000,
                 dynamics: {
                   initial: 500,
-                  rate: -0.555555
+                  rate: -1.0
+                }
+              },
+              {
+                duration: 21600000000,
+                dynamics: {
+                  initial: 300,
+                  rate: -1.0
                 }
               }
             ]
@@ -125,31 +133,6 @@ test.describe('Constraints', () => {
     //}
   });
 
-  test('Check eDSL for plan', async ({ request }) => {
-    //make sure it has externalProfile1 in it
-    const plan_edsl = await req.getPlanConstraintsDsl(request, plan_id);
-    expect(plan_edsl).not.toBeNull();
-    expect(plan_edsl).toBeDefined();
-    for (let elem of plan_edsl) {
-      if (elem.filePath === 'mission-model-generated-code.ts') {
-        //console.log(elem.content);
-        expect(elem.content.includes("externalProfile1")).toBeTruthy();
-      }
-    }
-  });
-
-  test('Check eDSL for mission model', async ({ request }) => {
-    //make sure it doesn't have externalProfile1 in it
-    const mm_edsl = await req.getModelConstraintsDsl(request, mission_model_id.toString());
-    expect(mm_edsl).not.toBeNull();
-    expect(mm_edsl).toBeDefined();
-    for (let elem of mm_edsl) {
-      if (elem.filePath === 'mission-model-generated-code.ts') {
-        expect(elem.content.includes("externalProfile1")).toBeFalsy();
-      }
-    }
-  });
-
   test('Create Simulation', async ({request}) => {
     const simulation: SimulationCreation = {
       plan_id: plan_id,
@@ -171,35 +154,10 @@ test.describe('Constraints', () => {
     while (simulation_status === "pending" || simulation_status === "incomplete")
   });
 
-  /* There are 4 things we try, 3 of which are valid:
-      - a mission constraint using only mission model resources (valid)
-      - a plan constraint using only mission model resources (valid)
-      - a plan constraint using plan resources (valid)
-      - a mission constraint using plan resources (invalid)
-      Because the first three should pass constraints checking, they are added and constraints are
-        checked right after.
-      Then separately, the fourth constraint is added, constraints are checked, but thhen failure is expected.
-   */
-  test('Add Valid Constraints', async ({request}) => {
+  test('Add Sparse Constraints', async ({request}) => {
     const constraints: Constraint[] = [
       {
-        definition:"export default (): Constraint => Real.Resource(\"/plant\").greaterThan(198.0)",
-        description:"test1",
-        model_id:mission_model_id,
-        name:"MMR.MC",
-        plan_id:null,
-        summary:"Mission Model Resource, Mission Constraint"
-      },
-      {
-        definition:"export default (): Constraint => Real.Resource(\"/plant\").greaterThan(198.0)",
-        description:"test3",
-        model_id:null,
-        name:"MMR.PC",
-        plan_id:plan_id,
-        summary:"Mission Model Resource, Plan Constraint"
-      },
-      {
-        definition:"export default (): Constraint => Real.Resource(\"externalProfile1\").greaterThan(90.0)",
+        definition:"export default (): Constraint => Real.Resource(\"externalProfile1\").greaterThan(25.0)",
         description:"test4",
         model_id:null,
         name:"PR.PC",
@@ -215,40 +173,13 @@ test.describe('Constraints', () => {
     }
   });
 
-  test('Compile/Check Valid Constraints', async ({ request }) => {
+  test('Compile/Check Sparse Constraints', async ({ request }) => {
     const constraint_violations = await req.getViolations(request, plan_id);
+    console.log(constraint_violations);
+    console.log(JSON.stringify(constraint_violations))
     expect(constraint_violations).not.toBeNull();
     expect(constraint_violations).toBeDefined();
-    expect(constraint_violations["model/MMR.MC"]).not.toBeNull();
-    expect(constraint_violations["plan/MMR.PC"]).not.toBeNull();
     expect(constraint_violations["plan/PR.PC"]).not.toBeNull();
-  });
-
-
-  test('Add Invalid Constraints', async ({request}) => {
-    const constraint: Constraint =
-        {
-          definition:"export default (): Constraint => Real.Resource(\"externalProfile1\").greaterThan(90.0)",
-          description:"test2",
-          model_id:mission_model_id,
-          name:"PR.MC",
-          plan_id:null,
-          summary:"Plan Resource, Mission Constraint"
-        }
-    const simulation_id = await req.addConstraint(request, constraint);
-    expect(simulation_id).not.toBeNull();
-    expect(simulation_id).toBeDefined();
-    expect(typeof simulation_id).toEqual("number");
-  });
-
-  test('Compile/Check Invalid Constraints', async ({ request }) => {
-    try {
-      await req.getViolations(request, plan_id);
-      expect(1).toEqual(2); //should not get here
-    }
-    catch (error) {
-      expect(error.message).toContain("not a valid json response from webhook");
-    }
   });
 
   test('Delete plan', async ({ request }) => {
