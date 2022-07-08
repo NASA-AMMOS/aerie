@@ -189,21 +189,21 @@ describe('sequence generation', () => {
         // expansion 1
         type: 'command',
         stem: 'PREHEAT_OVEN',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [70],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
         type: 'command',
         stem: 'PREPARE_LOAF',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [50, false],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
         type: 'command',
         stem: 'BAKE_BREAD',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
@@ -211,21 +211,21 @@ describe('sequence generation', () => {
         // expansion 2
         type: 'command',
         stem: 'PREHEAT_OVEN',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [70],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
         type: 'command',
         stem: 'BAKE_BREAD',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
         type: 'command',
         stem: 'PREPARE_LOAF',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [50, false],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
@@ -283,21 +283,21 @@ describe('sequence generation', () => {
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: ['Chiquita', 43, 'Dole', 12, 1093],
         metadata: { simulatedActivityId: simulatedActivityId4 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: ['Chiquita', 43, 'Dole', 12, 1093],
         metadata: { simulatedActivityId: simulatedActivityId4 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: ['Chiquita', 43, 'Dole', 12, 'Blue', 1, 1093],
         metadata: { simulatedActivityId: simulatedActivityId4 },
       },
@@ -387,49 +387,49 @@ describe('sequence generation', () => {
       {
         type: 'command',
         stem: 'PREHEAT_OVEN',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [70],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
         type: 'command',
         stem: 'PREPARE_LOAF',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [50, false],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
         type: 'command',
         stem: 'BAKE_BREAD',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
         type: 'command',
         stem: 'PREHEAT_OVEN',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [70],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
         type: 'command',
         stem: 'BAKE_BREAD',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
         type: 'command',
         stem: 'PREPARE_LOAF',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [50, false],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
         type: 'command',
         stem: '$$ERROR$$',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: ['Error: Unimplemented'],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
@@ -502,42 +502,42 @@ describe('sequence generation', () => {
       {
         type: 'command',
         stem: 'PREHEAT_OVEN',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [70],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
         type: 'command',
         stem: 'PREPARE_LOAF',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [50, false],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
         type: 'command',
         stem: 'BAKE_BREAD',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
         type: 'command',
         stem: 'PREHEAT_OVEN',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [70],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
         type: 'command',
         stem: 'BAKE_BREAD',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
         type: 'command',
         stem: 'PREPARE_LOAF',
-        time: { type: 'COMMAND_COMPLETE' },
+        time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [50, false],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
@@ -608,3 +608,89 @@ describe('expansion regressions', () => {
   }, 10000);
 });
 
+
+it('should provide start and end times on activities', async () => {
+  // Setup
+
+  const activityId = await insertActivity(graphqlClient, planId, 'BiteBanana', '1 hours');
+  const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
+  const expansionId = await insertExpansion(
+    graphqlClient,
+    'BiteBanana',
+    `
+    export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+      return [
+        BAKE_BREAD.absoluteTiming(props.activityInstance.startTime),
+        BAKE_BREAD.absoluteTiming(props.activityInstance.endTime),
+      ];
+    }
+    `,
+  );
+
+
+  const expansionSet0Id = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
+    expansionId,
+  ]);
+  await expand(graphqlClient, expansionSet0Id, simulationArtifactPk.simulationDatasetId);
+  const sequencePk = await insertSequence(graphqlClient, {
+    seqId: 'test00000',
+    simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+  });
+  await linkActivityInstance(graphqlClient, sequencePk, activityId);
+
+
+  const simulatedActivityId3 = await convertActivityIdToSimulatedActivityId(
+      graphqlClient,
+      simulationArtifactPk.simulationDatasetId,
+      activityId,
+  );
+
+  const { getSequenceSeqJson } = await graphqlClient.request<{ getSequenceSeqJson: SequenceSeqJson }>(
+      gql`
+        query GetSeqJsonForSequence($seqId: String!, $simulationDatasetId: Int!) {
+          getSequenceSeqJson(seqId: $seqId, simulationDatasetId: $simulationDatasetId) {
+            id
+            metadata
+            steps {
+              type
+              stem
+              time {
+                type
+                tag
+              }
+              args
+              metadata
+            }
+          }
+        }
+      `,
+      {
+        seqId: 'test00000',
+        simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+      },
+  );
+
+  expect(getSequenceSeqJson.id).toBe('test00000');
+  expect(getSequenceSeqJson.metadata).toEqual({});
+  expect(getSequenceSeqJson.steps).toEqual([
+    {
+      type: 'command',
+      stem: 'BAKE_BREAD',
+      time: { type: TimingTypes.ABSOLUTE, tag: '2020-001T01:00:00.000' },
+      args: [],
+      metadata: { simulatedActivityId: simulatedActivityId3 },
+    },
+    {
+      type: 'command',
+      stem: 'BAKE_BREAD',
+      time: { type: TimingTypes.ABSOLUTE, tag: '2020-001T01:00:00.000' },
+      args: [],
+      metadata: { simulatedActivityId: simulatedActivityId3 },
+    },
+  ]);
+
+  // Cleanup
+  {
+    await removeSequence(graphqlClient, sequencePk);
+  }
+}, 30000);

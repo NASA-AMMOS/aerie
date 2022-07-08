@@ -32,6 +32,8 @@ export const simulatedActivitiesBatchLoader: BatchLoader<
             }
             attributes
             start_offset
+            start_time
+            end_time
             duration
             activity_type_name
           }
@@ -95,6 +97,8 @@ export const simulatedActivityInstanceBySimulatedActivityIdBatchLoader: BatchLoa
             }
             attributes
             start_offset
+            start_time
+            end_time
             duration
             activity_type_name
           }
@@ -149,6 +153,8 @@ export interface SimulatedActivity<
   attributes: SimulatedActivityAttributes<ActivityArguments, ActivityComputedAttributes>;
   duration: Temporal.Duration;
   startOffset: Temporal.Duration;
+  startTime: Temporal.Instant;
+  endTime: Temporal.Instant;
   activityTypeName: string;
 }
 
@@ -168,6 +174,8 @@ export interface GraphQLSimulatedActivityInstance<
   attributes: SimulatedActivityAttributes<ActivityArguments, ActivityComputedAttributes>;
   duration: string;
   start_offset: string;
+  start_time: string;
+  end_time: string;
   activity_type_name: string;
 }
 
@@ -179,6 +187,8 @@ export function mapGraphQLActivityInstance(
     id: activityInstance.id,
     duration: Temporal.Duration.from(parse(activityInstance.duration).toISOString()),
     startOffset: Temporal.Duration.from(parse(activityInstance.start_offset).toISOString()),
+    startTime: Temporal.Instant.from(activityInstance.start_time),
+    endTime: Temporal.Instant.from(activityInstance.end_time),
     simulationDatasetId: activityInstance.simulation_dataset.id,
     activityTypeName: activityInstance.activity_type_name,
     attributes: {
