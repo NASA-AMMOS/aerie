@@ -34,4 +34,5 @@ begin;
 
   -- Views
   \ir views/simulated_activity.sql
+  \ir views/resource_profile.sql
 end;
