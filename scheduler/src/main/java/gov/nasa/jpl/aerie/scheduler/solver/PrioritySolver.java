@@ -298,68 +298,68 @@ public class PrioritySolver implements Solver {
   }
 
 
-private void satisfyOptionGoal(OptionGoal goal) {
-  if (goal.getNamongP().isSingleton() && goal.getNamongP().getMaximum() == 1) {
-    if (goal.hasOptimizer()) {
-      //try to satisfy all and see what is best
-      Goal currentSatisfiedGoal = null;
-      Collection<ActivityInstance> actsToInsert = null;
-      Collection<ActivityInstance> actsToAssociateWith = null;
-      for (var subgoal : goal.getSubgoals()) {
-        satisfyGoal(subgoal);
-        if(evaluation.forGoal(subgoal).getScore() == 0 || subgoal.isPartiallySatisfiable()) {
-          var associatedActivities = evaluation.forGoal(subgoal).getAssociatedActivities();
-          var insertedActivities = evaluation.forGoal(subgoal).getInsertedActivities();
-          var aggregatedActivities = new ArrayList<ActivityInstance>();
-          aggregatedActivities.addAll(associatedActivities);
-          aggregatedActivities.addAll(insertedActivities);
-          if (aggregatedActivities.size() > 0 &&
-              (goal.getOptimizer().isBetterThanCurrent(aggregatedActivities) ||
-               currentSatisfiedGoal == null)) {
-            actsToInsert = insertedActivities;
-            actsToAssociateWith = associatedActivities;
-            currentSatisfiedGoal = subgoal;
+  private void satisfyOptionGoal(OptionGoal goal) {
+    if (goal.getNamongP().isSingleton() && goal.getNamongP().getMaximum() == 1) {
+      if (goal.hasOptimizer()) {
+        //try to satisfy all and see what is best
+        Goal currentSatisfiedGoal = null;
+        Collection<ActivityInstance> actsToInsert = null;
+        Collection<ActivityInstance> actsToAssociateWith = null;
+        for (var subgoal : goal.getSubgoals()) {
+          satisfyGoal(subgoal);
+          if(evaluation.forGoal(subgoal).getScore() == 0 || subgoal.isPartiallySatisfiable()) {
+            var associatedActivities = evaluation.forGoal(subgoal).getAssociatedActivities();
+            var insertedActivities = evaluation.forGoal(subgoal).getInsertedActivities();
+            var aggregatedActivities = new ArrayList<ActivityInstance>();
+            aggregatedActivities.addAll(associatedActivities);
+            aggregatedActivities.addAll(insertedActivities);
+            if (aggregatedActivities.size() > 0 &&
+                (goal.getOptimizer().isBetterThanCurrent(aggregatedActivities) ||
+                 currentSatisfiedGoal == null)) {
+              actsToInsert = insertedActivities;
+              actsToAssociateWith = associatedActivities;
+              currentSatisfiedGoal = subgoal;
+            }
           }
+          rollback(subgoal);
         }
-        rollback(subgoal);
-      }
-      //we should have the best solution
-      if (currentSatisfiedGoal != null) {
-        for(var act: actsToAssociateWith){
-          //we do not care about ownership here as it is not really a piggyback but just the validation of the supergoal
-          evaluation.forGoal(goal).associate(act, false);
-        }
-        if(checkAndInsertActs(actsToInsert)) {
-          for(var act: actsToInsert){
+        //we should have the best solution
+        if (currentSatisfiedGoal != null) {
+          for(var act: actsToAssociateWith){
+            //we do not care about ownership here as it is not really a piggyback but just the validation of the supergoal
             evaluation.forGoal(goal).associate(act, false);
           }
-          evaluation.forGoal(goal).setScore(0);
-        } else{
-          //this should not happen because we have already tried to insert the same set of activities in the plan and it
-          //did not failed
-          throw new IllegalStateException("Had satisfied subgoal but (1) simulation or (2) association with supergoal failed");
+          if(checkAndInsertActs(actsToInsert)) {
+            for(var act: actsToInsert){
+              evaluation.forGoal(goal).associate(act, false);
+            }
+            evaluation.forGoal(goal).setScore(0);
+          } else{
+            //this should not happen because we have already tried to insert the same set of activities in the plan and it
+            //did not failed
+            throw new IllegalStateException("Had satisfied subgoal but (1) simulation or (2) association with supergoal failed");
+          }
+        } else {
+          //number of subgoals needed to achieve supergoal
+          evaluation.forGoal(goal).setScore(goal.getNamongP().getMaximum() - goal.getNamongP().getMinimum());
         }
       } else {
-        //number of subgoals needed to achieve supergoal
-        evaluation.forGoal(goal).setScore(goal.getNamongP().getMaximum() - goal.getNamongP().getMinimum());
-      }
-    } else {
-      //just satisfy any goal
-      for (var subgoal : goal.getSubgoals()) {
-        satisfyGoal(subgoal);
-        //if partially satisfiability
-        if (evaluation.forGoal(subgoal).getScore() == 0 || subgoal.isPartiallySatisfiable()) {
-          //decision-making here : we stop at the first subgoal satisfied
-          evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false);
-          evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), false);
-          evaluation.forGoal(goal).setScore(0);
-          break;
+        //just satisfy any goal
+        for (var subgoal : goal.getSubgoals()) {
+          satisfyGoal(subgoal);
+          //if partially satisfiability
+          if (evaluation.forGoal(subgoal).getScore() == 0 || subgoal.isPartiallySatisfiable()) {
+            //decision-making here : we stop at the first subgoal satisfied
+            evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false);
+            evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), false);
+            evaluation.forGoal(goal).setScore(0);
+            break;
+          }
         }
       }
-      }
     } else {
-      throw new IllegalArgumentException(
-          "Other options than singleton namongp of OptionGoal has not yet been implemented");
+        throw new IllegalArgumentException(
+            "Other options than singleton namongp of OptionGoal has not yet been implemented");
     }
 
   }
