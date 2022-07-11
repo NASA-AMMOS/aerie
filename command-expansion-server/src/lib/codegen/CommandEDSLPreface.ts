@@ -89,8 +89,31 @@ declare global {
   type F<BitLength extends 32 | 64> = number;
   type F32 = F<32>;
   type F64 = F<64>;
+
+  // @ts-ignore : 'Commands' found in generated code
+  function A(...args: [TemplateStringsArray, ...string[]]): typeof Commands;
+  // @ts-ignore : 'Commands' found in generated code
+  function A(absoluteTime: Temporal.Instant): typeof Commands;
+  // @ts-ignore : 'Commands' found in generated code
+  function A(timeDOYString: string): typeof Commands;
+
+  // @ts-ignore : 'Commands' found in generated code
+  function R(...args: [TemplateStringsArray, ...string[]]): typeof Commands;
+  // @ts-ignore : 'Commands' found in generated code
+  function R(duration: Temporal.Duration): typeof Commands;
+  // @ts-ignore : 'Commands' found in generated code
+  function R(timeHMSString: string): typeof Commands;
+
+  // @ts-ignore : 'Commands' found in generated code
+  function E(...args: [TemplateStringsArray, ...string[]]): typeof Commands;
+  // @ts-ignore : 'Commands' found in generated code
+  function E(duration: Temporal.Duration): typeof Commands;
+  // @ts-ignore : 'Commands' found in generated code
+  function E(timeHMSString: string): typeof Commands;
+
+  // @ts-ignore : 'Commands' found in generated code
+  const C: typeof Commands;
 }
-/** END Preface */
 
 const DOY_REGEX = /(\d{4})-(\d{3})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?/;
 const HMS_REGEX = /(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?/;
@@ -211,7 +234,7 @@ export class Command<
     return `${YYYY}-${DOY}T${HH}:${MM}:${SS}.${sss}` as DOY_STRING;
   }
 
-  private static doyToInstant(doy: DOY_STRING): Temporal.Instant {
+  public static doyToInstant(doy: DOY_STRING): Temporal.Instant {
     const match = doy.match(DOY_REGEX);
     if (match === null) {
       throw new Error(`Invalid DOY string: ${doy}`);
@@ -263,7 +286,7 @@ export class Command<
     return `${HH}:${MM}:${SS}.${sss}` as HMS_STRING;
   }
 
-  private static hmsToDuration(hms: HMS_STRING): Temporal.Duration {
+  public static hmsToDuration(hms: HMS_STRING): Temporal.Duration {
     const match = hms.match(HMS_REGEX);
     if (match === null) {
       throw new Error(`Invalid HMS string: ${hms}`);
@@ -321,6 +344,85 @@ export class Sequence {
 }
 
 //helper functions
+
+// @ts-ignore : Used in generated code
+function A(...args: [TemplateStringsArray, ...string[]] | [Temporal.Instant] | [string]): typeof Commands {
+  let time: Temporal.Instant;
+  if (Array.isArray(args[0])) {
+    time = Command.doyToInstant(String.raw(...(args as [TemplateStringsArray, ...string[]])) as DOY_STRING);
+  } else if (typeof args[0] === 'string') {
+    time = Command.doyToInstant(args[0] as DOY_STRING);
+  } else {
+    time = args[0] as Temporal.Instant;
+  }
+
+  return commandsWithTimeValue(time, TimingTypes.ABSOLUTE);
+}
+
+// @ts-ignore : Used in generated code
+function R(...args: [TemplateStringsArray, ...string[]] | [Temporal.Duration] | [string]): typeof Commands {
+  let duration: Temporal.Duration;
+  if (Array.isArray(args[0])) {
+    duration = Command.hmsToDuration(String.raw(...(args as [TemplateStringsArray, ...string[]])) as HMS_STRING);
+  } else if (typeof args[0] === 'string') {
+    duration = Command.hmsToDuration(args[0] as HMS_STRING);
+  } else {
+    duration = args[0] as Temporal.Duration;
+  }
+
+  return commandsWithTimeValue(duration, TimingTypes.COMMAND_RELATIVE);
+}
+
+// @ts-ignore : Used in generated code
+function E(...args: [TemplateStringsArray, ...string[]] | [Temporal.Duration] | [string]): typeof Commands {
+  let duration: Temporal.Duration;
+  if (Array.isArray(args[0])) {
+    duration = Command.hmsToDuration(String.raw(...(args as [TemplateStringsArray, ...string[]])) as HMS_STRING);
+  } else if (typeof args[0] === 'string') {
+    duration = Command.hmsToDuration(args[0] as HMS_STRING);
+  } else {
+    duration = args[0] as Temporal.Duration;
+  }
+  return commandsWithTimeValue(duration, TimingTypes.EPOCH_RELATIVE);
+}
+
+function commandsWithTimeValue<T extends TimingTypes>(
+  timeValue: Temporal.Instant | Temporal.Duration,
+  timeType: T,
+  // @ts-ignore : 'Commands' found in generated code
+): typeof Commands {
+  // @ts-ignore : 'Commands' found in generated code
+  return Object.keys(Commands).reduce((accum, key) => {
+    // @ts-ignore : 'Commands' found in generated code
+    const command = Commands[key as keyof Commands];
+    if (typeof command === 'function') {
+      if (timeType === TimingTypes.ABSOLUTE) {
+        accum[key] = (...args: Parameters<typeof command>): typeof command => {
+          return command(...args).absoluteTiming(timeValue);
+        };
+      } else if (timeType === TimingTypes.COMMAND_RELATIVE) {
+        accum[key] = (...args: Parameters<typeof command>): typeof command => {
+          return command(...args).relativeTiming(timeValue);
+        };
+      } else {
+        accum[key] = (...args: Parameters<typeof command>): typeof command => {
+          return command(...args).epochTiming(timeValue);
+        };
+      }
+    } else {
+      if (timeType === TimingTypes.ABSOLUTE) {
+        accum[key] = command.absoluteTiming(timeValue);
+      } else if (timeType === TimingTypes.COMMAND_RELATIVE) {
+        accum[key] = command.relativeTiming(timeValue);
+      } else {
+        accum[key] = command.epochTiming(timeValue);
+      }
+    }
+    return accum;
+    // @ts-ignore : 'Commands' found in generated code
+  }, {} as typeof Commands);
+}
+
 // @ts-ignore
 function orderCommandArguments(args: { [argName: string]: any }, order: string[]): any {
   return order.map(key => args[key]);
