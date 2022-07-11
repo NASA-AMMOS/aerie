@@ -8,7 +8,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-/*package-local*/ final class AssociatePlanDatasetAction implements AutoCloseable {
+/*package-local*/ final class AssociatePlanDatasetAction implements AutoCloseable { //TODO: fix to accomodate for new plan_duration field
   private final @Language("SQL") String sql = """
       insert into plan_dataset (plan_id, dataset_id)
       values (?, ?)

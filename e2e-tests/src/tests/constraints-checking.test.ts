@@ -195,11 +195,13 @@ test.describe('Constraints', () => {
   });
 
   test('Run Simulation', async ({request}) => {
+    test.slow();
     var simulation_status;
     do {
       simulation_status = await req.runSimulation(request, plan_id);
       expect(simulation_status).not.toBeNull();
       expect(simulation_status).toBeDefined();
+      console.log(simulation_status)
     }
     while (simulation_status === "pending" || simulation_status === "incomplete")
   });
@@ -212,7 +214,7 @@ test.describe('Constraints', () => {
       Because the first three should pass constraints checking, they are added and constraints are
         checked right after.
       Then separately, the fourth constraint is added, constraints are checked, but thhen failure is expected.
-   *
+   */
   test('Add Valid Constraints', async ({request}) => {
     const constraints: Constraint[] = [
       /*{
@@ -230,7 +232,7 @@ test.describe('Constraints', () => {
         name:"MMR.PC",
         plan_id:plan_id,
         summary:"Mission Model Resource, Plan Constraint"
-      },*
+      },*/
       {
         definition:"export default (): Constraint => Real.Resource(\"externalProfile1\").greaterThan(90.0)",
         description:"test4",
@@ -298,7 +300,7 @@ test.describe('Constraints', () => {
     expect(deleted_mission_model_id).not.toBeNull();
     expect(deleted_mission_model_id).toBeDefined();
     expect(deleted_mission_model_id).toEqual(mission_model_id);
-  });*/
+  });
 
 
 });

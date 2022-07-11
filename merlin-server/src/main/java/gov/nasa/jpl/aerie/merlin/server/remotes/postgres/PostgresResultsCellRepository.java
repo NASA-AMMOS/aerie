@@ -452,7 +452,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   {
     final var simulationStart = new Timestamp(results.startTime);
     final var profileSet = ProfileSet.of(results.realProfiles, results.discreteProfiles);
-    ProfileRepository.postResourceProfiles(connection, datasetId, profileSet, simulationStart);
+    ProfileRepository.postResourceProfiles(connection, datasetId, profileSet, simulationStart); //the idea of an offset/start of dataset vs start of plan is null here, same thing passed twice
     postActivities(connection, datasetId, results.simulatedActivities, results.unfinishedActivities, simulationStart);
     insertSimulationTopics(connection, datasetId, results.topics);
     insertSimulationEvents(connection, datasetId, results.events, simulationStart);

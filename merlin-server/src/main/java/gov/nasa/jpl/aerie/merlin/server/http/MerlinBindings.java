@@ -3,8 +3,10 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
@@ -346,9 +348,28 @@ public final class MerlinBindings implements Plugin {
 
       final var planId = input.planId();
       final var datasetStart = input.datasetStart();
+      final Timestamp datasetEnd;
       final var profileSet = input.profileSet();
 
-      final var datasetId = this.planService.addExternalDataset(planId, datasetStart, profileSet);
+      //only 1 dataset uploaded at a time. so profileset will either have something in real or discrete
+      Timestamp toAdd = datasetStart;
+      if(profileSet.realProfiles().size() > 0) {
+        for (var profile : profileSet.realProfiles().entrySet()) {
+          for (var segment : profile.getValue()) {
+            toAdd = toAdd.plusMicros(segment.getLeft().dividedBy(Duration.MICROSECONDS));
+          }
+        }
+      }
+      else {
+        for (var profile : profileSet.discreteProfiles().entrySet()) {
+          for (var segment : profile.getValue().getRight()) {
+            toAdd = toAdd.plusMicros(segment.getLeft().dividedBy(Duration.MICROSECONDS));
+          }
+        }
+      }
+      datasetEnd = toAdd;
+
+      final var datasetId = this.planService.addExternalDataset(planId, datasetStart, datasetEnd, profileSet);
 
       ctx.status(201).result(ResponseSerializers.serializeCreatedDatasetId(datasetId).toString());
     } catch (final NoSuchPlanException ex) {

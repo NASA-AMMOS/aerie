@@ -20,5 +20,6 @@ public record HasuraAction<I extends HasuraAction.Input>(String name, I input, S
                               Map<String, SerializedValue> arguments) implements Input {}
   public record UploadExternalDatasetInput(PlanId planId,
                                            Timestamp datasetStart,
+                                           Timestamp datasetEnd,
                                            ProfileSet profileSet) implements Input {}
 }

@@ -13,6 +13,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+//--+++++++
+//
+
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.parseOffset;
 
 /*package-local*/ final class GetProfileSegmentsAction implements AutoCloseable {
@@ -59,7 +62,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
         dynamics = parseDynamics(resultSet.getCharacterStream(2), dynamicsP);
       }
 
-      final var duration = simulationDuration.minus(offset);
+      final var duration = simulationDuration.minus(offset); //TODO: FIX SIMULATIONDURATION TO JUST GO THE DURATION OF THIS ACTIVITY
       segments.add(Pair.of(duration, dynamics));
     }
 

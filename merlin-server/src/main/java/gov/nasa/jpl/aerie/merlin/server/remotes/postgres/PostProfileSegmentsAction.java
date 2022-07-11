@@ -35,7 +35,7 @@ public final class PostProfileSegmentsAction implements AutoCloseable {
 
     // Each profile segment's duration part is the duration for which the dynamics hold
     // before the next one begins. Since order in the database is not guaranteed
-    // we need to convert to offsets from the simulation start so order can be preserved
+    // we need to convert to offset from the simulation start so order can be preserved
     var accumulatedOffset = Duration.ZERO;
     for (final var pair : segments) {
       final var duration = pair.getLeft();

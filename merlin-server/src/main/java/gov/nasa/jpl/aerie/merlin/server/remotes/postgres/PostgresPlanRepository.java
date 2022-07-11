@@ -12,6 +12,7 @@ import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.ExternalProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
@@ -269,11 +270,12 @@ public final class PostgresPlanRepository implements PlanRepository {
   public long addExternalDataset(
       final PlanId planId,
       final Timestamp datasetStart,
+      final Timestamp datasetEnd,
       final ProfileSet profileSet
   ) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       final var plan = getPlanRecord(connection, planId);
-      final var planDataset = createPlanDataset(connection, planId, plan.startTime(), datasetStart);
+      final var planDataset = createPlanDataset(connection, planId, plan.startTime(), datasetStart, datasetEnd);
       ProfileRepository.postResourceProfiles(
           connection,
           planDataset.datasetId(),
@@ -289,7 +291,7 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public ProfileSet getExternalProfiles(final PlanId planId) throws NoSuchPlanException
+  public ExternalProfileSet getExternalProfiles(final PlanId planId) throws NoSuchPlanException
   {
 
 
@@ -306,30 +308,36 @@ public final class PostgresPlanRepository implements PlanRepository {
       final var planRecord = getPlanRecord(connection, planId);
 
       //now, using this window, make use of the method that takes window and plan record stuff to get profiles (including segments)
-      Map<String, List<Pair<Duration, RealDynamics>>> realProfiles = new HashMap<>(Map.of());
-      Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles = new HashMap<>(Map.of());
+      Map<String, Pair<Window, List<Pair<Duration, RealDynamics>>>> realProfiles = new HashMap<>(Map.of());
+      Map<String, Pair<Window, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>> discreteProfiles = new HashMap<>(Map.of());
 
       for (long datasetId : datasetIds) {
-        final var startOffset = getPlanDatasetStartOffset(connection, planId, datasetId);
-        //final var window = new Window(planRecord.startTime(), planRecord.endTime()); //TODO: get window from plan_dataset table; the dataset does not necessarily start at plan start (we desire to use offset_from_plan_start)
-        final var window = new Window(startOffset, planRecord.endTime());
+        final var simulationWindow = new Window(planRecord.startTime(), planRecord.endTime()); //TODO: get window from plan_dataset table; the dataset does not necessarily start at plan start (we desire to use offset_from_plan_start)
+        final var pairOfStartEnd = getPlanDatasetStart(connection, planId, datasetId, simulationWindow);
+        final var datasetStart = pairOfStartEnd.getLeft();
+        final var datasetEnd = pairOfStartEnd.getRight();
+        final var window = new Window(datasetStart, datasetEnd);
         final var profiles = ProfileRepository.getProfiles(connection, datasetId, window);
+
+        //TODO: ADD GAPS TO REFLECT SPACES BETWEEN INTERVALS
+        //TODO: MAKE DURATION END ONCE LAST PROFILE ENDS, NOT AFTER WHOLE THING ENDS - THIS IS IN LINE 62 OF GETPROFILESEGMENTSACTION.JAVA
+
         for (var discProf : profiles.discreteProfiles().entrySet()) {
           //checks if the same key, this means its a sparse dataset, then make it a sparse set instead of replacing
           if (!discProf.getValue().getRight().isEmpty()) {
             //if key exists
             if(discreteProfiles.containsKey(discProf.getKey())) {
               //grab arraylist for given key
-              var existingIntervals = discreteProfiles.get(discProf.getValue()).getRight();
+              var existingIntervals = discreteProfiles.get(discProf.getValue()).getRight().getRight();
               //append new arraylist to that one
               existingIntervals.addAll(discProf.getValue().getRight());
               //make a new pair
-              final var newPair = Pair.of(discProf.getValue().getLeft(), existingIntervals);
+              final var newPair = Pair.of(window, Pair.of(discProf.getValue().getLeft(), existingIntervals));
               //call put again
               discreteProfiles.put(discProf.getKey(), newPair);
             }
             else { //else, just add the key-value pair like normal
-              discreteProfiles.put(discProf.getKey(), discProf.getValue());
+              discreteProfiles.put(discProf.getKey(), Pair.of(window, discProf.getValue()));
             }
           }
         }
@@ -339,21 +347,21 @@ public final class PostgresPlanRepository implements PlanRepository {
             //if key exists
             if(realProfiles.containsKey(realProf.getKey())) {
               //grab arraylist for given key
-              var existingIntervals = realProfiles.get(realProf.getKey());
+              var existingIntervals = realProfiles.get(realProf.getKey()).getRight();
               //append new arraylist to that one
               existingIntervals.addAll(realProf.getValue());
               //call put again
-              realProfiles.put(realProf.getKey(), existingIntervals);
+              realProfiles.put(realProf.getKey(), Pair.of(window, existingIntervals));
             }
             else { //else, just add the key-value pair like normal
-              realProfiles.put(realProf.getKey(), realProf.getValue());
+              realProfiles.put(realProf.getKey(), Pair.of(window, realProf.getValue()));
             }
           }
         }
       }
 
       //return the map
-      return new ProfileSet(realProfiles, discreteProfiles);
+      return new ExternalProfileSet(realProfiles, discreteProfiles);
 
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to add external dataset to plan with id `%s`".formatted(planId), ex);
@@ -427,11 +435,12 @@ public final class PostgresPlanRepository implements PlanRepository {
       final Connection connection,
       final PlanId planId,
       final Timestamp planStart,
-      final Timestamp datasetStart
+      final Timestamp datasetStart,
+      final Timestamp datasetEnd
   ) throws SQLException {
     try (final var createPlanDatasetAction = new CreatePlanDatasetAction(connection);
           final var createProfileSegmentPartitionAction = new CreateProfileSegmentPartitionAction(connection)) {
-      final var pdr = createPlanDatasetAction.apply(planId.id(), planStart, datasetStart);
+      final var pdr = createPlanDatasetAction.apply(planId.id(), planStart, datasetStart, datasetEnd);
       createProfileSegmentPartitionAction.apply(pdr.datasetId());
       return pdr;
     }
@@ -446,13 +455,15 @@ public final class PostgresPlanRepository implements PlanRepository {
     }
   }
 
-  private static Timestamp getPlanDatasetStartOffset(
+  private static Pair<Timestamp, Timestamp> getPlanDatasetStart(
       final Connection connection,
       final PlanId planId,
-      final long dataset_id
+      final long dataset_id,
+      final Window simulationWindow
   ) throws SQLException, NoSuchPlanException {
-    try (final var getPlanDatasetStartOffsetAction = new GetPlanDatasetStartOffsetAction(connection)) {
-      return getPlanDatasetStartOffsetAction.get(planId.id(), dataset_id);
+    try (final var getPlanDatasetStartEnd = new GetPlanDatasetStartEnd(connection)) {
+      return getPlanDatasetStartEnd.
+          get(planId.id(), dataset_id, simulationWindow);
     }
   }
 

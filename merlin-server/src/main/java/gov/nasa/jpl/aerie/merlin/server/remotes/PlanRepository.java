@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceExcepti
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.ExternalProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
@@ -42,9 +43,9 @@ public interface PlanRepository {
 
   Map<String, Constraint> getAllConstraintsInPlan(PlanId planId) throws NoSuchPlanException;
 
-  long addExternalDataset(PlanId planId, Timestamp datasetStart, ProfileSet profileSet) throws NoSuchPlanException;
+  long addExternalDataset(PlanId planId, Timestamp datasetStart, Timestamp datasetEnd, ProfileSet profileSet) throws NoSuchPlanException;
 
-  ProfileSet getExternalProfiles(final PlanId planId) throws NoSuchPlanException;
+  ExternalProfileSet getExternalProfiles(final PlanId planId) throws NoSuchPlanException;
 
   record CreatedPlan(PlanId planId, List<ActivityInstanceId> activityIds) {}
 

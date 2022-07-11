@@ -85,7 +85,7 @@ public class TypescriptCodeGenerationServiceAdapter implements ConstraintsCodeGe
 
     for (var discreteEntry : profiles.discreteProfiles().entrySet()) {
       resources.put(discreteEntry.getKey(),
-                    discreteEntry.getValue().getLeft());
+                    discreteEntry.getValue().getRight().getLeft());
     }
 
     return resources;

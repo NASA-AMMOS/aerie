@@ -2,7 +2,7 @@ create table plan_dataset (
   plan_id integer not null,
   dataset_id integer not null,
 
-  offset_from_plan_start interval not null,
+  offset_from_plan_start interval not null
 
   constraint plan_dataset_primary_key
     primary key (plan_id, dataset_id),
@@ -70,6 +70,7 @@ begin
   -- calculate and assign the new offset from plan start
   dataset_start := reference_plan_start + reference.offset_from_plan_start;
   new.offset_from_plan_start = dataset_start - new_plan_start;
+
 return new;
 end$$;
 

@@ -101,10 +101,11 @@ public abstract class HasuraParsers {
       = productP
       . field("planId", planIdP)
       . field("datasetStart", timestampP)
+      . field("datasetEnd", timestampP)
       . field("profileSet", profileSetP)
       . map(Iso.of(
           untuple(HasuraAction.UploadExternalDatasetInput::new),
-          $ -> tuple($.planId(), $.datasetStart(), $.profileSet())
+          $ -> tuple($.planId(), $.datasetStart(), $.datasetEnd(), $.profileSet())
       ));
 
   public static final JsonParser<HasuraAction<HasuraAction.UploadExternalDatasetInput>> hasuraExternalDatasetActionP

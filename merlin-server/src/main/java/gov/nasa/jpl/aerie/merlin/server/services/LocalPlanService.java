@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.ExternalProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
@@ -41,14 +42,14 @@ public final class LocalPlanService implements PlanService {
   }
 
   @Override
-  public long addExternalDataset(final PlanId planId, final Timestamp datasetStart, final ProfileSet profileSet)
+  public long addExternalDataset(final PlanId planId, final Timestamp datasetStart, final Timestamp datasetEnd, final ProfileSet profileSet)
   throws NoSuchPlanException
   {
-    return this.planRepository.addExternalDataset(planId, datasetStart, profileSet);
+    return this.planRepository.addExternalDataset(planId, datasetStart, datasetEnd, profileSet);
   }
 
   @Override
-  public ProfileSet getExternalProfiles(
+  public ExternalProfileSet getExternalProfiles(
       final PlanId planId) throws NoSuchPlanException
   {
     return this.planRepository.getExternalProfiles(planId);

@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.ExternalProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
@@ -21,7 +22,7 @@ public interface PlanService {
 
   Map<String, Constraint> getConstraintsForPlan(PlanId planId) throws NoSuchPlanException;
 
-  long addExternalDataset(PlanId planId, Timestamp datasetStart, ProfileSet profileSet) throws NoSuchPlanException;
+  long addExternalDataset(PlanId planId, Timestamp datasetStart, Timestamp datasetEnd, ProfileSet profileSet) throws NoSuchPlanException;
 
-  ProfileSet getExternalProfiles(PlanId planId) throws NoSuchPlanException;
+  ExternalProfileSet getExternalProfiles(PlanId planId) throws NoSuchPlanException;
 }

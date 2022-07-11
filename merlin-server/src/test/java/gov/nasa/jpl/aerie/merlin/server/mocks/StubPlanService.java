@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.ExternalProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
@@ -74,16 +75,16 @@ public final class StubPlanService implements PlanService {
   }
 
   @Override
-  public long addExternalDataset(final PlanId planId, final Timestamp datasetStart, final ProfileSet profileSet)
+  public long addExternalDataset(final PlanId planId, final Timestamp datasetStart, final Timestamp datasetEnd, final ProfileSet profileSet)
   throws NoSuchPlanException
   {
     return 0;
   }
 
   @Override
-  public ProfileSet getExternalProfiles(
+  public ExternalProfileSet getExternalProfiles(
       final PlanId planId) throws NoSuchPlanException
   {
-    return new ProfileSet(Map.of(), Map.of());
+    return new ExternalProfileSet(Map.of(), Map.of());
   }
 }

@@ -129,21 +129,36 @@ public final class GetSimulationResultsAction {
           Window.between(activityOffset, activityOffset.plus(activity.duration()))));
     }
 
+    final var startTime = plan.startTimestamp;
 
     final var _discreteProfiles = new HashMap<>(results$
         .map(r -> r.discreteProfiles)
         .orElseGet(Collections::emptyMap));
-    //add in the external profiles as they require the same treatment
-    for (final var toMerge : externalProfiles.discreteProfiles().entrySet()) {
-      _discreteProfiles.put(toMerge.getKey(), toMerge.getValue());
-    }
-
     final var discreteProfiles = new HashMap<String, DiscreteProfile>(_discreteProfiles.size());
+
     for (final var entry : _discreteProfiles.entrySet()) {
       final var pieces = new ArrayList<DiscreteProfilePiece>(entry.getValue().getRight().size());
 
       var elapsed = Duration.ZERO;
       for (final var piece : entry.getValue().getRight()) {
+        final var extent = piece.getLeft();
+        final var value = piece.getRight();
+
+        pieces.add(new DiscreteProfilePiece(
+            Window.between(elapsed, elapsed.plus(extent)),
+            value));
+
+        elapsed = elapsed.plus(extent);
+      }
+
+      discreteProfiles.put(entry.getKey(), new DiscreteProfile(pieces));
+    }
+
+    for (final var entry : externalProfiles.discreteProfiles().entrySet()) {
+      final var pieces = new ArrayList<DiscreteProfilePiece>(entry.getValue().getRight().getRight().size());
+
+      var elapsed = Duration.of(startTime.microsUntil(entry.getValue().getLeft().start()), Duration.MICROSECONDS);
+      for (final var piece : entry.getValue().getRight().getRight()) {
         final var extent = piece.getLeft();
         final var value = piece.getRight();
 
@@ -163,16 +178,30 @@ public final class GetSimulationResultsAction {
         .orElseGet(Collections::emptyMap));
     final var realProfiles = new HashMap<String, LinearProfile>(); //TODO: update this when more profile types are added
 
-    //add in the external profiles as they require the same treatment
-    for (final var toMerge : externalProfiles.realProfiles().entrySet()) {
-      _realProfiles.put(toMerge.getKey(), toMerge.getValue());
-    }
-
     for (final var entry : _realProfiles.entrySet()) {
       final var pieces = new ArrayList<LinearProfilePiece>(entry.getValue().size());
 
       var elapsed = Duration.ZERO;
       for (final var piece : entry.getValue()) {
+        final var extent = piece.getLeft();
+        final var value = piece.getRight();
+
+        pieces.add(new LinearProfilePiece(
+            Window.between(elapsed, elapsed.plus(extent)),
+            value.initial,
+            value.rate));
+
+        elapsed = elapsed.plus(extent);
+      }
+
+      realProfiles.put(entry.getKey(), new LinearProfile(pieces));
+    }
+
+    for (final var entry : externalProfiles.realProfiles().entrySet()) {
+      final var pieces = new ArrayList<LinearProfilePiece>(entry.getValue().getRight().size());
+
+      var elapsed = Duration.of(startTime.microsUntil(entry.getValue().getLeft().start()), Duration.MICROSECONDS);
+      for (final var piece : entry.getValue().getRight()) {
         final var extent = piece.getLeft();
         final var value = piece.getRight();
 
