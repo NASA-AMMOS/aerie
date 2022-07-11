@@ -22,7 +22,7 @@ function generateTypescriptCode(dictionary: ampcs.CommandDictionary): {
 declare global {
 ${typescriptFswCommands.map(fswCommand => fswCommand.declaration).join('\n')}
 \tconst Commands: {\n${dictionary.fswCommands
-    .map(fswCommand => `\t\t${fswCommand.stem}: ${fswCommand.stem},\n`)
+    .map(fswCommand => `\t\t${fswCommand.stem}: typeof ${fswCommand.stem},\n`)
     .join('')}\t};
 }`;
 
@@ -33,7 +33,7 @@ export const Commands = {${dictionary.fswCommands
     .map(fswCommand => `\t\t${fswCommand.stem}: ${fswCommand.stem},\n`)
     .join('')}};
 
-Object.assign(globalThis, Commands);
+Object.assign(globalThis, Commands, { A:A, R:R, E:E, C:Commands});
 `;
 
   return {
@@ -120,7 +120,7 @@ ${repeatArgsDeclaration}${otherArgs.map(arg => `\t${arg.name}: ${mapArgumentType
     const value = `
 ${doc}
 const ${fswCommandName}_ARGS_ORDERS = [${argsOrder.join(',')}];
-export function ${fswCommandName}<T extends any[]>(...args: T[]) {
+export function ${fswCommandName}<T extends any[]>(...args: T) {
   return Command.new({
     stem: '${fswCommandName}',
     arguments: typeof args[0] === 'object' ? findAndOrderCommandArguments("${fswCommandName}",args[0],${fswCommandName}_ARGS_ORDERS) : args,
