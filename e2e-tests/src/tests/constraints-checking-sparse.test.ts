@@ -99,18 +99,11 @@ test.describe('Sparse', () => {
                   initial: 35,
                   rate: -0.5
                 }
-              }
-            ]
-          }
-        }`
-      },
-      { //attempt to make sparse dataset for externalProfile1... fails and overwrites, and datasetStart doesn't even work
-        plan_id: plan_id,
-        datasetStart: "2021-001T00:00:45",
-        profileSet: `{
-          externalProfile1: {
-            type: "real",
-            segments: [
+              },
+              { #skip to 45s.
+                duration: 13000000,
+                dynamics: null
+              },
               {
                 duration: 5000000,
                 dynamics: {
@@ -162,71 +155,71 @@ test.describe('Sparse', () => {
     }
   });
 
-  test('Create Simulation', async ({request}) => {
-    const simulation: SimulationCreation = {
-      plan_id: plan_id,
-      arguments: {},
-    };
-    const simulation_id = await req.createSimulation(request, simulation);
-    expect(simulation_id).not.toBeNull();
-    expect(simulation_id).toBeDefined();
-    expect(typeof simulation_id).toEqual("number");
-  });
-
-  test('Run Simulation', async ({request}) => {
-    var simulation_status;
-    do {
-      simulation_status = await req.runSimulation(request, plan_id);
-      expect(simulation_status).not.toBeNull();
-      expect(simulation_status).toBeDefined();
-      console.log(simulation_status);
-    }
-    while (simulation_status === "pending" || simulation_status === "incomplete")
-  });
-
-  test('Add Sparse Constraints', async ({request}) => {
-    const constraints: Constraint[] = [
-      {
-        definition:"export default (): Constraint => Real.Resource(\"externalProfile1\").greaterThan(25.0)",
-        description:"test4",
-        model_id:null,
-        name:"PR.PC",
-        plan_id:plan_id,
-        summary:"PlanResource, Plan Constraint"
-      }
-    ];
-    for (const constraint of constraints) {
-      const simulation_id = await req.addConstraint(request, constraint);
-      expect(simulation_id).not.toBeNull();
-      expect(simulation_id).toBeDefined();
-      expect(typeof simulation_id).toEqual("number");
-    }
-  });
-
-  test('Compile/Check Sparse Constraints', async ({ request }) => {
-    const constraint_violations = await req.getViolations(request, plan_id);
-    console.log(constraint_violations);
-    console.log(JSON.stringify(constraint_violations))
-    expect(constraint_violations).not.toBeNull();
-    expect(constraint_violations).toBeDefined();
-    expect(constraint_violations["plan/PR.PC"]).not.toBeNull();
-  });
-
-  test('Delete plan', async ({ request }) => {
-    //delete plan
-    const deleted_plan_id = await req.deletePlan(request, plan_id);
-    expect(deleted_plan_id).not.toBeNull();
-    expect(deleted_plan_id).toBeDefined();
-    expect(deleted_plan_id).toEqual(plan_id);
-  });
-
-  test('Delete mission model', async ({ request }) => {
-    //delete mission model
-    const deleted_mission_model_id = await req.deleteMissionModel(request, mission_model_id)
-    expect(deleted_mission_model_id).not.toBeNull();
-    expect(deleted_mission_model_id).toBeDefined();
-    expect(deleted_mission_model_id).toEqual(mission_model_id);
-  });
+  // test('Create Simulation', async ({request}) => {
+  //   const simulation: SimulationCreation = {
+  //     plan_id: plan_id,
+  //     arguments: {},
+  //   };
+  //   const simulation_id = await req.createSimulation(request, simulation);
+  //   expect(simulation_id).not.toBeNull();
+  //   expect(simulation_id).toBeDefined();
+  //   expect(typeof simulation_id).toEqual("number");
+  // });
+  //
+  // test('Run Simulation', async ({request}) => {
+  //   var simulation_status;
+  //   do {
+  //     simulation_status = await req.runSimulation(request, plan_id);
+  //     expect(simulation_status).not.toBeNull();
+  //     expect(simulation_status).toBeDefined();
+  //     console.log(simulation_status);
+  //   }
+  //   while (simulation_status === "pending" || simulation_status === "incomplete")
+  // });
+  //
+  // test('Add Sparse Constraints', async ({request}) => {
+  //   const constraints: Constraint[] = [
+  //     {
+  //       definition:"export default (): Constraint => Real.Resource(\"externalProfile1\").greaterThan(25.0)",
+  //       description:"test4",
+  //       model_id:null,
+  //       name:"PR.PC",
+  //       plan_id:plan_id,
+  //       summary:"PlanResource, Plan Constraint"
+  //     }
+  //   ];
+  //   for (const constraint of constraints) {
+  //     const simulation_id = await req.addConstraint(request, constraint);
+  //     expect(simulation_id).not.toBeNull();
+  //     expect(simulation_id).toBeDefined();
+  //     expect(typeof simulation_id).toEqual("number");
+  //   }
+  // });
+  //
+  // test('Compile/Check Sparse Constraints', async ({ request }) => {
+  //   const constraint_violations = await req.getViolations(request, plan_id);
+  //   console.log(constraint_violations);
+  //   console.log(JSON.stringify(constraint_violations))
+  //   expect(constraint_violations).not.toBeNull();
+  //   expect(constraint_violations).toBeDefined();
+  //   expect(constraint_violations["plan/PR.PC"]).not.toBeNull();
+  // });
+  //
+  // test('Delete plan', async ({ request }) => {
+  //   //delete plan
+  //   const deleted_plan_id = await req.deletePlan(request, plan_id);
+  //   expect(deleted_plan_id).not.toBeNull();
+  //   expect(deleted_plan_id).toBeDefined();
+  //   expect(deleted_plan_id).toEqual(plan_id);
+  // });
+  //
+  // test('Delete mission model', async ({ request }) => {
+  //   //delete mission model
+  //   const deleted_mission_model_id = await req.deleteMissionModel(request, mission_model_id)
+  //   expect(deleted_mission_model_id).not.toBeNull();
+  //   expect(deleted_mission_model_id).toBeDefined();
+  //   expect(deleted_mission_model_id).toEqual(mission_model_id);
+  // });
 
 
 });

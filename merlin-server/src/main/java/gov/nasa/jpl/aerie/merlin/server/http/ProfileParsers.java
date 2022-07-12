@@ -35,7 +35,7 @@ public final class ProfileParsers {
       . map(Iso.of(
           untuple(RealDynamics::linear),
           $ -> tuple($.initial, $.rate)
-      ));
+      )) | null;
 
   public static final JsonParser<Pair<Duration, RealDynamics>> realProfileSegmentP
       = productP

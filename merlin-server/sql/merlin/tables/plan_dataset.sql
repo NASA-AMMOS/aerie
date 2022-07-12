@@ -1,9 +1,8 @@
 create table plan_dataset (
   plan_id integer not null,
   dataset_id integer not null,
-
-  offset_from_plan_start interval not null
-
+  offset_from_plan_start interval not null,
+  dataset_duration interval not null,
   constraint plan_dataset_primary_key
     primary key (plan_id, dataset_id),
   constraint plan_dataset_references_plan

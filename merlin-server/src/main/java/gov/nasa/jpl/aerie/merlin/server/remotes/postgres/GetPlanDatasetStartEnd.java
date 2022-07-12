@@ -42,16 +42,11 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
         final Timestamp startOffsetEpoch = simulationWindow.start();
         final var startAsInterval = Interval.parse(results.getString(1)); //startOffset
         Timestamp startOffset =  new Timestamp((Instant) startAsInterval.addTo(startOffsetEpoch.toInstant()));
-        if(results.next()) {
-          final Timestamp datasetEndEpoch = simulationWindow.start();
-          final var endAsInterval = Interval.parse(results.getString(2)); //datasetEnd
-          Timestamp datasetEnd =  new Timestamp((Instant) endAsInterval.addTo(datasetEndEpoch.toInstant()));
-          return Pair.of(startOffset, datasetEnd);
-        }
-        else {
-          throw new SQLException("Dataset id: %d, or plan id: %d improperly configured - missing dataset_duration field, with startOffset: %s."
-                                     .formatted(datasetId, planId, startOffset.toString()));
-        }
+
+        final Timestamp datasetEndEpoch = simulationWindow.start();
+        final var endAsInterval = Interval.parse(results.getString(2)); //datasetEnd
+        Timestamp datasetEnd =  new Timestamp((Instant) endAsInterval.addTo(datasetEndEpoch.toInstant()));
+        return Pair.of(startOffset, datasetEnd);
       }
       else {
         throw new SQLException("Dataset id: %d, or plan id: %d, does not exist".formatted(datasetId, planId));

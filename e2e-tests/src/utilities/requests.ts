@@ -42,8 +42,11 @@ const req = {
         const { data } = json;
         return data as T;
       } else if (json?.errors) {
+        console.log("A---------");
         console.log(json.errors);
+        console.log("B---------");
         console.log(json.errors[0].extensions.internal);
+        console.log("C---------");
         console.log(json.errors[0].extensions.internal.response.body.failures);
         const [{ message }] = json.errors;
         throw new Error(message);

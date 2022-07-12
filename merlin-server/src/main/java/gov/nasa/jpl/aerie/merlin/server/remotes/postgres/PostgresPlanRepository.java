@@ -326,36 +326,36 @@ public final class PostgresPlanRepository implements PlanRepository {
           //checks if the same key, this means its a sparse dataset, then make it a sparse set instead of replacing
           if (!discProf.getValue().getRight().isEmpty()) {
             //if key exists
-            if(discreteProfiles.containsKey(discProf.getKey())) {
-              //grab arraylist for given key
-              var existingIntervals = discreteProfiles.get(discProf.getValue()).getRight().getRight();
-              //append new arraylist to that one
-              existingIntervals.addAll(discProf.getValue().getRight());
-              //make a new pair
-              final var newPair = Pair.of(window, Pair.of(discProf.getValue().getLeft(), existingIntervals));
-              //call put again
-              discreteProfiles.put(discProf.getKey(), newPair);
-            }
-            else { //else, just add the key-value pair like normal
-              discreteProfiles.put(discProf.getKey(), Pair.of(window, discProf.getValue()));
-            }
+//            if(discreteProfiles.containsKey(discProf.getKey())) {
+//              //grab arraylist for given key
+//              var existingIntervals = discreteProfiles.get(discProf.getValue()).getRight().getRight();
+//              //append new arraylist to that one
+//              existingIntervals.addAll(discProf.getValue().getRight());
+//              //make a new pair
+//              final var newPair = Pair.of(window, Pair.of(discProf.getValue().getLeft(), existingIntervals));
+//              //call put again
+//              discreteProfiles.put(discProf.getKey(), newPair);
+//            }
+//            else { //else, just add the key-value pair like normal
+              discreteProfiles.put(discProf.getKey(), Pair.of(window, discProf.getValue())); //just replace, if you post the same resource twice, then simply overwrite it, as everything should be included in a single post!
+//            }
           }
         }
         for (var realProf : profiles.realProfiles().entrySet()) {
           //checks if the same key, this means its a sparse dataset, then make it a sparse set instead of replacing
           if(!realProf.getValue().isEmpty()) {
-            //if key exists
-            if(realProfiles.containsKey(realProf.getKey())) {
-              //grab arraylist for given key
-              var existingIntervals = realProfiles.get(realProf.getKey()).getRight();
-              //append new arraylist to that one
-              existingIntervals.addAll(realProf.getValue());
-              //call put again
-              realProfiles.put(realProf.getKey(), Pair.of(window, existingIntervals));
-            }
-            else { //else, just add the key-value pair like normal
-              realProfiles.put(realProf.getKey(), Pair.of(window, realProf.getValue()));
-            }
+//            //if key exists
+//            if(realProfiles.containsKey(realProf.getKey())) {
+//              //grab arraylist for given key
+//              var existingIntervals = realProfiles.get(realProf.getKey()).getRight();
+//              //append new arraylist to that one
+//              existingIntervals.addAll(realProf.getValue());
+//              //call put again
+//              realProfiles.put(realProf.getKey(), Pair.of(window, existingIntervals));
+//            }
+//            else { //else, just add the key-value pair like normal
+              realProfiles.put(realProf.getKey(), Pair.of(window, realProf.getValue())); //just replace, if you post the same resource twice, then simply overwrite it, as everything should be included in a single post!
+//            }
           }
         }
       }
