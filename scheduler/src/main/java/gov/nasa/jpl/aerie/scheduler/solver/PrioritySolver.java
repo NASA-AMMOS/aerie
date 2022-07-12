@@ -312,7 +312,7 @@ public class PrioritySolver implements Solver {
             var aggregatedActivities = new ArrayList<ActivityInstance>();
             aggregatedActivities.addAll(associatedActivities);
             aggregatedActivities.addAll(insertedActivities);
-            if (aggregatedActivities.size() > 0 &&
+            if (!aggregatedActivities.isEmpty() &&
                 (goal.getOptimizer().isBetterThanCurrent(aggregatedActivities) ||
                  currentSatisfiedGoal == null)) {
               actsToInsert = insertedActivities;
@@ -335,24 +335,32 @@ public class PrioritySolver implements Solver {
             evaluation.forGoal(goal).setScore(0);
           } else{
             //this should not happen because we have already tried to insert the same set of activities in the plan and it
-            //did not failed
+            //did not fail
             throw new IllegalStateException("Had satisfied subgoal but (1) simulation or (2) association with supergoal failed");
           }
         } else {
           evaluation.forGoal(goal).setScore(-1);
         }
       } else {
+        var atLeastOneSatisfied = false;
         //just satisfy any goal
         for (var subgoal : goal.getSubgoals()) {
           satisfyGoal(subgoal);
-          //if partially satisfiability
-          if (evaluation.forGoal(subgoal).getScore() == 0 || subgoal.isPartiallySatisfiable()) {
-            //decision-making here : we stop at the first subgoal satisfied
-            evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false);
-            evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), false);
-            evaluation.forGoal(goal).setScore(0);
+          final var subgoalIsSatisfied = (evaluation.forGoal(subgoal).getScore() == 0);
+          if(!subgoalIsSatisfied && !(goal.isPartiallySatisfiable())){
+            rollback(subgoal);
+          }
+          evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false);
+          evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), true);
+          if(subgoalIsSatisfied){
+            atLeastOneSatisfied = true;
             break;
           }
+        }
+        if(atLeastOneSatisfied){
+          evaluation.forGoal(goal).setScore(0);
+        } else {
+          evaluation.forGoal(goal).setScore(-1);
         }
       }
   }
@@ -371,30 +379,30 @@ public class PrioritySolver implements Solver {
     assert goal != null;
     assert plan != null;
 
-    boolean failed = false;
-
+    var nbGoalSatisfied = 0;
     for (var subgoal : goal.getSubgoals()) {
       satisfyGoal(subgoal);
-      if (evaluation.forGoal(subgoal).getScore() != 0 && !subgoal.isPartiallySatisfiable()) {
-        failed = true;
-        break;
+      if (evaluation.forGoal(subgoal).getScore() == 0) {
+        nbGoalSatisfied++;
       }
     }
+    final var goalIsSatisfied = (nbGoalSatisfied == goal.getSubgoals().size());
+    if (goalIsSatisfied) {
+      evaluation.forGoal(goal).setScore(0);
+    } else {
+      evaluation.forGoal(goal).setScore(-1);
+    }
 
-    if (failed) {
-      //remove all activities
+    if (!goalIsSatisfied && !goal.isPartiallySatisfiable()) {
       for (var subgoal : goal.getSubgoals()) {
         rollback(subgoal);
       }
-    } else{
-      for(var subgoal : goal.getSubgoals()) {
+    } else {
+      for (var subgoal : goal.getSubgoals()) {
         evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false);
-        evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), false);
-        evaluation.forGoal(goal).setScore(0);
+        evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), true);
       }
     }
-
-
   }
 
 
