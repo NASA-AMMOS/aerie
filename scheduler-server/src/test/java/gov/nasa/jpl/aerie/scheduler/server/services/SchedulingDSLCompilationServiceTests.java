@@ -472,4 +472,89 @@ class SchedulingDSLCompilationServiceTests {
       fail(r.toString());
     }
   }
+
+  @Test
+  void testAndGoal(){
+    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
+    result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
+        PLAN_ID, """
+                export default function myGoal() {
+                  return Goal.ActivityRecurrenceGoal({
+                    activityTemplate: ActivityTemplates.SampleActivityEmpty(),
+                    interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                  }).and(
+                    Goal.ActivityRecurrenceGoal({
+                      activityTemplate: ActivityTemplates.SampleActivityEmpty(),
+                      interval: 2 * 60 * 60 * 1000 * 1000 // 2 hour in microseconds
+                    })
+                  )
+                }
+            """);
+    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.GoalAnd(List.of(
+        new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+          new SchedulingDSL.ActivityTemplate(
+              "SampleActivityEmpty",
+              Map.of()
+          ),
+          Duration.HOUR
+    ), new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+            new SchedulingDSL.ActivityTemplate(
+                "SampleActivityEmpty",
+                Map.of()
+            ),
+            Duration.HOUR.times(2)
+        )));
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+      assertEquals(
+          expectedGoalDefinition,
+          r.goalSpecifier()
+      );
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      fail(r.toString());
+    }
+  }
+
+  @Test
+  void testOrGoal(){
+    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
+    result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
+        PLAN_ID, """
+                export default function myGoal() {
+                  return Goal.ActivityRecurrenceGoal({
+                    activityTemplate: ActivityTemplates.SampleActivityEmpty(),
+                    interval: 60 * 60 * 1000 * 1000 // 1 hour in microseconds
+                  }).or(
+                    Goal.ActivityRecurrenceGoal({
+                      activityTemplate: ActivityTemplates.SampleActivityEmpty(),
+                      interval: 2 * 60 * 60 * 1000 * 1000 // 2 hour in microseconds
+                    })
+                  )
+                }
+            """);
+    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.GoalOr(List.of(
+        new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+            new SchedulingDSL.ActivityTemplate(
+                "SampleActivityEmpty",
+                Map.of()
+            ),
+            Duration.HOUR
+        ), new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+            new SchedulingDSL.ActivityTemplate(
+                "SampleActivityEmpty",
+                Map.of()
+            ),
+            Duration.HOUR.times(2)
+        )));
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+      assertEquals(
+          expectedGoalDefinition,
+          r.goalSpecifier()
+      );
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      fail(r.toString());
+    }
+  }
+
 }
