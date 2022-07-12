@@ -299,7 +299,6 @@ public class PrioritySolver implements Solver {
 
 
   private void satisfyOptionGoal(OptionGoal goal) {
-    if (goal.getNamongP().isSingleton() && goal.getNamongP().getMaximum() == 1) {
       if (goal.hasOptimizer()) {
         //try to satisfy all and see what is best
         Goal currentSatisfiedGoal = null;
@@ -340,8 +339,7 @@ public class PrioritySolver implements Solver {
             throw new IllegalStateException("Had satisfied subgoal but (1) simulation or (2) association with supergoal failed");
           }
         } else {
-          //number of subgoals needed to achieve supergoal
-          evaluation.forGoal(goal).setScore(goal.getNamongP().getMaximum() - goal.getNamongP().getMinimum());
+          evaluation.forGoal(goal).setScore(-1);
         }
       } else {
         //just satisfy any goal
@@ -357,11 +355,6 @@ public class PrioritySolver implements Solver {
           }
         }
       }
-    } else {
-        throw new IllegalArgumentException(
-            "Other options than singleton namongp of OptionGoal has not yet been implemented");
-    }
-
   }
 
   private void rollback(Goal goal){

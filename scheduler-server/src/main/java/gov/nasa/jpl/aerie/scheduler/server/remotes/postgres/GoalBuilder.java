@@ -85,6 +85,7 @@ public class GoalBuilder {
                                                  horizonEndTimestamp,
                                                  lookupActivityType));
       }
+      builder.forAllTimeIn(hor);
       return builder.build();
     }
 
