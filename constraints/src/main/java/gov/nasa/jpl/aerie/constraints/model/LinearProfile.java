@@ -22,28 +22,28 @@ public final class LinearProfile implements Profile<LinearProfile> {
   }
 
   @Override
-  public Windows equalTo(final LinearProfile other, final Window bounds) {
+  public Windows equalTo(final LinearProfile other, final Windows bounds) {
     return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::equalTo);
   }
 
   @Override
-  public Windows notEqualTo(final LinearProfile other, final Window bounds) {
+  public Windows notEqualTo(final LinearProfile other, final Windows bounds) {
     return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::notEqualTo);
   }
 
-  public Windows lessThan(final LinearProfile other, final Window bounds) {
+  public Windows lessThan(final LinearProfile other, final Windows bounds) {
     return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::lessThan);
   }
 
-  public Windows lessThanOrEqualTo(final LinearProfile other, final Window bounds) {
+  public Windows lessThanOrEqualTo(final LinearProfile other, final Windows bounds) {
     return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::lessThanOrEqualTo);
   }
 
-  public Windows greaterThan(final LinearProfile other, final Window bounds) {
+  public Windows greaterThan(final LinearProfile other, final Windows bounds) {
     return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::greaterThan);
   }
 
-  public Windows greaterThanOrEqualTo(final LinearProfile other, final Window bounds) {
+  public Windows greaterThanOrEqualTo(final LinearProfile other, final Windows bounds) {
     return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::greaterThanOrEqualTo);
   }
 
@@ -85,11 +85,11 @@ public final class LinearProfile implements Profile<LinearProfile> {
     );
   }
 
-  private static boolean profileOutsideBounds(final LinearProfilePiece piece, final Window bounds){
+  private static boolean profileOutsideBounds(final LinearProfilePiece piece, final Windows bounds){
     return piece.window.isStrictlyBefore(bounds) || piece.window.isStrictlyAfter(bounds);
   }
 
-  private Windows getWindowsSatisfying(final LinearProfile other, final Window bounds, final BiFunction<LinearProfilePiece, LinearProfilePiece, Windows> condition) {
+  private Windows getWindowsSatisfying(final LinearProfile other, final Windows bounds, final BiFunction<LinearProfilePiece, LinearProfilePiece, Windows> condition) {
     final var windows = new Windows();
     for (final var satisfying : processIntersections(this, other, condition, bounds)) {
       windows.addAll(satisfying);
@@ -103,7 +103,7 @@ public final class LinearProfile implements Profile<LinearProfile> {
     // TODO: Gaps in profiles will cause an error
     //       We may want to deal with gaps someday
     @Override
-    public Windows changePoints(final Window bounds) {
+    public Windows changePoints(final Windows bounds) {
       final var changePoints = new Windows();
       if (this.profilePieces.size() == 0) return changePoints;
 

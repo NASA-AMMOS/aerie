@@ -205,10 +205,12 @@ public final class GetSimulationResultsAction {
         final var extent = piece.getLeft();
         final var value = piece.getRight();
 
-        pieces.add(new LinearProfilePiece(
-            Window.between(elapsed, elapsed.plus(extent)),
-            value.initial,
-            value.rate));
+        if(value != null) {
+          pieces.add(new LinearProfilePiece(
+              Window.between(elapsed, elapsed.plus(extent)),
+              value.initial,
+              value.rate));
+        }
 
         elapsed = elapsed.plus(extent);
       }

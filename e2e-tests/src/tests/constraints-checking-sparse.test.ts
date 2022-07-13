@@ -202,6 +202,7 @@ test.describe('Sparse', () => {
     expect(constraint_violations).not.toBeNull();
     expect(constraint_violations).toBeDefined();
     expect(constraint_violations["plan/PR.PC"]).not.toBeNull();
+    expect(constraint_violations["plan/PR.PC"]).toEqual([{"windows":[{"start":45000000, "end":50000000}]}])
   });
 
   test('Delete plan', async ({ request }) => {

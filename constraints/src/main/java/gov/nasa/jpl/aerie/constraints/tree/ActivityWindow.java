@@ -17,7 +17,7 @@ public final class ActivityWindow implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
+  public Windows evaluate(final SimulationResults results, final Windows bounds, final Map<String, ActivityInstance> environment) {
     final var activity = environment.get(this.activityAlias);
     return new Windows(activity.window);
   }

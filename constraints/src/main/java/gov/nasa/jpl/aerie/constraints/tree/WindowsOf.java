@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.constraints.tree;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
-import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.List;
@@ -19,7 +18,7 @@ public final class WindowsOf implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(SimulationResults results, final Window bounds, Map<String, ActivityInstance> environment) {
+  public Windows evaluate(SimulationResults results, final Windows bounds, Map<String, ActivityInstance> environment) {
     final var ret = new Windows(bounds);
     final var unsatisfiedWindows = this.expression.evaluate(results, bounds, environment);
     for(var unsatisfiedWindow : unsatisfiedWindows){
