@@ -13,6 +13,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
@@ -35,16 +36,17 @@ public final class ProfileParsers {
       . map(Iso.of(
           untuple(RealDynamics::linear),
           $ -> tuple($.initial, $.rate)
-      )) | null;
+      ));
 
   public static final JsonParser<Pair<Duration, RealDynamics>> realProfileSegmentP
       = productP
       . field("duration", durationP)
-      . field("dynamics", realDynamicsP)
+      . optionalField("dynamics", realDynamicsP)
       . map(Iso.of(
-          untuple((BiFunction<Duration, RealDynamics, Pair<Duration, RealDynamics>>) Pair::of),
-          $ -> tuple($.getLeft(), $.getRight())
-      ));
+            untuple((duration, dynamics) -> tuple(duration, dynamics.orElse(null))),
+            untuple((duration, dynamics) -> tuple(duration, Optional.ofNullable(dynamics)))
+          )
+      );
 
   public static final JsonParser<Pair<Duration, SerializedValue>> discreteProfileSegmentP
       = productP

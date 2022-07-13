@@ -317,7 +317,7 @@ public final class PostgresPlanRepository implements PlanRepository {
         final var datasetStart = pairOfStartEnd.getLeft();
         final var datasetEnd = pairOfStartEnd.getRight();
         final var window = new Window(datasetStart, datasetEnd);
-        final var profiles = ProfileRepository.getProfiles(connection, datasetId, window);
+        final var profiles = ProfileRepository.getProfiles(connection, datasetId, window); //TODO: HANDLE NULL PROFILES!!!! REBUILD FIRST.
 
         //TODO: ADD GAPS TO REFLECT SPACES BETWEEN INTERVALS
         //TODO: MAKE DURATION END ONCE LAST PROFILE ENDS, NOT AFTER WHOLE THING ENDS - THIS IS IN LINE 62 OF GETPROFILESEGMENTSACTION.JAVA

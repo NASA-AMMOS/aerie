@@ -62,7 +62,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
         dynamics = parseDynamics(resultSet.getCharacterStream(2), dynamicsP);
       }
 
-      final var duration = simulationDuration.minus(offset); //TODO: FIX SIMULATIONDURATION TO JUST GO THE DURATION OF THIS ACTIVITY
+      final var duration = simulationDuration.minus(offset);
       segments.add(Pair.of(duration, dynamics));
     }
 
@@ -70,12 +70,17 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
   }
 
   private <Dynamics> Dynamics parseDynamics(final Reader jsonStream, final JsonParser<Dynamics> dynamicsP) {
-    final var json = Json.createReader(jsonStream).readValue();
-    return dynamicsP
-        .parse(json)
-        .getSuccessOrThrow(
-            failureReason -> new Error(
-                "Corrupt profile dynamics: " + failureReason.reason()));
+    if (jsonStream == null) {
+      return null;
+    }
+    else {
+      final var json = Json.createReader(jsonStream).readValue();
+      return dynamicsP
+          .parse(json)
+          .getSuccessOrThrow(
+              failureReason -> new Error(
+                  "Corrupt profile dynamics: " + failureReason.reason()));
+    }
   }
 
   @Override
