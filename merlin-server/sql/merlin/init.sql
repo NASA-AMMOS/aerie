@@ -24,16 +24,18 @@ begin;
   \ir tables/dataset.sql
   \ir tables/span.sql
   \ir tables/profile.sql
-  \ir tables/profile_segment.sql
   \ir tables/topic.sql
   \ir tables/event.sql
+  \ir tables/simulation_dataset.sql
+  \ir tables/timeline_segment.sql
+  \ir tables/lifecycle_event.sql
+  \ir tables/profile_segment.sql
 
   -- Analysis intents
   \ir tables/condition.sql
   \ir tables/profile_request.sql
 
   \ir tables/mission_model_parameters.sql
-  \ir tables/simulation_dataset.sql
   \ir tables/plan_dataset.sql
 
   -- Views
