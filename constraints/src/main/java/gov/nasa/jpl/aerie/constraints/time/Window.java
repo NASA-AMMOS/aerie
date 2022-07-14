@@ -121,6 +121,10 @@ public final class Window implements Comparable<Window>{
     return at(Duration.of(quantity, unit));
   }
 
+  public static Window encapsulates(Windows w) {
+    return new Window(w.minTimePoint().get(), w.maxTimePoint().get());
+  }
+
   public static final Window EMPTY = new Window(Duration.ZERO, Duration.ZERO.minus(Duration.EPSILON));
   public static final Window FOREVER = new Window(Duration.MIN_VALUE, Duration.MAX_VALUE);
 
@@ -201,7 +205,6 @@ public final class Window implements Comparable<Window>{
   public boolean isStrictlyAfter(Window x){
     return compareStartToEnd(this, x) > 0;
   }
-
   public boolean isStrictlyBefore(Window x){
     return compareEndToStart(this,x) < 0;
   }

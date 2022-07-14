@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,11 +36,11 @@ public class LinearProfileBenchmark {
   public static void firstMethod(LinearProfile profile1, LinearProfile profile2, int times, long durationSequence){
     //test at the middle of the profile
     final var testAt = times / 2;
-    profile1.greaterThan(profile2, Window.between(testAt * durationSequence, (testAt + 1) * durationSequence, SECONDS));
+    profile1.greaterThan(profile2, new Windows(Window.between(testAt * durationSequence, (testAt + 1) * durationSequence, SECONDS)));
   }
 
   public static void secondMethod(final LinearProfile profile1, final LinearProfile profile2, final long start, final int times, final long durationSequence){
-    profile1.greaterThan(profile2, Window.between(start, times * durationSequence, SECONDS));
+    profile1.greaterThan(profile2, new Windows(Window.between(start, times * durationSequence, SECONDS)));
   }
 
 

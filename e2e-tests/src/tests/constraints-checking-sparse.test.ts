@@ -136,8 +136,38 @@ test.describe('Sparse', () => {
                 dynamics: true
               },
               {
+                duration: 5000000,
+                dynamics: null
+              },
+              {
                 duration: 20000000,
                 dynamics: false
+              }
+            ]
+          }
+        }`
+      },
+      {
+        plan_id: plan_id,
+        datasetStart: "2021-001T00:00:10",
+        profileSet: `{
+          externalProfile3: {
+            type: "discrete",
+            schema: {
+              type: "real"
+            },
+            segments: [
+              {
+                duration: 20000000,
+                dynamics: 5
+              },
+              {
+                duration: 5000000,
+                dynamics: null
+              },
+              {
+                duration: 20000000,
+                dynamics: 27
               }
             ]
           }
@@ -179,7 +209,14 @@ test.describe('Sparse', () => {
   test('Add Sparse Constraints', async ({request}) => {
     const constraints: Constraint[] = [
       {
-        definition:"export default (): Constraint => Real.Resource(\"externalProfile1\").greaterThan(25.0)",
+        definition:`export default (): Constraint => {
+              return Windows.All(
+                  Real.Resource("externalProfile1").greaterThan(25.0),
+                  Discrete.Resource("externalProfile2").isEqual(true),
+                  Real.Resource("externalProfile2).greaterThan(26.0),
+                  Real.Resource("/plant").greaterThan(190.0)
+                )
+              }`,
         description:"test4",
         model_id:null,
         name:"PR.PC",
@@ -202,7 +239,7 @@ test.describe('Sparse', () => {
     expect(constraint_violations).not.toBeNull();
     expect(constraint_violations).toBeDefined();
     expect(constraint_violations["plan/PR.PC"]).not.toBeNull();
-    expect(constraint_violations["plan/PR.PC"]).toEqual([{"windows":[{"start":45000000, "end":50000000}]}])
+    expect(constraint_violations["plan/PR.PC"][0].windows).toEqual([{"start":45000000, "end":50000000}]);
   });
 
   test('Delete plan', async ({ request }) => {

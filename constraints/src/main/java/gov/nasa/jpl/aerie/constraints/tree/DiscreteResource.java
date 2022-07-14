@@ -20,6 +20,13 @@ public final class DiscreteResource implements Expression<DiscreteProfile> {
   @Override
   public DiscreteProfile evaluate(final SimulationResults results, final Windows bounds, final Map<String, ActivityInstance> environment) {
     if (results.discreteProfiles.containsKey(this.name)) {
+      //only evaluate where the resource exists
+      var prof = results.discreteProfiles.get(this.name);
+      Windows result = new Windows();
+      for (var i : prof.profilePieces) {
+        result.add(i.window);
+      }
+      bounds.intersectWith(result);
       return results.discreteProfiles.get(this.name);
     } else if (results.realProfiles.containsKey(this.name)) {
       throw new InputMismatchException(String.format("%s is a real resource, cannot interpret as discrete", this.name));

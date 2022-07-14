@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.List;
@@ -31,9 +32,10 @@ public final class RealParameter implements Expression<LinearProfile> {
                           this.parameterName,
                           activity.parameters.get(parameterName).toString())));
 
+    //this Windows will guaranteed be a single window. had to make it conform to a Windows because of a fix implemented in RealResource as that ones bounds SHOULD be Windows.
     return new LinearProfile(
         List.of(
-            new LinearProfilePiece(bounds, value, 0)));
+            new LinearProfilePiece(Window.encapsulates(bounds), value, 0)));
   }
 
   @Override

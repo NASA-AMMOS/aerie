@@ -21,7 +21,7 @@ public class LinearProfileTimeDomainTest {
         new LinearProfilePiece(Window.between(15, Inclusive, 20, Inclusive, SECONDS), -2, 0)
     );
 
-    final var result = profile.changePoints(Window.between(9, 16, SECONDS));
+    final var result = profile.changePoints(new Windows(Window.between(9, 16, SECONDS)));
 
     final var expected = new Windows();
     expected.add(Window.between(10, Exclusive, 15, Inclusive, SECONDS));
@@ -48,7 +48,7 @@ public class LinearProfileTimeDomainTest {
         new LinearProfilePiece(Window.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
     );
 
-    final var result = profile.lessThan(other, Window.between(9, 14, SECONDS));
+    final var result = profile.lessThan(other, new Windows(Window.between(9, 14, SECONDS)));
 
     final var expected = new Windows();
     expected.add(Window.between(9, Inclusive, 14, Exclusive, SECONDS));
@@ -75,7 +75,7 @@ public class LinearProfileTimeDomainTest {
         new LinearProfilePiece(Window.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
     );
 
-    final var result = profile.lessThanOrEqualTo(other, Window.between(0, 8, SECONDS));
+    final var result = profile.lessThanOrEqualTo(other, new Windows(Window.between(0, 8, SECONDS)));
 
     final var expected = new Windows();
     expected.add(Window.between( 0, Inclusive,  2, Inclusive, SECONDS));
@@ -103,7 +103,7 @@ public class LinearProfileTimeDomainTest {
         new LinearProfilePiece(Window.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
     );
 
-    final var result = profile.greaterThan(other, Window.between(2, 15, SECONDS));
+    final var result = profile.greaterThan(other, new Windows(Window.between(2, 15, SECONDS)));
 
     final var expected = new Windows();
     expected.add(Window.between( 2, Exclusive,  6, Exclusive, SECONDS));
@@ -131,7 +131,7 @@ public class LinearProfileTimeDomainTest {
         new LinearProfilePiece(Window.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
     );
 
-    final var result = profile.greaterThanOrEqualTo(other, Window.between(8, 20, SECONDS));
+    final var result = profile.greaterThanOrEqualTo(other, new Windows(Window.between(8, 20, SECONDS)));
 
     final var expected = new Windows();
     expected.add(Window.at(8, SECONDS));
@@ -159,7 +159,7 @@ public class LinearProfileTimeDomainTest {
         new LinearProfilePiece(Window.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
     );
 
-    final var result = profile.equalTo(other, Window.between(7, 17, SECONDS));
+    final var result = profile.equalTo(other, new Windows(Window.between(7, 17, SECONDS)));
 
     final var expected = new Windows();
     expected.add(Window.between( 7, Inclusive,  8, Inclusive, SECONDS));
@@ -188,7 +188,7 @@ public class LinearProfileTimeDomainTest {
         new LinearProfilePiece(Window.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
     );
 
-    final var result = profile.notEqualTo(other, Window.between(2, 11, SECONDS));
+    final var result = profile.notEqualTo(other, new Windows(Window.between(2, 11, SECONDS)));
 
     final var expected = new Windows();
     expected.add(Window.between(2, Exclusive, 6, Exclusive, SECONDS));

@@ -25,14 +25,22 @@ public final class RealResource implements Expression<LinearProfile> {
   public LinearProfile evaluate(final SimulationResults results, final Windows bounds, final Map<String, ActivityInstance> environment) {
     if (results.realProfiles.containsKey(this.name)) {
       //only evaluate where the resource is valid
-      var prof = results.realProfiles.get(this.name).profilePieces;
+      var prof = results.realProfiles.get(this.name);
       Windows result = new Windows();
-      for (var i : prof) {
+      for (var i : prof.profilePieces) {
         result.add(i.window);
       }
       bounds.intersectWith(result);
+      return prof;
     } else if (results.discreteProfiles.containsKey(this.name)) {
-      return convertDiscreteProfile(results.discreteProfiles.get(this.name));
+      //only evaluate where the resource exists
+      var prof = results.discreteProfiles.get(this.name);
+      Windows result = new Windows();
+      for (var i : prof.profilePieces) {
+        result.add(i.window);
+      }
+      bounds.intersectWith(result);
+      return convertDiscreteProfile(prof);
     }
 
     throw new InputMismatchException(String.format("%s is not a valid resource", this.name));

@@ -59,7 +59,7 @@ public final class LinearProfile implements Profile<LinearProfile> {
               p.rate + o.rate
           );
         },
-        Window.FOREVER
+        new Windows(Window.FOREVER)
     );
 
     return new LinearProfile(profilePieces);
@@ -86,7 +86,7 @@ public final class LinearProfile implements Profile<LinearProfile> {
   }
 
   private static boolean profileOutsideBounds(final LinearProfilePiece piece, final Windows bounds){
-    return piece.window.isStrictlyBefore(bounds) || piece.window.isStrictlyAfter(bounds);
+    return piece.window.isStrictlyBefore(Window.encapsulates(bounds)) || piece.window.isStrictlyAfter(Window.encapsulates(bounds));
   }
 
   private Windows getWindowsSatisfying(final LinearProfile other, final Windows bounds, final BiFunction<LinearProfilePiece, LinearProfilePiece, Windows> condition) {
@@ -138,7 +138,7 @@ public final class LinearProfile implements Profile<LinearProfile> {
    * @param processor BiFunction taking two profile pieces and a desired result based on their intersection
    * @return Set of all windows within bounds for which condition is satisfied between this and another profile
    */
-  private static <T> List<T> processIntersections(final LinearProfile left, final LinearProfile right, final BiFunction<LinearProfilePiece, LinearProfilePiece, T> processor, Window bounds) {
+  private static <T> List<T> processIntersections(final LinearProfile left, final LinearProfile right, final BiFunction<LinearProfilePiece, LinearProfilePiece, T> processor, Windows bounds) {
     if (left.profilePieces.isEmpty() || right.profilePieces.isEmpty()) return new ArrayList<>();
 
     // Setup to step through profiles simultaneously,
