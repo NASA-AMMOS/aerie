@@ -1,6 +1,10 @@
 table:
   name: activity
   schema: public
+object_relationships:
+- name: plan
+  using:
+    foreign_key_constraint_on: plan_id
 array_relationships:
 - name: simulated_activities
   using:
@@ -11,3 +15,14 @@ array_relationships:
       insertion_order: null
       column_mapping:
         id: directive_id
+remote_relationships:
+- name: source_scheduling_goal
+  definition:
+    to_source:
+      relationship_type: object
+      source: AerieScheduler
+      table:
+        schema: public
+        name: scheduling_goal
+      field_mapping:
+        source_scheduling_goal_id: id
