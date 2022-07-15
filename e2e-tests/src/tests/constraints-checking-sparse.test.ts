@@ -175,6 +175,16 @@ test.describe('Sparse', () => {
       }
     ];
 
+    /*
+
+    /plant: --+++--++--
+     value:   (3)  (2)
+         t: 01234567890
+
+    Real.Resource("/plant").equal(3.0)
+
+
+*/
 
     for (const profile of profiles) {
       const dataset_id = await req.addExternalProfile(request, profile);
@@ -209,12 +219,21 @@ test.describe('Sparse', () => {
   test('Add Sparse Constraints', async ({request}) => {
     const constraints: Constraint[] = [
       {
-        definition:`export default (): Constraint => {
-              return Windows.All(
+        /*definition:`export default (): Constraint => {
+              return Windows.Any(
                   Real.Resource("externalProfile1").greaterThan(25.0),
-                  Discrete.Resource("externalProfile2").isEqual(true),
-                  Real.Resource("externalProfile2).greaterThan(26.0),
-                  Real.Resource("/plant").greaterThan(190.0)
+                  Discrete.Resource("externalProfile2").equal(true),
+                  Discrete.Resource("externalProfile3").notEqual(3000.0),
+                  Real.Resource("externalProfile3").greaterThan(26.0),
+                  Real.Resource("/plant").greaterThan(190.0),
+                  //Real.Resource("externalProfile2").greaterThan(15.0)
+                )
+              }`,*/
+        definition: `export default (): Constraint => {
+              return Windows.All(
+
+                  Real.Resource("/plant").equal(200.0),
+                  Windows.Anh(Discrete.Resource("externalProfile3").equal(27.0), D
                 )
               }`,
         description:"test4",

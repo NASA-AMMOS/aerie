@@ -49,6 +49,9 @@ public final class RealResource implements Expression<LinearProfile> {
   private LinearProfile convertDiscreteProfile(final DiscreteProfile profile) {
     final var linearPieces = new ArrayList<LinearProfilePiece>(profile.profilePieces.size());
     for (final var piece : profile.profilePieces) {
+      if (piece.value.isNull()) {
+        continue;
+      }
       final var value = piece.value.asReal().orElseThrow(
           () -> new InputMismatchException("Discrete profile of non-real type cannot be converted to linear"));
       linearPieces.add(new LinearProfilePiece(piece.window, value, 0));

@@ -162,9 +162,11 @@ public final class GetSimulationResultsAction {
         final var extent = piece.getLeft();
         final var value = piece.getRight();
 
-        pieces.add(new DiscreteProfilePiece(
-            Window.between(elapsed, elapsed.plus(extent)),
-            value));
+        if(value != null) {
+          pieces.add(new DiscreteProfilePiece(
+              Window.between(elapsed, elapsed.plus(extent)),
+              value));
+        }
 
         elapsed = elapsed.plus(extent);
       }

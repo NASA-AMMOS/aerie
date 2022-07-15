@@ -10,6 +10,8 @@ import java.util.Set;
 
 public interface Expression<T> {
   T evaluate(final SimulationResults results, final Windows bounds, final Map<String, ActivityInstance> environment);
+
+  T getWhereDefined(); //traverses down the tree, what u do in violationsof is call on the children of this
   String prettyPrint(final String prefix);
   /** Add the resources referenced by this expression to the given set. **/
   void extractResources(Set<String> names);

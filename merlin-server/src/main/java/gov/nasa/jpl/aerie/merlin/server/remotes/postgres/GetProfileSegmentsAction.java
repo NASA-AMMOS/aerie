@@ -35,6 +35,31 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement = connection.prepareStatement(sql);
   }
 
+  /*
+
+  //Normally:
+
+  Windows.Any(
+      Real.Resource("hello").lessThan(3),
+      Real.Resource("hello").undefined() //because we want it to be vacuously true
+  );
+
+  //But that is verbose. The SUGAR:
+
+  Real.Resource("hello").whenDefined().lessThan(3); //when its defined, then and only then check for violations
+  .whenDefined() returns type Nullable.Resource("hello"), so then the lessThan(3) gets applied on an UndefReal type.
+  ->
+
+  NullableReal.Resource("hello").lessThan(3)
+
+  ->
+
+  Real.Resource("hello").lessThan(3), within the lessThan(3) implementation ->Windows.Any(
+      Real.Resource("hello").lessThan(3),
+      Real.Resource("hello").undefined() //because we want it to be vacuously true
+  );
+   */
+
   public <Dynamics> List<Pair<Duration, Dynamics>> get(
       final long datasetId,
       final long profileId,
