@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.List;
@@ -21,8 +20,8 @@ public final class DiscreteValue implements Expression<DiscreteProfile> {
   }
 
   @Override
-  public DiscreteProfile evaluate(final SimulationResults results, final Windows bounds, final Map<String, ActivityInstance> environment) {
-    return new DiscreteProfile(List.of(new DiscreteProfilePiece(Window.encapsulates(bounds), this.value)));
+  public DiscreteProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
+    return new DiscreteProfile(List.of(new DiscreteProfilePiece(bounds, this.value)));
   }
 
   @Override

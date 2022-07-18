@@ -162,11 +162,9 @@ public final class GetSimulationResultsAction {
         final var extent = piece.getLeft();
         final var value = piece.getRight();
 
-        if(value != null) {
-          pieces.add(new DiscreteProfilePiece(
-              Window.between(elapsed, elapsed.plus(extent)),
-              value));
-        }
+        pieces.add(new DiscreteProfilePiece(
+            Window.between(elapsed, elapsed.plus(extent)),
+            value));
 
         elapsed = elapsed.plus(extent);
       }
@@ -207,12 +205,10 @@ public final class GetSimulationResultsAction {
         final var extent = piece.getLeft();
         final var value = piece.getRight();
 
-        if(value != null) {
-          pieces.add(new LinearProfilePiece(
-              Window.between(elapsed, elapsed.plus(extent)),
-              value.initial,
-              value.rate));
-        }
+        pieces.add(new LinearProfilePiece(
+            Window.between(elapsed, elapsed.plus(extent)),
+            value.initial,
+            value.rate));
 
         elapsed = elapsed.plus(extent);
       }

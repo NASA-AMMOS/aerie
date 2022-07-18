@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -22,25 +21,11 @@ public final class RealResource implements Expression<LinearProfile> {
   }
 
   @Override
-  public LinearProfile evaluate(final SimulationResults results, final Windows bounds, final Map<String, ActivityInstance> environment) {
+  public LinearProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
     if (results.realProfiles.containsKey(this.name)) {
-      //only evaluate where the resource is valid
-      var prof = results.realProfiles.get(this.name);
-      Windows result = new Windows();
-      for (var i : prof.profilePieces) {
-        result.add(i.window);
-      }
-      bounds.intersectWith(result);
-      return prof;
+      return results.realProfiles.get(this.name);
     } else if (results.discreteProfiles.containsKey(this.name)) {
-      //only evaluate where the resource exists
-      var prof = results.discreteProfiles.get(this.name);
-      Windows result = new Windows();
-      for (var i : prof.profilePieces) {
-        result.add(i.window);
-      }
-      bounds.intersectWith(result);
-      return convertDiscreteProfile(prof);
+      return convertDiscreteProfile(results.discreteProfiles.get(this.name));
     }
 
     throw new InputMismatchException(String.format("%s is not a valid resource", this.name));
@@ -49,9 +34,6 @@ public final class RealResource implements Expression<LinearProfile> {
   private LinearProfile convertDiscreteProfile(final DiscreteProfile profile) {
     final var linearPieces = new ArrayList<LinearProfilePiece>(profile.profilePieces.size());
     for (final var piece : profile.profilePieces) {
-      if (piece.value.isNull()) {
-        continue;
-      }
       final var value = piece.value.asReal().orElseThrow(
           () -> new InputMismatchException("Discrete profile of non-real type cannot be converted to linear"));
       linearPieces.add(new LinearProfilePiece(piece.window, value, 0));

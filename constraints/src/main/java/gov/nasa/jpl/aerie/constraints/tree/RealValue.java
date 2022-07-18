@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.List;
 import java.util.Map;
@@ -20,11 +19,10 @@ public final class RealValue implements Expression<LinearProfile> {
   }
 
   @Override
-  public LinearProfile evaluate(final SimulationResults results, final Windows bounds, final Map<String, ActivityInstance> environment) {
-    //this Windows will guaranteed be a single window. had to make it conform to a Windows because of a fix implemented in RealResource as that ones bounds SHOULD be Windows.
+  public LinearProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
     return new LinearProfile(
         List.of(
-            new LinearProfilePiece(Window.encapsulates(bounds), this.value, 0.0)
+            new LinearProfilePiece(bounds, this.value, 0.0)
         )
     );
   }

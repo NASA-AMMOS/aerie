@@ -18,12 +18,12 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
     this(List.of(profilePieces));
   }
 
-  private static boolean profileOutsideBounds(final DiscreteProfilePiece piece, final Windows bounds){
-    return piece.window.isStrictlyBefore(Window.encapsulates(bounds)) || piece.window.isStrictlyAfter(Window.encapsulates(bounds));
+  private static boolean profileOutsideBounds(final DiscreteProfilePiece piece, final Window bounds){
+    return piece.window.isStrictlyBefore(bounds) || piece.window.isStrictlyAfter(bounds);
   }
 
   @Override
-  public Windows notEqualTo(final DiscreteProfile other, final Windows bounds) {
+  public Windows notEqualTo(final DiscreteProfile other, final Window bounds) {
     final var windows = new Windows(bounds);
     for (final var profilePiece : this.profilePieces) {
       if(profileOutsideBounds(profilePiece, bounds)) continue;
@@ -44,7 +44,7 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
   }
 
   @Override
-  public Windows equalTo(final DiscreteProfile other, final Windows bounds) {
+  public Windows equalTo(final DiscreteProfile other, final Window bounds) {
     final var windows = new Windows();
     for (final var profilePiece : this.profilePieces) {
       if(profileOutsideBounds(profilePiece, bounds)) continue;
@@ -66,7 +66,7 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
   // TODO: Gaps in profiles will cause an error
   //       We may want to deal with gaps someday
   @Override
-  public Windows changePoints(final Windows bounds) {
+  public Windows changePoints(final Window bounds) {
     final var changePoints = new Windows();
     if (this.profilePieces.size() == 0) return changePoints;
 
@@ -93,7 +93,7 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
 
   // TODO: Gaps in profiles will cause an error
   //       We may want to deal with gaps someday
-  public Windows transitions(final SerializedValue oldState, final SerializedValue newState, final Windows bounds) {
+  public Windows transitions(final SerializedValue oldState, final SerializedValue newState, final Window bounds) {
     final var transitionPoints = new Windows();
     if (this.profilePieces.size() == 0) return transitionPoints;
 

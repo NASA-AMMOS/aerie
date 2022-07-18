@@ -28,7 +28,7 @@ public class DiscreteProfileTimeDomainTest {
         new DiscreteProfilePiece(Window.between(15, Inclusive, 20, Inclusive, SECONDS), SerializedValue.of(false))
     ));
 
-    final var result = profile.equalTo(other, new Windows(Window.between(6, 14, SECONDS)));
+    final var result = profile.equalTo(other, Window.between(6, 14, SECONDS));
 
     final var expected = new Windows();
     assertEquivalent(expected, result);
@@ -50,7 +50,7 @@ public class DiscreteProfileTimeDomainTest {
         new DiscreteProfilePiece(Window.between(15, Inclusive, 20, Inclusive, SECONDS), SerializedValue.of(false))
     ));
 
-    final var result = profile.notEqualTo(other, new Windows(Window.between(6, 14, SECONDS)));
+    final var result = profile.notEqualTo(other, Window.between(6, 14, SECONDS));
 
     final var expected = new Windows();
     expected.add(Window.between(6, Inclusive, 14, Inclusive, SECONDS));
@@ -67,7 +67,7 @@ public class DiscreteProfileTimeDomainTest {
         new DiscreteProfilePiece(Window.between(15, Inclusive, 20, Inclusive, SECONDS), SerializedValue.of(false))
     ));
 
-    final var result = profile.changePoints(new Windows(Window.between(6, 14, SECONDS)));
+    final var result = profile.changePoints(Window.between(6, 14, SECONDS));
 
     final var expected = new Windows();
     expected.add(Window.at(10, SECONDS));
@@ -87,7 +87,7 @@ public class DiscreteProfileTimeDomainTest {
     final var result = profile.transitions(
         SerializedValue.of(true),
         SerializedValue.of(false),
-        new Windows(Window.between(6, 16, SECONDS)));
+        Window.between(6, 16, SECONDS));
 
     final var expected = new Windows();
     expected.add(Window.at(15, SECONDS));

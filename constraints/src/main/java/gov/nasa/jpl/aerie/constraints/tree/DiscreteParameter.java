@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.List;
 import java.util.Map;
@@ -22,12 +21,11 @@ public final class DiscreteParameter implements Expression<DiscreteProfile> {
   }
 
   @Override
-  public DiscreteProfile evaluate(final SimulationResults results, final Windows bounds, final Map<String, ActivityInstance> environment) {
-    //this Windows will guaranteed be a single window. had to make it conform to a Windows because of a fix implemented in RealResource as that ones bounds SHOULD be Windows.
+  public DiscreteProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
     final var activity = environment.get(this.activityAlias);
     return new DiscreteProfile(
         List.of(
-            new DiscreteProfilePiece(Window.encapsulates(bounds), activity.parameters.get(this.parameterName))));
+            new DiscreteProfilePiece(bounds, activity.parameters.get(this.parameterName))));
   }
 
   @Override

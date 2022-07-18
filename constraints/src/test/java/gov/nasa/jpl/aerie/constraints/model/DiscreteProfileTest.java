@@ -30,7 +30,7 @@ public class DiscreteProfileTest {
         new DiscreteProfilePiece(Window.between(15, Inclusive, 20, Inclusive, SECONDS), SerializedValue.of(false))
     ));
 
-    final var result = profile.equalTo(other, new Windows(Window.between(0, 20, SECONDS)));
+    final var result = profile.equalTo(other, Window.between(0, 20, SECONDS));
 
     final var expected = new Windows();
     expected.add(Window.between( 0, Inclusive,  5, Exclusive, SECONDS));
@@ -55,7 +55,7 @@ public class DiscreteProfileTest {
         new DiscreteProfilePiece(Window.between(15, Inclusive, 20, Inclusive, SECONDS), SerializedValue.of(false))
     ));
 
-    final var result = profile.notEqualTo(other, new Windows(Window.between(0, 20, SECONDS)));
+    final var result = profile.notEqualTo(other, Window.between(0, 20, SECONDS));
 
     final var expected = new Windows();
     expected.add(Window.between( 5, Inclusive, 15, Exclusive, SECONDS));
@@ -72,7 +72,7 @@ public class DiscreteProfileTest {
         new DiscreteProfilePiece(Window.between(15, Inclusive, 20, Inclusive, SECONDS), SerializedValue.of(false))
     ));
 
-    final var result = profile.changePoints(new Windows(Window.between(0, 20, SECONDS)));
+    final var result = profile.changePoints(Window.between(0, 20, SECONDS));
 
     final var expected = new Windows();
     expected.add(Window.at( 5, SECONDS));
@@ -91,7 +91,7 @@ public class DiscreteProfileTest {
         new DiscreteProfilePiece(Window.between(15, Inclusive, 20, Inclusive, SECONDS), SerializedValue.of(false))
     ));
 
-    final var result = profile.transitions(SerializedValue.of(true), SerializedValue.of(false), new Windows(Window.between(0, 20, SECONDS)));
+    final var result = profile.transitions(SerializedValue.of(true), SerializedValue.of(false), Window.between(0, 20, SECONDS));
 
     final var expected = new Windows();
     expected.add(Window.at( 5, SECONDS));

@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.time.Window;
 
 import java.util.Map;
 import java.util.Objects;
@@ -18,15 +18,8 @@ public final class DiscreteResource implements Expression<DiscreteProfile> {
   }
 
   @Override
-  public DiscreteProfile evaluate(final SimulationResults results, final Windows bounds, final Map<String, ActivityInstance> environment) {
+  public DiscreteProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
     if (results.discreteProfiles.containsKey(this.name)) {
-      //only evaluate where the resource exists
-      var prof = results.discreteProfiles.get(this.name);
-      Windows result = new Windows();
-      for (var i : prof.profilePieces) {
-        result.add(i.window);
-      }
-      bounds.intersectWith(result);
       return results.discreteProfiles.get(this.name);
     } else if (results.realProfiles.containsKey(this.name)) {
       throw new InputMismatchException(String.format("%s is a real resource, cannot interpret as discrete", this.name));

@@ -21,6 +21,7 @@ import java.util.Set;
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -562,7 +563,7 @@ public class ASTTests {
 
 
     @Override
-    public T evaluate(final SimulationResults results, final Windows bounds, final Map<String, ActivityInstance> environment) {
+    public T evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
       return this.value;
     }
 

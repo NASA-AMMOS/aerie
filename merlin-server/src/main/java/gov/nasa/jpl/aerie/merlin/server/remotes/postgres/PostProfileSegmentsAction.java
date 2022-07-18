@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.List;
 
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatements.setTimestamp;
@@ -46,7 +47,12 @@ public final class PostProfileSegmentsAction implements AutoCloseable {
       this.statement.setLong(2, profileRecord.id());
       setTimestamp(this.statement, 3, timestamp);
       setTimestamp(this.statement, 4, simulationStart);
-      this.statement.setString(5, serializeDynamics(dynamics, dynamicsP));
+      if (dynamics == null) {
+        this.statement.setNull(5, Types.VARCHAR);
+      }
+      else {
+        this.statement.setString(5, serializeDynamics(dynamics, dynamicsP));
+      }
 
       this.statement.addBatch();
 

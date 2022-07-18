@@ -35,31 +35,6 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement = connection.prepareStatement(sql);
   }
 
-  /*
-
-  //Normally:
-
-  Windows.Any(
-      Real.Resource("hello").lessThan(3),
-      Real.Resource("hello").undefined() //because we want it to be vacuously true
-  );
-
-  //But that is verbose. The SUGAR:
-
-  Real.Resource("hello").whenDefined().lessThan(3); //when its defined, then and only then check for violations
-  .whenDefined() returns type Nullable.Resource("hello"), so then the lessThan(3) gets applied on an UndefReal type.
-  ->
-
-  NullableReal.Resource("hello").lessThan(3)
-
-  ->
-
-  Real.Resource("hello").lessThan(3), within the lessThan(3) implementation ->Windows.Any(
-      Real.Resource("hello").lessThan(3),
-      Real.Resource("hello").undefined() //because we want it to be vacuously true
-  );
-   */
-
   public <Dynamics> List<Pair<Duration, Dynamics>> get(
       final long datasetId,
       final long profileId,
@@ -87,7 +62,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
         dynamics = parseDynamics(resultSet.getCharacterStream(2), dynamicsP);
       }
 
-      final var duration = simulationDuration.minus(offset); //TODO: FIX SIMULATIONDURATION TO JUST GO THE DURATION OF THIS ACTIVITY
+      final var duration = simulationDuration.minus(offset);
       segments.add(Pair.of(duration, dynamics));
     }
 
@@ -95,12 +70,17 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
   }
 
   private <Dynamics> Dynamics parseDynamics(final Reader jsonStream, final JsonParser<Dynamics> dynamicsP) {
-    final var json = Json.createReader(jsonStream).readValue();
-    return dynamicsP
-        .parse(json)
-        .getSuccessOrThrow(
-            failureReason -> new Error(
-                "Corrupt profile dynamics: " + failureReason.reason()));
+    if (jsonStream == null) {
+      return null;
+    }
+    else {
+      final var json = Json.createReader(jsonStream).readValue();
+      return dynamicsP
+          .parse(json)
+          .getSuccessOrThrow(
+              failureReason -> new Error(
+                  "Corrupt profile dynamics: " + failureReason.reason()));
+    }
   }
 
   @Override

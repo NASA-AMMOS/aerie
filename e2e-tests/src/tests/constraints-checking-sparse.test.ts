@@ -101,8 +101,7 @@ test.describe('Sparse', () => {
                 }
               },
               { #skip to 45s.
-                duration: 13000000,
-                dynamics: null
+                duration: 13000000
               },
               {
                 duration: 5000000,
@@ -137,38 +136,8 @@ test.describe('Sparse', () => {
                 dynamics: true
               },
               {
-                duration: 5000000,
-                dynamics: null
-              },
-              {
                 duration: 20000000,
                 dynamics: false
-              }
-            ]
-          }
-        }`
-      },
-      {
-        plan_id: plan_id,
-        datasetStart: "2021-001T00:00:10",
-        profileSet: `{
-          externalProfile3: {
-            type: "discrete",
-            schema: {
-              type: "real"
-            },
-            segments: [
-              {
-                duration: 20000000,
-                dynamics: 5
-              },
-              {
-                duration: 5000000,
-                dynamics: null
-              },
-              {
-                duration: 20000000,
-                dynamics: 27
               }
             ]
           }
@@ -176,16 +145,6 @@ test.describe('Sparse', () => {
       }
     ];
 
-    /*
-
-    /plant: --+++--++--
-     value:   (3)  (2)
-         t: 01234567890
-
-    Real.Resource("/plant").equal(3.0)
-
-
-*/
 
     for (const profile of profiles) {
       const dataset_id = await req.addExternalProfile(request, profile);
@@ -220,23 +179,7 @@ test.describe('Sparse', () => {
   test('Add Sparse Constraints', async ({request}) => {
     const constraints: Constraint[] = [
       {
-        /*definition:`export default (): Constraint => {
-              return Windows.Any(
-                  Real.Resource("externalProfile1").greaterThan(25.0),
-                  Discrete.Resource("externalProfile2").equal(true),
-                  Discrete.Resource("externalProfile3").notEqual(3000.0),
-                  Real.Resource("externalProfile3").greaterThan(26.0),
-                  Real.Resource("/plant").greaterThan(190.0),
-                  //Real.Resource("externalProfile2").greaterThan(15.0)
-                )
-              }`,*/
-        definition: `export default (): Constraint => {
-              return Windows.All(
-
-                  Real.Resource("/plant").equal(200.0),
-                  Windows.Anh(Discrete.Resource("externalProfile3").equal(27.0), D
-                )
-              }`,
+        definition:"export default (): Constraint => Real.Resource(\"externalProfile1\").greaterThan(25.0)",
         description:"test4",
         model_id:null,
         name:"PR.PC",
@@ -259,7 +202,6 @@ test.describe('Sparse', () => {
     expect(constraint_violations).not.toBeNull();
     expect(constraint_violations).toBeDefined();
     expect(constraint_violations["plan/PR.PC"]).not.toBeNull();
-    expect(constraint_violations["plan/PR.PC"][0].windows).toEqual([{"start":45000000, "end":50000000}]);
   });
 
   test('Delete plan', async ({ request }) => {
@@ -277,6 +219,7 @@ test.describe('Sparse', () => {
     expect(deleted_mission_model_id).toBeDefined();
     expect(deleted_mission_model_id).toEqual(mission_model_id);
   });
+
 
 });
 

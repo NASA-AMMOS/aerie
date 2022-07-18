@@ -73,14 +73,14 @@ public class TimeRangeExpression {
     }
 
     for (var expr : stateExpr) {
-      final var domainOfInter = new Windows(Window.between(inter.minTimePoint().get(), inter.maxTimePoint().get()));
+      final var domainOfInter = Window.between(inter.minTimePoint().get(), inter.maxTimePoint().get());
       Windows windowsState = expr.evaluate(simulationResults, domainOfInter, Map.of());
       inter.intersectWith(windowsState);
       if(inter.isEmpty()) return inter;
     }
 
     for (var constState : constantsStates) {
-      final var domainOfInter = new Windows(Window.between(inter.minTimePoint().get(), inter.maxTimePoint().get()));
+      final var domainOfInter = Window.between(inter.minTimePoint().get(), inter.maxTimePoint().get());
       final var changePoints = simulationResults.discreteProfiles.get(constState).changePoints(domainOfInter);
       final var timeline = new Windows();
       final var container = new ArrayList<Window>();
