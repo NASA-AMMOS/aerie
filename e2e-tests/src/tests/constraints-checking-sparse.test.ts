@@ -101,7 +101,8 @@ test.describe('Sparse', () => {
                 }
               },
               { #skip to 45s.
-                duration: 13000000
+                duration: 13000000,
+                dynamics: null
               },
               {
                 duration: 5000000,
@@ -276,7 +277,6 @@ test.describe('Sparse', () => {
     expect(deleted_mission_model_id).toBeDefined();
     expect(deleted_mission_model_id).toEqual(mission_model_id);
   });
-
 
 });
 
