@@ -137,6 +137,20 @@ public final class Windows implements Iterable<Window> {
     return ret;
   }
 
+  public Windows starts(){
+    Windows ret = new Windows();
+    StreamSupport.stream(windows.ascendingOrder().spliterator(), false)
+                 .forEach((x)-> ret.add(Window.at(x.start)));
+    return ret;
+  }
+
+  public Windows ends(){
+    Windows ret = new Windows();
+    StreamSupport.stream(windows.ascendingOrder().spliterator(), false)
+                 .forEach((x)-> ret.add(Window.at(x.end)));
+    return ret;
+  }
+
   public Windows removeFirstAndLast(){
     List<Window> actualList = StreamSupport
         .stream(windows.ascendingOrder().spliterator(), false)

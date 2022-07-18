@@ -11,7 +11,6 @@ import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 
 import java.util.List;
 
@@ -282,6 +281,24 @@ public final class ConstraintParsers {
             $ -> tuple(Unit.UNIT, $.expression)));
   }
 
+  static JsonParser<Starts> startsF(final JsonParser<Expression<Windows>> windowsExpressionP) {
+    return productP
+        .field("kind", literalP("WindowsExpressionStarts"))
+        .field("expression", windowsExpressionP)
+        .map(Iso.of(
+            untuple((kind, expr) -> new Starts(expr)),
+            $ -> tuple(Unit.UNIT, $.expression)));
+  }
+
+  static JsonParser<Ends> endsF(final JsonParser<Expression<Windows>> windowsExpressionP) {
+    return productP
+        .field("kind", literalP("WindowsExpressionEnds"))
+        .field("expression", windowsExpressionP)
+        .map(Iso.of(
+            untuple((kind, expr) -> new Ends(expr)),
+            $ -> tuple(Unit.UNIT, $.expression)));
+  }
+
   static JsonParser<ForEachActivity> forEachActivityF(final JsonParser<Expression<List<Violation>>> violationListExpressionP) {
     return productP
         .field("kind", literalP("ForEachActivity"))
@@ -321,7 +338,9 @@ public final class ConstraintParsers {
           allF(selfP),
           anyF(selfP),
           invertF(selfP),
-          shiftByF(selfP)));
+          shiftByF(selfP),
+          startsF(selfP),
+          endsF(selfP)));
 
   static final JsonParser<ViolationsOf> violationsOfP =
       productP

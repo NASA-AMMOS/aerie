@@ -15,6 +15,8 @@ export enum NodeKind {
   WindowsExpressionLongerThan = 'WindowsExpressionLongerThan',
   WindowsExpressionShorterhan = 'WindowsExpressionShorterThan',
   WindowsExpressionShiftBy = 'WindowsExpressionShiftBy',
+  WindowsExpressionStarts = 'WindowsExpressionStarts',
+  WindowsExpressionEnds = 'WindowsExpressionEnds',
   ExpressionEqual = 'ExpressionEqual',
   ExpressionNotEqual = 'ExpressionNotEqual',
   RealProfileLessThan = 'RealProfileLessThan',
@@ -62,7 +64,9 @@ export type WindowsExpression =
   | WindowsExpressionLongerThan
   | WindowsExpressionShorterThan
   | WindowsExpressionInvert
-  | WindowsExpressionShiftBy;
+  | WindowsExpressionShiftBy
+  | WindowsExpressionStarts
+  | WindowsExpressionEnds;
 
 export interface ProfileChanges {
   kind: NodeKind.ProfileChanges;
@@ -154,6 +158,16 @@ export interface WindowsExpressionLongerThan {
   kind: NodeKind.WindowsExpressionLongerThan,
   windowExpression: WindowsExpression,
   duration: number
+}
+
+export interface WindowsExpressionStarts {
+  kind: NodeKind.WindowsExpressionStarts,
+  expression: WindowsExpression
+}
+
+export interface WindowsExpressionEnds {
+  kind: NodeKind.WindowsExpressionEnds,
+  expression: WindowsExpression
 }
 
 export interface DiscreteProfileTransition {
