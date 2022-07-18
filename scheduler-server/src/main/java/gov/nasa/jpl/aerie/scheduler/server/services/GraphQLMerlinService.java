@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLInterval;
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLTimestamp;
@@ -268,7 +269,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     //NB: the duration format for creating plans is different than that for activity instances (microseconds)
     final var durStr = "\"" + duration.in(Duration.SECOND) + "\"";
     final var request = requestFormat.formatted(
-        getGraphQLValueString(name), modelId, getGraphQLValueString(startTime), durStr);
+        serializeForGql(name), modelId, serializeForGql(startTime.toString()), durStr);
 
     final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(null));
     try {
@@ -373,7 +374,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     final var argumentsSb = new StringBuilder();
     for (final var arg : activity.arguments().entrySet()) {
       final var name = arg.getKey();
-      var value = getGraphQLValueString(arg.getValue());
+      var value = serializeForGql(arg.getValue());
       argumentsSb.append(argFormat.formatted(name, value));
     }
     final var updateReq = """
@@ -473,13 +474,14 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
       //add duration to parameters if controllable
       if(act.getType().getDurationType() instanceof DurationType.Controllable durationType){
         if(!act.getArguments().containsKey(durationType.parameterName())){
-          requestSB.append(argFormat.formatted(durationType.parameterName(), getGraphQLValueString(act.getDuration())));
+          requestSB.append(argFormat.formatted(durationType.parameterName(), serializeForGql(act.getDuration())));
         }
       }
       for (final var arg : act.getArguments().entrySet()) {
         final var name = arg.getKey();
-        var value = getGraphQLValueString(arg.getValue());
-        requestSB.append(argFormat.formatted(name, value));
+        final var value = arg.getValue();
+        final var gqlValue = serializeForGql(value);
+        requestSB.append(argFormat.formatted(name, gqlValue));
       }
       requestSB.append(actPost);
     }
@@ -628,24 +630,66 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
   }
 
   /**
-   * serialize the given java object in a manner that can be used as a graphql argument value
-   *
-   * eg wraps strings or enums in quotes
-   *
-   * @param obj the object to serialize
+   * serialize the given string in a manner that can be used as a graphql argument value
+   * @param s the string to serialize
    * @return a serialization of the object suitable for use as a graphql value
    */
-  public String getGraphQLValueString(Object obj) {
+  public String serializeForGql(final String s) {
     //TODO: can probably leverage some serializers from aerie
-    if (obj instanceof String || obj instanceof Enum<?> || obj instanceof Instant) {
-      //TODO: (defensive) should escape contents of bare strings, eg internal quotes
-      //NB: Time::toString will format correctly as HH:MM:SS.sss, just need to quote it here
-      return "\"" + obj + "\"";
-    } else if (obj instanceof Duration dur) {
-      //NB: merlin uses durations in microseconds! (inconsistent with start_offset as a HH:MM:SS.sss string)
-      return Long.toString(dur.in(Duration.MICROSECOND));
-    } else {
-      return obj.toString();
-    }
+    //TODO: (defensive) should escape contents of bare strings, eg internal quotes
+    //NB: Time::toString will format correctly as HH:MM:SS.sss, just need to quote it here
+    return "\"" + s + "\"";
+  }
+
+  /**
+   * serialize the given duration in a manner that can be used as a graphql argument value
+   * @param d the duration to serialize
+   * @return a serialization of the object suitable for use as a graphql value
+   */
+  public String serializeForGql(final Duration d) {
+    //TODO: can probably leverage some serializers from aerie
+    //NB: merlin uses durations in microseconds! (inconsistent with start_offset as a HH:MM:SS.sss string)
+    return Long.toString(d.in(Duration.MICROSECOND));
+  }
+
+  public String serializeForGql(final SerializedValue value) {
+    return value.match(new SerializedValue.Visitor<>() {
+      @Override
+      public String onNull() {
+        return "null";
+      }
+
+      @Override
+      public String onReal(final double value) {
+        return String.valueOf(value);
+      }
+
+      @Override
+      public String onInt(final long value) {
+        return String.valueOf(value);
+      }
+
+      @Override
+      public String onBoolean(final boolean value) {
+        return value ? "true" : "false";
+      }
+
+      @Override
+      public String onString(final String value) {
+        return serializeForGql(value);
+      }
+
+      @Override
+      public String onMap(final Map<String, SerializedValue> value) {
+        return "{%s}".formatted(value.entrySet().stream()
+            .map(e -> "\"%s\": %s".formatted( //TODO: (defensive) should escape contents of bare strings, eg internal quotes
+                e.getKey(), serializeForGql(e.getValue()))).collect(Collectors.joining(",")));
+      }
+
+      @Override
+      public String onList(final List<SerializedValue> value) {
+        return "[%s]".formatted(value.stream().map(v -> serializeForGql(v)).collect(Collectors.joining(",")));
+      }
+    });
   }
 }

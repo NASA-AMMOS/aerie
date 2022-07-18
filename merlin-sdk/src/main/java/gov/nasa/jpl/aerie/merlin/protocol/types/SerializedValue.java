@@ -6,15 +6,15 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * A serializable representation of an mission model-specific activity parameter domain object.
+ * A serializable representation of a mission model-specific activity parameter domain object.
  *
- * A {@link SerializedValue} is an mission model-agnostic representation of the data in such an
+ * A {@link SerializedValue} is a mission model-agnostic representation of the data in such an
  * activity parameter, structured as serializable primitives composed using sequences and maps.
  *
  * This class is implemented using the Visitor pattern, following the approach considered at
  * http://blog.higher-order.com/blog/2009/08/21/structural-pattern-matching-in-java/.
  * Because a (de)serialization format (such as JSON) may have a fixed set of primitives types
- * from which data may be composed. SerializedParameter ensures that all data boils down to
+ * from which data may be composed. SerializedValue ensures that all data boils down to
  * this fixed set of primitives.
  *
  * Note that, if the disk representation of a {@link SerializedValue} could have multiple parses
@@ -24,13 +24,8 @@ import java.util.Optional;
  * code would need to know about all possible subclasses for deserialization). The Visitor
  * pattern on a class closed to extension allows us to guarantee that no ambiguity occurs.
  */
-public abstract class SerializedValue {
-  static public SerializedValue NULL = SerializedValue.ofNull();
-
-
-  // Closed type family -- the only legal subclasses are those defined within the body of
-  // this class definition.
-  private SerializedValue() {}
+public sealed interface SerializedValue {
+  SerializedValue NULL = SerializedValue.ofNull();
 
   /**
    * Calls the appropriate method of the passed {@link Visitor} depending on the kind of data
@@ -41,7 +36,7 @@ public abstract class SerializedValue {
    * @return The result of calling {@code visitor.onX()}, where {@code X} depends on the
    *   kind of data contained in this object.
    */
-  public abstract <T> T match(Visitor<T> visitor);
+  <T> T match(Visitor<T> visitor);
 
   /**
    * An operation to be performed on the data contained in a {@link SerializedValue}.
@@ -55,7 +50,7 @@ public abstract class SerializedValue {
    *
    * @param <T> The return type of the operation represented by this {@link Visitor }.
    */
-  public interface Visitor<T> {
+  interface Visitor<T> {
     T onNull();
     T onReal(double value);
     T onInt(long value);
@@ -65,18 +60,62 @@ public abstract class SerializedValue {
     T onList(List<SerializedValue> value);
   }
 
+  record NullValue() implements SerializedValue {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onNull();
+    }
+  }
+
+  record RealValue(double value) implements SerializedValue {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onReal(value);
+    }
+  }
+
+  record IntValue(long value) implements SerializedValue {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onInt(value);
+    }
+  }
+
+  record BooleanValue(boolean value) implements SerializedValue {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onBoolean(value);
+    }
+  }
+
+  record StringValue(String value) implements SerializedValue {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onString(value);
+    }
+  }
+
+  record MapValue(Map<String, SerializedValue> map) implements SerializedValue {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onMap(map);
+    }
+  }
+
+  record ListValue(List<SerializedValue> list) implements SerializedValue {
+    @Override
+    public <T> T match(final Visitor<T> visitor) {
+      return visitor.onList(list);
+    }
+  }
+
   /**
    * Creates a {@link SerializedValue} containing a null value.
    *
    * @return A new {@link SerializedValue} containing a null value.
    */
   private static SerializedValue ofNull() {
-    return new SerializedValue() {
-      @Override
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onNull();
-      }
-    };
+    return new NullValue();
   }
 
   /**
@@ -85,13 +124,8 @@ public abstract class SerializedValue {
    * @param value Any {@link double} value.
    * @return A new {@link SerializedValue} containing a real number.
    */
-  public static SerializedValue of(final double value) {
-    return new SerializedValue() {
-      @Override
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onReal(value);
-      }
-    };
+  static SerializedValue of(final double value) {
+    return new RealValue(value);
   }
 
   /**
@@ -100,13 +134,8 @@ public abstract class SerializedValue {
    * @param value Any {@link long} value.
    * @return A new {@link SerializedValue} containing an integral number.
    */
-  public static SerializedValue of(final long value) {
-    return new SerializedValue() {
-      @Override
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onInt(value);
-      }
-    };
+  static SerializedValue of(final long value) {
+    return new IntValue(value);
   }
 
   /**
@@ -115,13 +144,8 @@ public abstract class SerializedValue {
    * @param value Any {@link boolean} value.
    * @return A new {@link SerializedValue} containing a {@link boolean}.
    */
-  public static SerializedValue of(final boolean value) {
-    return new SerializedValue() {
-      @Override
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onBoolean(value);
-      }
-    };
+  static SerializedValue of(final boolean value) {
+    return new BooleanValue(value);
   }
 
   /**
@@ -130,14 +154,9 @@ public abstract class SerializedValue {
    * @param value Any {@link String} value.
    * @return A new {@link SerializedValue} containing a {@link String}.
    */
-  public static SerializedValue of(final String value) {
+  static SerializedValue of(final String value) {
     Objects.requireNonNull(value);
-    return new SerializedValue() {
-      @Override
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onString(value);
-      }
-    };
+    return new StringValue(value);
   }
 
   /**
@@ -146,32 +165,22 @@ public abstract class SerializedValue {
    * @param map Any set of named {@link SerializedValue}s.
    * @return A new {@link SerializedValue} containing a set of named {@link SerializedValue}s.
    */
-  public static SerializedValue of(final Map<String, SerializedValue> map) {
+  static SerializedValue of(final Map<String, SerializedValue> map) {
     for (final var v : Objects.requireNonNull(map).values()) Objects.requireNonNull(v);
     final var value = Map.copyOf(map);
-    return new SerializedValue() {
-      @Override
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onMap(value);
-      }
-    };
+    return new MapValue(value);
   }
 
   /**
    * Creates a {@link SerializedValue} containing a list of {@link SerializedValue}s.
    *
    * @param list Any list of {@link SerializedValue}s.
-   * @return A new SerializedParameter containing a list of {@link SerializedValue}s.
+   * @return A new SerializedValue containing a list of {@link SerializedValue}s.
    */
-  public static SerializedValue of(final List<SerializedValue> list) {
+  static SerializedValue of(final List<SerializedValue> list) {
     for (final var v : Objects.requireNonNull(list)) Objects.requireNonNull(v);
     final var value = List.copyOf(list);
-    return new SerializedValue() {
-      @Override
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onList(value);
-      }
-    };
+    return new ListValue(value);
   }
 
 
@@ -183,7 +192,7 @@ public abstract class SerializedValue {
    *
    * @param <T> The return type of the operation represented by this {@link Visitor}.
    */
-  public static abstract class DefaultVisitor<T> implements Visitor<T> {
+  abstract class DefaultVisitor<T> implements Visitor<T> {
     protected abstract T onDefault();
 
     @Override
@@ -227,7 +236,7 @@ public abstract class SerializedValue {
    *
    * By default, all variants return {@code Optional.empty}.
    */
-  public static abstract class OptionalVisitor<T> extends DefaultVisitor<Optional<T>> {
+  abstract class OptionalVisitor<T> extends DefaultVisitor<Optional<T>> {
     @Override
     protected Optional<T> onDefault() {
       return Optional.empty();
@@ -239,7 +248,7 @@ public abstract class SerializedValue {
    *
    * @return True if this object represents a null value, and false otherwise.
    */
-  public boolean isNull() {
+  default boolean isNull() {
     return this.match(new DefaultVisitor<>() {
       @Override
       public Boolean onNull() {
@@ -259,7 +268,7 @@ public abstract class SerializedValue {
    * @return An {@link Optional} containing a {@link double} if this object contains a real number.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<Double> asReal() {
+  default Optional<Double> asReal() {
     return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Double> onReal(final double value) {
@@ -279,7 +288,7 @@ public abstract class SerializedValue {
    * @return An {@link Optional} containing a {@link long} if this object contains an integral number.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<Long> asInt() {
+  default Optional<Long> asInt() {
     return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Long> onInt(final long value) {
@@ -301,7 +310,7 @@ public abstract class SerializedValue {
    * @return An {@link Optional} containing a {@link boolean} if this object contains a {@link boolean}.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<Boolean> asBoolean() {
+  default Optional<Boolean> asBoolean() {
     return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Boolean> onBoolean(final boolean value) {
@@ -316,7 +325,7 @@ public abstract class SerializedValue {
    * @return An {@link Optional} containing a {@link String} if this object contains a {@link String}.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<String> asString() {
+  default Optional<String> asString() {
     return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<String> onString(final String value) {
@@ -326,12 +335,12 @@ public abstract class SerializedValue {
   }
 
   /**
-   * Attempts to access the data in this object as a map of named {@code SerializedParameter}s.
+   * Attempts to access the data in this object as a map of named {@code SerializedValue}s.
    *
    * @return An {@link Optional} containing a map if this object contains a map.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<Map<String, SerializedValue>> asMap() {
+  default Optional<Map<String, SerializedValue>> asMap() {
     return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Map<String, SerializedValue>> onMap(final Map<String, SerializedValue> value) {
@@ -341,99 +350,16 @@ public abstract class SerializedValue {
   }
 
   /**
-   * Attempts to access the data in this object as a list of {@code SerializedParameter}s.
+   * Attempts to access the data in this object as a list of {@code SerializedValue}s.
    *
    * @return An {@link Optional} containing a list if this object contains a list.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<List<SerializedValue>> asList() {
+  default Optional<List<SerializedValue>> asList() {
     return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<List<SerializedValue>> onList(final List<SerializedValue> value) {
         return Optional.of(value);
-      }
-    });
-  }
-
-  @Override
-  public String toString() {
-    return this.match(new Visitor<>() {
-      @Override
-      public String onNull() {
-        return "null";
-      }
-
-      @Override
-      public String onReal(final double value) {
-        return String.valueOf(value);
-      }
-
-      @Override
-      public String onInt(final long value) {
-        return String.valueOf(value);
-      }
-
-      @Override
-      public String onBoolean(final boolean value) {
-        return String.valueOf(value);
-      }
-
-      @Override
-      public String onString(final String value) {
-        return value;
-      }
-
-      @Override
-      public String onMap(final Map<String, SerializedValue> value) {
-        return String.valueOf(value);
-      }
-
-      @Override
-      public String onList(final List<SerializedValue> value) {
-        return String.valueOf(value);
-      }
-    });
-  }
-
-  @Override
-  public boolean equals(final Object o) {
-    if (!(o instanceof SerializedValue)) return false;
-    final var other = (SerializedValue) o;
-
-    return this.match(new Visitor<>() {
-      @Override
-      public Boolean onNull() {
-        return other.isNull();
-      }
-
-      @Override
-      public Boolean onReal(final double value) {
-        return other.asReal().map(x -> x == value).orElse(false);
-      }
-
-      @Override
-      public Boolean onInt(final long value) {
-        return other.asInt().map(x -> x == value).orElse(false);
-      }
-
-      @Override
-      public Boolean onBoolean(final boolean value) {
-        return other.asBoolean().map(x -> x == value).orElse(false);
-      }
-
-      @Override
-      public Boolean onString(final String value) {
-        return other.asString().map(x -> Objects.equals(x, value)).orElse(false);
-      }
-
-      @Override
-      public Boolean onMap(final Map<String, SerializedValue> value) {
-        return other.asMap().map(x -> Objects.equals(x, value)).orElse(false);
-      }
-
-      @Override
-      public Boolean onList(final List<SerializedValue> value) {
-        return other.asList().map(x -> Objects.equals(x, value)).orElse(false);
       }
     });
   }
