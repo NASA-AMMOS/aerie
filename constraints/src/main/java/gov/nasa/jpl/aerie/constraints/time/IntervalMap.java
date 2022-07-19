@@ -388,16 +388,20 @@ public class IntervalMap<Alg, I, V> {
     return true;
   }
 
-  public Iterable<I> ascendingOrder() {
+  public Iterable<Pair<I, V>> ascendingOrder() {
     // SAFETY: calling `.remove()` on the returned iterator does not breach encapsulation.
     // The same effect can be achieved by calling `windows.subtract()` against the data returned by the iterator,
     // except for the added burden of avoiding `ConcurrentModificationException`s.
     List<I> sortedIntervals = new ArrayList<I>(this.intervals.keySet());
     sortedIntervals.sort(this.alg);
-    return sortedIntervals;
+    List<Pair<I,V>> sortedIntervalsWithValues = new ArrayList<Pair<I,V>>();
+    for (var interval : sortedIntervals) {
+      sortedIntervalsWithValues.add(Pair.of(interval, intervals.get(interval)));
+    }
+    return sortedIntervalsWithValues;
   }
 
-  public Iterable<I> descendingOrder() {
+  public Iterable<Pair<I,V>> descendingOrder() {
     return () -> new Iterator<>() {
       private final ListIterator<I> iter = new ArrayList<I>(IntervalMap.this.intervals.keySet()).listIterator(IntervalMap.this.intervals.size());
 
@@ -407,8 +411,9 @@ public class IntervalMap<Alg, I, V> {
       }
 
       @Override
-      public I next() {
-        return this.iter.previous();
+      public Pair<I,V> next() {
+        I previous = this.iter.previous();
+        return Pair.of(previous, intervals.get(previous));
       }
     };
   }

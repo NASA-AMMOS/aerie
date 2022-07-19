@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Iterator;
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.stream.StreamSupport;
 
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
 
-public final class Windows implements Iterable<Window> {
+public final class Windows implements Iterable<Pair<Window, Boolean>> {
   private final IntervalMap<WindowAlgebra, Window, Boolean> windows = new IntervalMap<>(new WindowAlgebra());
 
   public Windows() {}
@@ -20,12 +21,12 @@ public final class Windows implements Iterable<Window> {
     this.windows.addAll(other.windows);
   }
 
-  public Windows(final List<Window> windows) {
-    for (final var window : windows) this.add(window);
+  public Windows(final List<Pair<Window,Boolean>> windows) {
+    for (final var window : windows) this.add(window.getKey(), window.getValue());
   }
 
-  public Windows(final Pair<Window... windows) {
-    for (final var window : windows) this.add(window);
+  public Windows(final Pair<Window,Boolean>... windows) {
+    for (final var window : windows) this.add(window.getKey(), window.getValue());
   }
 
 
@@ -37,8 +38,8 @@ public final class Windows implements Iterable<Window> {
     this.windows.addAll(other.windows);
   }
 
-  public void addPoint(final long quantity, final Duration unit) {
-    this.add(Window.at(quantity, unit));
+  public void addPoint(final long quantity, final Duration unit, final boolean value) {
+    this.add(Window.at(quantity, unit), value);
   }
 
   public static Windows union(final Windows left, final Windows right) {
@@ -70,28 +71,28 @@ public final class Windows implements Iterable<Window> {
     return result;
   }
 
-  public void intersectWith(final Window window) {
-    this.windows.intersectWith(window);
+  public void intersectWith(final Window window, final boolean value) {
+    this.windows.intersectWith(window, value);
   }
 
   public void intersectWith(final Windows other) {
     this.windows.intersectWithAll(other.windows);
   }
 
-  public void intersectWith(final long start, final long end, final Duration unit) {
-    this.intersectWith(Window.between(start, end, unit));
+  public void intersectWith(final long start, final long end, final Duration unit, final boolean value) {
+    this.intersectWith(Window.between(start, end, unit), value);
   }
 
   public Optional<Duration> minTimePoint(){
     if(!isEmpty()) {
-      return Optional.of(this.windows.ascendingOrder().iterator().next().start);
+      return Optional.of(this.windows.ascendingOrder().iterator().next().getKey().start);
     } else{
       return Optional.empty();
     }
   }
   public Optional<Duration> maxTimePoint(){
     if(!isEmpty()) {
-      return Optional.of(this.windows.descendingOrder().iterator().next().end);
+      return Optional.of(this.windows.descendingOrder().iterator().next().getKey().end);
     } else{
       return Optional.empty();
     }
@@ -107,8 +108,8 @@ public final class Windows implements Iterable<Window> {
     final var ret = new Windows();
     StreamSupport
         .stream(windows.ascendingOrder().spliterator(), false)
-        .filter(win -> win.duration().noShorterThan(minDur) && win.duration().noLongerThan(maxDur))
-        .forEach(ret::add);
+        .filter(win -> win.getKey().duration().noShorterThan(minDur) && win.getKey().duration().noLongerThan(maxDur))
+        .forEach(window -> ret.add(window.getKey(), window.getValue()));
     return ret;
   }
 
@@ -133,12 +134,13 @@ public final class Windows implements Iterable<Window> {
   public Windows shiftBy(Duration fromStart, Duration fromEnd){
     Windows ret = new Windows();
     StreamSupport.stream(windows.ascendingOrder().spliterator(), false)
-        .forEach((x)-> ret.add(Window.between(x.start.plus(fromStart), x.startInclusivity, x.end.plus(fromEnd), x.endInclusivity)));
+        .forEach((x)-> ret.add(Window.between(x.getKey().start.plus(fromStart), x.getKey().startInclusivity,
+                                              x.getKey().end.plus(fromEnd), x.getKey().endInclusivity), x.getValue()));
     return ret;
   }
 
   public Windows removeFirstAndLast(){
-    List<Window> actualList = StreamSupport
+    List<Pair<Window, Boolean>> actualList = StreamSupport
         .stream(windows.ascendingOrder().spliterator(), false)
         .collect(Collectors.toList());
     if(actualList.size()>0)
@@ -151,8 +153,8 @@ public final class Windows implements Iterable<Window> {
   public Windows subsetContained(Window gate){
     Windows ret = new Windows();
     for(var win : windows.ascendingOrder()){
-      if(gate.contains(win)){
-        ret.add(win);
+      if(gate.contains(win.getKey())){
+        ret.add(win.getKey(), win.getValue());
       }
     }
     return ret;
@@ -163,12 +165,15 @@ public final class Windows implements Iterable<Window> {
   }
 
   public static Windows forever(){
-    return new Windows(Window.FOREVER);
+    return new Windows(Pair.of(Window.FOREVER, true));
   }
 
+  public static Windows forever(boolean value){
+    return new Windows(Pair.of(Window.FOREVER, value));
+  }
 
-  public static Windows subtract(Window x, Window y){
-    var tmp = new Windows(y);
+  public static Windows subtract(Window x, Window y, boolean value){
+    var tmp = new Windows(Pair.of(y, value));
     tmp.subtract(x);
     return tmp;
   }
@@ -203,7 +208,7 @@ public final class Windows implements Iterable<Window> {
 
 
   @Override
-  public Iterator<Window> iterator() {
+  public Iterator<Pair<Window, Boolean>> iterator() {
     return this.windows.ascendingOrder().iterator();
   }
 
