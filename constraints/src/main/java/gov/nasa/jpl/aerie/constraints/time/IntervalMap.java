@@ -416,7 +416,7 @@ public class IntervalMap<Alg, I, V> {
   @Override
   public boolean equals(final Object obj) {
     if (!(obj instanceof IntervalMap)) return false;
-    final var other = (IntervalMap<I, V>) obj;
+    final var other = (IntervalMap<Alg, I, V>) obj;
 
     return Objects.equals(this.intervals, other.intervals);
   }
