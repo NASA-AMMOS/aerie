@@ -47,7 +47,7 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     }
   }
 
-  /** Use {@link EventGraph#atom(Event)} instead of instantiating this class directly. */
+  /** Use {@link EventGraph#atom} instead of instantiating this class directly. */
   record Atom<Event>(Event atom) implements EventGraph<Event> {
     @Override
     public String toString() {
