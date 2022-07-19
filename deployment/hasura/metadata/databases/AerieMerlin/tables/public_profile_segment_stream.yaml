@@ -1,0 +1,3 @@
+table:
+  name: profile_segment_stream
+  schema: public
