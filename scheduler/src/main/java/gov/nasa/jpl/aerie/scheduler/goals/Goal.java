@@ -217,7 +217,6 @@ public class Goal {
   /**
    * set the (dis)contiguous range of time over which the goal applies
    *
-   * @return none.
    */
   public void setTemporalContext(Expression<Windows> tc) { temporalContext = tc; }
 

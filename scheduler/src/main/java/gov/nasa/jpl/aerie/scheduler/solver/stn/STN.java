@@ -50,7 +50,7 @@ public class STN {
    * tp1 --- [0, +inf] ---> tp2
    Maps to two edges in a distance graph
    i --- +inf ---> j
-   i <--- -0 --- j
+   i {@literal <}--- -0 --- j
 
    we can remove the first one and keep only the second one
    */

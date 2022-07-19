@@ -22,7 +22,7 @@ public class EquationSolvingAlgorithms {
      * Solves f(x) in [y - toleranceYLow, y + toleranceYHigh] for x in [dxLow, dxHigh].
      * the sign of f(bracket1) must be different from the sign of f(bracket2)
      *
-     * dxLow < dxHigh
+     * dxLow {@literal <} dxHigh
      * toleranceYLow > 0, toleranceYHigh > 0
      */
     RootFindingResult<T> findRoot(
