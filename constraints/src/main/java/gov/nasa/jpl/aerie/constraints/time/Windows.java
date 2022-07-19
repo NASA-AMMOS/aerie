@@ -12,7 +12,7 @@ import java.util.stream.StreamSupport;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
 
 public final class Windows implements Iterable<Window> {
-  private final IntervalSet<WindowAlgebra, Window> windows = new IntervalSet<>(new WindowAlgebra());
+  private final IntervalMap<WindowAlgebra, Window, Boolean> windows = new IntervalMap<>(new WindowAlgebra());
 
   public Windows() {}
 
@@ -24,13 +24,13 @@ public final class Windows implements Iterable<Window> {
     for (final var window : windows) this.add(window);
   }
 
-  public Windows(final Window... windows) {
+  public Windows(final Pair<Window... windows) {
     for (final var window : windows) this.add(window);
   }
 
 
-  public void add(final Window window) {
-    this.windows.add(window);
+  public void add(final Window window, final boolean value) {
+    this.windows.add(window, value);
   }
 
   public void addAll(final Windows other) {
