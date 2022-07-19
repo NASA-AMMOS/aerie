@@ -6,6 +6,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
@@ -13,6 +14,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 
 import javax.lang.model.element.Modifier;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 /**
@@ -175,7 +177,45 @@ public abstract sealed class MapperMethodMaker permits
         .build();
   }
 
-  protected final MethodSpec.Builder makeArgumentsPresentCheck(final MethodSpec.Builder methodBuilder) {
+  protected final MethodSpec.Builder makeArgumentAssignments(
+      final MethodSpec.Builder methodBuilder,
+      final BiFunction<CodeBlock.Builder, ParameterRecord, CodeBlock.Builder> makeArgumentAssignment)
+  {
+    var mb = methodBuilder
+        .beginControlFlow("for (final var $L : $L.entrySet())", "entry", "arguments")
+        .beginControlFlow("switch ($L.getKey())", "entry")
+        .addCode(
+            exportType.parameters()
+                .stream()
+                .map(parameter -> {
+                    final var caseBuilder = CodeBlock.builder()
+                        .add("case $S:\n", parameter.name)
+                        .indent();
+                    return makeArgumentAssignment.apply(caseBuilder, parameter)
+                        .addStatement("break")
+                        .unindent();
+                })
+                .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
+                .build())
+        .addCode(
+            CodeBlock
+                .builder()
+                .add("default:\n")
+                .indent()
+                .addStatement(
+                    "throw $T.extraneousParameter($L.getKey())",
+                    unconstructableInstantiateException,
+                    "entry")
+                .unindent()
+                .build())
+        .endControlFlow()
+        .endControlFlow()
+        .addCode("\n");
+
+    return makeMissingArgumentsCheck(mb).addCode("\n");
+  }
+
+  private MethodSpec.Builder makeMissingArgumentsCheck(final MethodSpec.Builder methodBuilder) {
     // Ensure all parameters are non-null
     return methodBuilder
         .addStatement(

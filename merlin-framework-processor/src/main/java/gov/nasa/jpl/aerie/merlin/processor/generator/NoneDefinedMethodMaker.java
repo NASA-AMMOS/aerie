@@ -55,41 +55,14 @@ import java.util.stream.Collectors;
             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
             .build()).addCode("\n");
 
-    methodBuilder = methodBuilder.beginControlFlow("for (final var $L : $L.entrySet())", "entry", "arguments")
-        .beginControlFlow("switch ($L.getKey())", "entry")
-        .addCode(
-            exportType.parameters()
-                .stream()
-                .map(parameter -> CodeBlock
-                    .builder()
-                    .add("case $S:\n", parameter.name)
-                    .indent()
-                    .addStatement(
-                        "$L = Optional.ofNullable(this.mapper_$L.deserializeValue($L.getValue()).getSuccessOrThrow(failure -> $T.unconstructableArgument(\"$L\", failure)))",
-                        parameter.name,
-                        parameter.name,
-                        "entry",
-                        unconstructableInstantiateException,
-                        parameter.name)
-                    .addStatement("break")
-                    .unindent())
-                .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
-                .build())
-        .addCode(
-            CodeBlock
-                .builder()
-                .add("default:\n")
-                .indent()
-                .addStatement(
-                    "throw $T.extraneousParameter($L.getKey())",
-                    unconstructableInstantiateException,
-                    "entry")
-                .unindent()
-                .build())
-        .endControlFlow()
-        .endControlFlow().addCode("\n");
-
-    methodBuilder = makeArgumentsPresentCheck(methodBuilder).addCode("\n");
+    methodBuilder = makeArgumentAssignments(methodBuilder, (builder, parameter) -> builder
+        .addStatement(
+            "$L = Optional.ofNullable(this.mapper_$L.deserializeValue($L.getValue()).getSuccessOrThrow(failure -> $T.unconstructableArgument(\"$L\", failure)))",
+            parameter.name,
+            parameter.name,
+            "entry",
+            unconstructableInstantiateException,
+            parameter.name));
 
     // Add return statement with instantiation of class with parameters
     methodBuilder = methodBuilder.addStatement(
