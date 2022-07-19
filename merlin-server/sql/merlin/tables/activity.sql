@@ -138,3 +138,59 @@ execute function activity_set_updated_at();
 
 comment on trigger set_timestamp on activity is e''
   'Sets the last_modified_at field of an activity to the current time.';
+
+create function check_activity_directive_metadata()
+returns trigger
+security definer
+language plpgsql as $$
+  declare
+    _key text;
+    _value jsonb;
+    _schema jsonb;
+    _type text;
+    _subValue jsonb;
+  begin
+  for _key, _value in
+    select * from jsonb_each(new.metadata::jsonb)
+  loop
+    select schema into _schema from activity_directive_metadata_schema where key = _key;
+    _type := _schema->>'type';
+    if _type = 'string' then
+      if jsonb_typeof(_value) != 'string' then
+        raise exception 'invalid metadata value for key %. Expected: string, Received: %', _key, _value;
+      end if;
+    elsif _type = 'long_string' then
+      if jsonb_typeof(_value) != 'string' then
+        raise exception 'invalid metadata value for key %. Expected: string, Received: %', _key, _value;
+      end if;
+    elsif _type = 'boolean' then
+      if jsonb_typeof(_value) != 'boolean' then
+        raise exception 'invalid metadata value for key %. Expected: boolean, Received: %', _key, _value;
+      end if;
+    elsif _type = 'number' then
+      if jsonb_typeof(_value) != 'number' then
+        raise exception 'invalid metadata value for key %. Expected: number, Received: %', _key, _value;
+      end if;
+    elsif _type = 'enum' then
+      if (_value not in (select * from jsonb_array_elements(_schema->'enumerates'))) then
+        raise exception 'invalid metadata value for key %. Expected: %, Received: %', _key, _schema->>'enumerates', _value;
+      end if;
+    elsif _type = 'enum_multiselect' then
+      if jsonb_typeof(_value) != 'array' then
+        raise exception 'invalid metadata value for key %. Expected an array of enumerates: %, Received: %', _key, _schema->>'enumerates', _value;
+      end if;
+      for _subValue in select * from jsonb_array_elements(_value)
+        loop
+          if (_subValue not in (select * from jsonb_array_elements(_schema->'enumerates'))) then
+            raise exception 'invalid metadata value for key %. Expected one of the valid enumerates: %, Received: %', _key, _schema->>'enumerates', _value;
+          end if;
+        end loop;
+    end if;
+  end loop;
+  return new;
+end$$;
+
+create trigger check_activity_directive_metadata_trigger
+before insert or update on activity
+for each row
+execute function check_activity_directive_metadata();
