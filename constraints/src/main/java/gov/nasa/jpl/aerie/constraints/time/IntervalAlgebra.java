@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
+import java.util.Comparator;
+
 /**
  * An algebra for interval-like operations on some underlying type {@code I}.
  *
@@ -16,7 +18,7 @@ package gov.nasa.jpl.aerie.constraints.time;
  *     either use an existential, or use something less fine-grained and be very very careful.
  * @param <I> The type on which this algebra supports interval operations.
  */
-public interface IntervalAlgebra<Alg, I> {
+public interface IntervalAlgebra<Alg, I> extends Comparator<I> {
   boolean isEmpty(I x);
 
   I unify(I x, I y);
@@ -67,5 +69,18 @@ public interface IntervalAlgebra<Alg, I> {
   }
   default boolean isMetBy(I x, I y) {
     return meets(y, x);
+  }
+
+  @Override
+  public default int compare(I x, I y) {
+    if (equals(x, y)) {
+      return 0;
+    }
+    else if (endsStrictlyBefore(x, y)) {
+      return -1;
+    }
+    else {
+      return 1;
+    }
   }
 }
