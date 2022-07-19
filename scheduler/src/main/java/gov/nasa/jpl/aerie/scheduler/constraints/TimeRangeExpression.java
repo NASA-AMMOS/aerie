@@ -48,11 +48,7 @@ public class TimeRangeExpression {
       if(minTimepoint.isPresent() && maxTimepoint.isPresent()) {
         final var anchorActSearch = new ActivityExpression.Builder()
             .basedOn(actTemplate)
-            .startsIn(Window.between(
-                Duration.max(Duration.ZERO, minTimepoint.get()),
-                Window.Inclusivity.Inclusive,
-                maxTimepoint.get(),
-                Window.Inclusivity.Exclusive)).build();
+            .startsIn(inter).build(); //check if it exists IN the windows, not just the upper and lower bounds of the window
         final var anchorActs = plan.find(anchorActSearch, simulationResults);
         for (var anchorAct : anchorActs) {
           var endInclusivity = Window.Inclusivity.Exclusive;

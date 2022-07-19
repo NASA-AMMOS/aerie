@@ -40,6 +40,14 @@ export class Goal {
     });
   }
 
+  public applyWhen(window: WindowsEDSL.Windows): Goal {
+    return Goal.new({
+      kind: AST.NodeKind.ApplyWhen,
+      goal: this.__astNode,
+      window: window.__astNode
+    });
+  }
+
   public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): ActivityRecurrenceGoal {
     return Goal.new({
       kind: AST.NodeKind.ActivityRecurrenceGoal,
@@ -161,6 +169,8 @@ declare global {
     public and(...others: Goal[]): Goal
 
     public or(...others: Goal[]): Goal
+
+    public static applyWhen(window: WindowsEDSL.Windows): Goal
 
     public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): ActivityRecurrenceGoal
 

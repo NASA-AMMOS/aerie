@@ -748,6 +748,58 @@ public class SchedulingIntegrationTests {
     assertEquals("Fyffes", changeProducer.args().get("producer").asString().get());
   }
 
+  @Test
+  void testApplyWhen() {
+    final var growBananaDuration = Duration.of(1, Duration.SECONDS);
+
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(
+            new MockMerlinService.PlannedActivityInstance(
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(1),
+                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                Duration.of(1, Duration.SECONDS)),
+            new MockMerlinService.PlannedActivityInstance(
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(1),
+                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                Duration.of(2, Duration.SECONDS)),
+            new MockMerlinService.PlannedActivityInstance(
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(1),
+                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                Duration.of(3, Duration.SECONDS)),
+            new MockMerlinService.PlannedActivityInstance(
+                "PickBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(100000)
+                ),
+                Duration.of(48, Duration.HOURS))
+        ),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+                  export default () => Goal.ActivityRecurrenceGoal({
+                      activityTemplate: ActivityTemplates.ChangeProducer({producer: "Morpheus"}),
+                      interval: 24 * 60 * 60 * 1000 * 1000
+                    }).applyWhen(Real.Resource("/plant").greaterThan(1.0))""", true)
+        )
+    );
+
+    for (MockMerlinService.PlannedActivityInstance i : results.updatedPlan().stream().toList()) {
+      System.out.println(i.type().toString() + ": " + i.startTime().toString());
+    }
+
+    assertEquals(1, results.scheduleResults.goalResults().size()); //starts an instant before 12:00 (when there is more than 1 plant - the window is about 00:00-24:00 because the plant gets created early, then the window is subdivided, and then a window is picked, seemingly arbitrarily, as this is uncontrollable duration (see line 304 of ActivityCreationTemplate), after which cadence is maintained) then schedules 4, as expected. 7 total then.
+    assertEquals(6, results.updatedPlan().size());
+
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var changeProducer = planByActivityType.get("ChangeProducer").iterator().next();
+    assertEquals("Morpheus", changeProducer.args().get("producer").asString().get());
+  }
+
   private static Map<String, Collection<MockMerlinService.PlannedActivityInstance>>
   partitionByActivityType(final Iterable<MockMerlinService.PlannedActivityInstance> activities) {
     final var result = new HashMap<String, Collection<MockMerlinService.PlannedActivityInstance>>();

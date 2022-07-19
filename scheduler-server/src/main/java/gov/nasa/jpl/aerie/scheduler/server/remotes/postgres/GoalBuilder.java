@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
@@ -21,12 +22,9 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
-
 import java.util.function.Function;
-
 public class GoalBuilder {
   private GoalBuilder() {}
-
   public static Goal goalOfGoalSpecifier(
       final SchedulingDSL.GoalSpecifier goalSpecifier,
       final Timestamp horizonStartTimestamp,
@@ -37,18 +35,17 @@ public class GoalBuilder {
         horizonEndTimestamp.toInstant()).getHor();
     if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition g) {
       return new RecurrenceGoal.Builder()
-          .forAllTimeIn(hor)
+          .forAllTimeIn(new WindowsWrapperExpression(new Windows(hor)))
           .repeatingEvery(g.interval())
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
           .build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition g) {
       var builder = new CoexistenceGoal.Builder()
-          .forAllTimeIn(hor)
+          .forAllTimeIn(new WindowsWrapperExpression(new Windows(hor)))
           .forEach(timeRangeExpressionOfConstraintExpression(
               g.forEach(),
               lookupActivityType))
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType));
-
       if (g.startConstraint().isPresent()) {
         final var startConstraint = g.startConstraint().get();
         final var timeExpression = new TimeExpressionRelativeFixed(
@@ -58,7 +55,6 @@ public class GoalBuilder {
         timeExpression.addOperation(startConstraint.operator(), startConstraint.operand());
         builder.startsAt(timeExpression);
       }
-
       if (g.endConstraint().isPresent()) {
         final var startConstraint = g.endConstraint().get();
         final var timeExpression = new TimeExpressionRelativeFixed(
@@ -68,7 +64,6 @@ public class GoalBuilder {
         timeExpression.addOperation(startConstraint.operator(), startConstraint.operand());
         builder.endsAt(timeExpression);
       }
-
       if (g.startConstraint().isEmpty() && g.endConstraint().isEmpty()) {
         throw new Error("Both start and end constraints were empty. This should have been disallowed at the type level.");
       }
@@ -91,13 +86,18 @@ public class GoalBuilder {
                                                  lookupActivityType));
       }
       return builder.build();
-    } else if(goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CardinalityGoalDefinition g){
+    }
+
+    else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalApplyWhen g) {
+      var goal = goalOfGoalSpecifier(g.goal(), horizonStartTimestamp, horizonEndTimestamp, lookupActivityType);
+      goal.setTemporalContext(g.windows());
+      return goal;
+    }
+
+    else if(goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CardinalityGoalDefinition g){
       final var builder = new CardinalityGoal.Builder()
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
-          .forAllTimeIn(hor)
-          .inPeriod(new TimeRangeExpression.Builder()
-                           .from(new Windows(Window.betweenClosedOpen(g.inPeriod().start(), g.inPeriod().end())))
-                           .build());
+           .forAllTimeIn(new WindowsWrapperExpression(new Windows(hor)));
       if(g.specification().duration().isPresent()){
         builder.duration(Window.between(g.specification().duration().get(), Duration.MAX_VALUE));
       }
@@ -124,7 +124,6 @@ public class GoalBuilder {
       throw new UnexpectedSubtypeError(SchedulingDSL.ConstraintExpression.class, constraintExpression);
     }
   }
-
   private static ActivityCreationTemplate makeActivityTemplate(
       final SchedulingDSL.ActivityTemplate activityTemplate,
       final Function<String, ActivityType> lookupActivityType) {

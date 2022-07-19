@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityConflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -100,49 +101,66 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
    * exist over a timespan longer than the allowed range (and one should
    * probably be created!)
    */
-  public java.util.Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
+  public java.util.Collection<Conflict> getConflicts(@NotNull Plan plan, final SimulationResults simulationResults) {
     final var conflicts = new java.util.LinkedList<Conflict>();
 
-    //collect all matching target acts ordered by start time
-    //REVIEW: could collapse with prior template start time query too?
-    final var satisfyingActSearch = new ActivityExpression.Builder()
-        .basedOn(desiredActTemplate)
-        .startsIn(getTemporalContext()).build();
-    final var acts = new java.util.LinkedList<>(plan.find(satisfyingActSearch, simulationResults));
-    acts.sort(java.util.Comparator.comparing(ActivityInstance::getStartTime));
+    //unwrap temporalContext
+    final var windows = getTemporalContext().evaluate(simulationResults);
 
-    //walk through existing matching activities to find too-large gaps,
-    //starting from the goal's own start time
-    //REVIEW: some clever implementation with stream reduce / combine?
-    final var actI = acts.iterator();
-    final var lastStartT = getTemporalContext().end;
-    var prevStartT = getTemporalContext().start;
-    while (actI.hasNext() && prevStartT.compareTo(lastStartT) < 0) {
-      final var act = actI.next();
-      final var actStartT = act.getStartTime();
-
-      //check if the inter-activity gap is too large
-      //REVIEW: should do any check based on min gap duration?
-      final var strideDur = actStartT.minus(prevStartT);
-      if (strideDur.compareTo(recurrenceInterval.max) > 0) {
-        //fill conflicts for all the missing activities in that long span
-        conflicts.addAll(makeRecurrenceConflicts(prevStartT, actStartT));
-
-      } else {
-        /*TODO: right now, we associate with all the activities that are satisfying but we should aim for the minimum
-        set which itself is a combinatoric problem */
-        var planEval = plan.getEvaluation();
-        if(!planEval.forGoal(this).getAssociatedActivities().contains(act) && planEval.canAssociateMoreToCreatorOf(act)) {
-          conflicts.add(new MissingAssociationConflict(this, List.of(act)));
-        }
-      }
-
-      prevStartT = actStartT;
+    //make sure it hasn't changed
+    if (this.initiallyEvaluatedTemporalContext != null && !windows.includes(this.initiallyEvaluatedTemporalContext)) {
+      throw new UnexpectedTemporalContextChangeException("The temporalContext Windows has changed from: " + this.initiallyEvaluatedTemporalContext.toString() + " to " + windows.toString());
+    }
+    else if (this.initiallyEvaluatedTemporalContext == null) {
+      this.initiallyEvaluatedTemporalContext = windows;
     }
 
-    //fill in conflicts for all missing activities in the last span up to the
-    //goal's own end time (also handles case of no matching acts at all)
-    conflicts.addAll(makeRecurrenceConflicts(prevStartT, lastStartT));
+    //iterate through it and then within each iteration do exactly what you did before
+    for (Window subWindow : windows) {
+      //collect all matching target acts ordered by start time
+      //REVIEW: could collapse with prior template start time query too?
+      final var satisfyingActSearch = new ActivityExpression.Builder()
+          .basedOn(desiredActTemplate)
+          .startsIn(subWindow)
+          .build();
+      final var acts = new java.util.LinkedList<>(plan.find(satisfyingActSearch, simulationResults));
+      acts.sort(java.util.Comparator.comparing(ActivityInstance::getStartTime));
+
+      //walk through existing matching activities to find too-large gaps,
+      //starting from the goal's own start time
+      //REVIEW: some clever implementation with stream reduce / combine?
+      final var actI = acts.iterator();
+      final var lastStartT = subWindow.end;
+      var prevStartT = subWindow.start;
+      while (actI.hasNext() && prevStartT.compareTo(lastStartT) < 0) {
+        final var act = actI.next();
+        final var actStartT = act.getStartTime();
+
+        //check if the inter-activity gap is too large
+        //REVIEW: should do any check based on min gap duration?
+        final var strideDur = actStartT.minus(prevStartT);
+        if (strideDur.compareTo(this.recurrenceInterval.max) > 0) {
+          //fill conflicts for all the missing activities in that long span
+          conflicts.addAll(makeRecurrenceConflicts(prevStartT, actStartT));
+
+        } else {
+          /*TODO: right now, we associate with all the activities that are satisfying but we should aim for the minimum
+          set which itself is a combinatoric problem */
+          var planEval = plan.getEvaluation();
+          if (!planEval.forGoal(this).getAssociatedActivities().contains(act) && planEval.canAssociateMoreToCreatorOf(
+              act)) {
+            conflicts.add(new MissingAssociationConflict(this, List.of(act)));
+          }
+        }
+
+        prevStartT =
+            actStartT.plus(recurrenceInterval.max); //if we dont do this sum it'll just restart where the last event started and keep adding an instance of the last event. it required you to go out of bounds on the last event which was a problem, so this accommodates.
+      }
+
+      //fill in conflicts for all missing activities in the last span up to the
+      //goal's own end time (also handles case of no matching acts at all)
+      conflicts.addAll(makeRecurrenceConflicts(prevStartT, lastStartT));
+    }
 
     return conflicts;
   }
@@ -172,8 +190,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
    * @param start IN the start time of the span to fill with conflicts (inclusive)
    * @param end IN the end time of the span to fill with conflicts (exclusive)
    */
-  private java.util.Collection<MissingActivityConflict> makeRecurrenceConflicts(
-      Duration start, Duration end)
+  private java.util.Collection<MissingActivityConflict> makeRecurrenceConflicts(Duration start, Duration end)
   {
     final var conflicts = new java.util.LinkedList<MissingActivityConflict>();
 

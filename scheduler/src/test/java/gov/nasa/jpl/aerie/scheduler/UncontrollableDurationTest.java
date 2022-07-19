@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -62,7 +64,7 @@ public class UncontrollableDurationTest {
 
     final var recurrenceTrapezoidal = new RecurrenceGoal.Builder()
         .thereExistsOne(solarPanelActivityTriangle)
-        .forAllTimeIn(planningHorizon.getHor())
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(planningHorizon.getHor())))
         .repeatingEvery(Duration.of(1000, Duration.SECONDS))
         .named("UncontrollableRecurrenceGoal")
         .build();
@@ -70,7 +72,7 @@ public class UncontrollableDurationTest {
 
     final var coexistenceTriangle = new CoexistenceGoal.Builder()
         .thereExistsOne(solarPanelActivityTrapezoidal)
-        .forAllTimeIn(planningHorizon.getHor())
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(planningHorizon.getHor())))
         .forEach(solarPanelActivityTriangle)
         .endsAt(TimeAnchor.START)
         .named("UncontrollableCoexistenceGoal")
@@ -111,7 +113,7 @@ public class UncontrollableDurationTest {
 
     final var recurrenceTrapezoidal = new RecurrenceGoal.Builder()
         .thereExistsOne(solarPanelActivityTriangle)
-        .forAllTimeIn(planningHorizon.getHor())
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(planningHorizon.getHor())))
         .repeatingEvery(Duration.of(1000, Duration.SECONDS))
         .named("UncontrollableRecurrenceGoal")
         .build();
@@ -120,7 +122,7 @@ public class UncontrollableDurationTest {
     final var start = TimeExpression.atStart();
     final var coexistenceTriangle = new CoexistenceGoal.Builder()
         .thereExistsOne(solarPanelActivityTrapezoidal)
-        .forAllTimeIn(planningHorizon.getHor())
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(planningHorizon.getHor())))
         .forEach(solarPanelActivityTriangle)
         .endsAt(start)
         .named("UncontrollableCoexistenceGoal")

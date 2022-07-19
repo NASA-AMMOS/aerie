@@ -1,5 +1,4 @@
 package gov.nasa.jpl.aerie.scheduler.server.models;
-
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.json.Iso;
@@ -12,11 +11,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.enumP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
@@ -32,9 +29,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 import static gov.nasa.jpl.aerie.scheduler.server.http.SerializedValueJsonParser.serializedValueP;
-
 public class SchedulingDSL {
-
   private static final JsonParser<ActivityTemplate> activityTemplateP =
       productP
           .field("activityType", stringP)
@@ -43,12 +38,11 @@ public class SchedulingDSL {
               untuple(ActivityTemplate::new),
               $ -> tuple($.activityType(), $.arguments())));
 
-
   private static final JsonParser<Duration> durationP =
       longP
-      . map(Iso.of(
-          microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
-          duration -> duration.in(Duration.MICROSECONDS)));
+          . map(Iso.of(
+              microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
+              duration -> duration.in(Duration.MICROSECONDS)));
 
   private static final JsonParser<ClosedOpenInterval> intervalP =
       productP
@@ -65,6 +59,7 @@ public class SchedulingDSL {
           .map(Iso.of(
               untuple(CardinalitySpecification::new),
               $ -> tuple($.duration(), $.occurrence())));
+
   private static final ProductParsers.JsonObjectParser<GoalSpecifier.RecurrenceGoalDefinition> recurrenceGoalDefinitionP =
       productP
           .field("activityTemplate", activityTemplateP)
@@ -144,6 +139,16 @@ public class SchedulingDSL {
                     GoalSpecifier.GoalOr::goals));
   }
 
+  private static ProductParsers.JsonObjectParser<GoalSpecifier.GoalApplyWhen> goalApplyWhenF(final JsonParser<GoalSpecifier> goalSpecifierP) {
+    return productP
+        .field("goal", goalSpecifierP)
+        .field("window", windowsExpressionP)
+        .map(Iso.of(untuple(GoalSpecifier.GoalApplyWhen::new),
+                    goalDefinition -> tuple(
+                        goalDefinition.goal(),
+                        goalDefinition.windows())));
+  }
+
 
   private static final JsonParser<GoalSpecifier> goalSpecifierP =
       recursiveP(self -> SumParsers.sumP("kind", GoalSpecifier.class, List.of(
@@ -151,13 +156,12 @@ public class SchedulingDSL {
           SumParsers.variant("ActivityCoexistenceGoal", GoalSpecifier.CoexistenceGoalDefinition.class, coexistenceGoalDefinitionP),
           SumParsers.variant("ActivityCardinalityGoal", GoalSpecifier.CardinalityGoalDefinition.class, cardinalityGoalDefinitionP),
           SumParsers.variant("GoalAnd", GoalSpecifier.GoalAnd.class, goalAndF(self)),
-          SumParsers.variant("GoalOr", GoalSpecifier.GoalOr.class, goalOrF(self))
+          SumParsers.variant("GoalOr", GoalSpecifier.GoalOr.class, goalOrF(self)),
+          SumParsers.variant("ApplyWhen", GoalSpecifier.GoalApplyWhen.class, goalApplyWhenF(self))
       )));
 
 
   public static final JsonParser<GoalSpecifier> schedulingJsonP = goalSpecifierP;
-
-
   public sealed interface GoalSpecifier {
     record RecurrenceGoalDefinition(
         ActivityTemplate activityTemplate,
@@ -176,19 +180,19 @@ public class SchedulingDSL {
     ) implements GoalSpecifier {}
     record GoalAnd(List<GoalSpecifier> goals) implements GoalSpecifier {}
     record GoalOr(List<GoalSpecifier> goals) implements GoalSpecifier {}
+    record GoalApplyWhen(
+        GoalSpecifier goal,
+        Expression<Windows> windows
+    ) implements GoalSpecifier {}
   }
 
   public record LinearResource(String name) {}
-
   public record CardinalitySpecification(Optional<Duration> duration, Optional<Integer> occurrence){}
   public record ClosedOpenInterval(Duration start, Duration end){}
   public record ActivityTemplate(String activityType, Map<String, SerializedValue> arguments) {}
-
   public sealed interface ConstraintExpression {
     record ActivityExpression(String type) implements ConstraintExpression {}
-
     record WindowsExpression(Expression<Windows> expression) implements ConstraintExpression {}
   }
-
   public record ActivityTimingConstraint(TimeAnchor windowProperty, TimeUtility.Operator operator, Duration operand, boolean singleton) {}
 }

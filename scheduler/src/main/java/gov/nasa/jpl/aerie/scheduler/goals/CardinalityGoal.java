@@ -46,11 +46,6 @@ public class CardinalityGoal extends ActivityTemplateGoal {
    *  */
   private Range<Integer> occurrenceRange;
 
-  /**
-   * the pattern used to locate anchor activity instances in the plan
-   */
-  protected TimeRangeExpression expr;
-
   // Following members are related to diagnosis of the scheduler being stuck with inserting 0-duration activities
   /**
    * Activities inserted so far to satisfy this goal
@@ -69,23 +64,6 @@ public class CardinalityGoal extends ActivityTemplateGoal {
    * the builder can construct goals piecemeal via a series of method calls
    */
   public static class Builder extends ActivityTemplateGoal.Builder<Builder> {
-
-    public Builder inPeriod(ActivityExpression actExpr) {
-      inPeriod = new TimeRangeExpression.Builder().from(actExpr).build();
-      return getThis();
-    }
-
-    public Builder inPeriod(Expression<Windows> expression) {
-      inPeriod = new TimeRangeExpression.Builder().from(expression).build();
-      return getThis();
-    }
-
-    public Builder inPeriod(TimeRangeExpression expr) {
-      inPeriod = expr;
-      return getThis();
-    }
-
-    protected TimeRangeExpression inPeriod;
 
     Window durationRange;
     Range<Integer> occurrenceRange;
@@ -125,12 +103,6 @@ public class CardinalityGoal extends ActivityTemplateGoal {
     protected CardinalityGoal fill(CardinalityGoal goal) {
       //first fill in any general specifiers from parents
       super.fill(goal);
-
-      if (inPeriod == null) {
-        throw new IllegalArgumentException(
-            "creating Cardinality goal requires non-null \"inPeriod\" anchor template");
-      }
-      goal.expr = inPeriod;
 
       if (durationRange != null) {
         goal.durationRange = durationRange;
@@ -178,69 +150,89 @@ public class CardinalityGoal extends ActivityTemplateGoal {
   @Override
   public Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
 
-    Windows timeDomain = this.expr.computeRange(simulationResults, plan, Windows.forever());
-    ActivityCreationTemplate actTB =
-        new ActivityCreationTemplate.Builder().basedOn(this.desiredActTemplate).startsOrEndsIn(timeDomain).build();
+    //unwrap temporalContext
+    final var windows = getTemporalContext().evaluate(simulationResults);
 
-    final var acts = new LinkedList<>(plan.find(actTB, simulationResults));
-    acts.sort(Comparator.comparing(ActivityInstance::getStartTime));
-
-    int nbActs = 0;
-    Duration total = Duration.ZERO;
-    var planEvaluation = plan.getEvaluation();
-    var associatedActivitiesToThisGoal = planEvaluation.forGoal(this).getAssociatedActivities();
-    for (var act : acts) {
-      if (planEvaluation.canAssociateMoreToCreatorOf(act) || associatedActivitiesToThisGoal.contains(act)) {
-        total = total.plus(act.getDuration());
-        nbActs++;
-      }
+    //make sure it hasn't changed
+    if (this.initiallyEvaluatedTemporalContext != null && !windows.equals(this.initiallyEvaluatedTemporalContext)) {
+      throw new UnexpectedTemporalContextChangeException("The temporalContext Windows has changed from: " + this.initiallyEvaluatedTemporalContext.toString() + " to " + windows.toString());
+    }
+    else if (this.initiallyEvaluatedTemporalContext == null) {
+      this.initiallyEvaluatedTemporalContext = windows;
     }
 
-    Duration durToSchedule = Duration.ZERO;
-    int nbToSchedule = 0;
-    if (this.durationRange != null && !this.durationRange.contains(total)) {
-      if (total.compareTo(this.durationRange.start) < 0) {
-        durToSchedule = this.durationRange.start.minus(total);
-      } else if (total.compareTo(this.durationRange.end) > 0) {
-        logger.warn("Need to decrease duration of activities from the plan, impossible because scheduler cannot remove activities");
-        return List.of(new UnsatisfiableGoalConflict(this,
-                                                     "Need to decrease duration of activities from the plan, impossible because scheduler cannot remove activities"));
-      }
-    }
-    if (this.occurrenceRange != null && !this.occurrenceRange.contains(nbActs)) {
-      if (nbActs < this.occurrenceRange.getMinimum()) {
-        nbToSchedule = this.occurrenceRange.getMinimum() - nbActs;
-      } else if (nbActs > this.occurrenceRange.getMaximum()) {
-        logger.warn("Need to remove activities from the plan to satify cardinality goal, impossible");
-        return List.of(new UnsatisfiableGoalConflict(this,
-                                                     "Need to remove activities from the plan to satify cardinality goal, impossible"));
-      }
-    }
-
-    if(stuckInsertingZeroDurationActivities(plan, this.occurrenceRange == null || nbToSchedule == 0)) return List.of(
-        new UnsatisfiableGoalConflict(this,
-                                      "During "+this.maxNoProgressSteps+" steps, solver has created only 0-duration activities to satisfy duration cardinality goal, exiting. "));
-
+    //iterate through it and then within each iteration do exactly what you did before
     final var conflicts = new LinkedList<Conflict>();
-    //at this point, have thrown exception if not satisfiable
-    //compute the missing association conflicts
-    for(final var act : acts){
-      if(!associatedActivitiesToThisGoal.contains(act) && planEvaluation.canAssociateMoreToCreatorOf(act)){
-        //they ALL have to be associated
-        conflicts.add(new MissingAssociationConflict(this, List.of(act)));
+
+    for(Window subWindow: windows) {
+      ActivityCreationTemplate actTB =
+          new ActivityCreationTemplate.Builder().basedOn(this.desiredActTemplate).startsOrEndsIn(new Windows(subWindow)).build();
+
+      final var acts = new LinkedList<>(plan.find(actTB, simulationResults));
+      acts.sort(Comparator.comparing(ActivityInstance::getStartTime));
+
+      int nbActs = 0;
+      Duration total = Duration.ZERO;
+      var planEvaluation = plan.getEvaluation();
+      var associatedActivitiesToThisGoal = planEvaluation.forGoal(this).getAssociatedActivities();
+      for (var act : acts) {
+        if (planEvaluation.canAssociateMoreToCreatorOf(act) || associatedActivitiesToThisGoal.contains(act)) {
+          total = total.plus(act.getDuration());
+          nbActs++;
+        }
       }
-    }
-    //1) solve occurence part, we just need a certain number of activities
-    for(int i = 0; i<nbToSchedule;i++){
-      conflicts.add(new MissingActivityTemplateConflict(this, new Windows(timeDomain), this.desiredActTemplate));
-    }
-    /*
-     * 2) solve duration part: we can't assume stuff about duration, we post one conflict. The scheduler will solve this conflict by inserting one
-     * activity then the conflict will be reevaluated and if the scheduled duration so far is less than needed, another
-     * conflict will be posted and so on
-     * */
-    if(nbToSchedule == 0 && durToSchedule.isPositive()){
-      conflicts.add(new MissingActivityTemplateConflict(this, new Windows(timeDomain), this.desiredActTemplate));
+
+      Duration durToSchedule = Duration.ZERO;
+      int nbToSchedule = 0;
+      if (this.durationRange != null && !this.durationRange.contains(total)) {
+        if (total.compareTo(this.durationRange.start) < 0) {
+          durToSchedule = this.durationRange.start.minus(total);
+        } else if (total.compareTo(this.durationRange.end) > 0) {
+          logger.warn(
+              "Need to decrease duration of activities from the plan, impossible because scheduler cannot remove activities");
+          return List.of(new UnsatisfiableGoalConflict(
+              this,
+              "Need to decrease duration of activities from the plan, impossible because scheduler cannot remove activities"));
+        }
+      }
+      if (this.occurrenceRange != null && !this.occurrenceRange.contains(nbActs)) {
+        if (nbActs < this.occurrenceRange.getMinimum()) {
+          nbToSchedule = this.occurrenceRange.getMinimum() - nbActs;
+        } else if (nbActs > this.occurrenceRange.getMaximum()) {
+          logger.warn("Need to remove activities from the plan to satify cardinality goal, impossible");
+          return List.of(new UnsatisfiableGoalConflict(
+              this,
+              "Need to remove activities from the plan to satify cardinality goal, impossible"));
+        }
+      }
+
+      if (stuckInsertingZeroDurationActivities(plan, this.occurrenceRange == null || nbToSchedule == 0)) return List.of(
+          new UnsatisfiableGoalConflict(
+              this,
+              "During "
+              + this.maxNoProgressSteps
+              + " steps, solver has created only 0-duration activities to satisfy duration cardinality goal, exiting. "));
+
+      //at this point, have thrown exception if not satisfiable
+      //compute the missing association conflicts
+      for (final var act : acts) {
+        if (!associatedActivitiesToThisGoal.contains(act) && planEvaluation.canAssociateMoreToCreatorOf(act)) {
+          //they ALL have to be associated
+          conflicts.add(new MissingAssociationConflict(this, List.of(act)));
+        }
+      }
+      //1) solve occurence part, we just need a certain number of activities
+      for (int i = 0; i < nbToSchedule; i++) {
+        conflicts.add(new MissingActivityTemplateConflict(this, new Windows(subWindow), this.desiredActTemplate));
+      }
+      /*
+       * 2) solve duration part: we can't assume stuff about duration, we post one conflict. The scheduler will solve this conflict by inserting one
+       * activity then the conflict will be reevaluated and if the scheduled duration so far is less than needed, another
+       * conflict will be posted and so on
+       * */
+      if (nbToSchedule == 0 && durToSchedule.isPositive()) {
+        conflicts.add(new MissingActivityTemplateConflict(this, new Windows(subWindow), this.desiredActTemplate));
+      }
     }
 
     return conflicts;

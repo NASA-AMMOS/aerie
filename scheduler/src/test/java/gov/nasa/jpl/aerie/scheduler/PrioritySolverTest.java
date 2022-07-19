@@ -2,6 +2,8 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import com.google.common.testing.NullPointerTester;
 import com.google.common.truth.Correspondence;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
@@ -144,7 +146,7 @@ public class PrioritySolverTest {
     final var goal = new ProceduralCreationGoal.Builder()
         .named("g0")
         .generateWith((plan) -> expectedPlan.getActivitiesByTime())
-        .forAllTimeIn(h.getHor())
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(h.getHor())))
         .build();
     problem.setGoals(List.of(goal));
     final var solver = makeProblemSolver(problem);
@@ -163,7 +165,7 @@ public class PrioritySolverTest {
     final var goal = new ProceduralCreationGoal.Builder()
         .named("g0")
         .generateWith((plan) -> expectedPlan.getActivitiesByTime())
-        .forAllTimeIn(h.getHor())
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(h.getHor())))
         .build();
     problem.setGoals(List.of(goal));
     final var solver = makeProblemSolver(problem);
@@ -215,7 +217,7 @@ public class PrioritySolverTest {
     final var actTypeB = problem.getActivityType("OtherControllableDurationActivity");
     final var goal = new CoexistenceGoal.Builder()
         .named("g0")
-        .forAllTimeIn(h.getHor())
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(h.getHor())))
         .forEach(new ActivityExpression.Builder()
                      .ofType(actTypeA)
                      .build())
