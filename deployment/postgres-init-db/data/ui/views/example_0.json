@@ -21,7 +21,7 @@
     "layout": {
       "columnSizes": "1fr 3px 3fr 3px 1fr",
       "columns": [
-        { "componentName": "ActivityTypes", "id": 1, "type": "component" },
+        { "componentName": "ActivityTypesPanel", "id": 1, "type": "component" },
         { "id": 2, "track": 1, "type": "gutter" },
         {
           "id": 3,
@@ -34,7 +34,7 @@
           "type": "rows"
         },
         { "id": 7, "track": 3, "type": "gutter" },
-        { "componentName": "ActivityForm", "id": 8, "type": "component" }
+        { "componentName": "ActivityFormPanel", "id": 8, "type": "component" }
       ],
       "gridName": "View",
       "id": 0,
