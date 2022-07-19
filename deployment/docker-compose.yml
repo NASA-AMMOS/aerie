@@ -30,7 +30,6 @@ services:
       PORT: 9000
       POSTGRES_AERIE_MERLIN_DB: aerie_merlin
       POSTGRES_AERIE_SCHEDULER_DB: aerie_scheduler
-      POSTGRES_AERIE_UI_DB: aerie_ui
       POSTGRES_HOST: postgres
       POSTGRES_PASSWORD: aerie
       POSTGRES_PORT: 5432

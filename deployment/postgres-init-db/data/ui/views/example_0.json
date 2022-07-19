@@ -1,12 +1,4 @@
 {
-  "id": 0,
-  "meta": {
-    "owner": "system",
-    "timeCreated": 1615235211527,
-    "timeUpdated": 1615235211527,
-    "version": "0.12.0"
-  },
-  "name": "Banananation",
   "plan": {
     "activityTables": [
       {

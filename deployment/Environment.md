@@ -27,22 +27,20 @@ This document provides detailed information about environment variables for each
 
 ## Aerie Gateway
 
-| Name                          | Description                                                | Type     | Default                          |
-| ----------------------------- | ---------------------------------------------------------- | -------- | -------------------------------- |
-| `GQL_API_URL`                 | URL of GraphQL API for the GraphQL Playground.             | `string` | http://localhost:8080/v1/graphql |
-| `LOG_FILE`                    | Either an output filepath to log to, or 'console'.         | `string` | console                          |
-| `LOG_LEVEL`                   | Logging level for filtering logs.                          | `string` | warn                             |
-| `PORT`                        | Port the Gateway server listens on.                        | `number` | 9000                             |
-| `POSTGRES_AERIE_MERLIN_DB`    | Name of Merlin Postgres database.                          | `string` | aerie_merlin                     |
-| `POSTGRES_AERIE_SCHEDULER_DB` | Name of scheduler Postgres database.                       | `string` | aerie_scheduler                  |
-| `POSTGRES_AERIE_UI_DB`        | Name of UI Postgres database.                              | `string` | aerie_ui                         |
-| `POSTGRES_HOST`               | Hostname of Postgres instance.                             | `string` | localhost                        |
-| `POSTGRES_PASSWORD`           | Password of Postgres instance.                             | `string` | aerie                            |
-| `POSTGRES_PORT`               | Port of Postgres instance.                                 | `number` | 5432                             |
-| `POSTGRES_USER`               | User of Postgres instance.                                 | `string` | aerie                            |
-| `RATE_LIMITER_FILES_MAX`      | Max requests allowed every 15 minutes to file endpoints    | `number` | 1000                             |
-| `RATE_LIMITER_LOGIN_MAX`      | Max requests allowed every 15 minutes to login endpoints   | `number` | 1000                             |
-| `RATE_LIMITER_UI_VIEWS_MAX`   | Max requests allowed every 15 minutes to UI view endpoints | `number` | 1000                             |
+| Name                          | Description                                              | Type     | Default                          |
+| ----------------------------- | -------------------------------------------------------- | -------- | -------------------------------- |
+| `GQL_API_URL`                 | URL of GraphQL API for the GraphQL Playground.           | `string` | http://localhost:8080/v1/graphql |
+| `LOG_FILE`                    | Either an output filepath to log to, or 'console'.       | `string` | console                          |
+| `LOG_LEVEL`                   | Logging level for filtering logs.                        | `string` | warn                             |
+| `PORT`                        | Port the Gateway server listens on.                      | `number` | 9000                             |
+| `POSTGRES_AERIE_MERLIN_DB`    | Name of Merlin Postgres database.                        | `string` | aerie_merlin                     |
+| `POSTGRES_AERIE_SCHEDULER_DB` | Name of scheduler Postgres database.                     | `string` | aerie_scheduler                  |
+| `POSTGRES_HOST`               | Hostname of Postgres instance.                           | `string` | localhost                        |
+| `POSTGRES_PASSWORD`           | Password of Postgres instance.                           | `string` | aerie                            |
+| `POSTGRES_PORT`               | Port of Postgres instance.                               | `number` | 5432                             |
+| `POSTGRES_USER`               | User of Postgres instance.                               | `string` | aerie                            |
+| `RATE_LIMITER_FILES_MAX`      | Max requests allowed every 15 minutes to file endpoints  | `number` | 1000                             |
+| `RATE_LIMITER_LOGIN_MAX`      | Max requests allowed every 15 minutes to login endpoints | `number` | 1000                             |
 
 ## Aerie Merlin
 
