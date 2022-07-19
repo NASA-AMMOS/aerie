@@ -183,11 +183,11 @@ export class Command<
   public static fromSeqJson<A extends ArgType[]>(json: CommandSeqJson<A>): Command<A> {
     const timeValue =
       json.time.type === TimingTypes.ABSOLUTE
-        ? { absoluteTime: Command.doyToInstant(json.time.tag) }
+        ? { absoluteTime: doyToInstant(json.time.tag) }
         : json.time.type === TimingTypes.COMMAND_RELATIVE
-        ? { relativeTime: Command.hmsToDuration(json.time.tag) }
+        ? { relativeTime: hmsToDuration(json.time.tag) }
         : json.time.type === TimingTypes.EPOCH_RELATIVE
-        ? { epochTime: Command.hmsToDuration(json.time.tag) }
+        ? { epochTime: hmsToDuration(json.time.tag) }
         : {};
 
     return Command.new<A>({
@@ -234,48 +234,6 @@ export class Command<
     return `${YYYY}-${DOY}T${HH}:${MM}:${SS}.${sss}` as DOY_STRING;
   }
 
-  public static doyToInstant(doy: DOY_STRING): Temporal.Instant {
-    const match = doy.match(DOY_REGEX);
-    if (match === null) {
-      throw new Error(`Invalid DOY string: ${doy}`);
-    }
-    const [, year, doyStr, hour, minute, second, millisecond] = match as [
-      unknown,
-      string,
-      string,
-      string,
-      string,
-      string,
-      string | undefined,
-    ];
-
-    //use to convert doy to month and day
-    const doyDate = new Date(parseInt(year, 10), 0, parseInt(doyStr, 10));
-    // convert to UTC Date
-    const utcDoyDate = new Date(
-      Date.UTC(
-        doyDate.getUTCFullYear(),
-        doyDate.getUTCMonth(),
-        doyDate.getUTCDate(),
-        doyDate.getUTCHours(),
-        doyDate.getUTCMinutes(),
-        doyDate.getUTCSeconds(),
-        doyDate.getUTCMilliseconds(),
-      ),
-    );
-
-    return Temporal.ZonedDateTime.from({
-      year: parseInt(year, 10),
-      month: utcDoyDate.getUTCMonth() + 1,
-      day: utcDoyDate.getUTCDate(),
-      hour: parseInt(hour, 10),
-      minute: parseInt(minute, 10),
-      second: parseInt(second, 10),
-      millisecond: parseInt(millisecond ?? '0', 10),
-      timeZone: 'UTC',
-    }).toInstant();
-  }
-
   /** HH:MM:SS.sss */
   private static durationToHms(time: Temporal.Duration): HMS_STRING {
     const HH = this.formatNumber(time.hours, 2);
@@ -284,20 +242,6 @@ export class Command<
     const sss = this.formatNumber(time.milliseconds, 3);
 
     return `${HH}:${MM}:${SS}.${sss}` as HMS_STRING;
-  }
-
-  public static hmsToDuration(hms: HMS_STRING): Temporal.Duration {
-    const match = hms.match(HMS_REGEX);
-    if (match === null) {
-      throw new Error(`Invalid HMS string: ${hms}`);
-    }
-    const [, hours, minutes, seconds, milliseconds] = match as [unknown, string, string, string, string | undefined];
-    return Temporal.Duration.from({
-      hours: parseInt(hours, 10),
-      minutes: parseInt(minutes, 10),
-      seconds: parseInt(seconds, 10),
-      milliseconds: parseInt(milliseconds ?? '0', 10),
-    });
   }
 
   private static formatNumber(number: number, size: number): string {
@@ -345,13 +289,69 @@ export class Sequence {
 
 //helper functions
 
+function doyToInstant(doy: DOY_STRING): Temporal.Instant {
+  const match = doy.match(DOY_REGEX);
+  if (match === null) {
+    throw new Error(`Invalid DOY string: ${doy}`);
+  }
+  const [, year, doyStr, hour, minute, second, millisecond] = match as [
+    unknown,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string | undefined,
+  ];
+
+  //use to convert doy to month and day
+  const doyDate = new Date(parseInt(year, 10), 0, parseInt(doyStr, 10));
+  // convert to UTC Date
+  const utcDoyDate = new Date(
+    Date.UTC(
+      doyDate.getUTCFullYear(),
+      doyDate.getUTCMonth(),
+      doyDate.getUTCDate(),
+      doyDate.getUTCHours(),
+      doyDate.getUTCMinutes(),
+      doyDate.getUTCSeconds(),
+      doyDate.getUTCMilliseconds(),
+    ),
+  );
+
+  return Temporal.ZonedDateTime.from({
+    year: parseInt(year, 10),
+    month: utcDoyDate.getUTCMonth() + 1,
+    day: utcDoyDate.getUTCDate(),
+    hour: parseInt(hour, 10),
+    minute: parseInt(minute, 10),
+    second: parseInt(second, 10),
+    millisecond: parseInt(millisecond ?? '0', 10),
+    timeZone: 'UTC',
+  }).toInstant();
+}
+
+function hmsToDuration(hms: HMS_STRING): Temporal.Duration {
+  const match = hms.match(HMS_REGEX);
+  if (match === null) {
+    throw new Error(`Invalid HMS string: ${hms}`);
+  }
+  const [, hours, minutes, seconds, milliseconds] = match as [unknown, string, string, string, string | undefined];
+  return Temporal.Duration.from({
+    hours: parseInt(hours, 10),
+    minutes: parseInt(minutes, 10),
+    seconds: parseInt(seconds, 10),
+    milliseconds: parseInt(milliseconds ?? '0', 10),
+  });
+}
+
 // @ts-ignore : Used in generated code
 function A(...args: [TemplateStringsArray, ...string[]] | [Temporal.Instant] | [string]): typeof Commands {
   let time: Temporal.Instant;
   if (Array.isArray(args[0])) {
-    time = Command.doyToInstant(String.raw(...(args as [TemplateStringsArray, ...string[]])) as DOY_STRING);
+    time = doyToInstant(String.raw(...(args as [TemplateStringsArray, ...string[]])) as DOY_STRING);
   } else if (typeof args[0] === 'string') {
-    time = Command.doyToInstant(args[0] as DOY_STRING);
+    time = doyToInstant(args[0] as DOY_STRING);
   } else {
     time = args[0] as Temporal.Instant;
   }
@@ -363,9 +363,9 @@ function A(...args: [TemplateStringsArray, ...string[]] | [Temporal.Instant] | [
 function R(...args: [TemplateStringsArray, ...string[]] | [Temporal.Duration] | [string]): typeof Commands {
   let duration: Temporal.Duration;
   if (Array.isArray(args[0])) {
-    duration = Command.hmsToDuration(String.raw(...(args as [TemplateStringsArray, ...string[]])) as HMS_STRING);
+    duration = hmsToDuration(String.raw(...(args as [TemplateStringsArray, ...string[]])) as HMS_STRING);
   } else if (typeof args[0] === 'string') {
-    duration = Command.hmsToDuration(args[0] as HMS_STRING);
+    duration = hmsToDuration(args[0] as HMS_STRING);
   } else {
     duration = args[0] as Temporal.Duration;
   }
@@ -377,9 +377,9 @@ function R(...args: [TemplateStringsArray, ...string[]] | [Temporal.Duration] | 
 function E(...args: [TemplateStringsArray, ...string[]] | [Temporal.Duration] | [string]): typeof Commands {
   let duration: Temporal.Duration;
   if (Array.isArray(args[0])) {
-    duration = Command.hmsToDuration(String.raw(...(args as [TemplateStringsArray, ...string[]])) as HMS_STRING);
+    duration = hmsToDuration(String.raw(...(args as [TemplateStringsArray, ...string[]])) as HMS_STRING);
   } else if (typeof args[0] === 'string') {
-    duration = Command.hmsToDuration(args[0] as HMS_STRING);
+    duration = hmsToDuration(args[0] as HMS_STRING);
   } else {
     duration = args[0] as Temporal.Duration;
   }
