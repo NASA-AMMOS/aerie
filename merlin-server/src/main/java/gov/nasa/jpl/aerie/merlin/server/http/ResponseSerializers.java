@@ -298,7 +298,7 @@ public final class ResponseSerializers {
   public static JsonValue serializeMissingArgumentsException(final MissingArgumentsException ex) {
     return Json.createObjectBuilder()
                .add("success", JsonValue.FALSE)
-               .add("errors", serializeMap(arg -> serializeMissingArgument(ex.containerName, ex.metaName, arg), ex.missingArguments.stream().collect(Collectors.toMap(
+               .add("errors", serializeMap(arg -> serializeMissingArgument(ex.metaName, ex.containerName, arg), ex.missingArguments.stream().collect(Collectors.toMap(
                    MissingArgumentsException.MissingArgument::parameterName,
                    $ -> $))))
                .add("arguments", serializeMap(ResponseSerializers::serializeArgument, ex.providedArguments.stream().collect(Collectors.toMap(
@@ -307,7 +307,7 @@ public final class ResponseSerializers {
                .build();
   }
 
-  private static JsonValue serializeMissingArgument(final String containerName, final String metaName, final MissingArgumentsException.MissingArgument argument) {
+  private static JsonValue serializeMissingArgument(final String metaName, final String containerName, final MissingArgumentsException.MissingArgument argument) {
     return Json.createObjectBuilder()
                .add("schema", serializeValueSchema(argument.schema()))
                .add("message", "Required argument for %s \"%s\" not provided: \"%s\" of type %s"
