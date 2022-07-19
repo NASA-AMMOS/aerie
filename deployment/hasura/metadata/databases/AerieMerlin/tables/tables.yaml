@@ -1,5 +1,6 @@
 - "!include public_activity.yaml"
 - "!include public_activity_type.yaml"
+- "!include public_activity_directive_metadata_schema.yaml"
 - "!include public_condition.yaml"
 - "!include public_dataset.yaml"
 - "!include public_mission_model.yaml"

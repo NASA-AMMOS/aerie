@@ -3,6 +3,10 @@
 begin;
   -- Domain types.
   \ir domain-types/merlin-arguments.sql
+  \ir domain-types/merlin-activity-directive-metadata.sql
+
+  -- Activity Directive Metadata schema
+  \ir tables/activity_directive_metadata_schema.sql
 
   -- Tables.
   -- Uploaded files (JARs or simulation input files).
