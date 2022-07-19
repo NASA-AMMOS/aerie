@@ -25,3 +25,12 @@
       isolation_level: read-committed
       use_prepared_statements: false
   tables: "!include AerieCommanding/tables/tables.yaml"
+- name: AerieUI
+  kind: postgres
+  configuration:
+    connection_info:
+      database_url:
+        from_env: AERIE_UI_DATABASE_URL
+      isolation_level: read-committed
+      use_prepared_statements: false
+  tables: "!include AerieUI/tables/tables.yaml"
