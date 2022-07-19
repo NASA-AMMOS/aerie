@@ -10,6 +10,7 @@ create table activity (
   start_offset interval not null,
   type text not null,
   arguments merlin_argument_set not null,
+  metadata merlin_activity_directive_metadata_set default '{}'::jsonb,
 
   constraint activity_synthetic_key
     primary key (id),
@@ -48,6 +49,8 @@ comment on column activity.type is e''
   'The type of the activity, as defined in the mission model associated with the plan.';
 comment on column activity.arguments is e''
   'The set of arguments to this activity, corresponding to the parameters of the associated activity type.';
+comment on column activity.metadata is e''
+  'The metadata associated with this activity.';
 
 
 create function increment_revision_on_insert_activity()
