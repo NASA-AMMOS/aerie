@@ -265,5 +265,10 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
           Inclusive
       );
     }
+
+    @Override
+    public final Window bottom() {
+      return Window.at(Duration.MIN_VALUE);
+    }
   }
 }

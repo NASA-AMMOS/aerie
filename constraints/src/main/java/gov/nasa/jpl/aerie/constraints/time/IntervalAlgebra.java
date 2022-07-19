@@ -27,6 +27,8 @@ public interface IntervalAlgebra<Alg, I> extends Comparator<I> {
   I lowerBoundsOf(I x);
   I upperBoundsOf(I x);
 
+  I bottom();
+
 
   default boolean overlaps(I x, I y) {
     return !isEmpty(intersect(x, y));
