@@ -208,6 +208,44 @@ final class IntervalMap<Alg, I, V> {
     // TODO
     //throw new NotImplementedException();
 
+    /*
+      This works by shifting a pointer at the end of each intersection. For example, let's say we have the following,
+        where + implies the interval is defined, - implies the interval is not, ... implies the space between this interval
+        and alg.bottom or the highest upper bound when doing alg.getUpperBound:
+
+      left:   ...+++-+++--++-...
+      right:  ...-+-++-++--++...
+
+      we want every gap/space where definedness changes, i.e. we want the subinterval where left is defined, right isn't,
+        and then the one where both are, the one where only left is, the one where only right is, etc. so our splits
+        (we split based on when definedness for either left or right changes) would be:
+
+      left:   ...|+|+|+|-|+|+|+|-|-|+|+|-|...
+      right:  ...|-|+|-|+|+|-|+|+|-|-|+|+|...
+
+      the goal of this method is to extract each of these splits (it is pretty awkward due to the existing Algebra definition)
+        and then pass the values of those splits (so if left has a value and right doesn't, pass Optional.of(leftValue) and
+        Optional.empty() for the right absence of value) to the transform, and add it to segments
+
+      to do so, we use 4 "pointers". The implementation is a bit obfuscated owing to the Algebra, but the idea is:
+        - one 'current' pointer that references the start of the current interval on the left. so an actual one that exists
+        - a 'previous' pointer that references where the left side last left off, after the previous split was calculated - the gaps between these help us determine intervals
+        - the same for the right
+
+      so, when the left and right previous pointers occur before the current pointers, that must mean there is a gap for both left and right:
+               P  C
+        left:  --+++...
+        right: ---++...
+
+      when a previous pointer occurs at the same time as a current pointer, there is no gap and we are now extracting an interval over an existing left or right segment:
+               P P
+               C C
+      left:  --+++...
+      right: ----+...
+
+      This breaks down into four cases, discussed below.
+     */
+
     if (left.alg.getClass() != right.alg.getClass()) {
       throw new IllegalArgumentException("Grammars of left and right must match!");
     }
