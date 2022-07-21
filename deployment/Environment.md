@@ -87,13 +87,14 @@ This document provides detailed information about environment variables for each
 
 ## Aerie UI
 
-| Name                 | Description                                                                                               | Type     | Default                          |
-| -------------------- | --------------------------------------------------------------------------------------------------------- | -------- | -------------------------------- |
-| `GATEWAY_CLIENT_URL` | Url of the Gateway as called from the client (i.e. web browser)                                           | `string` | http://localhost:9000            |
-| `GATEWAY_SERVER_URL` | Url of the Gateway as called from the server (i.e. Node.js container)                                     | `string` | http://localhost:9000            |
-| `HASURA_CLIENT_URL`  | Url of Hasura as called from the client (i.e. web browser)                                                | `string` | http://localhost:8080/v1/graphql |
-| `HASURA_SERVER_URL`  | Url of Hasura as called from the server (i.e. Node.js container)                                          | `string` | http://localhost:8080/v1/graphql |
-| `ORIGIN`             | Url of where the UI is served from. See the [Svelte Kit Adapter Node docs][svelte-kit-adapter-node-docs]. | `string` | http://localhost                 |
+| Name                    | Description                                                                                               | Type     | Default                          |
+| ----------------------- | --------------------------------------------------------------------------------------------------------- | -------- | -------------------------------- |
+| `GATEWAY_CLIENT_URL`    | Url of the Gateway as called from the client (i.e. web browser)                                           | `string` | http://localhost:9000            |
+| `GATEWAY_SERVER_URL`    | Url of the Gateway as called from the server (i.e. Node.js container)                                     | `string` | http://localhost:9000            |
+| `HASURA_CLIENT_URL`     | Url of Hasura as called from the client (i.e. web browser)                                                | `string` | http://localhost:8080/v1/graphql |
+| `HASURA_SERVER_URL`     | Url of Hasura as called from the server (i.e. Node.js container)                                          | `string` | http://localhost:8080/v1/graphql |
+| `HASURA_WEB_SOCKET_URL` | Url of Hasura called to establish a web-socket connection from the client                                 | `string` | ws://localhost:8080/v1/graphql   |
+| `ORIGIN`                | Url of where the UI is served from. See the [Svelte Kit Adapter Node docs][svelte-kit-adapter-node-docs]. | `string` | http://localhost                 |
 
 ## Hasura
 
