@@ -18,6 +18,7 @@ import java.util.List;
 import static gov.nasa.jpl.aerie.constraints.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.doubleP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
@@ -282,6 +283,16 @@ public final class ConstraintParsers {
             $ -> tuple(Unit.UNIT, $.expression)));
   }
 
+  static JsonParser<Split> splitF(final JsonParser<Expression<Windows>> windowsExpressionP) {
+    return productP
+        .field("kind", literalP("WindowsExpressionSplit"))
+        .field("windows", windowsExpressionP)
+        .field("numberOfSubWindows", intP)
+        .map(Iso.of(
+            untuple((kind, expr, numberOfSubWindows) -> new Split(expr, numberOfSubWindows)),
+            $ -> tuple(Unit.UNIT, $.windows, $.numberOfSubWindows)));
+  }
+
   static JsonParser<ForEachActivity> forEachActivityF(final JsonParser<Expression<List<Violation>>> violationListExpressionP) {
     return productP
         .field("kind", literalP("ForEachActivity"))
@@ -321,7 +332,8 @@ public final class ConstraintParsers {
           allF(selfP),
           anyF(selfP),
           invertF(selfP),
-          shiftByF(selfP)));
+          shiftByF(selfP),
+          splitF(selfP)));
 
   static final JsonParser<ViolationsOf> violationsOfP =
       productP

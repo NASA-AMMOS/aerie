@@ -108,6 +108,17 @@ export class Windows {
       fromEnd: fromEnd
     })
   }
+
+  public split(numberOfSubWindows: number): Windows {
+    if (numberOfSubWindows < 1) {
+      throw RangeError(".split numberOfSubWindows cannot be less than 1, but was: " + numberOfSubWindows);
+    }
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionSplit,
+      windows: this.__astNode,
+      numberOfSubWindows: numberOfSubWindows
+    })
+  }
 }
 
 export class Real {
@@ -361,7 +372,7 @@ declare global {
     public shiftBy(fromStart: number, fromEnd: number): Windows;
 
     /**
-     *  Return all windows with a duration longer than the argument
+     * Return all windows with a duration longer than the argument
      * @param duration the duration
      */
     public longerThan(duration: Duration): Windows;
@@ -372,6 +383,17 @@ declare global {
      */
     public shorterThan(duration: Duration): Windows;
 
+    /**
+     * Splits each window into equal sized sub-windows.
+     *
+     * For `.split(N)`, N sub-windows will be created by removing N-1 points in the middle.
+     * Instantaneous zero-width windows will be left unchanged.
+     * If an extremely small window contains fewer microseconds than N, each microsecond
+     * will be its own window.
+     *
+     * @param numberOfSubWindows how many sub-windows to split each window into
+     */
+    public split(numberOfSubWindows: number): Windows;
   }
 
   export class Real {
