@@ -17,7 +17,6 @@ public interface MissionModelRepository {
     // Mutations
     void updateModelParameters(String missionModelId, final List<Parameter> modelParameters) throws NoSuchMissionModelException;
     void updateActivityTypes(String missionModelId, final Map<String, ActivityType> activityTypes) throws NoSuchMissionModelException;
-    void deleteMissionModel(String missionModelId) throws NoSuchMissionModelException;
 
     class NoSuchMissionModelException extends Exception {}
 }

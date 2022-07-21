@@ -61,7 +61,6 @@ public final class InMemoryMissionModelRepository implements MissionModelReposit
     {
     }
 
-    @Override
     public void deleteMissionModel(final String missionModelId) throws NoSuchMissionModelException {
         final MissionModelJar missionModelJar = getMissionModel(missionModelId);
 

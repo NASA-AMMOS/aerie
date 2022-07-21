@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 
 import javax.sql.DataSource;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -16,7 +15,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public final class PostgresMissionModelRepository implements MissionModelRepository {
-  private final Path missionModelsPath = Path.of("merlin_file_store").toAbsolutePath();
   private final DataSource dataSource;
 
   public PostgresMissionModelRepository(final DataSource dataSource) {
@@ -108,33 +106,6 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
     } catch (final SQLException ex) {
       throw new DatabaseException(
           "Failed to update derived data for mission model with id `%s`".formatted(missionModelId), ex);
-    }
-  }
-
-  @Override
-  public void deleteMissionModel(final String missionModelId) throws NoSuchMissionModelException  {
-    // TODO: Separate JAR upload from mission model registration.
-    //   A client should be able to upload any file, then reference that file for any purpose,
-    //   be it as a mission model source or as an input file argument for activities/configuration.
-    try (final var connection = this.dataSource.getConnection()) {
-      try (
-          final var getModelAction = new GetModelAction(connection);
-          final var deleteModelAction = new DeleteModelAction(connection)
-      ) {
-        final var jarPath = getModelAction
-            .get(toMissionModelId(missionModelId))
-            .orElseThrow(NoSuchMissionModelException::new)
-            .path();
-        deleteModelAction.apply(toMissionModelId(missionModelId));
-
-        try {
-          Files.delete(jarPath);
-        } catch (final IOException ex) {
-          throw new DeleteUploadedFileException(jarPath, ex);
-        }
-      }
-    } catch (final SQLException ex) {
-      throw new DatabaseException("Failed to delete mission model with id `%s`".formatted(missionModelId), ex);
     }
   }
 
