@@ -107,6 +107,7 @@ services:
       GATEWAY_SERVER_URL: http://aerie_gateway:9000
       HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
       HASURA_SERVER_URL: http://hasura:8080/v1/graphql
+      HASURA_WEB_SOCKET_URL: ws://localhost:8080/v1/graphql
       NODE_TLS_REJECT_UNAUTHORIZED: "0"
       ORIGIN: http://localhost
     image: "ghcr.io/nasa-ammos/aerie-ui:develop"
