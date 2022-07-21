@@ -9,14 +9,12 @@ import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
-import org.apache.commons.lang3.NotImplementedException;
 
 import javax.json.Json;
 import javax.json.stream.JsonParsingException;
@@ -24,7 +22,6 @@ import javax.sql.DataSource;
 import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -163,80 +160,6 @@ public final class PostgresPlanRepository implements PlanRepository {
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get all activities from plan", ex);
     }
-  }
-
-  @Override
-  public CreatedPlan createPlan(final NewPlan plan) throws NoSuchMissionModelException, IntegrationFailureException {
-    try (
-        final var connection = this.dataSource.getConnection();
-        // Rollback the transaction if we throw out of this method.
-        final var transactionContext = new TransactionContext(connection);
-    ) {
-      try (
-          final var createPlanAction = new CreatePlanAction(connection);
-          final var createActivityAction = new CreateActivityAction(connection);
-          final var setActivityArgumentsAction = new CreateActivityArgumentsAction(connection)
-      ) {
-        final var planId = new PlanId(
-            createPlanAction.apply(
-                plan.name,
-                toMissionModelId(plan.missionModelId),
-                plan.startTimestamp,
-                plan.endTimestamp));
-
-        final List<ActivityInstanceId> activityIds;
-        if (plan.activityInstances == null) {
-          activityIds = new ArrayList<>();
-        } else {
-          activityIds = new ArrayList<>(plan.activityInstances.size());
-
-          for (final var activity : plan.activityInstances) {
-            final var activityId = createActivityAction.apply(
-                planId,
-                plan.startTimestamp,
-                activity.startTimestamp,
-                activity.type);
-
-            for (final var argument : activity.arguments.entrySet()) {
-              // Add this argument to the staged batch of arguments.
-              setActivityArgumentsAction.add(activityId, argument.getKey(), argument.getValue());
-            }
-
-            activityIds.add(new ActivityInstanceId(activityId));
-          }
-
-          // Insert all the accumulated arguments for all activities at once.
-          setActivityArgumentsAction.apply();
-        }
-
-        // Commit our changes so that they become visible to other agents.
-        transactionContext.commit();
-
-        return new CreatedPlan(planId, activityIds);
-      }
-    } catch (final SQLException ex) {
-      throw new DatabaseException("Failed to create a plan", ex);
-    }
-  }
-
-  @Override
-  public PlanTransaction updatePlan(final PlanId planId) throws NoSuchPlanException {
-    return new PostgresPlanTransaction(this.dataSource, planId);
-  }
-
-  @Override
-  public void deletePlan(final PlanId planId) {
-    throw new NotImplementedException("If this is needed on the Postgres repository then implement it");
-  }
-
-  @Override
-  public ActivityInstanceId createActivity(final PlanId planId, final ActivityInstance activity) {
-    throw new NotImplementedException("If this is needed on the Postgres repository then implement it");
-  }
-
-  @Override
-  public void deleteAllActivities(final PlanId planId) {
-    throw new NotImplementedException("If this is needed on the Postgres repository then implement it");
   }
 
   @Override

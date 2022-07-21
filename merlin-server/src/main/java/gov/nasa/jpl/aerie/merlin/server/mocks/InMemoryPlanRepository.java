@@ -78,7 +78,6 @@ public final class InMemoryPlanRepository implements PlanRepository {
             (entry) -> new ActivityInstance(entry.getValue())));
   }
 
-  @Override
   public CreatedPlan createPlan(final NewPlan newPlan) {
     final PlanId planId = new PlanId(this.nextPlanId++);
 
@@ -108,12 +107,10 @@ public final class InMemoryPlanRepository implements PlanRepository {
     return new CreatedPlan(planId, activityIds);
   }
 
-  @Override
   public PlanTransaction updatePlan(final PlanId planId) {
     return new MockPlanTransaction(planId);
   }
 
-  @Override
   public void deletePlan(final PlanId planId) throws NoSuchPlanException {
     if (!this.plans.containsKey(planId)) {
       throw new NoSuchPlanException(planId);
@@ -123,7 +120,6 @@ public final class InMemoryPlanRepository implements PlanRepository {
     this.plans.remove(planId);
   }
 
-  @Override
   public ActivityInstanceId createActivity(final PlanId planId, final ActivityInstance activity) throws NoSuchPlanException {
     final var entry = this.plans.get(planId);
     if (entry == null) throw new NoSuchPlanException(planId);
@@ -138,7 +134,6 @@ public final class InMemoryPlanRepository implements PlanRepository {
     return activityId;
   }
 
-  @Override
   public void deleteAllActivities(final PlanId planId) throws NoSuchPlanException {
     final var entry = this.plans.get(planId);
     if (entry == null) throw new NoSuchPlanException(planId);
