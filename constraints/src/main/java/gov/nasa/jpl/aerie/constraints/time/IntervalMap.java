@@ -6,9 +6,13 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 final class IntervalMap<Alg, I, V> {
   private final IntervalAlgebra<Alg, I> alg;
+
+
+  //[0, 3) [3] (3,5) -> would be 3 windows, one is zero width, we ARE allowing this.
 
   // INVARIANT: `intervals` is list of non-empty, non-overlapping intervals in ascending order.
   // INVARIANT: If two adjacent intervals abut exactly (e.g. [0, 3), [3, 5]), their values are non-equal.
@@ -101,6 +105,12 @@ final class IntervalMap<Alg, I, V> {
       // and everything right of `index` is strictly right of `interval`,
       // so adding this interval to the list is trivial.
       this.segments.add(index, Pair.of(interval, value));
+    }
+  }
+
+  public void unsetAll(final List<Pair<I,V>> other) {
+    for (var toUnset : other) {
+      unset(toUnset.getKey());
     }
   }
 
@@ -429,5 +439,58 @@ final class IntervalMap<Alg, I, V> {
   private V getValue(final int index) {
     final var i = (index > 0) ? index : this.segments.size() - index;
     return this.segments.get(i).getValue();
+  }
+
+  public Iterable<Pair<I, V>> ascendingOrder() {
+    // SAFETY: calling `.remove()` on the returned iterator does not breach encapsulation.
+    // The same effect can be achieved by calling `windows.subtract()` against the data returned by the iterator,
+    // except for the added burden of avoiding `ConcurrentModificationException`s.
+    /*List<I> sortedIntervals = this.segments.stream().map($ -> $.getKey()).collect(Collectors.toList());
+    sortedIntervals.sort(this.alg);
+    List<Pair<I,V>> sortedIntervalsWithValues = new ArrayList<Pair<I,V>>();
+    for (var interval : sortedIntervals) {
+      sortedIntervalsWithValues.add(Pair.of(interval, get(interval)));
+    }
+    return sortedIntervalsWithValues;*/
+    return this.segments;
+  }
+
+  public Iterable<Pair<I,V>> descendingOrder() {
+    return () -> new Iterator<>() {
+      private final ListIterator<Pair<I,V>> iter = IntervalMap.this.segments.listIterator();
+
+      @Override
+      public boolean hasNext() {
+        return this.iter.hasPrevious();
+      }
+      @Override
+      public Pair<I,V> next() {
+        return this.iter.previous();
+      }
+    };
+  }
+
+  public int size() {
+    return segments.size();
+  }
+
+  public boolean isEmpty() {
+    return segments.isEmpty();
+  }
+
+  public boolean includes(final I interval, final V value) {
+    return segments.contains(Pair.of(interval, value));
+  }
+
+  public static <Alg, I, V, R>
+  R foldLeft(
+      R initial,
+      final IntervalMap<Alg, I, V> intervals,
+      final BiFunction<V, R, R> transform
+  ) {
+    for (var interval : intervals.segments) {
+      initial = transform.apply(interval.getValue(), initial);
+    }
+    return initial;
   }
 }

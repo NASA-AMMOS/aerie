@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.constraints.time;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -18,24 +19,28 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
   public Windows() {}
 
   public Windows(final Windows other) {
-    this.windows.addAll(other.windows);
+    this.windows.setAll(other.windows);
   }
 
-  public Windows(final List<Pair<Window,Boolean>> windows) {
+  public Windows(final List<Pair<Window, Boolean>> windows) { //keep behavior the same, just change the backend. for now, pretend gaps are false, we will fix windows and upstream after IntervalMap is in place, change on a case-by-case basis for gaps
     for (final var window : windows) this.add(window.getKey(), window.getValue());
   }
 
-  public Windows(final Pair<Window,Boolean>... windows) {
-    for (final var window : windows) this.add(window.getKey(), window.getValue());
+  public Windows defaultTrueWindows(List<Window> windows) {
+    for (final var window: windows) this.add(window, true);
+  }
+
+  public Windows(final Window... windows) {
+    for (final var window : windows) this.add(window, true);
   }
 
 
-  public void add(final Window window, final boolean value) {
-    this.windows.add(window, value);
+  public void add(final Window window, final Boolean value) {
+    this.windows.set(window, value);
   }
 
   public void addAll(final Windows other) {
-    this.windows.addAll(other.windows);
+    this.windows.setAll(other.windows);
   }
 
   public void addPoint(final long quantity, final Duration unit, final boolean value) {
@@ -48,13 +53,33 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
     return result;
   }
 
+  public void clear() {
+    ArrayList<Pair<Window, Boolean>> allCurrentIntervals = new ArrayList<Pair<Window, Boolean>>();
+    this.windows.ascendingOrder().forEach(allCurrentIntervals::add);
+    this.windows.unsetAll(allCurrentIntervals);
+  }
+
+  public void nullifyInRange(final List<Window> other) { //instead of unsetAll, new name
+    for (var w : other) {
+      this.windows.unset(w);
+    }
+  }
+  public void nullifyInRange(final Windows other) {
+    for (var w : other) {
+      this.windows.unset(w.getKey());
+    }
+  }
 
   public void subtract(final Window window) {
-    this.windows.subtract(window);
+    subtractAll(new Windows(List.of(Pair.of(window, false))));
   }
 
   public void subtractAll(final Windows other) {
-    this.windows.subtractAll(other.windows);
+    final var intervals = other.windows;
+    final var newWindows = IntervalMap.map2(this.windows, intervals, (a$, b$) -> b$.isPresent() ? Optional.empty() : a$);
+    this.clear();
+    this.windows.setAll(newWindows);
+    //TODO: make this work such that windows is final
   }
 
   public void subtract(final long start, final long end, final Duration unit) {
@@ -72,11 +97,21 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
   }
 
   public void intersectWith(final Window window, final boolean value) {
-    this.windows.intersectWith(window, value);
+    intersectWith(new Windows(List.of(Pair.of(window, value))));
   }
 
   public void intersectWith(final Windows other) {
-    this.windows.intersectWithAll(other.windows);
+    final var intervals = other.windows;
+    this.windows = IntervalMap.map2(this.windows, intervals, (a$, b$) -> { //authored by Jonathan
+      if (a$.isPresent()) {
+        return (a$.get()) ? b$ : a$; //if a has a value, i.e. there is a window there, the intersection should return b's value (if no b window, then should be null, else a's value of not null)
+      }
+      else {
+        return (b$.orElse(true)) ? a$ : b$; //if b has no value, then it is true and intersection returns b null
+        // if b has value, then return a if null or not, implicitly check b.ispresent
+      }
+    });
+    //TODO: make this work such that windows is final
   }
 
   public void intersectWith(final long start, final long end, final Duration unit, final boolean value) {
@@ -190,20 +225,20 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
   }
 
 
-  public boolean includes(final Window probe) {
-    return this.windows.includes(probe);
+  public boolean includes(final Window probe, final boolean value) {
+    return this.windows.includes(probe, value);
   }
 
   public boolean includes(final Windows other) {
-    return this.windows.includesAll(other.windows);
+    this.windows.
   }
 
-  public boolean includes(final long start, final long end, final Duration unit) {
-    return this.includes(Window.between(start, end, unit));
+  public boolean includes(final long start, final long end, final Duration unit, final boolean value) { //TODO: should value defualt to true?
+    return this.includes(Window.between(start, end, unit), value);
   }
 
-  public boolean includesPoint(final long quantity, final Duration unit) {
-    return this.includes(Window.at(quantity, unit));
+  public boolean includesPoint(final long quantity, final Duration unit, final boolean value) {
+    return this.includes(Window.at(quantity, unit), value);
   }
 
 
