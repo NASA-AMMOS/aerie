@@ -560,6 +560,44 @@ class ConstraintsDSLCompilationServiceTests {
   }
 
   @Test
+  void testSplit() {
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(0.3).split(4)
+          }
+        """,
+        new ViolationsOf(
+            new Split(
+                new LessThan(new RealResource("state of charge"), new RealValue(0.3)),
+                4
+            )
+        )
+    );
+  }
+
+  @Test
+  void testSplitArgumentError() {
+    checkFailedCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(0.3).split(0)
+          }
+        """,
+        ".split numberOfSubWindows cannot be less than 1, but was: 0"
+    );
+
+    checkFailedCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(0.3).split(-2)
+          }
+        """,
+        ".split numberOfSubWindows cannot be less than 1, but was: -2"
+    );
+  }
+
+  @Test
   void testViolations() {
     checkSuccessfulCompilation(
         """

@@ -21,7 +21,8 @@ import java.util.Set;
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MILLISECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -46,6 +47,36 @@ public class ASTTests {
     final var expected = new Windows();
     expected.add(Window.between(5, Inclusive, 10, Inclusive, SECONDS));
     expected.add(Window.between(15, Inclusive, 20, Exclusive, SECONDS));
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testSplit() {
+    final var simResults = new SimulationResults(
+        Window.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var windows = new Windows();
+    windows.add(Window.between(0, Inclusive, 5, Exclusive, SECONDS));
+    windows.add(Window.between(10000000, Exclusive, 15000001, Exclusive, MICROSECONDS));
+    windows.add(Window.at(20, SECONDS));
+
+    final var result = new Split(Supplier.of(windows), 3).evaluate(simResults, Map.of());
+
+    final var expected = new Windows();
+    expected.add(Window.between(0, Inclusive, 1666666, Exclusive, MICROSECONDS));
+    expected.add(Window.between(1666666, Exclusive, 3333332, Exclusive, MICROSECONDS));
+    expected.add(Window.between(3333332, Exclusive, 5000000, Exclusive, MICROSECONDS));
+
+    expected.add(Window.between(10000000, Exclusive, 11666667, Exclusive, MICROSECONDS));
+    expected.add(Window.between(11666667, Exclusive, 13333334, Exclusive, MICROSECONDS));
+    expected.add(Window.between(13333334, Exclusive, 15000001, Exclusive, MICROSECONDS));
+
+    expected.add(Window.at(20, SECONDS));
 
     assertEquivalent(expected, result);
   }
