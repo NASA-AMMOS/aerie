@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ import java.util.stream.StreamSupport;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
 
 public final class Windows implements Iterable<Pair<Window, Boolean>> {
-  private final IntervalMap<WindowAlgebra, Window, Boolean> windows = new IntervalMap<>(new WindowAlgebra());
+  private final IntervalMap<Boolean> windows = new IntervalMap<>(new WindowAlgebra());
 
   public Windows() {}
 
@@ -26,8 +27,10 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
     for (final var window : windows) this.add(window.getKey(), window.getValue());
   }
 
-  public Windows defaultTrueWindows(List<Window> windows) {
-    for (final var window: windows) this.add(window, true);
+  public static Windows defaultTrueWindows(List<Window> windows) {
+    Windows toReturn = new Windows();
+    for (final var window: windows) toReturn.add(window, true);
+    return toReturn;
   }
 
   public Windows(final Window... windows) {
@@ -53,11 +56,11 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
     return result;
   }
 
-  public void clear() {
+  /*public void clear() {
     ArrayList<Pair<Window, Boolean>> allCurrentIntervals = new ArrayList<Pair<Window, Boolean>>();
     this.windows.ascendingOrder().forEach(allCurrentIntervals::add);
     this.windows.unsetAll(allCurrentIntervals);
-  }
+  }*/
 
   public void nullifyInRange(final List<Window> other) { //instead of unsetAll, new name
     for (var w : other) {
@@ -77,7 +80,7 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
   public void subtractAll(final Windows other) {
     final var intervals = other.windows;
     final var newWindows = IntervalMap.map2(this.windows, intervals, (a$, b$) -> b$.isPresent() ? Optional.empty() : a$);
-    this.clear();
+    this.windows.clear();
     this.windows.setAll(newWindows);
     //TODO: make this work such that windows is final
   }
@@ -102,7 +105,7 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
 
   public void intersectWith(final Windows other) {
     final var intervals = other.windows;
-    this.windows = IntervalMap.map2(this.windows, intervals, (a$, b$) -> { //authored by Jonathan
+    IntervalMap<Boolean> newWindows = IntervalMap.map2(this.windows, intervals, (a$, b$) -> { //authored by Jonathan
       if (a$.isPresent()) {
         return (a$.get()) ? b$ : a$; //if a has a value, i.e. there is a window there, the intersection should return b's value (if no b window, then should be null, else a's value of not null)
       }
@@ -111,7 +114,9 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
         // if b has value, then return a if null or not, implicitly check b.ispresent
       }
     });
-    //TODO: make this work such that windows is final
+
+    this.windows.clear();
+    this.windows.setAll(newWindows);
   }
 
   public void intersectWith(final long start, final long end, final Duration unit, final boolean value) {
@@ -200,15 +205,15 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
   }
 
   public static Windows forever(){
-    return new Windows(Pair.of(Window.FOREVER, true));
+    return new Windows(List.of(Pair.of(Window.FOREVER, true)));
   }
 
   public static Windows forever(boolean value){
-    return new Windows(Pair.of(Window.FOREVER, value));
+    return new Windows(List.of(Pair.of(Window.FOREVER, value)));
   }
 
   public static Windows subtract(Window x, Window y, boolean value){
-    var tmp = new Windows(Pair.of(y, value));
+    var tmp = new Windows(List.of(Pair.of(y, value)));
     tmp.subtract(x);
     return tmp;
   }
@@ -230,7 +235,8 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
   }
 
   public boolean includes(final Windows other) {
-    this.windows.
+    //this.windows.
+    throw new NotImplementedException();
   }
 
   public boolean includes(final long start, final long end, final Duration unit, final boolean value) { //TODO: should value defualt to true?
@@ -265,7 +271,7 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
     return this.windows.toString();
   }
 
-  private static class WindowAlgebra implements IntervalAlgebra<WindowAlgebra, Window> {
+  public static class WindowAlgebra implements IntervalAlgebra<WindowAlgebra, Window> {
     @Override
     public final boolean isEmpty(Window x) {
       return x.isEmpty();

@@ -8,38 +8,38 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-final class IntervalMap<Alg, I, V> {
-  private final IntervalAlgebra<Alg, I> alg;
+final class IntervalMap<V> {
+  private final IntervalAlgebra<Windows.WindowAlgebra, Window> alg;
 
 
   //[0, 3) [3] (3,5) -> would be 3 windows, one is zero width, we ARE allowing this.
 
   // INVARIANT: `intervals` is list of non-empty, non-overlapping intervals in ascending order.
   // INVARIANT: If two adjacent intervals abut exactly (e.g. [0, 3), [3, 5]), their values are non-equal.
-  private final List<Pair<I, V>> segments;
+  private final List<Pair<Window, V>> segments;
 
-  private IntervalMap(final IntervalAlgebra<Alg, I> algebra, final List<Pair<I, V>> segments) {
+  private IntervalMap(final IntervalAlgebra<Windows.WindowAlgebra, Window> algebra, final List<Pair<Window, V>> segments) {
     this.alg = Objects.requireNonNull(algebra);
     this.segments = Objects.requireNonNull(segments);
   }
 
   // Empty constructor
-  public IntervalMap(final IntervalAlgebra<Alg, I> algebra) {
+  public IntervalMap(final IntervalAlgebra<Windows.WindowAlgebra, Window> algebra) {
     this(algebra, new ArrayList<>());
   }
 
   // Singleton constructor
-  public IntervalMap(final IntervalAlgebra<Alg, I> algebra, final I key, final V value) {
+  public IntervalMap(final IntervalAlgebra<Windows.WindowAlgebra, Window> algebra, final Window key, final V value) {
     this(algebra, new ArrayList<>(List.of(Pair.of(Objects.requireNonNull(key), Objects.requireNonNull(value)))));
   }
 
   // Copy constructor
-  public IntervalMap(final IntervalMap<Alg, I, V> other) {
+  public IntervalMap(final IntervalMap<V> other) {
     this(other.alg, new ArrayList<>(other.segments));
   }
 
-  public List<Pair<I, V>> get(final I interval) {
-    final var results = new ArrayList<Pair<I, V>>();
+  public List<Pair<Window, V>> get(final Window interval) {
+    final var results = new ArrayList<Pair<Window, V>>();
     for (final var segment : this.segments) {
       if (this.alg.overlaps(interval, segment.getKey())) {
         results.add(segment);
@@ -49,11 +49,11 @@ final class IntervalMap<Alg, I, V> {
     return results;
   }
 
-  public void set(final I interval, final V value) {
+  public void set(final Window interval, final V value) {
     this.setAll(new IntervalMap<>(this.alg, interval, value));
   }
 
-  public void setAll(final IntervalMap<Alg, I, V> other) {
+  public void setAll(final IntervalMap<V> other) {
     int index = 0;
 
     for (final var window : other.segments) {
@@ -108,13 +108,17 @@ final class IntervalMap<Alg, I, V> {
     }
   }
 
-  public void unsetAll(final List<Pair<I,V>> other) {
+  public void unsetAll(final List<Pair<Window,V>> other) {
     for (var toUnset : other) {
       unset(toUnset.getKey());
     }
   }
 
-  public void unset(final I interval) {
+  public void clear() {
+    unsetAll(this.segments);
+  }
+
+  public void unset(final Window interval) {
     int index = 0;
 
     // <> is `interval`, the interval to unset; [] is the currently-indexed window in the map.
@@ -161,18 +165,16 @@ final class IntervalMap<Alg, I, V> {
    * @param intervals the IntervalMap whose values we wish to apply the transform over
    * @param transform the function to apply to each value of intervals (or the gaps between!), mapping its original value type V to another value type R
    * @return a new IntervalMap with newly mapped values
-   * @param <Alg> The algebra used by the IntervalMap
-   * @param <I> The type of intervals
    * @param <V> The original value type of the IntervalMap that each interval corresponds to
    * @param <R> The new value type that the returned IntervalMap's intervals should correspond to
    */
-  public static <Alg, I, V, R>
-  IntervalMap<Alg, I, R> map(
-      final IntervalMap<Alg, I, V> intervals,
+  public static <V, R>
+  IntervalMap<R> map(
+      final IntervalMap<V> intervals,
       final Function<Optional<V>, Optional<R>> transform
   ) {
     final var alg = intervals.alg;
-    final var segments = new ArrayList<Pair<I, R>>();
+    final var segments = new ArrayList<Pair<Window, R>>();
 
     var previous = alg.bottom(); //in the context of Windows, a window at Duration.MIN; a minimum value when computing gaps at the next step
     for (final var segment : intervals.segments) {
@@ -209,10 +211,10 @@ final class IntervalMap<Alg, I, V> {
     return new IntervalMap<>(intervals.alg, segments);
   }
 
-  public static <Alg, I, V1, V2, R>
-  IntervalMap<Alg, I, R> map2(
-      final IntervalMap<Alg, I, V1> left,
-      final IntervalMap<Alg, I, V2> right,
+  public static <V1, V2, R>
+  IntervalMap<R> map2(
+      final IntervalMap<V1> left,
+      final IntervalMap<V2> right,
       final BiFunction<Optional<V1>, Optional<V2>, Optional<R>> transform
   ) {
     // TODO
@@ -260,7 +262,7 @@ final class IntervalMap<Alg, I, V> {
       throw new IllegalArgumentException("Grammars of left and right must match!");
     }
     final var alg = left.alg;
-    final var segments = new ArrayList<Pair<I, R>>();
+    final var segments = new ArrayList<Pair<Window, R>>();
 
     var previousLeft = left.alg.bottom(); //PL - i think this encounters problems if the first interval starts at bottom, or if the final one ends at top, i THINK
     var previousRight = right.alg.bottom(); //PR
@@ -282,7 +284,7 @@ final class IntervalMap<Alg, I, V> {
             - left is undefined, right is defined (i.e. PL != CL, PR = CR)
        */
 
-      final I gap;
+      final Window gap;
 
       //case 1, left is undefined, right is undefined (i.e. PL != CL, PR != CR)
       if (alg.contains(alg.lowerBoundsOf(currentLeft), alg.lowerBoundsOf(previousLeft)) &&
@@ -431,7 +433,7 @@ final class IntervalMap<Alg, I, V> {
     return new IntervalMap<>(alg, segments);
   }
 
-  private I getInterval(final int index) {
+  private Window getInterval(final int index) {
     final var i = (index > 0) ? index : this.segments.size() - index;
     return this.segments.get(i).getKey();
   }
@@ -441,7 +443,7 @@ final class IntervalMap<Alg, I, V> {
     return this.segments.get(i).getValue();
   }
 
-  public Iterable<Pair<I, V>> ascendingOrder() {
+  public Iterable<Pair<Window, V>> ascendingOrder() {
     // SAFETY: calling `.remove()` on the returned iterator does not breach encapsulation.
     // The same effect can be achieved by calling `windows.subtract()` against the data returned by the iterator,
     // except for the added burden of avoiding `ConcurrentModificationException`s.
@@ -455,16 +457,16 @@ final class IntervalMap<Alg, I, V> {
     return this.segments;
   }
 
-  public Iterable<Pair<I,V>> descendingOrder() {
+  public Iterable<Pair<Window,V>> descendingOrder() {
     return () -> new Iterator<>() {
-      private final ListIterator<Pair<I,V>> iter = IntervalMap.this.segments.listIterator();
+      private final ListIterator<Pair<Window,V>> iter = IntervalMap.this.segments.listIterator();
 
       @Override
       public boolean hasNext() {
         return this.iter.hasPrevious();
       }
       @Override
-      public Pair<I,V> next() {
+      public Pair<Window,V> next() {
         return this.iter.previous();
       }
     };
@@ -478,14 +480,14 @@ final class IntervalMap<Alg, I, V> {
     return segments.isEmpty();
   }
 
-  public boolean includes(final I interval, final V value) {
+  public boolean includes(final Window interval, final V value) {
     return segments.contains(Pair.of(interval, value));
   }
 
-  public static <Alg, I, V, R>
+  public static <V, R>
   R foldLeft(
       R initial,
-      final IntervalMap<Alg, I, V> intervals,
+      final IntervalMap<V> intervals,
       final BiFunction<V, R, R> transform
   ) {
     for (var interval : intervals.segments) {
