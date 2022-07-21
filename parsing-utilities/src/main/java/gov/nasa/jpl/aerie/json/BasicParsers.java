@@ -190,6 +190,19 @@ public abstract class BasicParsers {
     }
   };
 
+  public static <T> JsonParser<Optional<T>> nullableP(JsonParser<T> parser) {
+    return chooseP(
+        parser.map(Iso.of(
+            Optional::of,
+            Optional::get
+        )),
+        nullP.map(Iso.of(
+            $ -> Optional.empty(),
+            $ -> Unit.UNIT
+        ))
+    );
+  }
+
   public static final JsonParser<Unit> nullP = new JsonParser<>() {
     @Override
     public JsonObject getSchema(final SchemaCache anchors) {
