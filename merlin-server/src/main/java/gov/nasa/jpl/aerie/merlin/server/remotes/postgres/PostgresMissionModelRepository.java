@@ -13,7 +13,6 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public final class PostgresMissionModelRepository implements MissionModelRepository {
@@ -74,63 +73,6 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
     } catch (final SQLException ex) {
       throw new DatabaseException(
           "Failed to retrieve constraints for mission model with id `%s`".formatted(missionModelId), ex);
-    }
-  }
-
-  @Override
-  public String createMissionModel(final MissionModelJar missionModelJar) {
-    // TODO: Separate JAR upload from mission model registration.
-    //   A client should be able to upload any file, then reference that file for any purpose,
-    //   be it as a mission model source or as an input file argument for activities/configuration.
-    try (
-        final var connection = this.dataSource.getConnection();
-        final var transactionContext = new TransactionContext(connection);
-        final var filesContext = new CreatedFilesContext()
-    ) {
-      // 1. Add the file to the filesystem.
-      final Path jarPath;
-      {
-        jarPath = getUnusedFilename(
-            this.missionModelsPath,
-            Optional
-                .ofNullable(missionModelJar.path.getFileName())
-                .map(Path::toString)
-                .orElse("missionModel"));
-
-        try {
-          Files.copy(missionModelJar.path, jarPath);
-        } catch (final IOException ex) {
-          throw new CreateUploadedFileException(missionModelJar.path, jarPath, ex);
-        }
-
-        // Delete the file from the filesystem if later steps fail.
-        filesContext.addPath(jarPath);
-      }
-
-      // 2. Register the file in the Postgres store.
-      final long modelId;
-      try (
-          final var createModelAction = new CreateModelAction(connection);
-          final var createUploadedFileAction = new CreateUploadedFileAction(connection)
-      ) {
-        final long jarId = createUploadedFileAction.apply(
-            missionModelJar.path.getFileName().getFileName().toString(),
-            this.missionModelsPath.relativize(jarPath).normalize());
-
-        modelId = createModelAction.apply(
-            missionModelJar.name,
-            missionModelJar.version,
-            missionModelJar.mission,
-            missionModelJar.owner,
-            jarId);
-      }
-
-      transactionContext.commit();
-      filesContext.commit();
-
-      return Long.toString(modelId);
-    } catch (final SQLException ex) {
-      throw new DatabaseException("Failed to register a mission model", ex);
     }
   }
 
