@@ -24,7 +24,6 @@ import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingDSLCompilationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.SynchronousSchedulerAgent;
 import gov.nasa.jpl.aerie.scheduler.server.services.ThreadedSchedulerAgent;
-import gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
 import org.slf4j.LoggerFactory;
@@ -54,11 +53,10 @@ public final class SchedulerAppDriver {
     final var config = loadConfiguration();
 
     final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI());
-    final var typescriptCodeGenerationService = new TypescriptCodeGenerationService();
 
     final SchedulingDSLCompilationService schedulingDSLCompilationService;
     try {
-      schedulingDSLCompilationService = new SchedulingDSLCompilationService(typescriptCodeGenerationService);
+      schedulingDSLCompilationService = new SchedulingDSLCompilationService();
     } catch (IOException e) {
       throw new Error("Failed to start SchedulingDSLCompilationService", e);
     }
@@ -79,7 +77,7 @@ public final class SchedulerAppDriver {
     final var schedulerService = new CachedSchedulerService(stores.results(), scheduleAgent);
     final var scheduleAction = new ScheduleAction(specificationService, schedulerService);
 
-    final var generateSchedulingLibAction = new GenerateSchedulingLibAction(typescriptCodeGenerationService, merlinService);
+    final var generateSchedulingLibAction = new GenerateSchedulingLibAction(merlinService);
 
     //establish bindings to the service layers
     final var bindings = new SchedulerBindings(schedulerService, scheduleAction, generateSchedulingLibAction);

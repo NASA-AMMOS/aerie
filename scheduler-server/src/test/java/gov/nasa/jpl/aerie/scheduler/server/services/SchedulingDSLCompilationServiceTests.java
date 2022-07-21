@@ -10,7 +10,6 @@ import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
-import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingCompilationError;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -47,7 +46,7 @@ class SchedulingDSLCompilationServiceTests {
 
   @BeforeAll
   void setUp() throws IOException {
-    schedulingDSLCompilationService = new SchedulingDSLCompilationService(new TypescriptCodeGenerationService());
+    schedulingDSLCompilationService = new SchedulingDSLCompilationService();
   }
 
   @AfterAll

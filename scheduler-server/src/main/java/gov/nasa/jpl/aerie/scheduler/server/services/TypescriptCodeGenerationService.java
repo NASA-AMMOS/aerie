@@ -1,35 +1,14 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
-import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
-import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 public class TypescriptCodeGenerationService {
-
-  public String generateTypescriptTypesForPlan(final MissionModelService missionModelService, final PlanId planId) {
-    try {
-      return generateTypescriptTypesFromMissionModel(missionModelService.getMissionModelTypes(planId));
-    } catch (MissionModelService.MissionModelServiceException | IOException e) {
-      throw new Error("Could not fetch mission model types", e);
-    }
-  }
-
-  public String generateTypescriptTypesForMissionModel(final MissionModelService missionModelService, final MissionModelId missionModelId) throws NoSuchMissionModelException {
-    try {
-      return generateTypescriptTypesFromMissionModel(missionModelService.getMissionModelTypes(missionModelId));
-    } catch (MissionModelService.MissionModelServiceException | IOException e) {
-      throw new Error("Could not fetch mission model types", e);
-    }
-  }
-
   public static String generateTypescriptTypesFromMissionModel(final MissionModelService.MissionModelTypes missionModelTypes) {
     final var activityTypeCodes = new ArrayList<ActivityTypeCode>();
     for (final var activityType : missionModelTypes.activityTypes()) {

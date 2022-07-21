@@ -22,12 +22,10 @@ import java.util.stream.Collectors;
 public class SchedulingDSLCompilationService {
 
   private final Process nodeProcess;
-  private final TypescriptCodeGenerationService schedulerCodeGenService;
 
-  public SchedulingDSLCompilationService(final TypescriptCodeGenerationService schedulerCodeGenService)
+  public SchedulingDSLCompilationService()
   throws IOException
   {
-    this.schedulerCodeGenService = schedulerCodeGenService;
     final var schedulingDslCompilerRoot = System.getenv("SCHEDULING_DSL_COMPILER_ROOT");
     final var schedulingDslCompilerCommand = System.getenv("SCHEDULING_DSL_COMPILER_COMMAND");
     final var nodePath = System.getenv("NODE_PATH");

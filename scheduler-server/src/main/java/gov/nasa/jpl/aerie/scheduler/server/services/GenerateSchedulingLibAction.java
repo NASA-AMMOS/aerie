@@ -10,11 +10,9 @@ import java.util.Map;
 import java.util.Objects;
 
 public record GenerateSchedulingLibAction(
-    TypescriptCodeGenerationService schedulingCodeGenService,
     MissionModelService missionModelService
 ) {
   public GenerateSchedulingLibAction {
-    Objects.requireNonNull(schedulingCodeGenService);
     Objects.requireNonNull(missionModelService);
   }
 
@@ -40,10 +38,10 @@ public record GenerateSchedulingLibAction(
       final var schedulerAst = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "scheduler-ast.ts"));
       final var windowsDsl = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "constraints", "constraints-edsl-fluent-api.ts"));
       final var windowsAst = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "constraints", "constraints-ast.ts"));
-      final var generatedSchedulerCode = this.schedulingCodeGenService.generateTypescriptTypesForMissionModel(missionModelService, missionModelId);
 
       final var missionModelTypes = missionModelService.getMissionModelTypes(missionModelId);
 
+      final var generatedSchedulerCode = TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelTypes);
       final var generatedConstraintsCode = gov.nasa.jpl.aerie.constraints.TypescriptCodeGenerationService
           .generateTypescriptTypes(
               SchedulingDSLCompilationService.activityTypes(missionModelTypes),
