@@ -79,7 +79,9 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
 
   public void subtractAll(final Windows other) {
     final var intervals = other.windows;
-    final var newWindows = IntervalMap.map2(this.windows, intervals, (a$, b$) -> b$.isPresent() ? Optional.empty() : a$);
+    final var newWindows = IntervalMap.map2(this.windows,
+                                            intervals,
+                                            (a$, b$) -> b$.isPresent() ? Optional.empty() : a$);
     this.windows.clear();
     this.windows.setAll(newWindows);
     //TODO: make this work such that windows is final
@@ -105,15 +107,18 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
 
   public void intersectWith(final Windows other) {
     final var intervals = other.windows;
-    IntervalMap<Boolean> newWindows = IntervalMap.map2(this.windows, intervals, (a$, b$) -> { //authored by Jonathan
-      if (a$.isPresent()) {
-        return (a$.get()) ? b$ : a$; //if a has a value, i.e. there is a window there, the intersection should return b's value (if no b window, then should be null, else a's value of not null)
-      }
-      else {
-        return (b$.orElse(true)) ? a$ : b$; //if b has no value, then it is true and intersection returns b null
-        // if b has value, then return a if null or not, implicitly check b.ispresent
-      }
-    });
+    IntervalMap<Boolean> newWindows = IntervalMap.map2(
+        this.windows,
+        intervals,
+        (a$, b$) -> { //authored by Jonathan
+          if (a$.isPresent()) {
+            return (a$.get()) ? b$ : a$; //if a has a value, i.e. there is a window there, the intersection should return b's value (if no b window, then should be null, else a's value of not null)
+          }
+          else {
+            return (b$.orElse(true)) ? a$ : b$; //if b has no value, then it is true and intersection returns b null
+            // if b has value, then return a if null or not, implicitly check b.ispresent
+          }
+        });
 
     this.windows.clear();
     this.windows.setAll(newWindows);

@@ -211,8 +211,87 @@ final class IntervalMap<V> {
     return new IntervalMap<>(intervals.alg, segments);
   }
 
-  public static <V1, V2, R>
+  //Jonathan's implementation
+  public static <Alg, V1, V2, R>
   IntervalMap<R> map2(
+      final IntervalMap<V1> left,
+      final IntervalMap<V2> right,
+      final BiFunction<Optional<V1>, Optional<V2>, Optional<R>> transform
+  ) {
+    final var alg = left.alg;
+
+    final var accumulator = new Object() {
+      final List<Pair<Window, R>> results = new ArrayList<>();
+      Window accInterval = alg.bottom(); //left and right have the same alg - both use Windows. This was implemented before that was determined.
+      Optional<R> accValue = Optional.empty(); //we are somehow accumulating a value into R
+
+      void flush() {
+        if (this.accValue.isPresent()) this.results.add(Pair.of(this.accInterval, this.accValue.get())); //if we have a value, add it
+        this.accInterval = alg.bottom(); //reset interval
+        this.accValue = Optional.empty(); //reset acc value, probably doing this at the end of intervals or smth
+      }
+
+      void append(final Window interval, final Optional<R> newValue) {
+        if (alg.isEmpty(interval)) return; //if nothing to append, don't act
+
+        if (!alg.overlaps(this.accInterval, interval) || !Objects.equals(this.accValue, newValue)) { //if no longer an overlap or the values not equal, time to flush
+          this.flush();
+        }
+
+        this.accInterval = alg.unify(this.accInterval, interval); //otherwise, merge the intervals if theres even a little overlap and the values r the same
+        this.accValue = newValue; //update vlaue????
+      }
+    };
+
+    int leftIndex = -1;
+    Window leftInterval = alg.bottom();
+    int rightIndex = -1;
+    Window rightInterval = alg.bottom();
+
+    while (leftIndex < left.segments.size() || rightIndex < right.segments.size()) {
+      // Advance to the next interval, if we've fully consumed the one prior.
+      if (alg.isEmpty(leftInterval) && leftIndex < left.segments.size()) { //i.e. if we are at the edge of the interval
+        leftInterval = left.getInterval(++leftIndex);
+      }
+      if (alg.isEmpty(rightInterval) && rightIndex < right.segments.size()) {
+        rightInterval = right.getInterval(++rightIndex);
+      }
+
+      // Extract the prefix and overlap between these intervals.
+      // At most one prefix will be non-empty (they can't each start before the other),
+      // but pretending otherwise makes the code simpler.
+      final var leftPrefix = alg.intersect(leftInterval, alg.lowerBoundsOf(rightInterval));
+      final var rightPrefix = alg.intersect(rightInterval, alg.lowerBoundsOf(leftInterval));
+      final var overlap = alg.intersect(leftInterval, rightInterval);
+      // At most one interval will have anything left over, but we need to analyze it against the next
+      // interval on the opposing timeline.
+      leftInterval = alg.intersect(leftInterval, alg.upperBoundsOf(alg.unify(leftPrefix, overlap)));
+      rightInterval = alg.intersect(rightInterval, alg.upperBoundsOf(alg.unify(rightPrefix, overlap)));
+
+      // Compute a new value on each interval.
+      if (!alg.isEmpty(leftPrefix)) {
+        accumulator.append(leftPrefix, transform.apply(
+            Optional.of(left.getValue(leftIndex)),
+            Optional.empty()));
+      }
+      if (!alg.isEmpty(rightPrefix)) {
+        accumulator.append(rightPrefix, transform.apply(
+            Optional.empty(),
+            Optional.of(right.getValue(rightIndex))));
+      }
+      if (!alg.isEmpty(overlap)) {
+        accumulator.append(overlap, transform.apply(
+            Optional.of(left.getValue(leftIndex)),
+            Optional.of(right.getValue(rightIndex))));
+      }
+    }
+
+    accumulator.flush();
+    return new IntervalMap<>(alg, accumulator.results);
+  }
+
+  public static <V1, V2, R>
+  IntervalMap<R> pmap2(
       final IntervalMap<V1> left,
       final IntervalMap<V2> right,
       final BiFunction<Optional<V1>, Optional<V2>, Optional<R>> transform
@@ -431,7 +510,7 @@ final class IntervalMap<V> {
 
 
     return new IntervalMap<>(alg, segments);
-  }
+  } //DOESN'T CHECK VALUES CORRECTLY.
 
   private Window getInterval(final int index) {
     final var i = (index > 0) ? index : this.segments.size() - index;
