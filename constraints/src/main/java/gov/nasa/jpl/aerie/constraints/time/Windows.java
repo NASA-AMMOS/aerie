@@ -28,6 +28,9 @@ public final class Windows implements Iterable<Window> {
     for (final var window : windows) this.add(window);
   }
 
+  public Spans intoSpans() {
+    return new Spans(this);
+  }
 
   public void add(final Window window) {
     this.windows.add(window);
