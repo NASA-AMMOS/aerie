@@ -555,7 +555,7 @@ public final class Windows implements Iterable<Window> {
     }
 
     public WindowAlgebra(Window horizon) { //in case users want a horizon from 0 to whenever, or 0 to infinity, or something. this will be coded into Windows as 0 to horizon end.
-      horizon = horizon;
+      this.horizon = horizon;
     }
 
     @Override
@@ -577,7 +577,7 @@ public final class Windows implements Iterable<Window> {
     public final Window lowerBoundsOf(final Window x) {
       if (x.isEmpty()) return Window.FOREVER;
       return Window.between(
-          Duration.MIN_VALUE,
+          horizon.start,
           Inclusive, x.start,
           x.startInclusivity.opposite()
       );
@@ -588,7 +588,7 @@ public final class Windows implements Iterable<Window> {
       if (x.isEmpty()) return Window.FOREVER;
       return Window.between(
           x.end,
-          x.endInclusivity.opposite(), Duration.MAX_VALUE,
+          x.endInclusivity.opposite(), horizon.end,
           Inclusive
       );
     }
