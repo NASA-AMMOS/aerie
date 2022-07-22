@@ -117,6 +117,15 @@ public final class Window implements Comparable<Window>{
     return new Window(point, Inclusive, point, Inclusive);
   }
 
+  /**
+   * Creates an empty window at a specific point - necessary for map2 to work right in IntervalMap.java.
+   * @param point
+   * @return
+   */
+  public static Window atExclusive(final Duration point) {
+    return between(point, Exclusive, point, Exclusive);
+  }
+
   public static Window at(final long quantity, final Duration unit) {
     return at(Duration.of(quantity, unit));
   }

@@ -227,7 +227,7 @@ final class IntervalMap<V> {
 
       void flush() {
         if (this.accValue.isPresent()) this.results.add(Pair.of(this.accInterval, this.accValue.get())); //if we have a value, add it
-        this.accInterval = alg.bottom(); //reset interval
+        this.accInterval = Window.atExclusive(this.accInterval.end); //reset interval TODO: better value??
         this.accValue = Optional.empty(); //reset acc value, probably doing this at the end of intervals or smth
       }
 
@@ -248,13 +248,60 @@ final class IntervalMap<V> {
     int rightIndex = -1;
     Window rightInterval = alg.bottom();
 
+    //handle -infinity up to the first interval
+    {
+      Window firstLeftPrefix;
+      Window firstRightPrefix;
+      if (left.segments.size() > 0) {
+        //-infinity (or whatever the lowest point is) up to this point
+        firstLeftPrefix = alg.lowerBoundsOf(left.getInterval(0));
+      } else {
+        //-infinity to infinity, because this is empty
+        firstLeftPrefix = alg.upperBoundsOf(alg.bottom());
+      }
+
+      if (right.segments.size() > 0) {
+        //-infinity (or whatever the lowest point is) up to this point
+        firstRightPrefix = alg.lowerBoundsOf(right.getInterval(0));
+      } else {
+        //-infinity to infinity, because this is empty
+        firstRightPrefix = alg.upperBoundsOf(alg.bottom());
+      }
+
+      final var overallPrefix = alg.intersect(firstLeftPrefix, firstRightPrefix);
+      if (!alg.isEmpty(overallPrefix)) { //in the offchance that the first intervals start at Duration.MIN, it's worth checking
+        accumulator.append(overallPrefix, transform.apply(
+            Optional.empty(),
+            Optional.empty()));
+      }
+    }
+
+    //handle everything between
     while (leftIndex < left.segments.size() || rightIndex < right.segments.size()) {
       // Advance to the next interval, if we've fully consumed the one prior.
-      if (alg.isEmpty(leftInterval) && leftIndex < left.segments.size()) { //i.e. if we are at the edge of the interval
-        leftInterval = left.getInterval(++leftIndex);
+      if (alg.isEmpty(leftInterval)) { //i.e. if we are at the edge of the interval
+        leftIndex++; //it's weird to increment and check again like this. but we need to increment only in the isEmpty
+                     // case. after that, if we have just incremented, and we are in bounds, we want to check if we are
+                     // in bounds. Not doing this can cause an  infinite loop!
+        if (leftIndex < left.segments.size()) {
+          var newInt = left.getInterval(leftIndex);
+          leftInterval = Window.between(
+              newInt.start,
+              Window.Inclusivity.Exclusive,
+              newInt.end,
+              Window.Inclusivity.Exclusive);
+        }
       }
-      if (alg.isEmpty(rightInterval) && rightIndex < right.segments.size()) {
-        rightInterval = right.getInterval(++rightIndex);
+      if (alg.isEmpty(rightInterval)) {
+        rightIndex++;
+        if (rightIndex < right.segments.size()) {
+          var newInt = right.getInterval(rightIndex);
+          rightInterval = Window.between(
+              newInt.start,
+              Window.Inclusivity.Exclusive,
+              newInt.end,
+              Window.Inclusivity.Exclusive);
+        }
       }
 
       // Extract the prefix and overlap between these intervals.
@@ -286,7 +333,37 @@ final class IntervalMap<V> {
       }
     }
 
-    accumulator.flush();
+    //handle end -> infinity, but only if we haven't earlier (which happens if both left and right are empty)
+    if (left.segments.size() > 0 || right.segments.size() > 0)
+    {
+      Window leftSuffix;
+      Window rightSuffix;
+      if (left.segments.size() > 0) {
+        //-infinity (or whatever the lowest point is) up to this point
+        leftSuffix = alg.upperBoundsOf(left.getInterval(left.segments.size()-1));
+      } else {
+        //-infinity to infinity, because this is empty
+        leftSuffix = alg.upperBoundsOf(alg.bottom());
+      }
+
+      if (right.segments.size() > 0) {
+        //-infinity (or whatever the lowest point is) up to this point
+        rightSuffix = alg.upperBoundsOf(right.getInterval(right.segments.size()-1));
+      } else {
+        //-infinity to infinity, because this is empty
+        rightSuffix = alg.upperBoundsOf(alg.bottom());
+      }
+
+      final var overallPrefix = alg.intersect(leftSuffix, rightSuffix);
+      if (!alg.isEmpty(overallPrefix)) { //in the offchance that the first intervals start at Duration.MIN, it's worth checking
+        accumulator.append(overallPrefix, transform.apply(
+            Optional.empty(),
+            Optional.empty()));
+      }
+    }
+
+    accumulator.flush(); //flush the final interval
+
     return new IntervalMap<>(alg, accumulator.results);
   }
 
@@ -513,12 +590,12 @@ final class IntervalMap<V> {
   } //DOESN'T CHECK VALUES CORRECTLY.
 
   private Window getInterval(final int index) {
-    final var i = (index > 0) ? index : this.segments.size() - index;
+    final var i = (index >= 0) ? index : this.segments.size() - index;
     return this.segments.get(i).getKey();
   }
 
   private V getValue(final int index) {
-    final var i = (index > 0) ? index : this.segments.size() - index;
+    final var i = (index >= 0) ? index : this.segments.size() - index;
     return this.segments.get(i).getValue();
   }
 
