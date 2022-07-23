@@ -210,19 +210,29 @@ public final class NewWindows implements Iterable<Pair<Window, Boolean>> {
   }
 
   public void intersectWith(final NewWindows other) {
-    //TODO
+    //if anything is null, the intersection is null.
+    //otherwise, intersection is just an AND operation...
+
+    // orig | inFilter | output
+    //  T   |    T     |   T
+    //  T   |    F     |   F
+    //  T   |    N     |   N
+    //  F   |    T     |   F
+    //  F   |    F     |   F
+    //  F   |    N     |   N
+    //  N   |    T     |   N
+    //  N   |    F     |   N
+    //  N   |    N     |   N
+
     final var intervals = other.windows;
     IntervalMap<Boolean> newWindows = IntervalMap.map2(
         this.windows,
         intervals,
         (a$, b$) -> { //authored by Jonathan
-          if (a$.isPresent()) {
-            return (a$.get()) ? b$ : a$; //if a has a value, i.e. there is a window there, the intersection should return b's value (if no b window, then should be null, else a's value of not null)
+          if (a$.isPresent() && b$.isPresent()) {
+            return Optional.of(a$.get() && b$.get());
           }
-          else {
-            return (b$.orElse(true)) ? a$ : b$; //if b has no value, then it is true and intersection returns b null
-            // if b has value, then return a if null or not, implicitly check b.ispresent
-          }
+          return Optional.empty();
         });
 
     this.windows.clear();
