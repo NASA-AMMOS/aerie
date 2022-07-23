@@ -53,7 +53,7 @@ final class IntervalMap<V> {
     this.setAll(new IntervalMap<>(this.alg, interval, value));
   }
 
-  public void setAll(final IntervalMap<V> other) {
+  public void setAll(final IntervalMap<V> other) { //make this overwrite as you are SETTING not just adding
     int index = 0;
 
     for (final var window : other.segments) {
