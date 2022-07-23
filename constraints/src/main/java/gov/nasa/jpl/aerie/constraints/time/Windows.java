@@ -1,10 +1,8 @@
+
 package gov.nasa.jpl.aerie.constraints.time;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -15,57 +13,34 @@ import java.util.stream.StreamSupport;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
 
-public final class Windows implements Iterable<Pair<Window, Boolean>> {
-  private final IntervalMap<Boolean> windows = new IntervalMap<>(new WindowAlgebra());
+public final class Windows implements Iterable<Window> {
+  private final IntervalSet<WindowAlgebra, Window> windows = new IntervalSet<>(new WindowAlgebra());
 
   public Windows() {}
 
   public Windows(final Windows other) {
-    this.windows.setAll(other.windows);
+    this.windows.addAll(other.windows);
   }
 
-  public Windows(final List<Pair<Window, Boolean>> windows) { //keep behavior the same, just change the backend. for now, pretend gaps are false, we will fix windows and upstream after IntervalMap is in place, change on a case-by-case basis for gaps
-    for (final var window : windows) this.add(window.getKey(), window.getValue());
+  public Windows(final List<Window> windows) {
+    for (final var window : windows) this.add(window);
   }
 
-  public static Windows defaultTrueWindows(List<Window> windows) {
-    Windows toReturn = new Windows();
-    for (final var window: windows) toReturn.add(window, true);
-    return toReturn;
+  public Windows(final Window... windows) {
+    for (final var window : windows) this.add(window);
   }
 
-  public Windows(final Pair<Window, Boolean>... windows) {
-    for (final var window: windows) this.add(window.getKey(), window.getValue());
-  }
 
-  public static Windows defaultTrueWindows(final Window... windows) {
-    Windows toReturn = new Windows();
-    for (final var window: windows) toReturn.add(window, true);
-    return toReturn;
-  }
-
-  public void add(final Window window, final Boolean value) {
-
+  public void add(final Window window) {
+    this.windows.add(window);
   }
 
   public void addAll(final Windows other) {
-
-  }
-
-  public void set(final Window window, final Boolean value) {
-    this.windows.set(window, value);
-  }
-
-  public void setAll(final Windows other) { //implement in terms of map2
-    this.windows.setAll(other.windows);
+    this.windows.addAll(other.windows);
   }
 
   public void addPoint(final long quantity, final Duration unit) {
-    this.add(Window.at(quantity, unit), true);
-  }
-
-  public void addPoint(final long quantity, final Duration unit, final boolean value) {
-    this.add(Window.at(quantity, unit), value);
+    this.add(Window.at(quantity, unit));
   }
 
   public static Windows union(final Windows left, final Windows right) {
@@ -74,35 +49,13 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
     return result;
   }
 
-  public void clear() {
-    ArrayList<Pair<Window, Boolean>> allCurrentIntervals = new ArrayList<Pair<Window, Boolean>>();
-    this.windows.ascendingOrder().forEach(allCurrentIntervals::add);
-    this.windows.unsetAll(allCurrentIntervals);
-  }
-
-  public void nullifyInRange(final List<Window> other) { //instead of unsetAll, new name
-    for (var w : other) {
-      this.windows.unset(w);
-    }
-  }
-  public void nullifyInRange(final Windows other) {
-    for (var w : other) {
-      this.windows.unset(w.getKey());
-    }
-  }
 
   public void subtract(final Window window) {
-    subtractAll(new Windows(List.of(Pair.of(window, false))));
+    this.windows.subtract(window);
   }
 
   public void subtractAll(final Windows other) {
-    final var intervals = other.windows;
-    final var newWindows = IntervalMap.map2(this.windows,
-                                            intervals,
-                                            (a$, b$) -> b$.isPresent() ? Optional.empty() : a$);
-    this.windows.clear();
-    this.windows.setAll(newWindows);
-    //TODO: make this work such that windows is final
+    this.windows.subtractAll(other.windows);
   }
 
   public void subtract(final long start, final long end, final Duration unit) {
@@ -119,43 +72,28 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
     return result;
   }
 
-  public void intersectWith(final Window window, final boolean value) {
-    intersectWith(new Windows(List.of(Pair.of(window, value))));
+  public void intersectWith(final Window window) {
+    this.windows.intersectWith(window);
   }
 
   public void intersectWith(final Windows other) {
-    final var intervals = other.windows;
-    IntervalMap<Boolean> newWindows = IntervalMap.map2(
-        this.windows,
-        intervals,
-        (a$, b$) -> { //authored by Jonathan
-          if (a$.isPresent()) {
-            return (a$.get()) ? b$ : a$; //if a has a value, i.e. there is a window there, the intersection should return b's value (if no b window, then should be null, else a's value of not null)
-          }
-          else {
-            return (b$.orElse(true)) ? a$ : b$; //if b has no value, then it is true and intersection returns b null
-            // if b has value, then return a if null or not, implicitly check b.ispresent
-          }
-        });
-
-    this.windows.clear();
-    this.windows.setAll(newWindows);
+    this.windows.intersectWithAll(other.windows);
   }
 
-  public void intersectWith(final long start, final long end, final Duration unit, final boolean value) {
-    this.intersectWith(Window.between(start, end, unit), value);
+  public void intersectWith(final long start, final long end, final Duration unit) {
+    this.intersectWith(Window.between(start, end, unit));
   }
 
   public Optional<Duration> minTimePoint(){
     if(!isEmpty()) {
-      return Optional.of(this.windows.ascendingOrder().iterator().next().getKey().start);
+      return Optional.of(this.windows.ascendingOrder().iterator().next().start);
     } else{
       return Optional.empty();
     }
   }
   public Optional<Duration> maxTimePoint(){
     if(!isEmpty()) {
-      return Optional.of(this.windows.descendingOrder().iterator().next().getKey().end);
+      return Optional.of(this.windows.descendingOrder().iterator().next().end);
     } else{
       return Optional.empty();
     }
@@ -171,8 +109,8 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
     final var ret = new Windows();
     StreamSupport
         .stream(windows.ascendingOrder().spliterator(), false)
-        .filter(win -> win.getKey().duration().noShorterThan(minDur) && win.getKey().duration().noLongerThan(maxDur))
-        .forEach(window -> ret.add(window.getKey(), window.getValue()));
+        .filter(win -> win.duration().noShorterThan(minDur) && win.duration().noLongerThan(maxDur))
+        .forEach(ret::add);
     return ret;
   }
 
@@ -197,13 +135,12 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
   public Windows shiftBy(Duration fromStart, Duration fromEnd){
     Windows ret = new Windows();
     StreamSupport.stream(windows.ascendingOrder().spliterator(), false)
-        .forEach((x)-> ret.add(Window.between(x.getKey().start.plus(fromStart), x.getKey().startInclusivity,
-                                              x.getKey().end.plus(fromEnd), x.getKey().endInclusivity), x.getValue()));
+                 .forEach((x)-> ret.add(Window.between(x.start.plus(fromStart), x.startInclusivity, x.end.plus(fromEnd), x.endInclusivity)));
     return ret;
   }
 
   public Windows removeFirstAndLast(){
-    List<Pair<Window, Boolean>> actualList = StreamSupport
+    List<Window> actualList = StreamSupport
         .stream(windows.ascendingOrder().spliterator(), false)
         .collect(Collectors.toList());
     if(actualList.size()>0)
@@ -216,8 +153,8 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
   public Windows subsetContained(Window gate){
     Windows ret = new Windows();
     for(var win : windows.ascendingOrder()){
-      if(gate.contains(win.getKey())){
-        ret.add(win.getKey(), win.getValue());
+      if(gate.contains(win)){
+        ret.add(win);
       }
     }
     return ret;
@@ -228,15 +165,12 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
   }
 
   public static Windows forever(){
-    return new Windows(List.of(Pair.of(Window.FOREVER, true)));
+    return new Windows(Window.FOREVER);
   }
 
-  public static Windows forever(boolean value){
-    return new Windows(List.of(Pair.of(Window.FOREVER, value)));
-  }
 
-  public static Windows subtract(Window x, Window y, boolean value){
-    var tmp = new Windows(List.of(Pair.of(y, value)));
+  public static Windows subtract(Window x, Window y){
+    var tmp = new Windows(y);
     tmp.subtract(x);
     return tmp;
   }
@@ -253,26 +187,25 @@ public final class Windows implements Iterable<Pair<Window, Boolean>> {
   }
 
 
-  public boolean includes(final Window probe, final boolean value) {
-    return this.windows.includes(probe, value);
+  public boolean includes(final Window probe) {
+    return this.windows.includes(probe);
   }
 
   public boolean includes(final Windows other) {
-    //this.windows.
-    throw new NotImplementedException();
+    return this.windows.includesAll(other.windows);
   }
 
-  public boolean includes(final long start, final long end, final Duration unit, final boolean value) { //TODO: should value defualt to true?
-    return this.includes(Window.between(start, end, unit), value);
+  public boolean includes(final long start, final long end, final Duration unit) {
+    return this.includes(Window.between(start, end, unit));
   }
 
-  public boolean includesPoint(final long quantity, final Duration unit, final boolean value) {
-    return this.includes(Window.at(quantity, unit), value);
+  public boolean includesPoint(final long quantity, final Duration unit) {
+    return this.includes(Window.at(quantity, unit));
   }
 
 
   @Override
-  public Iterator<Pair<Window, Boolean>> iterator() {
+  public Iterator<Window> iterator() {
     return this.windows.ascendingOrder().iterator();
   }
 

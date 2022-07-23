@@ -16,7 +16,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class IntervalMapTest {
 
   @Test
-  public void setAllStandard() {
+  public void setAllStandard1() {
+    Window horizon = Window.between(0, 17, SECONDS);
+
     IntervalMap<String> left = new IntervalMap<>(new Windows.WindowAlgebra());
     IntervalMap<String> right = new IntervalMap<>(new Windows.WindowAlgebra());
 
@@ -35,19 +37,67 @@ public class IntervalMapTest {
 
     left.setAll(right);
 
+    IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
+    expected.set(Window.between(Duration.of(3, SECONDS), Exclusive, Duration.of(8, SECONDS), Exclusive), "b");
+    expected.set(Window.between(Duration.of(8, SECONDS), Inclusive, Duration.of(9, SECONDS), Inclusive), "a");
+    expected.set(Window.between(Duration.of(9, SECONDS), Exclusive, Duration.of(10, SECONDS), Inclusive), "b");
+    expected.set(Window.between(Duration.of(12, SECONDS), Inclusive, Duration.of(13, SECONDS), Exclusive), "b");
+    expected.set(Window.between(Duration.of(13, SECONDS), Inclusive, Duration.of(14, SECONDS), Inclusive), "a");
+    expected.set(Window.at(Duration.of(15, SECONDS)), "a");
+    expected.set(Window.between(Duration.of(15, SECONDS), Exclusive, Duration.of(16, SECONDS), Exclusive), "b");
+    expected.set(Window.between(Duration.of(16, SECONDS), Inclusive, Duration.of(17, SECONDS), Inclusive), "a");
+
+    for (var i : left.ascendingOrder()) {
+      System.out.println(i);
+    }
+
+    var leftIter = StreamSupport.stream(left.ascendingOrder().spliterator(), false).collect(Collectors.toList());
+    var expectedIter = StreamSupport.stream(expected.ascendingOrder().spliterator(), false).collect(Collectors.toList());
+    for (int i = 0; i < expectedIter.size(); i++) {
+      assertEquals(leftIter.get(i), expectedIter.get(i));
+    }
+  }
+
+  @Test
+  public void setAllStandard2() {
+    Window horizon = Window.between(0, 23, SECONDS);
+
+    IntervalMap<String> left = new IntervalMap<>(new Windows.WindowAlgebra(horizon));
+    IntervalMap<String> right = new IntervalMap<>(new Windows.WindowAlgebra(horizon));
+
+    left.set(Window.between(Duration.of(0, SECONDS), Inclusive, Duration.of(3, SECONDS), Inclusive), "a");
+    left.set(Window.between(Duration.of(5, SECONDS), Exclusive, Duration.of(10, SECONDS), Exclusive), "b");
+    left.set(Window.at(Duration.of(13, SECONDS)), "a");
+    left.set(Window.between(14,23, SECONDS), "b");
+
+
+    right.set(Window.at(Duration.of(0, SECONDS)), "b");
+    right.set(Window.between(Duration.of(2, SECONDS), Inclusive, Duration.of(7, SECONDS), Exclusive), "a");
+    right.set(Window.between(Duration.of(10, SECONDS), Exclusive, Duration.of(11, SECONDS), Inclusive), "a");
+    right.set(Window.between(Duration.of(12, SECONDS), Inclusive, Duration.of(14, SECONDS), Exclusive), "b");
+    right.set(Window.between(Duration.of(15, SECONDS), Inclusive, Duration.of(16, SECONDS), Exclusive), "b");
+    right.set(Window.at(Duration.of(17, SECONDS)), "a");
+    right.set(Window.between(Duration.of(19, SECONDS), Exclusive, Duration.of(21, SECONDS), Inclusive), "a");
+    right.set(Window.at(Duration.of(23, SECONDS)), "a");
+
+
+    left.setAll(right);
+
     for (var i : left.ascendingOrder()) {
       System.out.println(i);
     }
 
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
-    expected.set(Window.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "b");
-    expected.set(Window.between(Duration.of(4, SECONDS), Inclusive, Duration.of(5, SECONDS), Inclusive), "a");
-    expected.set(Window.between(Duration.of(5, SECONDS), Exclusive, Duration.of(9, SECONDS), Inclusive), "a");
-    expected.set(Window.between(Duration.of(9, SECONDS), Exclusive, Duration.of(10, SECONDS), Exclusive), "b");
-    expected.set(Window.between(Duration.of(12, SECONDS), Exclusive, Duration.of(13, SECONDS), Exclusive), "a");
-    expected.set(Window.between(Duration.of(13, SECONDS), Exclusive, Duration.of(14, SECONDS), Exclusive), "b");
-    expected.set(Window.between(Duration.of(15, SECONDS), Exclusive, Duration.of(16, SECONDS), Exclusive), "b");
-    expected.set(Window.between(Duration.of(16, SECONDS), Exclusive, Duration.of(17, SECONDS), Exclusive), "a");
+    expected.set(Window.at(Duration.of(0, SECONDS)), "b");
+    expected.set(Window.between(Duration.of(0, SECONDS), Exclusive, Duration.of(7, SECONDS), Exclusive), "a");
+    expected.set(Window.between(Duration.of(7, SECONDS), Inclusive, Duration.of(10, SECONDS), Exclusive), "b");
+    expected.set(Window.between(Duration.of(10, SECONDS), Exclusive, Duration.of(11, SECONDS), Inclusive), "a");
+    expected.set(Window.between(Duration.of(12, SECONDS), Inclusive, Duration.of(17, SECONDS), Exclusive), "b");
+    expected.set(Window.at(Duration.of(17, SECONDS)), "a");
+    expected.set(Window.between(Duration.of(17, SECONDS), Exclusive, Duration.of(19, SECONDS), Inclusive), "b");
+    expected.set(Window.between(Duration.of(19, SECONDS), Exclusive, Duration.of(21, SECONDS), Inclusive), "a");
+    expected.set(Window.between(Duration.of(21, SECONDS), Exclusive, Duration.of(23, SECONDS), Exclusive), "b");
+    expected.set(Window.at(Duration.of(23, SECONDS)), "a");
 
     var leftIter = StreamSupport.stream(left.ascendingOrder().spliterator(), false).collect(Collectors.toList());
     var expectedIter = StreamSupport.stream(expected.ascendingOrder().spliterator(), false).collect(Collectors.toList());
