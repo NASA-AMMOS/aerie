@@ -31,6 +31,12 @@ import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.TypescriptCodeGenerationServiceAdapter;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.LowResourceMonitor;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.handler.StatisticsHandler;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
@@ -38,7 +44,7 @@ import java.nio.file.Path;
 
 public final class AerieAppDriver {
 
-  public static void main(final String[] args) {
+  public static void main(final String[] args) throws InterruptedException {
     // Fetch application configuration properties.
     final var configuration = loadConfiguration();
     final var stores = loadStores(configuration);
@@ -75,8 +81,16 @@ public final class AerieAppDriver {
         simulationAction,
         generateConstraintsLibAction
     );
-
     // Configure an HTTP server.
+    //default javalin jetty server has a QueuedThreadPool with maxThreads to 250
+    final var server = new Server(new QueuedThreadPool(250));
+    final var connector = new ServerConnector(server);
+    connector.setPort(configuration.httpPort());
+    //set idle timeout to be equal to the idle timeout of hasura
+    connector.setIdleTimeout(180000);
+    server.addBean(new LowResourceMonitor(server));
+    server.insertHandler(new StatisticsHandler());
+    server.setConnectors(new Connector[]{connector});
     final var javalin = Javalin.create(config -> {
       config.showJavalinBanner = false;
       if (configuration.enableJavalinDevLogging()) config.enableDevLogging();
@@ -85,6 +99,7 @@ public final class AerieAppDriver {
       config.registerPlugin(new LocalAppExceptionBindings());
       config.registerPlugin(new MissionModelRepositoryExceptionBindings());
       config.registerPlugin(new MissionModelExceptionBindings());
+      config.server(() -> server);
     });
 
     // Start the HTTP server.

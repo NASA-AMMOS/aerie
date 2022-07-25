@@ -26,6 +26,12 @@ import gov.nasa.jpl.aerie.scheduler.server.services.SynchronousSchedulerAgent;
 import gov.nasa.jpl.aerie.scheduler.server.services.ThreadedSchedulerAgent;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.LowResourceMonitor;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.handler.StatisticsHandler;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
@@ -82,13 +88,23 @@ public final class SchedulerAppDriver {
     //establish bindings to the service layers
     final var bindings = new SchedulerBindings(schedulerService, scheduleAction, generateSchedulingLibAction);
 
+    //default javalin jetty server has a QueuedThreadPool with maxThreads to 250
+    final var server = new Server(new QueuedThreadPool(250));
+    final var connector = new ServerConnector(server);
+    connector.setPort(config.httpPort());
+    //set idle timeout to be equal to the idle timeout of hasura
+    connector.setIdleTimeout(180000);
+    server.addBean(new LowResourceMonitor(server));
+    server.insertHandler(new StatisticsHandler());
+    server.setConnectors(new Connector[]{connector});
     //configure the http server (the consumer lambda overlays additional config on the input javalinConfig)
     final var javalin = Javalin.create(javalinConfig -> {
       javalinConfig.showJavalinBanner = false;
       if (config.enableJavalinDevLogging()) javalinConfig.enableDevLogging();
       javalinConfig.enableCorsForAllOrigins(); //TODO: probably don't want literally any cross-origin request...
       javalinConfig.registerPlugin(bindings);
-      //TODO: exception handling (should elevate/reuse from MerlinApp for consistency?)
+      javalinConfig.server(() -> server);
+      //TODO: exception handling (shxould elevate/reuse from MerlinApp for consistency?)
     });
 
     //start the http server and handle requests as configured above
