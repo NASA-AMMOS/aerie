@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes;
 
+import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryMissionModelRepository;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,7 @@ public abstract class MissionModelRepositoryContractTest {
         }
     }
 
-    protected MissionModelRepository missionModelRepository = null;
+    protected InMemoryMissionModelRepository missionModelRepository = null;
 
     protected abstract void resetRepository();
 

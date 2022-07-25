@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceExcepti
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
@@ -31,14 +30,6 @@ public interface PlanRepository {
   long getPlanRevision(PlanId planId) throws NoSuchPlanException;
   RevisionData getPlanRevisionData(PlanId planId) throws NoSuchPlanException;
   Map<ActivityInstanceId, ActivityInstance> getAllActivitiesInPlan(PlanId planId) throws NoSuchPlanException;
-
-  // Mutations
-  CreatedPlan createPlan(NewPlan plan) throws MissionModelRepository.NoSuchMissionModelException;
-  PlanTransaction updatePlan(PlanId planId) throws NoSuchPlanException;
-  void deletePlan(PlanId planId) throws NoSuchPlanException;
-
-  ActivityInstanceId createActivity(PlanId planId, ActivityInstance activity) throws NoSuchPlanException;
-  void deleteAllActivities(PlanId planId) throws NoSuchPlanException;
 
   Map<String, Constraint> getAllConstraintsInPlan(PlanId planId) throws NoSuchPlanException;
 
