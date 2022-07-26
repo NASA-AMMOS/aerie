@@ -20,6 +20,13 @@ array_relationships:
       table:
         name: condition
         schema: public
+- name: datasets
+  using:
+    foreign_key_constraint_on:
+      column: plan_id
+      table:
+        name: plan_dataset
+        schema: public
 - name: simulations
   using:
     foreign_key_constraint_on:
