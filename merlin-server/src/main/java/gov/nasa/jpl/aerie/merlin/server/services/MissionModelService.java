@@ -40,8 +40,7 @@ public interface MissionModelService {
   throws NoSuchMissionModelException, TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException;
 
   Map<ActivityInstanceId, String> validateActivityInstantiations(String missionModelId, Map<ActivityInstanceId, SerializedActivity> activities)
-  throws NoSuchMissionModelException, MissionModelFacade.MissionModelContractException,
-         LocalMissionModelService.MissionModelLoadException;
+  throws NoSuchMissionModelException, LocalMissionModelService.MissionModelLoadException;
 
   Map<String, SerializedValue> getActivityEffectiveArguments(String missionModelId, SerializedActivity activity)
   throws NoSuchMissionModelException,
