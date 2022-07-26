@@ -98,7 +98,6 @@ public final class LocalMissionModelService implements MissionModelService {
    * @param activity The serialized activity to validate against the named mission model.
    * @return A list of validation errors that is empty if validation succeeds.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
-   * @throws MissionModelFacade.MissionModelContractException If the named mission model does not abide by the expected contract.
    * @throws MissionModelLoadException If the mission model cannot be loaded -- the JAR may be invalid, or the mission model
    * it contains may not abide by the expected contract at load time.
    */
@@ -124,7 +123,7 @@ public final class LocalMissionModelService implements MissionModelService {
    */
   @Override
   public Map<ActivityInstanceId, String> validateActivityInstantiations(final String missionModelId, final Map<ActivityInstanceId, SerializedActivity> activities)
-  throws NoSuchMissionModelException, MissionModelFacade.MissionModelContractException, MissionModelLoadException
+  throws NoSuchMissionModelException, MissionModelLoadException
   {
     return this.loadConfiguredMissionModel(missionModelId).validateActivityInstantiations(activities);
   }
@@ -149,14 +148,11 @@ public final class LocalMissionModelService implements MissionModelService {
   public List<String> validateModelArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
          MissionModelLoadException,
-         UnconstructableMissionModelConfigurationException,
-         UnconfigurableMissionModelException
+         UnconstructableMissionModelConfigurationException
   {
     try {
       return this.loadConfiguredMissionModel(missionModelId)
                  .validateConfiguration(arguments);
-    } catch (final MissionModelFacade.UnconfigurableMissionModelException ex) {
-      throw new UnconfigurableMissionModelException(ex);
     } catch (final MissionModelFacade.UnconstructableMissionModelConfigurationException ex) {
       throw new UnconstructableMissionModelConfigurationException(ex);
     }
@@ -174,14 +170,11 @@ public final class LocalMissionModelService implements MissionModelService {
   throws NoSuchMissionModelException,
          MissingArgumentsException,
          MissionModelLoadException,
-         UnconstructableMissionModelConfigurationException,
-         UnconfigurableMissionModelException
+         UnconstructableMissionModelConfigurationException
   {
     try {
       return this.loadConfiguredMissionModel(missionModelId)
                  .getEffectiveArguments(arguments);
-    } catch (final MissionModelFacade.UnconfigurableMissionModelException ex) {
-      throw new UnconfigurableMissionModelException(ex);
     } catch (final MissionModelFacade.UnconstructableMissionModelConfigurationException ex) {
       throw new UnconstructableMissionModelConfigurationException(ex);
     }
