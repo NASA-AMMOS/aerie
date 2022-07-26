@@ -161,7 +161,7 @@ public class UncontrollableDurationTest {
 
     final var coexistenceControllable = new CoexistenceGoal.Builder()
         .thereExistsOne(zeroDurationUncontrollableActivity)
-        .forAllTimeIn(planningHorizon.getHor())
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(planningHorizon.getHor())))
         .forEach(ActivityExpression.ofType(problem.getActivityType("ControllableDurationActivity")))
         .startsAt(intervalStartTimeExpression)
         .build();

@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -394,7 +395,7 @@ public class TestApplyWhen {
 
   @Test
   public void testRecurrenceCutoffUncontrollable() {
-    var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
+    var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(21));
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
         planningHorizon,
@@ -419,13 +420,10 @@ public class TestApplyWhen {
       logger.debug(a.getStartTime().toString());
     }
 
-    //TODO: reinsert these after fixing uncontrollableduration goals.
-    /*assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
+    assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), activityType));
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
-    assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));*/
-    //no way to predict when, just how many, without having run it once before...
-    assertEquals(plan.getActivitiesByTime().size(), 2);
+    assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), activityType));
   }
 
 
@@ -573,7 +571,7 @@ public class TestApplyWhen {
     /*
       Expect 5 to get scheduled just in a row, as basicactivity's duration should allow that.
      */
-    Window period = Window.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(10, Duration.SECONDS));
+    Window period = Window.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(20, Duration.SECONDS));
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
@@ -604,13 +602,12 @@ public class TestApplyWhen {
       logger.debug(a.getStartTime().toString());
     }
 
-    /*
-    assertTrue(plan.get().getActivitiesByTime().size() == 2);
-    assertEquals(plan.get().getActivitiesByTime().stream()
-                     .map(ActivityInstance::getDuration)
-                     .reduce(Duration.ZERO, Duration::plus), Duration.of(4, Duration.SECOND)); //1 gets added, then throws 4 warnings meaning it tried to schedule 5 in total, not the expected 8...
-    */
-    assertEquals(plan.get().getActivities().size(), 5);
+    var size = plan.get().getActivitiesByTime().size();
+    var totalDuration = plan.get().getActivitiesByTime().stream()
+                            .map(ActivityInstance::getDuration)
+                            .reduce(Duration.ZERO, Duration::plus);
+    assertTrue(size >= 3 && size <= 10);
+    assertTrue(totalDuration.dividedBy(Duration.SECOND) >= 16 && totalDuration.dividedBy(Duration.SECOND) <= 19);
   }
 
 
@@ -722,13 +719,13 @@ public class TestApplyWhen {
   public void testCoexistenceUncontrollableCutoff() { //ruled unpredictable for now
     /*
                      123456789012345678901234
-       GOAL WINDOW: [++++++++++++--- ---------]
+       GOAL WINDOW: [+++++++++++++-- ---------]
        ACTIVITIES:  [+++++-----+++++|+++++----]
-       RESULT:      [+---------+---- +--------] (works, surprisingly)
+       RESULT:      [++--------++--- ---------]
 
      */
 
-    Window period = Window.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(12, Duration.SECONDS));
+    Window period = Window.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(13, Duration.SECONDS));
 
     var periodTre = new TimeRangeExpression.Builder()
         .from(new Windows(period))
@@ -774,7 +771,9 @@ public class TestApplyWhen {
     for(ActivityInstance a : plan.get().getActivitiesByTime()){
       logger.debug(a.getStartTime().toString() + ", " + a.getDuration().toString());
     }
-    assertTrue(plan.get().getActivitiesByTime().size() == 5); //ruled unpredictable for now, although this IS expected behavior!
+    assertTrue(plan.get().getActivitiesByTime()
+                   .stream().filter($ -> $.getDuration().dividedBy(Duration.SECOND) == 2).collect(Collectors.toList())
+                   .size() == 2);
   }
 
   @Test
