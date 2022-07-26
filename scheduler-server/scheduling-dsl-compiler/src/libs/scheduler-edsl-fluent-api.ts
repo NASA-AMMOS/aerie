@@ -67,12 +67,11 @@ export class Goal {
       endConstraint: (("endsAt" in opts) ? opts.endsAt.__astNode : ("endsWithin" in opts) ? opts.endsWithin.__astNode : undefined),
     });
   }
-  public static CardinalityGoal(opts: { activityTemplate: ActivityTemplate, specification: AST.CardinalityGoalArguments, inPeriod: ClosedOpenInterval }): ActivityCardinalityGoal {
+  public static CardinalityGoal(opts: { activityTemplate: ActivityTemplate, specification: AST.CardinalityGoalArguments }): ActivityCardinalityGoal {
     return Goal.new({
       kind: AST.NodeKind.ActivityCardinalityGoal,
       activityTemplate: opts.activityTemplate,
-      specification: opts.specification,
-      inPeriod : opts.inPeriod
+      specification: opts.specification
     });
   }
 }
@@ -183,7 +182,7 @@ declare global {
       forEach: WindowsEDSL.Windows | ActivityExpression,
     } & CoexistenceGoalTimingConstraints): ActivityCoexistenceGoal
 
-    public static CardinalityGoal(opts: { activityTemplate: ActivityTemplate, specification: AST.CardinalityGoalArguments, inPeriod: ClosedOpenInterval }): ActivityCardinalityGoal
+    public static CardinalityGoal(opts: { activityTemplate: ActivityTemplate, specification: AST.CardinalityGoalArguments }): ActivityCardinalityGoal
   }
   class ActivityExpression {
     public static ofType(activityType: ActivityType): ActivityExpression

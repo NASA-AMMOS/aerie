@@ -117,13 +117,11 @@ public class SchedulingDSL {
       productP
           .field("activityTemplate", activityTemplateP)
           .field("specification", cardinalitySpecificationJsonParser)
-          .field("inPeriod", intervalP)
           .map(Iso.of(
               untuple(GoalSpecifier.CardinalityGoalDefinition::new),
               goalDefinition -> tuple(
                   goalDefinition.activityTemplate(),
-                  goalDefinition.specification(),
-                  goalDefinition.inPeriod())));
+                  goalDefinition.specification())));
 
   private static ProductParsers.JsonObjectParser<GoalSpecifier.GoalAnd> goalAndF(final JsonParser<GoalSpecifier> goalSpecifierP) {
     return productP
@@ -175,8 +173,7 @@ public class SchedulingDSL {
     ) implements GoalSpecifier {}
     record CardinalityGoalDefinition(
         ActivityTemplate activityTemplate,
-        CardinalitySpecification specification,
-        ClosedOpenInterval inPeriod
+        CardinalitySpecification specification
     ) implements GoalSpecifier {}
     record GoalAnd(List<GoalSpecifier> goals) implements GoalSpecifier {}
     record GoalOr(List<GoalSpecifier> goals) implements GoalSpecifier {}
