@@ -336,13 +336,6 @@ public final class ResponseSerializers {
                .build();
   }
 
-  public static JsonValue serializeMissionModelContractException(final MissionModelFacade.MissionModelContractException ex) {
-    // TODO: Improve diagnostic information
-    return Json.createObjectBuilder()
-               .add("message", ex.getMessage())
-               .build();
-  }
-
   public static JsonValue serializeMissionModelLoadException(
       final LocalMissionModelService.MissionModelLoadException ex)
   {

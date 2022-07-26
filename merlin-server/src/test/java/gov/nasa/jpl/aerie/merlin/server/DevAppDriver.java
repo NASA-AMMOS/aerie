@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.server;
 
 import gov.nasa.jpl.aerie.merlin.server.http.LocalAppExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinBindings;
-import gov.nasa.jpl.aerie.merlin.server.http.MissionModelExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.MissionModelRepositoryExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.mocks.Fixtures;
 import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryMissionModelRepository;
@@ -55,7 +54,6 @@ public final class DevAppDriver {
         config.registerPlugin(new MerlinBindings(missionModelController, planController, simulationAction, generateConstraintsLibAction));
         config.registerPlugin(new LocalAppExceptionBindings());
         config.registerPlugin(new MissionModelRepositoryExceptionBindings());
-        config.registerPlugin(new MissionModelExceptionBindings());
     });
 
     // Start the HTTP server.

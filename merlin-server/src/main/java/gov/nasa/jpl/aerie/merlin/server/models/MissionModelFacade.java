@@ -25,7 +25,7 @@ import java.util.Optional;
 public final class MissionModelFacade {
   private final MissionModel<?> missionModel;
 
-  public MissionModelFacade(final MissionModel<?> missionModel) throws MissionModelContractException {
+  public MissionModelFacade(final MissionModel<?> missionModel) {
     this.missionModel = missionModel;
   }
 
@@ -89,7 +89,7 @@ public final class MissionModelFacade {
   }
 
   public List<String> validateConfiguration(final Map<String, SerializedValue> arguments)
-  throws UnconfigurableMissionModelException, UnconstructableMissionModelConfigurationException
+  throws UnconstructableMissionModelConfigurationException
   {
     return getValidationFailures(this.missionModel.getConfigurationType(), arguments);
   }
@@ -110,7 +110,7 @@ public final class MissionModelFacade {
 
   /** Get mission model configuration effective arguments. */
   public Map<String, SerializedValue> getEffectiveArguments(final Map<String, SerializedValue> arguments)
-  throws UnconfigurableMissionModelException, MissingArgumentsException, UnconstructableMissionModelConfigurationException
+  throws MissingArgumentsException, UnconstructableMissionModelConfigurationException
   {
     return getEffectiveArguments(this.missionModel.getConfigurationType(), arguments);
   }
@@ -158,9 +158,7 @@ public final class MissionModelFacade {
       this.registry = DirectiveTypeRegistry.extract(this.factory);
     }
 
-    public Map<String, ActivityType> getActivityTypes()
-    throws MissionModelFacade.MissionModelContractException
-    {
+    public Map<String, ActivityType> getActivityTypes() {
       final var activityTypes = new HashMap<String, ActivityType>();
       this.registry.taskSpecTypes().forEach((name, specType) -> {
         activityTypes.put(name, new ActivityType(name, specType.getParameters(), specType.getRequiredParameters(), specType.getReturnValueSchema()));
@@ -169,7 +167,7 @@ public final class MissionModelFacade {
     }
 
     public ActivityType getActivityType(final String typeName)
-    throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.MissionModelContractException
+    throws MissionModelFacade.NoSuchActivityTypeException
     {
       final var specType = Optional
           .ofNullable(this.registry.taskSpecTypes().get(typeName))
@@ -183,16 +181,6 @@ public final class MissionModelFacade {
     }
   }
 
-  public static class MissionModelContractException extends RuntimeException {
-    public MissionModelContractException(final String message) {
-      super(message);
-    }
-
-    public MissionModelContractException(final String message, final Throwable cause) {
-      super(message, cause);
-    }
-  }
-
   public static class NoSuchActivityTypeException extends Exception {
     public final String typeName;
 
@@ -201,8 +189,6 @@ public final class MissionModelFacade {
       this.typeName = typeName;
     }
   }
-
-  public static class UnconfigurableMissionModelException extends Exception {}
 
   public static class UnconstructableMissionModelConfigurationException extends Exception {
     public UnconstructableMissionModelConfigurationException(final String message, final Throwable cause) {

@@ -9,7 +9,6 @@ import gov.nasa.jpl.aerie.merlin.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.merlin.server.config.Store;
 import gov.nasa.jpl.aerie.merlin.server.http.LocalAppExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinBindings;
-import gov.nasa.jpl.aerie.merlin.server.http.MissionModelExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.MissionModelRepositoryExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryMissionModelRepository;
 import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryPlanRepository;
@@ -84,7 +83,6 @@ public final class AerieAppDriver {
       config.registerPlugin(merlinBindings);
       config.registerPlugin(new LocalAppExceptionBindings());
       config.registerPlugin(new MissionModelRepositoryExceptionBindings());
-      config.registerPlugin(new MissionModelExceptionBindings());
     });
 
     // Start the HTTP server.
