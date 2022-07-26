@@ -11,6 +11,6 @@ import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 public final class BasicActivity {
   @EffectModel
   public void run(final Mission mission) {
-    delay(Duration.of(1, Duration.SECONDS));
+    delay(Duration.of(2, Duration.SECONDS));
   }
 }
