@@ -85,19 +85,20 @@ describe('sequence generation', () => {
       `
     export default function TimeDynamicCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
       return [
-        ADD_WATER.absoluteTiming(Temporal.Instant.from("2022-04-20T20:17:13Z")),
-        ADD_WATER.absoluteTiming(Temporal.Instant.from("2020-02-29T03:45:19Z")),
-        ADD_WATER.absoluteTiming(Temporal.Instant.from("2025-12-24T12:01:59Z")),
-        EAT_BANANA.relativeTiming(Temporal.Duration.from({ minutes: 15, seconds: 30 })),
-        EAT_BANANA.epochTiming(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })),
-        PACKAGE_BANANA({
+        A\`2020-060T03:45:19\`.ADD_WATER,
+        A(Temporal.Instant.from("2025-12-24T12:01:59Z")).PREHEAT_OVEN({temperature: 360}),
+        R\`00:15:30\`.PREHEAT_OVEN({temperature: 425}),
+        R(Temporal.Duration.from({ hours: 1, minutes: 15, seconds: 30 })).EAT_BANANA,
+        E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PREPARE_LOAF(50, false),
+        E\`04:56:54\`.EAT_BANANA,
+        C.PACKAGE_BANANA({
           bundle_name1: "Chiquita",
           number_of_bananas1: 43,
           bundle_name2: "Dole",
           number_of_bananas2: 12,
           lot_number: 1093,
         }),
-        PACKAGE_BANANA({
+        C.PACKAGE_BANANA({
           bundle_name2: "Dole",
           number_of_bananas1: 43,
           bundle_name1: "Chiquita",
@@ -234,16 +235,6 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'ADD_WATER',
         time: {
-          tag: '2022-110T20:17:13.000',
-          type: 'ABSOLUTE',
-        },
-        args: [],
-        metadata: { simulatedActivityId: simulatedActivityId4 },
-      },
-      {
-        type: 'command',
-        stem: 'ADD_WATER',
-        time: {
           tag: '2020-060T03:45:19.000',
           type: 'ABSOLUTE',
         },
@@ -252,19 +243,29 @@ describe('sequence generation', () => {
       },
       {
         type: 'command',
-        stem: 'ADD_WATER',
+        stem: 'PREHEAT_OVEN',
         time: {
           tag: '2025-358T12:01:59.000',
           type: 'ABSOLUTE',
         },
-        args: [],
+        args: [360],
+        metadata: { simulatedActivityId: simulatedActivityId4 },
+      },
+      {
+        type: 'command',
+        stem: 'PREHEAT_OVEN',
+        time: {
+          tag: '00:15:30.000',
+          type: 'COMMAND_RELATIVE',
+        },
+        args: [425],
         metadata: { simulatedActivityId: simulatedActivityId4 },
       },
       {
         type: 'command',
         stem: 'EAT_BANANA',
         time: {
-          tag: '00:15:30.000',
+          tag: '01:15:30.000',
           type: 'COMMAND_RELATIVE',
         },
         args: [],
@@ -272,9 +273,19 @@ describe('sequence generation', () => {
       },
       {
         type: 'command',
-        stem: 'EAT_BANANA',
+        stem: 'PREPARE_LOAF',
         time: {
           tag: '12:06:54.000',
+          type: 'EPOCH_RELATIVE',
+        },
+        args: [50, false],
+        metadata: { simulatedActivityId: simulatedActivityId4 },
+      },
+      {
+        type: 'command',
+        stem: 'EAT_BANANA',
+        time: {
+          tag: '04:56:54.000',
           type: 'EPOCH_RELATIVE',
         },
         args: [],
@@ -557,9 +568,9 @@ describe('expansion regressions', () => {
     const activityId = await insertActivity(graphqlClient, planId, 'GrowBanana', '1 hours');
     const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
     const expansionId = await insertExpansion(
-        graphqlClient,
-        'GrowBanana',
-        `
+      graphqlClient,
+      'GrowBanana',
+      `
     export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
       return [
         PREHEAT_OVEN({temperature: 70}).relativeTiming(props.activityInstance.startOffset),
@@ -568,26 +579,34 @@ describe('expansion regressions', () => {
     }
     `,
     );
-    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
-      expansionId,
-    ]);
+    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
     const expansionRunId = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
 
-    const simulatedActivityId = await convertActivityIdToSimulatedActivityId(graphqlClient, simulationArtifactPk.simulationDatasetId, activityId);
+    const simulatedActivityId = await convertActivityIdToSimulatedActivityId(
+      graphqlClient,
+      simulationArtifactPk.simulationDatasetId,
+      activityId,
+    );
 
-    const { activity_instance_commands } = await graphqlClient.request<{ activity_instance_commands: { commands: ReturnType<Command['toSeqJson']>, errors: string[] }[] }>(
-        gql`
-          query getExpandedCommands($expansionRunId: Int!, $simulatedActivityId:Int!) {
-            activity_instance_commands(where: {_and: {expansion_run_id: {_eq: $expansionRunId}, activity_instance_id: {_eq: $simulatedActivityId}}}) {
-              commands
-              errors
+    const { activity_instance_commands } = await graphqlClient.request<{
+      activity_instance_commands: { commands: ReturnType<Command['toSeqJson']>; errors: string[] }[];
+    }>(
+      gql`
+        query getExpandedCommands($expansionRunId: Int!, $simulatedActivityId: Int!) {
+          activity_instance_commands(
+            where: {
+              _and: { expansion_run_id: { _eq: $expansionRunId }, activity_instance_id: { _eq: $simulatedActivityId } }
             }
+          ) {
+            commands
+            errors
           }
-        `,
-        {
-          expansionRunId,
-          simulatedActivityId,
-        },
+        }
+      `,
+      {
+        expansionRunId,
+        simulatedActivityId,
+      },
     );
 
     expect(activity_instance_commands.length).toBe(1);
@@ -595,8 +614,20 @@ describe('expansion regressions', () => {
       throw new Error(activity_instance_commands[0]?.errors.join('\n'));
     }
     expect(activity_instance_commands[0]?.commands).toEqual([
-      { args: [70], metadata: { simulatedActivityId}, stem: 'PREHEAT_OVEN', time: { tag: '01:00:00.000', type: TimingTypes.COMMAND_RELATIVE }, type: 'command' },
-      { args: [70], metadata: { simulatedActivityId}, stem: 'PREHEAT_OVEN', time: { tag: '01:00:00.000', type: TimingTypes.COMMAND_RELATIVE }, type: 'command' },
+      {
+        args: [70],
+        metadata: { simulatedActivityId },
+        stem: 'PREHEAT_OVEN',
+        time: { tag: '01:00:00.000', type: TimingTypes.COMMAND_RELATIVE },
+        type: 'command',
+      },
+      {
+        args: [70],
+        metadata: { simulatedActivityId },
+        stem: 'PREHEAT_OVEN',
+        time: { tag: '01:00:00.000', type: TimingTypes.COMMAND_RELATIVE },
+        type: 'command',
+      },
     ]);
 
     // Cleanup
@@ -607,7 +638,6 @@ describe('expansion regressions', () => {
     await removeExpansionRun(graphqlClient, expansionRunId);
   }, 10000);
 });
-
 
 it('should provide start and end times on activities', async () => {
   // Setup
@@ -627,10 +657,7 @@ it('should provide start and end times on activities', async () => {
     `,
   );
 
-
-  const expansionSet0Id = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
-    expansionId,
-  ]);
+  const expansionSet0Id = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
   await expand(graphqlClient, expansionSet0Id, simulationArtifactPk.simulationDatasetId);
   const sequencePk = await insertSequence(graphqlClient, {
     seqId: 'test00000',
@@ -638,36 +665,35 @@ it('should provide start and end times on activities', async () => {
   });
   await linkActivityInstance(graphqlClient, sequencePk, activityId);
 
-
   const simulatedActivityId3 = await convertActivityIdToSimulatedActivityId(
-      graphqlClient,
-      simulationArtifactPk.simulationDatasetId,
-      activityId,
+    graphqlClient,
+    simulationArtifactPk.simulationDatasetId,
+    activityId,
   );
 
   const { getSequenceSeqJson } = await graphqlClient.request<{ getSequenceSeqJson: SequenceSeqJson }>(
-      gql`
-        query GetSeqJsonForSequence($seqId: String!, $simulationDatasetId: Int!) {
-          getSequenceSeqJson(seqId: $seqId, simulationDatasetId: $simulationDatasetId) {
-            id
-            metadata
-            steps {
+    gql`
+      query GetSeqJsonForSequence($seqId: String!, $simulationDatasetId: Int!) {
+        getSequenceSeqJson(seqId: $seqId, simulationDatasetId: $simulationDatasetId) {
+          id
+          metadata
+          steps {
+            type
+            stem
+            time {
               type
-              stem
-              time {
-                type
-                tag
-              }
-              args
-              metadata
+              tag
             }
+            args
+            metadata
           }
         }
-      `,
-      {
-        seqId: 'test00000',
-        simulationDatasetId: simulationArtifactPk.simulationDatasetId,
-      },
+      }
+    `,
+    {
+      seqId: 'test00000',
+      simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+    },
   );
 
   expect(getSequenceSeqJson.id).toBe('test00000');
