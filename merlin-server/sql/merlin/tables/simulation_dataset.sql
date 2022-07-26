@@ -256,5 +256,5 @@ do $$ begin
 create trigger notify_simulation_workers
   after insert on simulation_dataset
   for each row
-  execute procedure notify_simulation_workers();
+  execute function notify_simulation_workers();
 end $$;

@@ -129,7 +129,7 @@ comment on function activity_set_updated_at() is e''
 create trigger set_timestamp
   before update on activity
   for each row
-execute procedure activity_set_updated_at();
+execute function activity_set_updated_at();
 
 comment on trigger set_timestamp on activity is e''
   'Sets the last_modified_at field of an activity to the current time.';
