@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
@@ -29,7 +29,7 @@ public final class MissionModelTest {
     private MissionModelFacade.Unconfigured<?> unconfiguredMissionModel;
 
     @BeforeEach
-    public void initialize() throws MissionModelFacade.MissionModelContractException {
+    public void initialize() {
         final var configuration = new Configuration();
         this.missionModel = makeMissionModel(new MissionModelBuilder(), configuration);
         this.unconfiguredMissionModel = new MissionModelFacade.Unconfigured<>(new GeneratedMissionModelFactory());
@@ -48,7 +48,7 @@ public final class MissionModelTest {
     }
 
     @Test
-    public void shouldGetActivityTypeList() throws MissionModelFacade.MissionModelContractException {
+    public void shouldGetActivityTypeList() {
         // GIVEN
       final Map<String, ActivityType> expectedTypes = Map.of(
             "foo", new ActivityType(
@@ -69,7 +69,7 @@ public final class MissionModelTest {
     }
 
     @Test
-    public void shouldGetActivityType() throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.MissionModelContractException {
+    public void shouldGetActivityType() throws MissionModelFacade.NoSuchActivityTypeException {
         // GIVEN
       final ActivityType expectedType = new ActivityType(
             "foo",
@@ -102,8 +102,7 @@ public final class MissionModelTest {
 
     @Test
     public void shouldInstantiateActivityInstance()
-    throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.MissionModelContractException,
-           TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException
+        throws MissionModelFacade.NoSuchActivityTypeException, InvalidArgumentsException
     {
         // GIVEN
         final var typeName = "foo";
@@ -128,7 +127,7 @@ public final class MissionModelTest {
         final Throwable thrown = catchThrowable(() -> missionModel.validateActivity(new SerializedActivity(typeName, parameters)));
 
         // THEN
-        assertThat(thrown).isInstanceOf(TaskSpecType.UnconstructableTaskSpecException.class);
+        assertThat(thrown).isInstanceOf(InvalidArgumentsException.class);
     }
 
     @Test
@@ -141,6 +140,6 @@ public final class MissionModelTest {
         final Throwable thrown = catchThrowable(() -> missionModel.validateActivity(new SerializedActivity(typeName, parameters)));
 
         // THEN
-        assertThat(thrown).isInstanceOf(TaskSpecType.UnconstructableTaskSpecException.class);
+        assertThat(thrown).isInstanceOf(InvalidArgumentsException.class);
     }
 }

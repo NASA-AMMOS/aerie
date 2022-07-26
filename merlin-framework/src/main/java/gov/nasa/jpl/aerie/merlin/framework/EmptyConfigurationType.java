@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
@@ -22,9 +22,11 @@ public final class EmptyConfigurationType implements ConfigurationType<Unit> {
 
   @Override
   public Unit instantiate(final Map<String, SerializedValue> arguments)
-  throws UnconstructableConfigurationException, MissingArgumentsException
+  throws InvalidArgumentsException
   {
-    if (!arguments.isEmpty()) throw new UnconstructableConfigurationException();
+    final var invalidArgsExBuilder = new InvalidArgumentsException.Builder("configuration", getClass().getSimpleName());
+    arguments.forEach((k, v) -> invalidArgsExBuilder.withExtraneousArgument(k));
+    invalidArgsExBuilder.throwIfAny();
 
     return Unit.UNIT;
   }

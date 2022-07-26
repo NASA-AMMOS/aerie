@@ -8,7 +8,8 @@ import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableArgumentException;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
@@ -31,8 +32,7 @@ import java.util.stream.Collectors;
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
         .returns(TypeName.get(exportType.declaration().asType()))
-        .addException(unconstructableInstantiateException)
-        .addException(MissingArgumentsException.class)
+        .addException(InvalidArgumentsException.class)
         .addParameter(
             ParameterizedTypeName.get(
                 java.util.Map.class,
@@ -67,12 +67,12 @@ import java.util.stream.Collectors;
 
         methodBuilder = makeArgumentAssignments(methodBuilder, (builder, parameter) -> builder
             .addStatement(
-                "$L = $L(this.mapper_$L.deserializeValue($L.getValue()).getSuccessOrThrow(failure -> $T.unconstructableArgument(\"$L\", failure)))",
+                "$L = $L(this.mapper_$L.deserializeValue($L.getValue())$W.getSuccessOrThrow(failure -> new $T(\"$L\", failure)))",
                 parameter.name,
                 "Optional.ofNullable",
                 parameter.name,
                 "entry",
-                unconstructableInstantiateException,
+                UnconstructableArgumentException.class,
                 parameter.name));
       break;
     }

@@ -5,11 +5,9 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -21,26 +19,18 @@ import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 
 import javax.json.Json;
 import javax.json.JsonValue;
 import javax.json.stream.JsonParsingException;
-import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
-import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
-import static gov.nasa.jpl.aerie.merlin.server.http.ValueSchemaJsonParser.valueSchemaP;
 
 public final class ResponseSerializers {
   public static <T> JsonValue serializeNullable(final Function<T, JsonValue> serializer, final T value) {
@@ -295,24 +285,27 @@ public final class ResponseSerializers {
     }
   }
 
-  public static JsonValue serializeMissingArgumentsException(final MissingArgumentsException ex) {
+  public static JsonValue serializeInvalidArgumentsException(final InvalidArgumentsException ex) {
     return Json.createObjectBuilder()
-               .add("success", JsonValue.FALSE)
-               .add("errors", serializeMap(arg -> serializeMissingArgument(ex.metaName, ex.containerName, arg), ex.missingArguments.stream().collect(Collectors.toMap(
-                   MissingArgumentsException.MissingArgument::parameterName,
-                   $ -> $))))
-               .add("arguments", serializeMap(ResponseSerializers::serializeArgument, ex.providedArguments.stream().collect(Collectors.toMap(
-                   MissingArgumentsException.ProvidedArgument::parameterName,
-                   MissingArgumentsException.ProvidedArgument::serializedValue))))
-               .build();
+        .add("success", JsonValue.FALSE)
+        .add("errors", Json.createObjectBuilder()
+            .add("extraneousArguments", serializeStringList(ex.extraneousArguments.stream().map(a -> a.parameterName()).toList()))
+            .add("unconstructableArguments", serializeIterable(ResponseSerializers::serializeUnconstructableArgument, ex.unconstructableArguments))
+            .add("missingArguments", serializeStringList(ex.missingArguments.stream().map(a -> a.parameterName()).toList()))
+            .build())
+        .add("arguments", serializeMap(ResponseSerializers::serializeArgument, ex.validArguments.stream().collect(Collectors.toMap(
+             InvalidArgumentsException.ValidArgument::parameterName,
+             InvalidArgumentsException.ValidArgument::serializedValue))))
+        .build();
   }
 
-  private static JsonValue serializeMissingArgument(final String metaName, final String containerName, final MissingArgumentsException.MissingArgument argument) {
+  private static JsonValue serializeUnconstructableArgument(
+      final InvalidArgumentsException.UnconstructableArgument argument)
+  {
     return Json.createObjectBuilder()
-               .add("schema", serializeValueSchema(argument.schema()))
-               .add("message", "Required argument for %s \"%s\" not provided: \"%s\" of type %s"
-                   .formatted(metaName, containerName, argument.parameterName(), argument.schema()))
-               .build();
+       .add("name", argument.parameterName())
+       .add("failure", argument.failure())
+       .build();
   }
 
   public static JsonValue serializeJsonParsingException(final JsonParsingException ex) {
@@ -388,7 +381,7 @@ public final class ResponseSerializers {
   }
 
 
-    private static final class ValueSchemaSerializer implements ValueSchema.Visitor<JsonValue> {
+  private static final class ValueSchemaSerializer implements ValueSchema.Visitor<JsonValue> {
     @Override
     public JsonValue onReal() {
       return Json

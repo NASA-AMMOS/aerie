@@ -10,7 +10,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -50,7 +50,7 @@ public final class MissionModelFacade {
   }
 
   public List<String> validateActivity(final SerializedActivity activity)
-  throws NoSuchActivityTypeException, TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException
+  throws NoSuchActivityTypeException, InvalidArgumentsException
   {
     final var specType = Optional
         .ofNullable(this.missionModel.getDirectiveTypes().taskSpecTypes().get(activity.getTypeName()))
@@ -62,7 +62,7 @@ public final class MissionModelFacade {
   private <Specification, Return> List<String> getValidationFailures(
       final TaskSpecType<?, Specification, Return> specType,
       final Map<String, SerializedValue> arguments)
-  throws TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException
+  throws InvalidArgumentsException
   {
     return specType.getValidationFailures(specType.instantiate(arguments));
   }
@@ -70,7 +70,7 @@ public final class MissionModelFacade {
   public Map<String, SerializedValue> getActivityEffectiveArguments(
       final String typeName,
       final Map<String, SerializedValue> arguments)
-  throws NoSuchActivityTypeException, TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException
+  throws NoSuchActivityTypeException, InvalidArgumentsException
   {
     final var specType = Optional
         .ofNullable(this.missionModel.getDirectiveTypes().taskSpecTypes().get(typeName))
@@ -82,14 +82,14 @@ public final class MissionModelFacade {
   private static <Specification, Return> Map<String, SerializedValue> getActivityEffectiveArguments(
       final TaskSpecType<?, Specification, Return> specType,
       final Map<String, SerializedValue> arguments)
-  throws TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException
+  throws InvalidArgumentsException
   {
     final var activity = specType.instantiate(arguments);
     return specType.getArguments(activity);
   }
 
   public List<String> validateConfiguration(final Map<String, SerializedValue> arguments)
-  throws UnconstructableMissionModelConfigurationException
+  throws InvalidArgumentsException
   {
     return getValidationFailures(this.missionModel.getConfigurationType(), arguments);
   }
@@ -97,20 +97,14 @@ public final class MissionModelFacade {
   private <Config> List<String> getValidationFailures(
       final ConfigurationType<Config> configurationType,
       final Map<String, SerializedValue> arguments)
-  throws UnconstructableMissionModelConfigurationException
+  throws InvalidArgumentsException
   {
-    try {
-      return configurationType.getValidationFailures(configurationType.instantiate(arguments));
-    } catch (final ConfigurationType.UnconstructableConfigurationException | MissingArgumentsException e) {
-      throw new UnconstructableMissionModelConfigurationException(
-          "Unknown failure when deserializing configuration -- do the parameters match the schema?",
-          e);
-    }
+    return configurationType.getValidationFailures(configurationType.instantiate(arguments));
   }
 
   /** Get mission model configuration effective arguments. */
   public Map<String, SerializedValue> getEffectiveArguments(final Map<String, SerializedValue> arguments)
-  throws MissingArgumentsException, UnconstructableMissionModelConfigurationException
+  throws InvalidArgumentsException
   {
     return getEffectiveArguments(this.missionModel.getConfigurationType(), arguments);
   }
@@ -118,16 +112,10 @@ public final class MissionModelFacade {
   private static <Config> Map<String, SerializedValue> getEffectiveArguments(
       final ConfigurationType<Config> configurationType,
       final Map<String, SerializedValue> arguments)
-  throws MissingArgumentsException, UnconstructableMissionModelConfigurationException
+  throws InvalidArgumentsException
   {
-    try {
-      final var config = configurationType.instantiate(arguments);
-      return configurationType.getArguments(config);
-    } catch (final ConfigurationType.UnconstructableConfigurationException e) {
-      throw new UnconstructableMissionModelConfigurationException(
-          "Unknown failure when deserializing configuration -- do the parameters match the schema?",
-          e);
-    }
+    final var config = configurationType.instantiate(arguments);
+    return configurationType.getArguments(config);
   }
 
   /** Get activity instantiation failure messages as a mapping of activity instance ID to failure. */
@@ -138,10 +126,7 @@ public final class MissionModelFacade {
     activities.forEach((id, act) -> {
       try {
         getActivityEffectiveArguments(act.getTypeName(), act.getArguments());
-      } catch (final NoSuchActivityTypeException |
-          TaskSpecType.UnconstructableTaskSpecException |
-          MissingArgumentsException e)
-      {
+      } catch (final NoSuchActivityTypeException | InvalidArgumentsException e) {
         failures.put(id, e.toString());
       }
     });
@@ -187,12 +172,6 @@ public final class MissionModelFacade {
     public NoSuchActivityTypeException(final String typeName) {
       super("No such activity type: \"%s\"".formatted(typeName));
       this.typeName = typeName;
-    }
-  }
-
-  public static class UnconstructableMissionModelConfigurationException extends Exception {
-    public UnconstructableMissionModelConfigurationException(final String message, final Throwable cause) {
-      super(message, cause);
     }
   }
 }

@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
@@ -176,7 +175,7 @@ public final class StubMissionModelService implements MissionModelService {
   public Map<String, SerializedValue> getModelEffectiveArguments(
       final String missionModelId,
       final Map<String, SerializedValue> arguments)
-  throws MissingArgumentsException, LocalMissionModelService.MissionModelLoadException
+  throws LocalMissionModelService.MissionModelLoadException
   {
     return Map.of();
   }
