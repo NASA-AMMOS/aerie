@@ -7,7 +7,8 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableArgumentException;
 
 import javax.lang.model.element.Modifier;
 import java.util.List;
@@ -27,8 +28,7 @@ import java.util.Optional;
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
         .returns(TypeName.get(exportType.declaration().asType()))
-        .addException(unconstructableInstantiateException)
-        .addException(MissingArgumentsException.class)
+        .addException(InvalidArgumentsException.class)
         .addParameter(
             ParameterizedTypeName.get(
                 java.util.Map.class,
@@ -61,11 +61,11 @@ import java.util.Optional;
 
     methodBuilder = makeArgumentAssignments(methodBuilder, (builder, parameter) -> builder
         .addStatement(
-            "template.$L = this.mapper_$L.deserializeValue($L.getValue()).getSuccessOrThrow(failure -> $T.unconstructableArgument(\"$L\", failure))",
+            "template.$L = this.mapper_$L.deserializeValue($L.getValue())$W.getSuccessOrThrow(failure -> new $T(\"$L\", failure))",
             parameter.name,
             parameter.name,
             "entry",
-            unconstructableInstantiateException,
+            UnconstructableArgumentException.class,
             parameter.name));
 
     return methodBuilder.addStatement("return template").build();

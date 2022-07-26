@@ -5,8 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -106,8 +105,7 @@ public final class LocalMissionModelService implements MissionModelService {
    */
   @Override
   public List<String> validateActivityArguments(final String missionModelId, final SerializedActivity activity)
-  throws NoSuchMissionModelException, MissionModelLoadException, TaskSpecType.UnconstructableTaskSpecException,
-         MissingArgumentsException
+  throws NoSuchMissionModelException, MissionModelLoadException, InvalidArgumentsException
   {
     try {
       // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
@@ -135,9 +133,8 @@ public final class LocalMissionModelService implements MissionModelService {
   public Map<String, SerializedValue> getActivityEffectiveArguments(final String missionModelId, final SerializedActivity activity)
   throws NoSuchMissionModelException,
          NoSuchActivityTypeException,
-         MissingArgumentsException,
          MissionModelLoadException,
-         TaskSpecType.UnconstructableTaskSpecException
+         InvalidArgumentsException
   {
     try {
       return this.loadConfiguredMissionModel(missionModelId)
@@ -151,14 +148,10 @@ public final class LocalMissionModelService implements MissionModelService {
   public List<String> validateModelArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
          MissionModelLoadException,
-         UnconstructableMissionModelConfigurationException
+         InvalidArgumentsException
   {
-    try {
-      return this.loadConfiguredMissionModel(missionModelId)
-                 .validateConfiguration(arguments);
-    } catch (final MissionModelFacade.UnconstructableMissionModelConfigurationException ex) {
-      throw new UnconstructableMissionModelConfigurationException(ex);
-    }
+    return this.loadConfiguredMissionModel(missionModelId)
+               .validateConfiguration(arguments);
   }
 
   @Override
@@ -171,16 +164,11 @@ public final class LocalMissionModelService implements MissionModelService {
   @Override
   public Map<String, SerializedValue> getModelEffectiveArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
-         MissingArgumentsException,
          MissionModelLoadException,
-         UnconstructableMissionModelConfigurationException
+         InvalidArgumentsException
   {
-    try {
-      return this.loadConfiguredMissionModel(missionModelId)
-                 .getEffectiveArguments(arguments);
-    } catch (final MissionModelFacade.UnconstructableMissionModelConfigurationException ex) {
-      throw new UnconstructableMissionModelConfigurationException(ex);
-    }
+    return this.loadConfiguredMissionModel(missionModelId)
+               .getEffectiveArguments(arguments);
 }
 
   /**

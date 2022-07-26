@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol.model;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
@@ -12,7 +12,7 @@ public interface ConfigurationType<Config> {
   List<String> getRequiredParameters();
 
   Config instantiate(Map<String, SerializedValue> arguments)
-  throws UnconstructableConfigurationException, MissingArgumentsException;
+  throws InvalidArgumentsException;
 
   Map<String, SerializedValue> getArguments(Config configuration);
   List<String> getValidationFailures(Config configuration);
@@ -24,14 +24,6 @@ public interface ConfigurationType<Config> {
 
     public UnconstructableConfigurationException(final String message) {
       super(message);
-    }
-
-    public static UnconstructableConfigurationException unconstructableArgument(final String parameterName, final String failure) {
-      return new UnconstructableConfigurationException("Unconstructable argument \"%s\": %s".formatted(parameterName, failure));
-    }
-
-    public static UnconstructableConfigurationException extraneousParameter(final String parameterName) {
-      return new UnconstructableConfigurationException("Extraneous parameter \"%s\"".formatted(parameterName));
     }
   }
 }
