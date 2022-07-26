@@ -21,6 +21,7 @@ export enum NodeKind {
   ActivityCoexistenceGoal = 'ActivityCoexistenceGoal',
   ActivityCardinalityGoal = 'ActivityCardinalityGoal',
   ActivityExpression = 'ActivityExpression',
+  WindowsExpressionRoot = 'WindowsExpressionRoot',
   GoalAnd = 'GoalAnd',
   GoalOr = 'GoalOr',
   ApplyWhen = 'ApplyWhen'
@@ -55,9 +56,14 @@ export interface ActivityCardinalityGoal {
 export interface ActivityCoexistenceGoal {
   kind: NodeKind.ActivityCoexistenceGoal,
   activityTemplate: ActivityTemplate,
-  forEach: WindowsExpressions.WindowsExpression | ActivityExpression,
+  forEach: WindowsExpressionRoot | ActivityExpression,
   startConstraint: ActivityTimingConstraintSingleton | ActivityTimingConstraintRange | undefined,
   endConstraint: ActivityTimingConstraintSingleton | ActivityTimingConstraintRange | undefined,
+}
+
+export interface WindowsExpressionRoot {
+  kind: NodeKind.WindowsExpressionRoot,
+  expression: WindowsExpressions.WindowsExpression
 }
 
 export interface ActivityExpression {
