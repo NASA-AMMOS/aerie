@@ -21,7 +21,6 @@ import java.util.Set;
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -41,7 +40,7 @@ public class ASTTests {
     windows.add(Window.between(10, Exclusive, 15, Exclusive, SECONDS));
     windows.add(Window.at(20, SECONDS));
 
-    final var result = new Invert(Supplier.of(windows)).evaluate(simResults, Map.of());
+    final var result = new Invert(new WindowsWrapperExpression(windows)).evaluate(simResults, Map.of());
 
     final var expected = new Windows();
     expected.add(Window.between(5, Inclusive, 10, Inclusive, SECONDS));
@@ -72,7 +71,7 @@ public class ASTTests {
     right.add(Window.between(10, Inclusive, 12, Inclusive, SECONDS));
     right.add(Window.between(15, Inclusive, 20, Exclusive, SECONDS));
 
-    final var result = new All(Supplier.of(left), Supplier.of(right)).evaluate(simResults, Map.of());
+    final var result = new All(new WindowsWrapperExpression(left), new WindowsWrapperExpression(right)).evaluate(simResults, Map.of());
 
     final var expected = new Windows();
     expected.add(Window.between( 0, Inclusive,  5, Exclusive, SECONDS));
@@ -104,7 +103,7 @@ public class ASTTests {
     right.add(Window.between(10, Inclusive, 12, Inclusive, SECONDS));
     right.add(Window.between(15, Inclusive, 20, Exclusive, SECONDS));
 
-    final var result = new Any(Supplier.of(left), Supplier.of(right)).evaluate(simResults, Map.of());
+    final var result = new Any(new WindowsWrapperExpression(left), new WindowsWrapperExpression(right)).evaluate(simResults, Map.of());
 
     final var expected = new Windows();
     expected.add(Window.between(  0, Inclusive,   5, Inclusive, SECONDS));
@@ -134,7 +133,7 @@ public class ASTTests {
     final var expandByFromStart = Duration.negate(Duration.of(1, SECONDS));
     final var expandByFromEnd = Duration.of(0, SECONDS);
 
-    final var result = new ShiftBy(Supplier.of(left), expandByFromStart, expandByFromEnd).evaluate(simResults, Map.of());
+    final var result = new ShiftBy(new WindowsWrapperExpression(left), expandByFromStart, expandByFromEnd).evaluate(simResults, Map.of());
 
     final var expected = new Windows();
     expected.add(Window.between(-1, Inclusive, 9, Exclusive, SECONDS));
@@ -163,7 +162,7 @@ public class ASTTests {
     final var clampFromStart = Duration.of(1, SECONDS);
     final var clampFromEnd = Duration.negate(Duration.of(1, SECONDS));
 
-    final var result = new ShiftBy(Supplier.of(left), clampFromStart, clampFromEnd).evaluate(simResults, Map.of());
+    final var result = new ShiftBy(new WindowsWrapperExpression(left), clampFromStart, clampFromEnd).evaluate(simResults, Map.of());
 
     final var expected = new Windows();
     expected.add(Window.between(1, Inclusive, 4, Exclusive, SECONDS));
@@ -186,7 +185,7 @@ public class ASTTests {
     final var expected = new LinearProfile(
         new LinearProfilePiece(simResults.bounds, 7, 0));
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, (LinearProfile) result);
   }
 
   @Test
@@ -205,7 +204,7 @@ public class ASTTests {
             new DiscreteProfilePiece(simResults.bounds, SerializedValue.of("IDLE"))
         ));
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, (DiscreteProfile) result);
   }
 
   @Test
@@ -230,7 +229,7 @@ public class ASTTests {
         new LinearProfilePiece(Window.between(0, Inclusive, 20, Inclusive, SECONDS), 2, 0)
     );
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, (LinearProfile) result);
   }
 
   @Test
@@ -254,7 +253,7 @@ public class ASTTests {
 
     final var expected = simResults.discreteProfiles.get("discrete2");
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, (DiscreteProfile) result);
   }
 
   @Test
@@ -278,7 +277,7 @@ public class ASTTests {
 
     final var expected = simResults.realProfiles.get("real2");
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, (LinearProfile) result);
   }
 
   @Test
@@ -302,7 +301,7 @@ public class ASTTests {
 
     final var expected = new LinearProfile(new LinearProfilePiece(Window.at(5, SECONDS), 2, 0));
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, (LinearProfile) result);
   }
 
   @Test
@@ -364,7 +363,7 @@ public class ASTTests {
     final var result = new ForEachActivity(
         "TypeA",
         "act",
-        new Supplier<>(List.of(violation))
+        new ViolationSupplier(violation)
     ).evaluate(simResults, Map.of());
 
     final var expected = List.of(
@@ -394,7 +393,7 @@ public class ASTTests {
         new ForEachActivity(
             "TypeB",
             "act",
-            new Supplier<>(List.of(violation))
+            new ViolationSupplier(violation)
         )
     ).evaluate(simResults, Map.of());
 
@@ -419,7 +418,7 @@ public class ASTTests {
     final var windows = new Windows();
     windows.add(Window.between(1, 4, SECONDS));
     windows.add(Window.between(7,20, SECONDS));
-    final var result = new ViolationsOf(new Supplier<>(windows)).evaluate(simResults, Map.of());
+    final var result = new ViolationsOf(new WindowsWrapperExpression(windows)).evaluate(simResults, Map.of());
 
     final var expected = List.of(new Violation(Windows.minus(new Windows(simResults.bounds), windows)));
 
@@ -518,7 +517,7 @@ public class ASTTests {
     left.add(Window.at(20, SECONDS));
 
     final var right = Duration.of(2, SECONDS);
-    final var result = new LongerThan(Supplier.of(left), right).evaluate(simResults, Map.of());
+    final var result = new LongerThan(new WindowsWrapperExpression(left), right).evaluate(simResults, Map.of());
 
     final var expected = new Windows();
     expected.add(Window.between(0, Inclusive, 5, Exclusive, SECONDS));
@@ -544,7 +543,7 @@ public class ASTTests {
     left.add(Window.at(20, SECONDS));
 
     final var right = Duration.of(2, SECONDS);
-    final var result = new ShorterThan(Supplier.of(left), right).evaluate(simResults, Map.of());
+    final var result = new ShorterThan(new WindowsWrapperExpression(left), right).evaluate(simResults, Map.of());
 
     final var expected = new Windows();
     expected.add(Window.between(6, Inclusive, 7, Inclusive, SECONDS));
@@ -554,16 +553,15 @@ public class ASTTests {
     assertEquivalent(expected, result);
   }
 
-  private static final class Supplier<T> implements Expression<T> {
-    private final T value;
+  private static final class ViolationSupplier implements ConstraintExpression {
+    private final List<Violation> value;
 
-    public Supplier(final T value) {
-      this.value = value;
+    public ViolationSupplier(final Violation... values) {
+      this.value = List.of(values);
     }
 
-
     @Override
-    public T evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
+    public List<Violation> evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
       return this.value;
     }
 
@@ -575,8 +573,8 @@ public class ASTTests {
       return value.toString();
     }
 
-    public static <V> Supplier<V> of(V value) {
-      return new Supplier<>(value);
+    public static ViolationSupplier of(Violation... values) {
+      return new ViolationSupplier(values);
     }
   }
 }
