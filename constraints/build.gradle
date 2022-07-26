@@ -20,5 +20,9 @@ dependencies {
   implementation project(':merlin-sdk')
   implementation project(':parsing-utilities')
 
+  implementation 'com.fasterxml.jackson.core:jackson-annotations:2.13.0'
+  implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
+
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+  testImplementation 'com.fasterxml.jackson.core:jackson-core:2.13.0'
 }

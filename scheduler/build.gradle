@@ -28,6 +28,8 @@ dependencies {
   implementation 'org.slf4j:slf4j-simple:1.7.26'
   implementation 'com.squareup.okio:okio:3.0.0'
   implementation 'com.squareup.okhttp3:okhttp:4.9.0'
+  implementation 'com.fasterxml.jackson.core:jackson-annotations:2.13.0'
+  implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
 
   testImplementation project(':merlin-framework-junit')
   testImplementation project(':constraints')
