@@ -1,4 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.tree;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
@@ -9,15 +11,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class Any implements Expression<Windows> {
-  public final List<Expression<Windows>> expressions;
+public final class Any implements WindowsExpression {
+  public final List<WindowsExpression> expressions;
 
-  public Any(final List<Expression<Windows>> expressions) {
+  @JsonCreator
+  public Any(@JsonProperty("expressions") final List<WindowsExpression> expressions) {
     this.expressions = expressions;
   }
 
-  @SafeVarargs
-  public Any(final Expression<Windows>... expressions) {
+  public Any(final WindowsExpression... expressions) {
     this(List.of(expressions));
   }
 
@@ -56,8 +58,7 @@ public final class Any implements Expression<Windows> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof Any)) return false;
-    Any o = (Any)obj;
+    if (!(obj instanceof Any o)) return false;
 
     return Objects.equals(this.expressions, o.expressions);
   }

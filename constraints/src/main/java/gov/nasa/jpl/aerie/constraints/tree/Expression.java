@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
@@ -7,6 +8,10 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import java.util.Map;
 import java.util.Set;
 
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.MINIMAL_CLASS,
+    property = "kind"
+)
 public interface Expression<T> {
   T evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment);
   String prettyPrint(final String prefix);

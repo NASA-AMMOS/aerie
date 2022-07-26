@@ -11,14 +11,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class DiscreteParameter implements Expression<DiscreteProfile> {
-  public final String activityAlias;
-  public final String parameterName;
-
-  public DiscreteParameter(final String activityAlias, final String parameterName) {
-    this.activityAlias = activityAlias;
-    this.parameterName = parameterName;
-  }
+public record DiscreteParameter(
+    String activityAlias,
+    String parameterName) implements DiscreteProfileExpression {
 
   @Override
   public DiscreteProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
@@ -29,7 +24,8 @@ public final class DiscreteParameter implements Expression<DiscreteProfile> {
   }
 
   @Override
-  public void extractResources(final Set<String> names) { }
+  public void extractResources(final Set<String> names) {
+  }
 
   @Override
   public String prettyPrint(final String prefix) {
@@ -43,8 +39,7 @@ public final class DiscreteParameter implements Expression<DiscreteProfile> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof DiscreteParameter)) return false;
-    final var o = (DiscreteParameter)obj;
+    if (!(obj instanceof final DiscreteParameter o)) return false;
 
     return Objects.equals(this.activityAlias, o.activityAlias) &&
            Objects.equals(this.parameterName, o.parameterName);

@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.protocol.types;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -96,8 +99,10 @@ public final class Duration implements Comparable<Duration> {
   // Range of (-2^63) to (2^63 - 1) microseconds.
   // This comes out to almost 600,000 years, at microsecond resolution.
   // Merlin was not designed for time scales longer than this.
+  @JsonValue
   private final long durationInMicroseconds;
 
+  @JsonCreator
   private Duration(final long durationInMicroseconds) {
     this.durationInMicroseconds = durationInMicroseconds;
   }

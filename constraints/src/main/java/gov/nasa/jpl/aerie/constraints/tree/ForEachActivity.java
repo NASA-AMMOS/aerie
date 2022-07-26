@@ -12,20 +12,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class ForEachActivity implements Expression<List<Violation>> {
-  public final String activityType;
-  public final String alias;
-  public final Expression<List<Violation>> expression;
-
-  public ForEachActivity(
-      final String activityType,
-      final String alias,
-      final Expression<List<Violation>> expression
-  ) {
-    this.activityType = activityType;
-    this.alias = alias;
-    this.expression = expression;
-  }
+public record ForEachActivity(
+    String activityType, String alias,
+    ConstraintExpression expression) implements ConstraintExpression {
 
   @Override
   public List<Violation> evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
@@ -67,8 +56,7 @@ public final class ForEachActivity implements Expression<List<Violation>> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof ForEachActivity)) return false;
-    final var o = (ForEachActivity)obj;
+    if (!(obj instanceof final ForEachActivity o)) return false;
 
     return Objects.equals(this.activityType, o.activityType) &&
            Objects.equals(this.alias, o.alias) &&

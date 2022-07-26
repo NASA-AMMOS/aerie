@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
@@ -10,13 +12,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class ShorterThan implements Expression<Windows> {
+public final class ShorterThan implements WindowsExpression {
   public final Expression<Windows> windows;
   public final Duration duration;
 
-  public ShorterThan(final Expression<Windows> left, final Duration right) {
-    this.windows = left;
-    this.duration = right;
+  @JsonCreator
+  public ShorterThan(@JsonProperty("windows") final Expression<Windows> windows, @JsonProperty("duration") final Duration duration) {
+    this.windows = windows;
+    this.duration = duration;
   }
 
   @Override
@@ -42,8 +45,7 @@ public final class ShorterThan implements Expression<Windows> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof ShorterThan)) return false;
-    final var o = (ShorterThan)obj;
+    if (!(obj instanceof final ShorterThan o)) return false;
 
     return Objects.equals(this.windows, o.windows) &&
            Objects.equals(this.duration, o.duration);

@@ -10,14 +10,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class Equal<P extends Profile<P>> implements Expression<Windows> {
-  public final Expression<P> left;
-  public final Expression<P> right;
-
-  public Equal(final Expression<P> left, final Expression<P> right) {
-    this.left = left;
-    this.right = right;
-  }
+public record Equal<P extends Profile<P>>(
+    Expression<P> left,
+    Expression<P> right) implements WindowsExpression {
 
   @Override
   public Windows evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
@@ -45,8 +40,7 @@ public final class Equal<P extends Profile<P>> implements Expression<Windows> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof Equal)) return false;
-    final var o = (Equal<?>)obj;
+    if (!(obj instanceof final Equal<?> o)) return false;
 
     return Objects.equals(this.left, o.left) &&
            Objects.equals(this.right, o.right);

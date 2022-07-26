@@ -10,14 +10,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class LessThan implements Expression<Windows> {
-  public final Expression<LinearProfile> left;
-  public final Expression<LinearProfile> right;
-
-  public LessThan(final Expression<LinearProfile> left, final Expression<LinearProfile> right) {
-    this.left = left;
-    this.right = right;
-  }
+public record LessThan(
+    Expression<LinearProfile> left,
+    Expression<LinearProfile> right) implements WindowsExpression {
 
   @Override
   public Windows evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
@@ -45,8 +40,7 @@ public final class LessThan implements Expression<Windows> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof LessThan)) return false;
-    final var o = (LessThan)obj;
+    if (!(obj instanceof final LessThan o)) return false;
 
     return Objects.equals(this.left, o.left) &&
            Objects.equals(this.right, o.right);

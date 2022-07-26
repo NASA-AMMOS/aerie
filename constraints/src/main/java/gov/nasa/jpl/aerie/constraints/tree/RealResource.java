@@ -13,13 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class RealResource implements Expression<LinearProfile> {
-  public final String name;
-
-  public RealResource(final String name) {
-    this.name = name;
-  }
-
+public record RealResource(String name) implements LinearProfileExpression {
   @Override
   public LinearProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
     if (results.realProfiles.containsKey(this.name)) {
@@ -58,8 +52,7 @@ public final class RealResource implements Expression<LinearProfile> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof RealResource)) return false;
-    final var o = (RealResource)obj;
+    if (!(obj instanceof final RealResource o)) return false;
 
     return Objects.equals(this.name, o.name);
   }

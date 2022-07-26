@@ -10,12 +10,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class Changes<P extends Profile<P>> implements Expression<Windows> {
-  public final ProfileExpression<P> expression;
-
-  public Changes(final ProfileExpression<P> expression) {
-    this.expression = expression;
-  }
+public record Changes<P extends Profile<P>>(
+    Expression<P> expression) implements WindowsExpression {
 
   @Override
   public Windows evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
@@ -38,8 +34,7 @@ public final class Changes<P extends Profile<P>> implements Expression<Windows> 
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof Changes)) return false;
-    final var o = (Changes<?>)obj;
+    if (!(obj instanceof final Changes<?> o)) return false;
 
     return Objects.equals(this.expression, o.expression);
   }

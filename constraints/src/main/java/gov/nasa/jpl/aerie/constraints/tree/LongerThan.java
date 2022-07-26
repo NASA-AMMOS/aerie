@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
@@ -10,12 +12,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class LongerThan implements Expression<Windows> {
+public final class LongerThan implements WindowsExpression {
   public final Expression<Windows> windows;
   public final Duration duration;
 
-  public LongerThan(final Expression<Windows> left, final Duration duration) {
-    this.windows = left;
+  @JsonCreator
+  public LongerThan(@JsonProperty("windows") final Expression<Windows> windows, @JsonProperty("duration") final Duration duration) {
+    this.windows = windows;
     this.duration = duration;
   }
 
