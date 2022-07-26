@@ -1,7 +1,8 @@
 import fs from 'fs';
 import ts from 'typescript';
 import { UserCodeRunner } from '@nasa-jpl/aerie-ts-user-code-runner';
-import type { Constraint } from './libs/constraints-edsl-fluent-api.js';
+import { Constraint, Windows } from './libs/constraints-edsl-fluent-api.js';
+import * as AST from './libs/constraints-ast.js';
 import * as readline from 'readline';
 
 const codeRunner = new UserCodeRunner();
@@ -54,7 +55,11 @@ async function handleRequest(data: Buffer) {
       return;
     }
 
-    const stringified = JSON.stringify(result.unwrap().__astNode);
+    let unwrapped = result.unwrap();
+    if (unwrapped.__astNode.kind != AST.NodeKind.ForEachActivity && unwrapped.__astNode.kind != AST.NodeKind.ViolationsOf) {
+      unwrapped = (new Windows(unwrapped.__astNode)).violations();
+    }
+    const stringified = JSON.stringify(unwrapped.__astNode);
     if (stringified === undefined) {
       throw Error(JSON.stringify(result.unwrap()) + ' was not JSON serializable');
     }

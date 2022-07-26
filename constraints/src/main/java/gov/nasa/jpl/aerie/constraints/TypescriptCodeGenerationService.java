@@ -93,7 +93,7 @@ public final class TypescriptCodeGenerationService {
             .append(parameterProfile)
             .append("({ kind: AST.NodeKind.")
             .append(nodeKind)
-            .append(", alias: this.__alias, name: \"")
+            .append(", activityAlias: this.__alias, parameterName: \"")
             .append(parameter.name())
             .append("\"}")
             .append("), ");
@@ -117,7 +117,7 @@ public final class TypescriptCodeGenerationService {
                           public window(): Windows {
                             return new Windows({
                               kind: AST.NodeKind.WindowsExpressionActivityWindow,
-                              alias: this.__alias
+                              activityAlias: this.__alias
                             });
                           }
                           /**
@@ -126,7 +126,7 @@ public final class TypescriptCodeGenerationService {
                           public start(): Windows {
                             return new Windows({
                               kind: AST.NodeKind.WindowsExpressionStartOf,
-                              alias: this.__alias
+                              activityAlias: this.__alias
                             });
                           }
                           /**
@@ -135,7 +135,7 @@ public final class TypescriptCodeGenerationService {
                           public end(): Windows {
                             return new Windows({
                               kind: AST.NodeKind.WindowsExpressionEndOf,
-                              alias: this.__alias
+                              activityAlias: this.__alias
                             });
                           }"""));
 
