@@ -1268,7 +1268,7 @@ public class TestApplyWhen {
 
     // "Make an expression that depends on a resource (the resource here is mission.activitiesExecuted).
     Expression<Windows> gte = new All(
-        new LinkedList<Expression<Windows>>(Arrays.asList(
+        new LinkedList<>(Arrays.asList(
             new GreaterThanOrEqual(
                 new RealResource("/activitiesExecuted"),
                 new RealValue(2.0)

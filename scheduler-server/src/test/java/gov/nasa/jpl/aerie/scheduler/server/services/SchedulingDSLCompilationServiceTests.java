@@ -298,7 +298,7 @@ class SchedulingDSLCompilationServiceTests {
                                                      Map.entry("duration", SerializedValue.of(60L * 60 * 1000 * 1000))
                                                  )
               ),
-              new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2"),
+              new SchedulingDSL.ConstraintExpression.Activity("SampleActivity2"),
               Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, Duration.of(100000000, Duration.MICROSECONDS), true)),
               Optional.empty()
           ),
@@ -462,7 +462,7 @@ class SchedulingDSLCompilationServiceTests {
                                                      Map.entry("duration", SerializedValue.of(60L * 60 * 1000 * 1000))
                                                  )
               ),
-              new SchedulingDSL.ConstraintExpression.WindowsExpression(new LongerThan(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)), Duration.of(10, Duration.MICROSECOND))),
+              new SchedulingDSL.ConstraintExpression.Windows(new LongerThan(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)), Duration.of(10, Duration.MICROSECOND))),
               Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.END, TimeUtility.Operator.PLUS, Duration.ZERO, true)),
               Optional.empty()
           ),
