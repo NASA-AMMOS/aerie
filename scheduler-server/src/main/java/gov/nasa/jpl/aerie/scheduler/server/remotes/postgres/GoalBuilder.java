@@ -112,11 +112,11 @@ public class GoalBuilder {
   private static TimeRangeExpression timeRangeExpressionOfConstraintExpression(
       final SchedulingDSL.ConstraintExpression constraintExpression,
       final Function<String, ActivityType> lookupActivityType) {
-    if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.ActivityExpression c) {
+    if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.Activity c) {
       return new TimeRangeExpression.Builder()
           .from(ActivityExpression.ofType(lookupActivityType.apply(c.type())))
           .build();
-    } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.WindowsExpression c){
+    } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.Windows c){
       return new TimeRangeExpression.Builder()
           .from(c.expression())
           .build();
@@ -131,13 +131,13 @@ public class GoalBuilder {
     final var type = lookupActivityType.apply(activityTemplate.activityType());
     if(type.getDurationType() instanceof DurationType.Controllable durationType){
       //detect duration parameter
-      if(activityTemplate.arguments().containsKey(durationType.parameterName())){
-        builder.duration(new DurationValueMapper().deserializeValue(activityTemplate.arguments().get(durationType.parameterName())).getSuccessOrThrow());
-        activityTemplate.arguments().remove(durationType.parameterName());
+      if(activityTemplate.args().containsKey(durationType.parameterName())){
+        builder.duration(new DurationValueMapper().deserializeValue(activityTemplate.args().get(durationType.parameterName())).getSuccessOrThrow());
+        activityTemplate.args().remove(durationType.parameterName());
       }
     }
     builder = builder.ofType(type);
-    for (final var argument : activityTemplate.arguments().entrySet()) {
+    for (final var argument : activityTemplate.args().entrySet()) {
       builder = builder.withArgument(argument.getKey(), argument.getValue());
     }
     return builder.build();

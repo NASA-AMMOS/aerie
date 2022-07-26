@@ -3,6 +3,8 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.ResultsCellRepository;
 
+import java.io.IOException;
+
 public record CachedSchedulerService(
     ResultsCellRepository store,
     SchedulerAgent agent
@@ -27,6 +29,9 @@ public record CachedSchedulerService(
         // If we couldn't delegate, clean up the cell and return an Incomplete.
         this.store.deallocate(cell);
         return new ResultsProtocol.State.Incomplete();
+      } catch (final IOException ex) {
+        this.store.deallocate(cell);
+        return new ResultsProtocol.State.Failed(ex.toString());
       }
 
       // Return the current value of the reader; if it's incomplete, the caller can check it again later.

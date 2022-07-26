@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
@@ -20,6 +23,11 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class SchedulingDSLCompilationService {
+
+  private static final ObjectMapper mapper = new ObjectMapper();
+  static {
+    mapper.registerModule(new Jdk8Module());
+  }
 
   private final Process nodeProcess;
 
@@ -83,21 +91,17 @@ public class SchedulingDSLCompilationService {
         case "error" -> {
           final var output = outputReader.readLine();
           try {
-            yield new SchedulingDSLCompilationResult.Error(parseJson(output, SchedulingCompilationError.schedulingErrorJsonP));
-          } catch (InvalidJsonException e) {
+            yield new SchedulingDSLCompilationResult.Error(mapper.readValue(output, SchedulingCompilationError.UserCodeErrorsList.class).errors());
+          } catch (JsonParsingException e) {
             throw new Error("Could not parse JSON returned from typescript: ", e);
-          } catch (InvalidEntityException e) {
-            throw new Error("Could not parse JSON returned from typescript: " + e.failures + "\n" + output);
           }
         }
         case "success" -> {
           final var output = outputReader.readLine();
           try {
-            yield new SchedulingDSLCompilationResult.Success(parseJson(output, SchedulingDSL.schedulingJsonP));
-          } catch (InvalidJsonException e) {
+            yield new SchedulingDSLCompilationResult.Success(mapper.readValue(output, SchedulingDSL.GoalSpecifier.class));
+          } catch (JsonProcessingException e) {
             throw new Error("Could not parse JSON returned from typescript: " + output, e);
-          } catch (InvalidEntityException e) {
-            throw new Error("Could not parse JSON returned from typescript: " + e.failures + "\n" + output, e);
           }
         }
         default -> throw new Error("scheduling dsl compiler returned unexpected status: " + status);
