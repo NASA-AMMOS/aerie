@@ -34,6 +34,10 @@ public final class NewWindows implements Iterable<Pair<Window, Boolean>> {
     return toReturn;
   }
 
+  public NewWindows(final Window w, final Boolean b) {
+    this.add(w, b);
+  }
+
   public NewWindows(final Pair<Window, Boolean>... windows) {
     for (final var window: windows) this.add(window.getKey(), window.getValue());
   }
@@ -42,10 +46,6 @@ public final class NewWindows implements Iterable<Pair<Window, Boolean>> {
     NewWindows toReturn = new NewWindows();
     for (final var window: windows) toReturn.add(window, true);
     return toReturn;
-  }
-
-  public void add(final Window window, final Boolean value) {
-    addAll(new NewWindows(Pair.of(window, value)));
   }
 
   public void addAll(final NewWindows other) {
@@ -85,12 +85,12 @@ public final class NewWindows implements Iterable<Pair<Window, Boolean>> {
     this.windows.setAll(newMap);
   }
 
-  public void set(final Window window, final Boolean value) {
-    this.windows.set(window, value);
+  public void add(final Window window) {
+    this.addAll(new NewWindows(window, true));
   }
 
-  public void setAll(final NewWindows other) { //implement in terms of map2
-    this.windows.setAll(other.windows);
+  public void add(final Window window, final Boolean value) {
+    this.addAll(new NewWindows(window, value));
   }
 
   public void addPoint(final long quantity, final Duration unit) {
@@ -105,6 +105,14 @@ public final class NewWindows implements Iterable<Pair<Window, Boolean>> {
     final var result = new NewWindows(left);
     result.addAll(right);
     return result;
+  }
+
+  public void set(final Window window, final Boolean value) {
+    this.windows.set(window, value);
+  }
+
+  public void setAll(final NewWindows other) { //implement in terms of map2
+    this.windows.setAll(other.windows);
   }
 
   public void clear() {
@@ -123,10 +131,6 @@ public final class NewWindows implements Iterable<Pair<Window, Boolean>> {
     for (var w : other) {
       this.windows.unset(w.getKey());
     }
-  }
-
-  public void subtract(final Window window) {
-    subtractAll(new NewWindows(List.of(Pair.of(window, true))));
   }
 
   public void subtractAll(final NewWindows other) {
@@ -175,6 +179,18 @@ public final class NewWindows implements Iterable<Pair<Window, Boolean>> {
     this.windows.setAll(newWindows);
   }
 
+  public void subtractAll(List<Window> windows) {
+    this.subtractAll(NewWindows.defaultTrueWindows(windows));
+  }
+
+  public void subtractAll(Window... windows) {
+    this.subtractAll(NewWindows.defaultTrueWindows(windows));
+  }
+
+  public void subtract(final Window window) {
+    this.subtractAll(new NewWindows(window, true));
+  }
+
   public void subtract(final long start, final long end, final Duration unit) {
     this.subtract(Window.between(start, end, unit));
   }
@@ -192,21 +208,17 @@ public final class NewWindows implements Iterable<Pair<Window, Boolean>> {
   //default behavior is subtract x from y, so obviously you'd actually WANT to subtract, only possible if x and y are
   // true
   public static NewWindows subtract(Window x, Window y){
-    var tmp = new NewWindows(List.of(Pair.of(y, true)));
-    tmp.subtractAll(new NewWindows(List.of(Pair.of(x, true))));
+    var tmp = new NewWindows(y, true);
+    tmp.subtractAll(new NewWindows(x, true));
     return tmp;
   }
 
   //but if you want to subtract and maybe you're working with return values, then you want to specify the value of x
   // and y before subtracting.
   public static NewWindows subtract(Window x, boolean xvalue, Window y, boolean yvalue){
-    var tmp = new NewWindows(List.of(Pair.of(y, yvalue)));
-    tmp.subtractAll(new NewWindows(List.of(Pair.of(x, xvalue))));
+    var tmp = new NewWindows(y, yvalue);
+    tmp.subtractAll(new NewWindows(x, xvalue));
     return tmp;
-  }
-
-  public void intersectWith(final Window window, final boolean value) {
-    intersectWith(new NewWindows(List.of(Pair.of(window, value))));
   }
 
   public void intersectWith(final NewWindows other) {
@@ -237,6 +249,18 @@ public final class NewWindows implements Iterable<Pair<Window, Boolean>> {
 
     this.windows.clear();
     this.windows.setAll(newWindows);
+  }
+
+  public void intersectWith(final Window window) {
+    this.intersectWith(new NewWindows(window, true));
+  }
+
+  public void intersectWith(final long start, final long end, final Duration unit) {
+    this.intersectWith(Window.between(start, end, unit), true);
+  }
+
+  public void intersectWith(final Window window, final boolean value) {
+    this.intersectWith(new NewWindows(window, value));
   }
 
   public void intersectWith(final long start, final long end, final Duration unit, final boolean value) {
@@ -336,11 +360,39 @@ public final class NewWindows implements Iterable<Pair<Window, Boolean>> {
   }
 
   public NewWindows shiftBy(Duration fromStart, Duration fromEnd){
-    //TODO
+    //cases:
+    //if true window, add start and end always
+    //if false and neighbor is null, do not stretch in that direction, otherwise add
+
     NewWindows ret = new NewWindows();
-    StreamSupport.stream(windows.ascendingOrder().spliterator(), false)
-        .forEach((x)-> ret.add(Window.between(x.getKey().start.plus(fromStart), x.getKey().startInclusivity,
-                                              x.getKey().end.plus(fromEnd), x.getKey().endInclusivity), x.getValue()));
+    var preStretch = StreamSupport.stream(windows.ascendingOrder().spliterator(), false).collect(Collectors.toList());
+    final var length = preStretch.size();
+
+    for (int i = 0; i < length; i++) {
+      final var current = preStretch.get(i);
+      Duration start = Duration.of(0, Duration.SECOND);
+      Duration end = Duration.of(0, Duration.SECOND);
+      if (current.getValue()) {
+        start = fromStart;
+        end = fromEnd;
+      }
+      else {
+        if (i - 1 >= 0 && preStretch.get(i - 1).getKey().adjacent(current.getKey())) { //regardless if true or false
+          start = fromStart;
+        }
+        if (i + 1 < length && preStretch.get(i + 1).getKey().adjacent(current.getKey())) {
+          end = fromEnd;
+        }
+      }
+      ret.add(
+          Window.between(
+              current.getKey().start.plus(start),
+              current.getKey().startInclusivity,
+              current.getKey().end.plus(end),
+              current.getKey().endInclusivity),
+          current.getValue());
+    }
+
     return ret;
   }
 
@@ -356,14 +408,17 @@ public final class NewWindows implements Iterable<Pair<Window, Boolean>> {
   }
 
   public NewWindows subsetContained(Window gate){
-    //TODO (might already be implemented in IntervalMap)
     NewWindows ret = new NewWindows();
     for(var win : windows.ascendingOrder()){
-      if(gate.contains(win.getKey())){
+      if(gate.contains(win.getKey()) && win.getValue()){
         ret.add(win.getKey(), win.getValue());
       }
     }
     return ret;
+  }
+
+  public NewWindows getOverlaps(Window interval) {
+    return new NewWindows(this.windows.get(interval));
   }
 
   public int size(){
@@ -371,7 +426,7 @@ public final class NewWindows implements Iterable<Pair<Window, Boolean>> {
   }
 
   public static NewWindows forever(){
-    return new NewWindows(List.of(Pair.of(Window.FOREVER, true)));
+    return new NewWindows(Window.FOREVER, true);
   }
 
   public boolean isEmpty() {
@@ -379,28 +434,95 @@ public final class NewWindows implements Iterable<Pair<Window, Boolean>> {
   }
 
   public boolean isFalse() {
-    //TODO
-    return false;
+    //the main line will or every truth value. if it's all false, this will give false, but we want to know IF we are
+    //  all false, so we not the result to say true, as in yes, everything is false.
+    return !StreamSupport.stream(this.windows.ascendingOrder().spliterator(), false).collect(Collectors.toList())
+                        .stream().map($a -> $a.getValue())
+                        .reduce(false, Boolean::logicalOr);
+  }
+
+  //the equivalent to includes, but just checking not null, not necessarily for equal.
+  public boolean isNotNull(final NewWindows other) {
+    //like includes below, but agnostic to values. just sees if, true or false, is it present. This is just the
+    //  includes method in IntervalMap.
+    //so check inclusion of each window, replace with true or false, then crunch by anding. if all present, then all
+    //  true, so return true, else false.
+    return StreamSupport.stream(other.windows.ascendingOrder().spliterator(), false).collect(Collectors.toList())
+        .stream().map($ -> this.windows.includes($.getKey(), $.getValue()))
+        .reduce(true, Boolean::logicalAnd);
+  }
+
+  public boolean isNotNull(final Window probe, final boolean value) {
+    return this.isNotNull(new NewWindows(probe, value));
   }
 
 
-  public boolean includes(final Window probe, final boolean value) {
-    return this.windows.includes(probe, value);
+  public boolean isNotNull(final long start, final long end, final Duration unit, final boolean value) {
+    return this.isNotNull(new NewWindows(Window.between(start, end, unit), value));
   }
+
+  public boolean pointIsNotNull(final long quantity, final Duration unit, final boolean value) {
+    return this.isNotNull(new NewWindows(Window.at(quantity, unit), value));
+  }
+
 
   public boolean includes(final NewWindows other) {
-    //TODO
-    throw new NotImplementedException();
+    //if you have:
+    //  other:    ---TTTT---TTT------
+    //  original: ---------TTTFF-----
+    //  then you fail twice, once because first interval not contained at all, second because overlap with false
+    //  we can do this with a map2 with a truthtable, so wherever inclusion holds we say true, if its wrong we say false
+    //  and then reduce and if there's any falses you failed overall.
+
+    // other |  orig   | output
+    //  T    |    T     |   T
+    //  T    |    F     |   F
+    //  T    |    N     |   F
+    //  F    |    T     |   T     //probably won't pass false as a value anyways, but just in case we should handle
+    //  F    |    F     |   T     //  in case user passes a NewWindows from another method that has falses...
+    //  F    |    N     |   N     //since its false, not a problem if undefined. we handle actual null checks in isNotNull
+    //  N    |    T     |   N
+    //  N    |    F     |   N
+    //  N    |    N     |   N
+
+    final var inclusion = IntervalMap.map2(
+        this.windows,
+        other.windows,
+        ($other, $original) -> {
+          if ($other.isPresent()) {
+            if($other.get()) {
+              if (!$original.isPresent()) {
+                return Optional.of(false);
+              }
+              return Optional.of($other.get() && $original.get());
+            }
+            else {
+              if (!$original.isPresent()) {
+                return Optional.empty();
+              }
+              return Optional.of(false);
+            }
+          }
+          return Optional.empty();
+        });
+
+    //anywhere where the above has false means inclusion wasn't perfect, so squash and get a truth value:
+    return StreamSupport.stream(inclusion.ascendingOrder().spliterator(), false).collect(Collectors.toList())
+                        .stream().map($a -> $a.getValue())
+                        .reduce(true, Boolean::logicalAnd);
   }
 
-  public boolean includes(final long start, final long end, final Duration unit, final boolean value) {
-    //TODO: should value defualt to true?
-    return this.includes(Window.between(start, end, unit), value);
+  public boolean includes(final Window probe) {
+    return this.includes(new NewWindows(probe, true));
   }
 
-  public boolean includesPoint(final long quantity, final Duration unit, final boolean value) {
-    //TODO: should value defualt to true?
-    return this.includes(Window.at(quantity, unit), value);
+
+  public boolean includes(final long start, final long end, final Duration unit) {
+    return this.includes(new NewWindows(Window.between(start, end, unit), true));
+  }
+
+  public boolean includesPoint(final long quantity, final Duration unit) {
+    return this.includes(new NewWindows(Window.at(quantity, unit), true));
   }
 
 
