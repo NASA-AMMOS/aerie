@@ -28,6 +28,11 @@ public interface MissionModelService {
 
   Map<String, ValueSchema> getStatesSchemas(String missionModelId)
   throws NoSuchMissionModelException;
+
+  /**
+   * getActivityTypes uses the cached result of refreshActivityTypes. For this reason, refreshActivityTypes
+   * should be called first.
+   */
   Map<String, ActivityType> getActivityTypes(String missionModelId)
   throws NoSuchMissionModelException;
   // TODO: Provide a finer-scoped validation return type. Mere strings make all validations equally severe.
