@@ -50,8 +50,8 @@ public class IncrementalSimulationTest {
     var act1Dur = incrementalSimulationDriver.getActivityDuration(acts.get(0).id());
     var act2Dur = incrementalSimulationDriver.getActivityDuration(acts.get(1).id());
     assertTrue(act1Dur.isPresent() && act2Dur.isPresent());
-    assertTrue(act1Dur.get().isEqualTo(Duration.of(1, SECONDS)));
-    assertTrue(act2Dur.get().isEqualTo(Duration.of(1, SECONDS)));
+    assertTrue(act1Dur.get().isEqualTo(Duration.of(2, SECONDS)));
+    assertTrue(act2Dur.get().isEqualTo(Duration.of(2, SECONDS)));
   }
 
   @Test
@@ -83,7 +83,7 @@ public class IncrementalSimulationTest {
         new ActivityInstanceId(2));
     acts.add(act2);
 
-    endOfLastAct = Duration.of(15,SECONDS);
+    endOfLastAct = Duration.of(16,SECONDS);
     return acts;
   }
 
