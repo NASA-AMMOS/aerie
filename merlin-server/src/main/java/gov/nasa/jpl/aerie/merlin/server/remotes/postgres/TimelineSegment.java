@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 import java.util.Set;
 
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 
 /**
  * A {@link TimelineSegment} represents a portion of a timeline of a simulation
@@ -28,4 +27,4 @@ public final record TimelineSegment(
     long simulationDatasetId,
     Set<LifeCycleEvent> lifeCycleEvents,
     ProfileSet profileSegments,
-    Timestamp simulationTime) {}
+    String simulationTime) {}

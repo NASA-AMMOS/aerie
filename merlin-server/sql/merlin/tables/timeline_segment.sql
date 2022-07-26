@@ -1,7 +1,7 @@
 create table timeline_segment (
     id int generated always as identity,
     simulation_dataset_id int,
-    simulation_time interval,
+    simulation_time text,
 
     constraint segment_synthetic_key
         primary key (id),

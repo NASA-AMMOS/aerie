@@ -40,6 +40,21 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     this.dataSource = dataSource;
   }
 
+  public String testSegment() {
+    try (final var connection = dataSource.getConnection()) {
+      final var timelineSegment = new TimelineSegment(1, null, null, "00:10:00");
+
+      final var action = new CreateTimelineSegmentAction(connection);
+      var id = action.apply(timelineSegment);
+
+      action.close();
+      return "success: " + id;
+    } catch (final SQLException ex) {
+      return "failure: -1";
+      // throw new DatabaseException("Failed to get dataset", ex);
+    }
+  }
+
   @Override
   public ResultsProtocol.OwnerRole allocate(final PlanId planId) {
     try (final var connection = this.dataSource.getConnection()) {

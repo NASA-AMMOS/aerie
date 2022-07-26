@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresResultsCellRepository;
 
 public record CachedSimulationService (
     SimulationAgent agent,
@@ -24,6 +25,13 @@ public record CachedSimulationService (
       // Return the current value of the reader; if it's incomplete, the caller can check it again later.
       return cell.get();
     }
+  }
+
+  public String testSegment() {
+    if (this.store instanceof PostgresResultsCellRepository s) {
+      return s.testSegment();
+    }
+    return "fail, not PostgresResultsCellRepository";
   }
 
   @Override
