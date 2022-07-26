@@ -92,4 +92,9 @@ public final class InMemoryMissionModelRepository implements MissionModelReposit
     public Map<String, MissionModelJar> getAllMissionModels() {
         return new HashMap<>(this.missionModels);
     }
+
+  @Override
+  public Map<String, ActivityType> getActivityTypes(final String missionModelId) {
+    return Map.of();
+  }
 }
