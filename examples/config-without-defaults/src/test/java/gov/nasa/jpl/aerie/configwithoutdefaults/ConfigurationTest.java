@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.configwithoutdefaults.generated.ConfigurationMapper;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinTestContext;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -29,7 +29,7 @@ public final class ConfigurationTest {
   private final Mission model;
 
   public ConfigurationTest(final MerlinTestContext<ActivityTypes, Mission> ctx)
-  throws ConfigurationType.UnconstructableConfigurationException, MissingArgumentsException
+  throws ConfigurationType.UnconstructableConfigurationException, InvalidArgumentsException
   {
     // Rely on config. defaults by instantiating config. with empty argument map
     final var config = new ConfigurationMapper().instantiate(Map.of(
