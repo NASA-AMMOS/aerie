@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 final class IntervalMap<V> {
   private final IntervalAlgebra<Windows.WindowAlgebra, Window> alg;
@@ -59,9 +60,17 @@ final class IntervalMap<V> {
   public void setAll(final IntervalMap<V> other) {
     int index = 0;
 
-    for (final var window : other.segments) {
+    for (var window : other.segments) {
       var interval = window.getKey();
       final var value = window.getValue();
+
+      //truncate window to the bottom
+      if (window.getKey().start.shorterThan(this.alg.bottom().end)) {
+        interval = Window.between(this.alg.bottom().end,
+                                        Window.Inclusivity.Inclusive,
+                                        window.getKey().end,
+                                        window.getKey().endInclusivity);
+      }
 
       // <> is `interval`, the interval to unset; [] is the currently-indexed window in the map.
       // Cases: --[---]---<--->--
@@ -629,5 +638,21 @@ final class IntervalMap<V> {
       initial = transform.apply(interval.getValue(), initial);
     }
     return initial;
+  }
+
+  public boolean equals(final IntervalMap<V> other) {
+    return StreamSupport.stream(map2(this, other, ($a, $b) -> {
+      if ($a.isPresent() && $b.isPresent()) {
+        return Optional.of($a.get().equals($b.get()));
+      }
+      else if (!$a.isPresent() && !$b.isPresent()) {
+        return Optional.empty();
+      }
+      else {
+        return Optional.of(false);
+      }
+    }).ascendingOrder().spliterator(), false).collect(Collectors.toList())
+                        .stream().map($a -> $a.getValue())
+                        .reduce(true, Boolean::logicalAnd);
   }
 }
