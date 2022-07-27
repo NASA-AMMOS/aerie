@@ -41,13 +41,17 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
+    for (var i : mapped.ascendingOrder()) {
+      System.out.println(i);
+    }
+
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
     expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN");
     expected.set(Window.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "aN");
-    expected.set(Window.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Exclusive), "ab");
-    expected.set(Window.between(Duration.of(3, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "Nb");
-    expected.set(Window.between(Duration.of(4, SECONDS), Inclusive, Duration.of(5, SECONDS), Exclusive), "bb");
-    expected.set(Window.between(Duration.of(5, SECONDS), Inclusive, Duration.of(7, SECONDS), Inclusive), "bN");
+    expected.set(Window.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Inclusive), "ab");
+    expected.set(Window.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "Nb");
+    expected.set(Window.between(Duration.of(4, SECONDS), Inclusive, Duration.of(5, SECONDS), Inclusive), "bb");
+    expected.set(Window.between(Duration.of(5, SECONDS), Exclusive, Duration.of(7, SECONDS), Inclusive), "bN");
     expected.set(Window.between(Duration.of(7, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     var mappedIter = StreamSupport.stream(mapped.ascendingOrder().spliterator(), false).collect(Collectors.toList());
@@ -83,11 +87,15 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
+    for (var i : mapped.ascendingOrder()) {
+      System.out.println(i);
+    }
+
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
     expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN");
     expected.set(Window.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "aN");
-    expected.set(Window.between(Duration.of(2, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "ab");
-    expected.set(Window.between(Duration.of(4, SECONDS), Inclusive, Duration.of(5, SECONDS), Inclusive), "aN");
+    expected.set(Window.between(Duration.of(2, SECONDS), Inclusive, Duration.of(4, SECONDS), Inclusive), "ab");
+    expected.set(Window.between(Duration.of(4, SECONDS), Exclusive, Duration.of(5, SECONDS), Inclusive), "aN");
     expected.set(Window.between(Duration.of(5, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     var mappedIter = StreamSupport.stream(mapped.ascendingOrder().spliterator(), false).collect(Collectors.toList());
@@ -123,10 +131,14 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
+    for (var i : mapped.ascendingOrder()) {
+      System.out.println(i);
+    }
+
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
     expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN");
     expected.set(Window.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "aN");
-    expected.set(Window.between(Duration.of(2, SECONDS), Inclusive, Duration.of(4, SECONDS), Inclusive), "ab");
+    expected.set(Window.between(Duration.of(2, SECONDS), Inclusive, Duration.of(5, SECONDS), Inclusive), "ab");
     expected.set(Window.between(Duration.of(5, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     var mappedIter = StreamSupport.stream(mapped.ascendingOrder().spliterator(), false).collect(Collectors.toList());
@@ -162,11 +174,16 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
+    for (var i : mapped.ascendingOrder()) {
+      System.out.println(i);
+    }
+
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
     expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN");
     expected.set(Window.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "aN");
     expected.set(Window.between(Duration.of(2, SECONDS), Inclusive, Duration.of(5, SECONDS), Exclusive), "ab");
-    expected.set(Window.between(Duration.of(5, SECONDS), Inclusive, Duration.MAX_VALUE, Inclusive), "NN");
+    expected.set(Window.at(Duration.of(5, SECONDS)), "aN");
+    expected.set(Window.between(Duration.of(5, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     var mappedIter = StreamSupport.stream(mapped.ascendingOrder().spliterator(), false).collect(Collectors.toList());
     var expectedIter = StreamSupport.stream(expected.ascendingOrder().spliterator(), false).collect(Collectors.toList());
@@ -200,6 +217,10 @@ public class IntervalMapMap2OverlapTest {
                                                       return Optional.of("NN");
                                                     }
                                                   });
+
+    for (var i : mapped.ascendingOrder()) {
+      System.out.println(i);
+    }
 
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
     expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN");
@@ -240,10 +261,14 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
+    for (var i : mapped.ascendingOrder()) {
+      System.out.println(i);
+    }
+
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
     expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN");
-    expected.set(Window.between(Duration.of(1, SECONDS), Inclusive, Duration.of(3, SECONDS), Exclusive), "aN");
-    expected.set(Window.between(Duration.of(3, SECONDS), Inclusive, Duration.of(5, SECONDS), Inclusive), "ab");
+    expected.set(Window.between(Duration.of(1, SECONDS), Inclusive, Duration.of(3, SECONDS), Inclusive), "ab");
+    expected.set(Window.between(Duration.of(3, SECONDS), Exclusive, Duration.of(5, SECONDS), Inclusive), "aN");
     expected.set(Window.between(Duration.of(5, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     var mappedIter = StreamSupport.stream(mapped.ascendingOrder().spliterator(), false).collect(Collectors.toList());
@@ -279,11 +304,16 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
+    for (var i : mapped.ascendingOrder()) {
+      System.out.println(i);
+    }
+
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
-    expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Inclusive), "NN");
-    expected.set(Window.between(Duration.of(1, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "aN");
-    expected.set(Window.between(Duration.of(3, SECONDS), Inclusive, Duration.of(5, SECONDS), Exclusive), "ab");
-    expected.set(Window.between(Duration.of(5, SECONDS), Inclusive, Duration.MAX_VALUE, Inclusive), "NN");
+    expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN");
+    expected.set(Window.at(Duration.of(1, SECONDS)), "aN");
+    expected.set(Window.between(Duration.of(1, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "ab");
+    expected.set(Window.between(Duration.of(3, SECONDS), Inclusive, Duration.of(5, SECONDS), Inclusive), "aN");
+    expected.set(Window.between(Duration.of(5, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     var mappedIter = StreamSupport.stream(mapped.ascendingOrder().spliterator(), false).collect(Collectors.toList());
     var expectedIter = StreamSupport.stream(expected.ascendingOrder().spliterator(), false).collect(Collectors.toList());
@@ -318,11 +348,15 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
+    for (var i : mapped.ascendingOrder()) {
+      System.out.println(i);
+    }
+
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
     expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Inclusive), "NN");
-    expected.set(Window.between(Duration.of(1, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "aN");
-    expected.set(Window.between(Duration.of(3, SECONDS), Inclusive, Duration.of(5, SECONDS), Exclusive), "ab");
-    expected.set(Window.between(Duration.of(5, SECONDS), Inclusive, Duration.MAX_VALUE, Inclusive), "NN");
+    expected.set(Window.between(Duration.of(1, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "ab");
+    expected.set(Window.between(Duration.of(3, SECONDS), Inclusive, Duration.of(5, SECONDS), Inclusive), "aN");
+    expected.set(Window.between(Duration.of(5, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     var mappedIter = StreamSupport.stream(mapped.ascendingOrder().spliterator(), false).collect(Collectors.toList());
     var expectedIter = StreamSupport.stream(expected.ascendingOrder().spliterator(), false).collect(Collectors.toList());
@@ -360,8 +394,8 @@ public class IntervalMapMap2OverlapTest {
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
     expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN");
     expected.set(Window.between(Duration.of(1, SECONDS), Inclusive, Duration.of(3, SECONDS), Exclusive), "Nb");
-    expected.set(Window.between(Duration.of(3, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "ab");
-    expected.set(Window.between(Duration.of(4, SECONDS), Inclusive, Duration.of(5, SECONDS), Inclusive), "aN");
+    expected.set(Window.between(Duration.of(3, SECONDS), Inclusive, Duration.of(4, SECONDS), Inclusive), "ab");
+    expected.set(Window.between(Duration.of(4, SECONDS), Exclusive, Duration.of(5, SECONDS), Inclusive), "aN");
     expected.set(Window.between(Duration.of(5, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     var mappedIter = StreamSupport.stream(mapped.ascendingOrder().spliterator(), false).collect(Collectors.toList());
@@ -398,14 +432,16 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
+    for (var i : mapped.ascendingOrder()) {
+      System.out.println(i);
+    }
+
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
-    expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN");
-    expected.set(Window.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "aN");
-    expected.set(Window.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Exclusive), "ab");
-    expected.set(Window.between(Duration.of(3, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "Nb");
-    expected.set(Window.between(Duration.of(4, SECONDS), Inclusive, Duration.of(5, SECONDS), Exclusive), "bb");
-    expected.set(Window.between(Duration.of(5, SECONDS), Inclusive, Duration.of(7, SECONDS), Inclusive), "bN");
-    expected.set(Window.between(Duration.of(7, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
+    expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Exclusive), "NN");
+    expected.set(Window.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Inclusive), "ab");
+    expected.set(Window.between(Duration.of(3, SECONDS), Exclusive, Duration.of(5, SECONDS), Exclusive), "Nb");
+    expected.set(Window.between(Duration.of(5, SECONDS), Inclusive, Duration.of(6, SECONDS), Inclusive), "bb");
+    expected.set(Window.between(Duration.of(6, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     var mappedIter = StreamSupport.stream(mapped.ascendingOrder().spliterator(), false).collect(Collectors.toList());
     var expectedIter = StreamSupport.stream(expected.ascendingOrder().spliterator(), false).collect(Collectors.toList());
@@ -441,14 +477,18 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
+    for (var i : mapped.ascendingOrder()) {
+      System.out.println(i);
+    }
+
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
-    expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN");
-    expected.set(Window.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "aN");
-    expected.set(Window.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Exclusive), "ab");
-    expected.set(Window.between(Duration.of(3, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "Nb");
-    expected.set(Window.between(Duration.of(4, SECONDS), Inclusive, Duration.of(5, SECONDS), Exclusive), "bb");
-    expected.set(Window.between(Duration.of(5, SECONDS), Inclusive, Duration.of(7, SECONDS), Inclusive), "bN");
-    expected.set(Window.between(Duration.of(7, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
+    expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Exclusive), "NN");
+    expected.set(Window.at(Duration.of(2, SECONDS)), "Nb");
+    expected.set(Window.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "ab");
+    expected.set(Window.between(Duration.of(3, SECONDS), Inclusive, Duration.of(5, SECONDS), Inclusive), "Nb");
+    expected.set(Window.between(Duration.of(5, SECONDS), Exclusive, Duration.of(6, SECONDS), Exclusive), "bb");
+    expected.set(Window.at(Duration.of(6, SECONDS)), "Nb");
+    expected.set(Window.between(Duration.of(6, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     var mappedIter = StreamSupport.stream(mapped.ascendingOrder().spliterator(), false).collect(Collectors.toList());
     var expectedIter = StreamSupport.stream(expected.ascendingOrder().spliterator(), false).collect(Collectors.toList());
@@ -484,14 +524,16 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
+    for (var i : mapped.ascendingOrder()) {
+      System.out.println(i);
+    }
+
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
-    expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN");
-    expected.set(Window.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "aN");
-    expected.set(Window.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Exclusive), "ab");
-    expected.set(Window.between(Duration.of(3, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "Nb");
-    expected.set(Window.between(Duration.of(4, SECONDS), Inclusive, Duration.of(5, SECONDS), Exclusive), "bb");
-    expected.set(Window.between(Duration.of(5, SECONDS), Inclusive, Duration.of(7, SECONDS), Inclusive), "bN");
-    expected.set(Window.between(Duration.of(7, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
+    expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Inclusive), "NN");
+    expected.set(Window.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "ab");
+    expected.set(Window.between(Duration.of(3, SECONDS), Inclusive, Duration.of(5, SECONDS), Inclusive), "Nb");
+    expected.set(Window.between(Duration.of(5, SECONDS), Exclusive, Duration.of(6, SECONDS), Exclusive), "bb");
+    expected.set(Window.between(Duration.of(6, SECONDS), Inclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     var mappedIter = StreamSupport.stream(mapped.ascendingOrder().spliterator(), false).collect(Collectors.toList());
     var expectedIter = StreamSupport.stream(expected.ascendingOrder().spliterator(), false).collect(Collectors.toList());
@@ -535,14 +577,18 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
+    for (var i : mapped.ascendingOrder()) {
+      System.out.println(i);
+    }
+
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
     expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Inclusive), "NN");
-    expected.set(Window.between(Duration.of(0, SECONDS), Exclusive, Duration.of(1, SECONDS), Exclusive), "aN");
-    expected.set(Window.between(Duration.of(1, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "ab");
+    expected.set(Window.between(Duration.of(0, SECONDS), Exclusive, Duration.of(1, SECONDS), Inclusive), "aN");
+    expected.set(Window.between(Duration.of(1, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "ab");
     expected.set(Window.at(Duration.of(4, SECONDS)), "aN");
     expected.set(Window.between(Duration.of(4, SECONDS), Exclusive, Duration.of(5, SECONDS), Exclusive), "ab");
     expected.set(Window.between(Duration.of(5, SECONDS), Inclusive, Duration.of(6, SECONDS), Exclusive), "aa");
-    expected.set(Window.between(Duration.of(6, SECONDS), Inclusive, Duration.of(7, SECONDS), Exclusive), "NN");
+    expected.set(Window.between(Duration.of(6, SECONDS), Inclusive, Duration.of(7, SECONDS), Exclusive), "aN");
     expected.set(Window.between(Duration.of(7, SECONDS), Inclusive, Duration.of(8, SECONDS), Exclusive), "aa");
     expected.set(Window.between(Duration.of(8, SECONDS), Inclusive, Duration.of(9, SECONDS), Exclusive), "Na");
     expected.set(Window.between(Duration.of(9, SECONDS), Inclusive, Duration.of(13, SECONDS), Exclusive), "ba");
@@ -587,6 +633,10 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
+    for (var i : mapped.ascendingOrder()) {
+      System.out.println(i);
+    }
+
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
     expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Exclusive), "NN");
     expected.set(Window.at(Duration.of(2, SECONDS)), "ab");
@@ -630,6 +680,10 @@ public class IntervalMapMap2OverlapTest {
                                                       return Optional.of("NN");
                                                     }
                                                   });
+
+    for (var i : mapped.ascendingOrder()) {
+      System.out.println(i);
+    }
 
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
     expected.set(Window.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Exclusive), "NN");

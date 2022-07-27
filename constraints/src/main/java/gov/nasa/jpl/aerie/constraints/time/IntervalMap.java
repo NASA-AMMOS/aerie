@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -42,7 +43,8 @@ final class IntervalMap<V> {
     final var results = new ArrayList<Pair<Window, V>>();
     for (final var segment : this.segments) {
       if (this.alg.overlaps(interval, segment.getKey())) {
-        results.add(segment);
+        results.add(Pair.of(this.alg.intersect(segment.getKey(), interval), segment.getValue())); //TODO: review - should this be an intersection, or grab the segment if part of
+                                   //  it falls in the interval Window?
       }
     }
 
@@ -116,7 +118,7 @@ final class IntervalMap<V> {
   }
 
   public void clear() {
-    unsetAll(this.segments);
+    unsetAll(new ArrayList<Pair<Window, V>>(this.segments)); //need to use deep copy
   }
 
   public void unset(final Window interval) {
@@ -213,7 +215,7 @@ final class IntervalMap<V> {
   }
 
   //Jonathan's implementation
-  public static <Alg, V1, V2, R>
+  public static <V1, V2, R>
   IntervalMap<R> map2(
       final IntervalMap<V1> left,
       final IntervalMap<V2> right,
@@ -237,10 +239,15 @@ final class IntervalMap<V> {
 
         if (!alg.overlaps(this.accInterval, interval) || !Objects.equals(this.accValue, newValue)) { //if no longer an overlap or the values not equal, time to flush
           this.flush();
+          /*if(!alg.meets(this.accInterval, interval)) { //&& !alg.unify(this.accInterval, Window.at(interval.start)).isSingleton()) { //this handles gaps where left and right are undefined
+            this.accInterval = alg.unify(this.accInterval, Window.at(interval.start));
+            this.accValue = transform.apply(Optional.empty(), Optional.empty());
+            this.flush();
+          }*/
         }
 
         this.accInterval = alg.unify(this.accInterval, interval); //otherwise, merge the intervals if theres even a little overlap and the values r the same
-        this.accValue = newValue; //update vlaue????
+        this.accValue = newValue;
       }
     };
 
@@ -250,7 +257,7 @@ final class IntervalMap<V> {
     Window rightInterval = alg.bottom();
     System.out.println(leftInterval.toString() + " " +  rightInterval.toString());
 
-    //handle -infinity up to the first interval
+    /*handle -infinity up to the first interval
     {
       Window firstLeftPrefix;
       Window firstRightPrefix;
@@ -276,7 +283,7 @@ final class IntervalMap<V> {
             Optional.empty(),
             Optional.empty()));
       }
-    }
+    }*/
 
     //handle everything between
     while (leftIndex < left.segments.size() || rightIndex < right.segments.size()) {
@@ -299,6 +306,8 @@ final class IntervalMap<V> {
       // Extract the prefix and overlap between these intervals.
       // At most one prefix will be non-empty (they can't each start before the other),
       // but pretending otherwise makes the code simpler.
+      final var nullGap = alg.intersect(alg.intersect(alg.lowerBoundsOf(rightInterval), alg.lowerBoundsOf(leftInterval)),
+                                          alg.upperBoundsOf(accumulator.accInterval));
       final var leftPrefix = alg.intersect(leftInterval, alg.lowerBoundsOf(rightInterval));
       final var rightPrefix = alg.intersect(rightInterval, alg.lowerBoundsOf(leftInterval));
       final var overlap = alg.intersect(leftInterval, rightInterval);
@@ -307,6 +316,12 @@ final class IntervalMap<V> {
       leftInterval = alg.intersect(leftInterval, alg.upperBoundsOf(alg.unify(leftPrefix, overlap)));
       rightInterval = alg.intersect(rightInterval, alg.upperBoundsOf(alg.unify(rightPrefix, overlap)));
 
+      if (!alg.isEmpty(nullGap)) {
+        accumulator.append(nullGap, transform.apply(
+            Optional.empty(),
+            Optional.empty()
+        ));
+      }
       // Compute a new value on each interval.
       if (!alg.isEmpty(leftPrefix)) {
         accumulator.append(leftPrefix, transform.apply(
@@ -357,6 +372,200 @@ final class IntervalMap<V> {
     accumulator.flush(); //flush the final interval
 
     return new IntervalMap<>(alg, accumulator.results);
+  }
+
+  public static <V1, V2, R>
+  IntervalMap<R> pmap2(
+      final IntervalMap<V1> left,
+      final IntervalMap<V2> right,
+      final BiFunction<Optional<V1>, Optional<V2>, Optional<R>> transform
+  ) throws Exception
+  {
+
+    if (left.alg.getClass() != right.alg.getClass()) {
+      throw new IllegalArgumentException("Grammars of left and right must match!");
+    }
+    final var alg = left.alg;
+    final var segments = new ArrayList<Pair<Window, R>>();
+
+    var previousLeft = Window.between(Duration.MIN_VALUE, Duration.of(0, Duration.SECONDS));// left.alg.bottom(); //PL - i think this encounters problems if the first interval starts at bottom, or if the final one ends at top, i THINK
+    var previousRight = Window.between(Duration.MIN_VALUE, Duration.of(0, Duration.SECONDS));// right.alg.bottom(); //PR
+
+    var leftIndex = 0; //need to update this whenever you move up an interval in the list for bounds checking
+    var currentLeft = left.segments.get(0).getKey(); //CL; this will be sliced depending on how intervals line up (i.e. if this represents an interval and previousRight is at a gap)
+    var currentLeftValue = left.segments.get(0).getValue(); //store the value, as we will splice intervals and break 1:1 correspondence between whats stored in currentLeft and the actual value
+
+    var rightIndex = 0;
+    var currentRight = right.segments.get(0).getKey(); //CR
+    var currentRightValue = right.segments.get(0).getValue(); //store the value, as we will splice intervals and break 1:1 correspondence between whats stored in currentLeft and the actual value
+
+    while (leftIndex < left.segments.size() && rightIndex < right.segments.size()) {
+       /*
+           Four cases:
+             - left is undefined, right is undefined (i.e. PL != CL, PR != CR)
+             - left is defined, right is defined (i.e. PL = CL, PR = CR)
+             - left is defined, right is undefined (i.e. PL = CL, PR != CR)
+             - left is undefined, right is defined (i.e. PL != CL, PR = CR)
+        */
+
+      final Window gap;
+
+      //case 1, left is undefined, right is undefined (i.e. PL != CL, PR != CR)
+      if (alg.contains(alg.lowerBoundsOf(currentLeft), alg.lowerBoundsOf(previousLeft)) &&
+          alg.contains(alg.lowerBoundsOf(currentRight), alg.lowerBoundsOf(previousRight))) {
+        //overlapping gap is the undefined space where lowerBounds(currentLeft) match that of lowerBounds(currentRight)
+        gap = alg.intersect(alg.lowerBoundsOf(currentLeft), alg.lowerBoundsOf(currentRight));
+        transform.apply(Optional.empty(), Optional.empty()).ifPresent($ -> segments.add(Pair.of(gap, $))); //won't be empty, implied by the condition
+
+        previousLeft = currentLeft;
+        previousRight = currentRight;
+        continue;
+
+      }
+
+      //case 2, left is defined, right is defined (i.e. PL = CL, PR = CR)
+      else if (alg.equals(alg.lowerBoundsOf(currentLeft), alg.lowerBoundsOf(previousLeft)) &&
+               alg.equals(alg.lowerBoundsOf(currentRight), alg.lowerBoundsOf(previousRight))) {
+        //overlapping gap is the space where both are defined, so just the intersection
+        gap =  alg.intersect(currentLeft, currentRight);
+        transform.apply(Optional.of(currentLeftValue), Optional.of(currentRightValue)).ifPresent($ -> segments.add(Pair.of(gap, $)));
+
+        if(alg.equals(alg.upperBoundsOf(gap), alg.upperBoundsOf(currentLeft))) {
+          //that means the intersection goes up to the end of left
+          leftIndex += 1;
+          if (leftIndex < left.segments.size()) {
+            currentLeft = left.segments.get(leftIndex).getKey();
+            currentLeftValue = left.segments.get(leftIndex).getValue();
+          }
+        }
+        else {
+          //splice the interval, move currentLeft up to where the end of the interval is, i.e. intersection of upper
+          //  bounds of the gap and the interval itself (what's left of the interval after the gap)
+          currentLeft = alg.intersect(alg.upperBoundsOf(gap), currentLeft);
+        }
+
+        if(alg.equals(alg.upperBoundsOf(gap), alg.upperBoundsOf(currentRight))) {
+          //that means the intersection goes up to the end of left
+          rightIndex += 1;
+          if (rightIndex < right.segments.size()) {
+            currentRight = right.segments.get(rightIndex).getKey();
+            currentRightValue = right.segments.get(rightIndex).getValue();
+          }
+        }
+        else {
+          //splice the interval, move currentLeft up to where the end of the interval is, i.e. intersection of upper
+          //  bounds of the gap and the interval itself (what's left of the interval after the gap)
+          currentRight = alg.intersect(alg.upperBoundsOf(gap), currentRight);
+        }
+
+      }
+
+      //case 3, left is defined, right is undefined (i.e. PL = CL, PR != CR)
+      else if (alg.equals(alg.lowerBoundsOf(currentLeft), alg.lowerBoundsOf(previousLeft)) &&
+               alg.contains(alg.lowerBoundsOf(currentRight), alg.lowerBoundsOf(previousRight))) {
+        //overlapping gap is the space where both are defined, so just the intersection
+        gap =  alg.intersect(currentLeft, alg.lowerBoundsOf(currentRight));
+        transform.apply(Optional.of(currentLeftValue), Optional.empty()).ifPresent($ -> segments.add(Pair.of(gap, $)));
+
+        if(alg.equals(alg.upperBoundsOf(gap), alg.upperBoundsOf(currentLeft))) {
+          //that means the intersection goes up to the end of left
+          leftIndex += 1;
+          if (leftIndex < left.segments.size()) {
+            currentLeft = left.segments.get(leftIndex).getKey();
+            currentLeftValue = left.segments.get(leftIndex).getValue();
+          }
+        }
+        else {
+          //splice the interval, move currentLeft up to where the end of the interval is, i.e. intersection of upper
+          //  bounds of the gap and the interval itself (what's left of the interval after the gap)
+          currentLeft = alg.intersect(alg.upperBoundsOf(gap), currentLeft);
+        }
+      }
+
+      //case 4, left is undefined, right is defined (i.e. PL != CL, PR = CR)
+      else if (alg.equals(alg.lowerBoundsOf(currentRight), alg.lowerBoundsOf(previousRight)) &&
+               alg.contains(alg.lowerBoundsOf(currentLeft), alg.lowerBoundsOf(previousLeft))) {
+        //overlapping gap is the space where both are defined, so just the intersection
+        gap =  alg.intersect(alg.lowerBoundsOf(currentLeft), currentRight);
+        transform.apply(Optional.empty(), Optional.of(currentRightValue)).ifPresent($ -> segments.add(Pair.of(gap, $)));
+
+        if(alg.equals(alg.upperBoundsOf(gap), alg.upperBoundsOf(currentRight))) {
+          //that means the intersection goes up to the end of left
+          rightIndex += 1;
+          if (rightIndex < right.segments.size()) {
+            currentRight = right.segments.get(rightIndex).getKey();
+            currentRightValue = right.segments.get(rightIndex).getValue();
+          }
+        }
+        else {
+          //splice the interval, move currentLeft up to where the end of the interval is, i.e. intersection of upper
+          //  bounds of the gap and the interval itself (what's left of the interval after the gap)
+          currentRight = alg.intersect(alg.upperBoundsOf(gap), currentRight);
+        }
+      }
+
+
+      else {
+        throw new Exception("Should not hit this case!");
+      }
+
+      previousLeft = alg.upperBoundsOf(gap); //effectively points to the end of the gap
+      previousRight = alg.upperBoundsOf(gap);
+
+    }
+
+    while (leftIndex < left.segments.size())
+    {
+      //check the final left intervals; case 3, left is defined, right is undefined (i.e. PL = CL, PR != CR)
+      //overlapping gap is the space where both are defined, so just the intersection
+      final var gap =  alg.intersect(currentLeft, alg.lowerBoundsOf(currentRight));
+      transform.apply(Optional.of(currentLeftValue), Optional.empty()).ifPresent($ -> segments.add(Pair.of(gap, $)));
+
+      if(alg.equals(alg.upperBoundsOf(gap), alg.upperBoundsOf(currentLeft))) {
+        //that means the intersection goes up to the end of left
+        leftIndex += 1;
+        if (leftIndex < left.segments.size()) {
+          currentLeft = left.segments.get(leftIndex).getKey();
+          currentLeftValue = left.segments.get(leftIndex).getValue();
+        }
+      }
+      else {
+        //splice the interval, move currentLeft up to where the end of the interval is, i.e. intersection of upper
+        //  bounds of the gap and the interval itself (what's left of the interval after the gap)
+        currentLeft = alg.intersect(alg.upperBoundsOf(gap), currentLeft);
+      }
+    }
+
+
+    while (rightIndex < left.segments.size())
+    {
+      //or check the final right intervals; case 4, left is undefined, right is defined (i.e. PL != CL, PR = CR)
+      //overlapping gap is the space where both are defined, so just the intersection
+      final var gap =  alg.intersect(alg.lowerBoundsOf(currentLeft), currentRight);
+      transform.apply(Optional.empty(), Optional.of(currentRightValue)).ifPresent($ -> segments.add(Pair.of(gap, $)));
+
+      if(alg.equals(alg.upperBoundsOf(gap), alg.upperBoundsOf(currentRight))) {
+        //that means the intersection goes up to the end of left
+        rightIndex += 1;
+        if (rightIndex < right.segments.size()) {
+          currentRight = right.segments.get(rightIndex).getKey();
+          currentRightValue = right.segments.get(rightIndex).getValue();
+        }
+      }
+      else {
+        //splice the interval, move currentLeft up to where the end of the interval is, i.e. intersection of upper
+        //  bounds of the gap and the interval itself (what's left of the interval after the gap)
+        currentRight = alg.intersect(alg.upperBoundsOf(gap), currentRight);
+      }
+    }
+
+    //check the final gap
+    //overlapping gap is the undefined space where lowerBounds(currentLeft) match that of lowerBounds(currentRight)
+    final var gap =  alg.intersect(alg.upperBoundsOf(currentLeft), alg.upperBoundsOf(currentRight));
+    transform.apply(Optional.empty(), Optional.empty()).ifPresent($ -> segments.add(Pair.of(gap, $)));
+
+
+    return new IntervalMap<>(alg, segments);
   }
 
   private Window getInterval(final int index) {

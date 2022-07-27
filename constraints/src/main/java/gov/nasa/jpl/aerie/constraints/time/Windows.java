@@ -258,7 +258,7 @@ public final class Windows implements Iterable<Window> {
     public final Window lowerBoundsOf(final Window x) {
       if (x.isEmpty()) return Window.FOREVER;
       return Window.between(
-          Duration.MIN_VALUE,
+          horizon.start,
           Inclusive, x.start,
           x.startInclusivity.opposite()
       );
@@ -269,7 +269,7 @@ public final class Windows implements Iterable<Window> {
       if (x.isEmpty()) return Window.FOREVER;
       return Window.between(
           x.end,
-          x.endInclusivity.opposite(), Duration.MAX_VALUE,
+          x.endInclusivity.opposite(), horizon.end,
           Inclusive
       );
     }

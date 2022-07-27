@@ -38,6 +38,8 @@ public final class NewWindows implements Iterable<Pair<Window, Boolean>> {
     this.add(w, b);
   }
 
+  //won't be passing anything that isn't Pair.of(Window, Boolean) so it seems @SafeVarargs can be used.
+  @SafeVarargs
   public NewWindows(final Pair<Window, Boolean>... windows) {
     for (final var window: windows) this.add(window.getKey(), window.getValue());
   }

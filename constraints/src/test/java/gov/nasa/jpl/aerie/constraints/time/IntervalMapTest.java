@@ -130,8 +130,8 @@ public class IntervalMapTest {
 
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
     expected.set(Window.at(Duration.of(0, SECONDS)), "a");
-    expected.set(Window.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Inclusive), "a");
-    expected.set(Window.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "b");
+    expected.set(Window.at(Duration.of(2, SECONDS)), "a");
+    expected.set(Window.between(Duration.of(2, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "b");
 
     var leftIter = StreamSupport.stream(left.ascendingOrder().spliterator(), false).collect(Collectors.toList());
     var expectedIter = StreamSupport.stream(expected.ascendingOrder().spliterator(), false).collect(Collectors.toList());
@@ -163,8 +163,8 @@ public class IntervalMapTest {
     }
 
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
-    expected.set(Window.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Inclusive), "a");
-    expected.set(Window.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "b");
+    expected.set(Window.at(Duration.of(2, SECONDS)), "a");
+    expected.set(Window.between(Duration.of(2, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "b");
     expected.set(Window.at(Duration.of(4, SECONDS)), "a");
 
     var leftIter = StreamSupport.stream(left.ascendingOrder().spliterator(), false).collect(Collectors.toList());
@@ -227,7 +227,7 @@ public class IntervalMapTest {
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
     expected.set(Window.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "a");
     expected.set(Window.between(Duration.of(4, SECONDS), Exclusive, Duration.of(5, SECONDS), Exclusive), "b");
-    expected.set(Window.between(Duration.of(5, SECONDS), Exclusive, Duration.of(6, SECONDS), Inclusive), "b");
+    expected.set(Window.between(Duration.of(5, SECONDS), Exclusive, Duration.of(6, SECONDS), Exclusive), "b");
 
     var leftIter = StreamSupport.stream(left.ascendingOrder().spliterator(), false).collect(Collectors.toList());
     var expectedIter = StreamSupport.stream(expected.ascendingOrder().spliterator(), false).collect(Collectors.toList());
@@ -343,7 +343,7 @@ public class IntervalMapTest {
     left.unset(Window.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive));
 
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra());
-    expected.set(Window.between(Duration.of(1, SECONDS), Exclusive, Duration.of(2, SECONDS), Exclusive), "a");
+    expected.set(Window.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "a");
     expected.set(Window.at(Duration.of(3, SECONDS)), "a");
     expected.set(Window.between(Duration.of(4, SECONDS), Exclusive, Duration.of(5, SECONDS), Inclusive), "a");
 
@@ -385,7 +385,15 @@ public class IntervalMapTest {
     toTest.set(Window.between(1, 3, SECONDS), "a");
     toTest.set(Window.between(4, 6, SECONDS), "b");
 
+    for (var i : toTest.ascendingOrder()) {
+      System.out.println(i);
+    }
+
     toTest.clear();
+
+    for (var i : toTest.ascendingOrder()) {
+      System.out.println(i);
+    }
 
     assertEquals(toTest.size(), 0);
   }
@@ -396,16 +404,16 @@ public class IntervalMapTest {
 
     IntervalMap<String> left = new IntervalMap<>(new Windows.WindowAlgebra(horizon));
 
-    left.set(Window.between(1, 3, SECONDS), "b"); //overwrite!
+    left.set(Window.between(1, 3, SECONDS), "b");
     left.set(Window.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Exclusive), "a");
     left.set(Window.between(Duration.of(4, SECONDS), Inclusive, Duration.of(5, SECONDS), Exclusive), "b");
 
     List<Pair<Window, String>> result = left.get(Window.between(2, 5, SECONDS));
 
     IntervalMap<String> expected = new IntervalMap<>(new Windows.WindowAlgebra(horizon));
-    expected.set(Window.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "b");
     expected.set(Window.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Exclusive), "a");
-    expected.set(Window.between(Duration.of(4, SECONDS), Inclusive, Duration.of(5, SECONDS), Exclusive), "a");
+    expected.set(Window.at(Duration.of(3, SECONDS)), "b");
+    expected.set(Window.between(Duration.of(4, SECONDS), Inclusive, Duration.of(5, SECONDS), Exclusive), "b");
 
     var expectedIter = StreamSupport.stream(expected.ascendingOrder().spliterator(), false).collect(Collectors.toList());
     for (int i = 0; i < expectedIter.size(); i++) {
