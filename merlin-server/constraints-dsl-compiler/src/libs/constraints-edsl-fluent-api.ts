@@ -375,6 +375,9 @@ declare global {
     ): Constraint;
   }
 
+  /**
+   * A set of intervals that coalesces overlapping intervals.
+   */
   export class Windows {
     /** Internal AST Node */
     public readonly __astNode: AST.WindowsExpression;
@@ -442,6 +445,9 @@ declare global {
     public spans(): Spans;
   }
 
+  /**
+   * A set of intervals that can overlap without being coaleseced together.
+   */
   export class Spans {
     public readonly __astNode: AST.SpansExpression;
 
