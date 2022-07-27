@@ -40,7 +40,12 @@ public final class SpiceLoader {
         } else if (osName.startsWith("linux")) {
             return "libJNISpice.so";
         } else if (osName.startsWith("mac")) {
-            return "libJNISpice.jnilib";
+          final String archName = System.getProperty("os.arch").toLowerCase();
+          if (archName.startsWith("aarch64")) {
+            return "libJNISpice_arm.jnilib";
+          } else {
+            return "libJNISpice_intel.jnilib";
+          }
         }
 
         throw new UnsupportedOperationException("Platform " + osName + " is not supported by JNISpice.");
