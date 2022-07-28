@@ -93,6 +93,59 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
     }
   }
 
+  private static void StreamProfileSegments(
+      final Connection connection,
+      final long datasetId,
+      final Map<String, ProfileRecord> records,
+      final ProfileSet profileSet,
+      final long timelineSegmentId
+  ) throws SQLException {
+    final var realProfiles = profileSet.realProfiles();
+    final var discreteProfiles = profileSet.discreteProfiles();
+    for (final var resource : records.keySet()) {
+      final ProfileRecord record = records.get(resource);
+      switch (record.type().getLeft()) {
+        case "real" -> StreamRealProfileSegments(
+            connection,
+            datasetId,
+            record,
+            realProfiles.get(resource),
+            timelineSegmentId);
+        case "discrete" -> StreamDiscreteProfileSegments(
+            connection,
+            datasetId,
+            record,
+            discreteProfiles.get(resource).getRight(),
+            timelineSegmentId);
+        default -> throw new Error("Unrecognized profile type " + record.type().getLeft());
+      }
+    }
+  }
+
+  private static void StreamRealProfileSegments(
+      final Connection connection,
+      final long datasetId,
+      final ProfileRecord profileRecord,
+      final List<Pair<Duration, RealDynamics>> segments,
+      final long timelineSegmentId
+  ) throws SQLException {
+    try (final var postProfileSegmentsAction = new StreamProfileSegmentsAction(connection)) {
+      postProfileSegmentsAction.apply(datasetId, profileRecord, segments, realDynamicsP, timelineSegmentId);
+    }
+  }
+
+  private static void StreamDiscreteProfileSegments(
+      final Connection connection,
+      final long datasetId,
+      final ProfileRecord profileRecord,
+      final List<Pair<Duration, SerializedValue>> segments,
+      final long timelineSegmentId
+  ) throws SQLException {
+    try (final var postProfileSegmentsAction = new StreamProfileSegmentsAction(connection)) {
+      postProfileSegmentsAction.apply(datasetId, profileRecord, segments, serializedValueP, timelineSegmentId);
+    }
+  }
+
   private static void postProfileSegments(
       final Connection connection,
       final long datasetId,

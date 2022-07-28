@@ -1,18 +1,18 @@
 table:
-  name: profile
+  name: timeline_segment
   schema: public
 array_relationships:
-- name: profile_segments
+- name: lifecycle_events
   using:
     foreign_key_constraint_on:
-      column: profile_id
+      column: timeline_segment_id
       table:
-        name: profile_segment
+        name: lifecycle_event
         schema: public
 - name: profile_segment_streams
   using:
     foreign_key_constraint_on:
-      column: profile_id
+      column: timeline_segment_id
       table:
         name: profile_segment_stream
         schema: public

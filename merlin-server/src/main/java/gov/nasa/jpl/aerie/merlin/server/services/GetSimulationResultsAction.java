@@ -70,6 +70,14 @@ public final class GetSimulationResultsAction {
     }
   }
 
+  public String testSegment() {
+    if (this.simulationService instanceof CachedSimulationService s) {
+      return "success! id: " + s.testSegment();
+    } else {
+      return "fail, not CachedSimulationService";
+    }
+  }
+
   public Map<String, List<Pair<Duration, SerializedValue>>> getResourceSamples(final PlanId planId)
   throws NoSuchPlanException
   {

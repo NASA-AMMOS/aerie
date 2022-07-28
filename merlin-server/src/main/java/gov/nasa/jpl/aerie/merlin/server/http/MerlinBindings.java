@@ -109,6 +109,9 @@ public final class MerlinBindings implements Plugin {
       path("health", () -> {
         get(ctx -> ctx.status(200));
       });
+      path("testSegment", () -> {
+        get(ctx -> ctx.status(200).result(this.simulationAction.testSegment()));
+      });
     });
 
     // This exception is expected when the request body entity is not a legal JsonValue.
