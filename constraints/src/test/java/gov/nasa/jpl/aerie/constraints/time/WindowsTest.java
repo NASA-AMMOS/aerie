@@ -11,8 +11,10 @@ import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.window;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class WindowsTest {
@@ -539,5 +541,21 @@ public class WindowsTest {
     final var expected = List.of(window(0, 5, MICROSECONDS));
 
     assertEquals(expected, windowList);
+  }
+
+  @Test
+  public void intoSpans() {
+    final var spans = new Windows(List.of(
+        window(0, 2, SECONDS),
+        window(1, 3, SECONDS),
+        window(5, 5, SECONDS)
+    )).intoSpans();
+
+    final var expected = new Spans(
+        window(0, 3, SECONDS),
+        window(5, 5, SECONDS)
+    );
+
+    assertIterableEquals(expected, spans);
   }
 }

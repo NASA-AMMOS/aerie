@@ -571,6 +571,20 @@ class ConstraintsDSLCompilationServiceTests {
     );
   }
 
+  //// TESTS FOR `Spans` API CLASS
+
+  @Test
+  void testSpansFromWindows() {
+    checkSuccessfulCompilation(
+        """
+            export default () => {
+                return Real.Resource("state of charge").equal(0.3).spans().windows();
+            }
+        """,
+        new ViolationsOf(new WindowsFromSpans(new SpansFromWindows(new Equal<>(new RealResource("state of charge"), new RealValue(0.3)))))
+    );
+  }
+
   //// TESTS FOR `Constraint` API CLASS
 
   @Test

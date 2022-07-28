@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.json;
 
+import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.tree.All;
 import gov.nasa.jpl.aerie.constraints.tree.Changes;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
@@ -22,10 +23,12 @@ import gov.nasa.jpl.aerie.constraints.tree.Rate;
 import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
+import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.StartOf;
 import gov.nasa.jpl.aerie.constraints.tree.Times;
 import gov.nasa.jpl.aerie.constraints.tree.Transition;
 import gov.nasa.jpl.aerie.constraints.tree.ViolationsOf;
+import gov.nasa.jpl.aerie.constraints.tree.WindowsFromSpans;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Test;
 
@@ -604,6 +607,81 @@ public final class ConstraintParsersTest {
                             new DiscreteParameter("B", "b"))),
                     new Invert(new ActivityWindow("A")),
                     new Invert(new ActivityWindow("B"))))));
+
+    assertEquivalent(expected, result);
+  }
+
+  // I know its excessive, I just wanted to be sure :)
+  @Test
+  public void testDeepMutualRecursion() {
+    final var json = Json
+        .createObjectBuilder()
+        .add("kind", "WindowsExpressionFromSpans")
+        .add("spansExpression", Json
+            .createObjectBuilder()
+            .add("kind", "SpansExpressionFromWindows")
+            .add("windowsExpression", Json
+                .createObjectBuilder()
+                .add("kind", "WindowsExpressionFromSpans")
+                .add("spansExpression", Json
+                    .createObjectBuilder()
+                    .add("kind", "SpansExpressionFromWindows")
+                    .add("windowsExpression", Json
+                        .createObjectBuilder()
+                        .add("kind", "WindowsExpressionFromSpans")
+                        .add("spansExpression", Json
+                            .createObjectBuilder()
+                            .add("kind", "SpansExpressionFromWindows")
+                            .add("windowsExpression", Json
+                                .createObjectBuilder()
+                                .add("kind", "WindowsExpressionFromSpans")
+                                .add("spansExpression", Json
+                                    .createObjectBuilder()
+                                    .add("kind", "SpansExpressionFromWindows")
+                                    .add("windowsExpression", Json
+                                        .createObjectBuilder()
+                                        .add("kind", "WindowsExpressionFromSpans")
+                                        .add("spansExpression", Json
+                                            .createObjectBuilder()
+                                            .add("kind", "SpansExpressionFromWindows")
+                                            .add("windowsExpression", Json
+                                                .createObjectBuilder()
+                                                .add("kind", "WindowsExpressionFromSpans")
+                                                .add("spansExpression", Json
+                                                    .createObjectBuilder()
+                                                    .add("kind", "SpansExpressionFromWindows")
+                                                    .add("windowsExpression", Json
+                                                        .createObjectBuilder()
+                                                        .add("kind", "WindowsExpressionActivityWindow")
+                                                        .add("alias", "TEST")))))))))))))
+        .build();
+    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+
+    final var expected = new WindowsFromSpans(
+        new SpansFromWindows(
+            new WindowsFromSpans(
+                new SpansFromWindows(
+                    new WindowsFromSpans(
+                        new SpansFromWindows(
+                            new WindowsFromSpans(
+                                new SpansFromWindows(
+                                    new WindowsFromSpans(
+                                        new SpansFromWindows(
+                                            new WindowsFromSpans(
+                                                new SpansFromWindows(
+                                                    new ActivityWindow("TEST")
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    );
 
     assertEquivalent(expected, result);
   }
