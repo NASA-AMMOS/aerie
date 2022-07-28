@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -99,7 +99,7 @@ public class GoalBuilder {
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
            .forAllTimeIn(new WindowsWrapperExpression(new Windows(hor)));
       if(g.specification().duration().isPresent()){
-        builder.duration(Window.between(g.specification().duration().get(), Duration.MAX_VALUE));
+        builder.duration(Interval.between(g.specification().duration().get(), Duration.MAX_VALUE));
       }
       if(g.specification().occurrence().isPresent()){
         builder.occurences(new Range<>(g.specification().occurrence().get(), Integer.MAX_VALUE));

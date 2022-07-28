@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.All;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
@@ -8,7 +8,6 @@ import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
 import gov.nasa.jpl.aerie.constraints.tree.Equal;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.constraints.tree.Any;
-import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -176,7 +175,7 @@ public class AerieLanderRules extends Problem {
         .thereExistsOne(HP3Acts)
         .attachStateConstraint(sce)
         .owned(ChildCustody.Jointly)
-        .duration(Window.between(Duration.of(3, Duration.HOUR), Duration.MAX_VALUE))
+        .duration(Interval.between(Duration.of(3, Duration.HOUR), Duration.MAX_VALUE))
         .build();
 
     goals.put(8,goal1c);
@@ -582,10 +581,10 @@ public class AerieLanderRules extends Problem {
    * Rule 3a:
    - schedule XbandActive
    - with parameters
-   - duration: max of 2hr or full dsn station visibility/allocation window
+   - duration: max of 2hr or full dsn station visibility/allocation interval
    - when a dsn station is both visible and allocated
    (will need initial plan to include changing visibility/allocation states)
-   - and the contact window is at least 20min
+   - and the contact interval is at least 20min
    ref: merlin activity model
    https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/comm/xband/XBandActive.java#L17
    ref: merlin comm model

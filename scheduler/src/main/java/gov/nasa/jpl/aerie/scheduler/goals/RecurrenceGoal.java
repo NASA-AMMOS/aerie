@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
@@ -116,12 +116,12 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
     }
 
     //iterate through it and then within each iteration do exactly what you did before
-    for (Window subWindow : windows) {
+    for (Interval subInterval : windows) {
       //collect all matching target acts ordered by start time
       //REVIEW: could collapse with prior template start time query too?
       final var satisfyingActSearch = new ActivityExpression.Builder()
           .basedOn(desiredActTemplate)
-          .startsIn(subWindow)
+          .startsIn(subInterval)
           .build();
       final var acts = new java.util.LinkedList<>(plan.find(satisfyingActSearch, simulationResults));
       acts.sort(java.util.Comparator.comparing(ActivityInstance::getStartTime));
@@ -130,8 +130,8 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
       //starting from the goal's own start time
       //REVIEW: some clever implementation with stream reduce / combine?
       final var actI = acts.iterator();
-      final var lastStartT = subWindow.end;
-      var prevStartT = subWindow.start;
+      final var lastStartT = subInterval.end;
+      var prevStartT = subInterval.start;
       while (actI.hasNext() && prevStartT.compareTo(lastStartT) < 0) {
         final var act = actI.next();
         final var actStartT = act.getStartTime();
@@ -202,7 +202,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
          ;
          intervalT = intervalT.plus(recurrenceInterval.max)
     ) {
-      var interval = Window.between(intervalT.minus(recurrenceInterval.max), Duration.min(intervalT, end));
+      var interval = Interval.between(intervalT.minus(recurrenceInterval.max), Duration.min(intervalT, end));
         conflicts.add(new MissingActivityTemplateConflict(
             this, new Windows(
             interval), this.getActTemplate()));

@@ -444,7 +444,7 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.window());
+            return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.interval());
           }
         """,
         new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new ActivityWindow("activity alias 0")))
@@ -600,7 +600,7 @@ class ConstraintsDSLCompilationServiceTests {
         export default () => {
           return Constraint.ForEachActivity(
             ActivityType.activity,
-            (myAlias) => myAlias.window()
+            (myAlias) => myAlias.interval()
           )
         }
         """,
@@ -618,7 +618,7 @@ class ConstraintsDSLCompilationServiceTests {
         }
 
         function myHelperFunction(instance: Gen.ActivityInstance<ActivityType.activity>): Constraint {
-          return instance.window();
+          return instance.interval();
         }
         """,
         new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new ActivityWindow("activity alias 0")))
@@ -634,7 +634,7 @@ class ConstraintsDSLCompilationServiceTests {
             ActivityType.activity,
             (alias1) => Constraint.ForEachActivity(
               ActivityType.activity,
-              (alias2) => Windows.All(alias1.window(), alias2.window())
+              (alias2) => Windows.All(alias1.interval(), alias2.interval())
             )
           )
         }

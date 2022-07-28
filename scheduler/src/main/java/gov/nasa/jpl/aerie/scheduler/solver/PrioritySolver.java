@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.solver;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -467,7 +466,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
           //only the target goal state constraints to consider
           for(var act : actToChooseFrom){
             var actWindow = new Windows();
-            actWindow.add(Window.between(act.getStartTime(), act.getEndTime()));
+            actWindow.add(Interval.between(act.getStartTime(), act.getEndTime()));
             var stateConstraints = goal.getResourceConstraints();
             var narrowed = actWindow;
             if(stateConstraints!= null) {
@@ -562,7 +561,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
     //may depend on the source goal)
     final var goal = missing.getGoal();
 
-    //start from the time window where the missing activity causes a problem
+    //start from the time interval where the missing activity causes a problem
     //NB: these are start windows
     var possibleWindows = new Windows(missing.getTemporalContext());
 
@@ -660,7 +659,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
       return ret;
     }
 
-    final var totalDomain = Window.between(windows.minTimePoint().get(), windows.maxTimePoint().get());
+    final var totalDomain = Interval.between(windows.minTimePoint().get(), windows.maxTimePoint().get());
     //make sure the simulation results cover the domain
     simulationFacade.computeSimulationResultsUntil(totalDomain.end);
 

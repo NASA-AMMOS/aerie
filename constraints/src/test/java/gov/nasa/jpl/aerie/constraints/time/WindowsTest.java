@@ -7,9 +7,9 @@ import java.util.Collections;
 import java.util.List;
 
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
-import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
-import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
-import static gov.nasa.jpl.aerie.constraints.time.Window.window;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.window;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -19,7 +19,7 @@ public class WindowsTest {
   @Test
   public void addEmpty() {
     final var windows = new Windows();
-    windows.add(Window.EMPTY);
+    windows.add(Interval.EMPTY);
 
     final var expected = new Windows();
 
@@ -89,7 +89,7 @@ public class WindowsTest {
     // Add two disjoint windows
     windows.add(window(0,  2, MICROSECONDS));
     windows.add(window(3,  5, MICROSECONDS));
-    // Then add a window that overlaps both
+    // Then add a interval that overlaps both
     windows.add(window(1,  4, MICROSECONDS));
 
     final var expected = new Windows();
@@ -264,11 +264,11 @@ public class WindowsTest {
 
   @Test
   public void subtractAllButPoint() {
-    final var windows = new Windows(Window.between(0, Inclusive, 1, Exclusive, MICROSECONDS));
-    windows.subtract(Window.between(0, Exclusive, 1, Inclusive, MICROSECONDS));
+    final var windows = new Windows(Interval.between(0, Inclusive, 1, Exclusive, MICROSECONDS));
+    windows.subtract(Interval.between(0, Exclusive, 1, Inclusive, MICROSECONDS));
 
     final var expected = new Windows();
-    expected.add(Window.at(0, MICROSECONDS));
+    expected.add(Interval.at(0, MICROSECONDS));
 
     assertEquivalent(expected, windows);
   }
@@ -345,7 +345,7 @@ public class WindowsTest {
     windows.add(window(0,  1, MICROSECONDS));
     windows.add(window(2,  4, MICROSECONDS));
 
-    windows.intersectWith(Window.EMPTY);
+    windows.intersectWith(Interval.EMPTY);
 
     final var expected = new Windows();
 
@@ -450,7 +450,7 @@ public class WindowsTest {
   public void includesEmpty() {
     final var x = new Windows();
 
-    assertTrue(x.includes(Window.EMPTY));
+    assertTrue(x.includes(Interval.EMPTY));
     assertFalse(x.includesPoint(0, MICROSECONDS));
   }
 
@@ -520,7 +520,7 @@ public class WindowsTest {
   public void asEmptyList() {
     final var windows = new Windows();
 
-    final var windowList = new ArrayList<Window>();
+    final var windowList = new ArrayList<Interval>();
     windows.forEach(windowList::add);
 
     assertEquals(Collections.emptyList(), windowList);
@@ -533,7 +533,7 @@ public class WindowsTest {
     windows.add(window(3,  5, MICROSECONDS));
     windows.add(window(1,  4, MICROSECONDS));
 
-    final var windowList = new ArrayList<Window>();
+    final var windowList = new ArrayList<Interval>();
     windows.forEach(windowList::add);
 
     final var expected = List.of(window(0, 5, MICROSECONDS));

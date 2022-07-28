@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
@@ -11,27 +10,27 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 final class IntervalMap<V> {
-  private final IntervalAlgebra<Windows.WindowAlgebra, Window> alg;
+  private final IntervalAlgebra alg;
 
 
   //[0, 3) [3] (3,5) -> would be 3 windows, one is zero width, we ARE allowing this.
 
   // INVARIANT: `intervals` is list of non-empty, non-overlapping intervals in ascending order.
   // INVARIANT: If two adjacent intervals abut exactly (e.g. [0, 3), [3, 5]), their values are non-equal.
-  private final List<Pair<Window, V>> segments;
+  private final List<Pair<Interval, V>> segments;
 
-  private IntervalMap(final IntervalAlgebra<Windows.WindowAlgebra, Window> algebra, final List<Pair<Window, V>> segments) {
+  private IntervalMap(final IntervalAlgebra algebra, final List<Pair<Interval, V>> segments) {
     this.alg = Objects.requireNonNull(algebra);
     this.segments = Objects.requireNonNull(segments);
   }
 
   // Empty constructor
-  public IntervalMap(final IntervalAlgebra<Windows.WindowAlgebra, Window> algebra) {
+  public IntervalMap(final IntervalAlgebra algebra) {
     this(algebra, new ArrayList<>());
   }
 
   // Singleton constructor
-  public IntervalMap(final IntervalAlgebra<Windows.WindowAlgebra, Window> algebra, final Window key, final V value) {
+  public IntervalMap(final IntervalAlgebra algebra, final Interval key, final V value) {
     this(algebra, new ArrayList<>(List.of(Pair.of(Objects.requireNonNull(key), Objects.requireNonNull(value)))));
   }
 
@@ -40,19 +39,19 @@ final class IntervalMap<V> {
     this(other.alg, new ArrayList<>(other.segments));
   }
 
-  public List<Pair<Window, V>> get(final Window interval) {
-    final var results = new ArrayList<Pair<Window, V>>();
+  public List<Pair<Interval, V>> get(final Interval interval) {
+    final var results = new ArrayList<Pair<Interval, V>>();
     for (final var segment : this.segments) {
       if (this.alg.overlaps(interval, segment.getKey())) {
         results.add(Pair.of(this.alg.intersect(segment.getKey(), interval), segment.getValue())); //TODO: review - should this be an intersection, or grab the segment if part of
-                                   //  it falls in the interval Window?
+                                   //  it falls in the interval Interval?
       }
     }
 
     return results;
   }
 
-  public void set(final Window interval, final V value) {
+  public void set(final Interval interval, final V value) {
     this.setAll(new IntervalMap<>(this.alg, interval, value));
   }
 
@@ -64,15 +63,15 @@ final class IntervalMap<V> {
       var interval = window.getKey();
       final var value = window.getValue();
 
-      //truncate window to the bottom
+      //truncate interval to the bottom
       if (window.getKey().start.shorterThan(this.alg.bottom().end)) {
-        interval = Window.between(this.alg.bottom().end,
-                                        Window.Inclusivity.Inclusive,
-                                        window.getKey().end,
-                                        window.getKey().endInclusivity);
+        interval = Interval.between(this.alg.bottom().end,
+                                    Interval.Inclusivity.Inclusive,
+                                    window.getKey().end,
+                                    window.getKey().endInclusivity);
       }
 
-      // <> is `interval`, the interval to unset; [] is the currently-indexed window in the map.
+      // <> is `interval`, the interval to unset; [] is the currently-indexed interval in the map.
       // Cases: --[---]---<--->--
       while (index < this.segments.size() && this.alg.endsStrictlyBefore(this.getInterval(index), interval)) {
         index += 1;
@@ -120,20 +119,20 @@ final class IntervalMap<V> {
     }
   }
 
-  public void unsetAll(final List<Pair<Window,V>> other) {
+  public void unsetAll(final List<Pair<Interval,V>> other) {
     for (var toUnset : other) {
       unset(toUnset.getKey());
     }
   }
 
   public void clear() {
-    unsetAll(new ArrayList<Pair<Window, V>>(this.segments)); //need to use deep copy
+    unsetAll(new ArrayList<Pair<Interval, V>>(this.segments)); //need to use deep copy
   }
 
-  public void unset(final Window interval) {
+  public void unset(final Interval interval) {
     int index = 0;
 
-    // <> is `interval`, the interval to unset; [] is the currently-indexed window in the map.
+    // <> is `interval`, the interval to unset; [] is the currently-indexed interval in the map.
     // Cases: --[---]---<--->--
     while (index < this.segments.size() && this.alg.endsStrictlyBefore(this.getInterval(index), interval)) {
       index += 1;
@@ -186,9 +185,9 @@ final class IntervalMap<V> {
       final Function<Optional<V>, Optional<R>> transform
   ) {
     final var alg = intervals.alg;
-    final var segments = new ArrayList<Pair<Window, R>>();
+    final var segments = new ArrayList<Pair<Interval, R>>();
 
-    var previous = alg.bottom(); //in the context of Windows, a window at Duration.MIN; a minimum value when computing gaps at the next step
+    var previous = alg.bottom(); //in the context of Windows, a interval at Duration.MIN; a minimum value when computing gaps at the next step
     for (final var segment : intervals.segments) {
       //previous might be ----TT---
       //segment might be  -------F-
@@ -233,23 +232,23 @@ final class IntervalMap<V> {
     final var alg = left.alg;
 
     final var accumulator = new Object() {
-      final List<Pair<Window, R>> results = new ArrayList<>();
-      Window accInterval = alg.bottom(); //left and right have the same alg - both use Windows. This was implemented before that was determined.
+      final List<Pair<Interval, R>> results = new ArrayList<>();
+      Interval accInterval = alg.bottom(); //left and right have the same alg - both use Windows. This was implemented before that was determined.
       Optional<R> accValue = Optional.empty(); //we are somehow accumulating a value into R
 
       void flush() {
         if (this.accValue.isPresent()) this.results.add(Pair.of(this.accInterval, this.accValue.get())); //if we have a value, add it
-        this.accInterval = Window.atExclusive(this.accInterval.end); //reset interval TODO: better value??
+        this.accInterval = Interval.atExclusive(this.accInterval.end); //reset interval TODO: better value??
         this.accValue = Optional.empty(); //reset acc value, probably doing this at the end of intervals or smth
       }
 
-      void append(final Window interval, final Optional<R> newValue) {
+      void append(final Interval interval, final Optional<R> newValue) {
         if (alg.isEmpty(interval)) return; //if nothing to append, don't act
 
         if (!alg.overlaps(this.accInterval, interval) || !Objects.equals(this.accValue, newValue)) { //if no longer an overlap or the values not equal, time to flush
           this.flush();
-          /*if(!alg.meets(this.accInterval, interval)) { //&& !alg.unify(this.accInterval, Window.at(interval.start)).isSingleton()) { //this handles gaps where left and right are undefined
-            this.accInterval = alg.unify(this.accInterval, Window.at(interval.start));
+          /*if(!alg.meets(this.accInterval, interval)) { //&& !alg.unify(this.accInterval, Interval.at(interval.start)).isSingleton()) { //this handles gaps where left and right are undefined
+            this.accInterval = alg.unify(this.accInterval, Interval.at(interval.start));
             this.accValue = transform.apply(Optional.empty(), Optional.empty());
             this.flush();
           }*/
@@ -261,15 +260,15 @@ final class IntervalMap<V> {
     };
 
     int leftIndex = -1;
-    Window leftInterval = alg.bottom();
+    Interval leftInterval = alg.bottom();
     int rightIndex = -1;
-    Window rightInterval = alg.bottom();
+    Interval rightInterval = alg.bottom();
     System.out.println(leftInterval.toString() + " " +  rightInterval.toString());
 
     /*handle -infinity up to the first interval
     {
-      Window firstLeftPrefix;
-      Window firstRightPrefix;
+      Interval firstLeftPrefix;
+      Interval firstRightPrefix;
       if (left.segments.size() > 0) {
         //-infinity (or whatever the lowest point is) up to this point
         firstLeftPrefix = alg.lowerBoundsOf(left.getInterval(0));
@@ -352,8 +351,8 @@ final class IntervalMap<V> {
     //handle end -> infinity, but only if we haven't earlier (which happens if both left and right are empty)
     if (left.segments.size() > 0 || right.segments.size() > 0)
     {
-      Window leftSuffix;
-      Window rightSuffix;
+      Interval leftSuffix;
+      Interval rightSuffix;
       if (left.segments.size() > 0) {
         //-infinity (or whatever the lowest point is) up to this point
         leftSuffix = alg.upperBoundsOf(left.getInterval(left.segments.size()-1));
@@ -395,10 +394,10 @@ final class IntervalMap<V> {
       throw new IllegalArgumentException("Grammars of left and right must match!");
     }
     final var alg = left.alg;
-    final var segments = new ArrayList<Pair<Window, R>>();
+    final var segments = new ArrayList<Pair<Interval, R>>();
 
-    var previousLeft = Window.between(Duration.MIN_VALUE, Duration.of(0, Duration.SECONDS));// left.alg.bottom(); //PL - i think this encounters problems if the first interval starts at bottom, or if the final one ends at top, i THINK
-    var previousRight = Window.between(Duration.MIN_VALUE, Duration.of(0, Duration.SECONDS));// right.alg.bottom(); //PR
+    var previousLeft = Interval.between(Duration.MIN_VALUE, Duration.of(0, Duration.SECONDS));// left.alg.bottom(); //PL - i think this encounters problems if the first interval starts at bottom, or if the final one ends at top, i THINK
+    var previousRight = Interval.between(Duration.MIN_VALUE, Duration.of(0, Duration.SECONDS));// right.alg.bottom(); //PR
 
     var leftIndex = 0; //need to update this whenever you move up an interval in the list for bounds checking
     var currentLeft = left.segments.get(0).getKey(); //CL; this will be sliced depending on how intervals line up (i.e. if this represents an interval and previousRight is at a gap)
@@ -417,7 +416,7 @@ final class IntervalMap<V> {
              - left is undefined, right is defined (i.e. PL != CL, PR = CR)
         */
 
-      final Window gap;
+      final Interval gap;
 
       //case 1, left is undefined, right is undefined (i.e. PL != CL, PR != CR)
       if (alg.contains(alg.lowerBoundsOf(currentLeft), alg.lowerBoundsOf(previousLeft)) &&
@@ -577,7 +576,7 @@ final class IntervalMap<V> {
     return new IntervalMap<>(alg, segments);
   }
 
-  private Window getInterval(final int index) {
+  private Interval getInterval(final int index) {
     final var i = (index >= 0) ? index : this.segments.size() - index;
     return this.segments.get(i).getKey();
   }
@@ -587,7 +586,7 @@ final class IntervalMap<V> {
     return this.segments.get(i).getValue();
   }
 
-  public Iterable<Pair<Window, V>> ascendingOrder() {
+  public Iterable<Pair<Interval, V>> ascendingOrder() {
     // SAFETY: calling `.remove()` on the returned iterator does not breach encapsulation.
     // The same effect can be achieved by calling `windows.subtract()` against the data returned by the iterator,
     // except for the added burden of avoiding `ConcurrentModificationException`s.
@@ -601,8 +600,8 @@ final class IntervalMap<V> {
     return this.segments;
   }
 
-  public Iterable<Pair<Window,V>> descendingOrder() {
-    List<Pair<Window, V>> reversed = new ArrayList<>(this.segments);
+  public Iterable<Pair<Interval,V>> descendingOrder() {
+    List<Pair<Interval, V>> reversed = new ArrayList<>(this.segments);
     Collections.reverse(reversed);
     return reversed;
   }
@@ -618,7 +617,7 @@ final class IntervalMap<V> {
   //TODO: this is never used. the point of isNotNull was maybe to get use out of this while providing an alternative to
   //  includes, but this method was the wrong thing to use. not sure if this should just be exposed through NewWindows,
   //  if so, can't think of an inutitive name!
-  public boolean includes(final Window interval, final V value) {
+  public boolean includes(final Interval interval, final V value) {
     return segments.contains(Pair.of(interval, value));
   }
 
@@ -650,7 +649,7 @@ final class IntervalMap<V> {
                         .reduce(true, Boolean::logicalAnd);
   }
 
-  public IntervalAlgebra<Windows.WindowAlgebra, Window> getAlg() {
+  public IntervalAlgebra getAlg() {
     return alg;
   }
 

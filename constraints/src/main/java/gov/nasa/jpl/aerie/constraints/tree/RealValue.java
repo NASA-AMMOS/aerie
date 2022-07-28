@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +19,7 @@ public final class RealValue implements Expression<LinearProfile> {
   }
 
   @Override
-  public LinearProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
+  public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
     return new LinearProfile(
         List.of(
             new LinearProfilePiece(bounds, this.value, 0.0)

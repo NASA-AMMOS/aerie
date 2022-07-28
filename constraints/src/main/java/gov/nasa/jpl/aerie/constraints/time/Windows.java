@@ -10,11 +10,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
-import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
-
-public final class Windows implements Iterable<Window> {
-  private final IntervalSet<WindowAlgebra, Window> windows = new IntervalSet<>(new WindowAlgebra());
+public final class Windows implements Iterable<Interval> {
+  private final IntervalSet windows = new IntervalSet(new IntervalAlgebra()); //TODO: restricting the algebra's horizon like we normally do for IntervalMap causes tests to fail
 
   public Windows() {}
 
@@ -22,17 +19,17 @@ public final class Windows implements Iterable<Window> {
     this.windows.addAll(other.windows);
   }
 
-  public Windows(final List<Window> windows) {
-    for (final var window : windows) this.add(window);
+  public Windows(final List<Interval> intervals) {
+    for (final var window : intervals) this.add(window);
   }
 
-  public Windows(final Window... windows) {
-    for (final var window : windows) this.add(window);
+  public Windows(final Interval... intervals) {
+    for (final var window : intervals) this.add(window);
   }
 
 
-  public void add(final Window window) {
-    this.windows.add(window);
+  public void add(final Interval interval) {
+    this.windows.add(interval);
   }
 
   public void addAll(final Windows other) {
@@ -40,7 +37,7 @@ public final class Windows implements Iterable<Window> {
   }
 
   public void addPoint(final long quantity, final Duration unit) {
-    this.add(Window.at(quantity, unit));
+    this.add(Interval.at(quantity, unit));
   }
 
   public static Windows union(final Windows left, final Windows right) {
@@ -50,8 +47,8 @@ public final class Windows implements Iterable<Window> {
   }
 
 
-  public void subtract(final Window window) {
-    this.windows.subtract(window);
+  public void subtract(final Interval interval) {
+    this.windows.subtract(interval);
   }
 
   public void subtractAll(final Windows other) {
@@ -59,11 +56,11 @@ public final class Windows implements Iterable<Window> {
   }
 
   public void subtract(final long start, final long end, final Duration unit) {
-    this.subtract(Window.between(start, end, unit));
+    this.subtract(Interval.between(start, end, unit));
   }
 
   public void subtractPoint(final long quantity, final Duration unit) {
-    this.subtract(Window.at(quantity, unit));
+    this.subtract(Interval.at(quantity, unit));
   }
 
   public static Windows minus(final Windows left, final Windows right) {
@@ -72,8 +69,8 @@ public final class Windows implements Iterable<Window> {
     return result;
   }
 
-  public void intersectWith(final Window window) {
-    this.windows.intersectWith(window);
+  public void intersectWith(final Interval interval) {
+    this.windows.intersectWith(interval);
   }
 
   public void intersectWith(final Windows other) {
@@ -81,7 +78,7 @@ public final class Windows implements Iterable<Window> {
   }
 
   public void intersectWith(final long start, final long end, final Duration unit) {
-    this.intersectWith(Window.between(start, end, unit));
+    this.intersectWith(Interval.between(start, end, unit));
   }
 
   public Optional<Duration> minTimePoint(){
@@ -135,12 +132,12 @@ public final class Windows implements Iterable<Window> {
   public Windows shiftBy(Duration fromStart, Duration fromEnd){
     Windows ret = new Windows();
     StreamSupport.stream(windows.ascendingOrder().spliterator(), false)
-                 .forEach((x)-> ret.add(Window.between(x.start.plus(fromStart), x.startInclusivity, x.end.plus(fromEnd), x.endInclusivity)));
+                 .forEach((x)-> ret.add(Interval.between(x.start.plus(fromStart), x.startInclusivity, x.end.plus(fromEnd), x.endInclusivity)));
     return ret;
   }
 
   public Windows removeFirstAndLast(){
-    List<Window> actualList = StreamSupport
+    List<Interval> actualList = StreamSupport
         .stream(windows.ascendingOrder().spliterator(), false)
         .collect(Collectors.toList());
     if(actualList.size()>0)
@@ -150,7 +147,7 @@ public final class Windows implements Iterable<Window> {
     return new Windows(actualList);
   }
 
-  public Windows subsetContained(Window gate){
+  public Windows subsetContained(Interval gate){
     Windows ret = new Windows();
     for(var win : windows.ascendingOrder()){
       if(gate.contains(win)){
@@ -165,11 +162,11 @@ public final class Windows implements Iterable<Window> {
   }
 
   public static Windows forever(){
-    return new Windows(Window.FOREVER);
+    return new Windows(Interval.FOREVER);
   }
 
 
-  public static Windows subtract(Window x, Window y){
+  public static Windows subtract(Interval x, Interval y){
     var tmp = new Windows(y);
     tmp.subtract(x);
     return tmp;
@@ -187,7 +184,7 @@ public final class Windows implements Iterable<Window> {
   }
 
 
-  public boolean includes(final Window probe) {
+  public boolean includes(final Interval probe) {
     return this.windows.includes(probe);
   }
 
@@ -196,16 +193,16 @@ public final class Windows implements Iterable<Window> {
   }
 
   public boolean includes(final long start, final long end, final Duration unit) {
-    return this.includes(Window.between(start, end, unit));
+    return this.includes(Interval.between(start, end, unit));
   }
 
   public boolean includesPoint(final long quantity, final Duration unit) {
-    return this.includes(Window.at(quantity, unit));
+    return this.includes(Interval.at(quantity, unit));
   }
 
 
   @Override
-  public Iterator<Window> iterator() {
+  public Iterator<Interval> iterator() {
     return this.windows.ascendingOrder().iterator();
   }
 
@@ -225,61 +222,5 @@ public final class Windows implements Iterable<Window> {
   @Override
   public String toString() {
     return this.windows.toString();
-  }
-
-  public static class WindowAlgebra implements IntervalAlgebra<WindowAlgebra, Window> {
-
-    private Window horizon;
-
-    public WindowAlgebra() {
-      horizon = Window.between(Duration.MIN_VALUE, Duration.MAX_VALUE);
-    }
-
-    public WindowAlgebra(Window horizon) {
-      this.horizon = horizon;
-    }
-
-    @Override
-    public final boolean isEmpty(Window x) {
-      return x.isEmpty();
-    }
-
-    @Override
-    public final Window unify(final Window x, final Window y) {
-      return Window.unify(x, y);
-    }
-
-    @Override
-    public final Window intersect(final Window x, final Window y) {
-      return Window.intersect(x, y);
-    }
-
-    @Override
-    public final Window lowerBoundsOf(final Window x) {
-      if (x.isEmpty()) return Window.FOREVER;
-      return Window.between(
-          horizon.start,
-          Inclusive, x.start,
-          x.startInclusivity.opposite()
-      );
-    }
-
-    @Override
-    public final Window upperBoundsOf(final Window x) {
-      if (x.isEmpty()) return Window.FOREVER;
-      return Window.between(
-          x.end,
-          x.endInclusivity.opposite(), horizon.end,
-          Inclusive
-      );
-    }
-
-    @Override
-    public final Window bottom() {
-      return Window.between(horizon.start, Exclusive, horizon.start, Exclusive);
-    }
-
-    @Override
-    public final Window bounds() { return horizon; }
   }
 }

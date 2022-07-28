@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.filters;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
@@ -24,7 +24,7 @@ public class FilterLatching implements TimeWindowsFilter {
 
   @Override
   public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
-    List<Window> ret = new ArrayList<>();
+    List<Interval> ret = new ArrayList<>();
 
     if (!windows.isEmpty()) {
 

@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.scheduling;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
@@ -52,7 +52,7 @@ public class BinaryMutexConstraint extends GlobalConstraint {
         .ofType(actToBeSearched).build();
 
     final var acts = new java.util.LinkedList<>(plan.find(actSearch, simulationResults));
-    List<Window> rangesActs = acts.stream().map(a -> Window.betweenClosedOpen(a.getStartTime(), a.getEndTime())).collect(
+    List<Interval> rangesActs = acts.stream().map(a -> Interval.betweenClosedOpen(a.getStartTime(), a.getEndTime())).collect(
         Collectors.toList());
     var twActs = new Windows(rangesActs);
 
@@ -77,18 +77,18 @@ public class BinaryMutexConstraint extends GlobalConstraint {
       final var acts = new java.util.LinkedList<>(plan.find(actSearch, simulationResults));
       final var otherActs = new java.util.LinkedList<>(plan.find(otherActSearch, simulationResults));
 
-      List<Window> rangesActs = acts.stream().map(a -> Window.betweenClosedOpen(a.getStartTime(), a.getEndTime())).collect(
+      List<Interval> rangesActs = acts.stream().map(a -> Interval.betweenClosedOpen(a.getStartTime(), a.getEndTime())).collect(
           Collectors.toList());
       Windows twActs = new Windows(rangesActs);
-      List<Window> rangesOtherActs = otherActs
+      List<Interval> rangesOtherActs = otherActs
           .stream()
-          .map(a -> Window.betweenClosedOpen(a.getStartTime(), a.getEndTime()))
+          .map(a -> Interval.betweenClosedOpen(a.getStartTime(), a.getEndTime()))
           .collect(Collectors.toList());
       Windows twOtherActs = new Windows(rangesOtherActs);
 
       Windows result = new Windows(twActs);
       result.intersectWith(twOtherActs);
-      //intersection with current window to be sure we are not analyzing intersections happenning outside
+      //intersection with current interval to be sure we are not analyzing intersections happenning outside
       result.intersectWith(window);
       violationWindows = Windows.union(violationWindows,result);
     }

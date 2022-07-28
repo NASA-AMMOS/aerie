@@ -142,7 +142,7 @@ public class SchedulingDSL {
   private static ProductParsers.JsonObjectParser<GoalSpecifier.GoalApplyWhen> goalApplyWhenF(final JsonParser<GoalSpecifier> goalSpecifierP) {
     return productP
         .field("goal", goalSpecifierP)
-        .field("window", windowsExpressionP)
+        .field("interval", windowsExpressionP)
         .map(Iso.of(untuple(GoalSpecifier.GoalApplyWhen::new),
                     goalDefinition -> tuple(
                         goalDefinition.goal(),

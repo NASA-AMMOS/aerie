@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 
 import java.util.List;
 import java.util.Map;
@@ -21,7 +21,7 @@ public final class DiscreteParameter implements Expression<DiscreteProfile> {
   }
 
   @Override
-  public DiscreteProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
+  public DiscreteProfile evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
     final var activity = environment.get(this.activityAlias);
     return new DiscreteProfile(
         List.of(

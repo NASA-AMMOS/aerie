@@ -112,16 +112,16 @@ public final class TypescriptCodeGenerationService {
     result.add(indent("""
                           }
                           /**
-                           * Produces a window for the duration of the activity.
+                           * Produces a interval for the duration of the activity.
                            */
-                          public window(): Windows {
+                          public interval(): Windows {
                             return new Windows({
                               kind: AST.NodeKind.WindowsExpressionActivityWindow,
                               alias: this.__alias
                             });
                           }
                           /**
-                           * Produces an instantaneous window at the start of the activity.
+                           * Produces an instantaneous interval at the start of the activity.
                            */
                           public start(): Windows {
                             return new Windows({
@@ -130,7 +130,7 @@ public final class TypescriptCodeGenerationService {
                             });
                           }
                           /**
-                           * Produces an instantaneous window at the end of the activity.
+                           * Produces an instantaneous interval at the end of the activity.
                            */
                           public end(): Windows {
                             return new Windows({

@@ -6,29 +6,32 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Objects;
 
-public class IntervalSet<Alg, I> {
-  private final IntervalAlgebra<Alg, I> alg;
+public class IntervalSet {
+
+  private final IntervalAlgebra alg;
 
   // INVARIANT: `intervals` is list of non-empty, non-overlapping intervals in ascending order.
-  private final List<I> intervals = new ArrayList<>();
+  private final List<Interval> intervals = new ArrayList<>();
 
-  public IntervalSet(final IntervalAlgebra<Alg, I> algebra) {
-    this.alg = Objects.requireNonNull(algebra);
+  public IntervalSet(IntervalAlgebra alg) {
+    this.alg = alg;
   }
 
-  public IntervalSet(final IntervalSet<Alg, I> other) {
+  public IntervalSet(final IntervalSet other) {
     this.alg = other.alg;
     this.intervals.addAll(other.intervals);
   }
 
 
-  public void add(final I interval) {
-    if (this.alg.isEmpty(interval)) return;
+  public void add(final Interval interval) {
 
     // OPTIMIZATION: If this interval fits at the end of our list, just do that.
     // Common case for building up a set of intervals.
     // This whole clause can be removed without affecting correctness.
-    if (
+    if (interval.isEmpty()) {
+      return;
+    }
+    else if (
         this.intervals.size() == 0 ||
         this.alg.endsStrictlyBefore(this.intervals.get(this.intervals.size() - 1), interval)
     ) {
@@ -44,14 +47,14 @@ public class IntervalSet<Alg, I> {
     this.addAll(List.of(interval));
   }
 
-  public void addAll(final IntervalSet<Alg, I> other) {
+  public void addAll(final IntervalSet other) {
     this.addAll(other.intervals);
   }
 
   /**
    * PRECONDITION: `other` produces non-empty, non-overlapping intervals in ascending order.
    */
-  private void addAll(final Iterable<I> other) {
+  private void addAll(final Iterable<Interval> other) {
     int index = 0;
 
     for (final var window : other) {
@@ -63,7 +66,7 @@ public class IntervalSet<Alg, I> {
         index += 1;
       }
 
-      // Remove and join with any windows that overlap this window.
+      // Remove and join with any windows that overlap this interval.
       var joined = window;
       while (
           index < this.intervals.size() &&
@@ -77,30 +80,30 @@ public class IntervalSet<Alg, I> {
   }
 
 
-  public void subtract(final I interval) {
+  public void subtract(final Interval interval) {
     if (this.alg.isEmpty(interval)) return;
     this.subtractAll(List.of(interval));
   }
 
-  public void subtractAll(final IntervalSet<Alg, I> other) {
+  public void subtractAll(final IntervalSet other) {
     this.subtractAll(other.intervals);
   }
 
   /**
    * PRECONDITION: `other` produces non-empty, non-overlapping intervals in ascending order.
    */
-  private void subtractAll(final Iterable<I> other) {
+  private void subtractAll(final Iterable<Interval> other) {
     int index = 0;
 
-    // We'll notate each `window` by <> and `this.intervals.get(index)` by [].
+    // We'll notate each `interval` by <> and `this.intervals.get(index)` by [].
     for (final var window : other) {
-      // Look for the first window ending at or after this one starts.
+      // Look for the first interval ending at or after this one starts.
       // Skip these cases: --[---]---<--->--
       while (index < this.intervals.size() && this.alg.endsStrictlyBefore(this.intervals.get(index), window)) {
         index += 1;
       }
 
-      // Clip the window at the start of this range.
+      // Clip the interval at the start of this range.
       // Handle these cases: --[---<---]--->-- and --[---<--->---]--
       // Replace them with:  --[--]----------- and --[--]-----[--]--
       if (index < this.intervals.size() && this.alg.startsBefore(this.intervals.get(index), window)) {
@@ -111,28 +114,28 @@ public class IntervalSet<Alg, I> {
         index += 1;
 
         if (!this.alg.isEmpty(suffix)) this.intervals.add(index, suffix);
-        // The suffix might also be clipped by the next window.
+        // The suffix might also be clipped by the next interval.
       }
 
-      // Remove any windows contained by this window.
+      // Remove any windows contained by this interval.
       // Handle these cases: --<---[---]--->--
       // Replace them with:  -----------------
       while (index < this.intervals.size() && !this.alg.endsAfter(this.intervals.get(index), window)) {
         this.intervals.remove(index);
       }
 
-      // Clip the window at the end of this range.
+      // Clip the interval at the end of this range.
       // Handle these cases: --<---[--->---]--
       // Replace them with:  -----------[--]--
       if (index < this.intervals.size() && !this.alg.startsStrictlyAfter(this.intervals.get(index), window)) {
         this.intervals.set(index, this.alg.intersect(this.intervals.get(index), this.alg.upperBoundsOf(window)));
-        // This interval might also be clipped by the next window.
+        // This interval might also be clipped by the next interval.
       }
     }
   }
 
 
-  public void intersectWith(final I interval) {
+  public void intersectWith(final Interval interval) {
     if (this.alg.isEmpty(interval)) {
       this.intervals.clear();
     } else {
@@ -140,14 +143,14 @@ public class IntervalSet<Alg, I> {
     }
   }
 
-  public void intersectWithAll(final IntervalSet<Alg, I> other) {
+  public void intersectWithAll(final IntervalSet other) {
     this.intersectWithAll(other.intervals);
   }
 
   /**
    * PRECONDITION: `other` produces non-empty, non-overlapping intervals in ascending order.
    */
-  private void intersectWithAll(final Iterable<I> other) {
+  private void intersectWithAll(final Iterable<Interval> other) {
     int index = 0;
 
     for (final var window : other) {
@@ -156,7 +159,7 @@ public class IntervalSet<Alg, I> {
         this.intervals.remove(index);
       }
 
-      // Clip the first window intersecting this one.
+      // Clip the first interval intersecting this one.
       if (index < this.intervals.size() && this.alg.startsBefore(this.intervals.get(index), window)) {
         final var original = this.intervals.get(index);
         final var remainder = this.alg.intersect(original, this.alg.upperBoundsOf(window));
@@ -170,7 +173,7 @@ public class IntervalSet<Alg, I> {
         index += 1;
       }
 
-      // Clip the window at the end of this range.
+      // Clip the interval at the end of this range.
       if (index < this.intervals.size() && !this.alg.startsAfter(this.intervals.get(index), window)) {
         final var original = this.intervals.get(index);
         final var remainder = this.alg.intersect(original, this.alg.upperBoundsOf(window));
@@ -190,26 +193,26 @@ public class IntervalSet<Alg, I> {
   // TODO: implement symmetric difference `negateUnder()`
 
   public boolean isEmpty() {
-    return new IntervalSet<>(this.alg).includesAll(this);
+    return new IntervalSet(this.alg).includesAll(this);
   }
 
   public int size(){
     return intervals.size();
   }
 
-  public boolean includes(final I interval) {
+  public boolean includes(final Interval interval) {
     if (this.alg.isEmpty(interval)) return true;
     return this.includesAll(List.of(interval));
   }
 
-  public boolean includesAll(final IntervalSet<Alg, I> other) {
+  public boolean includesAll(final IntervalSet other) {
     return this.includesAll(other.intervals);
   }
 
   /**
    * PRECONDITION: `other` produces non-empty, non-overlapping intervals in ascending order.
    */
-  private boolean includesAll(final Iterable<I> other) {
+  private boolean includesAll(final Iterable<Interval> other) {
     int index = 0;
 
     for (final var window : other) {
@@ -218,7 +221,7 @@ public class IntervalSet<Alg, I> {
         index += 1;
       }
 
-      // If windows.get(index) doesn't contain `window`, then nothing does.
+      // If windows.get(index) doesn't contain `interval`, then nothing does.
       if (index >= this.intervals.size() || !this.alg.contains(this.intervals.get(index), window)) {
         return false;
       }
@@ -227,16 +230,16 @@ public class IntervalSet<Alg, I> {
     return true;
   }
 
-  public Iterable<I> ascendingOrder() {
+  public Iterable<Interval> ascendingOrder() {
     // SAFETY: calling `.remove()` on the returned iterator does not breach encapsulation.
     // The same effect can be achieved by calling `windows.subtract()` against the data returned by the iterator,
     // except for the added burden of avoiding `ConcurrentModificationException`s.
     return this.intervals;
   }
 
-  public Iterable<I> descendingOrder() {
+  public Iterable<Interval> descendingOrder() {
     return () -> new Iterator<>() {
-      private final ListIterator<I> iter = IntervalSet.this.intervals.listIterator(IntervalSet.this.intervals.size());
+      private final ListIterator<Interval> iter = IntervalSet.this.intervals.listIterator(IntervalSet.this.intervals.size());
 
       @Override
       public boolean hasNext() {
@@ -244,7 +247,7 @@ public class IntervalSet<Alg, I> {
       }
 
       @Override
-      public I next() {
+      public Interval next() {
         return this.iter.previous();
       }
     };
@@ -253,7 +256,7 @@ public class IntervalSet<Alg, I> {
   @Override
   public boolean equals(final Object obj) {
     if (!(obj instanceof IntervalSet)) return false;
-    final var other = (IntervalSet<?, ?>) obj;
+    final var other = (IntervalSet) obj;
 
     return Objects.equals(this.intervals, other.intervals);
   }

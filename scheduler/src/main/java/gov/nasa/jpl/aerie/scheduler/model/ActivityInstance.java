@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.model;
 
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.VariableArgumentComputer;
@@ -307,7 +307,7 @@ public class ActivityInstance {
 
   public static SerializedValue getValue(VariableArgumentComputer computer, Duration time, SimulationResults simulationResults){
     if(computer instanceof StateQueryParam state) {
-      return state.getValue(simulationResults, null, Window.at(time));
+      return state.getValue(simulationResults, null, Interval.at(time));
     } else{
       throw new IllegalArgumentException("Variable argument specification not supported");
     }

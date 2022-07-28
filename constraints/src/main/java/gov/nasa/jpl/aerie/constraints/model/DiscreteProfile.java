@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
@@ -18,12 +18,12 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
     this(List.of(profilePieces));
   }
 
-  private static boolean profileOutsideBounds(final DiscreteProfilePiece piece, final Window bounds){
-    return piece.window.isStrictlyBefore(bounds) || piece.window.isStrictlyAfter(bounds);
+  private static boolean profileOutsideBounds(final DiscreteProfilePiece piece, final Interval bounds){
+    return piece.interval.isStrictlyBefore(bounds) || piece.interval.isStrictlyAfter(bounds);
   }
 
   @Override
-  public Windows notEqualTo(final DiscreteProfile other, final Window bounds) {
+  public Windows notEqualTo(final DiscreteProfile other, final Interval bounds) {
     final var windows = new Windows(bounds);
     for (final var profilePiece : this.profilePieces) {
       if(profileOutsideBounds(profilePiece, bounds)) continue;
@@ -32,8 +32,8 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
         if (profilePiece.value.equals(otherPiece.value)) {
           windows.subtractAll(
               Windows.intersection(
-                  new Windows(profilePiece.window),
-                  new Windows(otherPiece.window)
+                  new Windows(profilePiece.interval),
+                  new Windows(otherPiece.interval)
               )
           );
         }
@@ -44,7 +44,7 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
   }
 
   @Override
-  public Windows equalTo(final DiscreteProfile other, final Window bounds) {
+  public Windows equalTo(final DiscreteProfile other, final Interval bounds) {
     final var windows = new Windows();
     for (final var profilePiece : this.profilePieces) {
       if(profileOutsideBounds(profilePiece, bounds)) continue;
@@ -53,8 +53,8 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
         if (profilePiece.value.equals(otherPiece.value)) {
           windows.addAll(
               Windows.intersection(
-                  new Windows(profilePiece.window),
-                  new Windows(otherPiece.window)
+                  new Windows(profilePiece.interval),
+                  new Windows(otherPiece.interval)
               )
           );
         }
@@ -66,7 +66,7 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
   // TODO: Gaps in profiles will cause an error
   //       We may want to deal with gaps someday
   @Override
-  public Windows changePoints(final Window bounds) {
+  public Windows changePoints(final Interval bounds) {
     final var changePoints = new Windows();
     if (this.profilePieces.size() == 0) return changePoints;
 
@@ -78,8 +78,8 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
       //avoid adding transition points for profiles outside of bounds
       if(profileOutsideBounds(prev, bounds) || profileOutsideBounds(curr, bounds)) {prev = curr; continue;}
 
-      if (Window.meets(prev.window, curr.window)) {
-        if (prev.value != curr.value) changePoints.add(Window.at(prev.window.end));
+      if (Interval.meets(prev.interval, curr.interval)) {
+        if (prev.value != curr.value) changePoints.add(Interval.at(prev.interval.end));
       } else {
         throw new Error("Unexpected gap in profile pieces not allowed");
       }
@@ -93,7 +93,7 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
 
   // TODO: Gaps in profiles will cause an error
   //       We may want to deal with gaps someday
-  public Windows transitions(final SerializedValue oldState, final SerializedValue newState, final Window bounds) {
+  public Windows transitions(final SerializedValue oldState, final SerializedValue newState, final Interval bounds) {
     final var transitionPoints = new Windows();
     if (this.profilePieces.size() == 0) return transitionPoints;
 
@@ -105,9 +105,9 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
       //avoid adding transition points for profiles outside of bounds
       if(profileOutsideBounds(prev, bounds) || profileOutsideBounds(curr, bounds)) {prev = curr; continue;}
 
-      if (Window.meets(prev.window, curr.window)) {
+      if (Interval.meets(prev.interval, curr.interval)) {
         if (prev.value.equals(oldState) && curr.value.equals(newState)) {
-          transitionPoints.add(Window.at(prev.window.end));
+          transitionPoints.add(Interval.at(prev.interval.end));
         }
       } else {
         throw new Error("Unexpected gap in profile pieces not allowed");

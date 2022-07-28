@@ -2,13 +2,13 @@ package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 
 import java.util.Map;
 import java.util.Set;
 
 public interface Expression<T> {
-  T evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment);
+  T evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment);
   String prettyPrint(final String prefix);
   /** Add the resources referenced by this expression to the given set. **/
   void extractResources(Set<String> names);
@@ -17,7 +17,7 @@ public interface Expression<T> {
     return this.evaluate(results, results.bounds, environment);
   }
 
-  default T evaluate(final SimulationResults results, final Window bounds){
+  default T evaluate(final SimulationResults results, final Interval bounds){
     return this.evaluate(results, results.bounds, Map.of());
   }
 

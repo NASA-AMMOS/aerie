@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.filters;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Filter windows that have at least another window preceding ending within a delay
+ * Filter windows that have at least another interval preceding ending within a delay
  */
 public class FilterSequenceMaxGapBefore implements TimeWindowsFilter {
 
@@ -22,8 +22,8 @@ public class FilterSequenceMaxGapBefore implements TimeWindowsFilter {
 
   @Override
   public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
-    Window before = null;
-    List<Window> filtered = new ArrayList<>();
+    Interval before = null;
+    List<Interval> filtered = new ArrayList<>();
     for (var range : windows) {
       if (before != null) {
         if (range.start.minus(before.end).compareTo(delay) <= 0) {

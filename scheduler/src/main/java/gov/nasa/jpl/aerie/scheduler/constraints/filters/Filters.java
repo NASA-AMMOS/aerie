@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.filters;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -93,7 +93,7 @@ public class Filters {
 
   }
 
-  public static TimeWindowsFilter functionalFilter(Function<Window, Boolean> function) {
+  public static TimeWindowsFilter functionalFilter(Function<Interval, Boolean> function) {
     return new FilterUserFunctional(function);
   }
 

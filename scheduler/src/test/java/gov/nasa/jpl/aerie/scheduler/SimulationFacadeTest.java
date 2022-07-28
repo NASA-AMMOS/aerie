@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.All;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
@@ -58,7 +58,7 @@ public class SimulationFacadeTest {
 
   //hard-coded range of scheduling/simulation operations
   private static final PlanningHorizon horizon = new PlanningHorizon(t0h, tEndh);
-  private static final Window entireHorizon = horizon.getHor();
+  private static final Interval entireHorizon = horizon.getHor();
 
   //concrete named time points used to setup tests and validate expectations
   private static final Duration t0 = horizon.toDur(t0h);
@@ -193,7 +193,7 @@ public class SimulationFacadeTest {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new GreaterThan(getFruitRes(), new RealValue(2.9)).evaluate(facade.getLatestConstraintSimulationResults());
-    var expected = new Windows(Window.betweenClosedOpen(t0, t2));
+    var expected = new Windows(Interval.betweenClosedOpen(t0, t2));
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -202,7 +202,7 @@ public class SimulationFacadeTest {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new LessThan(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
-    var expected = new Windows(Window.between(t2, tEnd));
+    var expected = new Windows(Interval.between(t2, tEnd));
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -211,7 +211,7 @@ public class SimulationFacadeTest {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new All(new GreaterThanOrEqual(getFruitRes(), new RealValue(3.0)), new LessThanOrEqual(getFruitRes(), new RealValue(3.99))).evaluate(facade.getLatestConstraintSimulationResults());
-    var expected = new Windows(Window.betweenClosedOpen(t1, t2));
+    var expected = new Windows(Interval.betweenClosedOpen(t1, t2));
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -220,7 +220,7 @@ public class SimulationFacadeTest {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new Equal<>(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
-    var expected = new Windows(Window.betweenClosedOpen(t1, t2));
+    var expected = new Windows(Interval.betweenClosedOpen(t1, t2));
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -229,7 +229,7 @@ public class SimulationFacadeTest {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new NotEqual<>(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
-    var expected = new Windows(List.of(Window.betweenClosedOpen(t0, t1), Window.between(t2, tEnd)));
+    var expected = new Windows(List.of(Interval.betweenClosedOpen(t0, t1), Interval.between(t2, tEnd)));
     assertThat(actual).isEqualTo(expected);
   }
 

@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.transformers;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
@@ -36,8 +36,8 @@ public class TransformerEnvelope implements TimeWindowsTransformer {
       }
 
       if (atLeastOne) {
-        //register new transformed window
-        ret.add(Window.between(min, max));
+        //register new transformed interval
+        ret.add(Interval.between(min, max));
       }
     }
 

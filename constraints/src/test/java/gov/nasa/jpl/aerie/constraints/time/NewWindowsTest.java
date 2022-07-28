@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
-import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,18 +20,18 @@ public class NewWindowsTest {
     var windows1 = new NewWindows();
     var windows2 = new NewWindows(windows1);
     assertTrue(windows1.equals(windows2));
-    var windows3 = new NewWindows(List.of(Pair.of(Window.between(Duration.MIN_VALUE,
-                                                                 Duration.of(0, SECONDS)),true),
-                                          Pair.of(Window.at(1, SECONDS), true),
-                                          Pair.of(Window.between(Duration.of(2, SECONDS),
-                                                                 Duration.of(3, SECONDS)),false),
-                                          Pair.of(Window.at(3, SECONDS), true)));
-    var windows4 = new NewWindows(Pair.of(Window.between(Duration.MIN_VALUE,
-                                                         Duration.of(0, SECONDS)),true),
-                                  Pair.of(Window.at(1, SECONDS), true),
-                                  Pair.of(Window.between(Duration.of(2, SECONDS),
-                                                                 Duration.of(3, SECONDS)),false),
-                                  Pair.of(Window.at(3, SECONDS), true));
+    var windows3 = new NewWindows(List.of(Pair.of(Interval.between(Duration.MIN_VALUE,
+                                                                   Duration.of(0, SECONDS)), true),
+                                          Pair.of(Interval.at(1, SECONDS), true),
+                                          Pair.of(Interval.between(Duration.of(2, SECONDS),
+                                                                   Duration.of(3, SECONDS)), false),
+                                          Pair.of(Interval.at(3, SECONDS), true)));
+    var windows4 = new NewWindows(Pair.of(Interval.between(Duration.MIN_VALUE,
+                                                           Duration.of(0, SECONDS)), true),
+                                  Pair.of(Interval.at(1, SECONDS), true),
+                                  Pair.of(Interval.between(Duration.of(2, SECONDS),
+                                                           Duration.of(3, SECONDS)), false),
+                                  Pair.of(Interval.at(3, SECONDS), true));
 
 
     for (var i : windows3.getListCopy()) {
@@ -46,22 +46,23 @@ public class NewWindowsTest {
 
 
     var windows5 = NewWindows.defaultTrueWindows(
-                                                      Window.between(Duration.MIN_VALUE,
-                                                                     Duration.of(0, SECONDS)),
-                                                      Window.at(1, SECONDS),
-                                                      Window.between(Duration.of(2, SECONDS),
-                                                                     Duration.of(3, SECONDS)),
-                                                      Window.at(3, SECONDS));
-    var windows6 = NewWindows.defaultTrueWindows(List.of(Window.between(Duration.MIN_VALUE,
-                                                                        Duration.of(0, SECONDS)),
-                                                         Window.at(1, SECONDS),
-                                                         Window.between(Duration.of(2, SECONDS),
-                                                                        Duration.of(3, SECONDS)),
-                                                         Window.at(3, SECONDS)));
+        Interval.between(Duration.MIN_VALUE,
+                         Duration.of(0, SECONDS)),
+        Interval.at(1, SECONDS),
+        Interval.between(Duration.of(2, SECONDS),
+                         Duration.of(3, SECONDS)),
+        Interval.at(3, SECONDS));
+    var windows6 = NewWindows.defaultTrueWindows(List.of(
+        Interval.between(Duration.MIN_VALUE,
+                         Duration.of(0, SECONDS)),
+        Interval.at(1, SECONDS),
+        Interval.between(Duration.of(2, SECONDS),
+                         Duration.of(3, SECONDS)),
+        Interval.at(3, SECONDS)));
 
 
     assertTrue(windows5.equals(windows6));
-    var windows7 = new NewWindows(Window.between(3, 4, SECONDS), false);
+    var windows7 = new NewWindows(Interval.between(3, 4, SECONDS), false);
 
   }
 
@@ -82,17 +83,17 @@ public class NewWindowsTest {
     //  N  |  F  |  F
     //  N  |  N  |  N
 
-    NewWindows orig = new NewWindows(Pair.of(Window.between(Duration.of(2, SECONDS),
-                                                            Duration.of(5, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                            Duration.of(9, SECONDS)), false));
+    NewWindows orig = new NewWindows(Pair.of(Interval.between(Duration.of(2, SECONDS),
+                                                              Duration.of(5, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                              Duration.of(9, SECONDS)), false));
 
-    NewWindows addMe = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                             Duration.of(3, SECONDS)), true),
-                                      Pair.of(Window.between(Duration.of(4, SECONDS),
-                                                             Duration.of(7, SECONDS)), false),
-                                      Pair.of(Window.between(Duration.of(8, SECONDS),
-                                                             Duration.of(10, SECONDS)), true));
+    NewWindows addMe = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                               Duration.of(3, SECONDS)), true),
+                                      Pair.of(Interval.between(Duration.of(4, SECONDS),
+                                                               Duration.of(7, SECONDS)), false),
+                                      Pair.of(Interval.between(Duration.of(8, SECONDS),
+                                                               Duration.of(10, SECONDS)), true));
     NewWindows union = NewWindows.union(orig, addMe);
     orig.addAll(addMe);
 
@@ -102,12 +103,12 @@ public class NewWindowsTest {
       System.out.println(i);
     }
 
-    NewWindows expected = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                                Duration.of(5, SECONDS)), true),
-                                         Pair.of(Window.between(Duration.of(5, SECONDS), Exclusive,
-                                                                Duration.of(8, SECONDS), Exclusive), false),
-                                         Pair.of(Window.between(Duration.of(8, SECONDS),
-                                                                Duration.of(10, SECONDS)), true));
+    NewWindows expected = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                                  Duration.of(5, SECONDS)), true),
+                                         Pair.of(Interval.between(Duration.of(5, SECONDS), Exclusive,
+                                                                  Duration.of(8, SECONDS), Exclusive), false),
+                                         Pair.of(Interval.between(Duration.of(8, SECONDS),
+                                                                  Duration.of(10, SECONDS)), true));
     final var expectedAsList = expected.getListCopy();
 
     for (int i = 0; i < origAsList.size(); i++) {
@@ -121,21 +122,23 @@ public class NewWindowsTest {
   public void addVariations() {
 
     //invoke add(valueless), add(with value), addPoint(valueless), addPoint(with value)
-    NewWindows orig = new NewWindows(Pair.of(Window.between(Duration.of(2, SECONDS),
-                                                            Duration.of(5, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                            Duration.of(9, SECONDS)), false));
+    NewWindows orig = new NewWindows(Pair.of(Interval.between(Duration.of(2, SECONDS),
+                                                              Duration.of(5, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                              Duration.of(9, SECONDS)), false));
 
     orig.addPoint(0, SECONDS);
-    orig.add(Window.between(Duration.of(0, SECONDS), Exclusive,
-                            Duration.of(3, SECONDS), Inclusive));
+    orig.add(Interval.between(Duration.of(0, SECONDS), Exclusive,
+                              Duration.of(3, SECONDS), Inclusive));
     orig.addPoint(4, SECONDS, false);
-    orig.add(Window.between(Duration.of(4, SECONDS), Exclusive,
-                            Duration.of(7, SECONDS), Inclusive),
-             false);
-    orig.add(Window.between(Duration.of(8, SECONDS),
-                            Duration.of(10, SECONDS)),
-             true);
+    orig.add(
+        Interval.between(Duration.of(4, SECONDS), Exclusive,
+                         Duration.of(7, SECONDS), Inclusive),
+        false);
+    orig.add(
+        Interval.between(Duration.of(8, SECONDS),
+                         Duration.of(10, SECONDS)),
+        true);
 
     final var origAsList = orig.getListCopy();
 
@@ -143,12 +146,12 @@ public class NewWindowsTest {
       System.out.println(i);
     }
 
-    NewWindows expected = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                                Duration.of(5, SECONDS)), true),
-                                         Pair.of(Window.between(Duration.of(5, SECONDS), Exclusive,
-                                                                Duration.of(8, SECONDS), Exclusive), false),
-                                         Pair.of(Window.between(Duration.of(8, SECONDS),
-                                                                Duration.of(10, SECONDS)), true));
+    NewWindows expected = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                                  Duration.of(5, SECONDS)), true),
+                                         Pair.of(Interval.between(Duration.of(5, SECONDS), Exclusive,
+                                                                  Duration.of(8, SECONDS), Exclusive), false),
+                                         Pair.of(Interval.between(Duration.of(8, SECONDS),
+                                                                  Duration.of(10, SECONDS)), true));
     final var expectedAsList = expected.getListCopy();
 
     for (int i = 0; i < origAsList.size(); i++) {
@@ -162,16 +165,16 @@ public class NewWindowsTest {
 
     NewWindows w = new NewWindows();
 
-    w.set(Window.between(Duration.ZERO, Duration.MAX_VALUE), false);
+    w.set(Interval.between(Duration.ZERO, Duration.MAX_VALUE), false);
 
     //added correctly?
     assertEquals(w.size(), 1);
 
     //add at front, back, in between, make sure they're added correctly
-    w.set(Window.at(Duration.ZERO), true); //don't coalesce
-    w.set(Window.at(Duration.MAX_VALUE), false); //coalesce implictly, nothing happens w/ this line
-    w.set(Window.between(Duration.of(3, SECONDS),
-                         Duration.of(50, SECONDS)), true);
+    w.set(Interval.at(Duration.ZERO), true); //don't coalesce
+    w.set(Interval.at(Duration.MAX_VALUE), false); //coalesce implictly, nothing happens w/ this line
+    w.set(Interval.between(Duration.of(3, SECONDS),
+                           Duration.of(50, SECONDS)), true);
 
     //added correctly?
     assertEquals(w.size(), 4);
@@ -188,15 +191,15 @@ public class NewWindowsTest {
   @Test
   public void isEmptyVsIsFalse() {
 
-    //create a window of just true blocks
-    NewWindows soTrue = new NewWindows(Pair.of(Window.between(Duration.of(3, SECONDS),
-                                                              Duration.of(5, SECONDS)), true),
-                                       Pair.of(Window.between(Duration.of(7, SECONDS),
-                                                              Duration.of(10, SECONDS)), true),
-                                       Pair.of(Window.between(Duration.of(12, SECONDS),
-                                                              Duration.of(15, SECONDS)), true),
-                                       Pair.of(Window.between(Duration.of(30, SECONDS),
-                                                              Duration.of(35, SECONDS)), true));
+    //create a interval of just true blocks
+    NewWindows soTrue = new NewWindows(Pair.of(Interval.between(Duration.of(3, SECONDS),
+                                                                Duration.of(5, SECONDS)), true),
+                                       Pair.of(Interval.between(Duration.of(7, SECONDS),
+                                                                Duration.of(10, SECONDS)), true),
+                                       Pair.of(Interval.between(Duration.of(12, SECONDS),
+                                                                Duration.of(15, SECONDS)), true),
+                                       Pair.of(Interval.between(Duration.of(30, SECONDS),
+                                                                Duration.of(35, SECONDS)), true));
 
     //check isFalse, verify the return value is false as either true or null
     //isEmpty is different from isFalse. isEmpty checks is there anything at all - all false would still return false
@@ -230,18 +233,19 @@ public class NewWindowsTest {
     System.out.println(before);
 
     //try all unset variations, with different bound types
-    before.unset(Window.between(Duration.of(5, SECONDS), Exclusive,
-                                Duration.of(7, SECONDS), Inclusive));
-    before.unsetAll(List.of(Window.between(Duration.of(9, SECONDS), Exclusive,
-                                           Duration.of(12, SECONDS), Inclusive)));
-    before.unsetAll(List.of(Window.between(Duration.of(13, SECONDS), Exclusive,
-                                           Duration.of(15, SECONDS), Inclusive)));
-    before.unsetAll(Window.between(Duration.of(20, SECONDS), Exclusive,
-                                   Duration.of(25, SECONDS), Exclusive),
-                    Window.between(Duration.of(26, SECONDS), Exclusive,
-                                   Duration.of(27, SECONDS), Exclusive));
-    before.unsetAll(new NewWindows(Window.between(29, 30, SECONDS), true));
-    before.unsetAll(new NewWindows(Window.between(29, 30, SECONDS), false)); //value doesn't matter
+    before.unset(Interval.between(Duration.of(5, SECONDS), Exclusive,
+                                  Duration.of(7, SECONDS), Inclusive));
+    before.unsetAll(List.of(Interval.between(Duration.of(9, SECONDS), Exclusive,
+                                             Duration.of(12, SECONDS), Inclusive)));
+    before.unsetAll(List.of(Interval.between(Duration.of(13, SECONDS), Exclusive,
+                                             Duration.of(15, SECONDS), Inclusive)));
+    before.unsetAll(
+        Interval.between(Duration.of(20, SECONDS), Exclusive,
+                         Duration.of(25, SECONDS), Exclusive),
+        Interval.between(Duration.of(26, SECONDS), Exclusive,
+                         Duration.of(27, SECONDS), Exclusive));
+    before.unsetAll(new NewWindows(Interval.between(29, 30, SECONDS), true));
+    before.unsetAll(new NewWindows(Interval.between(29, 30, SECONDS), false)); //value doesn't matter
 
     System.out.println(before);
 
@@ -251,20 +255,20 @@ public class NewWindowsTest {
                      .reduce(true, Boolean::logicalAnd));
 
     //check values
-    NewWindows expected = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                                Duration.of(5, SECONDS)), true),
-                                         Pair.of(Window.between(Duration.of(7, SECONDS), Exclusive,
-                                                                Duration.of(9, SECONDS), Inclusive), true),
-                                         Pair.of(Window.between(Duration.of(12, SECONDS), Exclusive,
-                                                                Duration.of(13, SECONDS), Inclusive), true),
-                                         Pair.of(Window.between(Duration.of(15, SECONDS), Exclusive,
-                                                                Duration.of(20, SECONDS), Inclusive), true),
-                                         Pair.of(Window.between(Duration.of(25, SECONDS), Inclusive,
-                                                                Duration.of(26, SECONDS), Inclusive), true),
-                                         Pair.of(Window.between(Duration.of(27, SECONDS), Inclusive,
-                                                                Duration.of(29, SECONDS), Exclusive), true),
-                                         Pair.of(Window.between(Duration.of(30, SECONDS), Exclusive,
-                                                                Duration.MAX_VALUE, Inclusive), true));
+    NewWindows expected = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                                  Duration.of(5, SECONDS)), true),
+                                         Pair.of(Interval.between(Duration.of(7, SECONDS), Exclusive,
+                                                                  Duration.of(9, SECONDS), Inclusive), true),
+                                         Pair.of(Interval.between(Duration.of(12, SECONDS), Exclusive,
+                                                                  Duration.of(13, SECONDS), Inclusive), true),
+                                         Pair.of(Interval.between(Duration.of(15, SECONDS), Exclusive,
+                                                                  Duration.of(20, SECONDS), Inclusive), true),
+                                         Pair.of(Interval.between(Duration.of(25, SECONDS), Inclusive,
+                                                                  Duration.of(26, SECONDS), Inclusive), true),
+                                         Pair.of(Interval.between(Duration.of(27, SECONDS), Inclusive,
+                                                                  Duration.of(29, SECONDS), Exclusive), true),
+                                         Pair.of(Interval.between(Duration.of(30, SECONDS), Exclusive,
+                                                                  Duration.MAX_VALUE, Inclusive), true));
 
     var beforeAsList = before.getListCopy();
     var expectedAsList = expected.getListCopy();
@@ -292,23 +296,23 @@ public class NewWindowsTest {
     //  N  |  F  |  N
     //  N  |  N  |  N
 
-    NewWindows orig = new NewWindows(Pair.of(Window.between(Duration.of(1, SECONDS),
-                                                            Duration.of(4, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                            Duration.of(11, SECONDS)), false));
+    NewWindows orig = new NewWindows(Pair.of(Interval.between(Duration.of(1, SECONDS),
+                                                              Duration.of(4, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                              Duration.of(11, SECONDS)), false));
 
-    NewWindows subtractMe = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                             Duration.of(2, SECONDS)), true),
-                                      Pair.of(Window.between(Duration.of(2, SECONDS), Exclusive,
-                                                             Duration.of(3, SECONDS), Inclusive), false),
-                                      Pair.of(Window.between(Duration.of(7, SECONDS),
-                                                             Duration.of(8, SECONDS)), true),
-                                      Pair.of(Window.between(Duration.of(9, SECONDS),
-                                                             Duration.of(10, SECONDS)), false),
-                                      Pair.of(Window.between(Duration.of(12, SECONDS),
-                                                             Duration.of(13, SECONDS)), true),
-                                      Pair.of(Window.between(Duration.of(14, SECONDS),
-                                                             Duration.of(15, SECONDS)), false));
+    NewWindows subtractMe = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                                    Duration.of(2, SECONDS)), true),
+                                      Pair.of(Interval.between(Duration.of(2, SECONDS), Exclusive,
+                                                               Duration.of(3, SECONDS), Inclusive), false),
+                                      Pair.of(Interval.between(Duration.of(7, SECONDS),
+                                                               Duration.of(8, SECONDS)), true),
+                                      Pair.of(Interval.between(Duration.of(9, SECONDS),
+                                                               Duration.of(10, SECONDS)), false),
+                                      Pair.of(Interval.between(Duration.of(12, SECONDS),
+                                                               Duration.of(13, SECONDS)), true),
+                                      Pair.of(Interval.between(Duration.of(14, SECONDS),
+                                                               Duration.of(15, SECONDS)), false));
     NewWindows minus = NewWindows.minus(orig, subtractMe);
     orig.subtractAll(subtractMe);
 
@@ -319,12 +323,12 @@ public class NewWindowsTest {
     }
 
 
-    NewWindows expected = new NewWindows(Pair.of(Window.between(Duration.of(1, SECONDS),
-                                                                Duration.of(2, SECONDS)), false),
-                                         Pair.of(Window.between(Duration.of(2, SECONDS), Exclusive,
-                                                                Duration.of(4, SECONDS), Inclusive), true),
-                                         Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                                Duration.of(11, SECONDS)), false));
+    NewWindows expected = new NewWindows(Pair.of(Interval.between(Duration.of(1, SECONDS),
+                                                                  Duration.of(2, SECONDS)), false),
+                                         Pair.of(Interval.between(Duration.of(2, SECONDS), Exclusive,
+                                                                  Duration.of(4, SECONDS), Inclusive), true),
+                                         Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                                  Duration.of(11, SECONDS)), false));
     final var expectedAsList = expected.getListCopy();
 
     for (int i = 0; i < origAsList.size(); i++) {
@@ -337,18 +341,18 @@ public class NewWindowsTest {
   @Test
   public void subtractVariations() {
 
-    //invoke subtractAll(List<Window>), subtractAll(Window... windows), subtract(window), subtract(durations), subtract(point)
-    NewWindows orig = new NewWindows(Pair.of(Window.between(Duration.of(1, SECONDS),
-                                                            Duration.of(5, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                            Duration.of(11, SECONDS)), false));
+    //invoke subtractAll(List<Interval>), subtractAll(Interval... windows), subtract(interval), subtract(durations), subtract(point)
+    NewWindows orig = new NewWindows(Pair.of(Interval.between(Duration.of(1, SECONDS),
+                                                              Duration.of(5, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                              Duration.of(11, SECONDS)), false));
 
-    orig.subtractAll(List.of(Window.between(Duration.of(0, SECONDS),
-                                            Duration.of(2, SECONDS))));
-    orig.subtractAll(Window.between(Duration.of(7, SECONDS),
-                                    Duration.of(8, SECONDS)));
-    orig.subtract(Window.between(Duration.of(13, SECONDS),
-                                 Duration.of(14, SECONDS)));
+    orig.subtractAll(List.of(Interval.between(Duration.of(0, SECONDS),
+                                              Duration.of(2, SECONDS))));
+    orig.subtractAll(Interval.between(Duration.of(7, SECONDS),
+                                      Duration.of(8, SECONDS)));
+    orig.subtract(Interval.between(Duration.of(13, SECONDS),
+                                   Duration.of(14, SECONDS)));
     orig.subtract(3, 4, SECONDS);
     orig.subtractPoint(5, SECONDS);
 
@@ -358,17 +362,17 @@ public class NewWindowsTest {
     }
 
 
-    NewWindows expected = new NewWindows(Pair.of(Window.between(Duration.of(1, SECONDS),
-                                                                Duration.of(2, SECONDS)), false),
-                                         Pair.of(Window.between(Duration.of(2, SECONDS), Exclusive,
-                                                                Duration.of(3, SECONDS), Exclusive), true),
-                                         Pair.of(Window.between(Duration.of(3, SECONDS),
-                                                                Duration.of(4, SECONDS)), false),
-                                         Pair.of(Window.between(Duration.of(4, SECONDS), Exclusive,
-                                                                Duration.of(5, SECONDS), Exclusive), true),
-                                         Pair.of(Window.at(Duration.of(5, SECONDS)), false),
-                                         Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                                Duration.of(11, SECONDS)), false));
+    NewWindows expected = new NewWindows(Pair.of(Interval.between(Duration.of(1, SECONDS),
+                                                                  Duration.of(2, SECONDS)), false),
+                                         Pair.of(Interval.between(Duration.of(2, SECONDS), Exclusive,
+                                                                  Duration.of(3, SECONDS), Exclusive), true),
+                                         Pair.of(Interval.between(Duration.of(3, SECONDS),
+                                                                  Duration.of(4, SECONDS)), false),
+                                         Pair.of(Interval.between(Duration.of(4, SECONDS), Exclusive,
+                                                                  Duration.of(5, SECONDS), Exclusive), true),
+                                         Pair.of(Interval.at(Duration.of(5, SECONDS)), false),
+                                         Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                                  Duration.of(11, SECONDS)), false));
     final var expectedAsList = expected.getListCopy();
 
     for (int i = 0; i < origAsList.size(); i++) {
@@ -376,22 +380,23 @@ public class NewWindowsTest {
     }
 
 
-    //subtract(window from window), subtract (Window with values)
-    var subtractBasic = NewWindows.subtract(Window.between(Duration.of(0, SECONDS),
-                                                           Duration.of(10, SECONDS)),
-                                            Window.between(Duration.of(5, SECONDS),
-                                                           Duration.of(10, SECONDS)));
+    //subtract(interval from interval), subtract (Interval with values)
+    var subtractBasic = NewWindows.subtract(
+        Interval.between(Duration.of(0, SECONDS),
+                         Duration.of(10, SECONDS)),
+        Interval.between(Duration.of(5, SECONDS),
+                         Duration.of(10, SECONDS)));
     assertEquals(subtractBasic.getListCopy().get(0),
-                 Pair.of(Window.between(Duration.of(0, SECONDS), Inclusive,
-                                        Duration.of(5, SECONDS), Exclusive), true));
+                 Pair.of(Interval.between(Duration.of(0, SECONDS), Inclusive,
+                                          Duration.of(5, SECONDS), Exclusive), true));
 
-    var subtractAdvanced = NewWindows.subtract(Window.between(Duration.of(0, SECONDS),
-                                                              Duration.of(10, SECONDS)), false,
-                                               Window.between(Duration.of(5, SECONDS),
-                                                              Duration.of(10, SECONDS)), true);
+    var subtractAdvanced = NewWindows.subtract(Interval.between(Duration.of(0, SECONDS),
+                                                                Duration.of(10, SECONDS)), false,
+                                               Interval.between(Duration.of(5, SECONDS),
+                                                                Duration.of(10, SECONDS)), true);
     assertEquals(subtractAdvanced.getListCopy().get(0),
-                 Pair.of(Window.between(Duration.of(0, SECONDS),
-                                        Duration.of(10, SECONDS)), false));
+                 Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                          Duration.of(10, SECONDS)), false));
 
 
   }
@@ -413,23 +418,23 @@ public class NewWindowsTest {
     //  N   |    F     |   N
     //  N   |    N     |   N
 
-    NewWindows orig = new NewWindows(Pair.of(Window.between(Duration.of(1, SECONDS),
-                                                            Duration.of(4, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                            Duration.of(11, SECONDS)), false));
+    NewWindows orig = new NewWindows(Pair.of(Interval.between(Duration.of(1, SECONDS),
+                                                              Duration.of(4, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                              Duration.of(11, SECONDS)), false));
 
-    NewWindows intersectMe = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                                  Duration.of(2, SECONDS)), true),
-                                           Pair.of(Window.between(Duration.of(2, SECONDS), Exclusive,
-                                                                  Duration.of(3, SECONDS), Inclusive), false),
-                                           Pair.of(Window.between(Duration.of(7, SECONDS),
-                                                                  Duration.of(8, SECONDS)), true),
-                                           Pair.of(Window.between(Duration.of(9, SECONDS),
-                                                                  Duration.of(10, SECONDS)), false),
-                                           Pair.of(Window.between(Duration.of(12, SECONDS),
-                                                                  Duration.of(13, SECONDS)), true),
-                                           Pair.of(Window.between(Duration.of(14, SECONDS),
-                                                                  Duration.of(15, SECONDS)), false));
+    NewWindows intersectMe = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                                     Duration.of(2, SECONDS)), true),
+                                           Pair.of(Interval.between(Duration.of(2, SECONDS), Exclusive,
+                                                                    Duration.of(3, SECONDS), Inclusive), false),
+                                           Pair.of(Interval.between(Duration.of(7, SECONDS),
+                                                                    Duration.of(8, SECONDS)), true),
+                                           Pair.of(Interval.between(Duration.of(9, SECONDS),
+                                                                    Duration.of(10, SECONDS)), false),
+                                           Pair.of(Interval.between(Duration.of(12, SECONDS),
+                                                                    Duration.of(13, SECONDS)), true),
+                                           Pair.of(Interval.between(Duration.of(14, SECONDS),
+                                                                    Duration.of(15, SECONDS)), false));
     NewWindows intersection = NewWindows.intersection(orig, intersectMe);
     orig.intersectWith(intersectMe);
 
@@ -440,14 +445,14 @@ public class NewWindowsTest {
     }
 
 
-    NewWindows expected = new NewWindows(Pair.of(Window.between(Duration.of(1, SECONDS),
-                                                                Duration.of(2, SECONDS)), true),
-                                         Pair.of(Window.between(Duration.of(2, SECONDS), Exclusive,
-                                                                Duration.of(3, SECONDS), Inclusive), false),
-                                         Pair.of(Window.between(Duration.of(7, SECONDS),
-                                                                Duration.of(8, SECONDS)), false),
-                                         Pair.of(Window.between(Duration.of(9, SECONDS),
-                                                                Duration.of(10, SECONDS)), false));
+    NewWindows expected = new NewWindows(Pair.of(Interval.between(Duration.of(1, SECONDS),
+                                                                  Duration.of(2, SECONDS)), true),
+                                         Pair.of(Interval.between(Duration.of(2, SECONDS), Exclusive,
+                                                                  Duration.of(3, SECONDS), Inclusive), false),
+                                         Pair.of(Interval.between(Duration.of(7, SECONDS),
+                                                                  Duration.of(8, SECONDS)), false),
+                                         Pair.of(Interval.between(Duration.of(9, SECONDS),
+                                                                  Duration.of(10, SECONDS)), false));
     final var expectedAsList = expected.getListCopy();
 
     for (int i = 0; i < origAsList.size(); i++) {
@@ -460,17 +465,17 @@ public class NewWindowsTest {
   @Test
   public void intersectVariations() {
 
-    NewWindows orig = new NewWindows(Pair.of(Window.between(Duration.of(1, SECONDS),
-                                                            Duration.of(4, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                            Duration.of(11, SECONDS)), false));
+    NewWindows orig = new NewWindows(Pair.of(Interval.between(Duration.of(1, SECONDS),
+                                                              Duration.of(4, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                              Duration.of(11, SECONDS)), false));
 
-    //test intersectWith (window), intersectwith(duration), intersectwith(window with value),
+    //test intersectWith (interval), intersectwith(duration), intersectwith(interval with value),
     //  intersectWith(duration with value), intersection between windows
-    orig.intersectWith(Window.between(0, 2, SECONDS));
+    orig.intersectWith(Interval.between(0, 2, SECONDS));
     orig.intersectWith(7, 8, SECONDS);
-    orig.intersectWith(Window.between(Duration.of(2, SECONDS), Exclusive,
-                                      Duration.of(3, SECONDS), Inclusive), false);
+    orig.intersectWith(Interval.between(Duration.of(2, SECONDS), Exclusive,
+                                        Duration.of(3, SECONDS), Inclusive), false);
     orig.intersectWith(10, 12, SECONDS, false);
 
 
@@ -480,14 +485,14 @@ public class NewWindowsTest {
     }
 
 
-    NewWindows expected = new NewWindows(Pair.of(Window.between(Duration.of(1, SECONDS),
-                                                                Duration.of(2, SECONDS)), true),
-                                         Pair.of(Window.between(Duration.of(2, SECONDS), Exclusive,
-                                                                Duration.of(3, SECONDS), Inclusive), false),
-                                         Pair.of(Window.between(Duration.of(7, SECONDS),
-                                                                Duration.of(8, SECONDS)), false),
-                                         Pair.of(Window.between(Duration.of(9, SECONDS),
-                                                                Duration.of(10, SECONDS)), false));
+    NewWindows expected = new NewWindows(Pair.of(Interval.between(Duration.of(1, SECONDS),
+                                                                  Duration.of(2, SECONDS)), true),
+                                         Pair.of(Interval.between(Duration.of(2, SECONDS), Exclusive,
+                                                                  Duration.of(3, SECONDS), Inclusive), false),
+                                         Pair.of(Interval.between(Duration.of(7, SECONDS),
+                                                                  Duration.of(8, SECONDS)), false),
+                                         Pair.of(Interval.between(Duration.of(9, SECONDS),
+                                                                  Duration.of(10, SECONDS)), false));
     final var expectedAsList = expected.getListCopy();
 
     for (int i = 0; i < origAsList.size(); i++) {
@@ -507,24 +512,24 @@ public class NewWindowsTest {
     assertFalse(w.maxTrueTimePoint().isPresent());
 
     //check only 1 interval
-    w.set(Window.between(Duration.ZERO, Duration.MAX_VALUE), false);
+    w.set(Interval.between(Duration.ZERO, Duration.MAX_VALUE), false);
     assertEquals(w.minValidTimePoint().get(), Pair.of(Duration.ZERO, Inclusive));
     assertEquals(w.maxValidTimePoint().get(), Pair.of(Duration.MAX_VALUE, Inclusive));
     assertFalse(w.minTrueTimePoint().isPresent());
     assertFalse(w.maxTrueTimePoint().isPresent());
 
     //multiple intervals
-    w.set(Window.between(Duration.of(3, SECONDS),
-                         Duration.of(50, SECONDS)), true);
-    w.set(Window.between(75, 200, SECONDS), true);
+    w.set(Interval.between(Duration.of(3, SECONDS),
+                           Duration.of(50, SECONDS)), true);
+    w.set(Interval.between(75, 200, SECONDS), true);
     assertEquals(w.minValidTimePoint().get(), Pair.of(Duration.ZERO, Inclusive));
     assertEquals(w.maxValidTimePoint().get(), Pair.of(Duration.MAX_VALUE, Inclusive));
     assertEquals(w.minTrueTimePoint().get(), Pair.of(Duration.of(3, SECONDS), Inclusive));
     assertEquals(w.maxTrueTimePoint().get(), Pair.of(Duration.of(200, SECONDS), Inclusive));
 
     //verify points work too
-    w.unset(Window.at(Duration.MAX_VALUE));
-    w.set(Window.at(Duration.ZERO), true);
+    w.unset(Interval.at(Duration.MAX_VALUE));
+    w.set(Interval.at(Duration.ZERO), true);
     assertEquals(w.minValidTimePoint().get(), Pair.of(Duration.ZERO, Inclusive));
     assertEquals(w.maxValidTimePoint().get(), Pair.of(Duration.MAX_VALUE, Exclusive));
     assertEquals(w.minTrueTimePoint().get(), Pair.of(Duration.of(0, SECONDS), Inclusive));
@@ -544,17 +549,17 @@ public class NewWindowsTest {
     //the only thing to demonstrate or test here is that it is different from subtracting from forever as that was an
     //  important distinction in implementation.
 
-    NewWindows main = new NewWindows(Pair.of(Window.at(Duration.of(0, SECONDS)), false),
-                                     Pair.of(Window.between(Duration.of(1, SECONDS),
-                                                             Duration.of(3, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(4, SECONDS),
-                                                             Duration.of(7, SECONDS)), false),
-                                     Pair.of(Window.between(Duration.of(8, SECONDS),
-                                                             Duration.of(10, SECONDS)), true),
-                                     Pair.of(Window.at(Duration.of(12, SECONDS)), true),
-                                     Pair.of(Window.at(Duration.of(13, SECONDS)), false),
-                                     Pair.of(Window.at(Duration.MAX_VALUE), true));
-    main.unset(Window.at(9, SECONDS));
+    NewWindows main = new NewWindows(Pair.of(Interval.at(Duration.of(0, SECONDS)), false),
+                                     Pair.of(Interval.between(Duration.of(1, SECONDS),
+                                                              Duration.of(3, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(4, SECONDS),
+                                                              Duration.of(7, SECONDS)), false),
+                                     Pair.of(Interval.between(Duration.of(8, SECONDS),
+                                                              Duration.of(10, SECONDS)), true),
+                                     Pair.of(Interval.at(Duration.of(12, SECONDS)), true),
+                                     Pair.of(Interval.at(Duration.of(13, SECONDS)), false),
+                                     Pair.of(Interval.at(Duration.MAX_VALUE), true));
+    main.unset(Interval.at(9, SECONDS));
 
     //if we were to subtract, this is how itd look
     var subtracted = NewWindows.forever();
@@ -569,16 +574,16 @@ public class NewWindowsTest {
     }
 
     //check values
-    NewWindows expected = new NewWindows(Pair.of(Window.at(0, SECONDS), true),
-                                         Pair.of(Window.between(Duration.of(0, SECONDS), Exclusive,
-                                                                Duration.of(4, SECONDS), Exclusive), false),
-                                         Pair.of(Window.between(Duration.of(4, SECONDS), Inclusive,
-                                                                Duration.of(7, SECONDS), Inclusive), true),
-                                         Pair.of(Window.between(Duration.of(7, SECONDS), Exclusive,
-                                                                Duration.of(13, SECONDS), Exclusive), false),
-                                         Pair.of(Window.at(13, SECONDS), true),
-                                         Pair.of(Window.between(Duration.of(13, SECONDS), Exclusive,
-                                                                Duration.MAX_VALUE, Inclusive), false));
+    NewWindows expected = new NewWindows(Pair.of(Interval.at(0, SECONDS), true),
+                                         Pair.of(Interval.between(Duration.of(0, SECONDS), Exclusive,
+                                                                  Duration.of(4, SECONDS), Exclusive), false),
+                                         Pair.of(Interval.between(Duration.of(4, SECONDS), Inclusive,
+                                                                  Duration.of(7, SECONDS), Inclusive), true),
+                                         Pair.of(Interval.between(Duration.of(7, SECONDS), Exclusive,
+                                                                  Duration.of(13, SECONDS), Exclusive), false),
+                                         Pair.of(Interval.at(13, SECONDS), true),
+                                         Pair.of(Interval.between(Duration.of(13, SECONDS), Exclusive,
+                                                                  Duration.MAX_VALUE, Inclusive), false));
     final var expectedAsList = expected.getListCopy();
     for (int i = 0; i < mainAsList.size(); i++) {
       assertEquals(expectedAsList.get(i), mainAsList.get(i));
@@ -606,14 +611,14 @@ public class NewWindowsTest {
     //  N   |    F     |   N
     //  N   |    N     |   N
 
-    NewWindows orig = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                            Duration.of(4, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                            Duration.of(9, SECONDS)), false),
-                                     Pair.of(Window.between(Duration.of(11, SECONDS),
-                                                            Duration.of(14, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(16, SECONDS),
-                                                            Duration.of(17, SECONDS)), true));
+    NewWindows orig = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                              Duration.of(4, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                              Duration.of(9, SECONDS)), false),
+                                     Pair.of(Interval.between(Duration.of(11, SECONDS),
+                                                              Duration.of(14, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(16, SECONDS),
+                                                              Duration.of(17, SECONDS)), true));
 
 
     orig = orig.filterByDuration(Duration.of(3, SECONDS), Duration.of(3, SECONDS));
@@ -623,14 +628,14 @@ public class NewWindowsTest {
       System.out.println(i);
     }
 
-    NewWindows expected = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                                Duration.of(4, SECONDS)), false),
-                                         Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                                Duration.of(9, SECONDS)), false),
-                                         Pair.of(Window.between(Duration.of(11, SECONDS),
-                                                                Duration.of(14, SECONDS)), true),
-                                         Pair.of(Window.between(Duration.of(16, SECONDS),
-                                                                Duration.of(17, SECONDS)), false));
+    NewWindows expected = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                                  Duration.of(4, SECONDS)), false),
+                                         Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                                  Duration.of(9, SECONDS)), false),
+                                         Pair.of(Interval.between(Duration.of(11, SECONDS),
+                                                                  Duration.of(14, SECONDS)), true),
+                                         Pair.of(Interval.between(Duration.of(16, SECONDS),
+                                                                  Duration.of(17, SECONDS)), false));
     final var expectedAsList = expected.getListCopy();
 
     for (int i = 0; i < origAsList.size(); i++) {
@@ -643,14 +648,14 @@ public class NewWindowsTest {
   public void filterByDurationNormal2() {
 
 
-    NewWindows orig = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                            Duration.of(4, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                            Duration.of(9, SECONDS)), false),
-                                     Pair.of(Window.between(Duration.of(11, SECONDS),
-                                                            Duration.of(14, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(16, SECONDS),
-                                                            Duration.of(17, SECONDS)), true));
+    NewWindows orig = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                              Duration.of(4, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                              Duration.of(9, SECONDS)), false),
+                                     Pair.of(Interval.between(Duration.of(11, SECONDS),
+                                                              Duration.of(14, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(16, SECONDS),
+                                                              Duration.of(17, SECONDS)), true));
 
 
     orig = orig.filterByDuration(Duration.of(1, SECONDS), Duration.of(3, SECONDS));
@@ -660,14 +665,14 @@ public class NewWindowsTest {
       System.out.println(i);
     }
 
-    NewWindows expected = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                                Duration.of(4, SECONDS)), false),
-                                         Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                                Duration.of(9, SECONDS)), false),
-                                         Pair.of(Window.between(Duration.of(11, SECONDS),
-                                                                Duration.of(14, SECONDS)), true),
-                                         Pair.of(Window.between(Duration.of(16, SECONDS),
-                                                                Duration.of(17, SECONDS)), true));
+    NewWindows expected = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                                  Duration.of(4, SECONDS)), false),
+                                         Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                                  Duration.of(9, SECONDS)), false),
+                                         Pair.of(Interval.between(Duration.of(11, SECONDS),
+                                                                  Duration.of(14, SECONDS)), true),
+                                         Pair.of(Interval.between(Duration.of(16, SECONDS),
+                                                                  Duration.of(17, SECONDS)), true));
     final var expectedAsList = expected.getListCopy();
 
     for (int i = 0; i < origAsList.size(); i++) {
@@ -679,14 +684,14 @@ public class NewWindowsTest {
   @Test
   public void filterByDurationZero() {
 
-    NewWindows orig = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                            Duration.of(4, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                            Duration.of(9, SECONDS)), false),
-                                     Pair.of(Window.between(Duration.of(11, SECONDS),
-                                                            Duration.of(14, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(16, SECONDS),
-                                                            Duration.of(17, SECONDS)), true));
+    NewWindows orig = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                              Duration.of(4, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                              Duration.of(9, SECONDS)), false),
+                                     Pair.of(Interval.between(Duration.of(11, SECONDS),
+                                                              Duration.of(14, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(16, SECONDS),
+                                                              Duration.of(17, SECONDS)), true));
 
 
     orig = orig.filterByDuration(Duration.ZERO, Duration.ZERO);
@@ -696,14 +701,14 @@ public class NewWindowsTest {
       System.out.println(i);
     }
 
-    NewWindows expected = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                                Duration.of(4, SECONDS)), false),
-                                         Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                                Duration.of(9, SECONDS)), false),
-                                         Pair.of(Window.between(Duration.of(11, SECONDS),
-                                                                Duration.of(14, SECONDS)), false),
-                                         Pair.of(Window.between(Duration.of(16, SECONDS),
-                                                                Duration.of(17, SECONDS)), false));
+    NewWindows expected = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                                  Duration.of(4, SECONDS)), false),
+                                         Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                                  Duration.of(9, SECONDS)), false),
+                                         Pair.of(Interval.between(Duration.of(11, SECONDS),
+                                                                  Duration.of(14, SECONDS)), false),
+                                         Pair.of(Interval.between(Duration.of(16, SECONDS),
+                                                                  Duration.of(17, SECONDS)), false));
     final var expectedAsList = expected.getListCopy();
 
     for (int i = 0; i < origAsList.size(); i++) {
@@ -715,14 +720,14 @@ public class NewWindowsTest {
   @Test
   public void filterByDurationMinZeroMaxMax() {
 
-    NewWindows orig = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                            Duration.of(4, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                            Duration.of(9, SECONDS)), false),
-                                     Pair.of(Window.between(Duration.of(11, SECONDS),
-                                                            Duration.of(14, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(16, SECONDS),
-                                                            Duration.of(17, SECONDS)), true));
+    NewWindows orig = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                              Duration.of(4, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                              Duration.of(9, SECONDS)), false),
+                                     Pair.of(Interval.between(Duration.of(11, SECONDS),
+                                                              Duration.of(14, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(16, SECONDS),
+                                                              Duration.of(17, SECONDS)), true));
 
 
     orig = orig.filterByDuration(Duration.ZERO, Duration.MAX_VALUE);
@@ -732,14 +737,14 @@ public class NewWindowsTest {
       System.out.println(i);
     }
 
-    NewWindows expected = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                                Duration.of(4, SECONDS)), true),
-                                         Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                                Duration.of(9, SECONDS)), false),
-                                         Pair.of(Window.between(Duration.of(11, SECONDS),
-                                                                Duration.of(14, SECONDS)), true),
-                                         Pair.of(Window.between(Duration.of(16, SECONDS),
-                                                                Duration.of(17, SECONDS)), true));
+    NewWindows expected = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                                  Duration.of(4, SECONDS)), true),
+                                         Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                                  Duration.of(9, SECONDS)), false),
+                                         Pair.of(Interval.between(Duration.of(11, SECONDS),
+                                                                  Duration.of(14, SECONDS)), true),
+                                         Pair.of(Interval.between(Duration.of(16, SECONDS),
+                                                                  Duration.of(17, SECONDS)), true));
     final var expectedAsList = expected.getListCopy();
 
     for (int i = 0; i < origAsList.size(); i++) {
@@ -751,14 +756,14 @@ public class NewWindowsTest {
   @Test
   public void filterByDurationMinMaxMaxMax() {
 
-    NewWindows orig = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                            Duration.of(4, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                            Duration.of(9, SECONDS)), false),
-                                     Pair.of(Window.between(Duration.of(11, SECONDS),
-                                                            Duration.of(14, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(16, SECONDS),
-                                                            Duration.of(17, SECONDS)), true));
+    NewWindows orig = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                              Duration.of(4, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                              Duration.of(9, SECONDS)), false),
+                                     Pair.of(Interval.between(Duration.of(11, SECONDS),
+                                                              Duration.of(14, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(16, SECONDS),
+                                                              Duration.of(17, SECONDS)), true));
 
 
     orig = orig.filterByDuration(Duration.MAX_VALUE, Duration.MAX_VALUE);
@@ -768,14 +773,14 @@ public class NewWindowsTest {
       System.out.println(i);
     }
 
-    NewWindows expected = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                                Duration.of(4, SECONDS)), false),
-                                         Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                                Duration.of(9, SECONDS)), false),
-                                         Pair.of(Window.between(Duration.of(11, SECONDS),
-                                                                Duration.of(14, SECONDS)), false),
-                                         Pair.of(Window.between(Duration.of(16, SECONDS),
-                                                                Duration.of(17, SECONDS)), false));
+    NewWindows expected = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                                  Duration.of(4, SECONDS)), false),
+                                         Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                                  Duration.of(9, SECONDS)), false),
+                                         Pair.of(Interval.between(Duration.of(11, SECONDS),
+                                                                  Duration.of(14, SECONDS)), false),
+                                         Pair.of(Interval.between(Duration.of(16, SECONDS),
+                                                                  Duration.of(17, SECONDS)), false));
     final var expectedAsList = expected.getListCopy();
 
     for (int i = 0; i < origAsList.size(); i++) {
@@ -787,14 +792,14 @@ public class NewWindowsTest {
   @Test
   public void filterByDurationMinMaxMaxZero() {
 
-    NewWindows orig = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                            Duration.of(4, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(6, SECONDS),
-                                                            Duration.of(9, SECONDS)), false),
-                                     Pair.of(Window.between(Duration.of(11, SECONDS),
-                                                            Duration.of(14, SECONDS)), true),
-                                     Pair.of(Window.between(Duration.of(16, SECONDS),
-                                                            Duration.of(17, SECONDS)), true));
+    NewWindows orig = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                              Duration.of(4, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(6, SECONDS),
+                                                              Duration.of(9, SECONDS)), false),
+                                     Pair.of(Interval.between(Duration.of(11, SECONDS),
+                                                              Duration.of(14, SECONDS)), true),
+                                     Pair.of(Interval.between(Duration.of(16, SECONDS),
+                                                              Duration.of(17, SECONDS)), true));
 
 
     try {
@@ -820,29 +825,29 @@ public class NewWindowsTest {
 
   @Test
   public void removeFirstLastOne() {
-    NewWindows one = new NewWindows(Window.between(0, 2, SECONDS), true);
+    NewWindows one = new NewWindows(Interval.between(0, 2, SECONDS), true);
     NewWindows rfl = one.removeFirstAndLast();
     assertEquals(rfl, new NewWindows());
   }
 
   @Test
   public void removeFirstLastTwo() {
-    NewWindows two = new NewWindows(Pair.of(Window.between(0, 2, SECONDS), true),
-                                      Pair.of(Window.between(3, 4, SECONDS), true));
+    NewWindows two = new NewWindows(Pair.of(Interval.between(0, 2, SECONDS), true),
+                                      Pair.of(Interval.between(3, 4, SECONDS), true));
     NewWindows rfl = two.removeFirstAndLast();
     assertEquals(rfl, new NewWindows());
   }
 
   @Test
   public void shiftByStretch() {
-    NewWindows orig = new NewWindows(Pair.of(Window.at(0, SECONDS), true),
-                                     Pair.of(Window.between(1, 2, SECONDS), false),
-                                     Pair.of(Window.between(5, 6, SECONDS), true),
-                                     Pair.of(Window.between(7, 8, SECONDS), false),
-                                     Pair.of(Window.between(8, Exclusive, 10, Exclusive, SECONDS), true),
-                                     Pair.of(Window.between(13, 14, SECONDS), true),
-                                     Pair.of(Window.between(14, Exclusive, 16, Exclusive, SECONDS), false),
-                                     Pair.of(Window.at(Duration.MAX_VALUE.minus(Duration.of(1, SECONDS))), true)); //long overflow if at max value
+    NewWindows orig = new NewWindows(Pair.of(Interval.at(0, SECONDS), true),
+                                     Pair.of(Interval.between(1, 2, SECONDS), false),
+                                     Pair.of(Interval.between(5, 6, SECONDS), true),
+                                     Pair.of(Interval.between(7, 8, SECONDS), false),
+                                     Pair.of(Interval.between(8, Exclusive, 10, Exclusive, SECONDS), true),
+                                     Pair.of(Interval.between(13, 14, SECONDS), true),
+                                     Pair.of(Interval.between(14, Exclusive, 16, Exclusive, SECONDS), false),
+                                     Pair.of(Interval.at(Duration.MAX_VALUE.minus(Duration.of(1, SECONDS))), true)); //long overflow if at max value
 
     NewWindows result = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(1, SECONDS));
 
@@ -851,18 +856,18 @@ public class NewWindowsTest {
       System.out.println(i);
     }
 
-    NewWindows expected = new NewWindows(Pair.of(Window.between(Duration.of(0, SECONDS),
-                                                                Duration.of(1, SECONDS)), true),
-                                         Pair.of(Window.between(Duration.of(1, SECONDS), Exclusive,
-                                                                Duration.of(2, SECONDS), Inclusive), false),
-                                         Pair.of(Window.between(Duration.of(4, SECONDS), Inclusive,
-                                                                Duration.of(11, SECONDS), Exclusive), true),
-                                         Pair.of(Window.between(Duration.of(12, SECONDS),
-                                                                Duration.of(15, SECONDS)), true),
-                                         Pair.of(Window.between(Duration.of(15, SECONDS), Exclusive,
-                                                                Duration.of(16, SECONDS), Exclusive), false),
-                                         Pair.of(Window.between(Duration.MAX_VALUE.minus(Duration.of(2, SECONDS)),
-                                                                Duration.MAX_VALUE), true));
+    NewWindows expected = new NewWindows(Pair.of(Interval.between(Duration.of(0, SECONDS),
+                                                                  Duration.of(1, SECONDS)), true),
+                                         Pair.of(Interval.between(Duration.of(1, SECONDS), Exclusive,
+                                                                  Duration.of(2, SECONDS), Inclusive), false),
+                                         Pair.of(Interval.between(Duration.of(4, SECONDS), Inclusive,
+                                                                  Duration.of(11, SECONDS), Exclusive), true),
+                                         Pair.of(Interval.between(Duration.of(12, SECONDS),
+                                                                  Duration.of(15, SECONDS)), true),
+                                         Pair.of(Interval.between(Duration.of(15, SECONDS), Exclusive,
+                                                                  Duration.of(16, SECONDS), Exclusive), false),
+                                         Pair.of(Interval.between(Duration.MAX_VALUE.minus(Duration.of(2, SECONDS)),
+                                                                  Duration.MAX_VALUE), true));
     final var expectedAsList = expected.getListCopy();
 
     for (int i = 0; i < resultAsList.size(); i++) {
@@ -873,29 +878,29 @@ public class NewWindowsTest {
 
   @Test
   public void shiftByFromStartFromEndPermsWithInterval() {
-    var restrictedAlgebra = new Windows.WindowAlgebra(Window.between(0, 10, SECONDS));
+    var restrictedAlgebra = new IntervalAlgebra(Interval.between(0, 10, SECONDS));
 
-    var leftEnd = Window.between(0, 2, SECONDS);
-    var rightEnd = Window.between(8, 10, SECONDS);
+    var leftEnd = Interval.between(0, 2, SECONDS);
+    var rightEnd = Interval.between(8, 10, SECONDS);
 
     var orig = new NewWindows(restrictedAlgebra);
     orig.setAll(new NewWindows(Pair.of(leftEnd, true), Pair.of(rightEnd, true)));
 
     var fromStartPosFromEndPos = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(1, SECONDS));
-    assertEquals(fromStartPosFromEndPos, new NewWindows(Pair.of(Window.between(0, 3, SECONDS), true),
-                                                        Pair.of(Window.between(7, 10, SECONDS), true)));
+    assertEquals(fromStartPosFromEndPos, new NewWindows(Pair.of(Interval.between(0, 3, SECONDS), true),
+                                                        Pair.of(Interval.between(7, 10, SECONDS), true)));
 
     var fromStartPosFromEndNeg = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(-1, SECONDS));
-    assertEquals(fromStartPosFromEndNeg, new NewWindows(Pair.of(Window.between(1, 1, SECONDS), true),
-                                                        Pair.of(Window.between(9, 9, SECONDS), true)));
+    assertEquals(fromStartPosFromEndNeg, new NewWindows(Pair.of(Interval.between(1, 1, SECONDS), true),
+                                                        Pair.of(Interval.between(9, 9, SECONDS), true)));
 
     var fromStartNegFromEndPos = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(1, SECONDS));
-    assertEquals(fromStartNegFromEndPos, new NewWindows(Pair.of(Window.between(1, 3, SECONDS), true),
-                                                        Pair.of(Window.between(9, 10, SECONDS), true)));
+    assertEquals(fromStartNegFromEndPos, new NewWindows(Pair.of(Interval.between(1, 3, SECONDS), true),
+                                                        Pair.of(Interval.between(9, 10, SECONDS), true)));
 
     var fromStartNegFromEndNeg = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(-1, SECONDS));
-    assertEquals(fromStartNegFromEndNeg, new NewWindows(Pair.of(Window.between(0, 1, SECONDS), true),
-                                                        Pair.of(Window.between(7, 9, SECONDS), true)));
+    assertEquals(fromStartNegFromEndNeg, new NewWindows(Pair.of(Interval.between(0, 1, SECONDS), true),
+                                                        Pair.of(Interval.between(7, 9, SECONDS), true)));
 
     var removal = orig.shiftBy(Duration.of(0, SECONDS), Duration.of(-3, SECONDS));
     assertEquals(removal, new NewWindows());
@@ -903,26 +908,26 @@ public class NewWindowsTest {
 
   @Test
   public void shiftByFromStartFromEndPermsWithPoint() {
-    var restrictedAlgebra = new Windows.WindowAlgebra(Window.between(0, 4, SECONDS));
+    var restrictedAlgebra = new IntervalAlgebra(Interval.between(0, 4, SECONDS));
 
-    var leftEnd = Window.at(0, SECONDS);
-    var rightEnd = Window.at(4, SECONDS);
+    var leftEnd = Interval.at(0, SECONDS);
+    var rightEnd = Interval.at(4, SECONDS);
 
     var orig = new NewWindows(restrictedAlgebra);
     orig.setAll(new NewWindows(Pair.of(leftEnd, true), Pair.of(rightEnd, true)));
 
     var fromStartPosFromEndPos = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(1, SECONDS));
-    assertEquals(fromStartPosFromEndPos, new NewWindows(Pair.of(Window.between(0, 1, SECONDS), true),
-                                                        Pair.of(Window.between(3, 4, SECONDS), true)));
+    assertEquals(fromStartPosFromEndPos, new NewWindows(Pair.of(Interval.between(0, 1, SECONDS), true),
+                                                        Pair.of(Interval.between(3, 4, SECONDS), true)));
 
     var fromStartPosFromEndNeg = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(-1, SECONDS));
     assertEquals(fromStartPosFromEndNeg, new NewWindows());
 
     var fromStartNegFromEndPos = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(1, SECONDS));
-    assertEquals(fromStartNegFromEndPos, new NewWindows(Pair.of(Window.between(1, 1, SECONDS), true)));
+    assertEquals(fromStartNegFromEndPos, new NewWindows(Pair.of(Interval.between(1, 1, SECONDS), true)));
 
     var fromStartNegFromEndNeg = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(-1, SECONDS));
-    assertEquals(fromStartNegFromEndPos, new NewWindows(Pair.of(Window.between(1, 1, SECONDS), true)));
+    assertEquals(fromStartNegFromEndPos, new NewWindows(Pair.of(Interval.between(1, 1, SECONDS), true)));
 
     var coalesce = orig.shiftBy(Duration.of(-2, SECONDS), Duration.of(2, SECONDS));
     assertEquals(coalesce, new NewWindows(restrictedAlgebra.bounds(), true));
@@ -930,75 +935,75 @@ public class NewWindowsTest {
 
   @Test
   public void subsetContainedSpillOver() {
-    var orig = new NewWindows(Pair.of(Window.between(0, 3, SECONDS), true),
-                              Pair.of(Window.between(4, 5, SECONDS), true),
-                              Pair.of(Window.between(6, 8, SECONDS), true));
+    var orig = new NewWindows(Pair.of(Interval.between(0, 3, SECONDS), true),
+                              Pair.of(Interval.between(4, 5, SECONDS), true),
+                              Pair.of(Interval.between(6, 8, SECONDS), true));
 
-    var spillOver = orig.subsetContained(Window.between(2, 7, SECONDS));
+    var spillOver = orig.subsetContained(Interval.between(2, 7, SECONDS));
 
-    //if there is spillover, drops those entire intervals - based on implementation of Window.contains
+    //if there is spillover, drops those entire intervals - based on implementation of Interval.contains
     //ONLY KEEPS IF TRUE!!!
-    assertEquals(spillOver, new NewWindows(Pair.of(Window.between(4, 5, SECONDS), true)));
+    assertEquals(spillOver, new NewWindows(Pair.of(Interval.between(4, 5, SECONDS), true)));
 
   }
 
   @Test
   public void subsetContainedMeetsEndLeft() {
 
-    var alg = new Windows.WindowAlgebra(Window.between(0, 10, SECONDS));
+    var alg = new IntervalAlgebra(Interval.between(0, 10, SECONDS));
 
     var orig = new NewWindows(alg);
-    orig.setAll(new NewWindows(Pair.of(Window.between(0, 3, SECONDS), true),
-                               Pair.of(Window.between(4, 5, SECONDS), true),
-                               Pair.of(Window.between(6, 10, SECONDS), true)));
+    orig.setAll(new NewWindows(Pair.of(Interval.between(0, 3, SECONDS), true),
+                               Pair.of(Interval.between(4, 5, SECONDS), true),
+                               Pair.of(Interval.between(6, 10, SECONDS), true)));
 
-    var leftEnd = orig.subsetContained(Window.between(0, 7, SECONDS));
+    var leftEnd = orig.subsetContained(Interval.between(0, 7, SECONDS));
 
-    assertEquals(leftEnd, new NewWindows(Pair.of(Window.between(0, 3, SECONDS), true),
-                                      Pair.of(Window.between(4, 5, SECONDS), true)));
+    assertEquals(leftEnd, new NewWindows(Pair.of(Interval.between(0, 3, SECONDS), true),
+                                      Pair.of(Interval.between(4, 5, SECONDS), true)));
 
   }
 
   @Test
   public void subsetContainedMeetsEndRight() {
-    var alg = new Windows.WindowAlgebra(Window.between(0, 10, SECONDS));
+    var alg = new IntervalAlgebra(Interval.between(0, 10, SECONDS));
 
     var orig = new NewWindows(alg);
-    orig.setAll(new NewWindows(Pair.of(Window.between(0, 3, SECONDS), true),
-                               Pair.of(Window.between(4, 5, SECONDS), true),
-                               Pair.of(Window.between(6, 10, SECONDS), true)));
+    orig.setAll(new NewWindows(Pair.of(Interval.between(0, 3, SECONDS), true),
+                               Pair.of(Interval.between(4, 5, SECONDS), true),
+                               Pair.of(Interval.between(6, 10, SECONDS), true)));
 
-    var rightEnd = orig.subsetContained(Window.between(5, 10, SECONDS));
+    var rightEnd = orig.subsetContained(Interval.between(5, 10, SECONDS));
 
-    assertEquals(rightEnd, new NewWindows(Pair.of(Window.between(6, 10, SECONDS), true)));
+    assertEquals(rightEnd, new NewWindows(Pair.of(Interval.between(6, 10, SECONDS), true)));
   }
 
   @Test
   public void subsetContainedMeetsEnds() {
-    var alg = new Windows.WindowAlgebra(Window.between(0, 10, SECONDS));
+    var alg = new IntervalAlgebra(Interval.between(0, 10, SECONDS));
 
     var orig = new NewWindows(alg);
-    orig.setAll(new NewWindows(Pair.of(Window.between(0, 3, SECONDS), true),
-                               Pair.of(Window.between(4, 5, SECONDS), false),
-                               Pair.of(Window.between(6, 10, SECONDS), false)));
+    orig.setAll(new NewWindows(Pair.of(Interval.between(0, 3, SECONDS), true),
+                               Pair.of(Interval.between(4, 5, SECONDS), false),
+                               Pair.of(Interval.between(6, 10, SECONDS), false)));
 
-    var all = orig.subsetContained(Window.between(0, 10, SECONDS));
+    var all = orig.subsetContained(Interval.between(0, 10, SECONDS));
 
-    assertEquals(all, new NewWindows(Pair.of(Window.between(0, 3, SECONDS), true))); //only keeps the true ones
+    assertEquals(all, new NewWindows(Pair.of(Interval.between(0, 3, SECONDS), true))); //only keeps the true ones
   }
 
   @Test
   public void getOverlapsSpillover() {
     //keeps true or false!
-    var orig = new NewWindows(Pair.of(Window.between(0, 3, SECONDS), true),
-                              Pair.of(Window.between(4, 5, SECONDS), false),
-                              Pair.of(Window.between(6, 8, SECONDS), false));
+    var orig = new NewWindows(Pair.of(Interval.between(0, 3, SECONDS), true),
+                              Pair.of(Interval.between(4, 5, SECONDS), false),
+                              Pair.of(Interval.between(6, 8, SECONDS), false));
 
-    var spillOver = orig.getOverlaps(Window.between(2, Exclusive, 7, Exclusive, SECONDS));
+    var spillOver = orig.getOverlaps(Interval.between(2, Exclusive, 7, Exclusive, SECONDS));
 
-    assertEquals(spillOver, new NewWindows(Pair.of(Window.between(2, Exclusive, 3, Inclusive, SECONDS), true),
-                                           Pair.of(Window.between(4, 5, SECONDS), false),
-                                           Pair.of(Window.between(6, Inclusive, 7, Exclusive, SECONDS), false)));
+    assertEquals(spillOver, new NewWindows(Pair.of(Interval.between(2, Exclusive, 3, Inclusive, SECONDS), true),
+                                           Pair.of(Interval.between(4, 5, SECONDS), false),
+                                           Pair.of(Interval.between(6, Inclusive, 7, Exclusive, SECONDS), false)));
   }
 
   @Test
@@ -1017,21 +1022,21 @@ public class NewWindowsTest {
     //  N    |    F     |   F
     //  N    |    N     |   T
 
-    var nw = new NewWindows(new Windows.WindowAlgebra(Window.between(1, 2, SECONDS)));
+    var nw = new NewWindows(new IntervalAlgebra(Interval.between(1, 2, SECONDS)));
 
-    nw.set(Window.between(1, 2, SECONDS), true);
-    assertTrue(nw.isNotNull(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), true)))); //TT case
-    assertTrue(nw.isNotNull(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), false)))); //TF case
+    nw.set(Interval.between(1, 2, SECONDS), true);
+    assertTrue(nw.isNotNull(new NewWindows(Pair.of(Interval.between(1, 2, SECONDS), true)))); //TT case
+    assertTrue(nw.isNotNull(new NewWindows(Pair.of(Interval.between(1, 2, SECONDS), false)))); //TF case
     assertTrue(nw.isNotNull(new NewWindows())); //TN case
 
-    nw.set(Window.between(1, 2, SECONDS), false);
-    assertTrue(nw.isNotNull(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), true)))); //FT case
-    assertTrue(nw.isNotNull(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), false)))); //FF case
+    nw.set(Interval.between(1, 2, SECONDS), false);
+    assertTrue(nw.isNotNull(new NewWindows(Pair.of(Interval.between(1, 2, SECONDS), true)))); //FT case
+    assertTrue(nw.isNotNull(new NewWindows(Pair.of(Interval.between(1, 2, SECONDS), false)))); //FF case
     assertTrue(nw.isNotNull(new NewWindows())); //FN case
 
     nw.clear();
-    assertFalse(nw.isNotNull(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), true)))); //NT case
-    assertFalse(nw.isNotNull(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), false)))); //NF case
+    assertFalse(nw.isNotNull(new NewWindows(Pair.of(Interval.between(1, 2, SECONDS), true)))); //NT case
+    assertFalse(nw.isNotNull(new NewWindows(Pair.of(Interval.between(1, 2, SECONDS), false)))); //NF case
     assertTrue(nw.isNotNull(new NewWindows())); //NN case
 
   }
@@ -1039,11 +1044,11 @@ public class NewWindowsTest {
   @Test
   public void isNotNullVariations() {
 
-    //want to test out isNotNull(Window), isNotNull(Duration), isNotNull(Point) - do all true for now.
-    var nw = new NewWindows(new Windows.WindowAlgebra(Window.between(1, 2, SECONDS)));
+    //want to test out isNotNull(Interval), isNotNull(Duration), isNotNull(Point) - do all true for now.
+    var nw = new NewWindows(new IntervalAlgebra(Interval.between(1, 2, SECONDS)));
 
-    nw.set(Window.between(1, 2, SECONDS), true);
-    assertTrue(nw.isNotNull(Window.between(1, 2, SECONDS), false)); //values dont matter, that was already tested.
+    nw.set(Interval.between(1, 2, SECONDS), true);
+    assertTrue(nw.isNotNull(Interval.between(1, 2, SECONDS), false)); //values dont matter, that was already tested.
     assertTrue(nw.isNotNull(1, 2, SECONDS, false));
     assertTrue(nw.pointIsNotNull(1, SECONDS, false));
 
@@ -1066,21 +1071,21 @@ public class NewWindowsTest {
     //  N    |    F     |   T
     //  N    |    N     |   T
 
-    var nw = new NewWindows(new Windows.WindowAlgebra(Window.between(1, 2, SECONDS)));
+    var nw = new NewWindows(new IntervalAlgebra(Interval.between(1, 2, SECONDS)));
 
-    nw.set(Window.between(1, 2, SECONDS), true);
-    assertTrue(nw.includes(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), true)))); //TT case
-    assertTrue(nw.includes(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), false)))); //TF case
+    nw.set(Interval.between(1, 2, SECONDS), true);
+    assertTrue(nw.includes(new NewWindows(Pair.of(Interval.between(1, 2, SECONDS), true)))); //TT case
+    assertTrue(nw.includes(new NewWindows(Pair.of(Interval.between(1, 2, SECONDS), false)))); //TF case
     assertTrue(nw.includes(new NewWindows())); //TN case
 
-    nw.set(Window.between(1, 2, SECONDS), false);
-    assertFalse(nw.includes(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), true)))); //FT case
-    assertTrue(nw.includes(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), false)))); //FF case
+    nw.set(Interval.between(1, 2, SECONDS), false);
+    assertFalse(nw.includes(new NewWindows(Pair.of(Interval.between(1, 2, SECONDS), true)))); //FT case
+    assertTrue(nw.includes(new NewWindows(Pair.of(Interval.between(1, 2, SECONDS), false)))); //FF case
     assertTrue(nw.includes(new NewWindows())); //FN case
 
     nw.clear();
-    assertFalse(nw.includes(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), true)))); //NT case
-    assertTrue(nw.includes(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), false)))); //NF case
+    assertFalse(nw.includes(new NewWindows(Pair.of(Interval.between(1, 2, SECONDS), true)))); //NT case
+    assertTrue(nw.includes(new NewWindows(Pair.of(Interval.between(1, 2, SECONDS), false)))); //NF case
     assertTrue(nw.includes(new NewWindows())); //NN case
 
   }
@@ -1088,11 +1093,11 @@ public class NewWindowsTest {
   @Test
   public void includesVariations() {
 
-    //want to test out includes(Window), includes(Duration), includes(Point) - do all true for now.
-    var nw = new NewWindows(new Windows.WindowAlgebra(Window.between(1, 2, SECONDS)));
+    //want to test out includes(Interval), includes(Duration), includes(Point) - do all true for now.
+    var nw = new NewWindows(new IntervalAlgebra(Interval.between(1, 2, SECONDS)));
 
-    nw.set(Window.between(1, 2, SECONDS), true);
-    assertTrue(nw.includes(Window.between(1, 2, SECONDS)));
+    nw.set(Interval.between(1, 2, SECONDS), true);
+    assertTrue(nw.includes(Interval.between(1, 2, SECONDS)));
     assertTrue(nw.includes(1, 2, SECONDS));
     assertTrue(nw.includesPoint(1, SECONDS));
 
@@ -1100,15 +1105,15 @@ public class NewWindowsTest {
 
   @Test
   public void iterator() {
-    var nw = new NewWindows(new Windows.WindowAlgebra(Window.between(1, 2, SECONDS)));
-    nw.set(Window.between(1, 2, SECONDS), true);
+    var nw = new NewWindows(new IntervalAlgebra(Interval.between(1, 2, SECONDS)));
+    nw.set(Interval.between(1, 2, SECONDS), true);
 
     //some simple iterator tests
     var iter = nw.iterator();
-    iter.forEachRemaining($ -> assertEquals($, Pair.of(Window.between(1, 2, SECONDS), true)));
+    iter.forEachRemaining($ -> assertEquals($, Pair.of(Interval.between(1, 2, SECONDS), true)));
 
     iter = nw.iterator(); //everything has been consumed - need to reset
-    assertEquals(iter.next(), Pair.of(Window.between(1, 2, SECONDS), true));
+    assertEquals(iter.next(), Pair.of(Interval.between(1, 2, SECONDS), true));
     assertFalse(iter.hasNext());
   }
 }

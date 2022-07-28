@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.filters;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -30,7 +30,7 @@ public class FilterWithReset implements TimeWindowsFilter {
 
     if (!windowsToFilter.isEmpty()) {
 
-      var resetPeriods = resetExpr.computeRange(simulationResults, plan, new Windows(Window.FOREVER));
+      var resetPeriods = resetExpr.computeRange(simulationResults, plan, new Windows(Interval.FOREVER));
 
       for (var window : resetPeriods) {
         // get windows to filter that are completely contained in reset period

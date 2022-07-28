@@ -1,10 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler.constraints;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.filters.Filters;
 import gov.nasa.jpl.aerie.scheduler.constraints.filters.TimeWindowsFilter;
@@ -48,14 +47,14 @@ public class TimeRangeExpression {
       if(minTimepoint.isPresent() && maxTimepoint.isPresent()) {
         final var anchorActSearch = new ActivityExpression.Builder()
             .basedOn(actTemplate)
-            .startsIn(inter).build(); //check if it exists IN the windows, not just the upper and lower bounds of the window
+            .startsIn(inter).build(); //check if it exists IN the windows, not just the upper and lower bounds of the interval
         final var anchorActs = plan.find(anchorActSearch, simulationResults);
         for (var anchorAct : anchorActs) {
-          var endInclusivity = Window.Inclusivity.Exclusive;
+          var endInclusivity = Interval.Inclusivity.Exclusive;
           if(anchorAct.getDuration().isZero()){
-            endInclusivity = Window.Inclusivity.Inclusive;
+            endInclusivity = Interval.Inclusivity.Inclusive;
           }
-          actTw.add(Window.between(anchorAct.getStartTime(), Window.Inclusivity.Inclusive, anchorAct.getEndTime(), endInclusivity));
+          actTw.add(Interval.between(anchorAct.getStartTime(), Interval.Inclusivity.Inclusive, anchorAct.getEndTime(), endInclusivity));
         }
       }
       inter.intersectWith(actTw);
@@ -69,20 +68,20 @@ public class TimeRangeExpression {
     }
 
     for (var expr : stateExpr) {
-      final var domainOfInter = Window.between(inter.minTimePoint().get(), inter.maxTimePoint().get());
+      final var domainOfInter = Interval.between(inter.minTimePoint().get(), inter.maxTimePoint().get());
       Windows windowsState = expr.evaluate(simulationResults, domainOfInter, Map.of());
       inter.intersectWith(windowsState);
       if(inter.isEmpty()) return inter;
     }
 
     for (var constState : constantsStates) {
-      final var domainOfInter = Window.between(inter.minTimePoint().get(), inter.maxTimePoint().get());
+      final var domainOfInter = Interval.between(inter.minTimePoint().get(), inter.maxTimePoint().get());
       final var changePoints = simulationResults.discreteProfiles.get(constState).changePoints(domainOfInter);
       final var timeline = new Windows();
-      final var container = new ArrayList<Window>();
+      final var container = new ArrayList<Interval>();
       changePoints.iterator().forEachRemaining(container::add);
       container.stream().reduce((a, b) -> {
-        timeline.add(Window.window(a.start, Window.Inclusivity.Exclusive, b.start, Window.Inclusivity.Exclusive));
+        timeline.add(Interval.window(a.start, Interval.Inclusivity.Exclusive, b.start, Interval.Inclusivity.Exclusive));
         return b;
       });
       inter.intersectWith(timeline);
@@ -141,7 +140,7 @@ public class TimeRangeExpression {
       return getThis();
     }
 
-    public Builder thenFilter(Function<Window, Boolean> functionalFilter) {
+    public Builder thenFilter(Function<Interval, Boolean> functionalFilter) {
       filtersAndTransformers.add(Filters.functionalFilter(functionalFilter));
       return getThis();
     }

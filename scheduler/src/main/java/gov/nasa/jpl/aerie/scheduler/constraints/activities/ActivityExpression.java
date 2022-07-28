@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -129,12 +129,12 @@ public class ActivityExpression {
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B startsIn(@Nullable Window range) {
+    B startsIn(@Nullable Interval range) {
       this.startsIn = extendUpToAbsoluteError(range, acceptableAbsoluteTimingError);
       return getThis();
     }
 
-    protected @Nullable Window startsIn;
+    protected @Nullable Interval startsIn;
 
     /**
      * requires activities have a scheduled start or end time in a specified range
@@ -148,12 +148,12 @@ public class ActivityExpression {
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B startsOrEndsIn(@Nullable Window range) {
+    B startsOrEndsIn(@Nullable Interval range) {
       this.startsOrEndsIn = extendUpToAbsoluteError(range, acceptableAbsoluteTimingError);
       return getThis();
     }
 
-    protected @Nullable Window startsOrEndsIn;
+    protected @Nullable Interval startsOrEndsIn;
 
     /**
      * requires activities have a scheduled start or end time in a specified range
@@ -191,12 +191,12 @@ public class ActivityExpression {
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B endsIn(@Nullable Window range) {
+    B endsIn(@Nullable Interval range) {
       this.endsIn = extendUpToAbsoluteError(range, acceptableAbsoluteTimingError);
       return getThis();
     }
 
-    protected @Nullable Window endsIn;
+    protected @Nullable Interval endsIn;
 
     public @NotNull
     B startsIn(Windows ranges) {
@@ -222,12 +222,12 @@ public class ActivityExpression {
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B durationIn(@Nullable Window range) {
+    B durationIn(@Nullable Interval range) {
       this.durationIn = range;
       return getThis();
     }
 
-    protected @Nullable Window durationIn;
+    protected @Nullable Interval durationIn;
 
     /**
      * bootstraps a new query builder based on existing template
@@ -259,11 +259,11 @@ public class ActivityExpression {
       type = existingAct.getType();
 
       if (existingAct.getStartTime() != null) {
-        startsIn = Window.at(existingAct.getStartTime());
+        startsIn = Interval.at(existingAct.getStartTime());
       }
 
       if (existingAct.getDuration() != null) {
-        durationIn = Window.at(existingAct.getDuration());
+        durationIn = Interval.at(existingAct.getDuration());
       }
 
       //FINISH: extract all param values as == criteria
@@ -297,13 +297,13 @@ public class ActivityExpression {
     public abstract @NotNull
     AT build();
 
-    private Window extendUpToAbsoluteError(final Window window, final Duration absoluteError){
-      final var diff = absoluteError.times(2).minus(window.duration());
+    private Interval extendUpToAbsoluteError(final Interval interval, final Duration absoluteError){
+      final var diff = absoluteError.times(2).minus(interval.duration());
       if(diff.isPositive()){
         final var toApply = diff.dividedBy(2);
-        return Window.between(window.start.minus(toApply), window.startInclusivity, window.end.plus(toApply), window.endInclusivity);
+        return Interval.between(interval.start.minus(toApply), interval.startInclusivity, interval.end.plus(toApply), interval.endInclusivity);
       } else {
-        return window;
+        return interval;
       }
     }
 
@@ -372,7 +372,7 @@ public class ActivityExpression {
    *
    * the range itself determines if endpoints are inclusive or exclusive
    */
-  protected @Nullable Window startRange;
+  protected @Nullable Interval startRange;
 
   /**
    * range of allowed values for matching activity scheduled end times
@@ -383,7 +383,7 @@ public class ActivityExpression {
    *
    * the range itself determines if endpoints are inclusive or exclusive
    */
-  protected @Nullable Window endRange;
+  protected @Nullable Interval endRange;
   /**
    * range of allowed values for matching activity scheduled end times
    *
@@ -393,7 +393,7 @@ public class ActivityExpression {
    *
    * the range itself determines if endpoints are inclusive or exclusive
    */
-  protected @Nullable Window startOrEndRange;
+  protected @Nullable Interval startOrEndRange;
 
 
   /**
@@ -405,7 +405,7 @@ public class ActivityExpression {
    *
    * the range itself determines if endpoints are inclusive or exclusive
    */
-  protected @Nullable Window durationRange;
+  protected @Nullable Interval durationRange;
 
   /**
    * the bounding super-type for matching activities
@@ -433,7 +433,7 @@ public class ActivityExpression {
    *     if no limit on start time
    */
   public @Nullable
-  Window getStartRange() { return startRange; }
+  Interval getStartRange() { return startRange; }
 
   /**
    * fetch the range of allowed simulation durations matched by this template
@@ -442,7 +442,7 @@ public class ActivityExpression {
    *     if no limit on duration
    */
   public @Nullable
-  Window getDurationRange() { return durationRange; }
+  Interval getDurationRange() { return durationRange; }
 
   /**
    * fetch the bounding super type of activities matched by this template
@@ -506,8 +506,8 @@ public class ActivityExpression {
     if (match && startOrEndRangeW != null) {
       final var startT = act.getStartTime();
       final var endT = act.getEndTime();
-      match = ((startT != null) && startOrEndRangeW.includes(Window.at(startT))
-              || (endT != null) && startOrEndRangeW.includes(Window.at(endT)));
+      match = ((startT != null) && startOrEndRangeW.includes(Interval.at(startT))
+              || (endT != null) && startOrEndRangeW.includes(Interval.at(endT)));
     }
 
     if (match && endRange != null) {

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.All;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
@@ -51,7 +51,7 @@ public class TestApplyWhen {
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
-        .forAllTimeIn(new WindowsWrapperExpression(new Windows(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(12, Duration.SECONDS)))))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(12, Duration.SECONDS)))))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .duration(Duration.of(2, Duration.SECONDS))
                             .ofType(activityType)
@@ -85,7 +85,7 @@ public class TestApplyWhen {
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
-        .forAllTimeIn(new WindowsWrapperExpression(new Windows(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(17, Duration.SECONDS))))) //add colorful tests that make use of windows capability
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(17, Duration.SECONDS))))) //add colorful tests that make use of windows capability
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .duration(Duration.of(2, Duration.SECONDS))
                             .ofType(activityType)
@@ -119,7 +119,7 @@ public class TestApplyWhen {
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
-        .forAllTimeIn(new WindowsWrapperExpression(new Windows(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .duration(Duration.of(2, Duration.SECONDS))
                             .ofType(activityType)
@@ -153,7 +153,7 @@ public class TestApplyWhen {
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
-        .forAllTimeIn(new WindowsWrapperExpression(new Windows(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(21, Duration.SECONDS)))))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(21, Duration.SECONDS)))))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .duration(Duration.of(2, Duration.SECONDS))
                             .ofType(activityType)
@@ -187,7 +187,7 @@ public class TestApplyWhen {
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
-        .forAllTimeIn(new WindowsWrapperExpression(new Windows(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(2, Duration.SECONDS)))))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(2, Duration.SECONDS)))))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .duration(Duration.of(1, Duration.SECONDS))
                             .ofType(activityType)
@@ -224,9 +224,9 @@ public class TestApplyWhen {
         fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
-    final var goalWindow = new Windows(new LinkedList<Window>(Arrays.asList(
-        Window.between(Duration.of(1, Duration.SECONDS), Duration.of(7, Duration.SECONDS)), //needs to be 2 longer than recurrence window for second to last occurrence to be scheduled, no partial recurrence scheduling :(
-        Window.between(Duration.of(11, Duration.SECONDS), Duration.of(17, Duration.SECONDS))
+    final var goalWindow = new Windows(new LinkedList<Interval>(Arrays.asList(
+        Interval.between(Duration.of(1, Duration.SECONDS), Duration.of(7, Duration.SECONDS)), //needs to be 2 longer than recurrence interval for second to last occurrence to be scheduled, no partial recurrence scheduling :(
+        Interval.between(Duration.of(11, Duration.SECONDS), Duration.of(17, Duration.SECONDS))
     )));
 
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
@@ -269,9 +269,9 @@ public class TestApplyWhen {
         fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
-    final var goalWindow = new Windows(new LinkedList<Window>(Arrays.asList(
-        Window.between(Duration.of(1, Duration.SECONDS), Duration.of(4, Duration.SECONDS)),
-        Window.between(Duration.of(11, Duration.SECONDS), Duration.of(13, Duration.SECONDS))
+    final var goalWindow = new Windows(new LinkedList<Interval>(Arrays.asList(
+        Interval.between(Duration.of(1, Duration.SECONDS), Duration.of(4, Duration.SECONDS)),
+        Interval.between(Duration.of(11, Duration.SECONDS), Duration.of(13, Duration.SECONDS))
     )));
 
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
@@ -304,7 +304,7 @@ public class TestApplyWhen {
   public void testRecurrenceWindowsGlobalCheck() {
     //                     123456789012345678901
     // RECURRENCE WINDOW: [++-++-++-++-++-++-++-] (if global)
-    // GOAL WINDOW:       [+++++--++++++++-++++-] (if window is same length as recurrence window, fails)
+    // GOAL WINDOW:       [+++++--++++++++-++++-] (if interval is same length as recurrence interval, fails)
     // RESULT:            [++-----++-++----~~---] (if not global)
 
     var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0),TestUtility.timeFromEpochSeconds(20));
@@ -314,10 +314,10 @@ public class TestApplyWhen {
         fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
-    final var goalWindow = new Windows(new LinkedList<Window>(Arrays.asList(
-        Window.between(Duration.of(1, Duration.SECONDS), Duration.of(5, Duration.SECONDS)),
-        Window.between(Duration.of(8, Duration.SECONDS), Duration.of(15, Duration.SECONDS)),
-        Window.between(Duration.of(17, Duration.SECONDS), Duration.of(20, Duration.SECONDS))
+    final var goalWindow = new Windows(new LinkedList<Interval>(Arrays.asList(
+        Interval.between(Duration.of(1, Duration.SECONDS), Duration.of(5, Duration.SECONDS)),
+        Interval.between(Duration.of(8, Duration.SECONDS), Duration.of(15, Duration.SECONDS)),
+        Interval.between(Duration.of(17, Duration.SECONDS), Duration.of(20, Duration.SECONDS))
     )));
 
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
@@ -343,7 +343,7 @@ public class TestApplyWhen {
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(8, Duration.SECONDS), activityType));
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), activityType));
-    assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(17, Duration.SECONDS), activityType)); //window (len 4) needs to be 2 longer than the recurrence repeatingEvery (len 3)
+    assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(17, Duration.SECONDS), activityType)); //interval (len 4) needs to be 2 longer than the recurrence repeatingEvery (len 3)
   }
 
   @Test
@@ -360,10 +360,10 @@ public class TestApplyWhen {
         fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
-    final var goalWindow = new Windows(new LinkedList<Window>(Arrays.asList(
-        Window.between(Duration.of(1, Duration.SECONDS), Duration.of(1, Duration.SECONDS)),
-        Window.between(Duration.of(7, Duration.SECONDS), Duration.of(9, Duration.SECONDS)),
-        Window.between(Duration.of(11, Duration.SECONDS), Duration.of(13, Duration.SECONDS))
+    final var goalWindow = new Windows(new LinkedList<Interval>(Arrays.asList(
+        Interval.between(Duration.of(1, Duration.SECONDS), Duration.of(1, Duration.SECONDS)),
+        Interval.between(Duration.of(7, Duration.SECONDS), Duration.of(9, Duration.SECONDS)),
+        Interval.between(Duration.of(11, Duration.SECONDS), Duration.of(13, Duration.SECONDS))
     )));
 
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
@@ -402,7 +402,7 @@ public class TestApplyWhen {
     final var activityType = problem.getActivityType("BasicActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
-        .forAllTimeIn(new WindowsWrapperExpression(new Windows(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(12, Duration.SECONDS)))))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(12, Duration.SECONDS)))))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(activityType)
                             .build())
@@ -433,7 +433,7 @@ public class TestApplyWhen {
 
   @Test
   public void testCardinality() {
-    Window period = Window.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(5, Duration.SECONDS));
+    Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(5, Duration.SECONDS));
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
@@ -445,7 +445,7 @@ public class TestApplyWhen {
     problem.add(BinaryMutexConstraint.buildMutexConstraint(activityType, activityType));
 
     CardinalityGoal goal = new CardinalityGoal.Builder()
-        .duration(Window.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
+        .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
         .occurences(new Range<>(3, 10))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(problem.getActivityType("ControllableDurationActivity"))
@@ -484,13 +484,13 @@ public class TestApplyWhen {
         fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
-    final var goalWindow = new Windows(new LinkedList<Window>(Arrays.asList(
-        Window.between(Duration.of(1, Duration.SECONDS), Duration.of(5, Duration.SECONDS)),
-        Window.between(Duration.of(11, Duration.SECONDS), Duration.of(15, Duration.SECONDS)) //window here is exclusive, so I extended it by 1. in the case of recurrence goal, it was exclusive and had to be extended by 2 (one for exclusive/inclusive, and another so that the window wasn't equal in length to the recurrence window)
+    final var goalWindow = new Windows(new LinkedList<Interval>(Arrays.asList(
+        Interval.between(Duration.of(1, Duration.SECONDS), Duration.of(5, Duration.SECONDS)),
+        Interval.between(Duration.of(11, Duration.SECONDS), Duration.of(15, Duration.SECONDS)) //interval here is exclusive, so I extended it by 1. in the case of recurrence goal, it was exclusive and had to be extended by 2 (one for exclusive/inclusive, and another so that the interval wasn't equal in length to the recurrence interval)
     )));
 
     CardinalityGoal goal = new CardinalityGoal.Builder()
-        .duration(Window.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
+        .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
         .occurences(new Range<>(3, 10))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(problem.getActivityType("ControllableDurationActivity"))
@@ -533,14 +533,14 @@ public class TestApplyWhen {
         fooMissionModel), SimulationUtility.getFooSchedulerModel());
     final var activityType = problem.getActivityType("ControllableDurationActivity");
 
-    final var goalWindow = new Windows(new LinkedList<Window>(Arrays.asList(
-        Window.between(Duration.of(1, Duration.SECONDS), Duration.of(1, Duration.SECONDS)),
-        Window.between(Duration.of(7, Duration.SECONDS), Duration.of(8, Duration.SECONDS)), //exclusive
-        Window.between(Duration.of(11, Duration.SECONDS), Duration.of(13, Duration.SECONDS))
+    final var goalWindow = new Windows(new LinkedList<Interval>(Arrays.asList(
+        Interval.between(Duration.of(1, Duration.SECONDS), Duration.of(1, Duration.SECONDS)),
+        Interval.between(Duration.of(7, Duration.SECONDS), Duration.of(8, Duration.SECONDS)), //exclusive
+        Interval.between(Duration.of(11, Duration.SECONDS), Duration.of(13, Duration.SECONDS))
     )));
 
     CardinalityGoal goal = new CardinalityGoal.Builder()
-        .duration(Window.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
+        .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
         .occurences(new Range<>(3, 10))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(problem.getActivityType("ControllableDurationActivity"))
@@ -573,7 +573,7 @@ public class TestApplyWhen {
     /*
       Expect 5 to get scheduled just in a row, as basicactivity's duration should allow that.
      */
-    Window period = Window.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(10, Duration.SECONDS));
+    Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(10, Duration.SECONDS));
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
@@ -586,7 +586,7 @@ public class TestApplyWhen {
     problem.add(BinaryMutexConstraint.buildMutexConstraint(activityType, activityType));
 
     CardinalityGoal goal = new CardinalityGoal.Builder()
-        .duration(Window.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
+        .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
         .occurences(new Range<>(3, 10))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(activityType)
@@ -619,7 +619,7 @@ public class TestApplyWhen {
   @Test
   public void testCoexistenceWindowCutoff() {
 
-    Window period = Window.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(12, Duration.SECONDS));
+    Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(12, Duration.SECONDS));
 
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
@@ -668,7 +668,7 @@ public class TestApplyWhen {
   @Test
   public void testCoexistenceJustFits() {
 
-    Window period = Window.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(13, Duration.SECONDS));//13, so it just fits in
+    Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(13, Duration.SECONDS));//13, so it just fits in
 
     var periodTre = new TimeRangeExpression.Builder()
         .from(new Windows(period))
@@ -728,7 +728,7 @@ public class TestApplyWhen {
 
      */
 
-    Window period = Window.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(12, Duration.SECONDS));
+    Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(12, Duration.SECONDS));
 
     var periodTre = new TimeRangeExpression.Builder()
         .from(new Windows(period))
@@ -805,10 +805,10 @@ public class TestApplyWhen {
     //  pass this plan as initialPlan to Problem object
     problem.setInitialPlan(partialPlan);
 
-    //create goal window
-    final var goalWindow = new Windows(new LinkedList<Window>(Arrays.asList(
-        Window.between(Duration.of(1, Duration.SECONDS), Duration.of(4, Duration.SECONDS)),
-        Window.between(Duration.of(12, Duration.SECONDS), Duration.of(18, Duration.SECONDS))
+    //create goal interval
+    final var goalWindow = new Windows(new LinkedList<Interval>(Arrays.asList(
+        Interval.between(Duration.of(1, Duration.SECONDS), Duration.of(4, Duration.SECONDS)),
+        Interval.between(Duration.of(12, Duration.SECONDS), Duration.of(18, Duration.SECONDS))
     )));
 
     //want to create another activity for each of the already present activities
@@ -870,13 +870,13 @@ public class TestApplyWhen {
     //  pass this plan as initialPlan to Problem object
     problem.setInitialPlan(partialPlan);
 
-    //create goal window
-    final var goalWindow = new Windows(new LinkedList<Window>(Arrays.asList(
-        Window.between(Duration.of(2, Duration.SECONDS), Duration.of(5, Duration.SECONDS)), //FIXED: the first space in a windows object/the lowest time defines whats used in find (more deeply in match) to define the startRange, which goes from this window's overall start to end. even if the boundaries are weird within the windows, the cutoff here is only at the start and the end. debugging this test can show you as you his the call on line 181 in Coexistence Goal, which goes to 56 in TimeRangeExpression, which goes to 175 in PlanInMemory which goes to 499 in ActivityExpression.
-        Window.between(Duration.of(10, Duration.SECONDS), Duration.of(14, Duration.SECONDS)),
-        Window.between(Duration.of(16, Duration.SECONDS), Duration.of(18, Duration.SECONDS)),
-        Window.between(Duration.of(21, Duration.SECONDS), Duration.of(21, Duration.SECONDS)),
-        Window.between(Duration.of(23, Duration.SECONDS), Duration.of(28, Duration.SECONDS))
+    //create goal interval
+    final var goalWindow = new Windows(new LinkedList<Interval>(Arrays.asList(
+        Interval.between(Duration.of(2, Duration.SECONDS), Duration.of(5, Duration.SECONDS)), //FIXED: the first space in a windows object/the lowest time defines whats used in find (more deeply in match) to define the startRange, which goes from this interval's overall start to end. even if the boundaries are weird within the windows, the cutoff here is only at the start and the end. debugging this test can show you as you his the call on line 181 in Coexistence Goal, which goes to 56 in TimeRangeExpression, which goes to 175 in PlanInMemory which goes to 499 in ActivityExpression.
+        Interval.between(Duration.of(10, Duration.SECONDS), Duration.of(14, Duration.SECONDS)),
+        Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(18, Duration.SECONDS)),
+        Interval.between(Duration.of(21, Duration.SECONDS), Duration.of(21, Duration.SECONDS)),
+        Interval.between(Duration.of(23, Duration.SECONDS), Duration.of(28, Duration.SECONDS))
     )));
 
     //want to create another activity for each of the already present activities
@@ -917,11 +917,11 @@ public class TestApplyWhen {
   public void testCoexistenceWindowsBisect() { //bad, should fail completely. worth investigating.
     /*
        COEXISTENCE LATCH POINTS:
-       (seek to add Duration [++] activities to each of these, wherever an activity happens/theres a window)
+       (seek to add Duration [++] activities to each of these, wherever an activity happens/theres a interval)
                            123456789|012 (last 2 not technically included, it is a "fencepost")
                           [++++---++|+++]
-                                             DEPRECATED GOAL WINDOW: [++++++-+--++] //after testing, both 1-long window and 2-long windows fail. They match the activity and all but fail once you get to createActivityForReal.
-       FIXED GOAL WINDOW: [++++++-++|+++] //after testing, both 1-long window and 2-long windows fail. They match the activity and all but fail once you get to createActivityForReal.
+                                             DEPRECATED GOAL WINDOW: [++++++-+--++] //after testing, both 1-long interval and 2-long windows fail. They match the activity and all but fail once you get to createActivityForReal.
+       FIXED GOAL WINDOW: [++++++-++|+++] //after testing, both 1-long interval and 2-long windows fail. They match the activity and all but fail once you get to createActivityForReal.
        RESULT:            [++-------|++-]
      */
 
@@ -941,12 +941,12 @@ public class TestApplyWhen {
     //  pass this plan as initialPlan to Problem object
     problem.setInitialPlan(partialPlan);
 
-    //create goal window
-    final var goalWindow = new Windows(new LinkedList<Window>(Arrays.asList(
-        Window.between(Duration.of(1, Duration.SECONDS), Duration.of(6, Duration.SECONDS)), //FIXED: why doesn't this first one doesn't get scheduled? It does if it starts at 0 but should if it starts at 1.
-        Window.between(Duration.of(8, Duration.SECONDS), Duration.of(9, Duration.SECONDS)), //too short
-        //Window.between(Duration.of(11, Duration.SECONDS), Duration.of(13, Duration.SECONDS)) //fails because final "fencepost" lies outside of horizon
-        Window.between(Duration.of(10, Duration.SECONDS), Duration.of(12, Duration.SECONDS)) //passes because even though it touches boundary, large enough. the fence at 12 is not included, just the fencepost at 12.
+    //create goal interval
+    final var goalWindow = new Windows(new LinkedList<Interval>(Arrays.asList(
+        Interval.between(Duration.of(1, Duration.SECONDS), Duration.of(6, Duration.SECONDS)), //FIXED: why doesn't this first one doesn't get scheduled? It does if it starts at 0 but should if it starts at 1.
+        Interval.between(Duration.of(8, Duration.SECONDS), Duration.of(9, Duration.SECONDS)), //too short
+        //Interval.between(Duration.of(11, Duration.SECONDS), Duration.of(13, Duration.SECONDS)) //fails because final "fencepost" lies outside of horizon
+        Interval.between(Duration.of(10, Duration.SECONDS), Duration.of(12, Duration.SECONDS)) //passes because even though it touches boundary, large enough. the fence at 12 is not included, just the fencepost at 12.
     )));
 
     //want to create another activity for each of the already present activities
@@ -983,7 +983,7 @@ public class TestApplyWhen {
   public void testCoexistenceWindowsBisect2() { //corrected. Bisection does work successfully.
     /*
        COEXISTENCE LATCH POINTS:
-          (seek to add Duration [++] activities to each of these, wherever an activity happens/theres a window)
+          (seek to add Duration [++] activities to each of these, wherever an activity happens/theres a interval)
                      1234567890123456
                     [++++++++++++++++]
        GOAL WINDOW: [+++-++--+++--+++] //last one fails regardless of length
@@ -1005,12 +1005,12 @@ public class TestApplyWhen {
     //  pass this plan as initialPlan to Problem object
     problem.setInitialPlan(partialPlan);
 
-    //create goal window
-    final var goalWindow = new Windows(new LinkedList<Window>(Arrays.asList(
-        Window.between(Duration.of(1, Duration.SECONDS), Duration.of(3, Duration.SECONDS)), //FIXED: first one passes, but fails if the above activity starts at 0
-        Window.between(Duration.of(5, Duration.SECONDS), Duration.of(6, Duration.SECONDS)), //second one fails because too short, even though window shows up in CoexistenceGoal
-        Window.between(Duration.of(9, Duration.SECONDS), Duration.of(11, Duration.SECONDS)), //win! (even though window bisected)
-        Window.between(Duration.of(14, Duration.SECONDS), Duration.of(16, Duration.SECONDS)) //fourth one fails because of bad edge case behavior, window doesn't even show up in CoexistenceGoal. If the edge of the new activity touches the end of the horizon (ie 2 second activity scheduled from 14-16, horizon ends at 16), fails. Passes if its a longer window like 13-16.
+    //create goal interval
+    final var goalWindow = new Windows(new LinkedList<Interval>(Arrays.asList(
+        Interval.between(Duration.of(1, Duration.SECONDS), Duration.of(3, Duration.SECONDS)), //FIXED: first one passes, but fails if the above activity starts at 0
+        Interval.between(Duration.of(5, Duration.SECONDS), Duration.of(6, Duration.SECONDS)), //second one fails because too short, even though interval shows up in CoexistenceGoal
+        Interval.between(Duration.of(9, Duration.SECONDS), Duration.of(11, Duration.SECONDS)), //win! (even though interval bisected)
+        Interval.between(Duration.of(14, Duration.SECONDS), Duration.of(16, Duration.SECONDS)) //fourth one fails because of bad edge case behavior, interval doesn't even show up in CoexistenceGoal. If the edge of the new activity touches the end of the horizon (ie 2 second activity scheduled from 14-16, horizon ends at 16), fails. Passes if its a longer interval like 13-16.
     )));
 
     //want to create another activity for each of the already present activities
@@ -1047,7 +1047,7 @@ public class TestApplyWhen {
   @Test
   public void testCoexistenceUncontrollableJustFits() {
 
-    Window period = Window.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(13, Duration.SECONDS));
+    Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(13, Duration.SECONDS));
 
     var periodTre = new TimeRangeExpression.Builder()
         .from(new Windows(period))
@@ -1122,9 +1122,9 @@ public class TestApplyWhen {
         new RealValue(2.0)
     );
 
-    //[and a goal corresponding to that window]
+    //[and a goal corresponding to that interval]
     CardinalityGoal whenActivitiesGreaterThan2 = new CardinalityGoal.Builder()
-        .duration(Window.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
+        .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
         .occurences(new Range<>(3, 10))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(activityTypeDependent)
@@ -1197,9 +1197,9 @@ public class TestApplyWhen {
     );
 
 
-    //[and a goal corresponding to that window]
+    //[and a goal corresponding to that interval]
     CardinalityGoal whenActivitiesGreaterThan2 = new CardinalityGoal.Builder()
-        .duration(Window.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
+        .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
         .occurences(new Range<>(3, 10))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(activityTypeDependent)
@@ -1275,7 +1275,7 @@ public class TestApplyWhen {
             ),
             new WindowsWrapperExpression( //without this would just use planning horizon for time restrictions!
                 new Windows(
-                    Window.between(
+                    Interval.between(
                         Duration.of(1, Duration.SECONDS),
                         Duration.of(18, Duration.SECONDS)
                     )
@@ -1285,9 +1285,9 @@ public class TestApplyWhen {
     );
 
 
-    //[and a goal corresponding to that window]
+    //[and a goal corresponding to that interval]
     CardinalityGoal whenActivitiesGreaterThan2 = new CardinalityGoal.Builder()
-        .duration(Window.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
+        .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
         .occurences(new Range<>(3, 10))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(activityTypeDependent)

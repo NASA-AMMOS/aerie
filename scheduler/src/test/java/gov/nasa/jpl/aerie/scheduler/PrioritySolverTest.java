@@ -200,7 +200,7 @@ public class PrioritySolverTest {
 
     final var expectedPlan = makePlanA012(problem);
     //TODO: evaluation should have association of instances to goal
-    //TODO: should ensure no other spurious acts yet need to ignore special window activities
+    //TODO: should ensure no other spurious acts yet need to ignore special interval activities
     //TODO: may want looser expectation (eg allow flexibility as long as right repeat pattern met)
     assertThat(equalsExceptInName(plan.getActivitiesByTime().get(0), expectedPlan.getActivitiesByTime().get(0)))
         .isTrue();
@@ -234,7 +234,7 @@ public class PrioritySolverTest {
 
     final var expectedPlan = makePlanAB012(problem);
     //TODO: evaluation should have association of instances to goal
-    //TODO: should ensure no other spurious acts yet need to ignore special window activities
+    //TODO: should ensure no other spurious acts yet need to ignore special interval activities
     assertThat(plan.getActivitiesByTime())
         .comparingElementsUsing(equalExceptInName)
         .containsAtLeastElementsIn(expectedPlan.getActivitiesByTime());

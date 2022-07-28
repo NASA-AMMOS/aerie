@@ -7,9 +7,8 @@ import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
@@ -117,7 +116,7 @@ public final class GetSimulationResultsAction {
           id.id(),
           activity.type(),
           activity.arguments(),
-          Window.between(activityOffset, activityOffset.plus(activity.duration()))));
+          Interval.between(activityOffset, activityOffset.plus(activity.duration()))));
     }
     final var _discreteProfiles = results$
         .map(r -> r.discreteProfiles)
@@ -132,7 +131,7 @@ public final class GetSimulationResultsAction {
         final var value = piece.getRight();
 
         pieces.add(new DiscreteProfilePiece(
-            Window.between(elapsed, elapsed.plus(extent)),
+            Interval.between(elapsed, elapsed.plus(extent)),
             value));
 
         elapsed = elapsed.plus(extent);
@@ -153,7 +152,7 @@ public final class GetSimulationResultsAction {
         final var value = piece.getRight();
 
         pieces.add(new LinearProfilePiece(
-            Window.between(elapsed, elapsed.plus(extent)),
+            Interval.between(elapsed, elapsed.plus(extent)),
             value.initial,
             value.rate));
 
@@ -168,7 +167,7 @@ public final class GetSimulationResultsAction {
         Duration.MICROSECONDS);
 
     final var preparedResults = new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
-        Window.between(Duration.ZERO, planDuration),
+        Interval.between(Duration.ZERO, planDuration),
         activities,
         realProfiles,
         discreteProfiles);

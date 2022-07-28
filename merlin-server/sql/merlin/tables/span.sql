@@ -25,8 +25,8 @@ create table span (
 partition by list (dataset_id);
 
 comment on table span is e''
-  'A temporal window of interest. A span may be refined by its children, providing additional information over '
-  'more specific windows.';
+  'A temporal interval of interest. A span may be refined by its children, providing additional information over '
+  'more specific intervals.';
 
 comment on column span.id is e''
   'The synthetic identifier for this span.';
