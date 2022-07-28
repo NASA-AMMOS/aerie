@@ -1,5 +1,6 @@
 import * as AST from './constraints-ast.js';
-import * as Gen from './mission-model-generated-code.js';
+import type * as Gen from './mission-model-generated-code.js';
+import {ActivityType, ActivityTypeParameterMap} from "./mission-model-generated-code.js";
 
 export class Constraint {
   /** Internal AST node */
@@ -23,7 +24,7 @@ export class Constraint {
 
   public static ForEachActivity<A extends Gen.ActivityType>(
     activityType: A,
-    expression: (instance: Gen.ActivityInstance<A>) => Constraint,
+    expression: (instance: ActivityInstance<A>) => Constraint,
   ): Constraint {
     let alias = 'activity alias ' + Constraint.__numGeneratedAliases;
     Constraint.__numGeneratedAliases += 1;
@@ -31,7 +32,7 @@ export class Constraint {
       kind: AST.NodeKind.ForEachActivity,
       activityType,
       alias,
-      expression: expression(new Gen.ActivityInstance(activityType, alias)).__astNode,
+      expression: expression(new ActivityInstance(activityType, alias)).__astNode,
     });
   }
 }
@@ -231,7 +232,7 @@ export class Discrete<Schema> {
     this.__astNode = profile;
   }
 
-  public static Resource<R extends Gen.ResourceName>(name: R): Discrete<Gen.DiscreteResourceSchema<R>> {
+  public static Resource<R extends Gen.ResourceName>(name: R): Discrete<Gen.Resource[R]> {
     return new Discrete({
       kind: AST.NodeKind.DiscreteProfileResource,
       name,
@@ -282,6 +283,47 @@ export class Discrete<Schema> {
   }
 }
 
+export class ActivityInstance<A extends ActivityType> {
+
+  private readonly __activityType: A;
+  private readonly __alias: string;
+  public readonly parameters: ReturnType<typeof ActivityTypeParameterMap[A]>;
+
+  constructor(activityType: A, alias: string) {
+    this.__activityType = activityType;
+    this.__alias = alias;
+    this.parameters = ActivityTypeParameterMap[activityType](alias) as ReturnType<typeof ActivityTypeParameterMap[A]>;
+  }
+
+  /**
+   * Produces a window for the duration of the activity.
+   */
+  public window(): Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionActivityWindow,
+      alias: this.__alias
+    });
+  }
+  /**
+   * Produces an instantaneous window at the start of the activity.
+   */
+  public start(): Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionStartOf,
+      alias: this.__alias
+    });
+  }
+  /**
+   * Produces an instantaneous window at the end of the activity.
+   */
+  public end(): Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionEndOf,
+      alias: this.__alias
+    });
+  }
+}
+
 declare global {
   export class Constraint {
     /** Internal AST Node */
@@ -307,7 +349,7 @@ declare global {
      */
     public static ForEachActivity<A extends Gen.ActivityType>(
       activityType: A,
-      expression: (instance: Gen.ActivityInstance<A>) => Constraint,
+      expression: (instance: ActivityInstance<A>) => Constraint,
     ): Constraint;
   }
 
@@ -473,7 +515,7 @@ declare global {
      * @param name
      * @constructor
      */
-    public static Resource<R extends Gen.ResourceName>(name: R): Discrete<Gen.DiscreteResourceSchema<R>>;
+    public static Resource<R extends Gen.ResourceName>(name: R): Discrete<Gen.Resource[R]>;
 
     /**
      * Create a constant discrete profile for all time.
