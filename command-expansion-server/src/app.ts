@@ -122,7 +122,7 @@ app.post('/put-dictionary', async (req, res, next) => {
     values ($1, $2, $3)
     on conflict (mission, version) do update
       set command_types_typescript_path = $1
-    returning id;
+    returning id, command_types_typescript_path, mission, version, created_at, updated_at;
   `;
 
   const { rows } = await db.query(sqlExpression, [
@@ -134,8 +134,8 @@ app.post('/put-dictionary', async (req, res, next) => {
   if (rows.length < 1) {
     throw new Error(`POST /dictionary: No command dictionary was updated in the database`);
   }
-  const id = rows[0].id;
-  res.status(200).json({ id });
+  const [row] = rows;
+  res.status(200).json(row);
   return next();
 });
 
@@ -282,10 +282,12 @@ app.post('/get-command-typescript', async (req, res, next) => {
 
     res.status(200).json({
       status: Status.SUCCESS,
-      typescriptFiles: [{
-        filePath: 'command-types.ts',
-        content: commandTypescript,
-      }],
+      typescriptFiles: [
+        {
+          filePath: 'command-types.ts',
+          content: commandTypescript,
+        },
+      ],
       reason: null,
     });
   } catch (e) {
@@ -309,10 +311,12 @@ app.post('/get-activity-typescript', async (req, res, next) => {
 
   res.status(200).json({
     status: Status.SUCCESS,
-    typescriptFiles: [{
-      filePath: 'activity-types.ts',
-      content: activityTypescript,
-    }],
+    typescriptFiles: [
+      {
+        filePath: 'activity-types.ts',
+        content: activityTypescript,
+      },
+    ],
     reason: null,
   });
   return next();
