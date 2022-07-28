@@ -51,6 +51,54 @@ public class ASTTests {
   }
 
   @Test
+  public void testStarts() {
+    final var simResults = new SimulationResults(
+        Window.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var windows = new Windows();
+    windows.add(Window.between(0, Inclusive, 5, Exclusive, SECONDS));
+    windows.add(Window.between(10, Exclusive, 15, Exclusive, SECONDS));
+    windows.add(Window.at(20, SECONDS));
+
+    final var result = new Starts(Supplier.of(windows)).evaluate(simResults, Map.of());
+
+    final var expected = new Windows();
+    expected.add(Window.at(0, SECONDS));
+    expected.add(Window.at(10, SECONDS));
+    expected.add(Window.at(20, SECONDS));
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testEnds() {
+    final var simResults = new SimulationResults(
+        Window.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var windows = new Windows();
+    windows.add(Window.between(0, Inclusive, 5, Exclusive, SECONDS));
+    windows.add(Window.between(10, Exclusive, 15, Exclusive, SECONDS));
+    windows.add(Window.at(20, SECONDS));
+
+    final var result = new Ends(Supplier.of(windows)).evaluate(simResults, Map.of());
+
+    final var expected = new Windows();
+    expected.add(Window.at(5, SECONDS));
+    expected.add(Window.at(15, SECONDS));
+    expected.add(Window.at(20, SECONDS));
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
   public void testAnd() {
     final var simResults = new SimulationResults(
         Window.between(0, 20, SECONDS),

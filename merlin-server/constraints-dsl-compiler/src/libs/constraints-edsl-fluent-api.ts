@@ -108,6 +108,20 @@ export class Windows {
       fromEnd: fromEnd
     })
   }
+
+  public starts(): Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionStarts,
+      expression: this.__astNode
+    })
+  }
+
+  public ends(): Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionEnds,
+      expression: this.__astNode
+    })
+  }
 }
 
 export class Real {
@@ -372,6 +386,15 @@ declare global {
      */
     public shorterThan(duration: Duration): Windows;
 
+    /**
+     * Returns the instantaneous start points of the these windows.
+     */
+    public starts(): Windows;
+
+    /**
+     * Returns the instantaneous end points of the these windows.
+     */
+    public ends(): Windows;
   }
 
   export class Real {
