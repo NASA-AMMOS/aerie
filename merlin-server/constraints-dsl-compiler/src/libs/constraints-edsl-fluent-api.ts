@@ -108,6 +108,28 @@ export class Windows {
       fromEnd: fromEnd
     })
   }
+
+  public spans(): Spans {
+    return new Spans({
+      kind: AST.NodeKind.SpansExpressionFromWindows,
+      windowsExpression: this.__astNode
+    })
+  }
+}
+
+export class Spans {
+  public readonly __astNode: AST.SpansExpression;
+
+  public constructor(expression: AST.SpansExpression) {
+    this.__astNode = expression;
+  }
+
+  public windows(): Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionFromSpans,
+      spansExpression: this.__astNode
+    })
+  }
 }
 
 export class Real {
@@ -372,6 +394,22 @@ declare global {
      */
     public shorterThan(duration: Duration): Windows;
 
+    /**
+     * Convert this into a set of Spans.
+     */
+    public spans(): Spans;
+  }
+
+  export class Spans {
+    public readonly __astNode: AST.SpansExpression;
+
+    /**
+     * Convert this into a set of Windows.
+     *
+     * This is a lossy operation.
+     * If any spans overlap or touch, they will be coalesced into a single window.
+     */
+    public windows(): Windows;
   }
 
   export class Real {
@@ -512,4 +550,4 @@ declare global {
 }
 
 // Make Constraint available on the global object
-Object.assign(globalThis, { Constraint, Windows, Real, Discrete });
+Object.assign(globalThis, { Constraint, Windows, Spans, Real, Discrete });
