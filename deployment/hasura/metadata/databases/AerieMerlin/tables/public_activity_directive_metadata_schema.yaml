@@ -1,0 +1,3 @@
+table:
+  name: activity_directive_metadata_schema
+  schema: public
