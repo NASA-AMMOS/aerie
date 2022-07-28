@@ -27,9 +27,9 @@
           "id": 3,
           "rowSizes": "2fr 3px 1fr",
           "rows": [
-            { "componentName": "Timeline", "id": 4, "timelineId": 0, "type": "component" },
+            { "componentName": "TimelinePanel", "id": 4, "timelineId": 0, "type": "component" },
             { "id": 5, "track": 1, "type": "gutter" },
-            { "activityTableId": 0, "componentName": "ActivityTable", "id": 6, "type": "component" }
+            { "activityTableId": 0, "componentName": "ActivityTablePanel", "id": 6, "type": "component" }
           ],
           "type": "rows"
         },

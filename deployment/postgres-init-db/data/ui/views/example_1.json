@@ -26,7 +26,7 @@
       "columns": [
         { "id": 1, "componentName": "ActivityTypesPanel", "type": "component" },
         { "id": 2, "track": 1, "type": "gutter" },
-        { "id": 3, "componentName": "Timeline", "timelineId": 0, "type": "component" }
+        { "id": 3, "componentName": "TimelinePanel", "timelineId": 0, "type": "component" }
       ]
     },
     "timelines": [
