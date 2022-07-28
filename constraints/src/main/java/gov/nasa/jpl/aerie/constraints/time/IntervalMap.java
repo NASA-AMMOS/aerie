@@ -602,18 +602,9 @@ final class IntervalMap<V> {
   }
 
   public Iterable<Pair<Window,V>> descendingOrder() {
-    return () -> new Iterator<>() {
-      private final ListIterator<Pair<Window,V>> iter = IntervalMap.this.segments.listIterator();
-
-      @Override
-      public boolean hasNext() {
-        return this.iter.hasPrevious();
-      }
-      @Override
-      public Pair<Window,V> next() {
-        return this.iter.previous();
-      }
-    };
+    List<Pair<Window, V>> reversed = new ArrayList<>(this.segments);
+    Collections.reverse(reversed);
+    return reversed;
   }
 
   public int size() {
@@ -654,5 +645,14 @@ final class IntervalMap<V> {
     }).ascendingOrder().spliterator(), false).collect(Collectors.toList())
                         .stream().map($a -> $a.getValue())
                         .reduce(true, Boolean::logicalAnd);
+  }
+
+  public IntervalAlgebra<Windows.WindowAlgebra, Window> getAlg() {
+    return alg;
+  }
+
+  @Override
+  public String toString() {
+    return this.segments.toString();
   }
 }
