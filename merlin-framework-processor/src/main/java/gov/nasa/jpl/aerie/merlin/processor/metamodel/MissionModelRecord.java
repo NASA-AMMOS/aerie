@@ -4,6 +4,7 @@ import com.squareup.javapoet.ClassName;
 
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -13,6 +14,7 @@ public final class MissionModelRecord {
   public final TypeElement topLevelModel;
   public final List<TypeRule> typeRules;
   public final List<ActivityTypeRecord> activityTypes;
+  public final Collection<TypeElement> autoValueMapperRequests;
   public final Optional<ConfigurationTypeRecord> modelConfigurationType;
 
   public MissionModelRecord(
@@ -20,13 +22,15 @@ public final class MissionModelRecord {
       final TypeElement topLevelModel,
       final Optional<ConfigurationTypeRecord> modelConfigurationType,
       final List<TypeRule> typeRules,
-      final List<ActivityTypeRecord> activityTypes)
+      final List<ActivityTypeRecord> activityTypes,
+      final Collection<TypeElement> autoValueMapperRequests)
   {
     this.$package = Objects.requireNonNull($package);
     this.topLevelModel = Objects.requireNonNull(topLevelModel);
     this.modelConfigurationType = Objects.requireNonNull(modelConfigurationType);
     this.typeRules = Objects.requireNonNull(typeRules);
     this.activityTypes = Objects.requireNonNull(activityTypes);
+    this.autoValueMapperRequests = autoValueMapperRequests;
   }
 
   public ClassName getMerlinPluginName() {
@@ -51,5 +55,9 @@ public final class MissionModelRecord {
 
   public ClassName getTypesName() {
     return ClassName.get(this.$package.getQualifiedName() + ".generated", "ActivityTypes");
+  }
+
+  public ClassName getAutoValueMappersName() {
+    return ClassName.get(this.$package.getQualifiedName() + ".generated", "AutoValueMappers");
   }
 }
