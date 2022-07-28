@@ -22,6 +22,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Rate;
 import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
+import gov.nasa.jpl.aerie.constraints.tree.Split;
 import gov.nasa.jpl.aerie.constraints.tree.StartOf;
 import gov.nasa.jpl.aerie.constraints.tree.Times;
 import gov.nasa.jpl.aerie.constraints.tree.Transition;
@@ -486,6 +487,29 @@ public final class ConstraintParsersTest {
     final var expected =
         new Invert(
             new ActivityWindow("A"));
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testParseSplit() {
+    final var json = Json
+        .createObjectBuilder()
+        .add("kind", "WindowsExpressionSplit")
+        .add("windows", Json
+            .createObjectBuilder()
+            .add("kind", "WindowsExpressionActivityWindow")
+            .add("alias", "A"))
+        .add("numberOfSubWindows", 3)
+        .build();
+
+    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+
+    final var expected =
+        new Split(
+            new ActivityWindow("A"),
+            3
+        );
 
     assertEquivalent(expected, result);
   }

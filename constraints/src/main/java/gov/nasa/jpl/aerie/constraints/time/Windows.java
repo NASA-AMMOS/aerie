@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
 
 public final class Windows implements Iterable<Window> {
@@ -134,6 +135,44 @@ public final class Windows implements Iterable<Window> {
     Windows ret = new Windows();
     StreamSupport.stream(windows.ascendingOrder().spliterator(), false)
         .forEach((x)-> ret.add(Window.between(x.start.plus(fromStart), x.startInclusivity, x.end.plus(fromEnd), x.endInclusivity)));
+    return ret;
+  }
+
+  public Windows split(final int numberOfSubWindows) {
+    // Do nothing if N = 1
+    if (numberOfSubWindows == 1) {
+      return new Windows(this);
+    }
+
+    Windows ret = new Windows();
+    StreamSupport.stream(windows.ascendingOrder().spliterator(), false)
+      .forEach(x -> {
+        // Width of each sub-window, rounded down to the microsecond
+        final var width = Duration.divide(Duration.subtract(x.end, x.start), numberOfSubWindows);
+
+        // If there are fewer microseconds in the window than we can split, make one window per microsecond.
+        // This is likely only to come up for instantaneous windows, which we should leave unchanged.
+        final var numberOfMicroSeconds = Duration.subtract(x.end, x.start).in(Duration.MICROSECOND);
+        final int adjustedSubWindows;
+
+        if (x.isSingleton()) {
+          ret.add(Window.at(x.start));
+          return;
+        } else if (numberOfMicroSeconds < numberOfSubWindows) {
+          adjustedSubWindows = (int) numberOfMicroSeconds;
+        } else {
+          adjustedSubWindows = numberOfSubWindows;
+        }
+
+        var cursor = Duration.add(x.start, width);
+        ret.add(Window.between(x.start, x.startInclusivity, cursor, Exclusive));
+        for (int i = 1; i < adjustedSubWindows - 1; i++) {
+          final var nextCursor = Duration.add(cursor, width);
+          ret.add(Window.between(cursor, Exclusive, nextCursor, Exclusive));
+          cursor = nextCursor;
+        }
+        ret.add(Window.between(cursor, Exclusive, x.end, x.endInclusivity));
+      });
     return ret;
   }
 
