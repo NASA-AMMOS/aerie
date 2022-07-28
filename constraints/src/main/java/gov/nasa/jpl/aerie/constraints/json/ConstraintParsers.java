@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.*;
 import gov.nasa.jpl.aerie.json.BasicParsers;
@@ -281,6 +282,16 @@ public final class ConstraintParsers {
             $ -> tuple(Unit.UNIT, $.expression)));
   }
 
+  static JsonParser<WindowsFromSpans> windowsFromSpansF(final JsonParser<Expression<Spans>> spansExpressionP) {
+    return productP
+        .field("kind", literalP("WindowsExpressionFromSpans"))
+        .field("spansExpression", spansExpressionP)
+        .map(Iso.of(
+            untuple((kind, expr) -> new WindowsFromSpans(expr)),
+            $ -> tuple(Unit.UNIT, $.expression())
+        ));
+  }
+
   static JsonParser<ForEachActivity> forEachActivityF(final JsonParser<Expression<List<Violation>>> violationListExpressionP) {
     return productP
         .field("kind", literalP("ForEachActivity"))
@@ -300,27 +311,49 @@ public final class ConstraintParsers {
               untuple((kind, expression) -> new Changes<>(expression)),
               $ -> tuple(Unit.UNIT, $.expression)));
 
-  public static final JsonParser<Expression<Windows>> windowsExpressionP =
-      recursiveP(selfP -> chooseP(
-          activityWindowP,
-          startOfP,
-          endOfP,
-          changesP,
-          lessThanP,
-          lessThanOrEqualP,
-          longerThanP(selfP),
-          shorterThanP(selfP),
-          greaterThanOrEqualP,
-          greaterThanP,
-          transitionP,
-          equalF(linearProfileExprP),
-          equalF(discreteProfileExprP),
-          notEqualF(linearProfileExprP),
-          notEqualF(discreteProfileExprP),
-          allF(selfP),
-          anyF(selfP),
-          invertF(selfP),
-          shiftByF(selfP)));
+  private static JsonParser<Expression<Windows>> windowsExpressionF(JsonParser<Expression<Spans>> spansP) {
+    return recursiveP(selfP -> chooseP(
+        activityWindowP,
+        startOfP,
+        endOfP,
+        changesP,
+        lessThanP,
+        lessThanOrEqualP,
+        longerThanP(selfP),
+        shorterThanP(selfP),
+        greaterThanOrEqualP,
+        greaterThanP,
+        transitionP,
+        equalF(linearProfileExprP),
+        equalF(discreteProfileExprP),
+        notEqualF(linearProfileExprP),
+        notEqualF(discreteProfileExprP),
+        allF(selfP),
+        anyF(selfP),
+        invertF(selfP),
+        shiftByF(selfP),
+        windowsFromSpansF(spansP)));
+  }
+
+  static JsonParser<SpansFromWindows> spansFromWindowsF(JsonParser<Expression<Windows>> windowsExpressionP) {
+    return productP
+        .field("kind", literalP("SpansExpressionFromWindows"))
+        .field("windowsExpression", windowsExpressionP)
+        .map(Iso.of(
+            untuple((kind, expr) -> new SpansFromWindows(expr)),
+            $ -> tuple(Unit.UNIT, $.expression())
+        ));
+  }
+
+  private static JsonParser<Expression<Spans>> spansExpressionF(JsonParser<Expression<Windows>> windowsP) {
+      return recursiveP(selfP -> chooseP(
+          spansFromWindowsF(windowsP)
+      ));
+  }
+
+  public static final JsonParser<Expression<Windows>> windowsExpressionP = recursiveP(selfP -> windowsExpressionF(spansExpressionF(selfP)));
+
+  public static final JsonParser<Expression<Spans>> spansExpressionP = recursiveP(selfP -> spansExpressionF(windowsExpressionF(selfP)));
 
   static final JsonParser<ViolationsOf> violationsOfP =
       productP
