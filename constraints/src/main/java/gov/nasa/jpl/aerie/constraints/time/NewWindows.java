@@ -497,13 +497,36 @@ public final class NewWindows implements Iterable<Pair<Window, Boolean>> {
 
   //the equivalent to includes, but just checking not null, not necessarily for equal.
   public boolean isNotNull(final NewWindows other) {
-    //like includes below, but agnostic to values. just sees if, true or false, is it present. This is just the
-    //  includes method in IntervalMap.
-    //so check inclusion of each window, replace with true or false, then crunch by anding. if all present, then all
-    //  true, so return true, else false.
-    return StreamSupport.stream(other.windows.ascendingOrder().spliterator(), false).collect(Collectors.toList())
-        .stream().map($ -> this.windows.includes($.getKey(), $.getValue()))
-        .reduce(true, Boolean::logicalAnd);
+    // orig  |  other   | output
+    //  T    |    T     |   T
+    //  T    |    F     |   T
+    //  T    |    N     |   N
+    //  F    |    T     |   T
+    //  F    |    F     |   T
+    //  F    |    N     |   N
+    //  N    |    T     |   F
+    //  N    |    F     |   F
+    //  N    |    N     |   N
+
+    final var inclusion = IntervalMap.map2(
+        this.windows,
+        other.windows,
+        ($original, $other) -> {
+          if ($other.isPresent() && !$original.isPresent()) {
+            return Optional.of(false);
+          }
+          else if ($other.isPresent() && $original.isPresent()) {
+            return Optional.of(true);
+          }
+          else {
+            return Optional.empty();
+          }
+        });
+
+    //anywhere where the above has false means inclusion wasn't perfect, so squash and get a truth value:
+    return StreamSupport.stream(inclusion.ascendingOrder().spliterator(), false).collect(Collectors.toList())
+                        .stream().map($a -> $a.getValue())
+                        .reduce(true, Boolean::logicalAnd);
   }
 
   public boolean isNotNull(final Window probe, final boolean value) {
@@ -542,7 +565,7 @@ public final class NewWindows implements Iterable<Pair<Window, Boolean>> {
     final var inclusion = IntervalMap.map2(
         this.windows,
         other.windows,
-        ($other, $original) -> {
+        ($original, $other) -> {
           if ($other.isPresent()) {
             if($other.get()) {
               if (!$original.isPresent()) {
@@ -554,16 +577,17 @@ public final class NewWindows implements Iterable<Pair<Window, Boolean>> {
               if (!$original.isPresent()) {
                 return Optional.empty();
               }
-              return Optional.of(false);
+              return Optional.of(true);
             }
           }
-          return Optional.empty();
+          return Optional.of(true);
         });
 
     //anywhere where the above has false means inclusion wasn't perfect, so squash and get a truth value:
     return StreamSupport.stream(inclusion.ascendingOrder().spliterator(), false).collect(Collectors.toList())
                         .stream().map($a -> $a.getValue())
                         .reduce(true, Boolean::logicalAnd);
+    //TODO: do we agree? if other is NULL, then this method always returns true
   }
 
   public boolean includes(final Window probe) {

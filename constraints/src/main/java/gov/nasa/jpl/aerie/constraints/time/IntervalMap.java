@@ -615,6 +615,9 @@ final class IntervalMap<V> {
     return segments.isEmpty();
   }
 
+  //TODO: this is never used. the point of isNotNull was maybe to get use out of this while providing an alternative to
+  //  includes, but this method was the wrong thing to use. not sure if this should just be exposed through NewWindows,
+  //  if so, can't think of an inutitive name!
   public boolean includes(final Window interval, final V value) {
     return segments.contains(Pair.of(interval, value));
   }

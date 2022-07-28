@@ -4,21 +4,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
-import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
-import static gov.nasa.jpl.aerie.constraints.time.Window.window;
-import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
-import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class NewWindowsTest {
@@ -940,51 +930,185 @@ public class NewWindowsTest {
 
   @Test
   public void subsetContainedSpillOver() {
+    var orig = new NewWindows(Pair.of(Window.between(0, 3, SECONDS), true),
+                              Pair.of(Window.between(4, 5, SECONDS), true),
+                              Pair.of(Window.between(6, 8, SECONDS), true));
+
+    var spillOver = orig.subsetContained(Window.between(2, 7, SECONDS));
+
+    //if there is spillover, drops those entire intervals - based on implementation of Window.contains
+    //ONLY KEEPS IF TRUE!!!
+    assertEquals(spillOver, new NewWindows(Pair.of(Window.between(4, 5, SECONDS), true)));
 
   }
 
   @Test
   public void subsetContainedMeetsEndLeft() {
 
+    var alg = new Windows.WindowAlgebra(Window.between(0, 10, SECONDS));
+
+    var orig = new NewWindows(alg);
+    orig.setAll(new NewWindows(Pair.of(Window.between(0, 3, SECONDS), true),
+                               Pair.of(Window.between(4, 5, SECONDS), true),
+                               Pair.of(Window.between(6, 10, SECONDS), true)));
+
+    var leftEnd = orig.subsetContained(Window.between(0, 7, SECONDS));
+
+    assertEquals(leftEnd, new NewWindows(Pair.of(Window.between(0, 3, SECONDS), true),
+                                      Pair.of(Window.between(4, 5, SECONDS), true)));
+
   }
 
   @Test
   public void subsetContainedMeetsEndRight() {
+    var alg = new Windows.WindowAlgebra(Window.between(0, 10, SECONDS));
 
+    var orig = new NewWindows(alg);
+    orig.setAll(new NewWindows(Pair.of(Window.between(0, 3, SECONDS), true),
+                               Pair.of(Window.between(4, 5, SECONDS), true),
+                               Pair.of(Window.between(6, 10, SECONDS), true)));
+
+    var rightEnd = orig.subsetContained(Window.between(5, 10, SECONDS));
+
+    assertEquals(rightEnd, new NewWindows(Pair.of(Window.between(6, 10, SECONDS), true)));
   }
 
   @Test
   public void subsetContainedMeetsEnds() {
+    var alg = new Windows.WindowAlgebra(Window.between(0, 10, SECONDS));
 
+    var orig = new NewWindows(alg);
+    orig.setAll(new NewWindows(Pair.of(Window.between(0, 3, SECONDS), true),
+                               Pair.of(Window.between(4, 5, SECONDS), false),
+                               Pair.of(Window.between(6, 10, SECONDS), false)));
+
+    var all = orig.subsetContained(Window.between(0, 10, SECONDS));
+
+    assertEquals(all, new NewWindows(Pair.of(Window.between(0, 3, SECONDS), true))); //only keeps the true ones
   }
 
   @Test
-  public void getOverlapsSpllover() {
+  public void getOverlapsSpillover() {
+    //keeps true or false!
+    var orig = new NewWindows(Pair.of(Window.between(0, 3, SECONDS), true),
+                              Pair.of(Window.between(4, 5, SECONDS), false),
+                              Pair.of(Window.between(6, 8, SECONDS), false));
 
+    var spillOver = orig.getOverlaps(Window.between(2, Exclusive, 7, Exclusive, SECONDS));
+
+    assertEquals(spillOver, new NewWindows(Pair.of(Window.between(2, Exclusive, 3, Inclusive, SECONDS), true),
+                                           Pair.of(Window.between(4, 5, SECONDS), false),
+                                           Pair.of(Window.between(6, Inclusive, 7, Exclusive, SECONDS), false)));
   }
 
   @Test
   public void isNotNullMain() {
+
+    //same test scheme as includes below, just with different evaluations as we just check null, not values.
+
+    // orig  |  other   | output
+    //  T    |    T     |   T
+    //  T    |    F     |   T
+    //  T    |    N     |   T
+    //  F    |    T     |   T
+    //  F    |    F     |   T
+    //  F    |    N     |   T
+    //  N    |    T     |   F
+    //  N    |    F     |   F
+    //  N    |    N     |   T
+
+    var nw = new NewWindows(new Windows.WindowAlgebra(Window.between(1, 2, SECONDS)));
+
+    nw.set(Window.between(1, 2, SECONDS), true);
+    assertTrue(nw.isNotNull(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), true)))); //TT case
+    assertTrue(nw.isNotNull(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), false)))); //TF case
+    assertTrue(nw.isNotNull(new NewWindows())); //TN case
+
+    nw.set(Window.between(1, 2, SECONDS), false);
+    assertTrue(nw.isNotNull(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), true)))); //FT case
+    assertTrue(nw.isNotNull(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), false)))); //FF case
+    assertTrue(nw.isNotNull(new NewWindows())); //FN case
+
+    nw.clear();
+    assertFalse(nw.isNotNull(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), true)))); //NT case
+    assertFalse(nw.isNotNull(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), false)))); //NF case
+    assertTrue(nw.isNotNull(new NewWindows())); //NN case
 
   }
 
   @Test
   public void isNotNullVariations() {
 
+    //want to test out isNotNull(Window), isNotNull(Duration), isNotNull(Point) - do all true for now.
+    var nw = new NewWindows(new Windows.WindowAlgebra(Window.between(1, 2, SECONDS)));
+
+    nw.set(Window.between(1, 2, SECONDS), true);
+    assertTrue(nw.isNotNull(Window.between(1, 2, SECONDS), false)); //values dont matter, that was already tested.
+    assertTrue(nw.isNotNull(1, 2, SECONDS, false));
+    assertTrue(nw.pointIsNotNull(1, SECONDS, false));
+
   }
 
   @Test
   public void includesMain() {
 
+    //just test truth table associated with the map2 call for this method, don't waste time
+    //  with bounds checking as that was done for map2!!
+
+    // orig  |  other   | output
+    //  T    |    T     |   T
+    //  T    |    F     |   T
+    //  T    |    N     |   T
+    //  F    |    T     |   F
+    //  F    |    F     |   T
+    //  F    |    N     |   T
+    //  N    |    T     |   F
+    //  N    |    F     |   T
+    //  N    |    N     |   T
+
+    var nw = new NewWindows(new Windows.WindowAlgebra(Window.between(1, 2, SECONDS)));
+
+    nw.set(Window.between(1, 2, SECONDS), true);
+    assertTrue(nw.includes(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), true)))); //TT case
+    assertTrue(nw.includes(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), false)))); //TF case
+    assertTrue(nw.includes(new NewWindows())); //TN case
+
+    nw.set(Window.between(1, 2, SECONDS), false);
+    assertFalse(nw.includes(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), true)))); //FT case
+    assertTrue(nw.includes(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), false)))); //FF case
+    assertTrue(nw.includes(new NewWindows())); //FN case
+
+    nw.clear();
+    assertFalse(nw.includes(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), true)))); //NT case
+    assertTrue(nw.includes(new NewWindows(Pair.of(Window.between(1, 2, SECONDS), false)))); //NF case
+    assertTrue(nw.includes(new NewWindows())); //NN case
+
   }
 
   @Test
-  public void includesVariations(){
+  public void includesVariations() {
+
+    //want to test out includes(Window), includes(Duration), includes(Point) - do all true for now.
+    var nw = new NewWindows(new Windows.WindowAlgebra(Window.between(1, 2, SECONDS)));
+
+    nw.set(Window.between(1, 2, SECONDS), true);
+    assertTrue(nw.includes(Window.between(1, 2, SECONDS)));
+    assertTrue(nw.includes(1, 2, SECONDS));
+    assertTrue(nw.includesPoint(1, SECONDS));
 
   }
 
   @Test
   public void iterator() {
+    var nw = new NewWindows(new Windows.WindowAlgebra(Window.between(1, 2, SECONDS)));
+    nw.set(Window.between(1, 2, SECONDS), true);
 
+    //some simple iterator tests
+    var iter = nw.iterator();
+    iter.forEachRemaining($ -> assertEquals($, Pair.of(Window.between(1, 2, SECONDS), true)));
+
+    iter = nw.iterator(); //everything has been consumed - need to reset
+    assertEquals(iter.next(), Pair.of(Window.between(1, 2, SECONDS), true));
+    assertFalse(iter.hasNext());
   }
 }
