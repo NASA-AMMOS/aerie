@@ -105,17 +105,17 @@ create trigger insert_scheduling_specification_goal
   before insert
   on scheduling_specification_goals
   for each row
-execute procedure insert_scheduling_specification_goal_func();
+execute function insert_scheduling_specification_goal_func();
 
 create trigger update_scheduling_specification_goal
   before update
   on scheduling_specification_goals
   for each row
   when (OLD.priority is distinct from NEW.priority)
-execute procedure update_scheduling_specification_goal_func();
+execute function update_scheduling_specification_goal_func();
 
 create trigger delete_scheduling_specification_goal
   after delete
   on scheduling_specification_goals
   for each row
-execute procedure delete_scheduling_specification_goal_func();
+execute function delete_scheduling_specification_goal_func();

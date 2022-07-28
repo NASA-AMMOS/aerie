@@ -41,4 +41,4 @@ end$$;
 create trigger set_timestamp
 before update on sequence
 for each row
-execute procedure sequence_set_updated_at();
+execute function sequence_set_updated_at();
