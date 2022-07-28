@@ -279,6 +279,7 @@ public final class Windows implements Iterable<Window> {
       return Window.between(horizon.start, Exclusive, horizon.start, Exclusive);
     }
 
+    @Override
     public final Window bounds() { return horizon; }
   }
 }
