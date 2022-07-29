@@ -30,12 +30,16 @@ public final class TypescriptCodeGenerationService {
     }
     result.add("}");
 
-    result.add("export type ResourceName = " + String.join(" | ", resources.keySet().stream().map($ -> "\"" + $ + "\"").toList()) + ";");
-    result.add("export type DiscreteResourceSchema<R extends ResourceName> =");
+    result.add("export type Resource = {");
     for (var resource: resources.keySet()) {
-      result.add(indent("R extends \"" + resource + "\" ? " + valueSchemaToTypescript(resources.get(resource)) + " :"));
+      result.add(indent("\"" + resource + "\": " + valueSchemaToTypescript(resources.get(resource)) + ","));
     }
-    result.add(indent("never;"));
+    result.add("};");
+
+    result.add("export type ResourceName = " + String.join(
+        " | ",
+        resources.keySet().stream().map(key -> ("\"" + key + "\"")).toList()
+    ) + ";");
 
     result.add("export type RealResourceName = " + String.join(
         " | ",
@@ -44,102 +48,28 @@ public final class TypescriptCodeGenerationService {
 
     // ActivityParameters
 
-    result.add("export type ActivityParameters<A extends ActivityType> =");
+    result.add("export const ActivityTypeParameterMap = {");
     for (String activityType: activityTypes.keySet()) {
-      StringBuilder parameterSchema = new StringBuilder("{");
-      for (Parameter parameter: activityTypes.get(activityType).parameters()) {
-        parameterSchema
-            .append(parameter.name())
-            .append(": ")
-            .append(valueSchemaToTypescriptProfile(parameter.schema()))
-            .append(", ");
-      }
-      parameterSchema.append("}");
-      result.add(indent("A extends ActivityType." + activityType + " ? " + parameterSchema + " :"));
-    }
-    result.add(indent("never;"));
-
-    // ActivityInstance
-
-    result.add("export class ActivityInstance<A extends ActivityType> {");
-    result.add(indent("""
-                          private readonly __activityType: A;
-                          private readonly __alias: string;
-                          constructor(activityType: A, alias: string) {
-                          """));
-
-    result.add(indent(indent("""
-                                 this.__activityType = activityType;
-                                 this.__alias = alias;
-                                 """)));
-    result.add(indent("""
-                          }
-                          public get parameters(): ActivityParameters<A> {"""));
-
-    result.add(indent(indent("let result = (")));
-    for (String activityType: activityTypes.keySet()) {
-      final var profileObject = new StringBuilder("{");
-      for (var parameter: activityTypes.get(activityType).parameters()) {
+      result.add(indent("[ActivityType." + activityType + "]: (alias: string) => ({"));
+      for (final var parameter: activityTypes.get(activityType).parameters()) {
         var parameterProfile = valueSchemaToTypescriptProfile(parameter.schema());
-        String nodeKind;
+        final String nodeKind;
         if (parameterProfile.equals("Real")) {
           nodeKind = "RealProfileParameter";
         } else {
           nodeKind = "DiscreteProfileParameter";
         }
-        profileObject
-            .append(parameter.name())
-            .append(": new ")
-            .append(parameterProfile)
-            .append("({ kind: AST.NodeKind.")
-            .append(nodeKind)
-            .append(", alias: this.__alias, name: \"")
-            .append(parameter.name())
-            .append("\"}")
-            .append("), ");
+        result.add(indent(indent("\"" + parameter.name() + "\": new " + parameterProfile + "({")));
+        result.add(indent(indent(indent("""
+                                            kind: AST.NodeKind.%s,
+                                            alias,
+                                            name: "%s"
+                                            """.formatted(nodeKind, parameter.name())))));
+        result.add(indent(indent("}),")));
       }
-      profileObject.append("}");
-      result.add(indent(indent(indent("this.__activityType === ActivityType." + activityType + " ? " + profileObject + " :"))));
+      result.add(indent("}),"));
     }
-    result.add(indent(indent(indent("undefined) as ActivityParameters<A>;"))));
-    result.add(indent(indent("""
-                                 if (result === undefined) {
-                                   throw new TypeError("Unreachable state. Activity type was unexpected string in ActivityInstance.parameters(): " + this.__activityType);
-                                 } else {
-                                   return result;
-                                 }""")));
-
-    result.add(indent("""
-                          }
-                          /**
-                           * Produces a window for the duration of the activity.
-                           */
-                          public window(): Windows {
-                            return new Windows({
-                              kind: AST.NodeKind.WindowsExpressionActivityWindow,
-                              alias: this.__alias
-                            });
-                          }
-                          /**
-                           * Produces an instantaneous window at the start of the activity.
-                           */
-                          public start(): Windows {
-                            return new Windows({
-                              kind: AST.NodeKind.WindowsExpressionStartOf,
-                              alias: this.__alias
-                            });
-                          }
-                          /**
-                           * Produces an instantaneous window at the end of the activity.
-                           */
-                          public end(): Windows {
-                            return new Windows({
-                              kind: AST.NodeKind.WindowsExpressionEndOf,
-                              alias: this.__alias
-                            });
-                          }"""));
-
-    result.add("}");
+    result.add("};");
 
     result.add("""
                    declare global {""");
