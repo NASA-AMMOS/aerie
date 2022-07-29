@@ -10,6 +10,7 @@ import javax.sql.DataSource;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -71,6 +72,23 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
     } catch (final SQLException ex) {
       throw new DatabaseException(
           "Failed to retrieve constraints for mission model with id `%s`".formatted(missionModelId), ex);
+    }
+  }
+
+  @Override
+  public Map<String, ActivityType> getActivityTypes(final String missionModelId) throws NoSuchMissionModelException {
+    try (final var connection = this.dataSource.getConnection()) {
+      try (final var getActivityTypesAction = new GetActivityTypesAction(connection)) {
+        final var id = toMissionModelId(missionModelId);
+        final var result = new HashMap<String, ActivityType>();
+        for (final var activityType: getActivityTypesAction.get(id)) {
+          result.put(activityType.name(), activityType);
+        }
+        return result;
+      }
+    } catch (final SQLException ex) {
+      throw new DatabaseException(
+          "Failed to retrieve activity types for mission model with id `%s`".formatted(missionModelId), ex);
     }
   }
 

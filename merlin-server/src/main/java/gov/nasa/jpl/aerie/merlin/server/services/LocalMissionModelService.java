@@ -84,11 +84,14 @@ public final class LocalMissionModelService implements MissionModelService {
    * it contains may not abide by the expected contract at load time.
    */
   @Override
-  public Map<String, ActivityType> getActivityTypes(String missionModelId)
+  public Map<String, ActivityType> getActivityTypes(final String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
-    return loadUnconfiguredMissionModel(missionModelId)
-        .getActivityTypes();
+    try {
+      return missionModelRepository.getActivityTypes(missionModelId);
+    } catch (MissionModelRepository.NoSuchMissionModelException e) {
+      throw new NoSuchMissionModelException(missionModelId, e);
+    }
   }
 
   /**
@@ -225,7 +228,10 @@ public final class LocalMissionModelService implements MissionModelService {
   throws NoSuchMissionModelException
   {
     try {
-      this.missionModelRepository.updateActivityTypes(missionModelId, getActivityTypes(missionModelId));
+      final var activityTypes =
+          loadUnconfiguredMissionModel(missionModelId)
+              .getActivityTypes();
+      this.missionModelRepository.updateActivityTypes(missionModelId, activityTypes);
     } catch (final MissionModelRepository.NoSuchMissionModelException ex) {
       throw new NoSuchMissionModelException(missionModelId, ex);
     }
