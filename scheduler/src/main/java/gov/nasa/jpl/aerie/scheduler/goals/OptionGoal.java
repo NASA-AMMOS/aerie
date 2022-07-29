@@ -2,26 +2,21 @@ package gov.nasa.jpl.aerie.scheduler.goals;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
-import gov.nasa.jpl.aerie.scheduler.solver.optimizers.Optimizer;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.Range;
+import gov.nasa.jpl.aerie.scheduler.solver.optimizers.Optimizer;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class OptionGoal extends Goal {
 
-  private Range<Integer> namongp;
 
   private List<Goal> goals;
   private Optimizer optimizer;
 
   public List<Goal> getSubgoals() {
     return goals;
-  }
-
-  public Range<Integer> getNamongP(){
-    return this.namongp;
   }
 
   public boolean hasOptimizer(){
@@ -34,87 +29,37 @@ public class OptionGoal extends Goal {
 
   @Override
   public java.util.Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) {
-    return null;
-
+    throw new NotImplementedException("Conflict detection is performed at solver level");
   }
 
-  public static class Builder {
+  public static class Builder extends Goal.Builder<OptionGoal.Builder> {
 
     final List<Goal> goals = new ArrayList<>();
-    private String name;
-
-    enum CHOICE {
-      ATLEAST,
-      ATMOST,
-      EXACTLY
-    }
 
     Optimizer optimizer;
 
-    int namongp = 0;
-    CHOICE choice = null;
-
-    public Builder exactlyOneOf() {
-      if (choice != null) {
-        throw new IllegalArgumentException("Choice of goal satisfaction has been done already");
-      }
-      choice = CHOICE.EXACTLY;
-      namongp = 1;
-      return this;
-    }
-
-    public Builder named(String name) {
-      this.name = name;
-      return this;
-    }
-
-    public Builder atLeast(int n) {
-
-      if (choice != null) {
-        throw new IllegalArgumentException("Choice of goal satisfaction has been done already");
-      }
-      namongp = n;
-      choice = CHOICE.ATLEAST;
-      return this;
-    }
-
-
-    public Builder atMost(int n) {
-
-      if (choice != null) {
-        throw new IllegalArgumentException("Choice of goal satisfaction has been done already");
-      }
-      namongp = n;
-      choice = CHOICE.ATMOST;
-      return this;
-    }
-
     public Builder or(Goal goal) {
       goals.add(goal);
-      return this;
+      return getThis();
     }
 
     public Builder optimizingFor(Optimizer s) {
       optimizer = s;
+      return getThis();
+    }
+
+    @Override
+    protected Builder getThis() {
       return this;
     }
 
     public OptionGoal build() {
-
       OptionGoal dg = new OptionGoal();
+      super.fill(dg);
       dg.goals = goals;
       dg.name = name;
       dg.optimizer = optimizer;
-      switch (choice) {
-        case ATLEAST -> dg.namongp = new Range<>(this.namongp, goals.size());
-        case ATMOST -> dg.namongp = new Range<>(0, this.namongp);
-        case EXACTLY -> dg.namongp = new Range<>(this.namongp, this.namongp);
-      }
-
       return dg;
-
     }
-
   }
-
 }

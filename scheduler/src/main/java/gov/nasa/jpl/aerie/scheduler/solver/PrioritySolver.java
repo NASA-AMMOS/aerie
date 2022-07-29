@@ -298,70 +298,71 @@ public class PrioritySolver implements Solver {
   }
 
 
-private void satisfyOptionGoal(OptionGoal goal) {
-  if (goal.getNamongP().isSingleton() && goal.getNamongP().getMaximum() == 1) {
-    if (goal.hasOptimizer()) {
-      //try to satisfy all and see what is best
-      Goal currentSatisfiedGoal = null;
-      Collection<ActivityInstance> actsToInsert = null;
-      Collection<ActivityInstance> actsToAssociateWith = null;
-      for (var subgoal : goal.getSubgoals()) {
-        satisfyGoal(subgoal);
-        if(evaluation.forGoal(subgoal).getScore() == 0 || subgoal.isPartiallySatisfiable()) {
-          var associatedActivities = evaluation.forGoal(subgoal).getAssociatedActivities();
-          var insertedActivities = evaluation.forGoal(subgoal).getInsertedActivities();
-          var aggregatedActivities = new ArrayList<ActivityInstance>();
-          aggregatedActivities.addAll(associatedActivities);
-          aggregatedActivities.addAll(insertedActivities);
-          if (aggregatedActivities.size() > 0 &&
-              (goal.getOptimizer().isBetterThanCurrent(aggregatedActivities) ||
-               currentSatisfiedGoal == null)) {
-            actsToInsert = insertedActivities;
-            actsToAssociateWith = associatedActivities;
-            currentSatisfiedGoal = subgoal;
+  private void satisfyOptionGoal(OptionGoal goal) {
+      if (goal.hasOptimizer()) {
+        //try to satisfy all and see what is best
+        Goal currentSatisfiedGoal = null;
+        Collection<ActivityInstance> actsToInsert = null;
+        Collection<ActivityInstance> actsToAssociateWith = null;
+        for (var subgoal : goal.getSubgoals()) {
+          satisfyGoal(subgoal);
+          if(evaluation.forGoal(subgoal).getScore() == 0 || subgoal.isPartiallySatisfiable()) {
+            var associatedActivities = evaluation.forGoal(subgoal).getAssociatedActivities();
+            var insertedActivities = evaluation.forGoal(subgoal).getInsertedActivities();
+            var aggregatedActivities = new ArrayList<ActivityInstance>();
+            aggregatedActivities.addAll(associatedActivities);
+            aggregatedActivities.addAll(insertedActivities);
+            if (!aggregatedActivities.isEmpty() &&
+                (goal.getOptimizer().isBetterThanCurrent(aggregatedActivities) ||
+                 currentSatisfiedGoal == null)) {
+              actsToInsert = insertedActivities;
+              actsToAssociateWith = associatedActivities;
+              currentSatisfiedGoal = subgoal;
+            }
           }
+          rollback(subgoal);
         }
-        rollback(subgoal);
-      }
-      //we should have the best solution
-      if (currentSatisfiedGoal != null) {
-        for(var act: actsToAssociateWith){
-          //we do not care about ownership here as it is not really a piggyback but just the validation of the supergoal
-          evaluation.forGoal(goal).associate(act, false);
-        }
-        if(checkAndInsertActs(actsToInsert)) {
-          for(var act: actsToInsert){
+        //we should have the best solution
+        if (currentSatisfiedGoal != null) {
+          for(var act: actsToAssociateWith){
+            //we do not care about ownership here as it is not really a piggyback but just the validation of the supergoal
             evaluation.forGoal(goal).associate(act, false);
           }
-          evaluation.forGoal(goal).setScore(0);
-        } else{
-          //this should not happen because we have already tried to insert the same set of activities in the plan and it
-          //did not failed
-          throw new IllegalStateException("Had satisfied subgoal but (1) simulation or (2) association with supergoal failed");
+          if(checkAndInsertActs(actsToInsert)) {
+            for(var act: actsToInsert){
+              evaluation.forGoal(goal).associate(act, false);
+            }
+            evaluation.forGoal(goal).setScore(0);
+          } else{
+            //this should not happen because we have already tried to insert the same set of activities in the plan and it
+            //did not fail
+            throw new IllegalStateException("Had satisfied subgoal but (1) simulation or (2) association with supergoal failed");
+          }
+        } else {
+          evaluation.forGoal(goal).setScore(-1);
         }
       } else {
-        //number of subgoals needed to achieve supergoal
-        evaluation.forGoal(goal).setScore(goal.getNamongP().getMaximum() - goal.getNamongP().getMinimum());
-      }
-    } else {
-      //just satisfy any goal
-      for (var subgoal : goal.getSubgoals()) {
-        satisfyGoal(subgoal);
-        //if partially satisfiability
-        if (evaluation.forGoal(subgoal).getScore() == 0 || subgoal.isPartiallySatisfiable()) {
-          //decision-making here : we stop at the first subgoal satisfied
+        var atLeastOneSatisfied = false;
+        //just satisfy any goal
+        for (var subgoal : goal.getSubgoals()) {
+          satisfyGoal(subgoal);
+          final var subgoalIsSatisfied = (evaluation.forGoal(subgoal).getScore() == 0);
+          if(!subgoalIsSatisfied && !(goal.isPartiallySatisfiable())){
+            rollback(subgoal);
+          }
           evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false);
-          evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), false);
+          evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), true);
+          if(subgoalIsSatisfied){
+            atLeastOneSatisfied = true;
+            break;
+          }
+        }
+        if(atLeastOneSatisfied){
           evaluation.forGoal(goal).setScore(0);
-          break;
+        } else {
+          evaluation.forGoal(goal).setScore(-1);
         }
       }
-      }
-    } else {
-      throw new IllegalArgumentException(
-          "Other options than singleton namongp of OptionGoal has not yet been implemented");
-    }
-
   }
 
   private void rollback(Goal goal){
@@ -378,30 +379,30 @@ private void satisfyOptionGoal(OptionGoal goal) {
     assert goal != null;
     assert plan != null;
 
-    boolean failed = false;
-
+    var nbGoalSatisfied = 0;
     for (var subgoal : goal.getSubgoals()) {
       satisfyGoal(subgoal);
-      if (evaluation.forGoal(subgoal).getScore() != 0 && !subgoal.isPartiallySatisfiable()) {
-        failed = true;
-        break;
+      if (evaluation.forGoal(subgoal).getScore() == 0) {
+        nbGoalSatisfied++;
       }
     }
+    final var goalIsSatisfied = (nbGoalSatisfied == goal.getSubgoals().size());
+    if (goalIsSatisfied) {
+      evaluation.forGoal(goal).setScore(0);
+    } else {
+      evaluation.forGoal(goal).setScore(-1);
+    }
 
-    if (failed) {
-      //remove all activities
+    if (!goalIsSatisfied && !goal.isPartiallySatisfiable()) {
       for (var subgoal : goal.getSubgoals()) {
         rollback(subgoal);
       }
-    } else{
-      for(var subgoal : goal.getSubgoals()) {
+    } else {
+      for (var subgoal : goal.getSubgoals()) {
         evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false);
-        evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), false);
-        evaluation.forGoal(goal).setScore(0);
+        evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), true);
       }
     }
-
-
   }
 
 

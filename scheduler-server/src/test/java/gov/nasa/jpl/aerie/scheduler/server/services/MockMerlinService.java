@@ -126,8 +126,8 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   {
     this.updatedPlan = extractPlannedActivityInstances(plan);
     final var res = new HashMap<ActivityInstance, ActivityInstanceId>();
+    var id = 0L;
     for (final var activity : plan.getActivities()) {
-      var id = 0L;
       res.put(activity, new ActivityInstanceId(id++));
     }
     return res;

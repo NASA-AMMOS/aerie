@@ -48,8 +48,7 @@ export interface ActivityRecurrenceGoal {
 export interface ActivityCardinalityGoal {
   kind: NodeKind.ActivityCardinalityGoal,
   activityTemplate: ActivityTemplate,
-  specification: CardinalityGoalArguments,
-  inPeriod: ClosedOpenInterval,
+  specification: CardinalityGoalArguments
 }
 
 export interface ActivityCoexistenceGoal {

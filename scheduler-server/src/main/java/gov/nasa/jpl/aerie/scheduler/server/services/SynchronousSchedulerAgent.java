@@ -421,10 +421,24 @@ public record SynchronousSchedulerAgent(
     Map<GoalId, ScheduleResults.GoalResult> goalResults = new HashMap<>();
       for (var goalEval : plan.getEvaluation().getGoalEvaluations().entrySet()) {
         var goalId = goalsToIds.get(goalEval.getKey());
-        var goalResult = new ScheduleResults.GoalResult(goalEval.getValue().getInsertedActivities().stream().map(instancesToIds::get).collect(Collectors.toList()),
-                                                        goalEval.getValue().getAssociatedActivities().stream().map(instancesToIds::get).collect(Collectors.toList()),
-                                                        goalEval.getValue().getScore() >=0);
-        goalResults.put(goalId, goalResult);
+        //goal could be anonymous, a subgoal of a composite goal for example, and thus have no meaning for results sent back
+        if(goalId != null) {
+          final var goalResult = new ScheduleResults.GoalResult(
+              goalEval
+                  .getValue()
+                  .getInsertedActivities()
+                  .stream()
+                  .map(instancesToIds::get)
+                  .collect(Collectors.toList()),
+              goalEval
+                  .getValue()
+                  .getAssociatedActivities()
+                  .stream()
+                  .map(instancesToIds::get)
+                  .collect(Collectors.toList()),
+              goalEval.getValue().getScore() >= 0);
+          goalResults.put(goalId, goalResult);
+        }
       }
     return new ScheduleResults(goalResults);
   }

@@ -76,6 +76,7 @@ public class GoalBuilder {
                                                   horizonEndTimestamp,
                                                   lookupActivityType));
       }
+      builder.forAllTimeIn(new WindowsWrapperExpression(new Windows(hor)));
       return builder.build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalOr g) {
       var builder = new OptionGoal.Builder();
@@ -85,6 +86,7 @@ public class GoalBuilder {
                                                  horizonEndTimestamp,
                                                  lookupActivityType));
       }
+      builder.forAllTimeIn(new WindowsWrapperExpression(new Windows(hor)));
       return builder.build();
     }
 

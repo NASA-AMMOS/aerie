@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -128,7 +129,6 @@ public class SchedulingIntegrationTests {
                                         quantity: 1,
                                         growingDuration: 1000000,
                                       }),
-                                      inPeriod: {start :0, end:10000000},
                                       specification : {duration: 10 * 1000000}
                                     })
                   }
@@ -170,7 +170,6 @@ public class SchedulingIntegrationTests {
                                         quantity: 1,
                                         growingDuration: 1000000,
                                       }),
-                                      inPeriod: {start :0, end:10000000},
                                       specification : {occurrence: 10}
                                     })
                   }
@@ -835,14 +834,22 @@ public class SchedulingIntegrationTests {
   private SchedulingRunResults runScheduler(
       final MissionModelDescription desc,
       final List<MockMerlinService.PlannedActivityInstance> plannedActivities,
-      final Iterable<SchedulingGoal> goals
+      final Iterable<SchedulingGoal> goals){
+     return runScheduler(desc, plannedActivities, goals, new PlanningHorizon(
+         TimeUtility.fromDOY("2021-001T00:00:00"),
+         TimeUtility.fromDOY("2021-005T00:00:00")));
+  }
+
+  private SchedulingRunResults runScheduler(
+      final MissionModelDescription desc,
+      final List<MockMerlinService.PlannedActivityInstance> plannedActivities,
+      final Iterable<SchedulingGoal> goals,
+      final PlanningHorizon planningHorizon
   ) {
     final var mockMerlinService = new MockMerlinService();
     mockMerlinService.setMissionModel(getMissionModelInfo(desc));
     mockMerlinService.setInitialPlan(plannedActivities);
-    mockMerlinService.setPlanningHorizon(new PlanningHorizon(
-        TimeUtility.fromDOY("2021-001T00:00:00"),
-        TimeUtility.fromDOY("2021-005T00:00:00")));
+    mockMerlinService.setPlanningHorizon(planningHorizon);
     final var planId = new PlanId(1L);
     final var goalsByPriority = new ArrayList<GoalRecord>();
 
@@ -858,8 +865,8 @@ public class SchedulingIntegrationTests {
         planId,
         1L,
         goalsByPriority,
-        Timestamp.fromString("2021-001T00:00:00"),
-        Timestamp.fromString("2021-005T00:00:00"),
+        new Timestamp(planningHorizon.getStartInstant()),
+        new Timestamp(planningHorizon.getEndInstant()),
         Map.of(),
         false)));
     final var agent = new SynchronousSchedulerAgent(
@@ -914,4 +921,148 @@ public class SchedulingIntegrationTests {
 
     return new MissionModelService.MissionModelTypes(activityTypes, resourceTypes);
   }
+
+  @Test
+  void testAndFailure(){
+    //The cardinality goal is not satisfiable but the partial satisfaction is on by default so as the second subgoal is satisfied
+    //the composite goal is not satified but does not backtrack
+    final var growBananaDuration = Duration.of(1, Duration.MINUTES);
+    final var planningHorizon = new PlanningHorizon(TimeUtility.fromDOY("2021-001T00:00:00"),
+        TimeUtility.fromDOY("2021-001T01:00:00"));
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(
+            new MockMerlinService.PlannedActivityInstance(
+                "PickBanana",
+                Map.of("quantity", SerializedValue.of(99)),
+                Duration.of(1, Duration.MINUTES)),
+            new MockMerlinService.PlannedActivityInstance(
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(100),
+                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                Duration.of(15, Duration.MINUTES))),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+                export default (): Goal => {
+                 return Goal.CardinalityGoal({
+                                      activityTemplate: ActivityTemplates.GrowBanana({
+                                        quantity: 1,
+                                        growingDuration: 1000000 * 1800, //30 minutes in microseconds
+                                      }),
+                                      specification : {duration: 4 * 1000000 * 3600}}) //4 hours
+                        .and(
+                           Goal.CoexistenceGoal({
+                             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                             forEach: ActivityExpression.ofType(ActivityTypes.PickBanana),
+                             startsAt: TimingConstraint.singleton(WindowProperty.START)
+                           })
+                        )
+               }""", true)),
+        planningHorizon);
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    assertEquals(4, results.updatedPlan().size());
+    assertFalse(results.scheduleResults.goalResults().entrySet().iterator().next().getValue().satisfied());
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var pickBanana = planByActivityType.get("PickBanana").iterator().next();
+    final var itGrowBanana = planByActivityType.get("GrowBanana").iterator();
+    final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
+    final var growStartTimes = new HashSet<Duration>();
+    planByActivityType.get("GrowBanana").forEach(activity -> growStartTimes.add(activity.startTime()));
+    assertEquals(Duration.of(1, Duration.MINUTES), pickBanana.startTime());
+    assertEquals(Duration.of(1, Duration.MINUTES), peelBanana.startTime());
+    assertTrue(growStartTimes.contains(Duration.of(15, Duration.MINUTES)));
+    assertTrue(growStartTimes.contains(Duration.of(16, Duration.MINUTES)));
+  }
+
+  @Test
+  void testOrFailure(){
+    //the two goals are unsatisfiable so the supergoal will not appear satisfied.
+    //partial satisfaction is activated by default so the solver does not backtrack on insertion of activities
+    final var growBananaDuration = Duration.of(1, Duration.MINUTES);
+    final var planningHorizon = new PlanningHorizon(TimeUtility.fromDOY("2021-001T00:00:00"),
+                                                    TimeUtility.fromDOY("2021-001T01:00:00"));
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(
+            new MockMerlinService.PlannedActivityInstance(
+                "PickBanana",
+                Map.of("quantity", SerializedValue.of(99)),
+                Duration.of(2, Duration.MINUTES)),
+            new MockMerlinService.PlannedActivityInstance(
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(100),
+                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                Duration.of(4, Duration.MINUTES))),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+                export default (): Goal => {
+                 return Goal.CardinalityGoal({
+                                      activityTemplate: ActivityTemplates.GrowBanana({
+                                        quantity: 1,
+                                       growingDuration: 1000000 * 900, //15 minutes in microseconds
+                                      }),
+                                      specification : {duration: 4 * 1000000 * 3600}}) //2 hours
+                        .or(
+                           Goal.CardinalityGoal({
+                                      activityTemplate: ActivityTemplates.GrowBanana({
+                                        quantity: 1,
+                                        growingDuration: 1000000 * 1800, //30 minutes in microseconds
+                                      }),
+                                      specification : {duration: 4 * 1000000 * 3600}}) //4 hours
+                        )
+               }""", true)),
+        planningHorizon);
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    //as goal is partially satisfiable, it does not remove activities from the plan
+    assertEquals(5, results.updatedPlan().size());
+    assertFalse(results.scheduleResults.goalResults().entrySet().iterator().next().getValue().satisfied());
+  }
+
+  @Test
+  void testOr(){
+    //the first subgoal is satisfied which prevents the second subgoal to be looked at
+    //overall, the or goal is satisfied.
+    final var growBananaDuration = Duration.of(1, Duration.HOUR);
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(
+            new MockMerlinService.PlannedActivityInstance(
+                "PickBanana",
+                Map.of("quantity", SerializedValue.of(99)),
+                Duration.of(2, Duration.HOURS)),
+            new MockMerlinService.PlannedActivityInstance(
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(100),
+                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                Duration.of(4, Duration.HOURS))),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+                export default (): Goal => {
+                 return Goal.CoexistenceGoal({
+                             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                             forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+                             startsAt: TimingConstraint.singleton(WindowProperty.START)
+                           })
+                        .or(
+                           Goal.CoexistenceGoal({
+                             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+                             forEach: ActivityExpression.ofType(ActivityTypes.PickBanana),
+                             startsAt: TimingConstraint.singleton(WindowProperty.START)
+                           })
+                        )
+               }""", true)));
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    assertTrue(results.scheduleResults.goalResults().entrySet().iterator().next().getValue().satisfied());
+    assertEquals(3, results.updatedPlan().size());
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var pickBanana = planByActivityType.get("PickBanana").iterator().next();
+    final var growBanana = planByActivityType.get("GrowBanana").iterator().next();
+    final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
+    assertEquals(Duration.of(2, Duration.HOURS), pickBanana.startTime());
+    assertEquals(Duration.of(4, Duration.HOURS), peelBanana.startTime());
+    assertEquals(Duration.of(4, Duration.HOURS), growBanana.startTime());
+  }
+
 }
