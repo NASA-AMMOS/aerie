@@ -316,8 +316,10 @@ public class ActivityCreationTemplate extends ActivityExpression {
           act.setDuration(result.fx().minus(result.x()));
         }
         return Optional.of(act);
-      } catch (EquationSolvingAlgorithms.ZeroDerivative zeroDerivative) {
+      } catch (EquationSolvingAlgorithms.ZeroDerivativeException zeroOrInfiniteDerivativeException) {
         logger.debug("Rootfinding encountered a zero-derivative");
+      } catch (EquationSolvingAlgorithms.InfiniteDerivativeException infiniteDerivativeException) {
+        logger.debug("Rootfinding encountered an infinite-derivative");
       } catch (EquationSolvingAlgorithms.DivergenceException e) {
         logger.debug("Rootfinding diverged");
         logger.debug(e.history.history().toString());
