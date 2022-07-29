@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
@@ -60,7 +60,7 @@ public final class MissionModel<Model> {
   }
 
   public Directive<Model, ?, ?> instantiateDirective(final SerializedActivity specification)
-  throws TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException
+  throws TaskSpecType.UnconstructableTaskSpecException, InvalidArgumentsException
   {
     return Directive.instantiate(this.directiveTypes.taskSpecTypes().get(specification.getTypeName()), specification);
   }

@@ -8,7 +8,8 @@ import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableArgumentException;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -33,8 +34,7 @@ import java.util.stream.Collectors;
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
         .returns(TypeName.get(exportType.declaration().asType()))
-        .addException(unconstructableInstantiateException)
-        .addException(MissingArgumentsException.class)
+        .addException(InvalidArgumentsException.class)
         .addParameter(
             ParameterizedTypeName.get(
                 java.util.Map.class,
@@ -71,42 +71,15 @@ import java.util.stream.Collectors;
 
       methodBuilder = produceParametersFromDefaultsClass(methodBuilder);
 
-      methodBuilder = methodBuilder.beginControlFlow("for (final var $L : $L.entrySet())", "entry", "arguments")
-        .beginControlFlow("switch ($L.getKey())", "entry")
-        .addCode(
-            exportType.parameters()
-                .stream()
-                .map(parameter -> CodeBlock
-                    .builder()
-                    .add("case $S:\n", parameter.name)
-                    .indent()
-                    .addStatement(
-                        "$L = Optional.ofNullable(this.mapper_$L.deserializeValue($L.getValue()).getSuccessOrThrow(failure -> $T.unconstructableArgument(\"$L\", failure)))",
-                        parameter.name,
-                        parameter.name,
-                        "entry",
-                        unconstructableInstantiateException,
-                        parameter.name)
-                    .addStatement("break")
-                    .unindent())
-                .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
-                .build())
-        .addCode(
-            CodeBlock
-                .builder()
-                .add("default:\n")
-                .indent()
-                .addStatement(
-                    "throw $T.extraneousParameter($L.getKey())",
-                    unconstructableInstantiateException,
-                    "entry")
-                .unindent()
-                .build())
-        .endControlFlow()
-        .endControlFlow().addCode("\n");
+      methodBuilder = makeArgumentAssignments(methodBuilder, (builder, parameter) -> builder
+        .addStatement(
+            "$L = Optional.ofNullable(this.mapper_$L.deserializeValue($L.getValue())$W.getSuccessOrThrow(failure -> new $T(\"$L\", failure)))",
+            parameter.name,
+            parameter.name,
+            "entry",
+            UnconstructableArgumentException.class,
+            parameter.name));
     }
-
-    methodBuilder = makeArgumentsPresentCheck(methodBuilder).addCode("\n");
 
     // Add return statement with instantiation of class with parameters
     methodBuilder = methodBuilder.addStatement(

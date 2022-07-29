@@ -6,13 +6,14 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableArgumentException;
 
 import javax.lang.model.element.Modifier;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 /**
@@ -27,7 +28,6 @@ public abstract sealed class MapperMethodMaker permits
 {
   /*package-private*/ final ExportTypeRecord exportType;
   /*package-private*/ final String metaName;
-  /*package-private*/ final Class<?> unconstructableInstantiateException;
 
   public MapperMethodMaker(final ExportTypeRecord exportType) {
     this.exportType = exportType;
@@ -36,10 +36,8 @@ public abstract sealed class MapperMethodMaker permits
     //  this should be changed to a switch expression once sealed class pattern-matching switch expressions exist
     if (exportType instanceof ActivityTypeRecord) {
       this.metaName = "activity";
-      this.unconstructableInstantiateException = TaskSpecType.UnconstructableTaskSpecException.class;
     } else { // is instanceof ConfigurationTypeRecord
       this.metaName = "configuration";
-      this.unconstructableInstantiateException = ConfigurationType.UnconstructableConfigurationException.class;
     }
   }
 
@@ -175,15 +173,81 @@ public abstract sealed class MapperMethodMaker permits
         .build();
   }
 
-  protected final MethodSpec.Builder makeArgumentsPresentCheck(final MethodSpec.Builder methodBuilder) {
-    // Ensure all parameters are non-null
-    return methodBuilder
+  protected final MethodSpec.Builder makeArgumentAssignments(
+      final MethodSpec.Builder methodBuilder,
+      final BiFunction<CodeBlock.Builder, ParameterRecord, CodeBlock.Builder> makeArgumentAssignment)
+  {
+    var mb = methodBuilder;
+
+    // Condition must be checked for otherwise a try/catch without an exception thrown
+    // will not pass compilation
+    final var shouldExpectArguments = !exportType.parameters().isEmpty();
+
+    mb = mb
         .addStatement(
             "final var $L = new $T(\"$L\", \"$L\")",
-            "missingArgsExBuilder",
-            MissingArgumentsException.Builder.class,
-            exportType.name(),
-            metaName)
+            "invalidArgsExBuilder",
+            InvalidArgumentsException.Builder.class,
+            metaName,
+            exportType.name())
+        .addCode("\n")
+        .beginControlFlow(
+            "for (final var $L : $L.entrySet())",
+            "entry",
+            "arguments");
+
+    if (shouldExpectArguments) {
+        mb = mb.beginControlFlow("try");
+    }
+
+    mb = mb
+        .beginControlFlow("switch ($L.getKey())", "entry")
+        .addCode(
+            exportType.parameters()
+                .stream()
+                .map(parameter -> {
+                    final var caseBuilder = CodeBlock.builder()
+                        .add("case $S:\n", parameter.name)
+                        .indent();
+                    return makeArgumentAssignment.apply(caseBuilder, parameter)
+                        .addStatement("break")
+                        .unindent();
+                })
+                .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
+                .build())
+        .addCode(
+            CodeBlock
+                .builder()
+                .add("default:\n")
+                .indent()
+                .addStatement(
+                    "$L.withExtraneousArgument($L.getKey())",
+                    "invalidArgsExBuilder",
+                    "entry")
+                .unindent()
+                .build())
+        .endControlFlow();
+
+    if (shouldExpectArguments) {
+      mb = mb
+          .nextControlFlow("catch (final $T e)", UnconstructableArgumentException.class)
+          .addStatement(
+              "$L.withUnconstructableArgument(e.parameterName, e.failure)",
+              "invalidArgsExBuilder"
+          )
+          .endControlFlow();
+    }
+
+    mb = mb
+        .endControlFlow()
+        .addCode("\n");
+
+    return makeMissingArgumentsCheck(mb);
+  }
+
+  private MethodSpec.Builder makeMissingArgumentsCheck(final MethodSpec.Builder methodBuilder) {
+    // Ensure all parameters are non-null
+    return methodBuilder
         .addCode(
             exportType.parameters()
                 .stream()
@@ -191,25 +255,20 @@ public abstract sealed class MapperMethodMaker permits
                     .builder()
                     .addStatement(
                         // Re-serialize value since provided `arguments` map may not contain the value (when using `@WithDefaults` templates)
-                        "$L.ifPresentOrElse($Wvalue -> $L.withProvidedArgument(\"$L\", this.mapper_$L.serializeValue(value)),$W() -> $L.withMissingArgument(\"$L\", this.mapper_$L.getValueSchema()))",
+                        "$L.ifPresentOrElse($Wvalue -> $L.withValidArgument(\"$L\", this.mapper_$L.serializeValue(value)),$W() -> $L.withMissingArgument(\"$L\", this.mapper_$L.getValueSchema()))",
                         parameter.name,
-                        "missingArgsExBuilder",
+                        "invalidArgsExBuilder",
                         parameter.name,
                         parameter.name,
-                        "missingArgsExBuilder",
+                        "invalidArgsExBuilder",
                         parameter.name,
                         parameter.name))
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
             .build())
+        .addCode("\n")
         .addStatement(
-            "final var $L = $L.build()",
-            "missingArgsEx",
-            "missingArgsExBuilder")
-        .addStatement(
-            "if (!$L.$L.isEmpty()) throw $L",
-            "missingArgsEx",
-            "missingArguments",
-            "missingArgsEx");
+            "$L.throwIfAny()",
+            "invalidArgsExBuilder");
   }
 
   static MapperMethodMaker make(final ExportTypeRecord exportType) {

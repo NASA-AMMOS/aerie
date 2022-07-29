@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.driver.engine;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
@@ -17,7 +17,7 @@ public record Directive<Model, DirectiveType, Return> (
 ) {
   public static <Model, DirectiveType, Return> Directive<Model, DirectiveType, Return>
   instantiate(final @Nullable TaskSpecType<Model, DirectiveType, Return> directiveType, final SerializedActivity instance)
-  throws TaskSpecType.UnconstructableTaskSpecException, MissingArgumentsException
+  throws TaskSpecType.UnconstructableTaskSpecException, InvalidArgumentsException
   {
     if (directiveType == null) {
       throw new TaskSpecType.UnconstructableTaskSpecException("Nonexistent task spec. type: %s".formatted(instance.getTypeName()));
