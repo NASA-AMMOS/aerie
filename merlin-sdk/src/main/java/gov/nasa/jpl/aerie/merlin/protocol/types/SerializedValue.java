@@ -1,5 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.protocol.types;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import gov.nasa.jpl.aerie.merlin.protocol.json.SerializedValueDeserializer;
+import gov.nasa.jpl.aerie.merlin.protocol.json.SerializedValueSerializer;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -24,6 +29,8 @@ import java.util.Optional;
  * code would need to know about all possible subclasses for deserialization). The Visitor
  * pattern on a class closed to extension allows us to guarantee that no ambiguity occurs.
  */
+@JsonSerialize(using = SerializedValueSerializer.class)
+@JsonDeserialize(using = SerializedValueDeserializer.class)
 public sealed interface SerializedValue {
   SerializedValue NULL = SerializedValue.ofNull();
 

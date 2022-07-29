@@ -174,7 +174,7 @@ public class SimulationFacadeTest {
   public void getValueAtTimeDoubleOnSimplePlanMidpoint() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
-    final var stateQuery = new StateQueryParam(getFruitRes().name, new TimeExpressionConstant(t1_5));
+    final var stateQuery = new StateQueryParam(getFruitRes().name(), new TimeExpressionConstant(t1_5));
     final var actual = stateQuery.getValue(facade.getLatestConstraintSimulationResults(), null, horizon.getHor());
     assertThat(actual).isEqualTo(SerializedValue.of(3.0));
   }
@@ -183,7 +183,7 @@ public class SimulationFacadeTest {
   public void getValueAtTimeDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
-    final var stateQuery = new StateQueryParam(getFruitRes().name, new TimeExpressionConstant(t2));
+    final var stateQuery = new StateQueryParam(getFruitRes().name(), new TimeExpressionConstant(t2));
     final var actual = stateQuery.getValue(facade.getLatestConstraintSimulationResults(), null, horizon.getHor());
     assertThat(actual).isEqualTo(SerializedValue.of(2.9));
   }

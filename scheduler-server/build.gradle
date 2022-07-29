@@ -92,6 +92,9 @@ dependencies {
   implementation 'org.eclipse:yasson:1.0.5'
   implementation 'org.json:json:20220320'
   implementation 'org.apache.bcel:bcel:6.5.0'
+  implementation 'com.fasterxml.jackson.core:jackson-annotations:2.13.0'
+  implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
+  implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8'
 
   implementation 'com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9'
   implementation 'com.zaxxer:HikariCP:5.0.1'

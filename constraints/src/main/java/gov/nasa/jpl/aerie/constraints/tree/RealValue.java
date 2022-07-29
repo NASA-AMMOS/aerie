@@ -11,12 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class RealValue implements Expression<LinearProfile> {
-  public final double value;
-
-  public RealValue(final double value) {
-    this.value = value;
-  }
+public record RealValue(double value) implements LinearProfileExpression {
 
   @Override
   public LinearProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
@@ -28,7 +23,8 @@ public final class RealValue implements Expression<LinearProfile> {
   }
 
   @Override
-  public void extractResources(final Set<String> names) { }
+  public void extractResources(final Set<String> names) {
+  }
 
   @Override
   public String prettyPrint(final String prefix) {
@@ -41,8 +37,7 @@ public final class RealValue implements Expression<LinearProfile> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof RealValue)) return false;
-    final var o = (RealValue)obj;
+    if (!(obj instanceof final RealValue o)) return false;
 
     return Objects.equals(this.value, o.value);
   }

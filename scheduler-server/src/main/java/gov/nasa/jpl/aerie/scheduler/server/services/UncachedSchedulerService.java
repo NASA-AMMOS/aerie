@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.InMemoryResultsCell;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.ResultsCellRepository;
 
+import java.io.IOException;
 import java.util.Objects;
 
 /**
@@ -27,6 +28,9 @@ public record UncachedSchedulerService(ResultsCellRepository results, SchedulerA
       this.agent.schedule(request, cell);
     } catch (final InterruptedException e) {
       //interruption means the result will probably be an Incomplete, but that's ok
+      return new ResultsProtocol.State.Incomplete();
+    } catch (final IOException e) {
+      return new ResultsProtocol.State.Failed(e.toString());
     }
 
     //collect the result (whether success/failure/incomplete) and discard the cell

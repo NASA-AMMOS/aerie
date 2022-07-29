@@ -16,22 +16,26 @@ export class Constraint {
         activityType1,
         activity1 => Constraint.ForEachActivity(
             activityType2,
-            activity2 => Windows.All(activity1.window(), activity2.window()).invert()
+            activity2 => Windows.All(activity1.window(), activity2.window()).invert().violations()
         )
     )
   }
 
   public static ForEachActivity<A extends Gen.ActivityType>(
     activityType: A,
-    expression: (instance: Gen.ActivityInstance<A>) => Constraint,
+    expression: (instance: Gen.ActivityInstance<A>) => Constraint | Windows,
   ): Constraint {
     let alias = 'activity alias ' + Constraint.__numGeneratedAliases;
     Constraint.__numGeneratedAliases += 1;
+    let result = expression(new Gen.ActivityInstance(activityType, alias));
+    if (result instanceof Windows) {
+      result = result.violations();
+    }
     return new Constraint({
       kind: AST.NodeKind.ForEachActivity,
       activityType,
       alias,
-      expression: expression(new Gen.ActivityInstance(activityType, alias)).__astNode,
+      expression: result.__astNode,
     });
   }
 }
@@ -87,15 +91,15 @@ export class Windows {
   public longerThan(duration: Duration) : Windows {
     return new Windows({
       kind: AST.NodeKind.WindowsExpressionLongerThan,
-      windowExpression: this.__astNode,
+      windows: this.__astNode,
       duration: duration
     })
   }
 
   public shorterThan(duration: Duration) : Windows {
     return new Windows({
-      kind: AST.NodeKind.WindowsExpressionShorterhan,
-      windowExpression: this.__astNode,
+      kind: AST.NodeKind.WindowsExpressionShorterThan,
+      windows: this.__astNode,
       duration: duration
     })
   }
@@ -103,7 +107,7 @@ export class Windows {
   public shiftBy(fromStart: Duration, fromEnd: Duration) : Windows {
     return new Windows({
       kind: AST.NodeKind.WindowsExpressionShiftBy,
-      windowExpression: this.__astNode,
+      windows: this.__astNode,
       fromStart: fromStart,
       fromEnd: fromEnd
     })
@@ -244,12 +248,12 @@ export class Discrete<Schema> {
     });
   }
 
-  public transition(from: Schema, to: Schema): Windows {
+  public transition(oldState: Schema, newState: Schema): Windows {
     return new Windows({
       kind: AST.NodeKind.DiscreteProfileTransition,
       profile: this.__astNode,
-      from,
-      to,
+      oldState,
+      newState,
     });
   }
 
@@ -485,10 +489,10 @@ declare global {
     /**
      * Produce an instantaneous window whenever this profile makes a specific transition.
      *
-     * @param from initial value
-     * @param to final value
+     * @param oldState initial value
+     * @param newState final value
      */
-    public transition(from: Schema, to: Schema): Windows;
+    public transition(oldState: Schema, newState: Schema): Windows;
 
     /**
      * Produce a window whenever this profile is equal to another discrete profile.

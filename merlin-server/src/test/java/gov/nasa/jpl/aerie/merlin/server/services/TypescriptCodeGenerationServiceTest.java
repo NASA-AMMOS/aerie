@@ -38,7 +38,7 @@ class TypescriptCodeGenerationServiceTest {
              }
              public get parameters(): ActivityParameters<A> {
                let result = (
-                 this.__activityType === ActivityType.activity ? {Param: new Discrete<string>({ kind: AST.NodeKind.DiscreteProfileParameter, alias: this.__alias, name: "Param"}), AnotherParam: new Real({ kind: AST.NodeKind.RealProfileParameter, alias: this.__alias, name: "AnotherParam"}), } :
+                 this.__activityType === ActivityType.activity ? {Param: new Discrete<string>({ kind: AST.NodeKind.DiscreteProfileParameter, activityAlias: this.__alias, parameterName: "Param"}), AnotherParam: new Real({ kind: AST.NodeKind.RealProfileParameter, activityAlias: this.__alias, parameterName: "AnotherParam"}), } :
                  undefined) as ActivityParameters<A>;
                if (result === undefined) {
                  throw new TypeError("Unreachable state. Activity type was unexpected string in ActivityInstance.parameters(): " + this.__activityType);
@@ -52,7 +52,7 @@ class TypescriptCodeGenerationServiceTest {
              public window(): Windows {
                return new Windows({
                  kind: AST.NodeKind.WindowsExpressionActivityWindow,
-                 alias: this.__alias
+                 activityAlias: this.__alias
                });
              }
              /**
@@ -61,7 +61,7 @@ class TypescriptCodeGenerationServiceTest {
              public start(): Windows {
                return new Windows({
                  kind: AST.NodeKind.WindowsExpressionStartOf,
-                 alias: this.__alias
+                 activityAlias: this.__alias
                });
              }
              /**
@@ -70,7 +70,7 @@ class TypescriptCodeGenerationServiceTest {
              public end(): Windows {
                return new Windows({
                  kind: AST.NodeKind.WindowsExpressionEndOf,
-                 alias: this.__alias
+                 activityAlias: this.__alias
                });
              }
            }

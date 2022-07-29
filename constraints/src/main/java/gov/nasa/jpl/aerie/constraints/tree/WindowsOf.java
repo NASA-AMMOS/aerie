@@ -11,18 +11,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class WindowsOf implements Expression<Windows> {
-  public final Expression<List<Violation>> expression;
-
-  public WindowsOf(Expression<List<Violation>> expression) {
-    this.expression = expression;
-  }
+public record WindowsOf(
+    Expression<List<Violation>> expression) implements WindowsExpression {
 
   @Override
   public Windows evaluate(SimulationResults results, final Window bounds, Map<String, ActivityInstance> environment) {
     final var ret = new Windows(bounds);
     final var unsatisfiedWindows = this.expression.evaluate(results, bounds, environment);
-    for(var unsatisfiedWindow : unsatisfiedWindows){
+    for (var unsatisfiedWindow : unsatisfiedWindows) {
       ret.intersectWith(unsatisfiedWindow.violationWindows);
     }
     return ret;
@@ -40,8 +36,7 @@ public final class WindowsOf implements Expression<Windows> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof WindowsOf)) return false;
-    final var o = (WindowsOf)obj;
+    if (!(obj instanceof final WindowsOf o)) return false;
 
     return Objects.equals(this.expression, o.expression);
   }

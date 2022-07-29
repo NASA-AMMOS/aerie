@@ -1,32 +1,32 @@
 export enum NodeKind {
-  DiscreteProfileResource = 'DiscreteProfileResource',
-  DiscreteProfileValue = 'DiscreteProfileValue',
-  DiscreteProfileParameter = 'DiscreteProfileParameter',
-  RealProfileResource = 'RealProfileResource',
-  RealProfileValue = 'RealProfileValue',
-  RealProfileParameter = 'RealProfileParameter',
-  RealProfilePlus = 'RealProfilePlus',
-  RealProfileTimes = 'RealProfileTimes',
-  RealProfileRate = 'RealProfileRate',
-  DiscreteProfileTransition = 'DiscreteProfileTransition',
-  WindowsExpressionActivityWindow = 'WindowsExpressionActivityWindow',
-  WindowsExpressionStartOf = 'WindowsExpressionStartOf',
-  WindowsExpressionEndOf = 'WindowsExpressionEndOf',
-  WindowsExpressionLongerThan = 'WindowsExpressionLongerThan',
-  WindowsExpressionShorterhan = 'WindowsExpressionShorterThan',
-  WindowsExpressionShiftBy = 'WindowsExpressionShiftBy',
-  ExpressionEqual = 'ExpressionEqual',
-  ExpressionNotEqual = 'ExpressionNotEqual',
-  RealProfileLessThan = 'RealProfileLessThan',
-  RealProfileLessThanOrEqual = 'RealProfileLessThanOrEqual',
-  RealProfileGreaterThan = 'RealProfileGreaterThan',
-  RealProfileGreaterThanOrEqual = 'RealProfileGreaterThanOrEqual',
-  WindowsExpressionAll = 'WindowsExpressionAll',
-  WindowsExpressionAny = 'WindowsExpressionAny',
-  WindowsExpressionInvert = 'WindowsExpressionInvert',
-  ForEachActivity = 'ForEachActivity',
-  ProfileChanges = 'ProfileChanges',
-  ViolationsOf = 'ViolationsOf',
+  DiscreteProfileResource = '.DiscreteResource',
+  DiscreteProfileValue = '.DiscreteValue',
+  DiscreteProfileParameter = '.DiscreteParameter',
+  RealProfileResource = '.RealResource',
+  RealProfileValue = '.RealValue',
+  RealProfileParameter = '.RealParameter',
+  RealProfilePlus = '.Plus',
+  RealProfileTimes = '.Times',
+  RealProfileRate = '.Rate',
+  DiscreteProfileTransition = '.Transition',
+  WindowsExpressionActivityWindow = '.ActivityWindow',
+  WindowsExpressionStartOf = '.StartOf',
+  WindowsExpressionEndOf = '.EndOf',
+  WindowsExpressionLongerThan = '.LongerThan',
+  WindowsExpressionShorterThan = '.ShorterThan',
+  WindowsExpressionShiftBy = '.ShiftBy',
+  ExpressionEqual = '.Equal',
+  ExpressionNotEqual = '.NotEqual',
+  RealProfileLessThan = '.LessThan',
+  RealProfileLessThanOrEqual = '.LessThanOrEqual',
+  RealProfileGreaterThan = '.GreaterThan',
+  RealProfileGreaterThanOrEqual = '.GreaterThanOrEqual',
+  WindowsExpressionAll = '.All',
+  WindowsExpressionAny = '.Any',
+  WindowsExpressionInvert = '.Invert',
+  ForEachActivity = '.ForEachActivity',
+  ProfileChanges = '.Changes',
+  ViolationsOf = '.ViolationsOf',
 }
 
 export type Constraint = ViolationsOf | ForEachActivity | WindowsExpression;
@@ -78,7 +78,7 @@ export type Duration = number
 
 export interface WindowsExpressionShiftBy {
   kind: NodeKind.WindowsExpressionShiftBy,
-  windowExpression: WindowsExpression,
+  windows: WindowsExpression,
   fromStart: Duration,
   fromEnd: Duration,
 }
@@ -131,36 +131,36 @@ export interface ExpressionEqual<T = ProfileExpression> {
 
 export interface WindowsExpressionEndOf {
   kind: NodeKind.WindowsExpressionEndOf;
-  alias: string;
+  activityAlias: string;
 }
 
 export interface WindowsExpressionStartOf {
   kind: NodeKind.WindowsExpressionStartOf;
-  alias: string;
+  activityAlias: string;
 }
 
 export interface WindowsExpressionActivityWindow {
   kind: NodeKind.WindowsExpressionActivityWindow;
-  alias: string;
+  activityAlias: string;
 }
 
 export interface WindowsExpressionShorterThan {
-  kind: NodeKind.WindowsExpressionShorterhan,
-  windowExpression: WindowsExpression,
+  kind: NodeKind.WindowsExpressionShorterThan,
+  windows: WindowsExpression,
   duration: number
 }
 
 export interface WindowsExpressionLongerThan {
   kind: NodeKind.WindowsExpressionLongerThan,
-  windowExpression: WindowsExpression,
+  windows: WindowsExpression,
   duration: number
 }
 
 export interface DiscreteProfileTransition {
   kind: NodeKind.DiscreteProfileTransition;
   profile: DiscreteProfileExpression;
-  from: any;
-  to: any;
+  oldState: any;
+  newState: any;
 }
 
 export type ProfileExpression = RealProfileExpression | DiscreteProfileExpression;
@@ -202,8 +202,8 @@ export interface RealProfileValue {
 
 export interface RealProfileParameter {
   kind: NodeKind.RealProfileParameter;
-  alias: string;
-  name: string;
+  activityAlias: string;
+  parameterName: string;
 }
 
 export type DiscreteProfileExpression = DiscreteProfileResource | DiscreteProfileValue | DiscreteProfileParameter;
@@ -220,6 +220,6 @@ export interface DiscreteProfileValue {
 
 export interface DiscreteProfileParameter {
   kind: NodeKind.DiscreteProfileParameter;
-  alias: string;
-  name: string;
+  activityAlias: string;
+  parameterName: string;
 }

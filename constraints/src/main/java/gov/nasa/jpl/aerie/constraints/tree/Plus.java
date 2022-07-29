@@ -9,19 +9,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class Plus implements Expression<LinearProfile> {
-  public final Expression<LinearProfile> left;
-  public final Expression<LinearProfile> right;
-
-  public Plus(final Expression<LinearProfile> left, final Expression<LinearProfile> right) {
-    this.left = left;
-    this.right = right;
-  }
+public record Plus(
+    LinearProfileExpression left,
+    LinearProfileExpression right) implements LinearProfileExpression {
 
   @Override
   public LinearProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
-    return left.evaluate(results, bounds, environment)
-               .plus(right.evaluate(results, bounds, environment));
+    final var leftRes = left.evaluate(results, bounds, environment);
+    return leftRes.plus(right.evaluate(results, bounds, environment));
   }
 
   @Override
@@ -42,8 +37,7 @@ public final class Plus implements Expression<LinearProfile> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof Plus)) return false;
-    final var o = (Plus)obj;
+    if (!(obj instanceof final Plus o)) return false;
 
     return Objects.equals(this.left, o.left) &&
            Objects.equals(this.right, o.right);

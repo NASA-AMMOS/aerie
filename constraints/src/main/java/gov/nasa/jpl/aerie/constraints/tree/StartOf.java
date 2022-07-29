@@ -9,12 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class StartOf implements Expression<Windows> {
-  public final String activityAlias;
-
-  public StartOf(final String activityAlias) {
-    this.activityAlias = activityAlias;
-  }
+public record StartOf(String activityAlias) implements WindowsExpression {
 
   @Override
   public Windows evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
@@ -23,7 +18,8 @@ public final class StartOf implements Expression<Windows> {
   }
 
   @Override
-  public void extractResources(final Set<String> names) { }
+  public void extractResources(final Set<String> names) {
+  }
 
   @Override
   public String prettyPrint(final String prefix) {
@@ -36,8 +32,7 @@ public final class StartOf implements Expression<Windows> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof StartOf)) return false;
-    final var o = (StartOf)obj;
+    if (!(obj instanceof final StartOf o)) return false;
 
     return Objects.equals(this.activityAlias, o.activityAlias);
   }

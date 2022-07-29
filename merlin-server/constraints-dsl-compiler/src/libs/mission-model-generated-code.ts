@@ -27,7 +27,7 @@ export class ActivityInstance<A extends ActivityType> {
   public window(): Windows {
     return new Windows({
       kind: AST.NodeKind.WindowsExpressionActivityWindow,
-      alias: this.__alias
+      activityAlias: this.__alias
     });
   }
 }

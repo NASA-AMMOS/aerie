@@ -1,8 +1,12 @@
 package gov.nasa.jpl.aerie.constraints.json;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.nasa.jpl.aerie.constraints.tree.All;
 import gov.nasa.jpl.aerie.constraints.tree.Changes;
+import gov.nasa.jpl.aerie.constraints.tree.ConstraintExpression;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteProfileExpression;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
 import gov.nasa.jpl.aerie.constraints.tree.ActivityWindow;
@@ -14,10 +18,10 @@ import gov.nasa.jpl.aerie.constraints.tree.GreaterThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.LessThan;
 import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.Invert;
+import gov.nasa.jpl.aerie.constraints.tree.LinearProfileExpression;
 import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
 import gov.nasa.jpl.aerie.constraints.tree.Any;
 import gov.nasa.jpl.aerie.constraints.tree.Plus;
-import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
 import gov.nasa.jpl.aerie.constraints.tree.Rate;
 import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
@@ -26,483 +30,501 @@ import gov.nasa.jpl.aerie.constraints.tree.StartOf;
 import gov.nasa.jpl.aerie.constraints.tree.Times;
 import gov.nasa.jpl.aerie.constraints.tree.Transition;
 import gov.nasa.jpl.aerie.constraints.tree.ViolationsOf;
+import gov.nasa.jpl.aerie.constraints.tree.WindowsExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Test;
 
-import javax.json.Json;
-
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
-import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.*;
 
 public final class ConstraintParsersTest {
+  private static final ObjectMapper mapper = new ObjectMapper();
+
   @Test
-  public void testParseDiscreteValue() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "DiscreteProfileValue")
-        .add("value", false)
-        .build();
-    final var result = discreteProfileExprP.parse(json).getSuccessOrThrow();
+  public void testParseDiscreteValue() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".DiscreteValue",
+            "value": false
+        }
+        """;
 
     final var expected =
         new DiscreteValue(SerializedValue.of(false));
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, DiscreteProfileExpression.class));
   }
 
   @Test
-  public void testParseChanges() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "ProfileChanges")
-        .add("expression", Json
-            .createObjectBuilder()
-            .add("kind", "DiscreteProfileValue")
-            .add("value", false))
-        .build();
-    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+  public void testParseChanges() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".Changes",
+            "expression": {
+                "kind": ".DiscreteValue",
+                "value": false
+            }
+        }
+        """;
 
     final var expected =
-        new Changes<>(
-            new ProfileExpression<>(
-                new DiscreteValue(SerializedValue.of(false))));
+        new Changes<>(new DiscreteValue(SerializedValue.of(false)));
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, WindowsExpression.class));
   }
 
   @Test
-  public void testParseDiscreteResource() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "DiscreteProfileResource")
-        .add("name", "ResA")
-        .build();
-    final var result = discreteResourceP.parse(json).getSuccessOrThrow();
+  public void testParseDiscreteResource() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".DiscreteResource",
+            "name": "ResA"
+        }
+        """;
 
     final var expected =
         new DiscreteResource("ResA");
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, DiscreteProfileExpression.class));
   }
 
   @Test
-  public void testParseTransition() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "DiscreteProfileTransition")
-        .add("profile", Json
-            .createObjectBuilder()
-            .add("kind", "DiscreteProfileResource")
-            .add("name", "ResA"))
-        .add("from", "old")
-        .add("to", "new")
-        .build();
-    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+  public void testParseTransition() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".Transition",
+            "profile": {
+                "kind": ".DiscreteResource",
+                "name": "ResA"
+            },
+            "oldState": "old",
+            "newState": "new"
+        }
+        """;
 
     final var expected =
         new Transition(
             new DiscreteResource("ResA"),
             SerializedValue.of("old"),
-            SerializedValue.of("new"));
+            SerializedValue.of("new")
+        );
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, WindowsExpression.class));
   }
 
   @Test
-  public void testParseRealParameter() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "RealProfileParameter")
-        .add("alias", "act")
-        .add("name", "pJones")
-        .build();
-    final var result = linearProfileExprP.parse(json).getSuccessOrThrow();
+  public void testParseRealParameter() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".RealParameter",
+            "activityAlias": "act",
+            "parameterName": "pJones"
+        }
+        """;
 
-    final var expected = new RealParameter("act", "pJones");
+    final var expected =
+        new RealParameter("act", "pJones");
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, LinearProfileExpression.class));
   }
 
   @Test
-  public void testParseRealValue() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "RealProfileValue")
-        .add("value", 3.4)
-        .build();
-    final var result = linearProfileExprP.parse(json).getSuccessOrThrow();
+  public void testParseRealValue() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".RealValue",
+            "value": 3.4
+        }
+        """;
 
-    final var expected = new RealValue(3.4);
+    final var expected =
+        new RealValue(3.4);
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, LinearProfileExpression.class));
   }
 
   @Test
-  public void testParseRealResource() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "RealProfileResource")
-        .add("name", "ResA")
-        .build();
-    final var result = linearProfileExprP.parse(json).getSuccessOrThrow();
+  public void testParseRealResource() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".RealResource",
+            "name": "ResA"
+        }
+        """;
 
-    final var expected = new RealResource("ResA");
+    final var expected =
+        new RealResource("ResA");
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, LinearProfileExpression.class));
   }
 
   @Test
-  public void testParsePlus() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "RealProfilePlus")
-        .add("left", Json
-            .createObjectBuilder()
-            .add("kind", "RealProfileResource")
-            .add("name", "ResA"))
-        .add("right", Json
-            .createObjectBuilder()
-            .add("kind", "RealProfileResource")
-            .add("name", "ResB"))
-        .build();
-    final var result = linearProfileExprP.parse(json).getSuccessOrThrow();
+  public void testParsePlus() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".Plus",
+            "left": {
+                "kind": ".RealResource",
+                "name": "ResA"
+            },
+            "right": {
+                "kind": ".RealResource",
+                "name": "ResB"
+            }
+        }
+        """;
 
     final var expected =
         new Plus(
             new RealResource("ResA"),
-            new RealResource("ResB"));
+            new RealResource("ResB")
+        );
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, LinearProfileExpression.class));
   }
 
   @Test
-  public void testParseTimes() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "RealProfileTimes")
-        .add("profile", Json
-            .createObjectBuilder()
-            .add("kind", "RealProfileResource")
-            .add("name", "ResA"))
-        .add("multiplier", 2.7)
-        .build();
-    final var result = linearProfileExprP.parse(json).getSuccessOrThrow();
+  public void testParseTimes() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".Times",
+            "profile": {
+                "kind": ".RealResource",
+                "name": "ResA"
+            },
+            "multiplier": 2.7
+        }
+        """;
 
     final var expected =
         new Times(
             new RealResource("ResA"),
-            2.7);
+            2.7
+        );
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, LinearProfileExpression.class));
   }
 
   @Test
-  public void testParseRate() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "RealProfileRate")
-        .add("profile", Json
-            .createObjectBuilder()
-            .add("kind", "RealProfileResource")
-            .add("name", "ResA"))
-        .build();
-    final var result = linearProfileExprP.parse(json).getSuccessOrThrow();
+  public void testParseRate() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".Rate",
+            "profile": {
+                "kind": ".RealResource",
+                "name": "ResA"
+            }
+        }
+        """;
 
     final var expected =
         new Rate(
-            new RealResource("ResA"));
+            new RealResource("ResA")
+        );
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, LinearProfileExpression.class));
   }
 
   @Test
-  public void testParseDuring() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "WindowsExpressionActivityWindow")
-        .add("alias", "TEST")
-        .build();
-    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+  public void testParseDuring() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".ActivityWindow",
+            "activityAlias": "TEST"
+        }
+        """;
 
-    final var expected = new ActivityWindow("TEST");
+    final var expected =
+        new ActivityWindow("TEST");
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, WindowsExpression.class));
   }
 
   @Test
-  public void testParseStartOf() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "WindowsExpressionStartOf")
-        .add("alias", "TEST")
-        .build();
-    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+  public void testParseStartOf() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".StartOf",
+            "activityAlias": "TEST"
+        }
+        """;
 
-    final var expected = new StartOf("TEST");
+    final var expected =
+        new StartOf("TEST");
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, WindowsExpression.class));
   }
 
   @Test
-  public void testParseEndOf() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "WindowsExpressionEndOf")
-        .add("alias", "TEST")
-        .build();
-    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+  public void testParseEndOf() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".EndOf",
+            "activityAlias": "TEST"
+        }
+        """;
 
-    final var expected = new EndOf("TEST");
+    final var expected =
+        new EndOf("TEST");
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, WindowsExpression.class));
   }
 
   @Test
-  public void testParseParameter() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "DiscreteProfileParameter")
-        .add("alias", "TEST")
-        .add("name", "paramesan")
-        .build();
-    final var result = discreteProfileExprP.parse(json).getSuccessOrThrow();
+  public void testParseParameter() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".DiscreteParameter",
+            "activityAlias": "TEST",
+            "parameterName": "paramesan"
+        }
+        """;
 
-    final var expected = new DiscreteParameter("TEST", "paramesan");
+    final var expected =
+        new DiscreteParameter("TEST", "paramesan");
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, DiscreteProfileExpression.class));
   }
 
   @Test
-  public void testParseEqual() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "ExpressionEqual")
-        .add("left", Json
-            .createObjectBuilder()
-            .add("kind", "RealProfileResource")
-            .add("name", "ResA"))
-        .add("right", Json
-            .createObjectBuilder()
-            .add("kind", "RealProfileResource")
-            .add("name", "ResB"))
-        .build();
-    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+  public void testParseEqual() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".Equal",
+            "left": {
+                "kind": ".RealResource",
+                "name": "ResA"
+            },
+            "right": {
+                "kind": ".RealResource",
+                "name": "ResB"
+            }
+        }
+        """;
 
     final var expected =
         new Equal<>(
             new RealResource("ResA"),
-            new RealResource("ResB"));
+            new RealResource("ResB")
+        );
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, WindowsExpression.class));
   }
 
   @Test
-  public void testParseNotEqual() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "ExpressionNotEqual")
-        .add("left", Json
-            .createObjectBuilder()
-            .add("kind", "RealProfileResource")
-            .add("name", "ResA"))
-        .add("right", Json
-            .createObjectBuilder()
-            .add("kind", "RealProfileResource")
-            .add("name", "ResB"))
-        .build();
-    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+  public void testParseNotEqual() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".NotEqual",
+            "left": {
+                "kind": ".DiscreteResource",
+                "name": "ResA"
+            },
+            "right": {
+                "kind": ".DiscreteResource",
+                "name": "ResB"
+            }
+        }
+        """;
 
     final var expected =
         new NotEqual<>(
-            new RealResource("ResA"),
-            new RealResource("ResB"));
+            new DiscreteResource("ResA"),
+            new DiscreteResource("ResB")
+        );
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, WindowsExpression.class));
   }
 
   @Test
-  public void testParseLessThan() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "RealProfileLessThan")
-        .add("left", Json
-            .createObjectBuilder()
-            .add("kind", "RealProfileResource")
-            .add("name", "ResA"))
-        .add("right", Json
-            .createObjectBuilder()
-            .add("kind", "RealProfileResource")
-            .add("name", "ResB"))
-        .build();
-    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+  public void testParseLessThan() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".LessThan",
+            "left": {
+                "kind": ".RealResource",
+                "name": "ResA"
+            },
+            "right": {
+                "kind": ".RealResource",
+                "name": "ResB"
+            }
+        }
+        """;
 
     final var expected =
         new LessThan(
             new RealResource("ResA"),
-            new RealResource("ResB"));
+            new RealResource("ResB")
+        );
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, WindowsExpression.class));
   }
 
   @Test
-  public void testParseLessThanOrEqual() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "RealProfileLessThanOrEqual")
-        .add("left", Json
-            .createObjectBuilder()
-            .add("kind", "RealProfileResource")
-            .add("name", "ResA"))
-        .add("right", Json
-            .createObjectBuilder()
-            .add("kind", "RealProfileResource")
-            .add("name", "ResB"))
-        .build();
-    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+  public void testParseLessThanOrEqual() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".LessThanOrEqual",
+            "left": {
+                "kind": ".RealResource",
+                "name": "ResA"
+            },
+            "right": {
+                "kind": ".RealResource",
+                "name": "ResB"
+            }
+        }
+        """;
 
     final var expected =
         new LessThanOrEqual(
             new RealResource("ResA"),
-            new RealResource("ResB"));
+            new RealResource("ResB")
+        );
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, WindowsExpression.class));
   }
 
   @Test
-  public void testParseGreaterThanOrEqual() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "RealProfileGreaterThanOrEqual")
-        .add("left", Json
-            .createObjectBuilder()
-            .add("kind", "RealProfileResource")
-            .add("name", "ResA"))
-        .add("right", Json
-            .createObjectBuilder()
-            .add("kind", "RealProfileResource")
-            .add("name", "ResB"))
-        .build();
-    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
-
-    final var expected =
-        new GreaterThanOrEqual(
-            new RealResource("ResA"),
-            new RealResource("ResB"));
-
-    assertEquivalent(expected, result);
-  }
-
-  @Test
-  public void testParseGreaterThan() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "RealProfileGreaterThan")
-        .add("left", Json
-            .createObjectBuilder()
-            .add("kind", "RealProfileResource")
-            .add("name", "ResA"))
-        .add("right", Json
-            .createObjectBuilder()
-            .add("kind", "RealProfileResource")
-            .add("name", "ResB"))
-        .build();
-    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+  public void testParseGreaterThan() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".GreaterThan",
+            "left": {
+                "kind": ".RealResource",
+                "name": "ResA"
+            },
+            "right": {
+                "kind": ".RealResource",
+                "name": "ResB"
+            }
+        }
+        """;
 
     final var expected =
         new GreaterThan(
             new RealResource("ResA"),
-            new RealResource("ResB"));
+            new RealResource("ResB")
+        );
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, WindowsExpression.class));
   }
 
   @Test
-  public void testParseAll() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "WindowsExpressionAll")
-        .add("expressions", Json
-            .createArrayBuilder()
-            .add(Json
-                     .createObjectBuilder()
-                     .add("kind", "WindowsExpressionActivityWindow")
-                     .add("alias", "A"))
-            .add(Json
-                     .createObjectBuilder()
-                     .add("kind", "WindowsExpressionActivityWindow")
-                     .add("alias", "B")))
-        .build();
+  public void testParseGreaterThanOrEqual() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".GreaterThanOrEqual",
+            "left": {
+                "kind": ".RealResource",
+                "name": "ResA"
+            },
+            "right": {
+                "kind": ".RealResource",
+                "name": "ResB"
+            }
+        }
+        """;
 
-    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+    final var expected =
+        new GreaterThanOrEqual(
+            new RealResource("ResA"),
+            new RealResource("ResB")
+        );
+
+    assertEquivalent(expected, mapper.readValue(input, WindowsExpression.class));
+  }
+
+  @Test
+  public void testParseAll() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".All",
+            "expressions": [
+                {
+                    "kind": ".ActivityWindow",
+                    "activityAlias": "A"
+                },
+                {
+                    "kind": ".ActivityWindow",
+                    "activityAlias": "B"
+                }
+            ]
+        }
+        """;
 
     final var expected =
         new All(
             new ActivityWindow("A"),
-            new ActivityWindow("B"));
+            new ActivityWindow("B")
+        );
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, WindowsExpression.class));
   }
 
   @Test
-  public void testParseAny() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "WindowsExpressionAny")
-        .add("expressions", Json
-            .createArrayBuilder()
-            .add(Json
-                     .createObjectBuilder()
-                     .add("kind", "WindowsExpressionActivityWindow")
-                     .add("alias", "A"))
-            .add(Json
-                     .createObjectBuilder()
-                     .add("kind", "WindowsExpressionActivityWindow")
-                     .add("alias", "B")))
-        .build();
-
-    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+  public void testParseAny() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".Any",
+            "expressions": [
+                {
+                    "kind": ".ActivityWindow",
+                    "activityAlias": "A"
+                },
+                {
+                    "kind": ".ActivityWindow",
+                    "activityAlias": "B"
+                }
+            ]
+        }
+        """;
 
     final var expected =
         new Any(
             new ActivityWindow("A"),
-            new ActivityWindow("B"));
+            new ActivityWindow("B")
+        );
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, WindowsExpression.class));
   }
 
   @Test
-  public void testParseInvert() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "WindowsExpressionInvert")
-        .add("expression", Json
-            .createObjectBuilder()
-            .add("kind", "WindowsExpressionActivityWindow")
-            .add("alias", "A"))
-        .build();
-
-    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+  public void testParseInvert() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".Invert",
+            "expression": {
+                "kind": ".ActivityWindow",
+                "activityAlias": "A"
+            }
+        }
+        """;
 
     final var expected =
         new Invert(
-            new ActivityWindow("A"));
+            new ActivityWindow("A")
+        );
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, WindowsExpression.class));
   }
 
   @Test
-  public void testForEachActivity() {
-    final var json = Json
-        .createObjectBuilder()
-        .add("kind", "ForEachActivity")
-        .add("activityType", "TypeA")
-        .add("alias", "A")
-        .add("expression", Json
-            .createObjectBuilder()
-            .add("kind", "WindowsExpressionActivityWindow")
-            .add("alias", "A"))
-        .build();
-    final var result = constraintP.parse(json).getSuccessOrThrow();
+  public void testForEachActivity() throws JsonProcessingException {
+    final var input = """
+        {
+            "kind": ".ForEachActivity",
+            "activityType": "TypeA",
+            "alias": "A",
+            "expression": {
+                "kind": ".ViolationsOf",
+                "expression": {
+                    "kind": ".ActivityWindow",
+                    "activityAlias": "A"
+                }
+            }
+        }
+        """;
 
     final var expected =
         new ForEachActivity(
@@ -511,78 +533,81 @@ public final class ConstraintParsersTest {
             new ViolationsOf(
                 new ActivityWindow("A")));
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, ConstraintExpression.class));
   }
 
   @Test
-  public void testParseMassiveExpression() {
-    var json = Json
-        .createObjectBuilder()
-        .add("kind", "ForEachActivity")
-        .add("activityType", "TypeA")
-        .add("alias", "A")
-        .add("expression", Json
-            .createObjectBuilder()
-            .add("kind", "ForEachActivity")
-            .add("activityType", "TypeB")
-            .add("alias", "B")
-            .add("expression", Json
-                .createObjectBuilder()
-                .add("kind", "WindowsExpressionAny")
-                .add("expressions", Json
-                    .createArrayBuilder()
-                    .add(Json
-                             .createObjectBuilder()
-                             .add("kind", "WindowsExpressionAny")
-                             .add("expressions", Json
-                                 .createArrayBuilder()
-                                 .add(Json
-                                          .createObjectBuilder()
-                                          .add("kind", "WindowsExpressionInvert")
-                                          .add("expression", Json
-                                              .createObjectBuilder()
-                                              .add("kind", "RealProfileLessThan")
-                                              .add("left", Json
-                                                  .createObjectBuilder()
-                                                  .add("kind", "RealProfileTimes")
-                                                  .add("profile", Json
-                                                      .createObjectBuilder()
-                                                      .add("kind", "RealProfileResource")
-                                                      .add("name", "ResC"))
-                                                  .add("multiplier", 2.0))
-                                              .add("right", Json
-                                                  .createObjectBuilder()
-                                                  .add("kind", "RealProfileParameter")
-                                                  .add("alias", "A")
-                                                  .add("name", "a"))))
-                                 .add(Json
-                                          .createObjectBuilder()
-                                          .add("kind", "ExpressionEqual")
-                                          .add("left", Json
-                                              .createObjectBuilder()
-                                              .add("kind", "DiscreteProfileValue")
-                                              .add("value", false))
-                                          .add("right", Json
-                                              .createObjectBuilder()
-                                              .add("kind", "DiscreteProfileParameter")
-                                              .add("alias", "B")
-                                              .add("name", "b")))))
-                    .add(Json
-                             .createObjectBuilder()
-                             .add("kind", "WindowsExpressionInvert")
-                             .add("expression", Json
-                                 .createObjectBuilder()
-                                 .add("kind", "WindowsExpressionActivityWindow")
-                                 .add("alias", "A")))
-                    .add(Json
-                             .createObjectBuilder()
-                             .add("kind", "WindowsExpressionInvert")
-                             .add("expression", Json
-                                 .createObjectBuilder()
-                                 .add("kind", "WindowsExpressionActivityWindow")
-                                 .add("alias", "B"))))))
-        .build();
-    final var result = constraintP.parse(json).getSuccessOrThrow();
+  public void testParseMassiveExpression() throws JsonProcessingException {
+    final var input = """
+        {
+           "kind": ".ForEachActivity",
+           "activityType": "TypeA",
+           "alias": "A",
+           "expression": {
+               "kind": ".ForEachActivity",
+               "activityType": "TypeB",
+               "alias": "B",
+               "expression": {
+                   "kind": ".ViolationsOf",
+                   "expression": {
+                       "kind": ".Any",
+                       "expressions": [
+                           {
+                               "kind": ".Any",
+                               "expressions": [
+                                   {
+                                       "kind": ".Invert",
+                                       "expression": {
+                                           "kind": ".LessThan",
+                                           "left": {
+                                               "kind": ".Times",
+                                               "profile": {
+                                                   "kind": ".RealResource",
+                                                   "name": "ResC"
+                                               },
+                                               "multiplier": 2
+                                           },
+                                           "right": {
+                                               "kind": ".RealParameter",
+                                               "activityAlias": "A",
+                                               "parameterName": "a"
+                                           }
+                                       }
+                                   },
+                                   {
+                                       "kind": ".Equal",
+                                       "left": {
+                                           "kind": ".DiscreteValue",
+                                           "value": false
+                                       },
+                                       "right": {
+                                           "kind": ".DiscreteParameter",
+                                           "activityAlias": "B",
+                                           "parameterName": "b"
+                                       }
+                                   }
+                               ]
+                           },
+                           {
+                               "kind": ".Invert",
+                               "expression": {
+                                   "kind": ".ActivityWindow",
+                                   "activityAlias": "A"
+                               }
+                           },
+                           {
+                               "kind": ".Invert",
+                               "expression": {
+                                   "kind": ".ActivityWindow",
+                                   "activityAlias": "B"
+                               }
+                           }
+                       ]
+                   }
+               }
+           }
+        }
+        """;
 
     final var expected = new ForEachActivity(
         "TypeA",
@@ -605,6 +630,6 @@ public final class ConstraintParsersTest {
                     new Invert(new ActivityWindow("A")),
                     new Invert(new ActivityWindow("B"))))));
 
-    assertEquivalent(expected, result);
+    assertEquivalent(expected, mapper.readValue(input, ConstraintExpression.class));
   }
 }

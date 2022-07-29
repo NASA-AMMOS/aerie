@@ -11,12 +11,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class ViolationsOf implements Expression<List<Violation>> {
-  public final Expression<Windows> expression;
-
-  public ViolationsOf(Expression<Windows> expression) {
-    this.expression = expression;
-  }
+public record ViolationsOf(
+    WindowsExpression expression) implements ConstraintExpression {
 
   @Override
   public List<Violation> evaluate(SimulationResults results, final Window bounds, Map<String, ActivityInstance> environment) {
@@ -37,8 +33,7 @@ public final class ViolationsOf implements Expression<List<Violation>> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof ViolationsOf)) return false;
-    final var o = (ViolationsOf)obj;
+    if (!(obj instanceof final ViolationsOf o)) return false;
 
     return Objects.equals(this.expression, o.expression);
   }

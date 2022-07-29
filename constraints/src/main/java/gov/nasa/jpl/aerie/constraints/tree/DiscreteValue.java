@@ -12,12 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class DiscreteValue implements Expression<DiscreteProfile> {
-  public final SerializedValue value;
-
-  public DiscreteValue(final SerializedValue value) {
-    this.value = value;
-  }
+public record DiscreteValue(SerializedValue value) implements DiscreteProfileExpression {
 
   @Override
   public DiscreteProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
@@ -25,7 +20,8 @@ public final class DiscreteValue implements Expression<DiscreteProfile> {
   }
 
   @Override
-  public void extractResources(final Set<String> names) { }
+  public void extractResources(final Set<String> names) {
+  }
 
   @Override
   public String prettyPrint(final String prefix) {
@@ -38,8 +34,7 @@ public final class DiscreteValue implements Expression<DiscreteProfile> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof DiscreteValue)) return false;
-    final var o = (DiscreteValue)obj;
+    if (!(obj instanceof final DiscreteValue o)) return false;
 
     return Objects.equals(this.value, o.value);
   }

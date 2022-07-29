@@ -1,5 +1,5 @@
 import * as AST from "./scheduler-ast.js";
-import type * as WindowsEDSL from "./constraints-edsl-fluent-api.js";
+import * as WindowsEDSL from "./constraints-edsl-fluent-api.js";
 import type {ActivityType} from "./scheduler-mission-model-generated-code.js";
 
 type WindowProperty = AST.WindowProperty
@@ -59,10 +59,20 @@ export class Goal {
     activityTemplate: ActivityTemplate,
     forEach: WindowsEDSL.Windows | ActivityExpression,
   } & CoexistenceGoalTimingConstraints): ActivityCoexistenceGoal {
+    let forEachAST: AST.WindowsExpressionRoot | AST.ActivityExpression;
+    if (opts.forEach instanceof WindowsEDSL.Windows) {
+      forEachAST = {
+        kind: AST.NodeKind.WindowsExpressionRoot,
+        expression: opts.forEach.__astNode
+      };
+    } else {
+      forEachAST = opts.forEach.__astNode;
+    }
+
     return Goal.new({
       kind: AST.NodeKind.ActivityCoexistenceGoal,
       activityTemplate: opts.activityTemplate,
-      forEach: opts.forEach.__astNode,
+      forEach: forEachAST,
       startConstraint: (("startsAt" in opts) ? opts.startsAt.__astNode : ("startsWithin" in opts) ? opts.startsWithin.__astNode : undefined),
       endConstraint: (("endsAt" in opts) ? opts.endsAt.__astNode : ("endsWithin" in opts) ? opts.endsWithin.__astNode : undefined),
     });

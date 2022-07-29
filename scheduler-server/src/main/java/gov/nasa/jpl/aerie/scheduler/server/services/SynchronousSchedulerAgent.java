@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
@@ -24,12 +26,7 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.ResultsProtocolFailure;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.SpecificationLoadException;
-import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
-import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
-import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
-import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
-import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingCompilationError;
-import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
+import gov.nasa.jpl.aerie.scheduler.server.models.*;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.GoalBuilder;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
@@ -76,6 +73,8 @@ public record SynchronousSchedulerAgent(
     Objects.requireNonNull(goalsJarPath);
   }
 
+  private static final ObjectMapper mapper = new ObjectMapper();
+
   /**
    * {@inheritDoc}
    *
@@ -86,7 +85,7 @@ public record SynchronousSchedulerAgent(
    * any remaining exceptions passed upward represent fatal service configuration problems
    */
   @Override
-  public void schedule(final ScheduleRequest request, final ResultsProtocol.WriterRole writer) {
+  public void schedule(final ScheduleRequest request, final ResultsProtocol.WriterRole writer) throws IOException {
     try {
       //confirm requested plan to schedule from/into still exists at targeted version (request could be stale)
       //TODO: maybe some kind of high level db transaction wrapping entire read/update of target plan revision
@@ -148,9 +147,14 @@ public record SynchronousSchedulerAgent(
       writer.succeedWith(results);
     } catch (final SpecificationLoadException e) {
       //unwrap failure message from any anticipated exceptions and forward to subscribers
-      writer.failWith("%s\n%s".formatted(
-          e.toString(),
-          SchedulingCompilationError.schedulingErrorJsonP.unparse(e.errors).toString()));
+      try {
+        writer.failWith("%s\n%s".formatted(
+            e.toString(),
+            mapper.writeValueAsString(e.errors)));
+      } catch (JsonProcessingException ex) {
+        ex.printStackTrace();
+        throw ex;
+      }
     } catch (final ResultsProtocolFailure |
         NoSuchSpecificationException |
         NoSuchPlanException |

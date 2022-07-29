@@ -1,12 +1,14 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.tree.ConstraintExpression;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.merlin.server.models.ConstraintsCompilationError;
-import gov.nasa.jpl.aerie.constraints.json.ConstraintParsers;
 import org.json.JSONObject;
 
 import javax.json.Json;
@@ -21,6 +23,7 @@ public class ConstraintsDSLCompilationService {
 
   private final Process nodeProcess;
   private final ConstraintsCodeGenService typescriptCodeGenerationService;
+  private final ObjectMapper mapper = new ObjectMapper();
 
   public ConstraintsDSLCompilationService(final ConstraintsCodeGenService typescriptCodeGenerationService)
   throws IOException
@@ -82,8 +85,8 @@ public class ConstraintsDSLCompilationService {
         case "success" -> {
           final var output = outputReader.readLine();
           try {
-            yield new ConstraintsDSLCompilationResult.Success(parseJson(output, ConstraintParsers.constraintP));
-          } catch (InvalidJsonException | InvalidEntityException e) {
+            yield new ConstraintsDSLCompilationResult.Success(mapper.readValue(output, ConstraintExpression.class));
+          } catch (JsonProcessingException e) {
             throw new Error("Could not parse JSON returned from typescript: " + output, e);
           }
         }

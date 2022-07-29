@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
@@ -174,7 +175,7 @@ public class Goal {
       goal.resourceConstraints = null;
       if (this.resourceConstraints.size() > 0) {
         if (this.resourceConstraints.size() > 1) {
-          goal.resourceConstraints = new All(resourceConstraints);
+          goal.resourceConstraints = All.fromExpressions(resourceConstraints);
         } else {
           goal.resourceConstraints = resourceConstraints.get(0);
         }

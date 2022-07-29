@@ -9,13 +9,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class Rate implements Expression<LinearProfile> {
-  public final Expression<LinearProfile> profile;
-
-  public Rate(final Expression<LinearProfile> profile) {
-    this.profile = profile;
-  }
-
+public record Rate(
+    LinearProfileExpression profile) implements LinearProfileExpression {
 
   @Override
   public LinearProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
@@ -37,8 +32,7 @@ public final class Rate implements Expression<LinearProfile> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof Rate)) return false;
-    final var o = (Rate)obj;
+    if (!(obj instanceof final Rate o)) return false;
 
     return Objects.equals(this.profile, o.profile);
   }

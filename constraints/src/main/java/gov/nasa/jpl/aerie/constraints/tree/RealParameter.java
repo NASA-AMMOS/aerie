@@ -12,14 +12,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class RealParameter implements Expression<LinearProfile> {
-  public final String activityAlias;
-  public final String parameterName;
-
-  public RealParameter(final String activityAlias, final String parameterName) {
-    this.activityAlias = activityAlias;
-    this.parameterName = parameterName;
-  }
+public record RealParameter(
+    String activityAlias,
+    String parameterName) implements LinearProfileExpression {
 
   @Override
   public LinearProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
@@ -37,7 +32,8 @@ public final class RealParameter implements Expression<LinearProfile> {
   }
 
   @Override
-  public void extractResources(final Set<String> names) { }
+  public void extractResources(final Set<String> names) {
+  }
 
   @Override
   public String prettyPrint(final String prefix) {
@@ -51,8 +47,7 @@ public final class RealParameter implements Expression<LinearProfile> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof RealParameter)) return false;
-    final var o = (RealParameter)obj;
+    if (!(obj instanceof final RealParameter o)) return false;
 
     return Objects.equals(this.activityAlias, o.activityAlias) &&
            Objects.equals(this.parameterName, o.parameterName);

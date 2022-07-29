@@ -69,7 +69,7 @@ class ConstraintsDSLCompilationServiceTests {
         }
       """,
       new ViolationsOf(
-          new Changes<>(new ProfileExpression<>(new Times(new RealResource("state of charge"), 2.0)))
+          new Changes<>(new Times(new RealResource("state of charge"), 2.0))
       )
     );
   }
@@ -112,7 +112,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Resource("mode").changes();
             }
         """,
-        new ViolationsOf(new Changes<>(new ProfileExpression<>(new DiscreteResource("mode"))))
+        new ViolationsOf(new Changes<>(new DiscreteResource("mode")))
     );
   }
 
@@ -124,7 +124,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Value(5).changes()
             }
         """,
-        new ViolationsOf(new Changes<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(5)))))
+        new ViolationsOf(new Changes<>(new DiscreteValue(SerializedValue.of(5))))
     );
   }
 
@@ -140,7 +140,7 @@ class ConstraintsDSLCompilationServiceTests {
         new ForEachActivity(
             "activity",
             "activity alias 0",
-            new ViolationsOf(new Changes<>(new ProfileExpression<>(new DiscreteParameter("activity alias 0", "Param"))))
+            new ViolationsOf(new Changes<>(new DiscreteParameter("activity alias 0", "Param")))
         )
     );
   }
@@ -207,7 +207,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Value(4).changes()
             }
         """,
-        new ViolationsOf(new Changes<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(4)))))
+        new ViolationsOf(new Changes<>(new DiscreteValue(SerializedValue.of(4))))
     );
   }
 
@@ -233,7 +233,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").changes();
             }
         """,
-        new ViolationsOf(new Changes<>(new ProfileExpression<>(new RealResource("state of charge"))))
+        new ViolationsOf(new Changes<>(new RealResource("state of charge")))
     );
   }
 
@@ -245,7 +245,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Value(5).changes()
             }
         """,
-        new ViolationsOf(new Changes<>(new ProfileExpression<>(new RealValue(5.0))))
+        new ViolationsOf(new Changes<>(new RealValue(5.0)))
     );
   }
 
@@ -261,7 +261,7 @@ class ConstraintsDSLCompilationServiceTests {
         new ForEachActivity(
             "activity",
             "activity alias 0",
-            new ViolationsOf(new Changes<>(new ProfileExpression<>(new RealParameter("activity alias 0", "AnotherParam"))))
+            new ViolationsOf(new Changes<>(new RealParameter("activity alias 0", "AnotherParam")))
         )
     );
   }
@@ -421,7 +421,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Value(4).changes()
             }
         """,
-        new ViolationsOf(new Changes<>(new ProfileExpression<>(new RealValue(4.0))))
+        new ViolationsOf(new Changes<>(new RealValue(4.0)))
     );
   }
 
@@ -487,7 +487,7 @@ class ConstraintsDSLCompilationServiceTests {
         new ViolationsOf(
             new Any(
                 new Invert(new Changes<>(
-                    new ProfileExpression<>(new DiscreteResource("mode"))
+                    new DiscreteResource("mode")
                 )),
                 new LessThan(new RealResource("state of charge"), new RealValue(2.0))
             )
@@ -512,7 +512,7 @@ class ConstraintsDSLCompilationServiceTests {
                 java.util.List.of(
                     new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
                     new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
-                    new Changes<>(new ProfileExpression<>(new RealValue(5.0)))
+                    new Changes<>(new RealValue(5.0))
                 )
             )
         )
@@ -536,7 +536,7 @@ class ConstraintsDSLCompilationServiceTests {
                 java.util.List.of(
                     new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
                     new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
-                    new Changes<>(new ProfileExpression<>(new RealValue(5.0)))
+                    new Changes<>(new RealValue(5.0))
                 )
             )
         )
@@ -553,7 +553,7 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOf(
             new Invert(
-                new Changes<>(new ProfileExpression<>(new DiscreteResource("mode")))
+                new Changes<>(new DiscreteResource("mode"))
             )
         )
     );

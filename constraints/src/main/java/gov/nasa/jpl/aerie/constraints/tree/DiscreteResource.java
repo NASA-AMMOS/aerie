@@ -10,12 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class DiscreteResource implements Expression<DiscreteProfile> {
-  public final String name;
-
-  public DiscreteResource(final String name) {
-    this.name = name;
-  }
+public record DiscreteResource(String name) implements DiscreteProfileExpression {
 
   @Override
   public DiscreteProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
@@ -44,8 +39,7 @@ public final class DiscreteResource implements Expression<DiscreteProfile> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof DiscreteResource)) return false;
-    final var o = (DiscreteResource)obj;
+    if (!(obj instanceof final DiscreteResource o)) return false;
 
     return Objects.equals(this.name, o.name);
   }

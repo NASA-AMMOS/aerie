@@ -9,14 +9,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class Times implements Expression<LinearProfile> {
-  public final Expression<LinearProfile> profile;
-  public final double multiplier;
-
-  public Times(final Expression<LinearProfile> profile, final double multiplier) {
-    this.profile = profile;
-    this.multiplier = multiplier;
-  }
+public record Times(
+    LinearProfileExpression profile,
+    double multiplier) implements LinearProfileExpression {
 
   @Override
   public LinearProfile evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
@@ -40,8 +35,7 @@ public final class Times implements Expression<LinearProfile> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof Times)) return false;
-    final var o = (Times)obj;
+    if (!(obj instanceof final Times o)) return false;
 
     return Objects.equals(this.profile, o.profile) &&
            Objects.equals(this.multiplier, o.multiplier);
