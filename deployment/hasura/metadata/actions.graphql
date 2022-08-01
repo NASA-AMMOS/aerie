@@ -193,6 +193,11 @@ type TypescriptFile {
 
 type CommandDictionaryResponse {
   id: Int!
+  command_types_typescript_path: String!
+  mission: String!
+  version: String!
+  created_at: String!
+  updated_at: String!
 }
 
 type ExpansionSetResponse {
