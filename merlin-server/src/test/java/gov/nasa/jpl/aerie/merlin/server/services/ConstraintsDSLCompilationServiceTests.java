@@ -609,7 +609,7 @@ class ConstraintsDSLCompilationServiceTests {
 
     checkSuccessfulCompilation(
         """
-        import * as Gen from './mission-model-generated-code.js';
+        import { ActivityInstance } from './constraints-edsl-fluent-api.js';
         export default () => {
           return Constraint.ForEachActivity(
             ActivityType.activity,
@@ -617,7 +617,7 @@ class ConstraintsDSLCompilationServiceTests {
           )
         }
 
-        function myHelperFunction(instance: Gen.ActivityInstance<ActivityType.activity>): Constraint {
+        function myHelperFunction(instance: ActivityInstance<ActivityType.activity>): Constraint {
           return instance.window();
         }
         """,
