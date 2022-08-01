@@ -4,14 +4,12 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.models.MissionModelFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
@@ -148,7 +146,7 @@ public final class StubMissionModelService implements MissionModelService {
   public Map<ActivityInstanceId, String> validateActivityInstantiations(
       final String missionModelId,
       final Map<ActivityInstanceId, SerializedActivity> activities)
-  throws NoSuchMissionModelException, MissionModelFacade.MissionModelContractException, LocalMissionModelService.MissionModelLoadException
+  throws LocalMissionModelService.MissionModelLoadException
   {
     return Map.of();
   }
@@ -177,7 +175,7 @@ public final class StubMissionModelService implements MissionModelService {
   public Map<String, SerializedValue> getModelEffectiveArguments(
       final String missionModelId,
       final Map<String, SerializedValue> arguments)
-  throws MissingArgumentsException, LocalMissionModelService.MissionModelLoadException
+  throws LocalMissionModelService.MissionModelLoadException
   {
     return Map.of();
   }
