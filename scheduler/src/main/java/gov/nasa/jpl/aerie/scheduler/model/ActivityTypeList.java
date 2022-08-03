@@ -15,6 +15,10 @@ public interface ActivityTypeList {
     return new Blacklist(activityExpressions);
   }
 
+  static ActivityTypeList matchAny() {
+    return blacklist(List.of());
+  }
+
   static ActivityTypeList empty() {
     return whitelist(List.of());
   }

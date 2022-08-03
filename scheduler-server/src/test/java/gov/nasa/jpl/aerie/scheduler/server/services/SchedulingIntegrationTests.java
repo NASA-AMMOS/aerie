@@ -6,8 +6,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityTypeList;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
+import gov.nasa.jpl.aerie.scheduler.server.models.GlobalSchedulingConditionRecord;
+import gov.nasa.jpl.aerie.scheduler.server.models.GlobalSchedulingConditionSource;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
@@ -795,6 +798,80 @@ public class SchedulingIntegrationTests {
     assertEquals("Morpheus", changeProducer.args().get("producer").asString().get());
   }
 
+  @Test
+  void testGlobalSchedulingConditions_conditionNeverOccurs() {
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+          export default () => Goal.ActivityRecurrenceGoal({
+            activityTemplate: ActivityTemplates.ChangeProducer({producer: "Morpheus"}),
+            interval: 24 * 60 * 60 * 1000 * 1000
+          })
+          """, true)
+        ),
+        List.of(
+            new GlobalSchedulingConditionRecord(
+                new GlobalSchedulingConditionSource("export default () => Real.Resource(\"/fruit\").greaterThan(5.0)"),
+                ActivityTypeList.matchAny(),
+                true
+            )
+        ),
+        PLANNING_HORIZON);
+    assertEquals(0, results.updatedPlan().size());
+  }
+
+  @Test
+  void testGlobalSchedulingConditions_conditionAlwaysTrue() {
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+          export default () => Goal.ActivityRecurrenceGoal({
+            activityTemplate: ActivityTemplates.ChangeProducer({producer: "Morpheus"}),
+            interval: 24 * 60 * 60 * 1000 * 1000
+          })
+          """, true)
+        ),
+        List.of(
+            new GlobalSchedulingConditionRecord(
+                new GlobalSchedulingConditionSource("export default () => Real.Resource(\"/fruit\").lessThan(5.0)"),
+                ActivityTypeList.matchAny(),
+                true
+            )
+        ),
+        PLANNING_HORIZON);
+    assertEquals(4, results.updatedPlan().size());
+  }
+
+  @Test
+  void testGlobalSchedulingConditions_conditionSometimesTrue() {
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(
+            new MockMerlinService.PlannedActivityInstance(
+                "BiteBanana",
+                Map.of("biteSize", SerializedValue.of(1)),
+                Duration.of(24L * 60 * 60 * 1000 * 1000 - 1, Duration.MICROSECONDS))
+        ),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+          export default () => Goal.ActivityRecurrenceGoal({
+            activityTemplate: ActivityTemplates.ChangeProducer({producer: "Morpheus"}),
+            interval: 24 * 60 * 60 * 1000 * 1000
+          })
+          """, true)
+        ),
+        List.of(
+            new GlobalSchedulingConditionRecord(
+                new GlobalSchedulingConditionSource("export default () => Real.Resource(\"/fruit\").greaterThan(3.5)"),
+                ActivityTypeList.matchAny(),
+                true
+            )
+        ),
+        PLANNING_HORIZON);
+    assertEquals(2, results.updatedPlan().size());
+  }
+
   private static Map<String, Collection<MockMerlinService.PlannedActivityInstance>>
   partitionByActivityType(final Iterable<MockMerlinService.PlannedActivityInstance> activities) {
     final var result = new HashMap<String, Collection<MockMerlinService.PlannedActivityInstance>>();
@@ -832,6 +909,17 @@ public class SchedulingIntegrationTests {
       final List<MockMerlinService.PlannedActivityInstance> plannedActivities,
       final Iterable<SchedulingGoal> goals,
       final PlanningHorizon planningHorizon
+  )
+  {
+    return runScheduler(desc, plannedActivities, goals, List.of(), planningHorizon);
+  }
+
+  private SchedulingRunResults runScheduler(
+      final MissionModelDescription desc,
+      final List<MockMerlinService.PlannedActivityInstance> plannedActivities,
+      final Iterable<SchedulingGoal> goals,
+      final List<GlobalSchedulingConditionRecord> globalSchedulingConditions,
+      final PlanningHorizon planningHorizon
   ) {
     final var mockMerlinService = new MockMerlinService();
     mockMerlinService.setMissionModel(getMissionModelInfo(desc));
@@ -851,7 +939,7 @@ public class SchedulingIntegrationTests {
         new Timestamp(planningHorizon.getEndInstant()),
         Map.of(),
         false,
-        List.of())));
+        globalSchedulingConditions)));
     final var agent = new SynchronousSchedulerAgent(
         specificationService,
         mockMerlinService,
