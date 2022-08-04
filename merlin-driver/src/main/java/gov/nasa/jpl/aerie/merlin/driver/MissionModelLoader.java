@@ -15,38 +15,45 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.jar.JarFile;
 
 public final class MissionModelLoader {
     public static MissionModelFactory<?, ?, ?> loadMissionModelFactory(final Path path, final String name, final String version)
-        throws MissionModelLoadException
+    throws MissionModelLoadException
     {
         final var service = loadMissionModelProvider(path, name, version);
         return service.getFactory();
     }
 
-    public static MissionModel<?> loadMissionModel(final SerializedValue missionModelConfig, final Path path, final String name, final String version)
-        throws MissionModelLoadException
+    public static MissionModel<?> loadMissionModel(
+        final Instant planStart,
+        final SerializedValue missionModelConfig,
+        final Path path,
+        final String name,
+        final String version)
+    throws MissionModelLoadException
     {
         final var service = loadMissionModelProvider(path, name, version);
         final var factory = service.getFactory();
         final var builder = new MissionModelBuilder();
-        return loadMissionModel(missionModelConfig, factory, builder);
+        return loadMissionModel(planStart, missionModelConfig, factory, builder);
     }
 
     private static <Registry, Config, Model>
     MissionModel<Model> loadMissionModel(
+        final Instant planStart,
         final SerializedValue missionModelConfig,
         final MissionModelFactory<Registry, Config, Model> factory,
-        final MissionModelBuilder builder
-    ) {
+        final MissionModelBuilder builder)
+    {
         try {
             final var serializedConfigMap =
                 missionModelConfig.asMap().orElseThrow(ConfigurationType.UnconstructableConfigurationException::new);
 
             final var config = factory.getConfigurationType().instantiate(serializedConfigMap);
             final var registry = DirectiveTypeRegistry.extract(factory);
-            final var model = factory.instantiate(registry.registry(), config, builder);
+            final var model = factory.instantiate(registry.registry(), planStart, config, builder);
             return builder.build(model, factory.getConfigurationType(), registry);
         } catch (final ConfigurationType.UnconstructableConfigurationException | InvalidArgumentsException ex) {
             throw new MissionModelInstantiationException(ex);
@@ -54,7 +61,7 @@ public final class MissionModelLoader {
     }
 
     public static MerlinPlugin loadMissionModelProvider(final Path path, final String name, final String version)
-        throws MissionModelLoadException
+    throws MissionModelLoadException
     {
         // Look for a MerlinMissionModel implementor in the mission model. For correctness, we're assuming there's
         // only one matching MerlinMissionModel in any given mission model.

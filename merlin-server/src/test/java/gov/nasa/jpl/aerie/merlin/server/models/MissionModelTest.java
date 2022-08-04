@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -16,6 +16,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +39,7 @@ public final class MissionModelTest {
     private static MissionModelFacade makeMissionModel(final MissionModelBuilder builder, final Configuration config) {
         final var factory = new GeneratedMissionModelFactory();
         final var registry = DirectiveTypeRegistry.extract(factory);
-        final var model = factory.instantiate(registry.registry(), config, builder);
+        final var model = factory.instantiate(registry.registry(), Instant.EPOCH, config, builder);
         return new MissionModelFacade(builder.build(model, factory.getConfigurationType(), registry));
     }
 

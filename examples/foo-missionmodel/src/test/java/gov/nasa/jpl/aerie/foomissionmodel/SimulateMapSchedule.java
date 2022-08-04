@@ -29,23 +29,22 @@ public class SimulateMapSchedule {
   }
 
   private static MissionModel<RootModel<ActivityTypes, Mission>>
-  makeMissionModel(final MissionModelBuilder builder, final Configuration config) {
+  makeMissionModel(final MissionModelBuilder builder, final Instant planStart, final Configuration config) {
     final var factory = new GeneratedMissionModelFactory();
     final var registry = DirectiveTypeRegistry.extract(factory);
-    final var model = factory.instantiate(registry.registry(), config, builder);
+    final var model = factory.instantiate(registry.registry(), planStart, config, builder);
     return builder.build(model, factory.getConfigurationType(), registry);
   }
 
   private static
   void simulateWithMapSchedule() {
     final var config = new Configuration();
-    final var missionModel = makeMissionModel(new MissionModelBuilder(), config);
+    final var startTime = Instant.now();
+    final var simulationDuration = duration(25, SECONDS);
+    final var missionModel = makeMissionModel(new MissionModelBuilder(), Instant.EPOCH, config);
 
     try {
       final var schedule = loadSchedule();
-      final var startTime = Instant.now();
-      final var simulationDuration = duration(25, SECONDS);
-
       final var simulationResults = SimulationDriver.simulate(
           missionModel,
           schedule,

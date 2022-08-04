@@ -17,11 +17,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class SimulationUtility {
-  private static MissionModel<?> makeMissionModel(final MissionModelBuilder builder, final Configuration config) {
+  private static MissionModel<?> makeMissionModel(final MissionModelBuilder builder, final Instant planStart, final Configuration config) {
     final var factory = new GeneratedMissionModelFactory();
     final var registry = DirectiveTypeRegistry.extract(factory);
     // TODO: [AERIE-1516] Teardown the model to release any system resources (e.g. threads).
-    final var model = factory.instantiate(registry.registry(), config, builder);
+    final var model = factory.instantiate(registry.registry(), planStart, config, builder);
     return builder.build(model, factory.getConfigurationType(), registry);
   }
 
@@ -29,8 +29,8 @@ public final class SimulationUtility {
   simulate(final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule, final Duration simulationDuration) {
     final var dataPath = Path.of(SimulationUtility.class.getResource("data/lorem_ipsum.txt").getPath());
     final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath);
-    final var missionModel = makeMissionModel(new MissionModelBuilder(), config);
     final var startTime = Instant.now();
+    final var missionModel = makeMissionModel(new MissionModelBuilder(), Instant.EPOCH, config);
 
     return SimulationDriver.simulate(
         missionModel,

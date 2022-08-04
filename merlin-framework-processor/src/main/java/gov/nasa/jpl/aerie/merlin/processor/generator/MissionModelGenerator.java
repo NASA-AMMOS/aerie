@@ -40,6 +40,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -191,6 +192,10 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addParameter(
                         missionModel.getTypesName(),
                         "registry",
+                        Modifier.FINAL)
+                    .addParameter(
+                        ClassName.get(Instant.class),
+                       "simulationStart",
                         Modifier.FINAL)
                     .addParameter(
                         missionModel.modelConfigurationType

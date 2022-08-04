@@ -304,7 +304,7 @@ public record SynchronousSchedulerAgent(
       final var missionConfig = SerializedValue.of(plan.modelConfiguration());
       final var modelJarPath = modelJarsDir.resolve(plan.modelPath());
       return new SchedulerMissionModel(
-          MissionModelLoader.loadMissionModel(missionConfig, modelJarPath, plan.modelName(), plan.modelVersion()),
+          MissionModelLoader.loadMissionModel(plan.horizon().getStartInstant(), missionConfig, modelJarPath, plan.modelName(), plan.modelVersion()),
           loadSchedulerModelProvider(modelJarPath, plan.modelName(), plan.modelVersion()).getSchedulerModel());
     } catch (MissionModelLoader.MissionModelLoadException | SchedulerModelLoadException e) {
       throw new ResultsProtocolFailure(e);
