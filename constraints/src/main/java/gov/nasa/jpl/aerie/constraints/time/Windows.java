@@ -355,9 +355,17 @@ public final class Windows implements Iterable<Segment<Boolean>> {
 
       builder.set(Segment.of(shiftedInterval, segment.value()));
     }
-
     return new Windows(builder.build());
   }
+  
+  /**
+   *
+   */
+  @Override
+  public Windows split(final int numberOfSubWindows) {
+    return this.intoSpans().split(numberOfSubWindows).intoWindows();
+  }
+
 
   /**
    * Converts this into a Spans object, where each true segment is a Span.

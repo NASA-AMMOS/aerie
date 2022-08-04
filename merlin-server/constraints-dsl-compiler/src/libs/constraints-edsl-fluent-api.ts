@@ -180,6 +180,17 @@ export class Windows {
     })
   }
 
+  public split(numberOfSubWindows: number): Windows {
+    if (numberOfSubWindows < 1) {
+      throw RangeError(".split numberOfSubWindows cannot be less than 1, but was: " + numberOfSubWindows);
+    }
+    return new Windows({
+      kind: AST.NodeKind.IntervalsExpressionSplit,
+      intervals: this.__astNode,
+      numberOfSubIntervals: numberOfSubWindows
+    })
+  }
+
   public spans(): Spans {
     return new Spans({
       kind: AST.NodeKind.SpansExpressionFromWindows,
@@ -196,6 +207,18 @@ export class Spans {
   public constructor(expression: AST.SpansExpression) {
     this.__astNode = expression;
   }
+
+  public split(numberOfSubSpans: number): Spans {
+    if (numberOfSubSpans < 1) {
+      throw RangeError(".split numberOfSubSpans cannot be less than 1, but was: " + numberOfSubSpans);
+    }
+    return new Spans({
+      kind: AST.NodeKind.IntervalsExpressionSplit,
+      intervals: this.__astNode,
+      numberOfSubIntervals: numberOfSubSpans
+    })
+  }
+
 
   public windows(): Windows {
     return new Windows({
@@ -588,7 +611,7 @@ declare global {
     public shiftBy(fromStart: number, fromEnd: number): Windows;
 
     /**
-     *  Return all windows with a duration longer than the argument
+     * Return all windows with a duration longer than the argument
      * @param duration the duration
      */
     public longerThan(duration: Duration): Windows;
@@ -598,6 +621,16 @@ declare global {
      * @param duration the duration
      */
     public shorterThan(duration: Duration): Windows;
+
+    /**
+     * Splits each window into equal sized sub-windows.
+     *
+     * For `.split(N)`, N sub-windows will be created by removing N-1 points in the middle.
+     *
+     * @throws UnsplittableIntervalException during backend evaluation if the duration of a window is fewer microseconds than N.
+     * @param numberOfSubWindows how many sub-windows to split each window into
+     */
+    public split(numberOfSubWindows: number): Windows;
 
     /**
      * Convert this into a set of Spans.
@@ -610,6 +643,16 @@ declare global {
    */
   export class Spans {
     public readonly __astNode: AST.SpansExpression;
+
+    /**
+     * Splits each span into equal sized sub-spans.
+     *
+     * For `.split(N)`, N sub-spans will be created by removing N-1 points in the middle.
+     *
+     * @throws UnsplittableIntervalException during backend evaluation if the duration of a span is fewer microseconds than N.
+     * @param numberOfSubSpans how many sub-spans to split each span into
+     */
+    public split(numberOfSubSpans: number): Spans;
 
     /**
      * Convert this into a set of Windows.

@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.time.IntervalContainer;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.*;
@@ -17,6 +18,7 @@ import java.util.List;
 import static gov.nasa.jpl.aerie.constraints.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.doubleP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
@@ -281,6 +283,16 @@ public final class ConstraintParsers {
             $ -> tuple(Unit.UNIT, $.expression));
   }
 
+  static <I extends IntervalContainer<I>> JsonParser<Split<I>> splitF(final JsonParser<Expression<I>> intervalExpressionP) {
+    return productP
+        .field("kind", literalP("IntervalsExpressionSplit"))
+        .field("intervals", intervalExpressionP)
+        .field("numberOfSubIntervals", intP)
+        .map(Iso.of(
+            untuple((kind, expr, numberOfSubWindows) -> new Split<I>(expr, numberOfSubWindows)),
+            $ -> tuple(Unit.UNIT, $.intervals, $.numberOfSubIntervals)));
+  }
+
   static JsonParser<WindowsFromSpans> windowsFromSpansF(final JsonParser<Expression<Spans>> spansExpressionP) {
     return productP
         .field("kind", literalP("WindowsExpressionFromSpans"))
@@ -330,6 +342,7 @@ public final class ConstraintParsers {
         anyF(selfP),
         invertF(selfP),
         shiftByF(selfP),
+        splitF(selfP),
         windowsFromSpansF(spansP)));
   }
 
@@ -344,6 +357,7 @@ public final class ConstraintParsers {
 
   private static JsonParser<Expression<Spans>> spansExpressionF(JsonParser<Expression<Windows>> windowsP) {
       return recursiveP(selfP -> chooseP(
+          splitF(selfP),
           spansFromWindowsF(windowsP)
       ));
   }
