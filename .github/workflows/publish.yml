@@ -45,52 +45,108 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ github.token }}
-      # Build aerie-merlin Docker artifacts.
+      # Build, scan, and push aerie-merlin Docker artifacts.
       - name: Extract metadata (tags, labels) for aerie-merlin Docker image
         id: aerieMerlin
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin
-      - name: Build and push aerie-merlin Docker image
+      - name: Build aerie-merlin Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./merlin-server
+          load: true
+          tags: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin:${{ github.sha }}
+      - name: Scan aerie-merlin Docker image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin:${{ github.sha }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL'
+      - name: Push aerie-merlin Docker image
         uses: docker/build-push-action@v2
         with:
           context: ./merlin-server
           push: true
           tags: ${{ steps.aerieMerlin.outputs.tags }}
           labels: ${{ steps.aerieMerlin.outputs.labels }}
-      # Build aerie-merlin-worker Docker artifacts.
+      # Build, scan, and push aerie-merlin-worker Docker artifacts.
       - name: Extract metadata (tags, labels) for aerie-merlin-worker Docker image
         id: aerieMerlinWorker
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin-worker
-      - name: Build and push aerie-merlin-worker Docker image
+      - name: Build aerie-merlin-worker Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./merlin-worker
+          load: true
+          tags: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin-worker:${{ github.sha }}
+      - name: Scan aerie-merlin-worker Docker image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin-worker:${{ github.sha }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL'
+      - name: Push aerie-merlin-worker Docker image
         uses: docker/build-push-action@v2
         with:
           context: ./merlin-worker
           push: true
           tags: ${{ steps.aerieMerlinWorker.outputs.tags }}
           labels: ${{ steps.aerieMerlinWorker.outputs.labels }}
-      # Build aerie-scheduler Docker artifacts.
+      # Build, scan, and push aerie-scheduler Docker artifacts.
       - name: Extract metadata (tags, labels) for aerie-scheduler Docker image
         id: aerieScheduler
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/nasa-ammos/aerie-scheduler
-      - name: Build and push aerie-scheduler Docker image
+      - name: Build aerie-scheduler Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./scheduler-server
+          load: true
+          tags: ${{ env.REGISTRY }}/nasa-ammos/aerie-scheduler:${{ github.sha }}
+      - name: Scan aerie-scheduler Docker image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-scheduler:${{ github.sha }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL'
+      - name: Push aerie-scheduler Docker image
         uses: docker/build-push-action@v2
         with:
           context: ./scheduler-server
           push: true
           tags: ${{ steps.aerieScheduler.outputs.tags }}
           labels: ${{ steps.aerieScheduler.outputs.labels }}
-      # Build aerie-commanding Docker artifacts.
+      # Build, scan, and push aerie-commanding Docker artifacts.
       - name: Extract metadata (tags, labels) for aerie-commanding Docker image
         id: aerieCommanding
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/nasa-ammos/aerie-commanding
-      - name: Build and push aerie-commanding Docker image
+      - name: Build aerie-commanding Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./command-expansion-server
+          load: true
+          tags: ${{ env.REGISTRY }}/nasa-ammos/aerie-commanding:${{ github.sha }}
+      - name: Scan aerie-commanding Docker image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-commanding:${{ github.sha }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL'
+      - name: Push aerie-commanding Docker image
         uses: docker/build-push-action@v2
         with:
           context: ./command-expansion-server
