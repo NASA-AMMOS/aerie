@@ -41,7 +41,6 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -195,7 +194,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         Modifier.FINAL)
                     .addParameter(
                         ClassName.get(Instant.class),
-                       "simulationStart",
+                       "planStart",
                         Modifier.FINAL)
                     .addParameter(
                         missionModel.modelConfigurationType
@@ -233,16 +232,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
                         "executor",
                         "builder",
-                        (missionModel.modelConfigurationType.isPresent())
-                            ? CodeBlock.of(
-                                "new $T($L, $L)",
-                                ClassName.get(missionModel.topLevelModel),
-                                "registrar",
-                                "configuration")
-                            : CodeBlock.of(
-                                "new $T($L))",
-                                ClassName.get(missionModel.topLevelModel),
-                                "registrar"))
+                        generateMissionModelInstantiation(missionModel))
                     .addStatement(
                         "return new $T<>($L, $L, $L)",
                         gov.nasa.jpl.aerie.merlin.framework.RootModel.class,
@@ -256,6 +246,33 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
         .builder(typeName.packageName(), typeSpec)
         .skipJavaLangImports(true)
         .build();
+  }
+
+  private static CodeBlock generateMissionModelInstantiation(final MissionModelRecord missionModel) {
+    final var modelClassName = ClassName.get(missionModel.topLevelModel);
+    return missionModel.modelConfigurationType
+        .map(configType -> missionModel.expectsPlanStart ?
+            CodeBlock.of(
+                "new $T($L, $L, $L)",
+                modelClassName,
+                "registrar",
+                "planStart",
+                "configuration") :
+            CodeBlock.of(
+                "new $T($L, $L)",
+                modelClassName,
+                "registrar",
+                "configuration"))
+        .orElseGet(() -> missionModel.expectsPlanStart ?
+            CodeBlock.of(
+                "new $T($L, $L)",
+                modelClassName,
+                "registrar",
+                "planStart") :
+            CodeBlock.of(
+                "new $T($L)",
+                modelClassName,
+                "registrar"));
   }
 
   /** Generate `GeneratedSchedulerModel` class. */
