@@ -93,9 +93,9 @@ public final class MerlinWorkerAppDriver {
     return new WorkerAppConfiguration(
         Path.of(getEnv("MERLIN_WORKER_LOCAL_STORE","/usr/src/app/merlin_file_store")),
         new PostgresStore(getEnv("MERLIN_WORKER_DB_SERVER","postgres"),
-                          getEnv("MERLIN_WORKER_DB_USER","aerie"),
+                          getEnv("MERLIN_WORKER_DB_USER",""),
                           Integer.parseInt(getEnv("MERLIN_WORKER_DB_PORT","5432")),
-                          getEnv("MERLIN_WORKER_DB_PASSWORD","aerie"),
+                          getEnv("MERLIN_WORKER_DB_PASSWORD",""),
                           getEnv("MERLIN_WORKER_DB","aerie_merlin"))
     );
   }

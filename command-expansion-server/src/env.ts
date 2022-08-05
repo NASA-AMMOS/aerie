@@ -18,9 +18,9 @@ export const defaultEnv: Env = {
   PORT: '27184',
   POSTGRES_AERIE_EXPANSION_DB: 'aerie_commanding',
   POSTGRES_HOST: 'localhost',
-  POSTGRES_PASSWORD: 'aerie',
+  POSTGRES_PASSWORD: '',
   POSTGRES_PORT: '5432',
-  POSTGRES_USER: 'aerie',
+  POSTGRES_USER: '',
   STORAGE: 'commanding_file_store',
 };
 
