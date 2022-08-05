@@ -1,6 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.scheduler.model.ActivityTypeList;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
+import gov.nasa.jpl.aerie.scheduler.server.models.GlobalSchedulingConditionRecord;
+import gov.nasa.jpl.aerie.scheduler.server.models.GlobalSchedulingConditionSource;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
@@ -28,15 +31,18 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
     final SpecificationRecord specificationRecord;
     final PlanId planId;
     final List<PostgresGoalRecord> postgresGoalRecords;
+    final List<PostgresSchedulingConditionRecord> postgresSchedulingConditionRecords;
     try (final var connection = this.dataSource.getConnection();
          final var getSpecificationAction = new GetSpecificationAction(connection);
-         final var getSpecificationGoalsAction = new GetSpecificationGoalsAction(connection)
+         final var getSpecificationGoalsAction = new GetSpecificationGoalsAction(connection);
+         final var getSpecificationConditionsAction = new GetSpecificationConditionsAction(connection)
     ) {
       specificationRecord = getSpecificationAction
           .get(specificationId.id())
           .orElseThrow(() -> new NoSuchSpecificationException(specificationId));
       planId = new PlanId(specificationRecord.planId());
       postgresGoalRecords = getSpecificationGoalsAction.get(specificationId.id());
+      postgresSchedulingConditionRecords = getSpecificationConditionsAction.get(specificationId.id());
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get scheduling specification", ex);
     }
@@ -50,6 +56,15 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
             ))
         .toList();
 
+    final var globalSchedulingConditions = postgresSchedulingConditionRecords
+        .stream()
+        .map((PostgresSchedulingConditionRecord pgCondition) -> new GlobalSchedulingConditionRecord(
+            new GlobalSchedulingConditionSource(pgCondition.definition()),
+            ActivityTypeList.matchAny(), // TODO when global scheduling conditions can be limited to certain activity types, this will need to be updated.
+            pgCondition.enabled()
+        ))
+        .toList();
+
     return new Specification(
         planId,
         specificationRecord.planRevision(),
@@ -58,7 +73,7 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
         specificationRecord.horizonEndTimestamp(),
         specificationRecord.simulationArguments(),
         specificationRecord.analysisOnly(),
-        List.of() // TODO this will be loaded from the database in an upcoming commit
+        globalSchedulingConditions
     );
   }
 
