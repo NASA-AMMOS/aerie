@@ -17,9 +17,7 @@ create table plan (
     foreign key (model_id)
     references mission_model
     on update cascade
-    on delete set null,
-  constraint plan_duration_is_nonnegative
-    check (duration >= '0')
+    on delete set null
 );
 
 create index plan_model_id_index on plan (model_id);
@@ -61,3 +59,16 @@ after update on plan
 for each row
 when (pg_trigger_depth() < 1)
 execute function increment_revision_on_update_plan();
+
+create function raise_duration_is_negative()
+returns trigger
+security definer
+language plpgsql as $$begin
+  raise exception 'invalid plan duration, expected nonnegative duration but found: %', new.duration;
+end$$;
+
+create trigger check_plan_duration_is_nonnegative_trigger
+before insert or update on plan
+for each row
+when (new.duration < '0')
+execute function raise_duration_is_negative();
