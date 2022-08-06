@@ -12,5 +12,6 @@ begin;
   \ir tables/scheduling_goal_analysis.sql
   \ir tables/scheduling_goal_analysis_created_activities.sql
   \ir tables/scheduling_goal_analysis_satisfying_activities.sql
-
+  \ir tables/scheduling_condition.sql
+  \ir tables/scheduling_specification_conditions.sql
 end;
