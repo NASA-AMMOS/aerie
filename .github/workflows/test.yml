@@ -13,6 +13,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    environment: e2e-test
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
@@ -46,6 +47,12 @@ jobs:
           docker compose -f ./e2e-tests/docker-compose-test.yml up -d --build
           docker images
           docker ps -a
+        env:
+          AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
+          AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
+          POSTGRES_DB: "${{secrets.POSTGRES_DB}}"
+          POSTGRES_USER: "${{secrets.POSTGRES_USER}}"
+          POSTGRES_PASSWORD: "${{secrets.POSTGRES_PASSWORD}}"
       - name: Sleep for 30 Seconds
         run: sleep 30s
         shell: bash
