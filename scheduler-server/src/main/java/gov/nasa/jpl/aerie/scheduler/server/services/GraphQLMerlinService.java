@@ -106,6 +106,41 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     }
   }
 
+  private Optional<JsonObject> postRequest(final String query, final JsonObject variables) throws IOException, PlanServiceException {
+    try {
+      //TODO: (mem optimization) use streams here to avoid several copies of strings
+      final var reqBody = Json
+          .createObjectBuilder()
+          .add("query", query)
+          .add("variables", variables)
+          .build();
+      final var httpReq = HttpRequest
+          .newBuilder().uri(merlinGraphqlURI).timeout(httpTimeout)
+          .header("Content-Type", "application/json")
+          .header("Accept", "application/json")
+          .header("Origin", merlinGraphqlURI.toString())
+          .POST(HttpRequest.BodyPublishers.ofString(reqBody.toString()))
+          .build();
+      //TODO: (net optimization) gzip compress the request body if large enough (eg for createAllActs)
+      final var httpResp = HttpClient
+          .newHttpClient().send(httpReq, HttpResponse.BodyHandlers.ofInputStream());
+      if (httpResp.statusCode() != 200) {
+        //TODO: how severely to error out if aerie cannot be reached or has a 500 error or json is garbled etc etc?
+        return Optional.empty();
+      }
+      final var respBody = Json.createReader(httpResp.body()).readObject();
+      if (respBody.containsKey("errors")) {
+        throw new PlanServiceException(respBody.toString());
+      }
+      return Optional.of(respBody);
+    } catch (final InterruptedException e) {
+      //TODO: maybe retry if interrupted? but depends on semantics (eg don't duplicate mutation if not idempotent)
+      return Optional.empty();
+    } catch (final JsonException e) { // or also JsonParsingException
+      throw new IOException("json parse error on graphql response:" + e.getMessage(), e);
+    }
+  }
+
   //TODO: maybe use fancy aerie typed json parsers/serializers, ala BasicParsers.productP use in MerlinParsers
   //TODO: or upgrade to gson or similar modern library with registered object mappings
 
