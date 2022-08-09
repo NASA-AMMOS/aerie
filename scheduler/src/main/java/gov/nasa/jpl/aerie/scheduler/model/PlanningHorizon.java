@@ -24,8 +24,12 @@ public final class PlanningHorizon{
     return aerieHorizon;
   }
 
-  public Instant getStartHuginn(){
+  public Instant getStartInstant(){
     return start;
+  }
+
+  public Instant getEndInstant(){
+    return end;
   }
 
   public boolean contains(Duration time){

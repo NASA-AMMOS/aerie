@@ -246,7 +246,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     final var planName = getNextPlanName();
     final var planId = createEmptyPlan(
         planName, planMetadata.modelId(),
-        planMetadata.horizon().getStartHuginn(), planMetadata.horizon().getEndAerie());
+        planMetadata.horizon().getStartInstant(), planMetadata.horizon().getEndAerie());
     //create sim storage space since doesn't happen automatically (else breaks further queries)
     createSimulationForPlan(planId);
     Map<ActivityInstance, ActivityInstanceId> activityToId = createAllPlanActivities(planId, plan);
