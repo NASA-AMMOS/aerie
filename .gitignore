@@ -54,3 +54,6 @@ build
 
 # Ignore node test report
 test-report.html
+
+# Ignore any new .env files
+.env

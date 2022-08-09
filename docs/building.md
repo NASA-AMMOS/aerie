@@ -42,6 +42,7 @@ The `merlin` container is sourced by building the container anew using the build
 process. This is evidenced by the `build:` directive in the `merlin`
 section in docker-compose.yml.
 
+Prior to building docker-compose.yml, it is necessary to create a .env file using the template found in .env.template in the Aerie root directory.
 ### Docker Compose Build
 
 `docker compose build`
