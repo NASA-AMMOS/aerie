@@ -33,9 +33,19 @@ task generateASTJsonSchema(type: NpmTask) {
   inputs.dir('src')
 }
 
+task generateDocumentation(type: NpmTask) {
+  dependsOn npmInstall
+  dependsOn processResources
+  dependsOn assembleConstraintsDSLCompiler
+  args = ['run', 'generate-doc']
+  inputs.files('package.json', 'package-lock.json', 'tsconfig.json')
+  inputs.dir('src')
+}
+
 assemble {
   dependsOn assembleConstraintsDSLCompiler
   dependsOn generateASTJsonSchema
+  dependsOn generateDocumentation
 }
 
 test {
