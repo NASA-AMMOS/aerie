@@ -14,6 +14,7 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
@@ -96,7 +97,9 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   @Override
   public Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivities(
       final PlanMetadata planMetadata,
-      final Plan plan) throws IOException, NoSuchPlanException, PlanServiceException
+      final Plan plan,
+      final Map<ActivityInstance, GoalId> activityToGoal
+  ) throws IOException, NoSuchPlanException, PlanServiceException
   {
     return null;
   }
@@ -120,7 +123,8 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
       final PlanId planId,
       final Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
       final MerlinPlan initialPlan,
-      final Plan plan
+      final Plan plan,
+      final Map<ActivityInstance, GoalId> activityToGoal
   )
   throws IOException, NoSuchPlanException, PlanServiceException, NoSuchActivityInstanceException
   {
@@ -146,7 +150,11 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   }
 
   @Override
-  public Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(final PlanId planId, final Plan plan)
+  public Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(
+      final PlanId planId,
+      final Plan plan,
+      final Map<ActivityInstance, GoalId> activityToGoalId
+  )
   throws IOException, NoSuchPlanException, PlanServiceException
   {
     return null;

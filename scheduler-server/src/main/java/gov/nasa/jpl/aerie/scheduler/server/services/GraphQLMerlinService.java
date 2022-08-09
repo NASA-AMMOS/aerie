@@ -18,6 +18,7 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.scheduler.server.http.SerializedValueJsonParser;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
@@ -285,7 +286,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
   @Override
   public Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivities(
       final PlanMetadata planMetadata,
-      final Plan plan
+      final Plan plan,
+      final Map<ActivityInstance, GoalId> activityToGoalId
   )
   throws IOException, NoSuchPlanException, PlanServiceException
   {
@@ -358,7 +360,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
       final PlanId planId,
       final Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
       final MerlinPlan initialPlan,
-      final Plan plan)
+      final Plan plan,
+      final Map<ActivityInstance, GoalId> activityToGoalId
+  )
   throws IOException, NoSuchPlanException, NoSuchActivityInstanceException, PlanServiceException
   {
     final var ids = new HashMap<ActivityInstance, ActivityInstanceId>();
@@ -368,8 +372,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
       final var idActFromInitialPlan = idsFromInitialPlan.get(activity.getId());
       if (idActFromInitialPlan != null) {
         //add duration to parameters if controllable
-        if(activity.getType().getDurationType() instanceof DurationType.Controllable durationType){
-          if(!activity.getArguments().containsKey(durationType.parameterName())){
+        if (activity.getType().getDurationType() instanceof DurationType.Controllable durationType){
+          if (!activity.getArguments().containsKey(durationType.parameterName())){
             activity.addArgument(durationType.parameterName(), new DurationValueMapper().serializeValue(activity.getDuration()));
           }
         }
@@ -377,9 +381,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
         //if act was present in initial plan
         final var schedulerActIntoMerlinAct = new MerlinActivityInstance(activity.getType().getName(), activity.getStartTime(), activity.getArguments());
         final var activityInstanceId = idsFromInitialPlan.get(activity.getId());
-        if(!schedulerActIntoMerlinAct.equals(actFromInitialPlan.get())) {
+        if (!schedulerActIntoMerlinAct.equals(actFromInitialPlan.get())) {
           //update if it has changed
-          updateActivity(planId, schedulerActIntoMerlinAct, activityInstanceId);
+          updateActivity(planId, schedulerActIntoMerlinAct, activityInstanceId, activityToGoalId.get(activity));
         }
         ids.put(activity, activityInstanceId);
       } else {
@@ -396,7 +400,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     }
 
     //Create
-    ids.putAll(createActivities(planId, toAdd));
+    ids.putAll(createActivities(planId, toAdd, activityToGoalId));
 
     return ids;
   }
@@ -423,7 +427,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
   public void updateActivity(
       final PlanId planId,
       final MerlinActivityInstance activity,
-      final ActivityInstanceId instanceId
+      final ActivityInstanceId instanceId,
+      final GoalId goalId
   )
   throws PlanServiceException, NoSuchPlanException, IOException
   {
@@ -434,7 +439,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     final var query = """
         mutation UpdateActivity($id: Int!, $planId: Int!, $arguments: String!, $startOffset: Int!, $goalId: Int) {
           update_activity_by_pk(pk_columns: {id: $id, plan_id: $planId}, _set: {arguments: $arguments, start_offset: $startOffset, source_scheduling_goal_id: $goalId}) {
-           affected_rows
+            affected_rows
           }
         }
         """;
@@ -444,6 +449,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
         .add("planId", planId.id())
         .add("arguments", arguments.build())
         .add("startOffset", activity.startTimestamp().toString())
+        .add("goalId", goalId.id())
         .build();
 
     final var response = postRequest(query, variables).orElseThrow(() -> new NoSuchPlanException(planId));
@@ -509,16 +515,18 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
   @Override
   public Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(
       final PlanId planId,
-      final Plan plan
+      final Plan plan,
+      final Map<ActivityInstance, GoalId> activityToGoalId
   )
   throws IOException, NoSuchPlanException, PlanServiceException
   {
-    return createActivities(planId, plan.getActivitiesByTime());
+    return createActivities(planId, plan.getActivitiesByTime(), activityToGoalId);
   }
 
   private Map<ActivityInstance, ActivityInstanceId> createActivities(
       final PlanId planId,
-      final List<ActivityInstance> orderedActivities
+      final List<ActivityInstance> orderedActivities,
+      final Map<ActivityInstance, GoalId> activityToGoalId
   )
   throws IOException, NoSuchPlanException, PlanServiceException
   {
@@ -553,6 +561,12 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
           insertionObjectArguments.add(durationType.parameterName(), serializeForGql(act.getDuration()));
         }
       }
+
+      final var goalId = activityToGoalId.get(act);
+      if (goalId != null) {
+        insertionObject.add("source_scheduling_goal_id", goalId.id());
+      }
+
       for (final var arg : act.getArguments().entrySet()) {
         insertionObjectArguments.add(arg.getKey(), serializedValueP.unparse(arg.getValue()));
       }

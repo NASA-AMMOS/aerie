@@ -136,13 +136,22 @@ public record SynchronousSchedulerAgent(
       final var solutionPlan = scheduler.getNextSolution().orElseThrow(
           () -> new ResultsProtocolFailure("scheduler returned no solution"));
 
+      final var activityToGoalId = new HashMap<ActivityInstance, GoalId>();
+      for (final var entry : solutionPlan.getEvaluation().getGoalEvaluations().entrySet()) {
+        for (final var activity : entry.getValue().getInsertedActivities()) {
+          activityToGoalId.put(activity, goals.get(entry.getKey()));
+        }
+      }
       //store the solution plan back into merlin (and reconfirm no intervening mods!)
       //TODO: make revision confirmation atomic part of plan mutation (plan might have been modified during scheduling!)
       ensurePlanRevisionMatch(specification, getMerlinPlanRev(specification.planId()));
-      final var instancesToIds = storeFinalPlan(planMetadata,
-                                                loadedPlanComponents.idMap(),
-                                                loadedPlanComponents.merlinPlan(),
-                                                solutionPlan);
+      final var instancesToIds = storeFinalPlan(
+          planMetadata,
+          loadedPlanComponents.idMap(),
+          loadedPlanComponents.merlinPlan(),
+          solutionPlan,
+          activityToGoalId
+      );
       //collect results and notify subscribers of success
       final var results = collectResults(solutionPlan, instancesToIds, goals);
       writer.succeedWith(results);
@@ -388,17 +397,26 @@ public record SynchronousSchedulerAgent(
    * @throws ResultsProtocolFailure when the plan could not be stored to aerie, the target plan revision has
    *     changed, or aerie could not be reached
    */
-  private Map<ActivityInstance, ActivityInstanceId> storeFinalPlan(final PlanMetadata planMetadata,
-                                                                   final Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
-                                                                   final MerlinPlan initialPlan,
-                                                                   final Plan newPlan) {
+  private Map<ActivityInstance, ActivityInstanceId> storeFinalPlan(
+    final PlanMetadata planMetadata,
+    final Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
+    final MerlinPlan initialPlan,
+    final Plan newPlan,
+    final Map<ActivityInstance, GoalId> goalToActivity
+  ) {
     try {
       switch (this.outputMode) {
         case CreateNewOutputPlan -> {
-          return merlinService.createNewPlanWithActivities(planMetadata, newPlan).getValue();
+          return merlinService.createNewPlanWithActivities(planMetadata, newPlan, goalToActivity).getValue();
         }
         case UpdateInputPlanWithNewActivities -> {
-          return merlinService.updatePlanActivities(planMetadata.planId(), idsFromInitialPlan, initialPlan, newPlan);
+          return merlinService.updatePlanActivities(
+              planMetadata.planId(),
+              idsFromInitialPlan,
+              initialPlan,
+              newPlan,
+              goalToActivity
+          );
         }
         default -> throw new IllegalArgumentException("unsupported scheduler output mode " + this.outputMode);
       }
