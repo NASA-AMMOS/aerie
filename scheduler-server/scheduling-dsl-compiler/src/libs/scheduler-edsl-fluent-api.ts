@@ -506,7 +506,12 @@ declare global {
      */
     public or(...others: Goal[]): Goal
 
-    public static applyWhen(window: WindowsEDSL.Windows): Goal
+    /**
+     * Restricts the windows on which a goal is applied
+     * @param windows the windows on which this goal applies
+     * @returns a new goal applying on a restricted horizon
+     */
+    public applyWhen(window: WindowsEDSL.Windows): Goal
 
     /**
      * Creates an ActivityRecurrenceGoal
