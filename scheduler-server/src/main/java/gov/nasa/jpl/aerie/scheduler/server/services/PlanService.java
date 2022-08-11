@@ -49,7 +49,7 @@ public interface PlanService {
      * @return a newly allocated snapshot of the plan contents
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
-    MerlinPlan getPlanActivities(final PlanMetadata planMetadata, final Problem mission)
+    MerlinPlan getPlanActivityDirectives(final PlanMetadata planMetadata, final Problem mission)
     throws IOException, NoSuchPlanException, PlanServiceException, InvalidJsonException;
 
     /**
@@ -74,7 +74,7 @@ public interface PlanService {
      * @return the database id of the newly created aerie plan container
      * @throws NoSuchPlanException when the plan container could not be found in aerie after creation
      */
-    Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivities(
+    Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivityDirectives(
         final PlanMetadata planMetadata,
         final Plan plan,
         final Map<ActivityInstance, GoalId> activityToGoalId
@@ -116,7 +116,7 @@ public interface PlanService {
      * @return
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
-    Map<ActivityInstance, ActivityInstanceId> updatePlanActivities(
+    Map<ActivityInstance, ActivityInstanceId> updatePlanActivityDirectives(
         PlanId planId,
         Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
         MerlinPlan initialPlan,
@@ -133,7 +133,7 @@ public interface PlanService {
      * @param planId the database id of the plan container to clear
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
-    void clearPlanActivities(final PlanId planId)
+    void clearPlanActivityDirectives(final PlanId planId)
     throws IOException, NoSuchPlanException, PlanServiceException;
 
     /**
@@ -148,7 +148,7 @@ public interface PlanService {
      * @return
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
-    Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(
+    Map<ActivityInstance, ActivityInstanceId> createAllPlanActivityDirectives(
         final PlanId planId,
         final Plan plan,
         final Map<ActivityInstance, GoalId> activityToGoalId

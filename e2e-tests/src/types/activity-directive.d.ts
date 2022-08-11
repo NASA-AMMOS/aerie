@@ -1,4 +1,4 @@
-type ActivityId = number;
+type ActivityDirectiveId = number;
 
 type ActivityType = {
   name: string;
@@ -7,17 +7,17 @@ type ActivityType = {
 
 type ActivityTypesMap = Record<string, ActivityType>;
 
-type Activity = {
+type ActivityDirective = {
   arguments: ArgumentsMap;
   children: number[] | null;
   duration: number | null;
-  id: ActivityId;
+  id: ActivityDirectiveId;
   parent: number | null;
   startTime: string;
   type: string;
 };
 
-type ActivitiesMap = Record<ActivityId, Activity>;
+type ActivitieDirectivesMap = Record<ActivityDirectiveId, ActivityDirective>;
 
 type ActivityInsertInput = {
   arguments: ArgumentsMap;

@@ -240,19 +240,19 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
    * @return
    */
   @Override
-  public MerlinPlan getPlanActivities(final PlanMetadata planMetadata, final Problem problem)
+  public MerlinPlan getPlanActivityDirectives(final PlanMetadata planMetadata, final Problem problem)
   throws IOException, NoSuchPlanException, PlanServiceException, InvalidJsonException
   {
     final var merlinPlan = new MerlinPlan();
     final var request =
-        "query { plan_by_pk(id:%d) { activities { id start_offset type arguments } duration start_time }} ".formatted(
+        "query { plan_by_pk(id:%d) { activity_directives { id start_offset type arguments } duration start_time }} ".formatted(
             planMetadata.planId().id());
     final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(planMetadata.planId()));
     final var jsonplan = response.getJsonObject("data").getJsonObject("plan_by_pk");
-    final var activities = jsonplan.getJsonArray("activities");
-    for (int i = 0; i < activities.size(); i++) {
-      final var jsonActivity = activities.getJsonObject(i);
-      final var type = activities.getJsonObject(i).getString("type");
+    final var activityDirectives = jsonplan.getJsonArray("activity_directives");
+    for (int i = 0; i < activityDirectives.size(); i++) {
+      final var jsonActivity = activityDirectives.getJsonObject(i);
+      final var type = activityDirectives.getJsonObject(i).getString("type");
       final var start = jsonActivity.getString("start_offset");
       final var arguments = jsonActivity.getJsonObject("arguments");
       final var deserializedArguments = BasicParsers
@@ -284,7 +284,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
    * @return
    */
   @Override
-  public Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivities(
+  public Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivityDirectives(
       final PlanMetadata planMetadata,
       final Plan plan,
       final Map<ActivityInstance, GoalId> activityToGoalId
@@ -297,7 +297,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
         planMetadata.horizon().getStartInstant(), planMetadata.horizon().getEndAerie());
     //create sim storage space since doesn't happen automatically (else breaks further queries)
     createSimulationForPlan(planId);
-    final Map<ActivityInstance, ActivityInstanceId> activityToId = createAllPlanActivities(planId, plan, activityToGoalId);
+    final Map<ActivityInstance, ActivityInstanceId> activityToId = createAllPlanActivityDirectives(planId, plan, activityToGoalId);
 
     return Pair.of(planId, activityToId);
   }
@@ -356,7 +356,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
    * @return
    */
   @Override
-  public Map<ActivityInstance, ActivityInstanceId> updatePlanActivities(
+  public Map<ActivityInstance, ActivityInstanceId> updatePlanActivityDirectives(
       final PlanId planId,
       final Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
       final MerlinPlan initialPlan,
@@ -383,7 +383,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
         final var activityInstanceId = idsFromInitialPlan.get(activity.getId());
         if (!schedulerActIntoMerlinAct.equals(actFromInitialPlan.get())) {
           //update if it has changed
-          updateActivity(planId, schedulerActIntoMerlinAct, activityInstanceId, activityToGoalId.get(activity));
+          updateActivityDirective(planId, schedulerActIntoMerlinAct, activityInstanceId, activityToGoalId.get(activity));
         }
         ids.put(activity, activityInstanceId);
       } else {
@@ -395,17 +395,17 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     for (final var idActInInitialPlan : idsFromInitialPlan.entrySet()) {
       if (!actsFromNewPlan.containsKey(idActInInitialPlan.getKey())) {
         //activity has been removed by the scheduler, delete it
-        deleteActivity(idActInInitialPlan.getValue());
+        deleteActivityDirective(idActInInitialPlan.getValue());
       }
     }
 
     //Create
-    ids.putAll(createActivities(planId, toAdd, activityToGoalId));
+    ids.putAll(createActivityDirectives(planId, toAdd, activityToGoalId));
 
     return ids;
   }
 
-  public void deleteActivity(final ActivityInstanceId id)
+  public void deleteActivityDirective(final ActivityInstanceId id)
   throws PlanServiceException, IOException, NoSuchActivityInstanceException
   {
     final var query = """
@@ -424,7 +424,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     }
   }
 
-  public void updateActivity(
+  public void updateActivityDirective(
       final PlanId planId,
       final MerlinActivityInstance activity,
       final ActivityInstanceId instanceId,
@@ -438,7 +438,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     }
     final var query = """
         mutation UpdateActivity($id: Int!, $planId: Int!, $arguments: String!, $startOffset: Int!, $goalId: Int) {
-          update_activity_by_pk(pk_columns: {id: $id, plan_id: $planId}, _set: {arguments: $arguments, start_offset: $startOffset, source_scheduling_goal_id: $goalId}) {
+          update_activity_directive_by_pk(pk_columns: {id: $id, plan_id: $planId}, _set: {arguments: $arguments, start_offset: $startOffset, source_scheduling_goal_id: $goalId}) {
             affected_rows
           }
         }
@@ -454,7 +454,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
 
     final var response = postRequest(query, variables).orElseThrow(() -> new NoSuchPlanException(planId));
     try {
-      response.getJsonObject("data").getJsonObject("update_activity_by_pk").getJsonNumber("id").longValueExact();
+      response.getJsonObject("data").getJsonObject("update_activity_directive_by_pk").getJsonNumber("id").longValueExact();
     } catch (ClassCastException | ArithmeticException e) {
       throw new NoSuchPlanException(planId);
     }
@@ -491,11 +491,11 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
    */
   //TODO: (error cleanup) more diverse exceptions for failed operations
   @Override
-  public void clearPlanActivities(final PlanId planId) throws IOException, NoSuchPlanException, PlanServiceException {
+  public void clearPlanActivityDirectives(final PlanId planId) throws IOException, NoSuchPlanException, PlanServiceException {
     ensurePlanExists(planId);
     final var request = (
         "mutation clearPlanActivities {"
-        + "  delete_activity(where: { plan_id: { _eq: %d } }) {"
+        + "  delete_activity_directive(where: { plan_id: { _eq: %d } }) {"
         + "    affected_rows"
         + "  }"
         + "}"
@@ -513,17 +513,17 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
    * @return
    */
   @Override
-  public Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(
+  public Map<ActivityInstance, ActivityInstanceId> createAllPlanActivityDirectives(
       final PlanId planId,
       final Plan plan,
       final Map<ActivityInstance, GoalId> activityToGoalId
   )
   throws IOException, NoSuchPlanException, PlanServiceException
   {
-    return createActivities(planId, plan.getActivitiesByTime(), activityToGoalId);
+    return createActivityDirectives(planId, plan.getActivitiesByTime(), activityToGoalId);
   }
 
-  private Map<ActivityInstance, ActivityInstanceId> createActivities(
+  private Map<ActivityInstance, ActivityInstanceId> createActivityDirectives(
       final PlanId planId,
       final List<ActivityInstance> orderedActivities,
       final Map<ActivityInstance, GoalId> activityToGoalId
@@ -532,8 +532,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
   {
     ensurePlanExists(planId);
     final var query = """
-        mutation createAllPlanActivities($activities: [activity_insert_input!]!) {
-          insert_activity(objects: $activities) {
+        mutation createAllPlanActivityDirectives($activities: [activity_directive_insert_input!]!) {
+          insert_activity_directive(objects: $activities) {
             returning {
               id
             }
@@ -584,12 +584,12 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     final Map<ActivityInstance, ActivityInstanceId> instanceToInstanceId = new HashMap<>();
     try {
       final var numCreated = response
-          .getJsonObject("data").getJsonObject("insert_activity").getJsonNumber("affected_rows").longValueExact();
+          .getJsonObject("data").getJsonObject("insert_activity_directive").getJsonNumber("affected_rows").longValueExact();
       if (numCreated != orderedActivities.size()) {
         throw new NoSuchPlanException(planId);
       }
       var ids = response
-          .getJsonObject("data").getJsonObject("insert_activity").getJsonArray("returning");
+          .getJsonObject("data").getJsonObject("insert_activity_directive").getJsonArray("returning");
       //make sure we associate the right id with the right activity
       for(int i = 0; i < ids.size(); i++) {
         instanceToInstanceId.put(orderedActivities.get(i), new ActivityInstanceId(ids.getJsonObject(i).getInt("id")));

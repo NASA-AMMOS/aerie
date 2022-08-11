@@ -102,7 +102,7 @@ class MerlinDatabaseTests {
       final var res = statement
           .executeQuery(
               """
-                  INSERT INTO activity (type, plan_id, start_offset, arguments)
+                  INSERT INTO activity_directive (type, plan_id, start_offset, arguments)
                   VALUES ('test-activity', '%s', '00:00:00', '{}')
                   RETURNING id;"""
                   .formatted(planId)
@@ -238,7 +238,7 @@ class MerlinDatabaseTests {
     clearTable("uploaded_file");
     clearTable("mission_model");
     clearTable("plan");
-    clearTable("activity");
+    clearTable("activity_directive");
     clearTable("simulation_template");
     clearTable("simulation");
     clearTable("dataset");
@@ -409,7 +409,7 @@ class MerlinDatabaseTests {
       connection.createStatement()
                 .executeUpdate(
                     """
-                        UPDATE activity SET type = 'test-activity-updated'
+                        UPDATE activity_directive SET type = 'test-activity-updated'
                         WHERE id = %s;"""
                         .formatted(activityId)
                 );
@@ -447,7 +447,7 @@ class MerlinDatabaseTests {
       connection.createStatement()
                 .executeUpdate(
                     """
-                        DELETE FROM activity
+                        DELETE FROM activity_directive
                         WHERE id = %s;"""
                         .formatted(activityId)
                 );

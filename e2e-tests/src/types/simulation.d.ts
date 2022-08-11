@@ -32,7 +32,7 @@ type ResourceValue = {
   y: number | string;
 };
 
-type SimulationResponseActivity = Omit<Activity, 'id' | 'startTime'> & {
+type SimulationResponseActivity = Omit<ActivityDirective, 'id' | 'startTime'> & {
   computedAttributes: string;
   startTimestamp: string;
 };

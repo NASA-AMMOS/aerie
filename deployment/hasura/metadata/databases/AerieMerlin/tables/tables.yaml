@@ -1,4 +1,4 @@
-- "!include public_activity.yaml"
+- "!include public_activity_directive.yaml"
 - "!include public_activity_type.yaml"
 - "!include public_activity_directive_metadata_schema.yaml"
 - "!include public_condition.yaml"

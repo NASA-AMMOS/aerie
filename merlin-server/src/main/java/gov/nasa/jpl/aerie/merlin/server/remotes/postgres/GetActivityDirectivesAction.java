@@ -14,20 +14,20 @@ import java.util.Map;
 
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.activityArgumentsP;
 
-/*package-local*/ final class GetActivitiesAction implements AutoCloseable {
+/*package-local*/ final class GetActivityDirectivesAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
     select
       a.id,
       a.type,
       ceil(extract(epoch from a.start_offset) * 1000*1000) as start_offset_in_micros,
       a.arguments
-    from activity as a
+    from activity_directive as a
     where a.plan_id = ?
     """;
 
   private final PreparedStatement statement;
 
-  public GetActivitiesAction(final Connection connection) throws SQLException {
+  public GetActivityDirectivesAction(final Connection connection) throws SQLException {
     this.statement = connection.prepareStatement(sql);
   }
 

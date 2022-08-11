@@ -87,7 +87,7 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   }
 
   @Override
-  public MerlinPlan getPlanActivities(final PlanMetadata planMetadata, final Problem mission)
+  public MerlinPlan getPlanActivityDirectives(final PlanMetadata planMetadata, final Problem mission)
   {
     // TODO this gets the planMetadata from above
 
@@ -95,7 +95,7 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   }
 
   @Override
-  public Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivities(
+  public Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivityDirectives(
       final PlanMetadata planMetadata,
       final Plan plan,
       final Map<ActivityInstance, GoalId> activityToGoal
@@ -119,7 +119,7 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   }
 
   @Override
-  public Map<ActivityInstance, ActivityInstanceId> updatePlanActivities(
+  public Map<ActivityInstance, ActivityInstanceId> updatePlanActivityDirectives(
       final PlanId planId,
       final Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
       final MerlinPlan initialPlan,
@@ -143,14 +143,14 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   }
 
   @Override
-  public void clearPlanActivities(final PlanId planId)
+  public void clearPlanActivityDirectives(final PlanId planId)
   throws IOException, NoSuchPlanException, PlanServiceException
   {
 
   }
 
   @Override
-  public Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(
+  public Map<ActivityInstance, ActivityInstanceId> createAllPlanActivityDirectives(
       final PlanId planId,
       final Plan plan,
       final Map<ActivityInstance, GoalId> activityToGoalId
