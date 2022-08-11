@@ -20,7 +20,7 @@ const temporalPolyfillTypes = fs.readFileSync(
 );
 const tsConfig = JSON.parse(fs.readFileSync(new URL('../tsconfig.json', import.meta.url).pathname, 'utf-8'));
 const { options } = ts.parseJsonConfigFileContent(tsConfig, ts.sys, '');
-const compilerTarget = options.target ?? ts.ScriptTarget.ES2021
+const compilerTarget = options.target ?? ts.ScriptTarget.ES2021;
 
 const codeRunner = new UserCodeRunner();
 
@@ -92,7 +92,7 @@ export async function executeExpansion(opts: {
       }
       const commandsFlat = commands.flat() as Command[];
       for (const command of commandsFlat) {
-        (command as Mutable<Command>).metadata  = {
+        (command as Mutable<Command>).metadata = {
           ...command.metadata,
           simulatedActivityId: activityInstance.id,
         };
