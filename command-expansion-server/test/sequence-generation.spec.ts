@@ -13,7 +13,7 @@ import {
 } from './testUtils/Expansion.js';
 import { insertCommandDictionary, removeCommandDictionary } from './testUtils/CommandDictionary.js';
 import type { SequenceSeqJson } from '../src/lib/codegen/CommandEDSLPreface.js';
-import { insertSequence, linkActivityInstance, removeSequence } from './testUtils/Sequence.js';
+import { insertSequence, generateSequenceEDSL, linkActivityInstance, removeSequence } from './testUtils/Sequence.js';
 import { TimingTypes } from '../src/lib/codegen/CommandEDSLPreface.js';
 
 let planId: number;
@@ -731,4 +731,61 @@ it('should provide start, end, and computed attributes on activities', async () 
   {
     await removeSequence(graphqlClient, sequencePk);
   }
+}, 30000);
+
+it('generate sequence seqjson from static sequence', async () => {
+  var results = await generateSequenceEDSL(
+    graphqlClient,
+    commandDictionaryId,
+    `
+    export default () =>
+    Sequence.new({
+      seqId: "test00001",
+      metadata: {},
+      commands: [
+          C.BAKE_BREAD,
+          A\`2020-060T03:45:19\`.PREHEAT_OVEN(100),
+          E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PACKAGE_BANANA({
+            bundle_name2: "Dole",
+            number_of_bananas1: 43,
+            bundle_name1: "Chiquita",
+            lot_number: 1093,
+            number_of_bananas2: 12
+          }),
+      ],
+    });
+  `,
+  );
+
+  expect(results.id).toBe('test00001');
+  expect(results.metadata).toEqual({});
+  expect(results.steps).toEqual([
+    {
+      type: 'command',
+      stem: 'BAKE_BREAD',
+      time: { type: TimingTypes.COMMAND_COMPLETE },
+      args: [],
+      metadata: {},
+    },
+    {
+      type: 'command',
+      stem: 'PREHEAT_OVEN',
+      time: {
+        tag: '2020-060T03:45:19.000',
+        type: 'ABSOLUTE',
+      },
+      args: [100],
+      metadata: {},
+    },
+    {
+      type: 'command',
+      stem: 'PACKAGE_BANANA',
+      time: {
+        tag: '12:06:54.000',
+        type: 'EPOCH_RELATIVE',
+      },
+      args: ['Chiquita', 43, 'Dole', 12, 1093],
+      metadata: {},
+    },
+  ]);
 }, 30000);
