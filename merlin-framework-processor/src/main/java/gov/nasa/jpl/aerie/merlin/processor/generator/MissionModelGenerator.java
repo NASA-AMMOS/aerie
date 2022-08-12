@@ -612,24 +612,18 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
   private static MethodSpec generateActivityTypesRegisterMethod(final MissionModelRecord missionModel) {
     final var typeName = missionModel.getTypesName();
 
-    final var cb = CodeBlock.builder()
-        .add(
-            "return new $T(new $T()",
-            typeName,
-            typeName.nestedClass("Builder"));
-
+    final var activityTypesBuilderChain = CodeBlock.builder();
     for (final var activityType : missionModel.activityTypes) {
       final var qualifiedName = activityType.declaration().getQualifiedName().toString().replace(".", "_");
       final var mapperQualifiedName = activityType.mapper().name.canonicalName().replace(".", "_");
-      cb.add(
-          "$W.$L($L.registerDirectiveType($S, $T.$L))",
+      activityTypesBuilderChain.add(
+          "$W.$L($L.registerDirectiveType($S, $T.$L))", // $W is a line-wrapping directive
           qualifiedName,
           "registrar",
           activityType.name(),
           typeName,
           mapperQualifiedName);
     }
-    cb.add(")");
 
     return MethodSpec
         .methodBuilder("register")
@@ -644,7 +638,11 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             "registrar",
             Modifier.FINAL)
         .returns(typeName)
-        .addStatement(cb.build())
+        .addStatement(
+            "return new $T(new $T()$L)",
+            typeName,
+            typeName.nestedClass("Builder"),
+            activityTypesBuilderChain.build())
         .build();
   }
 

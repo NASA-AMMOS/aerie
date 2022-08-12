@@ -9,7 +9,7 @@ FROM eclipse-temurin:18-focal
 ENV NODE_VERSION=16.14.0
 ENV NVM_DIR=/usr/src/.nvm
 ENV PATH="${NVM_DIR}/versions/node/v${NODE_VERSION}/bin:${PATH}"
-RUN apt install --no-install-recommends -y curl \
+RUN apt update && apt install --no-install-recommends -y curl \
     && mkdir -p $NVM_DIR \
     && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash \
     &&. "$NVM_DIR/nvm.sh" \
