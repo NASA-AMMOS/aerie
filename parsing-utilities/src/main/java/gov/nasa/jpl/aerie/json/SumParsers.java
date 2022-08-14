@@ -35,14 +35,14 @@ public final class SumParsers {
               .createObjectBuilder(schema)
               .add("properties", Json
                   .createObjectBuilder()
-                  .add("type", Json
+                  .add(tagField, Json
                       .createObjectBuilder()
                       .add("const", Json.createValue(variant.tag()))
                       .build())
                   .addAll(Json.createObjectBuilder(properties)))
               .add("required", Json
                   .createArrayBuilder()
-                  .add("type")
+                  .add(tagField)
                   .addAll(Json.createArrayBuilder(requiredProperties)))
               .build());
         }
