@@ -36,4 +36,8 @@ public interface Iso<S, T> {
         $ -> other.from(this.from($)),
         $ -> this.to(other.to($)));
   }
+
+  default Iso<T, S> invert() {
+    return Iso.of(this::to, this::from);
+  }
 }
