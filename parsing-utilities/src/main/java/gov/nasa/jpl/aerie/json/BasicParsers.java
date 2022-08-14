@@ -43,6 +43,24 @@ public abstract class BasicParsers {
     }
   };
 
+  public static final JsonParser<Void> noneP = new JsonParser<>() {
+    @Override
+    public JsonObject getSchema(final SchemaCache anchors) {
+      // The schema `{"not": {}}` validates no JSON document.
+      return Json.createObjectBuilder().add("not", Json.createObjectBuilder()).build();
+    }
+
+    @Override
+    public JsonParseResult<Void> parse(final JsonValue json) {
+      return JsonParseResult.failure();
+    }
+
+    @Override
+    public JsonValue unparse(final Void value) {
+      throw new IllegalArgumentException("There are no valid instances of Void.");
+    }
+  };
+
   public static final JsonParser<Boolean> boolP = new JsonParser<>() {
     @Override
     public JsonObject getSchema(final SchemaCache anchors) {
