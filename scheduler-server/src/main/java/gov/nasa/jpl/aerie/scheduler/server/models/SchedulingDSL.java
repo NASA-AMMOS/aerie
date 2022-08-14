@@ -2,8 +2,8 @@ package gov.nasa.jpl.aerie.scheduler.server.models;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.json.Iso;
+import gov.nasa.jpl.aerie.json.JsonObjectParser;
 import gov.nasa.jpl.aerie.json.JsonParser;
-import gov.nasa.jpl.aerie.json.ProductParsers;
 import gov.nasa.jpl.aerie.json.SumParsers;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -60,7 +60,7 @@ public class SchedulingDSL {
               untuple(CardinalitySpecification::new),
               $ -> tuple($.duration(), $.occurrence())));
 
-  private static final ProductParsers.JsonObjectParser<GoalSpecifier.RecurrenceGoalDefinition> recurrenceGoalDefinitionP =
+  private static final JsonObjectParser<GoalSpecifier.RecurrenceGoalDefinition> recurrenceGoalDefinitionP =
       productP
           .field("activityTemplate", activityTemplateP)
           .field("interval", durationP)
@@ -70,7 +70,7 @@ public class SchedulingDSL {
                   goalDefinition.activityTemplate(),
                   goalDefinition.interval())));
 
-  private static final ProductParsers.JsonObjectParser<ConstraintExpression.ActivityExpression> activityExpressionP =
+  private static final JsonObjectParser<ConstraintExpression.ActivityExpression> activityExpressionP =
       productP
           .field("kind", literalP("ActivityExpression"))
           .field("type", stringP)
@@ -99,7 +99,7 @@ public class SchedulingDSL {
               untuple(ActivityTimingConstraint::new),
               $ -> tuple($.windowProperty(), $.operator(), $.operand(), $.singleton())));
 
-  private static final ProductParsers.JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP =
+  private static final JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP =
       productP
           .field("activityTemplate", activityTemplateP)
           .field("forEach", constraintExpressionP)
@@ -113,7 +113,7 @@ public class SchedulingDSL {
                   goalDefinition.startConstraint(),
                   goalDefinition.endConstraint())));
 
-  private static final ProductParsers.JsonObjectParser<GoalSpecifier.CardinalityGoalDefinition> cardinalityGoalDefinitionP =
+  private static final JsonObjectParser<GoalSpecifier.CardinalityGoalDefinition> cardinalityGoalDefinitionP =
       productP
           .field("activityTemplate", activityTemplateP)
           .field("specification", cardinalitySpecificationJsonParser)
@@ -123,21 +123,21 @@ public class SchedulingDSL {
                   goalDefinition.activityTemplate(),
                   goalDefinition.specification())));
 
-  private static ProductParsers.JsonObjectParser<GoalSpecifier.GoalAnd> goalAndF(final JsonParser<GoalSpecifier> goalSpecifierP) {
+  private static JsonObjectParser<GoalSpecifier.GoalAnd> goalAndF(final JsonParser<GoalSpecifier> goalSpecifierP) {
     return productP
         .field("goals", listP(goalSpecifierP))
         .map(Iso.of(untuple(GoalSpecifier.GoalAnd::new),
                     GoalSpecifier.GoalAnd::goals));
   }
 
-  private static ProductParsers.JsonObjectParser<GoalSpecifier.GoalOr> goalOrF(final JsonParser<GoalSpecifier> goalSpecifierP) {
+  private static JsonObjectParser<GoalSpecifier.GoalOr> goalOrF(final JsonParser<GoalSpecifier> goalSpecifierP) {
     return productP
         .field("goals", listP(goalSpecifierP))
         .map(Iso.of(untuple(GoalSpecifier.GoalOr::new),
                     GoalSpecifier.GoalOr::goals));
   }
 
-  private static ProductParsers.JsonObjectParser<GoalSpecifier.GoalApplyWhen> goalApplyWhenF(final JsonParser<GoalSpecifier> goalSpecifierP) {
+  private static JsonObjectParser<GoalSpecifier.GoalApplyWhen> goalApplyWhenF(final JsonParser<GoalSpecifier> goalSpecifierP) {
     return productP
         .field("goal", goalSpecifierP)
         .field("window", windowsExpressionP)

@@ -1,7 +1,5 @@
 package gov.nasa.jpl.aerie.json;
 
-import gov.nasa.jpl.aerie.json.ProductParsers.JsonObjectParser;
-
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
