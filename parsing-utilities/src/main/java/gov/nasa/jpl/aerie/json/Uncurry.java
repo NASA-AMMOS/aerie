@@ -5,6 +5,13 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+/**
+ * A set of utility functions for transforming the fields of an object parser.
+ *
+ * <p> The parsers produced from {@link ProductParsers} work with iteratively nested {@link Pair}s, which are
+ * inconvenient to work with directly. The static functions in this class let you use an n-ary function where
+ * a nested tuple would normally be given, or return an n-tuple rather than a series of nested 2-tuples. </p>
+ */
 public final class Uncurry {
   private Uncurry() {}
 
