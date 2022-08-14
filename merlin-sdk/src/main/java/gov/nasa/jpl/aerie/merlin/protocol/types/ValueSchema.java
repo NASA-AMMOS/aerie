@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.protocol.types;
 
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;

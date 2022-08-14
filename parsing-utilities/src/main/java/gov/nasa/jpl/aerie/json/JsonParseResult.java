@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public /*sealed*/ interface JsonParseResult<T> {
+public sealed interface JsonParseResult<T> {
   record Success<T>(T result) implements JsonParseResult<T> {}
   record Failure<T>(FailureReason reason) implements JsonParseResult<T> {
     public <S> Failure<S> cast() {
@@ -57,8 +57,6 @@ public /*sealed*/ interface JsonParseResult<T> {
 
   /** Prepends the given breadcrumb if the result is a failure. */
   default JsonParseResult<T> prependBreadcrumb(final Breadcrumb breadcrumb) {
-    final var self = this;
-
     if (this instanceof Success<T> s) {
       return s;
     } else if (this instanceof Failure<T> f) {
