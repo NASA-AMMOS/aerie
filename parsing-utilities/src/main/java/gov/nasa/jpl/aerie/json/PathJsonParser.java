@@ -12,7 +12,7 @@ public final class PathJsonParser implements JsonParser<Path> {
   public static final PathJsonParser pathP = new PathJsonParser();
 
   @Override
-  public JsonObject getSchema(final Map<Object, String> anchors) {
+  public JsonObject getSchema(final SchemaCache anchors) {
     return Json
         .createObjectBuilder()
         .add("type", "string")

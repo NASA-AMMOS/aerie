@@ -3,12 +3,10 @@ package gov.nasa.jpl.aerie.json;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 public interface JsonParser<T> {
-  JsonObject getSchema(Map<Object, String> anchors);
+  JsonObject getSchema(SchemaCache anchors);
   JsonParseResult<T> parse(JsonValue json);
   JsonValue unparse(T value);
 
@@ -16,7 +14,7 @@ public interface JsonParser<T> {
     return Json
         .createObjectBuilder()
         .add("$schema", Json.createValue("https://json-schema.org/draft/2020-12/schema"))
-        .addAll(Json.createObjectBuilder(this.getSchema(new HashMap<>())))
+        .addAll(Json.createObjectBuilder(this.getSchema(new SchemaCache())))
         .build();
   }
 
@@ -27,7 +25,7 @@ public interface JsonParser<T> {
 
     return new JsonParser<>() {
       @Override
-      public JsonObject getSchema(final Map<Object, String> anchors) {
+      public JsonObject getSchema(final SchemaCache anchors) {
         return self.getSchema(anchors);
       }
 

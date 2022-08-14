@@ -10,11 +10,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-
-import static gov.nasa.jpl.aerie.json.BasicParsers.getCachedSchema;
 
 public abstract class ProductParsers {
   private ProductParsers() {}
@@ -31,7 +28,7 @@ public abstract class ProductParsers {
 
       return new JsonObjectParser<>() {
         @Override
-        public JsonObject getSchema(final Map<Object, String> anchors) {
+        public JsonObject getSchema(final SchemaCache anchors) {
           return self.getSchema(anchors);
         }
 
@@ -53,7 +50,7 @@ public abstract class ProductParsers {
     private EmptyProductParser() {}
 
     @Override
-    public JsonObject getSchema(final Map<Object, String> anchors) {
+    public JsonObject getSchema(final SchemaCache anchors) {
       return Json
           .createObjectBuilder()
           .add("type", "object")
@@ -85,7 +82,7 @@ public abstract class ProductParsers {
     public JsonObjectParser<Unit> rest() {
       return new JsonObjectParser<>() {
         @Override
-        public JsonObject getSchema(final Map<Object, String> anchors) {
+        public JsonObject getSchema(final SchemaCache anchors) {
           return Json
               .createObjectBuilder()
               .add("type", "object")
@@ -190,10 +187,10 @@ public abstract class ProductParsers {
     }
 
     @Override
-    public JsonObject getSchema(final Map<Object, String> anchors) {
+    public JsonObject getSchema(final SchemaCache anchors) {
       final var fieldSchemas = Json.createObjectBuilder();
       for (final var field : this.fields) {
-        fieldSchemas.add(field.name, getCachedSchema(anchors, field.valueParser));
+        fieldSchemas.add(field.name, anchors.lookup(field.valueParser));
       }
 
       final var requiredFields = Json.createArrayBuilder();

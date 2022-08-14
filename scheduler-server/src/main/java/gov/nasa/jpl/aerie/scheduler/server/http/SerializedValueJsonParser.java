@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.json.SchemaCache;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import javax.json.Json;
@@ -19,7 +20,7 @@ public final class SerializedValueJsonParser implements JsonParser<SerializedVal
   public static final JsonParser<SerializedValue> serializedValueP = new SerializedValueJsonParser();
 
   @Override
-  public JsonObject getSchema(final Map<Object, String> anchors) {
+  public JsonObject getSchema(final SchemaCache anchors) {
     return Json.createObjectBuilder().add("type", "any").build();
   }
 

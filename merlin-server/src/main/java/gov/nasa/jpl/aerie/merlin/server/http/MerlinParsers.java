@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.json.SchemaCache;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
@@ -23,7 +24,7 @@ public abstract class MerlinParsers {
 
   public static final JsonParser<Timestamp> timestampP = new JsonParser<>() {
     @Override
-    public JsonObject getSchema(final Map<Object, String> anchors) {
+    public JsonObject getSchema(final SchemaCache anchors) {
       return Json
           .createObjectBuilder(stringP.getSchema())
           .add("format", "date-time")

@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.driver.json;
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.json.SchemaCache;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
@@ -25,7 +26,7 @@ public final class ValueSchemaJsonParser implements JsonParser<ValueSchema> {
   public static final JsonParser<ValueSchema> valueSchemaP = new ValueSchemaJsonParser();
 
   @Override
-  public JsonObject getSchema(final Map<Object, String> anchors) {
+  public JsonObject getSchema(final SchemaCache anchors) {
     // TODO: Figure out what this should be
     return Json.createObjectBuilder().add("type", "any").build();
   }
