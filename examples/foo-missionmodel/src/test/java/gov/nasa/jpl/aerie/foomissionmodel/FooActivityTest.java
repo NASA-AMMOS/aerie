@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
+import java.time.Instant;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.FooActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityTypes;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
@@ -32,7 +33,7 @@ public final class FooActivityTest {
   // The `Registrar` does not need to be declared as a parameter, but will be injected if declared.
   public FooActivityTest(final MerlinTestContext<ActivityTypes, Mission> ctx) {
     // Model configuration can be provided directly, just as for a normal Java class constructor.
-    this.model = new Mission(ctx.registrar(), new Configuration());
+    this.model = new Mission(ctx.registrar(), Instant.EPOCH, new Configuration());
 
     // Activities must be registered explicitly in order to be used in testing.
     // The generated `ActivityTypes` helper class loads all declared activities,

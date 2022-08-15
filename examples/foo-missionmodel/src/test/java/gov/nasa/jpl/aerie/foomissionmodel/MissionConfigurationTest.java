@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
+import java.time.Instant;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.FooActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityTypes;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
@@ -26,12 +27,13 @@ public final class MissionConfigurationTest {
     private final Mission model;
 
     public Test1(final MerlinTestContext<ActivityTypes, Mission> ctx) {
-      this.model = new Mission(ctx.registrar(), new Configuration());
+      this.model = new Mission(ctx.registrar(), Instant.EPOCH, new Configuration());
       ctx.use(model, ActivityTypes::register);
     }
 
     @Test
     public void test() {
+      assertThat(model.startingAfterUnixEpoch.get()).isEqualTo(false);
       spawn(new FooActivity());
       delay(1, Duration.SECOND);
       assertThat(model.sink.get()).isCloseTo(0.5, within(1e-9));
@@ -47,12 +49,13 @@ public final class MissionConfigurationTest {
     private final Mission model;
 
     public Test2(final MerlinTestContext<ActivityTypes, Mission> ctx) {
-      this.model = new Mission(ctx.registrar(), new Configuration(2.0));
+      this.model = new Mission(ctx.registrar(), Instant.EPOCH.plusSeconds(1), new Configuration(2.0));
       ctx.use(model, ActivityTypes::register);
     }
 
     @Test
     public void test() {
+      assertThat(model.startingAfterUnixEpoch.get()).isEqualTo(true);
       spawn(new FooActivity());
       delay(1, Duration.SECOND);
       assertThat(model.sink.get()).isCloseTo(2.0, within(1e-9));

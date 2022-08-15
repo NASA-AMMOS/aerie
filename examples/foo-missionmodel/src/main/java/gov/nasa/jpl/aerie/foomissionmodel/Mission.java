@@ -25,6 +25,7 @@ public final class Mission {
   // Need to generalize RealDynamics to nonlinear polynomials.
 
   public final Register<Double> foo = Register.forImmutable(0.0);
+  public final Register<Boolean> startingAfterUnixEpoch;
   public final Accumulator data = new Accumulator();
   public final Accumulator source = new Accumulator(100.0, 1.0);
   public final Accumulator sink;
@@ -37,9 +38,10 @@ public final class Mission {
   public final Clock utcClock = new Clock(Instant.parse("2023-08-18T00:00:00.00Z"));
   private final Registrar cachedRegistrar; // Normally bad practice, only stored to demonstrate built/unbuilt check
 
-  public Mission(final Registrar registrar, final Configuration config) {
+  public Mission(final Registrar registrar, final Instant planStart, final Configuration config) {
     this.cachedRegistrar = registrar;
 
+    this.startingAfterUnixEpoch = Register.forImmutable(planStart.compareTo(Instant.EPOCH) > 0);
     this.sink = new Accumulator(0.0, config.sinkRate);
 
     spawn(this::test);
@@ -52,6 +54,7 @@ public final class Mission {
     //   (This binding layer should also be the one responsible for feeding in constructor parameters.)
     registrar.discrete("/foo", this.foo, new DoubleValueMapper());
     registrar.discrete("/foo/conflicted", this.foo::isConflicted, new BooleanValueMapper());
+    registrar.discrete("/foo/starting_after_unix_epoch", startingAfterUnixEpoch, new BooleanValueMapper());
     registrar.real("/batterySoC", this.source.minus(this.sink));
     registrar.real("/data", this.data);
     registrar.real("/data/rate", this.data.rate);
