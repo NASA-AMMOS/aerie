@@ -1,15 +1,23 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
+import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
+import static gov.nasa.jpl.aerie.json.ProductParsers.productP;
+import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
+import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 
 public final class ValueSchemaJsonParser implements JsonParser<ValueSchema> {
   public static final JsonParser<ValueSchema> valueSchemaP = new ValueSchemaJsonParser();
@@ -63,30 +71,25 @@ public final class ValueSchemaJsonParser implements JsonParser<ValueSchema> {
   }
 
   private JsonParseResult<ValueSchema> parseVariant(final JsonObject obj) {
-    if (!obj.containsKey("variants")) return JsonParseResult.failure("\"variant\" value schema requires field \"variants\"");
-    final var variants = obj.get("variants");
-    if (!variants.getValueType().equals(JsonValue.ValueType.ARRAY)) return JsonParseResult.failure("\"variants\" field of \"variant\" must be an array");
+    final JsonParser<ValueSchema.Variant> variantP =
+        productP
+            .field("key", stringP)
+            .field("label", stringP)
+            .map(Iso.of(untuple(ValueSchema.Variant::new),
+                        $ -> tuple($.key(), $.label())));
+    final JsonParser<ValueSchema> variantsP =
+        productP
+            .field("type", literalP("variant"))
+            .field("variants", listP(variantP))
+            .map(Iso.of(untuple((type, variants) -> ValueSchema.ofVariant(variants)),
+                        $ -> tuple(Unit.UNIT, $.asVariant().get())));
 
-    final var options = new ArrayList<ValueSchema.Variant>();
-    for (final var variant : variants.asJsonArray()) {
-      if (!variant.getValueType().equals(JsonValue.ValueType.OBJECT)) return JsonParseResult.failure("Each option of a \"variant\" value schema must be an object");
-      final var variantObj = variant.asJsonObject();
-
-      if (!variantObj.containsKey("key")) return JsonParseResult.failure("Each option of a \"variant\" value schema must contain a \"key\" field");
-      if (!variantObj.containsKey("label")) return JsonParseResult.failure("Each option of a \"variant\" value schema must contain a \"label\" field");
-      final var key = variantObj.get("key");
-      final var label = variantObj.get("label");
-
-      if (!key.getValueType().equals(JsonValue.ValueType.STRING)) return JsonParseResult.failure("The \"key\" field of each option of a \"variant\" must be a string");
-      if (!label.getValueType().equals(JsonValue.ValueType.STRING)) return JsonParseResult.failure("The \"label\" field of each option of a \"variant\" must be a string");
-      options.add(new ValueSchema.Variant(key.toString(), label.toString()));
-    }
-
-    return JsonParseResult.success(ValueSchema.ofVariant(options));
+    return variantsP.parse(obj);
   }
 
   @Override
   public JsonValue unparse(final ValueSchema value) {
     return ResponseSerializers.serializeValueSchema(value);
   }
+
 }
