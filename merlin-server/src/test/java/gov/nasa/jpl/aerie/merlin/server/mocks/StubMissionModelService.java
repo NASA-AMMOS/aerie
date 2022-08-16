@@ -36,6 +36,15 @@ public final class StubMissionModelService implements MissionModelService {
       List.of(new Parameter("Param", ValueSchema.STRING), new Parameter("AnotherParam", ValueSchema.REAL)),
       List.of(),
       new EnumValueMapper<>(Unit.class).getValueSchema());
+  public static final String EXISTENT_ACTIVITY_TYPE_2 = "activity2";
+  public static final ActivityType EXISTENT_ACTIVITY_2 = new ActivityType(
+      EXISTENT_ACTIVITY_TYPE_2,
+      List.of(new Parameter("Param", ValueSchema.ofVariant(List.of(
+          new ValueSchema.Variant("hello", "hello"), new ValueSchema.Variant("there", "there")
+      )))),
+      List.of(),
+      new EnumValueMapper<>(Unit.class).getValueSchema()
+  );
 
   public static final SerializedActivity VALID_ACTIVITY_INSTANCE = new SerializedActivity(
       EXISTENT_ACTIVITY_TYPE,
@@ -120,7 +129,10 @@ public final class StubMissionModelService implements MissionModelService {
       throw new NoSuchMissionModelException(missionModelId);
     }
 
-    return Map.of(EXISTENT_ACTIVITY_TYPE, EXISTENT_ACTIVITY);
+    return Map.of(
+        EXISTENT_ACTIVITY_TYPE, EXISTENT_ACTIVITY,
+        EXISTENT_ACTIVITY_TYPE_2, EXISTENT_ACTIVITY_2
+    );
   }
 
   @Override

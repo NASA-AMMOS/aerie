@@ -17,6 +17,7 @@ class TypescriptCodeGenerationServiceTest {
            import * as AST from './constraints-ast.js';
            import { Discrete, Real, Windows } from './constraints-edsl-fluent-api.js';
            export enum ActivityType {
+             activity2 = "activity2",
              activity = "activity",
            }
            export type Resource = {
@@ -27,6 +28,13 @@ class TypescriptCodeGenerationServiceTest {
            export type ResourceName = "mode" | "state of charge" | "an integer";
            export type RealResourceName = "state of charge" | "an integer";
            export const ActivityTypeParameterMap = {
+             [ActivityType.activity2]: (alias: string) => ({
+               "Param": new Discrete<( | "hello" | "there")>({
+                 kind: AST.NodeKind.DiscreteProfileParameter,
+                 alias,
+                 name: "Param"
+               }),
+             }),
              [ActivityType.activity]: (alias: string) => ({
                "Param": new Discrete<string>({
                  kind: AST.NodeKind.DiscreteProfileParameter,
@@ -42,6 +50,7 @@ class TypescriptCodeGenerationServiceTest {
            };
            declare global {
              enum ActivityType {
+               activity2 = "activity2",
                activity = "activity",
              }
            }
