@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.scheduler.server.http;
+package gov.nasa.jpl.aerie.merlin.driver.json;
 
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
@@ -10,7 +10,9 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
@@ -75,21 +77,122 @@ public final class ValueSchemaJsonParser implements JsonParser<ValueSchema> {
         productP
             .field("key", stringP)
             .field("label", stringP)
-            .map(Iso.of(untuple(ValueSchema.Variant::new),
+            .map(Iso.of(
+                untuple(ValueSchema.Variant::new),
                         $ -> tuple($.key(), $.label())));
     final JsonParser<ValueSchema> variantsP =
         productP
             .field("type", literalP("variant"))
             .field("variants", listP(variantP))
-            .map(Iso.of(untuple((type, variants) -> ValueSchema.ofVariant(variants)),
+            .map(Iso.of(
+                untuple((type, variants) -> ValueSchema.ofVariant(variants)),
                         $ -> tuple(Unit.UNIT, $.asVariant().get())));
 
     return variantsP.parse(obj);
   }
 
   @Override
-  public JsonValue unparse(final ValueSchema value) {
-    return ResponseSerializers.serializeValueSchema(value);
+  public JsonValue unparse(final ValueSchema schema) {
+    if (schema == null) return JsonValue.NULL;
+
+    return schema.match(new ValueSchema.Visitor<>() {
+      @Override
+      public JsonValue onReal() {
+        return Json
+            .createObjectBuilder()
+            .add("type", "real")
+            .build();
+      }
+
+      @Override
+      public JsonValue onInt() {
+        return Json
+            .createObjectBuilder()
+            .add("type", "int")
+            .build();
+      }
+
+      @Override
+      public JsonValue onBoolean() {
+        return Json
+            .createObjectBuilder()
+            .add("type", "boolean")
+            .build();
+      }
+
+      @Override
+      public JsonValue onString() {
+        return Json
+            .createObjectBuilder()
+            .add("type", "string")
+            .build();
+      }
+
+      @Override
+      public JsonValue onDuration() {
+        return Json
+            .createObjectBuilder()
+            .add("type", "duration")
+            .build();
+      }
+
+      @Override
+      public JsonValue onPath() {
+        return Json
+            .createObjectBuilder()
+            .add("type", "path")
+            .build();
+      }
+
+      @Override
+      public JsonValue onSeries(final ValueSchema itemSchema) {
+        return Json
+            .createObjectBuilder()
+            .add("type", "series")
+            .add("items", itemSchema.match(this))
+            .build();
+      }
+
+      @Override
+      public JsonValue onStruct(final Map<String, ValueSchema> parameterSchemas) {
+        return Json
+            .createObjectBuilder()
+            .add("type", "struct")
+            .add("items", serializeMap(x -> x.match(this), parameterSchemas))
+            .build();
+      }
+
+      @Override
+      public JsonValue onVariant(final List<ValueSchema.Variant> variants) {
+        return Json
+            .createObjectBuilder()
+            .add("type", "variant")
+            .add("variants", serializeIterable(
+                v -> Json
+                    .createObjectBuilder()
+                    .add("key", v.key())
+                    .add("label", v.label())
+                    .build(),
+                variants))
+            .build();
+      }
+    });
   }
 
+  public static <T> JsonValue
+  serializeIterable(final Function<T, JsonValue> elementSerializer, final Iterable<T> elements) {
+    if (elements == null) return JsonValue.NULL;
+
+    final var builder = Json.createArrayBuilder();
+    for (final var element : elements) builder.add(elementSerializer.apply(element));
+    return builder.build();
+  }
+
+  public static <T> JsonValue serializeMap(final Function<T, JsonValue> fieldSerializer, final Map<String, T> fields) {
+    if (fields == null) return JsonValue.NULL;
+
+    final var builder = Json.createObjectBuilder();
+    for (final var entry : fields.entrySet()) builder.add(entry.getKey(), fieldSerializer.apply(entry.getValue()));
+    return builder.build();
+  }
 }
