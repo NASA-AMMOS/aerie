@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLInterval;
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLTimestamp;
-import static gov.nasa.jpl.aerie.scheduler.server.http.ValueSchemaJsonParser.valueSchemaP;
+import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
 
 /**
  * {@inheritDoc}

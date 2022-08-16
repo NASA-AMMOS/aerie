@@ -27,6 +27,8 @@ javadoc.options.links 'https://commons.apache.org/proper/commons-lang/javadocs/a
 javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
 dependencies {
+  implementation project(':parsing-utilities')
+
   api project(':merlin-sdk')
   api 'org.glassfish:javax.json:1.1.4'
   implementation 'it.unimi.dsi:fastutil:8.5.6'
