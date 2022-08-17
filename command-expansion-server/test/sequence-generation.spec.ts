@@ -639,19 +639,24 @@ describe('expansion regressions', () => {
   }, 10000);
 });
 
-it('should provide start and end times on activities', async () => {
+it('should provide start, end, and computed attributes on activities', async () => {
   // Setup
 
-  const activityId = await insertActivity(graphqlClient, planId, 'BiteBanana', '1 hours');
+  const activityId = await insertActivity(graphqlClient, planId, 'BakeBananaBread', '1 hours', {
+    tbSugar: 1,
+    glutenFree: false,
+    temperature: 350,
+  });
   const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
   const expansionId = await insertExpansion(
     graphqlClient,
-    'BiteBanana',
+    'BakeBananaBread',
     `
     export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
       return [
-        BAKE_BREAD.absoluteTiming(props.activityInstance.startTime),
-        BAKE_BREAD.absoluteTiming(props.activityInstance.endTime),
+        A(props.activityInstance.startTime).BAKE_BREAD,
+        A(props.activityInstance.endTime).BAKE_BREAD,
+        C.ECHO("Computed attributes: " + props.activityInstance.attributes.computed),
       ];
     }
     `,
@@ -711,6 +716,13 @@ it('should provide start and end times on activities', async () => {
       stem: 'BAKE_BREAD',
       time: { type: TimingTypes.ABSOLUTE, tag: '2020-001T01:00:00.000' },
       args: [],
+      metadata: { simulatedActivityId: simulatedActivityId3 },
+    },
+    {
+      type: 'command',
+      stem: 'ECHO',
+      time: { type: 'COMMAND_COMPLETE' },
+      args: ['Computed attributes: 198'],
       metadata: { simulatedActivityId: simulatedActivityId3 },
     },
   ]);

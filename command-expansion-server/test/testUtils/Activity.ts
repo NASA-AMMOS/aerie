@@ -9,6 +9,7 @@ export async function insertActivity(
   planId: number,
   activityType: string,
   startOffset: string = '30 seconds 0 milliseconds',
+  args: any = {},
 ): Promise<number> {
   const res = await graphqlClient.request<{
     insert_activity_one: { id: number };
@@ -26,7 +27,7 @@ export async function insertActivity(
       planId: planId,
       activityType,
       startOffset: startOffset,
-      arguments: {},
+      arguments: args,
     },
   );
   return res.insert_activity_one.id;
