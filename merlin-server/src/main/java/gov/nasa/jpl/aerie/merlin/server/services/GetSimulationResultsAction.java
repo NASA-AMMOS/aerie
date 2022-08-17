@@ -145,10 +145,10 @@ public final class GetSimulationResultsAction {
         .orElseGet(Collections::emptyMap);
     final var realProfiles = new HashMap<String, LinearProfile>();
     for (final var entry : _realProfiles.entrySet()) {
-      final var pieces = new ArrayList<LinearProfilePiece>(entry.getValue().size());
+      final var pieces = new ArrayList<LinearProfilePiece>(entry.getValue().getRight().size());
 
       var elapsed = Duration.ZERO;
-      for (final var piece : entry.getValue()) {
+      for (final var piece : entry.getValue().getRight()) {
         final var extent = piece.getLeft();
         final var value = piece.getRight();
 

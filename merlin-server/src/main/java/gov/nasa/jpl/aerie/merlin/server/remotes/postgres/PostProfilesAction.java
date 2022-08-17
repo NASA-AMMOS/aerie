@@ -31,7 +31,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
   public Map<String, ProfileRecord> apply(
       final long datasetId,
-      final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
+      final Map<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>> realProfiles,
       final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles
   ) throws SQLException {
     final var resourceNames = new ArrayList<String>();

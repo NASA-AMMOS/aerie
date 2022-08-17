@@ -58,10 +58,11 @@ public final class ProfileParsers {
   public static final JsonParser<RealProfile> realProfileP
       = productP
       . field("type", literalP("real"))
+      . field("schema", valueSchemaP)
       . field("segments", listP(realProfileSegmentP))
       . map(Iso.of(
-          untuple((type, segments) -> new RealProfile(segments)),
-          $ -> tuple(null, $.segments())
+          untuple((type, schema, segments) -> new RealProfile(schema, segments)),
+          $ -> tuple(null, $.schema(), $.segments())
       ));
 
   public static final JsonParser<DiscreteProfile> discreteProfileP
@@ -78,13 +79,13 @@ public final class ProfileParsers {
       = mapP(chooseP(realProfileP, discreteProfileP))
       . map(Iso.of(
           profiles -> {
-            final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
+            final var realProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>>();
             final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
             for (final var entry : profiles.entrySet()) {
               final var name = entry.getKey();
               final var profile = entry.getValue();
               if (profile instanceof RealProfile p) {
-                realProfiles.put(name, p.segments());
+                realProfiles.put(name, Pair.of(p.schema(), p.segments()));
               } else if (profile instanceof DiscreteProfile p) {
                 discreteProfiles.put(name, Pair.of(p.schema(), p.segments()));
               } else {
@@ -101,7 +102,7 @@ public final class ProfileParsers {
             profileSet
                 .realProfiles()
                 .forEach((name, profile) ->
-                             profiles.put(name, new RealProfile(profile)));
+                             profiles.put(name, new RealProfile(profile.getLeft(), profile.getRight())));
             profileSet
                 .discreteProfiles()
                 .forEach((name, profile) ->

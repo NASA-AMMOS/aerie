@@ -17,7 +17,7 @@ import java.util.SortedMap;
 
 public final class SimulationResults {
   public final Instant startTime;
-  public final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles;
+  public final Map<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>> realProfiles;
   public final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles;
   public final Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples;
   public final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities;
@@ -26,7 +26,7 @@ public final class SimulationResults {
   public final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events;
 
     public SimulationResults(
-        final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
+        final Map<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>> realProfiles,
         final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles,
         final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities,
         final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities,
@@ -46,13 +46,14 @@ public final class SimulationResults {
 
   private static Map<String, List<Pair<Duration, SerializedValue>>>
   takeSamples(
-      final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
+      final Map<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>> realProfiles,
       final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles)
   {
     final var samples = new HashMap<String, List<Pair<Duration, SerializedValue>>>();
 
-    realProfiles.forEach((name, profile) -> {
+    realProfiles.forEach((name, p) -> {
       var elapsed = Duration.ZERO;
+      var profile = p.getRight();
 
       final var timeline = new ArrayList<Pair<Duration, SerializedValue>>();
       for (final var piece : profile) {
