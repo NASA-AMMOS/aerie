@@ -36,14 +36,14 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
   ) throws SQLException {
     final var resourceNames = new ArrayList<String>();
     final var resourceTypes = new ArrayList<Pair<String, ValueSchema>>();
-    final var realResourceType = Pair.<String, ValueSchema>of("real", null);
-    final var serializedRealResourceType = realProfileTypeP.unparse(realResourceType).toString();
     for (final var resource : realProfiles.keySet()) {
+      final var schema = realProfiles.get(resource).getLeft();
+      final var realResourceType = Pair.of("real", schema);
       resourceNames.add(resource);
       resourceTypes.add(realResourceType);
       this.statement.setLong(1, datasetId);
       this.statement.setString(2, resource);
-      this.statement.setString(3, serializedRealResourceType);
+      this.statement.setString(3, realProfileTypeP.unparse(realResourceType).toString());
       this.statement.addBatch();
     }
 
