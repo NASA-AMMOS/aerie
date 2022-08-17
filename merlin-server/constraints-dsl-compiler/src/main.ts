@@ -42,14 +42,26 @@ async function handleRequest(data: Buffer) {
       missionModelGeneratedCode: string;
     };
 
-    const result = await codeRunner.executeUserCode<[], Constraint>(constraintCode, [], 'Constraint', [], 10000, [
-      ts.createSourceFile('constraints-ast.ts', constraintsAST, compilerTarget),
-      ts.createSourceFile('constraints-edsl-fluent-api.ts', constraintsEDSL, compilerTarget),
-      ts.createSourceFile('mission-model-generated-code.ts', missionModelGeneratedCode, compilerTarget),
-    ]);
+    const additionalSourceFiles: { 'filename': string, 'contents': string}[] = [
+      { 'filename': 'constraints-ast.ts', 'contents': constraintsAST },
+      { 'filename': 'constraints-edsl-fluent-api.ts', 'contents': constraintsEDSL },
+      { 'filename': 'mission-model-generated-code.ts', 'contents': missionModelGeneratedCode },
+    ];
+
+    const outputType = 'Constraint';
+
+    const result = await codeRunner.executeUserCode<[], Constraint>(
+        constraintCode,
+        [],
+        outputType,
+        [],
+        10000,
+        additionalSourceFiles.map(({filename, contents}) => ts.createSourceFile(filename, contents, compilerTarget))
+    );
 
     if (result.isErr()) {
-      process.stdout.write('error\n' + JSON.stringify(result.unwrapErr().map(err => err.toJSON())) + '\n');
+      process.stdout.write('error\n')
+      process.stdout.write(JSON.stringify(result.unwrapErr().map(err => err.toJSON())) + '\n');
       lineReader.once('line', handleRequest);
       return;
     }
@@ -58,11 +70,11 @@ async function handleRequest(data: Buffer) {
     if (stringified === undefined) {
       throw Error(JSON.stringify(result.unwrap()) + ' was not JSON serializable');
     }
-    process.stdout.write('success\n' + stringified + '\n');
+    process.stdout.write('success\n')
+    process.stdout.write(stringified + '\n');
   } catch (error: any) {
-    process.stdout.write(
-      'panic\n' + JSON.stringify(error.stack ?? error.message) + ' attempted to handle: ' + data.toString() + '\n',
-    );
+    process.stdout.write('panic\n');
+    process.stdout.write(JSON.stringify(error.stack ?? error.message) + ' attempted to handle: ' + data.toString() + '\n');
   }
   lineReader.once('line', handleRequest);
 }

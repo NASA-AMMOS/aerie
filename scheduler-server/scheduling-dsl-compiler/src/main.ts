@@ -1,8 +1,8 @@
 import fs from 'fs';
-import * as readline from 'readline';
 import ts from 'typescript';
-import { UserCodeRunner } from '@nasa-jpl/aerie-ts-user-code-runner';
-import type { Goal } from './libs/scheduler-edsl-fluent-api.js';
+import {UserCodeRunner} from '@nasa-jpl/aerie-ts-user-code-runner';
+import type {Goal} from './libs/scheduler-edsl-fluent-api.js';
+import * as readline from 'readline';
 
 const codeRunner = new UserCodeRunner();
 const schedulerEDSL = fs.readFileSync(
@@ -25,61 +25,57 @@ const tsConfig = JSON.parse(fs.readFileSync(new URL('../tsconfig.json', import.m
 const { options } = ts.parseJsonConfigFileContent(tsConfig, ts.sys, '');
 const compilerTarget = options.target ?? ts.ScriptTarget.ES2021
 
-const input = readline.createInterface(process.stdin);
-
-function registerInputCallback(callback: (data: string) => void) {
-  input.once('line', callback);
-}
-
-function writeOutputOneLine(data: string) {
-  process.stdout.write(data + '\n');
-}
-
-function writeSuccess(data: string) {
-  writeOutputOneLine('success');
-  writeOutputOneLine(data);
-}
-
-function writeError(data: string) {
-  writeOutputOneLine('error');
-  writeOutputOneLine(data);
-}
-
-function writePanic(data: string) {
-  writeOutputOneLine('panic');
-  writeOutputOneLine(data);
-}
-
 process.on('uncaughtException', (err) => {
   console.error('uncaughtException');
   console.error((err && err.stack) ? err.stack : err);
-  writePanic(err.stack ?? err.message);
+  process.stdout.write('panic' + '\n');
+  process.stdout.write((err.stack ?? err.message) + '\n');
   process.exit(1);
 });
 
-async function handleRequest(data: string) {
+const lineReader = readline.createInterface({
+  input: process.stdin,
+});
+lineReader.once('line', handleRequest);
+
+async function handleRequest(data: Buffer) {
   try {
-    const { goalCode, schedulerGeneratedCode, constraintsGeneratedCode } = JSON.parse(data) as { goalCode: string, schedulerGeneratedCode: string, constraintsGeneratedCode: string };
+    // Test the health of the service by responding to "ping" with "pong".
+    if (data.toString() === 'ping') {
+      process.stdout.write('pong\n');
+      lineReader.once('line', handleRequest);
+      return;
+    }
+    const { goalCode, schedulerGeneratedCode, constraintsGeneratedCode } = JSON.parse(data.toString()) as {
+      goalCode: string,
+      schedulerGeneratedCode: string,
+      constraintsGeneratedCode: string
+    };
+
+    const additionalSourceFiles: {'filename': string, 'contents': string}[] = [
+      { 'filename': 'constraints-ast.ts', 'contents': windowsAST},
+      { 'filename': 'constraints-edsl-fluent-api.ts', 'contents': windowsEDSL},
+      { 'filename': 'mission-model-generated-code.ts', 'contents': constraintsGeneratedCode},
+      { 'filename': 'scheduler-ast.ts', 'contents': schedulerAST},
+      { 'filename': 'scheduler-edsl-fluent-api.ts', 'contents': schedulerEDSL},
+      { 'filename': 'scheduler-mission-model-generated-code.ts', 'contents': schedulerGeneratedCode},
+    ];
+
+    const outputType = 'Goal';
 
     const result = await codeRunner.executeUserCode<[], Goal>(
         goalCode,
         [],
-        'Goal',
+        outputType,
         [],
         10000,
-        [
-          ts.createSourceFile('constraints-ast.ts', windowsAST, compilerTarget),
-          ts.createSourceFile('constraints-edsl-fluent-api.ts', windowsEDSL, compilerTarget),
-          ts.createSourceFile('mission-model-generated-code.ts', constraintsGeneratedCode, compilerTarget),
-          ts.createSourceFile('scheduler-ast.ts', schedulerAST, compilerTarget),
-          ts.createSourceFile('scheduler-edsl-fluent-api.ts', schedulerEDSL, compilerTarget),
-          ts.createSourceFile('scheduler-mission-model-generated-code.ts', schedulerGeneratedCode, compilerTarget),
-        ],
+        additionalSourceFiles.map(({filename, contents}) => ts.createSourceFile(filename, contents, compilerTarget))
     );
 
     if (result.isErr()) {
-      writeError(JSON.stringify(result.unwrapErr().map(err => err.toJSON())));
-      registerInputCallback(handleRequest);
+      process.stdout.write('error\n');
+      process.stdout.write(JSON.stringify(result.unwrapErr().map(err => err.toJSON())) + '\n');
+      lineReader.once('line', handleRequest);
       return;
     }
 
@@ -87,18 +83,11 @@ async function handleRequest(data: string) {
     if (stringified === undefined) {
       throw Error(JSON.stringify(result.unwrap().__astNode) + ' was not JSON serializable');
     }
-    writeSuccess(stringified);
+    process.stdout.write('success\n');
+    process.stdout.write(stringified + '\n');
   } catch (error: any) {
-    writePanic(JSON.stringify(error.stack ?? error.message));
+    process.stdout.write('panic\n');
+    process.stdout.write(JSON.stringify(error.stack ?? error.message) + '\n');
   }
-  registerInputCallback(handleRequest);
+  lineReader.once('line', handleRequest);
 }
-
-registerInputCallback(data => {
-  if (data.trim() === 'ping') {
-    // Enable testing the health of the service by sending 'ping' and expecting 'pong' in return.
-    writeOutputOneLine('pong');
-    registerInputCallback(handleRequest);
-  }
-});
-
