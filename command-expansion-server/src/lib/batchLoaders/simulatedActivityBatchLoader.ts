@@ -141,6 +141,14 @@ export interface SimulatedActivityAttributes<
 > {
   arguments: ActivityArguments;
   directiveId: number | undefined;
+  computed: ActivityComputedAttributes | undefined;
+}
+export interface GraphQLSimulatedActivityAttributes<
+  ActivityArguments extends Record<string, unknown> = Record<string, unknown>,
+  ActivityComputedAttributes extends Record<string, unknown> = Record<string, unknown>,
+> {
+  arguments: ActivityArguments;
+  directiveId: number | undefined;
   computedAttributes: ActivityComputedAttributes | undefined;
 }
 
@@ -171,7 +179,7 @@ export interface GraphQLSimulatedActivityInstance<
       };
     };
   };
-  attributes: SimulatedActivityAttributes<ActivityArguments, ActivityComputedAttributes>;
+  attributes: GraphQLSimulatedActivityAttributes<ActivityArguments, ActivityComputedAttributes>;
   duration: string;
   start_offset: string;
   start_time: string;
@@ -200,7 +208,9 @@ export function mapGraphQLActivityInstance(
         return acc;
       }, {} as { [attributeName: string]: any }),
       directiveId: activityInstance.attributes.directiveId,
-      computedAttributes: undefined, // TODO: Need to handle computed attributes
+      computed: activityInstance.attributes.computedAttributes
+        ? convertType(activityInstance.attributes.computedAttributes, activitySchema.computed_attributes_value_schema)
+        : null,
     },
   };
 }
