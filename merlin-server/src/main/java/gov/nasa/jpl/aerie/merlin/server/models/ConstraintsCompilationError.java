@@ -22,15 +22,14 @@ public class ConstraintsCompilationError {
       productP
           .field("message", stringP)
           .field("stack", stringP)
-          .field("sourceContext", stringP)
           .field("location", codeLocationP)
           .map(Iso.of(
               untuple(UserCodeError::new),
-              $ -> tuple($.message, $.stack, $.sourceContext, $.location)));
+              $ -> tuple($.message, $.stack, $.location)));
 
   public static final JsonParser<List<UserCodeError>> constraintsErrorJsonP = listP(userCodeErrorP);
 
   public record CodeLocation(Integer line, Integer column) {}
 
-  public record UserCodeError(String message, String stack, String sourceContext, CodeLocation location) {}
+  public record UserCodeError(String message, String stack, CodeLocation location) {}
 }
