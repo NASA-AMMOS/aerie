@@ -318,6 +318,7 @@ class SchedulingDSLCompilationServiceTests {
           interface FakeGoal {
             and(...others: FakeGoal[]): FakeGoal;
             or(...others: FakeGoal[]): FakeGoal;
+            applyWhen(window: Windows): FakeGoal;
           }
           export default function() {
             const myFakeGoal: FakeGoal = {
@@ -325,6 +326,9 @@ class SchedulingDSLCompilationServiceTests {
                 return myFakeGoal;
               },
               or: (...others: FakeGoal[]) => {
+                return myFakeGoal;
+              },
+              applyWhen: (window: Windows) => {
                 return myFakeGoal;
               },
             };

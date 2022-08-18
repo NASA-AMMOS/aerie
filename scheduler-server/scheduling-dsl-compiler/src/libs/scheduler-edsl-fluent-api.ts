@@ -1,3 +1,10 @@
+/**
+ * This module contains the elements you need to write scheduling goals. To start, navigate to {@link Goal } to find the goal constructors.
+ *
+ * @module Scheduling eDSL
+ * @packageDocumentation
+ */
+
 import * as AST from "./scheduler-ast.js";
 import type * as WindowsEDSL from "./constraints-edsl-fluent-api.js";
 import type {ActivityType} from "./scheduler-mission-model-generated-code.js";
@@ -5,21 +12,53 @@ import type {ActivityType} from "./scheduler-mission-model-generated-code.js";
 type WindowProperty = AST.WindowProperty
 type TimingConstraintOperator = AST.TimingConstraintOperator
 
-interface ActivityRecurrenceGoal extends Goal {}
-interface ActivityCoexistenceGoal extends Goal {}
-interface ActivityCardinalityGoal extends Goal {}
+export type { CardinalityGoalArguments, WindowProperty, TimingConstraintOperator} from "./scheduler-ast.js";
 
+/**
+ * This class represents allows to represent and specify goals.
+ */
 export class Goal {
+  /** @internal **/
   public readonly __astNode: AST.GoalSpecifier;
 
+  /** @internal **/
   private constructor(__astNode: AST.GoalSpecifier) {
     this.__astNode = __astNode;
   }
 
+  /** @internal **/
   private static new(__astNode: AST.GoalSpecifier): Goal {
     return new Goal(__astNode);
   }
 
+  /**
+   *
+   * The AND Goal aggregates several goals together and specifies that at least one of them must be satisfied.
+   *
+   * #### Inputs
+   * - **goals**: an ordered list of goals (here below referenced as the subgoals)
+   *
+   * #### Behavior
+   * The scheduler will try to satisfy each subgoal in the list. If a subgoal is only partially satisfied, the scheduler will not backtrack and will let the inserted activities in the plan. If all the subgoals are satisfied, the AND goal will appear satisfied. If one or several subgoals have not been satisfied, the AND goal will appear unsatisfied.
+   *
+   * #### Examples
+   *
+   * ```typescript
+   * export default function myGoal() {
+   *     return Goal.CoexistenceGoal({
+   *       forEach: Real.Resource("/fruit").equal(4.0),
+   *       activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+   *       endsAt: TimingConstraint.singleton(WindowProperty.END).plus(5 * 60 * 1000 * 1000)
+   *      }).and(
+   *       Goal.CardinalityGoal({
+   *             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+   *             specification: { occurrence : 10 }
+   *        }))
+   * }
+   * ```
+   * The AND goal above has two subgoals. The coexistence goal will place activities of type `PeelBanana` everytime the `/fruit` resource is equal to 4. The second goal will place 10 occurrences of the same kind of activities `PeelBanana`. The first subgoal will be evaluated first and will place a certain number of `PeelBanana` activities in the plan. When the second goal will be evaluated, it will count already present `PeelBanana` activities and insert the missing number. Imagine the first goals leads to inserting 2 activities. The second goal will then have to place 8 activities to be satisfied.
+   * @param others the list of goals
+   */
   public and(...others: Goal[]): Goal {
     return Goal.new({
       kind: AST.NodeKind.GoalAnd,
@@ -30,6 +69,42 @@ export class Goal {
     });
   }
 
+  /**
+   *
+   * The OR Goal aggregates several goals together and specifies that at least one of them must be satisfied.
+   *
+   * #### Inputs
+   * - **goals**: a list of goals (here below referenced as the subgoals)
+   *
+   * #### Behavior
+   * The scheduler will try to satisfy each subgoal in the list until one is satisfied. If a subgoal is only partially satisfied, the scheduler will not backtrack and will let the inserted activities in the plan.
+   *
+   * #### Examples
+   *
+   * ```typescript
+   * export default function myGoal() {
+   *     return Goal.CardinalityGoal({
+   *              activityTemplate: ActivityTemplates.GrowBanana({
+   *                quantity: 1,
+   *                growingDuration: 1000 * 1000 * 60 * 60, //1 hour in microseconds
+   *            }),
+   *           specification: { occurrence : 10 }
+   *           }).or(
+   *            Goal.ActivityRecurrenceGoal({
+   *             activityTemplate: ActivityTemplates.GrowBanana({
+   *             quantity: 1,
+   *             growingDuration: 1 * 60 * 60 * 1000 * 1000, //1 hour in microseconds
+   *           }),
+   *           interval: 2 * 60 * 60 * 1000 * 1000 // 2 hours in microseconds
+   *         }))
+   * }
+   * ```
+   *
+   * If the plan has a 24-hour planning horizon, the OR goal above will try placing activities of the `GrowBanana` type. The first subgoal will try placing 10 1-hour occurrences. If it fails to do so, because the planning horizon is maybe too short, it will then try to schedule 1 activity every 2 hours for the duration of the planning horizon.
+   *
+   * It may fail to achieve both subgoals but as the scheduler does not backtrack for now, activities inserted by any of the subgoals are kept in the plan.
+   * @param others the list of goals
+   */
   public or(...others: Goal[]): Goal {
     return Goal.new({
       kind: AST.NodeKind.GoalOr,
@@ -40,25 +115,154 @@ export class Goal {
     });
   }
 
-  public applyWhen(window: WindowsEDSL.Windows): Goal {
+  /**
+   * Restricts the windows on which a goal is applied
+   *
+   *
+   * By default, a goal applies on the whole planning horizon. The Aerie scheduler provides support for restricting _when_ a goal applies with the `.applyWhen()` method in the `Goal` class. This node allows users to provide a set of windows (`Windows`, see [documentation](https://github.com/NASA-AMMOS/aerie/wiki/Constraints#windows)) which could be a time or a resource-based window.
+   *
+   * The `.applyWhen()` method, takes one argument: the windows (in the form of an expression) that the goal should apply over. What follows is an example that applies a daily recurrence goal only when a given resource is greater than 2. If the resource is less than two, then the goal is no longer applied.
+   *
+   * ```typescript
+   * export default function myGoal() {
+   *     return Goal.ActivityRecurrenceGoal({
+   *             activityTemplate: ActivityTemplates.GrowBanana({
+   *             quantity: 1,
+   *             growingDuration: 1 * 60 * 60 * 1000 * 1000, //1 hour in microseconds
+   *           }),
+   *           interval: 2 * 60 * 60 * 1000 * 1000 // 2 hours in microseconds
+   *         }).applyWhen(Real.Resource("/fruit").greaterThan(2))
+   * }
+   * ```
+   *
+   * #### Notes on boundaries:
+   * * If you are trying to schedule an activity, or a recurrence within a window but that window cuts off either the activity or the recurrence interval (depending on the goal type), it will not be scheduled. For example, if you had a recurrence interval of 3 seconds, scheduling a 2 second activity each recurrence, and had the following window, you'd get the following:
+   * ```
+   * RECURRENCE INTERVAL: [++-++-++-]
+   * GOAL WINDOW:         [+++++----]
+   * RESULT:              [++-------]
+   * ```
+   * That, is, the second activity won't be scheduled as the goal window cuts off its recurrence interval.
+   * * Scheduling is _local_, not global. This means for every window that is matched (as it is possible to have disjoint windows, imagine a resource that fluctuates upward and downward but only applying that goal when the resource is over a certain value), the goal is applied individually. So, for that same recurrence interval setup as before, we could have:
+   * ```
+   * RECURRENCE INTERVAL: [++-++-++-++-]
+   * GOAL WINDOW:         [+++++--+++--]
+   * RESULT:              [++-----++---] //(the second one is applied independently of the first!)
+   * ```
+   * * When mapping out a temporal window to apply a goal over, keep in mind that the ending boundary of the goal is _exclusive_, i.e. if I want to apply a goal in the window of 10-12 seconds, it will apply only on seconds 10 and 11. This is in line with the [fencepost problem](https://icarus.cs.weber.edu/~dab/cs1410/textbook/3.Control/fencepost.html).
+   *
+   * @param windows the windows on which this goal applies
+   * @returns a new goal applying on a restricted horizon
+   */
+  public applyWhen(windows: WindowsEDSL.Windows): Goal {
     return Goal.new({
       kind: AST.NodeKind.ApplyWhen,
       goal: this.__astNode,
-      window: window.__astNode
+      window: windows.__astNode
     });
   }
 
-  public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): ActivityRecurrenceGoal {
+  /**
+   * Creates an ActivityRecurrenceGoal
+   *
+   * The Activity Recurrence Goal (sometimes referred to as a "frequency goal") specifies that a certain activity should occur repeatedly throughout the plan, at some given interval.
+   *
+   * #### Inputs
+   * - activityTemplate: the description of the activity whose recurrence we're interested in.
+   * - interval: a Duration of time specifying how often this activity must occur
+   *
+   * #### Behavior
+   * This interval is treated as an upper bound - so if the activity occurs more frequently, that is not considered a failure.
+   *
+   * The scheduler will find places in the plan where the given activity has not occurred within the given interval, and it will place an instance of that activity there.
+   *
+   * > Note: The interval is measured between the _start times_ of two activity instances. Neither the duration, nor the end time of the activity are examined by this goal.
+   *
+   * #### Example
+   * ```typescript
+   * export default function myGoal() {
+   *     return Goal.ActivityRecurrenceGoal({
+   *             activityTemplate: ActivityTemplates.GrowBanana({
+   *             quantity: 1,
+   *             growingDuration: 1 * 60 * 60 * 1000 * 1000, //1 hour in microseconds
+   *           }),
+   *           interval: 2 * 60 * 60 * 1000 * 1000 // 2 hours in microseconds
+   *         })
+   * }
+   * ```
+   *
+   * The goal above will place a `GrowBanana` activity in every 2-hour period of time that does not already contain one with the exact same parameters.
+   *
+   * @param opts an object containing the activity template and the interval at which the activities must be placed
+   */
+  public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): Goal {
     return Goal.new({
       kind: AST.NodeKind.ActivityRecurrenceGoal,
       activityTemplate: opts.activityTemplate,
       interval: opts.interval,
     });
   }
+
+  /**
+   * Creates a coexistence goal. The coexistence goal places one activity for each passed window.
+   * The start and end time of each activity can be parametrized relatively to its coexisting window with temporal constraints.
+   *
+   * The Coexistence Goal specifies that a certain activity should occur once **for each** occurrence of some condition.
+   *
+   * #### Inputs
+   * - **forEach**: a set of time windows (`Windows`, see [documentation](https://github.com/NASA-AMMOS/aerie/wiki/Constraints#windows) on how to produce such an expression) or a set of activities (`ActivityExpression`)
+   * - **activityTemplate**: the description of the activity to insert after each activity identified by `forEach`
+   * - **startsAt**: optionally specify a specific time when the activity should start relative to the window
+   * - **startsWithin**: optionally specify a range when the activity should start relative to the window
+   * - **endsAt**: optionally specify a specific time when the activity should end relative to the window
+   * - **endsWithin**: optionally specify a range when the activity should end relative to the window
+   *
+   * NOTE: Either the start or end of the activity must be constrained. This means that at least **1** of the 4 properties `startsAt`, `startsWithin`, `endsAt`, `endsWithin` must be given.
+   *
+   *
+   * #### Behavior
+   * The scheduler will find places in the plan where the `forEach` condition is true, and if not, it will insert a new instance using the given `activityTemplate` and temporal constraints.
+   *
+   * #### Examples
+   *
+   * ```typescript
+   * export default () => Goal.CoexistenceGoal({
+   *   forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+   *   activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+   *   startsAt: TimingConstraint.singleton(WindowProperty.END).plus(5 * 60 * 1000 * 1000)
+   * })
+   * ```
+   * Behavior: for each activity A of type `GrowBanana` present in the plan when the goal is evaluated, place an activity of type `PeelBanana` starting exactly at the end of A + 5 minutes.
+   *
+   * ```typescript
+   * export default () => Goal.CoexistenceGoal({
+   *   forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+   *   activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+   *   startsWithin: TimingConstraint.range(WindowProperty.END, Operator.PLUS, 5 * 60 * 1000 * 1000),
+   *   endsWithin: TimingConstraint.range(WindowProperty.END, Operator.PLUS, 6 * 60 * 1000 * 1000)
+   * })
+   * ```
+   *
+   * Behavior: for each activity A of type `GrowBanana` present in the plan when the goal is evaluated, place an activity of type `PeelBanana` starting in the interval [end of A, end of A + 5 minutes] and ending in the interval [end of A, end of A + 6 minutes].
+   *
+   *
+   * ```typescript
+   * export default () => Goal.CoexistenceGoal({
+   *   forEach: Real.Resource("/fruit").equal(4.0),
+   *   activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+   *   endsAt: TimingConstraint.singleton(WindowProperty.END).plus(5 * 60 * 1000 * 1000)
+   * })
+   * ```
+   * Behavior: for each continuous period of time during which the `/fruit` resource is equal to 4, place an activity of type `PeelBanana` ending exactly at the end of A + 6 minutes. Note that the scheduler will allow a default timing error of 500 milliseconds for temporal constraints. This parameter will be configurable in an upcoming release.
+   *
+   * KNOWN ISSUE: If the end is unconstrained while the activity has an uncontrollable duration, the scheduler may fail to place the activity. To work around this, add an `endsWithin` constraint that encompasses your expectation for the duration of the activity - this will help the scheduler narrow the search space.
+   *
+   * @param opts an object containing the activity template, a set of windows, and optionnally temporal constraints.
+   */
   public static CoexistenceGoal(opts: {
     activityTemplate: ActivityTemplate,
     forEach: WindowsEDSL.Windows | ActivityExpression,
-  } & CoexistenceGoalTimingConstraints): ActivityCoexistenceGoal {
+  } & CoexistenceGoalTimingConstraints): Goal {
     return Goal.new({
       kind: AST.NodeKind.ActivityCoexistenceGoal,
       activityTemplate: opts.activityTemplate,
@@ -67,7 +271,66 @@ export class Goal {
       endConstraint: (("endsAt" in opts) ? opts.endsAt.__astNode : ("endsWithin" in opts) ? opts.endsWithin.__astNode : undefined),
     });
   }
-  public static CardinalityGoal(opts: { activityTemplate: ActivityTemplate, specification: AST.CardinalityGoalArguments }): ActivityCardinalityGoal {
+
+  /**
+   * The Cardinality Goal specifies that a certain activity should occur in the plan either a certain number of times, or for a certain total duration.
+   * #### Inputs
+   * - **activityTemplate**: the description of the activity whose recurrence we're interested in.
+   * - **specification**: an object with either an `occurrence` field, a `duration` field, or both (see examples below).
+   *
+   * #### Behavior
+   * The duration and occurrence are treated as lower bounds - so if the activity occurs more times, or for a longer duration, that is not considered a failure, and the scheduler will not add any more activities.
+   *
+   * The scheduler will identify whether it not the plan has enough occurrences or total duration of the given activity template. If not, it will add activities until satisfaction.
+   *
+   * #### Examples
+   *
+   * Setting a lower bound on the total duration:
+   *
+   * ```typescript
+   * export default function myGoal() {
+   *     return Goal.CardinalityGoal({
+   *         activityTemplate: ActivityTemplates.GrowBanana({
+   *             quantity: 1,
+   *             growingDuration: 1000000,
+   *         }),
+   *         specification: { duration: 10 * 1000000 }
+   *     })
+   * }
+   * ```
+   *
+   * Setting a lower bound on the number of occurrences:
+   *
+   * ```typescript
+   * export default function myGoal() {
+   *     return Goal.CardinalityGoal({
+   *         activityTemplate: ActivityTemplates.GrowBanana({
+   *             quantity: 1,
+   *             growingDuration: 1000000,
+   *         }),
+   *         specification: { occurrence: 10 }
+   *     })
+   * }
+   * ```
+   *
+   * Combining the two:
+   *
+   * ```typescript
+   * export default function myGoal() {
+   *     return Goal.CardinalityGoal({
+   *         activityTemplate: ActivityTemplates.GrowBanana({
+   *             quantity: 1,
+   *             growingDuration: 1000000,
+   *         }),
+   *         specification: { occurrence: 10, duration: 10 * 1000000 }
+   *     })
+   * }
+   * ```
+   *
+   * NOTE: In order to avoid placing multiple activities at the same start time, the Cardinality goal introduces an assumed mutual exclusion constraint - namely that new activities will not be allowed to overlap with existing activities.
+   * @param opts an object containing the activity template and a  {@link ActivityCardinalityGoal} specification of what kind of cardinality is considered
+   */
+  public static CardinalityGoal(opts: { activityTemplate: ActivityTemplate, specification: AST.CardinalityGoalArguments }): Goal {
     return Goal.new({
       kind: AST.NodeKind.ActivityCardinalityGoal,
       activityTemplate: opts.activityTemplate,
@@ -76,21 +339,37 @@ export class Goal {
   }
 }
 
-type StartTimingConstraint = { startsAt: SingletonTimingConstraint | SingletonTimingConstraintNoOperator } | { startsWithin: RangeTimingConstraint }
-type EndTimingConstraint = { endsAt: SingletonTimingConstraint | SingletonTimingConstraintNoOperator } | {endsWithin: RangeTimingConstraint }
-type CoexistenceGoalTimingConstraints = StartTimingConstraint | EndTimingConstraint | (StartTimingConstraint & EndTimingConstraint)
+/**
+ * An StartTimingConstraint is a constraint applying on the start time of an activity template.
+ */
+export type StartTimingConstraint = { startsAt: SingletonTimingConstraint | SingletonTimingConstraintNoOperator } | { startsWithin: RangeTimingConstraint }
+/**
+ * An EndTimingConstraint is a constraint applying on the end time of an activity template.
+ */
+export type EndTimingConstraint = { endsAt: SingletonTimingConstraint | SingletonTimingConstraintNoOperator } | {endsWithin: RangeTimingConstraint }
+/**
+ * An CoexistenceGoalTimingConstraints is a constraint that can be used to constrain the start or end times of activities in coexistence goals.
+ */
+export type CoexistenceGoalTimingConstraints = StartTimingConstraint | EndTimingConstraint | (StartTimingConstraint & EndTimingConstraint)
 
-class ActivityExpression {
+export class ActivityExpression {
+  /** @internal **/
   public readonly __astNode: AST.ActivityExpression;
 
+  /** @internal **/
   private constructor(__astNode: AST.ActivityExpression) {
     this.__astNode = __astNode;
   }
 
+  /** @internal **/
   private static new(__astNode: AST.ActivityExpression): ActivityExpression {
     return new ActivityExpression(__astNode);
   }
 
+  /**
+   * Creates an actvity expression of a type
+   * @param activityType the type
+   */
   public static ofType(activityType: ActivityType): ActivityExpression {
     return ActivityExpression.new({
       kind: AST.NodeKind.ActivityExpression,
@@ -99,10 +378,26 @@ class ActivityExpression {
   }
 }
 
-class TimingConstraint {
+export class TimingConstraint {
+  /** @internal **/
+  private constructor() {}
+  /**
+   * The singleton timing constraint represents a precise time point
+   * at some offset from either the start or end of a window.
+   * @param windowProperty either WindowProperty.START or WindowProperty.END
+   */
   public static singleton(windowProperty: WindowProperty): SingletonTimingConstraintNoOperator {
     return SingletonTimingConstraintNoOperator.new(windowProperty);
   }
+  /**
+   * The range timing constraint represents a range of acceptable times
+   * relative to either the start or end of the window. The range will
+   * be between the window "anchor" and the new point defined by the operator
+   * and the offset.
+   * @param windowProperty either WindowProperty.START or WindowProperty.END
+   * @param operator either Operator.PLUS or Operator.MINUS
+   * @param operand the duration offset
+   */
   public static range(windowProperty: WindowProperty, operator: TimingConstraintOperator, operand: Duration): RangeTimingConstraint {
     return RangeTimingConstraint.new({
       windowProperty,
@@ -113,11 +408,17 @@ class TimingConstraint {
   }
 }
 
-class SingletonTimingConstraintNoOperator {
+/**
+ * Represents an operation on a timepoint.
+ */
+export class SingletonTimingConstraintNoOperator {
+  /** @internal **/
   public readonly __astNode: AST.ActivityTimingConstraintSingleton
+  /** @internal **/
   private constructor(__astNode: AST.ActivityTimingConstraintSingleton) {
     this.__astNode = __astNode;
   }
+  /** @internal **/
   public static new(windowProperty: WindowProperty): SingletonTimingConstraintNoOperator {
     return new SingletonTimingConstraintNoOperator({
       windowProperty,
@@ -126,6 +427,11 @@ class SingletonTimingConstraintNoOperator {
       singleton: true
     });
   }
+
+  /**
+   * Adds a duration to a timepoint
+   * @param operand the duration to add
+   */
   public plus(operand: Duration): SingletonTimingConstraint {
     return SingletonTimingConstraint.new({
       ...this.__astNode,
@@ -133,6 +439,11 @@ class SingletonTimingConstraintNoOperator {
       operand
     })
   }
+
+  /**
+   * Subtract a duration from a timepoint
+   * @param operand the duration to subtract
+   */
   public minus(operand: Duration): SingletonTimingConstraint {
     return SingletonTimingConstraint.new({
       ...this.__astNode,
@@ -141,22 +452,33 @@ class SingletonTimingConstraintNoOperator {
     })
   }
 }
-
-class SingletonTimingConstraint {
+/**
+ * A singleton timing constraint specifies that the start or the end time of an activity must be exaxctly equal to a timepoint. Use {@link TimingConstraint.singleton} to create such a constraint.
+ */
+export class SingletonTimingConstraint {
+  /** @internal **/
   public readonly __astNode: AST.ActivityTimingConstraintSingleton
+  /** @internal **/
   private constructor(__astNode: AST.ActivityTimingConstraintSingleton) {
     this.__astNode = __astNode;
   }
+  /** @internal **/
   public static new(__astNode: AST.ActivityTimingConstraintSingleton): SingletonTimingConstraint {
     return new SingletonTimingConstraint(__astNode);
   }
 }
 
-class RangeTimingConstraint {
+/**
+ * A range timing constraint specifies that the start or the end time of an activity must be comprised in an interval. Use {@link TimingConstraint.range} to create such a constraint.
+ */
+export class RangeTimingConstraint {
+  /** @internal **/
   public readonly __astNode: AST.ActivityTimingConstraintRange
+  /** @internal **/
   private constructor(__astNode: AST.ActivityTimingConstraintRange) {
     this.__astNode = __astNode;
   }
+  /** @internal **/
   public static new(__astNode: AST.ActivityTimingConstraintRange): RangeTimingConstraint {
     return new RangeTimingConstraint(__astNode);
   }
@@ -165,13 +487,37 @@ class RangeTimingConstraint {
 declare global {
   class Goal {
     public readonly __astNode: AST.GoalSpecifier;
+
+    /**
+     * Aggregates the goal with another list of goals to form a conjunction of goals
+     *
+     * All goals in the conjunction must be satisfied in order for the conjunction to be satisfied
+     *
+     * @param others the list of goals
+     */
     public and(...others: Goal[]): Goal
 
+    /**
+     * Aggregates the goal with another list of goals to form a disjunction of goals
+     *
+     * If any subgoal is satisfied, the goal will stop processing and appear satisfied.
+     *
+     * @param others the list of goals
+     */
     public or(...others: Goal[]): Goal
 
-    public static applyWhen(window: WindowsEDSL.Windows): Goal
+    /**
+     * Restricts the windows on which a goal is applied
+     * @param windows the windows on which this goal applies
+     * @returns a new goal applying on a restricted horizon
+     */
+    public applyWhen(window: WindowsEDSL.Windows): Goal
 
-    public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): ActivityRecurrenceGoal
+    /**
+     * Creates an ActivityRecurrenceGoal
+     * @param opts an object containing the activity template and the interval at which the activities must be placed
+     */
+    public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): Goal
 
     /**
      * The CoexistenceGoal places one activity (defined by activityTemplate) per window (defined by forEach).
@@ -180,11 +526,20 @@ declare global {
     public static CoexistenceGoal(opts: {
       activityTemplate: ActivityTemplate,
       forEach: WindowsEDSL.Windows | ActivityExpression,
-    } & CoexistenceGoalTimingConstraints): ActivityCoexistenceGoal
+    } & CoexistenceGoalTimingConstraints): Goal
 
-    public static CardinalityGoal(opts: { activityTemplate: ActivityTemplate, specification: AST.CardinalityGoalArguments }): ActivityCardinalityGoal
+    /**
+     * Creates a CardinalityGoal
+     * @param opts an object containing the activity template and a specification of what type of CardinalityGoal is required
+     * @constructor
+     */
+    public static CardinalityGoal(opts: { activityTemplate: ActivityTemplate, specification: AST.CardinalityGoalArguments }): Goal
   }
-  class ActivityExpression {
+  export class ActivityExpression {
+    /**
+     * Creates an actvity expression of a type
+     * @param activityType the type
+     */
     public static ofType(activityType: ActivityType): ActivityExpression
   }
   class TimingConstraint {
@@ -213,7 +568,17 @@ declare global {
   type Integer = number;
 }
 
+/**
+ * Represents a continuous closed-open interval (start value is included, end value is not included)
+ */
 export interface ClosedOpenInterval extends AST.ClosedOpenInterval {}
+
+/**
+ * An ActivityTemplate specifies the type of an activity, as well as the arguments it should be given.
+ *
+ *  Activity templates are generated for each mission model. You can get the full list of activity templates by typing `ActivityTemplates.` (note the period) into the scheduling goal editor, and viewing the auto-complete options.
+ *
+ * If the activity has parameters, pass them into the constructor in a dictionary as key-value pairs (i.e. `ActivityTemplate.ParamActivity({ param:1 }))`. If the activity has no parameters, do not pass a dictionary (i.e. `ActivityTemplate.ParameterlessActivity()`). */
 export interface ActivityTemplate extends AST.ActivityTemplate {}
 
 // Make Goal available on the global object
