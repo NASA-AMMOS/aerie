@@ -335,7 +335,7 @@ class SchedulingDSLCompilationServiceTests {
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
       assertEquals(r.errors().size(), 1);
       assertEquals(
-          "TypeError: TS2741 Incorrect return type. Property '__astNode' is missing in type 'FakeGoal' but required in type 'Goal'.",
+          "TypeError: TS2741 Incorrect return type. Expected: 'Goal', Actual: 'FakeGoal'.",
           r.errors().get(0).message()
       );
     }
