@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
@@ -75,7 +76,9 @@ public interface PlanService {
      */
     Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivities(
         final PlanMetadata planMetadata,
-        final Plan plan)
+        final Plan plan,
+        final Map<ActivityInstance, GoalId> activityToGoalId
+    )
     throws IOException, NoSuchPlanException, PlanServiceException;
 
     /**
@@ -117,7 +120,9 @@ public interface PlanService {
         PlanId planId,
         Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
         MerlinPlan initialPlan,
-        Plan plan)
+        Plan plan,
+        Map<ActivityInstance, GoalId> activityToGoalId
+    )
     throws IOException, NoSuchPlanException, PlanServiceException, NoSuchActivityInstanceException;
 
     /**
@@ -143,7 +148,11 @@ public interface PlanService {
      * @return
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
-    Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(final PlanId planId, final Plan plan)
+    Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(
+        final PlanId planId,
+        final Plan plan,
+        final Map<ActivityInstance, GoalId> activityToGoalId
+    )
     throws IOException, NoSuchPlanException, PlanServiceException;
   }
 

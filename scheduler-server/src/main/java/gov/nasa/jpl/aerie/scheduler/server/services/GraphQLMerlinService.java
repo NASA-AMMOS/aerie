@@ -18,6 +18,7 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.scheduler.server.http.SerializedValueJsonParser;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
@@ -50,6 +51,7 @@ import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLInterval;
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLTimestamp;
+import static gov.nasa.jpl.aerie.scheduler.server.http.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
 
 /**
@@ -106,6 +108,41 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     }
   }
 
+  private Optional<JsonObject> postRequest(final String query, final JsonObject variables) throws IOException, PlanServiceException {
+    try {
+      //TODO: (mem optimization) use streams here to avoid several copies of strings
+      final var reqBody = Json
+          .createObjectBuilder()
+          .add("query", query)
+          .add("variables", variables)
+          .build();
+      final var httpReq = HttpRequest
+          .newBuilder().uri(merlinGraphqlURI).timeout(httpTimeout)
+          .header("Content-Type", "application/json")
+          .header("Accept", "application/json")
+          .header("Origin", merlinGraphqlURI.toString())
+          .POST(HttpRequest.BodyPublishers.ofString(reqBody.toString()))
+          .build();
+      //TODO: (net optimization) gzip compress the request body if large enough (eg for createAllActs)
+      final var httpResp = HttpClient
+          .newHttpClient().send(httpReq, HttpResponse.BodyHandlers.ofInputStream());
+      if (httpResp.statusCode() != 200) {
+        //TODO: how severely to error out if aerie cannot be reached or has a 500 error or json is garbled etc etc?
+        return Optional.empty();
+      }
+      final var respBody = Json.createReader(httpResp.body()).readObject();
+      if (respBody.containsKey("errors")) {
+        throw new PlanServiceException(respBody.toString());
+      }
+      return Optional.of(respBody);
+    } catch (final InterruptedException e) {
+      //TODO: maybe retry if interrupted? but depends on semantics (eg don't duplicate mutation if not idempotent)
+      return Optional.empty();
+    } catch (final JsonException e) { // or also JsonParsingException
+      throw new IOException("json parse error on graphql response:" + e.getMessage(), e);
+    }
+  }
+
   //TODO: maybe use fancy aerie typed json parsers/serializers, ala BasicParsers.productP use in MerlinParsers
   //TODO: or upgrade to gson or similar modern library with registered object mappings
 
@@ -114,9 +151,16 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
    */
   @Override
   public long getPlanRevision(final PlanId planId) throws IOException, NoSuchPlanException, PlanServiceException {
-    final var request = "query getPlanRevision { plan_by_pk( id: %s ) { revision } }"
-        .formatted(planId.id());
-    final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(planId));
+    final var query = """
+        query GetPlanRevision($id: Int!) {
+          plan_by_pk(id: $id) {
+            revision
+          }
+        }
+        """;
+    final var variables = Json.createObjectBuilder().add("id", planId.id()).build();
+
+    final var response = postRequest(query, variables).orElseThrow(() -> new NoSuchPlanException(planId));
     try {
       return response.getJsonObject("data").getJsonObject("plan_by_pk").getJsonNumber("revision").longValueExact();
     } catch (ClassCastException | ArithmeticException e) {
@@ -240,7 +284,11 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
    * @return
    */
   @Override
-  public Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivities(final PlanMetadata planMetadata, final Plan plan)
+  public Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivities(
+      final PlanMetadata planMetadata,
+      final Plan plan,
+      final Map<ActivityInstance, GoalId> activityToGoalId
+  )
   throws IOException, NoSuchPlanException, PlanServiceException
   {
     final var planName = getNextPlanName();
@@ -249,7 +297,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
         planMetadata.horizon().getStartInstant(), planMetadata.horizon().getEndAerie());
     //create sim storage space since doesn't happen automatically (else breaks further queries)
     createSimulationForPlan(planId);
-    Map<ActivityInstance, ActivityInstanceId> activityToId = createAllPlanActivities(planId, plan);
+    final Map<ActivityInstance, ActivityInstanceId> activityToId = createAllPlanActivities(planId, plan, activityToGoalId);
 
     return Pair.of(planId, activityToId);
   }
@@ -312,7 +360,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
       final PlanId planId,
       final Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
       final MerlinPlan initialPlan,
-      final Plan plan)
+      final Plan plan,
+      final Map<ActivityInstance, GoalId> activityToGoalId
+  )
   throws IOException, NoSuchPlanException, NoSuchActivityInstanceException, PlanServiceException
   {
     final var ids = new HashMap<ActivityInstance, ActivityInstanceId>();
@@ -322,8 +372,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
       final var idActFromInitialPlan = idsFromInitialPlan.get(activity.getId());
       if (idActFromInitialPlan != null) {
         //add duration to parameters if controllable
-        if(activity.getType().getDurationType() instanceof DurationType.Controllable durationType){
-          if(!activity.getArguments().containsKey(durationType.parameterName())){
+        if (activity.getType().getDurationType() instanceof DurationType.Controllable durationType){
+          if (!activity.getArguments().containsKey(durationType.parameterName())){
             activity.addArgument(durationType.parameterName(), new DurationValueMapper().serializeValue(activity.getDuration()));
           }
         }
@@ -331,9 +381,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
         //if act was present in initial plan
         final var schedulerActIntoMerlinAct = new MerlinActivityInstance(activity.getType().getName(), activity.getStartTime(), activity.getArguments());
         final var activityInstanceId = idsFromInitialPlan.get(activity.getId());
-        if(!schedulerActIntoMerlinAct.equals(actFromInitialPlan.get())) {
+        if (!schedulerActIntoMerlinAct.equals(actFromInitialPlan.get())) {
           //update if it has changed
-          updateActivity(planId, schedulerActIntoMerlinAct, activityInstanceId);
+          updateActivity(planId, schedulerActIntoMerlinAct, activityInstanceId, activityToGoalId.get(activity));
         }
         ids.put(activity, activityInstanceId);
       } else {
@@ -350,7 +400,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     }
 
     //Create
-    ids.putAll(createActivities(planId, toAdd));
+    ids.putAll(createActivities(planId, toAdd, activityToGoalId));
 
     return ids;
   }
@@ -358,8 +408,15 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
   public void deleteActivity(final ActivityInstanceId id)
   throws PlanServiceException, IOException, NoSuchActivityInstanceException
   {
-    final var request = "mutation {delete_activity_by_pk( id : %d ){ id }}".formatted(id.id());
-    final var response = postRequest(request).orElseThrow(() -> new NoSuchActivityInstanceException(id));
+    final var query = """
+        mutation DeleteActivity($id: Int!) {
+          delete_activity_by_pk(id: $id) {
+            id
+          }
+        }
+        """;
+    final var variables = Json.createObjectBuilder().add("id", id.id()).build();
+    final var response = postRequest(query, variables).orElseThrow(() -> new NoSuchActivityInstanceException(id));
     try {
       response.getJsonObject("data").getJsonObject("delete_activity_by_pk").getJsonNumber("id").longValueExact();
     } catch (ClassCastException | ArithmeticException e) {
@@ -367,25 +424,35 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     }
   }
 
-  public void updateActivity(final PlanId planId, final MerlinActivityInstance activity, final ActivityInstanceId instanceId)
+  public void updateActivity(
+      final PlanId planId,
+      final MerlinActivityInstance activity,
+      final ActivityInstanceId instanceId,
+      final GoalId goalId
+  )
   throws PlanServiceException, NoSuchPlanException, IOException
   {
-    final var argFormat = "%s: %s ";
-    final var argumentsSb = new StringBuilder();
+    final var arguments = Json.createObjectBuilder();
     for (final var arg : activity.arguments().entrySet()) {
-      final var name = arg.getKey();
-      var value = serializeForGql(arg.getValue());
-      argumentsSb.append(argFormat.formatted(name, value));
+      arguments.add(arg.getKey(), serializedValueP.unparse(arg.getValue()));
     }
-    final var updateReq = """
-        mutation {
-          update_activity_by_pk( pk_columns : { id : %d, plan_id : %d }, _set: {start_offset : \"%s\", arguments : { %s }}) {
-           affected_rows
+    final var query = """
+        mutation UpdateActivity($id: Int!, $planId: Int!, $arguments: String!, $startOffset: Int!, $goalId: Int) {
+          update_activity_by_pk(pk_columns: {id: $id, plan_id: $planId}, _set: {arguments: $arguments, start_offset: $startOffset, source_scheduling_goal_id: $goalId}) {
+            affected_rows
           }
         }
-        """.formatted(instanceId.id(), planId.id(), activity.startTimestamp().toString(), argumentsSb.toString());
+        """;
 
-    final var response = postRequest(updateReq).orElseThrow(() -> new NoSuchPlanException(planId));
+    final var variables = Json.createObjectBuilder()
+        .add("id", instanceId.id())
+        .add("planId", planId.id())
+        .add("arguments", arguments.build())
+        .add("startOffset", activity.startTimestamp().toString())
+        .add("goalId", goalId.id())
+        .build();
+
+    final var response = postRequest(query, variables).orElseThrow(() -> new NoSuchPlanException(planId));
     try {
       response.getJsonObject("data").getJsonObject("update_activity_by_pk").getJsonNumber("id").longValueExact();
     } catch (ClassCastException | ArithmeticException e) {
@@ -446,49 +513,75 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
    * @return
    */
   @Override
-  public Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(final PlanId planId, final Plan plan)
+  public Map<ActivityInstance, ActivityInstanceId> createAllPlanActivities(
+      final PlanId planId,
+      final Plan plan,
+      final Map<ActivityInstance, GoalId> activityToGoalId
+  )
   throws IOException, NoSuchPlanException, PlanServiceException
   {
-    return createActivities(planId, plan.getActivitiesByTime());
+    return createActivities(planId, plan.getActivitiesByTime(), activityToGoalId);
   }
 
-  private Map<ActivityInstance, ActivityInstanceId> createActivities(final PlanId planId, final List<ActivityInstance> orderedActivities)
+  private Map<ActivityInstance, ActivityInstanceId> createActivities(
+      final PlanId planId,
+      final List<ActivityInstance> orderedActivities,
+      final Map<ActivityInstance, GoalId> activityToGoalId
+  )
   throws IOException, NoSuchPlanException, PlanServiceException
   {
     ensurePlanExists(planId);
-    final var requestPre = "mutation createAllPlanActivities { insert_activity( objects: [";
-    final var requestPost = "] ) { returning { id } affected_rows } }";
-    final var actPre = "{ plan_id: %d type: \"%s\" start_offset: \"%s\" arguments: {";
-    final var actPost = "} }";
-    final var argFormat = "%s: %s ";
+    final var query = """
+        mutation createAllPlanActivities($activities: [activity_insert_input!]!) {
+          insert_activity(objects: $activities) {
+            returning {
+              id
+            }
+            affected_rows
+          }
+        }
+        """;
 
     //assemble the entire mutation request body
     //TODO: (optimization) could use a lazy evaluating stream of strings to avoid large set of strings in memory
     //TODO: (defensive) should sanitize all strings uses as keys/values to avoid injection attacks
-    final var requestSB = new StringBuilder().append(requestPre);
 
-    Map<ActivityInstance, ActivityInstanceId> instanceToInstanceId = new HashMap<>();
-
+    final var insertionObjects = Json.createArrayBuilder();
     for (final var act : orderedActivities) {
-      requestSB.append(actPre.formatted(planId.id(), act.getType().getName(), act.getStartTime().toString()));
+      var insertionObject = Json
+          .createObjectBuilder()
+          .add("plan_id", planId.id())
+          .add("type", act.getType().getName())
+          .add("start_offset", act.getStartTime().toString());
+
       //add duration to parameters if controllable
+      final var insertionObjectArguments = Json.createObjectBuilder();
       if(act.getType().getDurationType() instanceof DurationType.Controllable durationType){
         if(!act.getArguments().containsKey(durationType.parameterName())){
-          requestSB.append(argFormat.formatted(durationType.parameterName(), serializeForGql(act.getDuration())));
+          insertionObjectArguments.add(durationType.parameterName(), serializeForGql(act.getDuration()));
         }
       }
-      for (final var arg : act.getArguments().entrySet()) {
-        final var name = arg.getKey();
-        final var value = arg.getValue();
-        final var gqlValue = serializeForGql(value);
-        requestSB.append(argFormat.formatted(name, gqlValue));
-      }
-      requestSB.append(actPost);
-    }
-    requestSB.append(requestPost);
-    final var request = requestSB.toString();
 
-    final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(planId));
+      final var goalId = activityToGoalId.get(act);
+      if (goalId != null) {
+        insertionObject.add("source_scheduling_goal_id", goalId.id());
+      }
+
+      for (final var arg : act.getArguments().entrySet()) {
+        insertionObjectArguments.add(arg.getKey(), serializedValueP.unparse(arg.getValue()));
+      }
+      insertionObject.add("arguments", insertionObjectArguments.build());
+      insertionObjects.add(insertionObject.build());
+    }
+
+    final var arguments = Json
+        .createObjectBuilder()
+        .add("activities", insertionObjects.build())
+        .build();
+
+    final var response = postRequest(query, arguments).orElseThrow(() -> new NoSuchPlanException(planId));
+
+    final Map<ActivityInstance, ActivityInstanceId> instanceToInstanceId = new HashMap<>();
     try {
       final var numCreated = response
           .getJsonObject("data").getJsonObject("insert_activity").getJsonNumber("affected_rows").longValueExact();
