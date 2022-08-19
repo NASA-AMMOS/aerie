@@ -20,7 +20,10 @@ public final class EndOf implements Expression<Windows> {
   @Override
   public Windows evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
     final var activity = environment.get(this.activityAlias);
-    return new Windows(Window.at(activity.window.end));
+    return new Windows(
+        Pair.of(Interval.FOREVER, false),
+        Pair.of(Interval.at(activity.interval.end), true)
+    );
   }
 
   @Override

@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.constraints.tree;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.Map;
@@ -20,7 +20,7 @@ public final class GreaterThanOrEqual implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
+  public Windows evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
     final var leftProfile = this.left.evaluate(results, bounds, environment);
     final var rightProfile = this.right.evaluate(results, bounds, environment);
 

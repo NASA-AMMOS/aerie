@@ -34,7 +34,7 @@ public class Spans implements Iterable<Interval> {
   }
 
   public Windows intoWindows() {
-    return new Windows(this.windows);
+    return Windows.definedEverywhere(this.intervals, true);
   }
 
   public void add(final Interval window) {

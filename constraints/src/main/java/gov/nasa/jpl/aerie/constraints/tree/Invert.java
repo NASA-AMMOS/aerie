@@ -18,9 +18,7 @@ public final class Invert implements Expression<Windows> {
 
   @Override
   public Windows evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
-    return Windows.minus(
-        new Windows(bounds),
-        this.expression.evaluate(results, bounds, environment));
+    return this.expression.evaluate(results, bounds, environment).not();
   }
 
   @Override

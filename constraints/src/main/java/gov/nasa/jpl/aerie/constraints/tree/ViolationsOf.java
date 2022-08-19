@@ -20,9 +20,9 @@ public final class ViolationsOf implements Expression<List<Violation>> {
 
   @Override
   public List<Violation> evaluate(SimulationResults results, final Interval bounds, Map<String, ActivityInstance> environment) {
-    final var boundsW = new Windows(bounds);
+    final var boundsW = new Windows(bounds, true);
     final var satisfiedWindows = this.expression.evaluate(results, bounds, environment);
-    return List.of(new Violation(Windows.minus(boundsW, satisfiedWindows)));
+    return List.of(new Violation(satisfiedWindows.not().and(boundsW)));
   }
 
   @Override

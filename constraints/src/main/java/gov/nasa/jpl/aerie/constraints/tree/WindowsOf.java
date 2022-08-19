@@ -20,12 +20,12 @@ public final class WindowsOf implements Expression<Windows> {
 
   @Override
   public Windows evaluate(SimulationResults results, final Interval bounds, Map<String, ActivityInstance> environment) {
-    final var ret = new Windows(bounds);
+    var ret = new Windows(bounds, false);
     final var unsatisfiedWindows = this.expression.evaluate(results, bounds, environment);
     for(var unsatisfiedWindow : unsatisfiedWindows){
-      ret.intersectWith(unsatisfiedWindow.violationWindows);
+      ret.setAllTrue(unsatisfiedWindow.violationWindows);
     }
-    return ret;
+    return ret.not();
   }
 
   @Override

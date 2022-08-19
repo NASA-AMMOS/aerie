@@ -24,11 +24,9 @@ public final class All implements Expression<Windows> {
 
   @Override
   public Windows evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
-    Windows windows = new Windows(bounds);
+    Windows windows = new Windows(bounds, true);
     for (final var expression : this.expressions) {
-      windows.intersectWith(
-          expression.evaluate(results, bounds, environment)
-      );
+      windows = windows.and(expression.evaluate(results, bounds, environment));
     }
     return windows;
   }
