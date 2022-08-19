@@ -69,18 +69,16 @@ public class TestFilters {
 
     final var res = tre2.computeRange(simResults, null, horizonW);
 
-    assertEquals(
-        new Windows(
-            Window.betweenClosedOpen(
-                Duration.of(3, Duration.SECONDS),
-                Duration.of(6, Duration.SECONDS)),
-            Window.betweenClosedOpen(
-                Duration.of(11, Duration.SECONDS),
-                Duration.of(15, Duration.SECONDS))),
-        res);
+    final var expected = new Windows(interval(0, Inclusive, 20, Exclusive, SECONDS), false);
+    expected.setAllTrue(List.of(
+        interval(3, Inclusive, 6, Exclusive, SECONDS),
+        interval(11, Inclusive, 15, Exclusive, SECONDS)
+    ));
+
+    assertEquals(expected, res);
   }
 
-  public DiscreteProfile smallState1(final Window horizon) {
+  public DiscreteProfile smallState1(final Interval horizon) {
     return new DiscreteProfile(List.of(
         new DiscreteProfilePiece(Interval.between(horizon.start.in(SECONDS), Inclusive, 20, Exclusive, SECONDS), SerializedValue.of(true)),
         new DiscreteProfilePiece(Interval.between(20, Inclusive, 25, Exclusive, SECONDS), SerializedValue.of(false)),
@@ -113,12 +111,12 @@ public class TestFilters {
     Interval r5 = Interval.betweenClosedOpen(Duration.of(11, Duration.SECONDS), Duration.of(15, Duration.SECONDS));
     Interval r7 = Interval.betweenClosedOpen(Duration.of(18, Duration.SECONDS), Duration.of(22, Duration.SECONDS));
 
-    Windows tw = new Windows(Arrays.asList(r1,r2,r3,r5,r7));
+    Windows tw = Windows.definedEverywhere(List.of(r1,r2,r3,r5,r7), true);
 
     Windows res = fsm.filter(null, null, tw);
 
-    var expected = new Windows(Arrays.asList(r2,r3));
-    assertEquals(res, expected);
+    var expected = Windows.definedEverywhere(List.of(r2,r3), true);
+    assertEquals(expected, res);
   }
 
   @Test
@@ -138,9 +136,9 @@ public class TestFilters {
     ranges.add(r5);
     ranges.add(r7);
 
-    Windows tw = new Windows(ranges);
+    Windows tw = Windows.definedEverywhere(ranges, true);
 
-    Windows expected = new Windows(Arrays.asList(r1,r5,r7));
+    Windows expected = Windows.definedEverywhere(List.of(r1,r5,r7), true);
     Windows res = fsm.filter(null, null, tw);
     assertEquals(res, expected);
 
