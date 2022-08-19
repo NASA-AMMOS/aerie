@@ -45,11 +45,10 @@ public class TestEnvelopes {
         .build();
 
     var ranges = tre.computeRange(null, null, horizon);
-    assertTrue(ranges.size()==1);
-    assertTrue(ranges.includes(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(10, Duration.SECONDS))));
+    assertTrue(ranges.includes(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(10, Duration.SECONDS))));
+    ranges.removeTrueSegment(0);
+    assertTrue(ranges.isAllFalse());
   }
-
-
 }
 
 

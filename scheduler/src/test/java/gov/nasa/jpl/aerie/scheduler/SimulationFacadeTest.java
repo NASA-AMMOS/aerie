@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.All;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
@@ -43,6 +43,10 @@ import java.util.Map;
 import java.util.function.Function;
 
 import static com.google.common.truth.Truth.assertThat;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.interval;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SimulationFacadeTest {
@@ -147,7 +151,7 @@ public class SimulationFacadeTest {
 
     final var goal = new CoexistenceGoal.Builder()
         .forEach(ActivityExpression.ofType(actTypePeel))
-        .forAllTimeIn(new WindowsWrapperExpression(new Windows(horizon.getHor())))
+        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(horizon.getHor(), true)))
         .thereExistsOne(new ActivityCreationTemplate.Builder().
                            ofType(actTypeBite)
                            .withArgument("biteSize", SerializedValue.of(0.1))
@@ -194,7 +198,10 @@ public class SimulationFacadeTest {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new GreaterThan(getFruitRes(), new RealValue(2.9)).evaluate(facade.getLatestConstraintSimulationResults());
-    var expected = new Windows(Window.betweenClosedOpen(t0, t2));
+    var expected = new Windows(
+        Pair.of(interval(0, Inclusive, 2, Exclusive, SECONDS), true),
+        Pair.of(interval(2, 5, SECONDS), false)
+    );
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -203,7 +210,10 @@ public class SimulationFacadeTest {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new LessThan(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
-    var expected = new Windows(Window.between(t2, tEnd));
+    var expected = new Windows(
+        Pair.of(interval(0, Inclusive, 2, Exclusive, SECONDS), false),
+        Pair.of(interval(2, 5, SECONDS), true)
+    );
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -212,7 +222,11 @@ public class SimulationFacadeTest {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new All(new GreaterThanOrEqual(getFruitRes(), new RealValue(3.0)), new LessThanOrEqual(getFruitRes(), new RealValue(3.99))).evaluate(facade.getLatestConstraintSimulationResults());
-    var expected = new Windows(Window.betweenClosedOpen(t1, t2));
+    var expected = new Windows(
+        Pair.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
+        Pair.of(interval(1, Inclusive, 2, Exclusive, SECONDS), true),
+        Pair.of(interval(2, Inclusive, 5, Inclusive, SECONDS), false)
+    );
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -221,7 +235,11 @@ public class SimulationFacadeTest {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new Equal<>(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
-    var expected = new Windows(Window.betweenClosedOpen(t1, t2));
+    var expected = new Windows(
+        Pair.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
+        Pair.of(interval(1, Inclusive, 2, Exclusive, SECONDS), true),
+        Pair.of(interval(2, Inclusive, 5, Inclusive, SECONDS), false)
+    );
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -230,7 +248,11 @@ public class SimulationFacadeTest {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new NotEqual<>(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
-    var expected = new Windows(List.of(Window.betweenClosedOpen(t0, t1), Window.between(t2, tEnd)));
+    var expected = new Windows(
+        Pair.of(interval(0, Inclusive, 1, Exclusive, SECONDS), true),
+        Pair.of(interval(1, Inclusive, 2, Exclusive, SECONDS), false),
+        Pair.of(interval(2, Inclusive, 5, Inclusive, SECONDS), true)
+    );
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -255,7 +277,7 @@ public class SimulationFacadeTest {
     final var actTypePeel = problem.getActivityType("PeelBanana");
 
     CoexistenceGoal cg = new CoexistenceGoal.Builder()
-        .forAllTimeIn(new WindowsWrapperExpression(new Windows(horizon.getHor())))
+        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(horizon.getHor(), true)))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(actTypePeel)
                             .withArgument("peelDirection", SerializedValue.of("fromStem"))
@@ -298,7 +320,7 @@ public class SimulationFacadeTest {
         = (p) -> externalActs;
 
     final var proceduralGoalWithConstraints = new ProceduralCreationGoal.Builder()
-        .forAllTimeIn(new WindowsWrapperExpression(new Windows(horizon.getHor())))
+        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(horizon.getHor(), true)))
         .attachStateConstraint(constraint)
         .generateWith(fixedGenerator)
         .owned(ChildCustody.Jointly)
@@ -340,7 +362,7 @@ public class SimulationFacadeTest {
         = (p) -> externalActs;
 
     final var proceduralgoalwithoutconstraints = new ProceduralCreationGoal.Builder()
-        .forAllTimeIn(new WindowsWrapperExpression(new Windows(horizon.getHor())))
+        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(horizon.getHor(), true)))
         .generateWith(fixedGenerator)
         .owned(ChildCustody.Jointly)
         .build();
