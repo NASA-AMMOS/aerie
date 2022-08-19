@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
@@ -99,12 +99,12 @@ public class ActivityCreationTemplate extends ActivityExpression {
      */
     public @NotNull
     Builder duration(@NotNull Duration duration) {
-      this.durationIn = Window.between(duration, duration);
+      this.durationIn = Interval.between(duration, duration);
       return getThis();
     }
 
     public @NotNull
-    Builder duration(@NotNull Window duration) {
+    Builder duration(@NotNull Interval duration) {
       this.durationIn = duration;
       return getThis();
     }

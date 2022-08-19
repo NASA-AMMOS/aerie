@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
@@ -18,8 +18,8 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
     this(List.of(profilePieces));
   }
 
-  private static boolean profileOutsideBounds(final DiscreteProfilePiece piece, final Window bounds){
-    return piece.window.isStrictlyBefore(bounds) || piece.window.isStrictlyAfter(bounds);
+  private static boolean profileOutsideBounds(final DiscreteProfilePiece piece, final Interval bounds){
+    return piece.interval.isStrictlyBefore(bounds) || piece.interval.isStrictlyAfter(bounds);
   }
 
   @Override
@@ -66,7 +66,7 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
   // TODO: Gaps in profiles will cause an error
   //       We may want to deal with gaps someday
   @Override
-  public Windows changePoints(final Window bounds) {
+  public Windows changePoints(final Interval bounds) {
     final var changePoints = new Windows();
     if (this.profilePieces.size() == 0) return changePoints;
 
@@ -91,7 +91,7 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
     return changePoints;
   }
 
-  // TODO: Gaps in profiles will cause an error
+  public Windows transitions(final SerializedValue oldState, final SerializedValue newState, final Interval bounds) {
   //       We may want to deal with gaps someday
   public Windows transitions(final SerializedValue oldState, final SerializedValue newState, final Window bounds) {
     final var transitionPoints = new Windows();
@@ -105,7 +105,7 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
       //avoid adding transition points for profiles outside of bounds
       if(profileOutsideBounds(prev, bounds) || profileOutsideBounds(curr, bounds)) {prev = curr; continue;}
 
-      if (Window.meets(prev.window, curr.window)) {
+      if (Interval.meets(prev.interval, curr.interval)) {
         if (prev.value.equals(oldState) && curr.value.equals(newState)) {
           transitionPoints.add(Window.at(prev.window.end));
         }

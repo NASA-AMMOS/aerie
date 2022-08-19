@@ -70,7 +70,6 @@ public final class TypescriptCodeGenerationService {
       result.add(indent("}),"));
     }
     result.add("};");
-
     result.add("""
                    declare global {""");
     result.add(indent("enum ActivityType {"));

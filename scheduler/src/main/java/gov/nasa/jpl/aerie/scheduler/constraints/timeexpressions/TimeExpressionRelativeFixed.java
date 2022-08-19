@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -17,7 +17,7 @@ public class TimeExpressionRelativeFixed extends TimeExpression {
   }
 
   @Override
-  public Window computeTime(final SimulationResults simulationResults, final Plan plan, final Window interval) {
+  public Interval computeTime(final SimulationResults simulationResults, final Plan plan, final Interval interval) {
     Duration from = null;
     if (anchor == TimeAnchor.START) {
       from = interval.start;
@@ -30,19 +30,19 @@ public class TimeExpressionRelativeFixed extends TimeExpression {
       res = TimeUtility.performOperation(entry.getKey(), res, entry.getValue());
     }
 
-    Window retRange;
+    Interval retRange;
 
     //if we want an range of possibles
     if (!fixed) {
       if (res.compareTo(from) > 0) {
-        retRange = Window.between(from, res);
+        retRange = Interval.between(from, res);
 
       } else {
-        retRange = Window.between(res, from);
+        retRange = Interval.between(res, from);
       }
       // we just want to compute the absolute timepoint
     } else {
-      retRange = Window.between(res, res);
+      retRange = Interval.between(res, res);
     }
 
     return retRange;

@@ -1,19 +1,19 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 public final class SimulationResults {
-  public final Window bounds;
+  public final Interval bounds;
   public final List<ActivityInstance> activities;
   public final Map<String, LinearProfile> realProfiles;
   public final Map<String, DiscreteProfile> discreteProfiles;
 
   public SimulationResults(
-      final Window bounds,
+      final Interval bounds,
       final List<ActivityInstance> activities,
       final Map<String, LinearProfile> realProfiles,
       final Map<String, DiscreteProfile> discreteProfiles

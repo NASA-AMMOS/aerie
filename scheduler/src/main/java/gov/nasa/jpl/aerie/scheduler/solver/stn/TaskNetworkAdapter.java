@@ -1,11 +1,11 @@
 package gov.nasa.jpl.aerie.scheduler.solver.stn;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
- * Adapter for TaskNetwork for use with Window and Duration
+ * Adapter for TaskNetwork for use with Interval and Duration
  */
 public class TaskNetworkAdapter {
 
@@ -15,13 +15,13 @@ public class TaskNetworkAdapter {
     this.tw = tw;
   }
 
-  public record TNActData(Window start, Window end, Window duration) {}
+  public record TNActData(Interval start, Interval end, Interval duration) {}
 
   public void addDurationInterval(String nameAct, Duration lb, Duration ub){
     tw.addDurationInterval(nameAct,toDouble(lb), toDouble(ub));
   }
 
-  public Window getStartInterval(String actName) {
+  public Interval getStartInterval(String actName) {
     var st = tw.getStartInterval(actName);
     return toWin(st.getLeft(), st.getRight());
   }
@@ -31,11 +31,11 @@ public class TaskNetworkAdapter {
     return new TNActData(toWin(data.start()), toWin(data.end()), toWin(data.duration()));
   }
 
-  public Window getEndInterval(String actName){
+  public Interval getEndInterval(String actName){
     return toWin(tw.getEndInterval(actName));
   }
 
-  public Window getDurationInterval(String actName){
+  public Interval getDurationInterval(String actName){
     return toWin(tw.getDurationInterval(actName));
   }
 
@@ -81,15 +81,15 @@ public class TaskNetworkAdapter {
     return (double) dur.in(Duration.MICROSECOND);
   }
 
-  private Window toWin(double d1, double d2){
-    return Window.between(toDur(d1), toDur(d2));
+  private Interval toWin(double d1, double d2){
+    return Interval.between(toDur(d1), toDur(d2));
   }
 
-  private Window toWin(Pair<Double, Double> pair){
+  private Interval toWin(Pair<Double, Double> pair){
     return toWin(pair.getLeft(), pair.getRight());
   }
 
-  public static TNActData solve(Window start, Window end, Window dur, Window enveloppe){
+  public static TNActData solve(Interval start, Interval end, Interval dur, Interval enveloppe){
     TaskNetwork tw = new TaskNetwork();
     String actName = "ACT";
     TaskNetworkAdapter tnw = new TaskNetworkAdapter(tw);

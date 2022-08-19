@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -18,9 +18,9 @@ public class TimeExpressionFromExpr extends TimeExpression {
   }
 
   @Override
-  public Window computeTime(final SimulationResults simulationResults, final Plan plan, final Window interval) {
-    Window rangeExpr = expression.computeTime(simulationResults, plan, interval);
-    Window retRange = null;
+  public Interval computeTime(final SimulationResults simulationResults, final Plan plan, final Interval interval) {
+    Interval rangeExpr = expression.computeTime(simulationResults, plan, interval);
+    Interval retRange = null;
 
     if (rangeExpr != null) {
       Duration resMin = rangeExpr.start;
@@ -30,7 +30,7 @@ public class TimeExpressionFromExpr extends TimeExpression {
         resMax = TimeUtility.performOperation(entry.getKey(), resMax, entry.getValue());
       }
 
-      retRange = Window.between(resMin, resMax);
+      retRange = Interval.between(resMin, resMax);
 
     }
     return retRange;

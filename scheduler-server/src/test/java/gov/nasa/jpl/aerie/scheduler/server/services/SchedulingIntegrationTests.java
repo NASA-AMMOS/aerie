@@ -791,7 +791,7 @@ public class SchedulingIntegrationTests {
       System.out.println(i.type().toString() + ": " + i.startTime().toString());
     }
 
-    assertEquals(1, results.scheduleResults.goalResults().size()); //starts an instant before 12:00 (when there is more than 1 plant - the window is about 00:00-24:00 because the plant gets created early, then the window is subdivided, and then a window is picked, seemingly arbitrarily, as this is uncontrollable duration (see line 304 of ActivityCreationTemplate), after which cadence is maintained) then schedules 4, as expected. 7 total then.
+    assertEquals(1, results.scheduleResults.goalResults().size()); //starts an instant before 12:00 (when there is more than 1 plant - the interval is about 00:00-24:00 because the plant gets created early, then the interval is subdivided, and then a interval is picked, seemingly arbitrarily, as this is uncontrollable duration (see line 304 of ActivityCreationTemplate), after which cadence is maintained) then schedules 4, as expected. 7 total then.
     assertEquals(6, results.updatedPlan().size());
 
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
