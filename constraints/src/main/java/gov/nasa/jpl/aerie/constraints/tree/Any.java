@@ -25,11 +25,11 @@ public final class Any implements Expression<Windows> {
   public Windows evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
     Windows windows = new Windows();
     for (final var expression : this.expressions) {
-      windows.addAll(
+      windows = windows.or(
           expression.evaluate(results, bounds, environment)
       );
     }
-    return Windows.intersection(windows, new Windows(bounds));
+    return windows.and(new Windows(bounds, true));
   }
 
   @Override

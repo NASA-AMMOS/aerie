@@ -11,6 +11,7 @@ import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
 public class DiscreteProfileTest {
 
@@ -32,11 +33,11 @@ public class DiscreteProfileTest {
 
     final var result = profile.equalTo(other, Interval.between(0, 20, SECONDS));
 
-    final var expected = new Windows();
-    expected.add(Window.between( 0, Inclusive,  5, Exclusive, SECONDS));
-    expected.add(Window.between(15, Inclusive, 20, Inclusive, SECONDS));
+    final var expected = new Windows(Interval.between(0, 20, SECONDS), false);
+    expected.setTrue(Interval.between( 0, Inclusive,  5, Exclusive, SECONDS));
+    expected.setTrue(Interval.between(15, Inclusive, 20, Inclusive, SECONDS));
 
-    assertEquivalent(expected, result);
+    assertIterableEquals(expected, result);
   }
 
   @Test
@@ -57,10 +58,10 @@ public class DiscreteProfileTest {
 
     final var result = profile.notEqualTo(other, Interval.between(0, 20, SECONDS));
 
-    final var expected = new Windows();
-    expected.add(Window.between( 5, Inclusive, 15, Exclusive, SECONDS));
+    final var expected = new Windows(Interval.between(0, 20, SECONDS), false);
+    expected.setTrue(Interval.between( 5, Inclusive, 15, Exclusive, SECONDS));
 
-    assertEquivalent(expected, result);
+    assertIterableEquals(expected, result);
   }
 
   @Test
@@ -74,12 +75,12 @@ public class DiscreteProfileTest {
 
     final var result = profile.changePoints(Interval.between(0, 20, SECONDS));
 
-    final var expected = new Windows();
-    expected.add(Window.at( 5, SECONDS));
+    final var expected = new Windows(Interval.between(0, 20, SECONDS), false);
+    expected.setTrue(Interval.at( 5, SECONDS));
     expected.setTrue(Interval.at(10, SECONDS));
-    expected.add(Window.at(15, SECONDS));
+    expected.setTrue(Interval.at(15, SECONDS));
 
-    assertEquivalent(expected, result);
+    assertIterableEquals(expected, result);
   }
 
   @Test
@@ -97,6 +98,6 @@ public class DiscreteProfileTest {
     expected.setTrue(Interval.at( 5, SECONDS));
     expected.setTrue(Interval.at(15, SECONDS));
 
-    assertEquivalent(expected, result);
+    assertIterableEquals(expected, result);
   }
 }
