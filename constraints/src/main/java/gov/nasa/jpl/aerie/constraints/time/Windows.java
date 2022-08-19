@@ -1,267 +1,334 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.Iterator;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Spliterator;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
+public final class Windows extends IntervalMap<Boolean> {
 
-public final class Windows implements Iterable<Window> {
-  private final IntervalSet<WindowAlgebra, Window> windows = new IntervalSet<>(new WindowAlgebra());
+  public Windows() {
+    super();
+  }
 
-  public Windows() {}
+  public Windows(IntervalAlgebra a) { //only for testing.
+    super(a);
+  }
 
   public Windows(final Windows other) {
-    this.windows.addAll(other.windows);
+    super(other);
   }
 
-  public Windows(final List<Window> windows) {
-    for (final var window : windows) this.add(window);
+  @SafeVarargs
+  public Windows(final Pair<Interval, Boolean>... windows) {
+    super(windows);
   }
 
-  public Windows(final Window... windows) {
-    for (final var window : windows) this.add(window);
+  public Windows(final Interval interval, final boolean value) {
+    super(interval, value);
   }
 
-  public Spans intoSpans() {
-    return new Spans(this);
+  private Windows(final IntervalMap<Boolean> from) {
+    super(from.alg, from.segments);
   }
 
-  public void add(final Window window) {
-    this.windows.add(window);
-  }
-
-  public void addAll(final Windows other) {
-    this.windows.addAll(other.windows);
-  }
-
-  public void addPoint(final long quantity, final Duration unit) {
-    this.add(Window.at(quantity, unit));
-  }
-
-  public static Windows union(final Windows left, final Windows right) {
-    final var result = new Windows(left);
-    result.addAll(right);
+  public static Windows definedEverywhere(final Interval interval, final boolean value) {
+    final var result = new Windows(Interval.FOREVER, !value);
+    result.set(interval, value);
     return result;
   }
 
-
-  public void subtract(final Window window) {
-    this.windows.subtract(window);
-  }
-
-  public void subtractAll(final Windows other) {
-    this.windows.subtractAll(other.windows);
-  }
-
-  public void subtract(final long start, final long end, final Duration unit) {
-    this.subtract(Window.between(start, end, unit));
-  }
-
-  public void subtractPoint(final long quantity, final Duration unit) {
-    this.subtract(Window.at(quantity, unit));
-  }
-
-  public static Windows minus(final Windows left, final Windows right) {
-    final var result = new Windows(left);
-    result.subtractAll(right);
+  public static Windows definedEverywhere(final List<Interval> intervals, final boolean value) {
+    final var result = new Windows(Interval.FOREVER, !value);
+    result.setAll(intervals, value);
     return result;
   }
 
-  public void intersectWith(final Window window) {
-    this.windows.intersectWith(window);
+  public void setAllTrue(final List<Interval> intervals) {
+    for (final var interval: intervals) {
+      this.set(interval, true);
+    }
   }
 
-  public void intersectWith(final Windows other) {
-    this.windows.intersectWithAll(other.windows);
+  public void setTrue(final Interval... intervals) {
+    this.setAllTrue(Arrays.stream(intervals).toList());
   }
 
-  public void intersectWith(final long start, final long end, final Duration unit) {
-    this.intersectWith(Window.between(start, end, unit));
+  public Windows and(final Windows other) {
+    return new Windows(IntervalMap.map2(
+        this, other,
+        (l, r) -> {
+          if (l.isPresent() && r.isPresent()) {
+            return Optional.of(l.get() && r.get());
+          } else if (l.isPresent()) {
+            return l.get() ? Optional.empty() : Optional.of(Boolean.FALSE);
+          } else if (r.isPresent()) {
+            return r.get() ? Optional.empty() : Optional.of(Boolean.FALSE);
+          } else {
+            return Optional.empty();
+          }
+        }
+    ));
   }
 
-  public Optional<Duration> minTimePoint(){
-    if(!isEmpty()) {
-      return Optional.of(this.windows.ascendingOrder().iterator().next().start);
+  public Windows and(final Interval other) {
+    return this.and(definedEverywhere(other, true));
+  }
+
+  public Windows or(final Windows other) {
+    return new Windows(IntervalMap.map2(
+        this, other,
+        (l, r) -> {
+          if (l.isPresent() && r.isPresent()) {
+            return Optional.of(l.get() || r.get());
+          } else if (l.isPresent()) {
+            return l.get() ? Optional.of(true) : Optional.empty();
+          } else if (r.isPresent()) {
+            return r.get() ? Optional.of(true) : Optional.empty();
+          } else {
+            return Optional.empty();
+          }
+        }
+    ));
+  }
+
+  public Windows or(final Interval other) {
+    return this.or(definedEverywhere(other, true));
+  }
+
+  public Windows add(final Windows other) {
+    return new Windows(IntervalMap.map2(
+        this, other,
+        (l, r) -> {
+          if (l.isPresent() && r.isPresent()) {
+            return Optional.of(l.get() || r.get());
+          } else if (l.isPresent()) {
+            return l;
+          } else return r;
+        }
+    ));
+  }
+
+  public Windows not() {
+    //should not be a subtraction because then if it was null originally, then subtracting original from forever
+    //  yields true where once was null, which isn't good. we want a simple inversion of true and false here, without
+    //  filling nulls.
+    return new Windows(this.map($ -> $.map(b -> !b)));
+  }
+
+  public Optional<Pair<Duration, Interval.Inclusivity>> minValidTimePoint(){
+    if(!this.isEmpty()) {
+      final var window = this.segments.get(0).getKey();
+      return Optional.of(Pair.of(window.start, window.startInclusivity));
     } else{
       return Optional.empty();
     }
   }
-  public Optional<Duration> maxTimePoint(){
+
+  public Optional<Pair<Duration, Interval.Inclusivity>> maxValidTimePoint(){
     if(!isEmpty()) {
-      return Optional.of(this.windows.descendingOrder().iterator().next().end);
+      final var window = this.segments.get(this.segments.size() - 1).getKey();
+      return Optional.of(Pair.of(window.end, window.endInclusivity));
     } else{
       return Optional.empty();
     }
   }
 
-  public Windows complement(){
-    var ret = Windows.forever();
-    ret.subtractAll(this);
-    return ret;
-  }
-
-  public Windows filterByDuration(Duration minDur, Duration maxDur){
-    final var ret = new Windows();
-    StreamSupport
-        .stream(windows.ascendingOrder().spliterator(), false)
-        .filter(win -> win.duration().noShorterThan(minDur) && win.duration().noLongerThan(maxDur))
-        .forEach(ret::add);
-    return ret;
-  }
-
-  public Windows removeFirst(){
-    var actualList = StreamSupport
-        .stream(windows.ascendingOrder().spliterator(), false)
-        .collect(Collectors.toList());
-    if(!actualList.isEmpty())
-      actualList.remove(0);
-    return new Windows(actualList);
-  }
-
-  public Windows removeLast(){
-    var actualList = StreamSupport
-        .stream(windows.ascendingOrder().spliterator(), false)
-        .collect(Collectors.toList());
-    if(!actualList.isEmpty())
-      actualList.remove(actualList.size()-1);
-    return new Windows(actualList);
-  }
-
-  public Windows shiftBy(Duration fromStart, Duration fromEnd){
-    Windows ret = new Windows();
-    StreamSupport.stream(windows.ascendingOrder().spliterator(), false)
-        .forEach((x)-> ret.add(Window.between(x.start.plus(fromStart), x.startInclusivity, x.end.plus(fromEnd), x.endInclusivity)));
-    return ret;
-  }
-
-  public Windows removeFirstAndLast(){
-    List<Window> actualList = StreamSupport
-        .stream(windows.ascendingOrder().spliterator(), false)
-        .collect(Collectors.toList());
-    if(actualList.size()>0)
-      actualList.remove(0);
-    if(actualList.size()>0)
-      actualList.remove(actualList.size()-1);
-    return new Windows(actualList);
-  }
-
-  public Windows subsetContained(Window gate){
-    Windows ret = new Windows();
-    for(var win : windows.ascendingOrder()){
-      if(gate.contains(win)){
-        ret.add(win);
+  public Optional<Pair<Duration, Interval.Inclusivity>> minTrueTimePoint(){
+    for (final var segment: this) {
+      if (segment.getValue()) {
+        final var window = segment.getKey();
+        return Optional.of(Pair.of(window.start, window.startInclusivity));
       }
     }
-    return ret;
+    return Optional.empty();
   }
 
-  public int size(){
-    return windows.size();
+  public Optional<Pair<Duration, Interval.Inclusivity>> maxTrueTimePoint(){
+    for (int i = this.segments.size() - 1; i >= 0; i--) {
+      final var segment = this.segments.get(i);
+      if (segment.getValue()) {
+        final var window = segment.getKey();
+        return Optional.of(Pair.of(window.end, window.endInclusivity));
+      }
+    }
+    return Optional.empty();
   }
 
-  public static Windows forever(){
-    return new Windows(Window.FOREVER);
-  }
-
-
-  public static Windows subtract(Window x, Window y){
-    var tmp = new Windows(y);
-    tmp.subtract(x);
-    return tmp;
-  }
-
-  public static Windows intersection(final Windows left, final Windows right) {
-    final var result = new Windows(left);
-    result.intersectWith(right);
+  public Windows trueSubsetContainedIn(final Interval interval) {
+    final var result = new Windows(interval, false);
+    for (final var segment: this) {
+      if (segment.getValue() && interval.contains(segment.getKey())) {
+        result.setTrue(segment.getKey());
+      }
+    }
     return result;
   }
 
-
-  public boolean isEmpty() {
-    return this.windows.isEmpty();
-  }
-
-
-  public boolean includes(final Window probe) {
-    return this.windows.includes(probe);
+  public Windows removeTrueSegment(final int indexToRemove) {
+    final var result = new Windows(this);
+    if (indexToRemove >= 0) {
+      int index = 0;
+      for (final var segment : result) {
+        if (segment.getValue()) {
+          if (index == indexToRemove) {
+            this.setInternal(segment.getKey(), false, Math.max(index - 1,  0));
+            break;
+          } else {
+            index += 1;
+          }
+        }
+      }
+    } else {
+      int index = -1;
+      for (int i = this.segments.size() - 1; i >= 0; i--) {
+        final var segment = this.segments.get(i);
+        if (segment.getValue()) {
+          if (index == indexToRemove) {
+            this.setInternal(segment.getKey(), false, Math.max(i - 1, 0));
+            break;
+          } else {
+            index -= 1;
+          }
+        }
+      }
+    }
+    return result;
   }
 
   public boolean includes(final Windows other) {
-    return this.windows.includesAll(other.windows);
+    //if you have:
+    //  other:    ---TTTT---TTT------
+    //  original: ---------TTTFF-----
+    //  then you fail twice, once because first interval not contained at all, second because overlap with false
+    //  we can do this with a map2 with a truthtable, so wherever inclusion holds we say true, if its wrong we say false
+    //  and then reduce and if there's any falses you failed overall.
+
+    // other |  orig   | output
+    //  T    |    T     |   T
+    //  T    |    F     |   F
+    //  T    |    N     |   F
+    //  F    |    T     |   T     //probably won't pass false as a value anyways, but just in case we should handle
+    //  F    |    F     |   T     //  in case user passes a NewWindows from another method that has falses...
+    //  F    |    N     |   N     //since its false, not a problem if undefined. we handle actual null checks in isNotNull
+    //  N    |    T     |   N
+    //  N    |    F     |   N
+    //  N    |    N     |   N
+
+    final var inclusion = IntervalMap.map2(
+        this,
+        other,
+        ($original, $other) -> $other.map($ -> !$ || ($original.isPresent() && $original.get()))
+    );
+
+    //anywhere where the above has false means inclusion wasn't perfect, so squash and get a truth value:
+    return StreamSupport.stream(inclusion.spliterator(), false).allMatch(Pair::getValue);
   }
 
-  public boolean includes(final long start, final long end, final Duration unit) {
-    return this.includes(Window.between(start, end, unit));
+  public boolean includes(final Interval probe) {
+    return this.includes(new Windows(probe, true));
   }
 
   public boolean includesPoint(final long quantity, final Duration unit) {
-    return this.includes(Window.at(quantity, unit));
+    return this.includes(new Windows(Interval.at(quantity, unit), true));
   }
 
+  public Windows filterByDuration(Duration minDur, Duration maxDur){
+    if (minDur.longerThan(maxDur)) {
+      throw new IllegalArgumentException("MaxDur %s must be greater than MinDur %s".formatted(minDur.toString(), maxDur.toString()));
+    }
 
-  @Override
-  public Iterator<Window> iterator() {
-    return this.windows.ascendingOrder().iterator();
+    //if you have:
+    //  input:  ---TTTTFFFFTTTTFFFFTT---FFFTTTFF--TTT---, 3, 3
+    //  output: ---FFFFFFFFFFFFFFFFTT---FFF
+    //  then you want to shorten only the trues, and replace them with F, don't mess with nulls
+    //  so if false interval encountered, keep the same. if true interval encountered, and it is not in filter, replace
+    //     with false
+    //  if true interval enountered, and true, keep the same
+    //  if null, keep null
+
+    // orig | inFilter | output
+    //  T   |    T     |   T
+    //  T   |    F     |   F
+    //  F   |    T     |   F
+    //  F   |    F     |   F
+    //  N   |    T     |   N
+    //  N   |    F     |   N
+
+
+    /*final var ret = new NewWindows();
+    StreamSupport
+        .stream(windows.ascendingOrder().spliterator(), false)
+        .filter(win -> win.getKey().duration().noShorterThan(minDur) && win.getKey().duration().noLongerThan(maxDur))
+        .forEach(interval -> ret.add(interval.getKey(), interval.getValue()));
+    return ret;*/
+
+    return new Windows(this.contextMap((value, interval) -> {
+      if (value.isPresent() && value.get()) {
+        final var duration = interval.duration();
+        if (duration.shorterThan(minDur) || duration.longerThan(maxDur)) {
+          return Optional.of(false);
+        } else {
+          return Optional.of(true);
+        }
+      }
+      return value;
+    }));
   }
 
-  @Override
-  public boolean equals(final Object obj) {
-    if (!(obj instanceof Windows)) return false;
-    final var other = (Windows) obj;
-
-    return Objects.equals(this.windows, other.windows);
+  public Windows shiftBy(Duration fromStart, Duration fromEnd){
+    final Windows result = new Windows(this.map($ -> $.map(b -> false)));
+    for (final var segment: segments) {
+      if (segment.getValue()) {
+        final var interval = segment.getKey();
+        if (interval.end.plus(fromEnd).noShorterThan(interval.start.plus(fromStart))) {
+          result.set(Interval.between(
+              interval.start.plus(fromStart),
+              interval.startInclusivity,
+              interval.end.plus(fromEnd),
+              interval.endInclusivity), true);
+        }
+      }
+    }
+    return result;
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.windows);
+  public TrueWindowsIterable iterateTrue() {
+    return new TrueWindowsIterable(this);
   }
 
-  @Override
-  public String toString() {
-    return this.windows.toString();
+  public Spliterator<Interval> spliterateTrue() {
+    return StreamSupport.stream(this.spliterator(), false).flatMap(pair -> {
+      if (pair.getValue()) {
+        return Stream.of(pair.getKey());
+      } else {
+        return Stream.of();
+      }
+    }).spliterator();
   }
 
-  private static class WindowAlgebra implements IntervalAlgebra<WindowAlgebra, Window> {
-    @Override
-    public final boolean isEmpty(Window x) {
-      return x.isEmpty();
+  public boolean isAllFalse() {
+    for (final var segment: segments) {
+      if (segment.getValue()) {
+        return false;
+      }
     }
+    return true;
+  }
 
-    @Override
-    public final Window unify(final Window x, final Window y) {
-      return Window.unify(x, y);
-    }
-
-    @Override
-    public final Window intersect(final Window x, final Window y) {
-      return Window.intersect(x, y);
-    }
-
-    @Override
-    public final Window lowerBoundsOf(final Window x) {
-      if (x.isEmpty()) return Window.FOREVER;
-      return Window.between(
-          Duration.MIN_VALUE,
-          Inclusive, x.start,
-          x.startInclusivity.opposite()
-      );
-    }
-
-    @Override
-    public final Window upperBoundsOf(final Window x) {
-      if (x.isEmpty()) return Window.FOREVER;
-      return Window.between(
-          x.end,
-          x.endInclusivity.opposite(), Duration.MAX_VALUE,
-          Inclusive
-      );
-    }
+  public Spans intoSpans() {
+    final var trueIntervals = StreamSupport.stream(this.spliterator(), false).flatMap($ -> {
+      if ($.getValue()) {
+        return Stream.of($.getKey());
+      } else {
+        return Stream.of();
+      }
+    }).toList();
+    return new Spans(trueIntervals);
   }
 }
