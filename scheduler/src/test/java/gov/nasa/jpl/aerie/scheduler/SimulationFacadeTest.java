@@ -31,6 +31,7 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,7 +59,7 @@ public class SimulationFacadeTest {
 
   //hard-coded range of scheduling/simulation operations
   private static final PlanningHorizon horizon = new PlanningHorizon(t0h, tEndh);
-  private static final Window entireHorizon = horizon.getHor();
+  private static final Interval entireHorizon = horizon.getHor();
 
   //concrete named time points used to setup tests and validate expectations
   private static final Duration t0 = horizon.toDur(t0h);

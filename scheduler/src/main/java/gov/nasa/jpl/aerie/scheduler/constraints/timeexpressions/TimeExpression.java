@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
@@ -23,7 +23,7 @@ public abstract class TimeExpression {
    * @param interval the range on which the relative time expression must be computed
    * @return a range of valid times satisfying the expression
    */
-  public abstract Window computeTime(final SimulationResults simulationResults, final Plan plan, final Window interval);
+  public abstract Interval computeTime(final SimulationResults simulationResults, final Plan plan, final Interval interval);
 
 
   protected final List<Pair<TimeUtility.Operator, Duration>> operations = new ArrayList<>();

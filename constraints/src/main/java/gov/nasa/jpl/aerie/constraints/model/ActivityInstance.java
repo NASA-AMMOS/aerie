@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
@@ -10,18 +10,18 @@ public final class ActivityInstance {
   public final long id;
   public final String type;
   public final Map<String, SerializedValue> parameters;
-  public final Window window;
+  public final Interval interval;
 
   public ActivityInstance(
       final long id,
       final String type,
       final Map<String, SerializedValue> parameters,
-      final Window window
+      final Interval interval
   ) {
     this.type = type;
     this.id = id;
     this.parameters = parameters;
-    this.window = window;
+    this.interval = interval;
   }
 
   @Override
@@ -32,11 +32,11 @@ public final class ActivityInstance {
     return Objects.equals(this.id, o.id) &&
            Objects.equals(this.type, o.type) &&
            Objects.equals(this.parameters, o.parameters) &&
-           Objects.equals(this.window, o.window);
+           Objects.equals(this.interval, o.interval);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.id, this.type, this.parameters, this.window);
+    return Objects.hash(this.id, this.type, this.parameters, this.interval);
   }
 }

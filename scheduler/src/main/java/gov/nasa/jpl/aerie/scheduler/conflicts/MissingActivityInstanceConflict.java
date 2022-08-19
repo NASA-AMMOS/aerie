@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.conflicts;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityExistentialGoal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;

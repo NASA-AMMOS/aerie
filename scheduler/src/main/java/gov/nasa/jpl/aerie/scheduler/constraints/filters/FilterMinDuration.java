@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.filters;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -24,7 +24,7 @@ public class FilterMinDuration extends FilterFunctional {
   }
 
   @Override
-  public boolean shouldKeep(final SimulationResults simulationResults, final Plan plan, final Window range) {
+  public boolean shouldKeep(final SimulationResults simulationResults, final Plan plan, final Interval range) {
     return range.duration().noShorterThan(minDuration);
   }
 

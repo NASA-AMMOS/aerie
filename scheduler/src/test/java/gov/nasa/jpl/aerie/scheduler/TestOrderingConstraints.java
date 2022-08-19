@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -72,7 +72,7 @@ public class TestOrderingConstraints {
 
     plan.add(act1);
     CardinalityConstraint cc =
-        new CardinalityConstraint.Builder().atMost(0).type(type1).inInterval(Window.between(
+        new CardinalityConstraint.Builder().atMost(0).type(type1).inInterval(Interval.between(
             t0,
             t10)).build();
 

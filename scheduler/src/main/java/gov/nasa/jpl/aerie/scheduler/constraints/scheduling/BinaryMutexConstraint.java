@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.scheduling;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
@@ -52,7 +52,7 @@ public class BinaryMutexConstraint extends GlobalConstraint {
         .ofType(actToBeSearched).build();
 
     final var acts = new java.util.LinkedList<>(plan.find(actSearch, simulationResults));
-    List<Window> rangesActs = acts.stream().map(a -> Window.betweenClosedOpen(a.getStartTime(), a.getEndTime())).collect(
+    List<Interval> rangesActs = acts.stream().map(a -> Interval.betweenClosedOpen(a.getStartTime(), a.getEndTime())).collect(
         Collectors.toList());
     var twActs = new Windows(rangesActs);
 

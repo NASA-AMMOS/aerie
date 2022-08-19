@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
@@ -24,7 +24,7 @@ public class StateQueryParam implements VariableArgumentComputer {
     this.timeExpr = timeExpression;
   }
 
-  public SerializedValue getValue(SimulationResults simulationResults, Plan plan, Window win) {
+  public SerializedValue getValue(SimulationResults simulationResults, Plan plan, Interval win) {
     var time = timeExpr.computeTime(simulationResults, plan, win);
     if (!time.isSingleton()) {
       throw new RuntimeException(" Time expression in StateQueryParam case must be singleton");
@@ -34,11 +34,11 @@ public class StateQueryParam implements VariableArgumentComputer {
     //TODO: unify necessary generic profile operations in Profile interface to avoid special casing
     if (simulationResults.realProfiles.containsKey(this.resourceName)) {
       //TODO: improve the profile data structure to allow fast time-keyed query
-      //TODO: improve Window to allow querying containment in interval directly
+      //TODO: improve Interval to allow querying containment in interval directly
       //for now we look for the last matching profile segment, if any (last to get latest if any overlaps)
       final var profile = simulationResults.realProfiles.get(this.resourceName);
       final Predicate<LinearProfilePiece> containsQueryTimeP = (piece)
-          -> !Window.intersect(piece.window, Window.at(queryT)).isEmpty();
+          -> !Interval.intersect(piece.interval, Interval.at(queryT)).isEmpty();
       final var piece = Lists.reverse(profile.profilePieces)
                              .stream()
                              .filter(containsQueryTimeP)
@@ -49,11 +49,11 @@ public class StateQueryParam implements VariableArgumentComputer {
       return SerializedValue.of(piece.valueAt(queryT));
     } else if (simulationResults.discreteProfiles.containsKey(this.resourceName)) {
       //TODO: improve the profile data structure to allow fast time-keyed query
-      //TODO: improve Window to allow querying containment in interval directly
+      //TODO: improve Interval to allow querying containment in interval directly
       //for now we look for the last matching profile segment, if any (last to get latest if any overlaps)
       final var profile = simulationResults.discreteProfiles.get(this.resourceName);
       final Predicate<DiscreteProfilePiece> containsQueryTimeP = (piece)
-          -> !Window.intersect(piece.window, Window.at(queryT)).isEmpty();
+          -> !Interval.intersect(piece.interval, Interval.at(queryT)).isEmpty();
       final var matchPiece = Lists.reverse(profile.profilePieces).stream()
                                   .filter(containsQueryTimeP).findFirst();
       return matchPiece

@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.constraints.tree;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 
 import java.util.Map;
 import java.util.Objects;
@@ -17,7 +17,7 @@ public final class ProfileExpression<P extends Profile<P>> implements Expression
   }
 
   @Override
-  public Profile<P> evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
+  public Profile<P> evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
     return this.expression.evaluate(results, bounds, environment);
   }
 

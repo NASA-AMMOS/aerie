@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
@@ -48,7 +48,7 @@ public class TestUtility {
   /**
    * Returns true if there is at least one activity of type activityType in the time range tw in the plan
    */
-  public static boolean atLeastOneActivityOfTypeInRange(Plan plan, Window interval, ActivityType activityType) {
+  public static boolean atLeastOneActivityOfTypeInRange(Plan plan, Interval interval, ActivityType activityType) {
 
     List<ActivityInstance> acts = plan.getActivitiesByTime();
     for (ActivityInstance act : acts) {

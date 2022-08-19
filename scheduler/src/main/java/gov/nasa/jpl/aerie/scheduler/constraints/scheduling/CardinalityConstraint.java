@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.scheduling;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
@@ -16,7 +16,7 @@ import java.util.Set;
 public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
 
   private int max;
-  private Window interval;
+  private Interval interval;
   private ActivityType type;
   private ActivityInstance instance;
 
@@ -29,7 +29,7 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
 
     private int max = -1;
     private ActivityType type;
-    private Window interval;
+    private Interval interval;
     private ActivityInstance instance;
 
     public Builder type(ActivityType type) {
@@ -43,7 +43,7 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
     }
 
 
-    public Builder inInterval(Window interval) {
+    public Builder inInterval(Interval interval) {
       this.interval = interval;
       return getThis();
     }

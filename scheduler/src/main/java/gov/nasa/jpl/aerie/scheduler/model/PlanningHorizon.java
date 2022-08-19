@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.model;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 
@@ -12,15 +12,15 @@ public final class PlanningHorizon{
   private final Instant start;
   private final Instant end;
 
-  private final Window aerieHorizon;
+  private final Interval aerieHorizon;
 
   public PlanningHorizon(@NotNull Instant start, @NotNull Instant end){
     this.start = start;
     this.end = end;
-    aerieHorizon = Window.betweenClosedOpen(Duration.ZERO , Duration.of(ChronoUnit.MICROS.between(start, end), Duration.MICROSECONDS));
+    aerieHorizon = Interval.betweenClosedOpen(Duration.ZERO , Duration.of(ChronoUnit.MICROS.between(start, end), Duration.MICROSECONDS));
   }
 
-  public Window getHor(){
+  public Interval getHor(){
     return aerieHorizon;
   }
 

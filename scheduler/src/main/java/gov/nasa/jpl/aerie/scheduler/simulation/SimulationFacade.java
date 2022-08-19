@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
@@ -174,7 +174,7 @@ public class SimulationFacade {
                                                        .map(e -> convertToConstraintModelActivityInstance(e.getKey().id(), e.getValue(), driverResults.startTime))
                                                        .collect(Collectors.toList());
     return new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
-        Window.between(Duration.ZERO, planDuration),
+        Interval.between(Duration.ZERO, planDuration),
         activities,
         Maps.transformValues(driverResults.realProfiles, this::convertToConstraintModelLinearProfile),
         Maps.transformValues(driverResults.discreteProfiles, this::convertToConstraintModelDiscreteProfile)
@@ -194,8 +194,8 @@ public class SimulationFacade {
     final var startT = Duration.of(startTime.until(driverActivity.start(), ChronoUnit.MICROS), MICROSECONDS);
     final var endT = startT.plus(driverActivity.duration());
     final var activityWindow = startT.isEqualTo(endT)
-        ? Window.between(startT, endT)
-        : Window.betweenClosedOpen(startT, endT);
+        ? Interval.between(startT, endT)
+        : Interval.betweenClosedOpen(startT, endT);
     return new gov.nasa.jpl.aerie.constraints.model.ActivityInstance(
         id, driverActivity.type(), driverActivity.arguments(),
         activityWindow);
@@ -215,7 +215,7 @@ public class SimulationFacade {
     for (final var piece : driverProfile.getRight()) {
       final var extent = piece.getLeft();
       final var value = piece.getRight();
-      pieces.add(new LinearProfilePiece(Window.betweenClosedOpen(elapsed, elapsed.plus(extent)), value.initial, value.rate));
+      pieces.add(new LinearProfilePiece(Interval.betweenClosedOpen(elapsed, elapsed.plus(extent)), value.initial, value.rate));
       elapsed = elapsed.plus(extent);
     }
     return new LinearProfile(pieces);
@@ -235,7 +235,7 @@ public class SimulationFacade {
     for (final var piece : driverProfile.getRight()) {
       final var extent = piece.getLeft();
       final var value = piece.getRight();
-      pieces.add(new DiscreteProfilePiece(Window.betweenClosedOpen(elapsed, elapsed.plus(extent)), value));
+      pieces.add(new DiscreteProfilePiece(Interval.betweenClosedOpen(elapsed, elapsed.plus(extent)), value));
       elapsed = elapsed.plus(extent);
     }
     return new DiscreteProfile(pieces);
