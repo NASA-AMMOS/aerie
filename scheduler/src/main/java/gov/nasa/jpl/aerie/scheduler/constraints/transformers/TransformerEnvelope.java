@@ -21,23 +21,23 @@ public class TransformerEnvelope implements TimeWindowsTransformer {
   @Override
   public Windows transformWindows(final Plan plan, final Windows windowsToTransform, final SimulationResults simulationResults) {
 
-    Windows ret = new Windows();
+    Windows ret = new Windows(Interval.FOREVER, false);
     if(!windowsToTransform.isEmpty()) {
-      Duration min = windowsToTransform.maxTimePoint().get(), max = windowsToTransform.minTimePoint().get();
+      Duration min = windowsToTransform.maxTrueTimePoint().get().getKey(), max = windowsToTransform.minTrueTimePoint().get().getKey();
       boolean atLeastOne = false;
       for (var insideExpr : insideExprs) {
 
         var rangeExpr = insideExpr.computeRange(simulationResults, plan, windowsToTransform);
-        if (!rangeExpr.isEmpty()) {
+        if (!rangeExpr.isAllFalse()) {
           atLeastOne = true;
-          min = Duration.min(min, rangeExpr.minTimePoint().get());
-          max = Duration.max(max, rangeExpr.maxTimePoint().get());
+          min = Duration.min(min, rangeExpr.minTrueTimePoint().get().getKey());
+          max = Duration.max(max, rangeExpr.maxTrueTimePoint().get().getKey());
         }
       }
 
       if (atLeastOne) {
-        //register new transformed window
-        ret.add(Window.between(min, max));
+        //register new transformed interval
+        ret.setTrue(Interval.between(min, max));
       }
     }
 

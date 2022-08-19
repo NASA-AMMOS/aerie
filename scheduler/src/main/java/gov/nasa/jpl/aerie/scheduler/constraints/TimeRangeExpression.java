@@ -36,62 +36,62 @@ public class TimeRangeExpression {
     if(inter.isEmpty()) return inter;
 
     if (constantWin != null && !inter.isEmpty()) {
-      inter.intersectWith(constantWin);
+      inter = inter.and(constantWin);
       if(inter.isEmpty()) return inter;
     }
 
     if (actTemplate != null) {
-      Windows actTw = new Windows();
-      var minTimepoint = inter.minTimePoint();
-      var maxTimepoint = inter.maxTimePoint();
+      Windows actTw = new Windows(Interval.FOREVER, false);
+      var minTimepoint = inter.minTrueTimePoint();
+      var maxTimepoint = inter.maxTrueTimePoint();
       if(minTimepoint.isPresent() && maxTimepoint.isPresent()) {
         final var anchorActSearch = new ActivityExpression.Builder()
             .basedOn(actTemplate)
-            .startsIn(inter).build(); //check if it exists IN the windows, not just the upper and lower bounds of the window
+            .startsIn(inter).build(); //check if it exists IN the windows, not just the upper and lower bounds of the interval
         final var anchorActs = plan.find(anchorActSearch, simulationResults);
         for (var anchorAct : anchorActs) {
-          var endInclusivity = Window.Inclusivity.Exclusive;
+          var endInclusivity = Interval.Inclusivity.Exclusive;
           if(anchorAct.getDuration().isZero()){
-            endInclusivity = Window.Inclusivity.Inclusive;
+            endInclusivity = Interval.Inclusivity.Inclusive;
           }
-          actTw.add(Window.between(anchorAct.getStartTime(), Window.Inclusivity.Inclusive, anchorAct.getEndTime(), endInclusivity));
+          actTw.setTrue(Interval.between(anchorAct.getStartTime(), Interval.Inclusivity.Inclusive, anchorAct.getEndTime(), endInclusivity));
         }
       }
-      inter.intersectWith(actTw);
-      if(inter.isEmpty()) return inter;
+      inter = inter.and(actTw);
+      if(inter.isAllFalse()) return inter;
     }
 
     for (var otherExpr : timeRangeExpressions) {
       Windows windowsState = otherExpr.computeRange(simulationResults, plan, domain);
-      inter.intersectWith(windowsState);
+      inter = inter.and(windowsState);
       if(inter.isEmpty()) return inter;
     }
 
     for (var expr : stateExpr) {
-      final var domainOfInter = Window.between(inter.minTimePoint().get(), inter.maxTimePoint().get());
+      final var domainOfInter = Interval.between(inter.minTrueTimePoint().get().getKey(), inter.maxTrueTimePoint().get().getKey());
       Windows windowsState = expr.evaluate(simulationResults, domainOfInter, Map.of());
-      inter.intersectWith(windowsState);
+      inter = inter.and(windowsState);
       if(inter.isEmpty()) return inter;
     }
 
     for (var constState : constantsStates) {
-      final var domainOfInter = Window.between(inter.minTimePoint().get(), inter.maxTimePoint().get());
+      final var domainOfInter = Interval.between(inter.minTrueTimePoint().get().getKey(), inter.maxTrueTimePoint().get().getKey());
       final var changePoints = simulationResults.discreteProfiles.get(constState).changePoints(domainOfInter);
-      final var timeline = new Windows();
-      final var container = new ArrayList<Window>();
-      changePoints.iterator().forEachRemaining(container::add);
+      final var timeline = new Windows(Interval.FOREVER, false);
+      final var container = new ArrayList<Interval>();
+      changePoints.iterateTrue().iterator().forEachRemaining(container::add);
       container.stream().reduce((a, b) -> {
-        timeline.add(Window.window(a.start, Window.Inclusivity.Exclusive, b.start, Window.Inclusivity.Exclusive));
+        timeline.setTrue(Interval.interval(a.start, Interval.Inclusivity.Exclusive, b.start, Interval.Inclusivity.Exclusive));
         return b;
       });
-      inter.intersectWith(timeline);
+      inter = inter.and(timeline);
       if(inter.isEmpty()) return inter;
     }
 
-    for (var filterOrtransform : filtersAndTransformers) {
-      if (filterOrtransform instanceof TimeWindowsFilter timeWindowsFilter) {
+    for (var filterOrTransform : filtersAndTransformers) {
+      if (filterOrTransform instanceof TimeWindowsFilter timeWindowsFilter) {
         inter = timeWindowsFilter.filter(simulationResults, plan, inter);
-      } else if (filterOrtransform instanceof TimeWindowsTransformer timeWindowsTransformer) {
+      } else if (filterOrTransform instanceof TimeWindowsTransformer timeWindowsTransformer) {
         inter = timeWindowsTransformer.transformWindows(plan, inter, simulationResults);
       }
       if(inter.isEmpty()) return inter;
@@ -140,7 +140,7 @@ public class TimeRangeExpression {
       return getThis();
     }
 
-    public Builder thenFilter(Function<Window, Boolean> functionalFilter) {
+    public Builder thenFilter(Function<Interval, Boolean> functionalFilter) {
       filtersAndTransformers.add(Filters.functionalFilter(functionalFilter));
       return getThis();
     }
@@ -215,7 +215,7 @@ public class TimeRangeExpression {
       if (constantWin.size() > 0) {
         Windows cstWind = constantWin.get(0);
         for (var cstWin : constantWin) {
-          cstWind.intersectWith(cstWin);
+          cstWind = cstWind.and(cstWin);
         }
         tre.constantWin = cstWind;
       }

@@ -466,8 +466,7 @@ public class PrioritySolver implements Solver {
           //no global constraint for the same reason above mentioned
           //only the target goal state constraints to consider
           for(var act : actToChooseFrom){
-            var actWindow = new Windows();
-            actWindow.add(Window.between(act.getStartTime(), act.getEndTime()));
+            var actWindow = Windows.definedEverywhere(Interval.between(act.getStartTime(), act.getEndTime()), true);
             var stateConstraints = goal.getResourceConstraints();
             var narrowed = actWindow;
             if(stateConstraints!= null) {
@@ -593,7 +592,7 @@ public class PrioritySolver implements Solver {
     possibleWindows = narrowGlobalConstraints(plan, missing, possibleWindows, this.problem.getGlobalConstraints());
 
     //narrow to windows where activity duration will fit
-    final var startWindows = possibleWindows;
+    var startWindows = possibleWindows;
     //for now handling just start-time windows, so no need to prune duration
     //    //REVIEW: how to handle dynamic durations? for now pessimistic!
     //    final var durationMax = goal.getActivityDurationRange().getMaximum();
@@ -602,7 +601,7 @@ public class PrioritySolver implements Solver {
 
     //create new act if there is any valid time (otherwise conflict is
     //unsatisfiable in current plan)
-    if (!startWindows.isEmpty()) {
+    if (!startWindows.isAllFalse()) {
       //TODO: move this into a polymorphic method? definitely don't want to be
       //demuxing on all the conflict types here
       if (missing instanceof final MissingActivityInstanceConflict missingInstance) {
@@ -614,7 +613,7 @@ public class PrioritySolver implements Solver {
         //select the "best" time among the possibilities, and latest among ties
         //REVIEW: currently not handling preferences / ranked windows
 
-        startWindows.intersectWith(missing.getTemporalContext());
+        startWindows = startWindows.and(missing.getTemporalContext());
         //create the new activity instance (but don't place in schedule)
         //REVIEW: not yet handling multiple activities at a time
         final var act = missingTemplate.getActTemplate().createActivity(
@@ -624,9 +623,7 @@ public class PrioritySolver implements Solver {
             simulationFacade,
             plan,
             this.problem.getPlanningHorizon());
-        if (act.isPresent()) {
-          newActs.add(act.get());
-        }//if(act)
+        act.ifPresent(newActs::add);
       }
 
     }//if(startWindows)
@@ -656,11 +653,11 @@ public class PrioritySolver implements Solver {
     assert constraints != null;
     Windows ret = new Windows(windows);
     //short circuit on already empty windows or no constraints: no work to do!
-    if (windows.isEmpty() || constraints.isEmpty()) {
+    if (windows.isAllFalse() || constraints.isEmpty()) {
       return ret;
     }
 
-    final var totalDomain = Window.between(windows.minTimePoint().get(), windows.maxTimePoint().get());
+    final var totalDomain = Interval.between(windows.minTrueTimePoint().get().getKey(), windows.maxTrueTimePoint().get().getKey());
     //make sure the simulation results cover the domain
     simulationFacade.computeSimulationResultsUntil(totalDomain.end);
 
@@ -669,7 +666,7 @@ public class PrioritySolver implements Solver {
     for (final var constraint : constraints) {
       //REVIEW: loop through windows more efficient than enveloppe(windows) ?
       final var validity = constraint.evaluate(simulationFacade.getLatestConstraintSimulationResults(), totalDomain);
-      ret.intersectWith(validity);
+      ret = ret.and(validity);
       //short-circuit if no possible windows left
       if (ret.isEmpty()) {
         break;
@@ -684,11 +681,11 @@ public class PrioritySolver implements Solver {
       Windows windows,
       Collection<GlobalConstraint> constraints) {
     Windows tmp = new Windows(windows);
-    if(tmp.isEmpty()){
+    if(tmp.isAllFalse()){
       return tmp;
     }
     //make sure the simulation results cover the domain
-    simulationFacade.computeSimulationResultsUntil(tmp.maxTimePoint().get());
+    simulationFacade.computeSimulationResultsUntil(tmp.maxTrueTimePoint().get().getKey());
     for (GlobalConstraint gc : constraints) {
       if (gc instanceof BinaryMutexConstraint) {
         tmp = ((BinaryMutexConstraint) gc).findWindows(plan, tmp, mac, simulationFacade.getLatestConstraintSimulationResults());

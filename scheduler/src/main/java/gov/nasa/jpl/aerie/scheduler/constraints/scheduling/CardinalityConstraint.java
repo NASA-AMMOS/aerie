@@ -115,17 +115,15 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
   @Override
   public ConstraintState isEnforced(Plan plan, Windows windows, SimulationResults simulationResults) {
 
-    int nbAct = 0;
     Windows evalSet = new Windows(windows);
-    evalSet.intersectWith(this.interval);
+    evalSet = evalSet.and(this.interval);
 
     //to avoid recounting twice the same activities in case they span over multiples windows
     Set<ActivityInstance> allActs = new HashSet<>();
 
     Windows violationWindows = new Windows();
 
-    for (var window : evalSet) {
-
+    for (final var window: evalSet.iterateTrue()) {
       var actSearch = new ActivityExpression.Builder()
           .ofType(this.type).startsOrEndsIn(window).build();
       if (instance != null) {
@@ -149,17 +147,15 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
 
   public Collection<ActivityInstance> getAllActs(Plan plan, Windows windows, SimulationResults simulationResults) {
 
-    int nbAct = 0;
     Windows evalSet = new Windows(windows);
-    evalSet.intersectWith(this.interval);
+    evalSet = evalSet.and(this.interval);
 
     //to avoid recounting twice the same activities in case they span over multiples windows
     Set<ActivityInstance> allActs = new HashSet<>();
 
     Windows violationWindows = new Windows();
 
-    for (var window : evalSet) {
-
+    for (final var window: evalSet.iterateTrue()) {
       var actSearch = new ActivityExpression.Builder()
           .ofType(this.type).startsOrEndsIn(window).build();
       if (instance != null) {
@@ -177,11 +173,11 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
   @Override
   public Windows findWindows(Plan plan, Windows windows, Conflict conflict, SimulationResults simulationResults) {
     Windows intersect = new Windows(windows);
-    intersect.intersectWith(this.interval);
-    if (!intersect.isEmpty()) {
+    intersect = intersect.and(this.interval);
+    if (!intersect.isAllFalse()) {
       final var allActs = getAllActs(plan, intersect, simulationResults);
       if (allActs.size() >= max) {
-        windows.subtractAll(intersect);
+        windows = windows.and(intersect.not());
       }
       return windows;
     } else {
