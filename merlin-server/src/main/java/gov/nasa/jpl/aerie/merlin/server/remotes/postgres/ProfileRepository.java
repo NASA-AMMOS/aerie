@@ -23,13 +23,16 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
       final long datasetId,
       final Window simulationWindow
   ) throws SQLException {
-    final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
+    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>>();
     final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
 
     final var profileRecords = getProfileRecords(connection, datasetId);
     for (final var record : profileRecords) {
       switch (record.type().getLeft()) {
-        case "real" -> realProfiles.put(record.name(), getRealProfileSegments(connection, record.datasetId(), record.id(), simulationWindow));
+        case "real" -> realProfiles.put(record.name(),
+                                        Pair.of(
+                                            record.type().getRight(),
+                                            getRealProfileSegments(connection, record.datasetId(), record.id(), simulationWindow)));
         case "discrete" -> discreteProfiles.put(record.name(),
                                                 Pair.of(
                                                     record.type().getRight(),
@@ -109,7 +112,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
             connection,
             datasetId,
             record,
-            realProfiles.get(resource),
+            realProfiles.get(resource).getRight(),
             simulationStart);
         case "discrete" -> postDiscreteProfileSegments(
             connection,

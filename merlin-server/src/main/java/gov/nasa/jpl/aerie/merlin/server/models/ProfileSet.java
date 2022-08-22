@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Map;
 
 public final record ProfileSet(
-    Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
+    Map<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>> realProfiles,
     Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles
 ) {
   public static ProfileSet of(
-      final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
+      final Map<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>> realProfiles,
       final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles
   ) {
     return new ProfileSet(realProfiles, discreteProfiles);

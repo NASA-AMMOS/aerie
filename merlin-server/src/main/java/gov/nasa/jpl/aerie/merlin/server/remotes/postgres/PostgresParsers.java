@@ -37,9 +37,10 @@ public final class PostgresParsers {
   public static final JsonParser<Pair<String, ValueSchema>> realProfileTypeP =
       productP
           .field("type", literalP("real"))
+          .field("schema", valueSchemaP)
           .map(Iso.of(
-              type -> Pair.of("real", null),
-              $ -> Unit.UNIT));
+              untuple((type, schema) -> Pair.of("real", schema)),
+              $ -> tuple(Unit.UNIT, $.getRight())));
 
   static final JsonParser<Pair<String, ValueSchema>> profileTypeP =
       chooseP(

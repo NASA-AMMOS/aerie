@@ -37,7 +37,7 @@ public class IncrementalSimulationTest {
   public void simulationResultsTest(){
     //ensures that simulation results are generated until the end of the last act;
     var simResults = incrementalSimulationDriver.getSimulationResults();
-    assert(simResults.realProfiles.get("/utcClock").get(0).getLeft().isEqualTo(endOfLastAct));
+    assert(simResults.realProfiles.get("/utcClock").getRight().get(0).getLeft().isEqualTo(endOfLastAct));
     /*ensures that when current simulation results cover more than the asked period and that nothing has happened
     between two requests, the same results are returned*/
     var simResults2 = incrementalSimulationDriver.getSimulationResultsUpTo(Duration.of(7,SECONDS));

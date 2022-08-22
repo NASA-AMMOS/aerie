@@ -208,11 +208,11 @@ public class SimulationFacade {
    * @return a real profile suitable for a constraint model SimulationResult, starting from the zero duration
    */
   private LinearProfile convertToConstraintModelLinearProfile(
-      List<Pair<Duration, RealDynamics>> driverProfile)
+      Pair<ValueSchema, List<Pair<Duration, RealDynamics>>> driverProfile)
   {
-    final var pieces = new ArrayList<LinearProfilePiece>(driverProfile.size());
+    final var pieces = new ArrayList<LinearProfilePiece>(driverProfile.getRight().size());
     var elapsed = Duration.ZERO;
-    for (final var piece : driverProfile) {
+    for (final var piece : driverProfile.getRight()) {
       final var extent = piece.getLeft();
       final var value = piece.getRight();
       pieces.add(new LinearProfilePiece(Window.betweenClosedOpen(elapsed, elapsed.plus(extent)), value.initial, value.rate));

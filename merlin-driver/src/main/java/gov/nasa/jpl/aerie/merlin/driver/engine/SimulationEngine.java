@@ -433,7 +433,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     // Extract profiles for every resource.
-    final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
+    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>>();
     final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
 
     for (final var entry : engine.resources.entrySet()) {
@@ -446,12 +446,14 @@ public final class SimulationEngine implements AutoCloseable {
       switch (resource.getType()) {
         case "real" -> realProfiles.put(
             name,
-            serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics));
+            Pair.of(
+                resource.getSchema(),
+                serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics)));
 
         case "discrete" -> discreteProfiles.put(
             name,
             Pair.of(
-                state.resource().getSchema(),
+                resource.getSchema(),
                 serializeProfile(elapsedTime, state, Resource::serialize)));
 
         default ->
