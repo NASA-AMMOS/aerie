@@ -294,11 +294,6 @@ class IntervalMap<V> implements Iterable<Pair<Interval, V>> {
 
         if (!alg.overlaps(this.accInterval, interval) || !Objects.equals(this.accValue, newValue)) { //if no longer an overlap or the values not equal, time to flush
           this.flush();
-          /*if(!alg.meets(this.accInterval, interval)) { //&& !alg.unify(this.accInterval, Interval.at(interval.start)).isSingleton()) { //this handles gaps where left and right are undefined
-            this.accInterval = alg.unify(this.accInterval, Interval.at(interval.start));
-            this.accValue = transform.apply(Optional.empty(), Optional.empty());
-            this.flush();
-          }*/
         }
 
         this.accInterval = alg.unify(this.accInterval, interval); //otherwise, merge the intervals if theres even a little overlap and the values r the same
@@ -310,35 +305,6 @@ class IntervalMap<V> implements Iterable<Pair<Interval, V>> {
     Interval leftInterval = alg.bottom();
     int rightIndex = -1;
     Interval rightInterval = alg.bottom();
-    System.out.println(leftInterval.toString() + " " +  rightInterval.toString());
-
-    /*handle -infinity up to the first interval
-    {
-      Interval firstLeftPrefix;
-      Interval firstRightPrefix;
-      if (left.segments.size() > 0) {
-        //-infinity (or whatever the lowest point is) up to this point
-        firstLeftPrefix = alg.lowerBoundsOf(left.getInterval(0));
-      } else {
-        //-infinity to infinity, because this is empty
-        firstLeftPrefix = alg.upperBoundsOf(alg.bottom());
-      }
-
-      if (right.segments.size() > 0) {
-        //-infinity (or whatever the lowest point is) up to this point
-        firstRightPrefix = alg.lowerBoundsOf(right.getInterval(0));
-      } else {
-        //-infinity to infinity, because this is empty
-        firstRightPrefix = alg.upperBoundsOf(alg.bottom());
-      }
-
-      final var overallPrefix = alg.intersect(firstLeftPrefix, firstRightPrefix);
-      if (!alg.isEmpty(overallPrefix)) { //in the offchance that the first intervals start at Duration.MIN, it's worth checking
-        accumulator.append(overallPrefix, transform.apply(
-            Optional.empty(),
-            Optional.empty()));
-      }
-    }*/
 
     //handle everything between
     while (leftIndex < left.segments.size() || rightIndex < right.segments.size()) {

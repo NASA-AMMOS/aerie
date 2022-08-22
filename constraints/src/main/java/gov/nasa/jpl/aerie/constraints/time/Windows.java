@@ -261,13 +261,6 @@ public final class Windows extends IntervalMap<Boolean> {
     //  N   |    F     |   N
 
 
-    /*final var ret = new NewWindows();
-    StreamSupport
-        .stream(windows.ascendingOrder().spliterator(), false)
-        .filter(win -> win.getKey().duration().noShorterThan(minDur) && win.getKey().duration().noLongerThan(maxDur))
-        .forEach(interval -> ret.add(interval.getKey(), interval.getValue()));
-    return ret;*/
-
     return new Windows(this.contextMap((value, interval) -> {
       if (value.isPresent() && value.get()) {
         final var duration = interval.duration();
