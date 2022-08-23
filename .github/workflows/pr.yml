@@ -1,0 +1,14 @@
+name: "Aerie PR Logic"
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - ready_for_review
+      - labeled
+      - unlabeled
+jobs:
+  pr_logic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: nasa-ammos/aerie-pr-action@main
