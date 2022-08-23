@@ -132,6 +132,13 @@ type Query {
   ): SequenceSeqJson!
 }
 
+type Query {
+  getUserSequenceSeqJson(
+    commandDictionaryID: Int!
+    edslBody: String!
+  ): SequenceSeqJson!
+}
+
 enum MerlinSimulationStatus {
   complete
   failed

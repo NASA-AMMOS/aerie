@@ -1,4 +1,5 @@
 import { gql, GraphQLClient } from 'graphql-request';
+import type { SequenceSeqJson } from '../../src/lib/codegen/CommandEDSLPreface';
 import { convertActivityDirectiveIdToSimulatedActivityId } from './ActivityDirective';
 
 export async function insertSequence(
@@ -28,6 +29,39 @@ export async function insertSequence(
     },
   );
   return { seqId: res.insert_sequence_one.seq_id, simulationDatasetId: res.insert_sequence_one.simulation_dataset_id };
+}
+
+export async function generateSequenceEDSL(
+  graphqlClient: GraphQLClient,
+  commandDictionaryID: number,
+  edslBody: string,
+): Promise<SequenceSeqJson> {
+  const res = await graphqlClient.request<{ getUserSequenceSeqJson: SequenceSeqJson }>(
+    gql`
+      query generateSequence($commandDictionaryID: Int!, $edslBody: String!) {
+        getUserSequenceSeqJson(commandDictionaryID: $commandDictionaryID, edslBody: $edslBody) {
+          id
+          metadata
+          steps {
+            args
+            metadata
+            stem
+            time {
+              tag
+              type
+            }
+            type
+          }
+        }
+      }
+    `,
+    {
+      commandDictionaryID: commandDictionaryID,
+      edslBody: edslBody,
+    },
+  );
+
+  return res.getUserSequenceSeqJson;
 }
 
 export async function removeSequence(

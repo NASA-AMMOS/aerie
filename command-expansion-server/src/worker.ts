@@ -8,7 +8,7 @@ import { UserCodeError, UserCodeRunner } from '@nasa-jpl/aerie-ts-user-code-runn
 
 import getLogger from './utils/logger.js';
 import type { SimulatedActivity } from './lib/batchLoaders/simulatedActivityBatchLoader.js';
-import type { Command } from './lib/codegen/CommandEDSLPreface.js';
+import type { Command, SequenceSeqJson } from './lib/codegen/CommandEDSLPreface.js';
 import type { Mutable } from './lib/codegen/CodegenHelpers';
 import { deserializeWithTemporal } from './utils/temporalSerializers.js';
 
@@ -20,7 +20,7 @@ const temporalPolyfillTypes = fs.readFileSync(
 );
 const tsConfig = JSON.parse(fs.readFileSync(new URL('../tsconfig.json', import.meta.url).pathname, 'utf-8'));
 const { options } = ts.parseJsonConfigFileContent(tsConfig, ts.sys, '');
-const compilerTarget = options.target ?? ts.ScriptTarget.ES2021
+const compilerTarget = options.target ?? ts.ScriptTarget.ES2021;
 
 const codeRunner = new UserCodeRunner();
 
@@ -92,7 +92,7 @@ export async function executeExpansion(opts: {
       }
       const commandsFlat = commands.flat() as Command[];
       for (const command of commandsFlat) {
-        (command as Mutable<Command>).metadata  = {
+        (command as Mutable<Command>).metadata = {
           ...command.metadata,
           simulatedActivityId: activityInstance.id,
         };
@@ -108,5 +108,43 @@ export async function executeExpansion(opts: {
   } catch (e: any) {
     logger.error(e);
     return { activityInstance, commands: null, errors: [e?.message ?? 'Unexpected error'] };
+  }
+}
+
+export async function executeEDSL(opts: { edslBody: string; commandTypes: string }): Promise<{
+  sequenceJson: SequenceSeqJson | null;
+  errors: ReturnType<UserCodeError['toJSON']>[];
+}> {
+  try {
+    const result = await codeRunner.executeUserCode(
+      opts.edslBody,
+      [],
+      'Sequence',
+      [],
+      1000,
+      [
+        ts.createSourceFile('command-types.ts', opts.commandTypes, compilerTarget),
+        ts.createSourceFile('TemporalPolyfillTypes.ts', temporalPolyfillTypes, compilerTarget),
+      ],
+      vm.createContext({
+        Temporal,
+      }),
+    );
+
+    if (result.isOk()) {
+      let sequence = result.unwrap() as Sequence;
+      return {
+        sequenceJson: sequence.toSeqJson(),
+        errors: [],
+      };
+    } else {
+      return {
+        sequenceJson: null,
+        errors: result.unwrapErr().map(err => err.toJSON()),
+      };
+    }
+  } catch (e: any) {
+    logger.error(e);
+    return { sequenceJson: null, errors: [e?.message ?? 'Unexpected error'] };
   }
 }

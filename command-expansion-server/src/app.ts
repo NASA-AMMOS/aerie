@@ -19,7 +19,7 @@ import {
 } from './lib/batchLoaders/simulatedActivityBatchLoader.js';
 import { expansionSetBatchLoader } from './lib/batchLoaders/expansionSetBatchLoader.js';
 import Piscina from 'piscina';
-import type { executeExpansion, typecheckExpansion } from './worker.js';
+import type { executeExpansion, typecheckExpansion, executeEDSL } from './worker.js';
 import { isRejected, isResolved } from './utils/typeguards.js';
 import { expansionBatchLoader } from './lib/batchLoaders/expansionBatchLoader.js';
 import type { UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
@@ -433,7 +433,45 @@ export interface SeqBuilder {
   ): Sequence;
 }
 
-app.post('/get-seqjson-for-sequence', async (req, res, next) => {
+//generate a sequence JSON from a sequence standalone file
+app.post('/get-seqjson-for-sequence-standalone', async (req, res, next) => {
+  const commandDictionaryID = req.body.input.commandDictionaryID as number;
+  const edslBody = req.body.input.edslBody as string;
+
+  let commandTypes;
+  try {
+    const context: Context = res.locals['context'];
+    commandTypes = await context.commandTypescriptDataLoader.load({ dictionaryId: commandDictionaryID });
+  } catch (e) {
+    res.status(200).json({
+      message: 'Error loading command dictionary',
+      cause: (e as Error).message,
+    });
+    return next();
+  }
+
+  const result = await ((await piscina.run(
+    {
+      edslBody,
+      commandTypes,
+    },
+    { name: 'executeEDSL' },
+  )) as ReturnType<typeof executeEDSL>);
+
+  const sequenceJson = result.sequenceJson;
+  if (sequenceJson != null && result.errors.length === 0) {
+    res.status(200).json(sequenceJson);
+  } else {
+    res.status(200).json({
+      message: 'Failure to generate sequence JSON',
+      cause: result.errors,
+    });
+  }
+
+  return next();
+});
+
+app.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, res, next) => {
   // Get the specified sequence + activity instance ids + commands from the latest expansion run for each activity instance (filtered on simulation dataset)
   // get start time for each activity instance and join with activity instance command data
   // Create sequence object with all the commands and return the seqjson

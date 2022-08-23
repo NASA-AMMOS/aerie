@@ -61,7 +61,10 @@ export interface SequenceSeqJson {
 }
 
 declare global {
-  class Command<A extends ArgType[] | { [argName: string]: any } = [] | {}> {
+  class Command<
+    A extends ArgType[] | { [argName: string]: any } = [] | {},
+    M extends Record<string, any> = Record<string, any>,
+  > {
     public static new<A extends any[] | { [argName: string]: any }>(opts: CommandOptions<A>): Command<A>;
 
     public toSeqJson(): CommandSeqJson;
@@ -72,6 +75,17 @@ declare global {
 
     public relativeTiming(relativeTime: Temporal.Duration): Command<A>;
   }
+
+  class Sequence {
+    public readonly seqId: string;
+    public readonly metadata: Record<string, any>;
+    public readonly commands: Command[];
+
+    public static new(opts: { seqId: string; metadata: Record<string, any>; commands: Command[] }): Sequence;
+
+    public toSeqJson(): SequenceSeqJson;
+  }
+
   type Context = {};
   type ExpansionReturn = Arrayable<Command>;
 
