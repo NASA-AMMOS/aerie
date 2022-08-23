@@ -1,5 +1,5 @@
 import { gql, GraphQLClient } from 'graphql-request';
-import { convertActivityIdToSimulatedActivityId } from './Activity';
+import { convertActivityDirectiveIdToSimulatedActivityId } from './ActivityDirective';
 
 export async function insertSequence(
   graphqlClient: GraphQLClient,
@@ -59,7 +59,7 @@ export async function linkActivityInstance(
   sequencePk: { simulationDatasetId: number; seqId: string },
   activityInstanceId: number,
 ): Promise<void> {
-  const simulatedActivityId = await convertActivityIdToSimulatedActivityId(
+  const simulatedActivityId = await convertActivityDirectiveIdToSimulatedActivityId(
     graphqlClient,
     sequencePk.simulationDatasetId,
     activityInstanceId,

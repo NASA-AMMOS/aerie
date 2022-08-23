@@ -123,12 +123,17 @@ test.describe('Scheduling', () => {
     expect(status).toBeDefined();
     const max_it = 10;
     let it = 0;
+    let reason_local: string;
     while (it++ <  max_it && status == "incomplete"){
       const { reason, status } = await req.schedule(request, specification_id);
       status_local = status;
+      reason_local = reason;
       expect(status).not.toBeNull();
       expect(status).toBeDefined();
       await delay(1000);
+    }
+    if (status_local == "failed"){
+      throw new Error(reason_local);
     }
     expect(status_local).toEqual("complete")
   });
@@ -139,7 +144,7 @@ test.describe('Scheduling', () => {
     expect(plan).not.toBeNull();
     expect(plan).toBeDefined();
     expect(plan.id).toEqual(plan_id);
-    expect(plan.activities.length).toEqual(12);
+    expect(plan.activity_directives.length).toEqual(12);
   });
 
   test('Delete plan', async ({ request }) => {

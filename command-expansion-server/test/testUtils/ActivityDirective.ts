@@ -4,7 +4,7 @@ import { activitySchemaBatchLoader } from '../../src/lib/batchLoaders/activitySc
 import { simulatedActivitiesBatchLoader } from '../../src/lib/batchLoaders/simulatedActivityBatchLoader';
 import { assertDefined } from '../../src/utils/assertions';
 
-export async function insertActivity(
+export async function insertActivityDirective(
   graphqlClient: GraphQLClient,
   planId: number,
   activityType: string,
@@ -12,11 +12,11 @@ export async function insertActivity(
   args: any = {},
 ): Promise<number> {
   const res = await graphqlClient.request<{
-    insert_activity_one: { id: number };
+    insert_activity_directive_one: { id: number };
   }>(
     gql`
-      mutation InsertTestActivity($activityType: String!, $planId: Int!, $startOffset: interval!, $arguments: jsonb) {
-        insert_activity_one(
+      mutation InsertTestActivityDirective($activityType: String!, $planId: Int!, $startOffset: interval!, $arguments: jsonb) {
+        insert_activity_directive_one(
           object: { type: $activityType, start_offset: $startOffset, plan_id: $planId, arguments: $arguments }
         ) {
           id
@@ -30,14 +30,14 @@ export async function insertActivity(
       arguments: args,
     },
   );
-  return res.insert_activity_one.id;
+  return res.insert_activity_directive_one.id;
 }
 
-export async function removeActivity(graphqlClient: GraphQLClient, activityId: number): Promise<void> {
+export async function removeActivityDirective(graphqlClient: GraphQLClient, activityId: number): Promise<void> {
   return graphqlClient.request(
     gql`
-      mutation DeleteActivity($activityId: Int!) {
-        delete_activity_by_pk(id: $activityId) {
+      mutation DeleteActivityDirectve($activityId: Int!) {
+        delete_activity_directive_by_pk(id: $activityId) {
           id
         }
       }
@@ -48,7 +48,7 @@ export async function removeActivity(graphqlClient: GraphQLClient, activityId: n
   );
 }
 
-export async function convertActivityIdToSimulatedActivityId(
+export async function convertActivityDirectiveIdToSimulatedActivityId(
   graphqlClient: GraphQLClient,
   simulationDatasetId: number,
   activityId: number,

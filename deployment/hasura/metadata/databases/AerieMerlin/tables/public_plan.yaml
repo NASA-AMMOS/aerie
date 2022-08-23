@@ -6,12 +6,12 @@ object_relationships:
   using:
     foreign_key_constraint_on: model_id
 array_relationships:
-- name: activities
+- name: activity_directives
   using:
     foreign_key_constraint_on:
       column: plan_id
       table:
-        name: activity
+        name: activity_directive
         schema: public
 - name: conditions
   using:
@@ -37,7 +37,7 @@ array_relationships:
 remote_relationships:
 - name: scheduling_specifications
   definition:
-    to_source: 
+    to_source:
       relationship_type: array
       source: AerieScheduler
       table:

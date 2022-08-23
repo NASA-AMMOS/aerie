@@ -16,7 +16,7 @@ type CreatePlanInput = {
 
 
 type Plan = {
-  activities: Activity[];
+  activity_directives: ActivityDirective[];
   constraints: Constraint[];
   duration: string;
   endTime: string;

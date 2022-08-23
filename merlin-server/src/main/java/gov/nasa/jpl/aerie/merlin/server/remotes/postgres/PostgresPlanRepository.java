@@ -224,7 +224,7 @@ public final class PostgresPlanRepository implements PlanRepository {
   ) throws SQLException, NoSuchPlanException {
     try (
         final var getPlanAction = new GetPlanAction(connection);
-        final var getActivitiesAction = new GetActivitiesAction(connection)
+        final var getActivitiesAction = new GetActivityDirectivesAction(connection)
     ) {
       final var planStart = getPlanAction
           .get(planId.id())

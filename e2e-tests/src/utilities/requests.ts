@@ -4,7 +4,6 @@ import { createReadStream } from 'fs';
 import { basename, resolve } from 'path';
 import * as urls from '../utilities/urls';
 import gql from './gql';
-import {request} from "@playwright/test";
 import time from "./time";
 
 /**
@@ -182,12 +181,12 @@ const req = {
   },
 
   async getPlan(request: APIRequestContext, id: number): Promise<Plan>{
-    const data = await req.hasura(request, gql.GET_PLAN, { id: id });
+    const data = await req.hasura<{ plan: Plan }>(request, gql.GET_PLAN, { id: id });
     const { plan } = data;
     const startTime = new Date(plan.startTime);
     return {
       ...plan,
-      activities: plan.activities.map((activity: any) => toActivity(activity, startTime)),
+      activity_directives: plan.activity_directives.map((activity: any) => toActivity(activity, startTime)),
       endTime: time.getDoyTimeFromDuration(startTime, plan.duration),
       startTime: time.getDoyTime(startTime),
     };
@@ -197,7 +196,7 @@ const req = {
 /**
  * Converts any activity to an Activity.
  */
-export function toActivity(activity: any, startTime: Date): Activity {
+export function toActivity(activity: any, startTime: Date): ActivityDirective {
   return {
     arguments: activity.arguments,
     children: [],

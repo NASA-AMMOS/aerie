@@ -114,7 +114,7 @@ const gql = {
   GET_PLAN: `#graphql
     query GetPlan($id: Int!) {
       plan: plan_by_pk(id: $id) {
-        activities {
+        activity_directives {
           arguments
           id
           startOffset: start_offset

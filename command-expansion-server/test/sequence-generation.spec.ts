@@ -1,7 +1,7 @@
 import { gql, GraphQLClient } from 'graphql-request';
 import { removeMissionModel, uploadMissionModel } from './testUtils/MissionModel.js';
 import { createPlan, removePlan } from './testUtils/Plan.js';
-import { convertActivityIdToSimulatedActivityId, insertActivity, removeActivity } from './testUtils/Activity.js';
+import { convertActivityDirectiveIdToSimulatedActivityId, insertActivityDirective, removeActivityDirective } from './testUtils/ActivityDirective.js';
 import { executeSimulation, removeSimulationArtifacts } from './testUtils/Simulation.js';
 import {
   expand,
@@ -49,9 +49,9 @@ describe('sequence generation', () => {
   let sequencePk: { seqId: string; simulationDatasetId: number };
 
   beforeEach(async () => {
-    activityId1 = await insertActivity(graphqlClient, planId, 'GrowBanana');
-    activityId2 = await insertActivity(graphqlClient, planId, 'PeelBanana', '30 minutes');
-    activityId4 = await insertActivity(graphqlClient, planId, 'ThrowBanana', '60 minutes');
+    activityId1 = await insertActivityDirective(graphqlClient, planId, 'GrowBanana');
+    activityId2 = await insertActivityDirective(graphqlClient, planId, 'PeelBanana', '30 minutes');
+    activityId4 = await insertActivityDirective(graphqlClient, planId, 'ThrowBanana', '60 minutes');
     commandDictionaryId = await insertCommandDictionary(graphqlClient);
     expansionId1 = await insertExpansion(
       graphqlClient,
@@ -119,7 +119,7 @@ describe('sequence generation', () => {
 
   afterEach(async () => {
     await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
-    await removeActivity(graphqlClient, activityId1);
+    await removeActivityDirective(graphqlClient, activityId1);
     await removeMissionModel(graphqlClient, missionModelId);
     await removeExpansionSet(graphqlClient, expansionSetId);
     await removeExpansion(graphqlClient, expansionId1);
@@ -142,17 +142,17 @@ describe('sequence generation', () => {
       await linkActivityInstance(graphqlClient, sequencePk, activityId4);
     }
 
-    const simulatedActivityId1 = await convertActivityIdToSimulatedActivityId(
+    const simulatedActivityId1 = await convertActivityDirectiveIdToSimulatedActivityId(
       graphqlClient,
       simulationArtifactPk.simulationDatasetId,
       activityId1,
     );
-    const simulatedActivityId2 = await convertActivityIdToSimulatedActivityId(
+    const simulatedActivityId2 = await convertActivityDirectiveIdToSimulatedActivityId(
       graphqlClient,
       simulationArtifactPk.simulationDatasetId,
       activityId2,
     );
-    const simulatedActivityId4 = await convertActivityIdToSimulatedActivityId(
+    const simulatedActivityId4 = await convertActivityDirectiveIdToSimulatedActivityId(
       graphqlClient,
       simulationArtifactPk.simulationDatasetId,
       activityId4,
@@ -339,7 +339,7 @@ describe('sequence generation', () => {
         expansionId2,
         expansionId3,
       ]);
-      activityId3 = await insertActivity(graphqlClient, planId, 'BiteBanana', '1 hours');
+      activityId3 = await insertActivityDirective(graphqlClient, planId, 'BiteBanana', '1 hours');
       simulationArtifactPk = await executeSimulation(graphqlClient, planId);
       expansionRunPk = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
       sequencePk = await insertSequence(graphqlClient, {
@@ -351,17 +351,17 @@ describe('sequence generation', () => {
       await linkActivityInstance(graphqlClient, sequencePk, activityId3);
     }
 
-    const simulatedActivityId1 = await convertActivityIdToSimulatedActivityId(
+    const simulatedActivityId1 = await convertActivityDirectiveIdToSimulatedActivityId(
       graphqlClient,
       simulationArtifactPk.simulationDatasetId,
       activityId1,
     );
-    const simulatedActivityId2 = await convertActivityIdToSimulatedActivityId(
+    const simulatedActivityId2 = await convertActivityDirectiveIdToSimulatedActivityId(
       graphqlClient,
       simulationArtifactPk.simulationDatasetId,
       activityId2,
     );
-    const simulatedActivityId3 = await convertActivityIdToSimulatedActivityId(
+    const simulatedActivityId3 = await convertActivityDirectiveIdToSimulatedActivityId(
       graphqlClient,
       simulationArtifactPk.simulationDatasetId,
       activityId3,
@@ -459,7 +459,7 @@ describe('sequence generation', () => {
     let expansionRunPk: number;
     // Setup
     {
-      activityId3 = await insertActivity(graphqlClient, planId, 'BiteBanana', '1 hours');
+      activityId3 = await insertActivityDirective(graphqlClient, planId, 'BiteBanana', '1 hours');
       simulationArtifactPk = await executeSimulation(graphqlClient, planId);
       expansionRunPk = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
       sequencePk = await insertSequence(graphqlClient, {
@@ -471,12 +471,12 @@ describe('sequence generation', () => {
       await linkActivityInstance(graphqlClient, sequencePk, activityId3);
     }
 
-    const simulatedActivityId1 = await convertActivityIdToSimulatedActivityId(
+    const simulatedActivityId1 = await convertActivityDirectiveIdToSimulatedActivityId(
       graphqlClient,
       simulationArtifactPk.simulationDatasetId,
       activityId1,
     );
-    const simulatedActivityId2 = await convertActivityIdToSimulatedActivityId(
+    const simulatedActivityId2 = await convertActivityDirectiveIdToSimulatedActivityId(
       graphqlClient,
       simulationArtifactPk.simulationDatasetId,
       activityId2,
@@ -565,7 +565,7 @@ describe('sequence generation', () => {
 describe('expansion regressions', () => {
   test('start_offset undefined regression', async () => {
     // Setup
-    const activityId = await insertActivity(graphqlClient, planId, 'GrowBanana', '1 hours');
+    const activityId = await insertActivityDirective(graphqlClient, planId, 'GrowBanana', '1 hours');
     const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
     const expansionId = await insertExpansion(
       graphqlClient,
@@ -582,7 +582,7 @@ describe('expansion regressions', () => {
     const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
     const expansionRunId = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
 
-    const simulatedActivityId = await convertActivityIdToSimulatedActivityId(
+    const simulatedActivityId = await convertActivityDirectiveIdToSimulatedActivityId(
       graphqlClient,
       simulationArtifactPk.simulationDatasetId,
       activityId,
@@ -631,7 +631,7 @@ describe('expansion regressions', () => {
     ]);
 
     // Cleanup
-    await removeActivity(graphqlClient, activityId);
+    await removeActivityDirective(graphqlClient, activityId);
     await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
     await removeExpansion(graphqlClient, expansionId);
     await removeExpansionSet(graphqlClient, expansionSetId);
@@ -642,7 +642,7 @@ describe('expansion regressions', () => {
 it('should provide start, end, and computed attributes on activities', async () => {
   // Setup
 
-  const activityId = await insertActivity(graphqlClient, planId, 'BakeBananaBread', '1 hours', {
+  const activityId = await insertActivityDirective(graphqlClient, planId, 'BakeBananaBread', '1 hours', {
     tbSugar: 1,
     glutenFree: false,
     temperature: 350,
@@ -670,7 +670,7 @@ it('should provide start, end, and computed attributes on activities', async () 
   });
   await linkActivityInstance(graphqlClient, sequencePk, activityId);
 
-  const simulatedActivityId3 = await convertActivityIdToSimulatedActivityId(
+  const simulatedActivityId3 = await convertActivityDirectiveIdToSimulatedActivityId(
     graphqlClient,
     simulationArtifactPk.simulationDatasetId,
     activityId,

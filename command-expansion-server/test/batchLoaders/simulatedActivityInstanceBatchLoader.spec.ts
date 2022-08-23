@@ -5,7 +5,7 @@ import {
 } from '../../src/lib/batchLoaders/simulatedActivityBatchLoader.js';
 import { removeMissionModel, uploadMissionModel } from '../testUtils/MissionModel.js';
 import { createPlan, removePlan } from '../testUtils/Plan';
-import { convertActivityIdToSimulatedActivityId, insertActivity, removeActivity } from '../testUtils/Activity';
+import { convertActivityDirectiveIdToSimulatedActivityId, insertActivityDirective, removeActivityDirective } from '../testUtils/ActivityDirective';
 import { executeSimulation, removeSimulationArtifacts } from '../testUtils/Simulation';
 import DataLoader from 'dataloader';
 import { activitySchemaBatchLoader } from '../../src/lib/batchLoaders/activitySchemaBatchLoader.js';
@@ -20,13 +20,13 @@ beforeAll(async () => {
   graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string);
   missionModelId = await uploadMissionModel(graphqlClient);
   planId = await createPlan(graphqlClient, missionModelId);
-  activityId = await insertActivity(graphqlClient, planId, 'ParameterTest');
+  activityId = await insertActivityDirective(graphqlClient, planId, 'ParameterTest');
   simulationArtifactIds = await executeSimulation(graphqlClient, planId);
 });
 
 afterAll(async () => {
   await removeSimulationArtifacts(graphqlClient, simulationArtifactIds);
-  await removeActivity(graphqlClient, activityId);
+  await removeActivityDirective(graphqlClient, activityId);
   await removePlan(graphqlClient, planId);
   await removeMissionModel(graphqlClient, missionModelId);
 });
@@ -45,7 +45,7 @@ it('should load simulated activity instances for simulation_dataset', async () =
 it('should load simulated activity instance for simulation_dataset and simulated activity id', async () => {
   const activitySchemaDataLoader = new DataLoader(activitySchemaBatchLoader({ graphqlClient }));
 
-  const simulatedActivityId = await convertActivityIdToSimulatedActivityId(
+  const simulatedActivityId = await convertActivityDirectiveIdToSimulatedActivityId(
     graphqlClient,
     simulationArtifactIds.simulationDatasetId,
     activityId,

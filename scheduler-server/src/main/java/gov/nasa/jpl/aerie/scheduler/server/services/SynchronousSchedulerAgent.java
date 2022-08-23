@@ -247,7 +247,7 @@ public record SynchronousSchedulerAgent(
   private PlanComponents loadInitialPlan(final PlanMetadata planMetadata, final Problem problem) {
     //TODO: maybe paranoid check if plan rev has changed since original metadata?
     try {
-      final var merlinPlan =  merlinService.getPlanActivities(planMetadata, problem);
+      final var merlinPlan =  merlinService.getPlanActivityDirectives(planMetadata, problem);
       final Map<SchedulingActivityInstanceId, ActivityInstanceId> schedulingIdToMerlinId = new HashMap<>();
       final var plan = new PlanInMemory();
       final var activityTypes = problem.getActivityTypes().stream().collect(Collectors.toMap(ActivityType::getName, at -> at));
@@ -407,10 +407,10 @@ public record SynchronousSchedulerAgent(
     try {
       switch (this.outputMode) {
         case CreateNewOutputPlan -> {
-          return merlinService.createNewPlanWithActivities(planMetadata, newPlan, goalToActivity).getValue();
+          return merlinService.createNewPlanWithActivityDirectives(planMetadata, newPlan, goalToActivity).getValue();
         }
         case UpdateInputPlanWithNewActivities -> {
-          return merlinService.updatePlanActivities(
+          return merlinService.updatePlanActivityDirectives(
               planMetadata.planId(),
               idsFromInitialPlan,
               initialPlan,
