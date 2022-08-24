@@ -62,7 +62,7 @@ jobs:
         with:
           image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin:${{ github.sha }}
           format: 'table'
-          exit-code: '1'
+          exit-code: '0'
           ignore-unfixed: true
           severity: 'CRITICAL'
       - name: Push aerie-merlin Docker image
@@ -89,7 +89,7 @@ jobs:
         with:
           image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin-worker:${{ github.sha }}
           format: 'table'
-          exit-code: '1'
+          exit-code: '0'
           ignore-unfixed: true
           severity: 'CRITICAL'
       - name: Push aerie-merlin-worker Docker image
@@ -116,7 +116,7 @@ jobs:
         with:
           image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-scheduler:${{ github.sha }}
           format: 'table'
-          exit-code: '1'
+          exit-code: '0'
           ignore-unfixed: true
           severity: 'CRITICAL'
       - name: Push aerie-scheduler Docker image
@@ -143,7 +143,7 @@ jobs:
         with:
           image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-commanding:${{ github.sha }}
           format: 'table'
-          exit-code: '1'
+          exit-code: '0'
           ignore-unfixed: true
           severity: 'CRITICAL'
       - name: Push aerie-commanding Docker image
