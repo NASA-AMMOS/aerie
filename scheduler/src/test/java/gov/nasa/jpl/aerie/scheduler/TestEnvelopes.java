@@ -15,21 +15,21 @@ public class TestEnvelopes {
   @Test
   public void testEnvelopes() {
 
-    var horizon = new Windows(Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(20, Duration.SECONDS)), true);
+    var horizon = new Windows(false).set(Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(20, Duration.SECONDS)), true);
 
     Interval r1 = Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(10, Duration.SECONDS));
     Interval r2 = Interval.betweenClosedOpen(Duration.of(12, Duration.SECONDS), Duration.of(20, Duration.SECONDS));
 
-    var resetExpr = new TimeRangeExpression.Builder().from(Windows.definedEverywhere(List.of(r1, r2), true)).build();
+    var resetExpr = new TimeRangeExpression.Builder().from(new Windows(false).set(List.of(r1, r2), true)).build();
 
     Interval r3 = Interval.betweenClosedOpen(Duration.of(6, Duration.SECONDS), Duration.of(11, Duration.SECONDS));
     Interval r4 = Interval.betweenClosedOpen(Duration.of(3, Duration.SECONDS), Duration.of(7, Duration.SECONDS));
     Interval r5 = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(3, Duration.SECONDS));
     Interval r6 = Interval.betweenClosedOpen(Duration.of(3, Duration.SECONDS), Duration.of(4, Duration.SECONDS));
 
-    var firstType = new TimeRangeExpression.Builder().from(Windows.definedEverywhere(List.of(r4, r6), true)).build();
+    var firstType = new TimeRangeExpression.Builder().from(new Windows(false).set(List.of(r4, r6), true)).build();
 
-    var secondType = new TimeRangeExpression.Builder().from(Windows.definedEverywhere(List.of(r3, r5), true)).build();
+    var secondType = new TimeRangeExpression.Builder().from(new Windows(false).set(List.of(r3, r5), true)).build();
 
 
     var envelope = new Transformers.EnvelopeBuilder()
@@ -46,8 +46,8 @@ public class TestEnvelopes {
 
     var ranges = tre.computeRange(null, null, horizon);
     assertTrue(ranges.includes(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(10, Duration.SECONDS))));
-    ranges.removeTrueSegment(0);
-    assertTrue(ranges.isAllFalse());
+    ranges = ranges.removeTrueSegment(0);
+    assertTrue(ranges.isAllEqualTo(false));
   }
 }
 

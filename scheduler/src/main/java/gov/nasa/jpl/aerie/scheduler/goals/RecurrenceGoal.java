@@ -116,7 +116,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
     }
 
     //iterate through it and then within each iteration do exactly what you did before
-    for (Interval subInterval : windows.iterateTrue()) {
+    for (Interval subInterval : windows.iterateEqualTo(true)) {
       //collect all matching target acts ordered by start time
       //REVIEW: could collapse with prior template start time query too?
       final var satisfyingActSearch = new ActivityExpression.Builder()
@@ -202,7 +202,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
          ;
          intervalT = intervalT.plus(recurrenceInterval.max)
     ) {
-      final var windows = Windows.definedEverywhere(Interval.between(intervalT.minus(recurrenceInterval.max), Duration.min(intervalT, end)), true);
+      final var windows = new Windows(false).set(Interval.between(intervalT.minus(recurrenceInterval.max), Duration.min(intervalT, end)), true);
       conflicts.add(new MissingActivityTemplateConflict(this, windows, this.getActTemplate()));
       if(intervalT.compareTo(end) >= 0){
         break;

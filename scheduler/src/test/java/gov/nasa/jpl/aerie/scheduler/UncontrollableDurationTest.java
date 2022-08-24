@@ -67,7 +67,7 @@ public class UncontrollableDurationTest {
 
     final var recurrenceTrapezoidal = new RecurrenceGoal.Builder()
         .thereExistsOne(solarPanelActivityTriangle)
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(planningHorizon.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
         .repeatingEvery(Duration.of(1000, Duration.SECONDS))
         .named("UncontrollableRecurrenceGoal")
         .build();
@@ -75,7 +75,7 @@ public class UncontrollableDurationTest {
 
     final var coexistenceTriangle = new CoexistenceGoal.Builder()
         .thereExistsOne(solarPanelActivityTrapezoidal)
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(planningHorizon.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
         .forEach(solarPanelActivityTriangle)
         .endsAt(TimeAnchor.START)
         .named("UncontrollableCoexistenceGoal")
@@ -115,7 +115,7 @@ public class UncontrollableDurationTest {
 
     final var recurrenceTrapezoidal = new RecurrenceGoal.Builder()
         .thereExistsOne(solarPanelActivityTriangle)
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(planningHorizon.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
         .repeatingEvery(Duration.of(1000, Duration.SECONDS))
         .named("UncontrollableRecurrenceGoal")
         .build();
@@ -124,7 +124,7 @@ public class UncontrollableDurationTest {
     final var start = TimeExpression.atStart();
     final var coexistenceTriangle = new CoexistenceGoal.Builder()
         .thereExistsOne(solarPanelActivityTrapezoidal)
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(planningHorizon.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
         .forEach(solarPanelActivityTriangle)
         .endsAt(start)
         .named("UncontrollableCoexistenceGoal")
@@ -161,7 +161,7 @@ public class UncontrollableDurationTest {
 
     final var coexistenceControllable = new CoexistenceGoal.Builder()
         .thereExistsOne(zeroDurationUncontrollableActivity)
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(planningHorizon.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
         .forEach(ActivityExpression.ofType(problem.getActivityType("ControllableDurationActivity")))
         .startsAt(intervalStartTimeExpression)
         .build();

@@ -40,7 +40,7 @@ public class TestCardinalityGoal {
                             .duration(Duration.of(2, Duration.SECONDS))
                             .build())
         .named("TestCardGoal")
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(period, true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(period, true)))
         .owned(ChildCustody.Jointly)
         .build();
 
@@ -75,7 +75,7 @@ public class TestCardinalityGoal {
                             .duration(Interval.between(Duration.of(3, Duration.SECONDS), Duration.of(4, Duration.SECONDS)))
                             .build())
         .named("TestCardGoal")
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(period, true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(period, true)))
         .owned(ChildCustody.Jointly)
         .build();});
   }

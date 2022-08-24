@@ -26,16 +26,16 @@ public class FilterSequenceMaxGapAfter implements TimeWindowsFilter {
   @Override
   public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
     Interval before = null;
-    final var result = new Windows(windows);
-    for (var interval : windows.iterateTrue()) {
+    var result = new Windows(windows);
+    for (var interval : windows.iterateEqualTo(true)) {
       if (before != null) {
         if (interval.start.minus(before.end).compareTo(maxDelay) > 0) {
-          result.set(before, false);
+          result = result.set(before, false);
         }
       }
       before = interval;
     }
-    result.removeTrueSegment(-1);
+    result = result.removeTrueSegment(-1);
     return result;
   }
 

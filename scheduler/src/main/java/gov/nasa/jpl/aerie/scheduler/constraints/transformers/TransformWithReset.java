@@ -28,9 +28,9 @@ public class TransformWithReset implements TimeWindowsTransformer {
 
     if (!windowsToTransform.isEmpty()) {
 
-      var resetPeriods = resetExpr.computeRange(simulationResults, plan, new Windows(Interval.FOREVER, true));
+      var resetPeriods = resetExpr.computeRange(simulationResults, plan, new Windows(true));
 
-      for (var window : resetPeriods.iterateTrue()) {
+      for (var window : resetPeriods.iterateEqualTo(true)) {
         // get windows to transform that are completely contained in reset period
         Windows cur = windowsToTransform.trueSubsetContainedIn(window);
         if (!cur.isEmpty()) {

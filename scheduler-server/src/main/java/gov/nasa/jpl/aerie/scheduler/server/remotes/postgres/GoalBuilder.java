@@ -34,13 +34,13 @@ public class GoalBuilder {
         horizonEndTimestamp.toInstant()).getHor();
     if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition g) {
       return new RecurrenceGoal.Builder()
-          .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(hor, true)))
+          .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)))
           .repeatingEvery(g.interval())
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
           .build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition g) {
       var builder = new CoexistenceGoal.Builder()
-          .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(hor, true)))
+          .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)))
           .forEach(timeRangeExpressionOfConstraintExpression(
               g.forEach(),
               lookupActivityType))
@@ -75,7 +75,7 @@ public class GoalBuilder {
                                                   horizonEndTimestamp,
                                                   lookupActivityType));
       }
-      builder.forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(hor, true)));
+      builder.forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)));
       return builder.build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalOr g) {
       var builder = new OptionGoal.Builder();
@@ -85,7 +85,7 @@ public class GoalBuilder {
                                                  horizonEndTimestamp,
                                                  lookupActivityType));
       }
-      builder.forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(hor, true)));
+      builder.forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)));
       return builder.build();
     }
 
@@ -98,7 +98,7 @@ public class GoalBuilder {
     else if(goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CardinalityGoalDefinition g){
       final var builder = new CardinalityGoal.Builder()
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
-           .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(hor, true)));
+           .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)));
       if(g.specification().duration().isPresent()){
         builder.duration(Interval.between(g.specification().duration().get(), Duration.MAX_VALUE));
       }

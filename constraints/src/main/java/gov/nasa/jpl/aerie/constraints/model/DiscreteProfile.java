@@ -25,19 +25,18 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
 
   @Override
   public Windows equalTo(final DiscreteProfile other, final Interval bounds) {
-    final var windows = new Windows();
+    var windows = new Windows();
     for (final var profilePiece : this.profilePieces) {
       if(profileOutsideBounds(profilePiece, bounds)) continue;
       for (final var otherPiece : other.profilePieces) {
         if(profileOutsideBounds(otherPiece, bounds)) continue;
         final var overlap = Interval.intersect(profilePiece.interval, otherPiece.interval);
         if (!overlap.isEmpty()) {
-          windows.set(overlap, profilePiece.value.equals(otherPiece.value));
+          windows = windows.set(overlap, profilePiece.value.equals(otherPiece.value));
         }
       }
     }
-    windows.bound(bounds);
-    return windows;
+    return windows.select(bounds);
   }
 
   @Override
@@ -47,15 +46,15 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
 
   @Override
   public Windows changePoints(final Interval bounds) {
-    final var changePoints = new Windows();
+    var changePoints = new Windows();
     if (this.profilePieces.size() == 0) return changePoints;
 
     final var iter = this.profilePieces.iterator();
     var prev = iter.next();
     if (prev.interval.start.noLongerThan(bounds.start)) {
-      changePoints.set(prev.interval, false);
+      changePoints = changePoints.set(prev.interval, false);
     } else {
-      changePoints.set(
+      changePoints = changePoints.set(
           Interval.between(
               prev.interval.start,
               Interval.Inclusivity.Exclusive,
@@ -70,10 +69,10 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
       final var curr = iter.next();
 
       if (Interval.meets(prev.interval, curr.interval)) {
-        changePoints.set(curr.interval, false);
-        if (!prev.value.equals(curr.value)) changePoints.setTrue(Interval.at(curr.interval.start));
+        changePoints = changePoints.set(curr.interval, false);
+        if (!prev.value.equals(curr.value)) changePoints = changePoints.set(Interval.at(curr.interval.start), true);
       } else {
-        changePoints.set(
+        changePoints = changePoints.set(
             Interval.between(
                 curr.interval.start,
                 Interval.Inclusivity.Exclusive,
@@ -86,20 +85,19 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
       prev = curr;
     }
 
-    changePoints.bound(bounds);
-    return changePoints;
+    return changePoints.select(bounds);
   }
 
   public Windows transitions(final SerializedValue oldState, final SerializedValue newState, final Interval bounds) {
-    final var transitionPoints = new Windows();
+    var transitionPoints = new Windows();
     if (this.profilePieces.size() == 0) return transitionPoints;
 
     final var iter = this.profilePieces.iterator();
     var prev = iter.next();
     if (prev.interval.start.noLongerThan(bounds.start)) {
-      transitionPoints.set(prev.interval, false);
+      transitionPoints = transitionPoints.set(prev.interval, false);
     } else {
-      transitionPoints.set(
+      transitionPoints = transitionPoints.set(
           Interval.between(
               prev.interval.start,
               Interval.Inclusivity.Exclusive,
@@ -114,10 +112,10 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
       final var curr = iter.next();
 
       if (Interval.meets(prev.interval, curr.interval)) {
-        transitionPoints.set(curr.interval, false);
-        if (prev.value.equals(oldState) && curr.value.equals(newState)) transitionPoints.setTrue(Interval.at(curr.interval.start));
+        transitionPoints = transitionPoints.set(curr.interval, false);
+        if (prev.value.equals(oldState) && curr.value.equals(newState)) transitionPoints = transitionPoints.set(Interval.at(curr.interval.start), true);
       } else {
-        transitionPoints.set(
+        transitionPoints = transitionPoints.set(
             Interval.between(
                 curr.interval.start,
                 Interval.Inclusivity.Exclusive,
@@ -130,8 +128,7 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
       prev = curr;
     }
 
-    transitionPoints.bound(bounds);
-    return transitionPoints;
+    return transitionPoints.select(bounds);
   }
 
   @Override

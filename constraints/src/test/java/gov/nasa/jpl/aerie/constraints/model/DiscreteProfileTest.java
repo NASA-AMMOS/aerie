@@ -33,9 +33,9 @@ public class DiscreteProfileTest {
 
     final var result = profile.equalTo(other, Interval.between(0, 20, SECONDS));
 
-    final var expected = new Windows(Interval.between(0, 20, SECONDS), false);
-    expected.setTrue(Interval.between( 0, Inclusive,  5, Exclusive, SECONDS));
-    expected.setTrue(Interval.between(15, Inclusive, 20, Inclusive, SECONDS));
+    final var expected = new Windows(Interval.between(0, 20, SECONDS), false)
+        .set(Interval.between( 0, Inclusive,  5, Exclusive, SECONDS), true)
+        .set(Interval.between(15, Inclusive, 20, Inclusive, SECONDS), true);
 
     assertIterableEquals(expected, result);
   }
@@ -58,8 +58,8 @@ public class DiscreteProfileTest {
 
     final var result = profile.notEqualTo(other, Interval.between(0, 20, SECONDS));
 
-    final var expected = new Windows(Interval.between(0, 20, SECONDS), false);
-    expected.setTrue(Interval.between( 5, Inclusive, 15, Exclusive, SECONDS));
+    final var expected = new Windows(Interval.between(0, 20, SECONDS), false)
+        .set(Interval.between( 5, Inclusive, 15, Exclusive, SECONDS), true);
 
     assertIterableEquals(expected, result);
   }
@@ -75,10 +75,10 @@ public class DiscreteProfileTest {
 
     final var result = profile.changePoints(Interval.between(0, 20, SECONDS));
 
-    final var expected = new Windows(Interval.between(0, 20, SECONDS), false);
-    expected.setTrue(Interval.at( 5, SECONDS));
-    expected.setTrue(Interval.at(10, SECONDS));
-    expected.setTrue(Interval.at(15, SECONDS));
+    final var expected = new Windows(Interval.between(0, 20, SECONDS), false)
+        .set(Interval.at( 5, SECONDS), true)
+    		.set(Interval.at(10, SECONDS), true)
+    		.set(Interval.at(15, SECONDS), true);
 
     assertIterableEquals(expected, result);
   }
@@ -94,9 +94,9 @@ public class DiscreteProfileTest {
 
     final var result = profile.transitions(SerializedValue.of(true), SerializedValue.of(false), Interval.between(0, 20, SECONDS));
 
-    final var expected = new Windows(Interval.between(0, 20, SECONDS), false);
-    expected.setTrue(Interval.at( 5, SECONDS));
-    expected.setTrue(Interval.at(15, SECONDS));
+    final var expected = new Windows(Interval.between(0, 20, SECONDS), false)
+    		.set(Interval.at( 5, SECONDS), true)
+    		.set(Interval.at(15, SECONDS), true);
 
     assertIterableEquals(expected, result);
   }

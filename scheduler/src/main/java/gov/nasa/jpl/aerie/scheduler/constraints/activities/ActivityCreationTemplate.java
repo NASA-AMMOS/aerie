@@ -232,7 +232,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
   public @NotNull
   Optional<ActivityInstance> createActivity(String name, Windows windows, boolean instantiateVariableArguments, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
     //REVIEW: how to properly export any flexibility to instance?
-    for (var window : windows.iterateTrue()) {
+    for (var window : windows.iterateEqualTo(true)) {
       var act = createInstanceForReal(name, window, instantiateVariableArguments, facade, plan, planningHorizon);
       if (act.isPresent()) {
         return act;

@@ -26,16 +26,16 @@ public class FilterWithReset implements TimeWindowsFilter {
     Windows ret = new Windows();
     int totalFiltered = 0;
 
-    if (!windowsToFilter.isEmpty()) {
+    if (!windowsToFilter.isAllEqualTo(false)) {
 
       var resetPeriods = resetExpr.computeRange(simulationResults, plan, new Windows(Interval.FOREVER, true));
 
-      for (var window : resetPeriods.iterateTrue()) {
+      for (var window : resetPeriods.iterateEqualTo(true)) {
         // get windows to filter that are completely contained in reset period
         Windows cur = windowsToFilter.trueSubsetContainedIn(window);
-        if (!cur.isEmpty()) {
+        if (!cur.isAllEqualTo(false)) {
           //apply filter and union result
-          ret.setAll(filter.filter(simulationResults, plan, cur));
+          ret = ret.set(filter.filter(simulationResults, plan, cur));
           totalFiltered += cur.size();
         }
         //short circuit

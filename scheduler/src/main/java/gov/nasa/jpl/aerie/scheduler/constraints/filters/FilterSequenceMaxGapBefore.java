@@ -23,10 +23,10 @@ public class FilterSequenceMaxGapBefore implements TimeWindowsFilter {
   @Override
   public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
     Interval before = null;
-    final var result = new Windows(windows);
-    for (var interval : windows.iterateTrue()) {
+    var result = new Windows(windows);
+    for (var interval : windows.iterateEqualTo(true)) {
       if (before == null || interval.start.minus(before.end).compareTo(delay) > 0) {
-        result.set(interval, false);
+        result = result.set(interval, false);
       }
       before = interval;
     }

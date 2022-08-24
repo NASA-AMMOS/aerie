@@ -21,13 +21,13 @@ public class IntervalMapMap2BasicTest {
 
   @Test
   public void map2basic() {
-    IntervalMap<String> left = new IntervalMap<>(new IntervalAlgebra());
-    IntervalMap<String> right = new IntervalMap<>(new IntervalAlgebra());
+    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra())
 
-    left.set(Interval.between(3, 4, SECONDS), "a"); //note, this is [3,4], not [3,4)
-    left.set(Interval.between(4, 5, SECONDS), "b"); //note, this is [4,5], not [4,5) -> multivalued at 4, it takes the value that appears latest. so the value at 4 is b
+        .set(Interval.between(3, 4, SECONDS), "a") //note, this is [3,4], not [3,4)
+        .set(Interval.between(4, 5, SECONDS), "b"); //note, this is [4,5], not [4,5) -> multivalued at 4, it takes the value that appears latest. so the value at 4 is b
 
-    right.set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "b");
+    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra())
+        .set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "b");
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
                                                   right,
@@ -46,25 +46,25 @@ public class IntervalMapMap2BasicTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<>(new IntervalAlgebra());
-    expected.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Exclusive), "NN");
-    expected.set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Exclusive), "Nb");
-    expected.set(Interval.between(Duration.of(3, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "ab");
-    expected.set(Interval.between(Duration.of(4, SECONDS), Inclusive, Duration.of(5, SECONDS), Inclusive), "bN");
-    expected.set(Interval.between(Duration.of(5, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
+    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Exclusive), "NN")
+        .set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Exclusive), "Nb")
+        .set(Interval.between(Duration.of(3, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "ab")
+        .set(Interval.between(Duration.of(4, SECONDS), Inclusive, Duration.of(5, SECONDS), Inclusive), "bN")
+        .set(Interval.between(Duration.of(5, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
 
   @Test
   public void map2basicInclusiveEnd() {
-    IntervalMap<String> left = new IntervalMap<>(new IntervalAlgebra());
-    IntervalMap<String> right = new IntervalMap<>(new IntervalAlgebra());
+    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra())
 
-    left.set(Interval.between(3, 4, SECONDS), "a"); //note, this is [3,4], not [3,4)
-    left.set(Interval.between(4, 5, SECONDS), "b"); //note, this is [4,5], not [4,5) -> multivalued at 4, it takes the value that appears latest. so the value at 4 is b
+        .set(Interval.between(3, 4, SECONDS), "a") //note, this is [3,4], not [3,4)
+        .set(Interval.between(4, 5, SECONDS), "b"); //note, this is [4,5], not [4,5) -> multivalued at 4, it takes the value that appears latest. so the value at 4 is b
 
-    right.set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(4, SECONDS), Inclusive), "b"); //when there is overlap like this between inclusive and exclusive intervals,
+    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra())
+        .set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(4, SECONDS), Inclusive), "b"); //when there is overlap like this between inclusive and exclusive intervals,
     // it automatically handles it where there is overlap. so if it goes [---] and that shares an end with [--], it becomes [--)[--)
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
@@ -84,26 +84,26 @@ public class IntervalMapMap2BasicTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<>(new IntervalAlgebra());
-    expected.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Exclusive), "NN");
-    expected.set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Exclusive), "Nb");
-    expected.set(Interval.between(Duration.of(3, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "ab");
-    expected.set(Interval.at(Duration.of(4, SECONDS)), "bb");
-    expected.set(Interval.between(Duration.of(4, SECONDS), Exclusive, Duration.of(5, SECONDS), Inclusive), "bN");
-    expected.set(Interval.between(Duration.of(5, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
+    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Exclusive), "NN")
+        .set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Exclusive), "Nb")
+        .set(Interval.between(Duration.of(3, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "ab")
+        .set(Interval.at(Duration.of(4, SECONDS)), "bb")
+        .set(Interval.between(Duration.of(4, SECONDS), Exclusive, Duration.of(5, SECONDS), Inclusive), "bN")
+        .set(Interval.between(Duration.of(5, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
 
   @Test
   public void map2basicExclusiveStart() {
-    IntervalMap<String> left = new IntervalMap<>(new IntervalAlgebra());
-    IntervalMap<String> right = new IntervalMap<>(new IntervalAlgebra());
+    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra())
 
-    left.set(Interval.between(3, 4, SECONDS), "a"); //note, this is [3,4], not [3,4)
-    left.set(Interval.between(4, 5, SECONDS), "b"); //note, this is [4,5], not [4,5) -> multivalued at 4, it takes the value that appears latest. so the value at 4 is b
+        .set(Interval.between(3, 4, SECONDS), "a") //note, this is [3,4], not [3,4)
+        .set(Interval.between(4, 5, SECONDS), "b"); //note, this is [4,5], not [4,5) -> multivalued at 4, it takes the value that appears latest. so the value at 4 is b
 
-    right.set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "b");
+    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra())
+        .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "b");
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
                                                   right,
@@ -122,13 +122,13 @@ public class IntervalMapMap2BasicTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<>(new IntervalAlgebra());
-    expected.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Inclusive), "NN");
-    expected.set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "Nb");
-    expected.set(Interval.between(Duration.of(3, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "ab");
-    expected.set(Interval.at(Duration.of(4, SECONDS)), "bb");
-    expected.set(Interval.between(Duration.of(4, SECONDS), Exclusive, Duration.of(5, SECONDS), Inclusive), "bN");
-    expected.set(Interval.between(Duration.of(5, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
+    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Inclusive), "NN")
+        .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "Nb")
+        .set(Interval.between(Duration.of(3, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "ab")
+        .set(Interval.at(Duration.of(4, SECONDS)), "bb")
+        .set(Interval.between(Duration.of(4, SECONDS), Exclusive, Duration.of(5, SECONDS), Inclusive), "bN")
+        .set(Interval.between(Duration.of(5, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
@@ -136,13 +136,12 @@ public class IntervalMapMap2BasicTest {
   @Test
   public void map2emptyleftAndCoalesce() {
     IntervalMap<String> left = new IntervalMap<>(new IntervalAlgebra());
-    IntervalMap<String> right = new IntervalMap<>(new IntervalAlgebra());
 
-    right.set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "b");
-    right.set(Interval.between(4, 5, SECONDS), "b"); //should not coalesce
-
-    right.set(Interval.between(Duration.of(7, SECONDS), Exclusive, Duration.of(8, SECONDS), Exclusive), "b"); //should not coalesce with 3-5 above, does not in set
-    right.set(Interval.between(Duration.of(8, SECONDS), Exclusive, Duration.of(9, SECONDS), Exclusive), "b"); //should not coalesce with 7-8 above, does not in set
+    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra())
+        .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "b")
+        .set(Interval.between(4, 5, SECONDS), "b") //should not coalesce
+        .set(Interval.between(Duration.of(7, SECONDS), Exclusive, Duration.of(8, SECONDS), Exclusive), "b") //should not coalesce with 3-5 above, does not in set
+        .set(Interval.between(Duration.of(8, SECONDS), Exclusive, Duration.of(9, SECONDS), Exclusive), "b"); //should not coalesce with 7-8 above, does not in set
 
     IntervalMap<String> mapped = IntervalMap.map2(
         left,
@@ -159,28 +158,28 @@ public class IntervalMapMap2BasicTest {
           }
         });
 
-    IntervalMap<String> expected = new IntervalMap<>(new IntervalAlgebra());
-    expected.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(3, SECONDS), Inclusive), "NN");
-    expected.set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(5, SECONDS), Inclusive), "Nb");
-    expected.set(Interval.between(Duration.of(5, SECONDS), Exclusive, Duration.of(7, SECONDS), Inclusive), "NN");
-    expected.set(Interval.between(Duration.of(7, SECONDS), Exclusive, Duration.of(8, SECONDS), Exclusive), "Nb");
-    expected.set(Interval.at(Duration.of(8, SECONDS)), "NN");
-    expected.set(Interval.between(Duration.of(8, SECONDS), Exclusive, Duration.of(9, SECONDS), Exclusive), "Nb");
-    expected.set(Interval.between(Duration.of(9, SECONDS), Inclusive, Duration.MAX_VALUE, Inclusive), "NN");
+    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(3, SECONDS), Inclusive), "NN")
+        .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(5, SECONDS), Inclusive), "Nb")
+        .set(Interval.between(Duration.of(5, SECONDS), Exclusive, Duration.of(7, SECONDS), Inclusive), "NN")
+        .set(Interval.between(Duration.of(7, SECONDS), Exclusive, Duration.of(8, SECONDS), Exclusive), "Nb")
+        .set(Interval.at(Duration.of(8, SECONDS)), "NN")
+        .set(Interval.between(Duration.of(8, SECONDS), Exclusive, Duration.of(9, SECONDS), Exclusive), "Nb")
+        .set(Interval.between(Duration.of(9, SECONDS), Inclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
 
   @Test
   public void map2emptyrightAndCoalesce() {
-    IntervalMap<String> left = new IntervalMap<>(new IntervalAlgebra());
+    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra())
+
+        .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "b")
+        .set(Interval.between(4, 5, SECONDS), "b") //coalesces successfully!
+        .set(Interval.between(Duration.of(7, SECONDS), Exclusive, Duration.of(8, SECONDS), Exclusive), "b")
+        .set(Interval.between(Duration.of(8, SECONDS), Exclusive, Duration.of(9, SECONDS), Exclusive), "b");
+
     IntervalMap<String> right = new IntervalMap<>(new IntervalAlgebra());
-
-    left.set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "b");
-    left.set(Interval.between(4, 5, SECONDS), "b"); //coalesces successfully!
-
-    left.set(Interval.between(Duration.of(7, SECONDS), Exclusive, Duration.of(8, SECONDS), Exclusive), "b");
-    left.set(Interval.between(Duration.of(8, SECONDS), Exclusive, Duration.of(9, SECONDS), Exclusive), "b");
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
                                                   right,
@@ -199,14 +198,14 @@ public class IntervalMapMap2BasicTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<>(new IntervalAlgebra());
-    expected.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(3, SECONDS), Inclusive), "NN");
-    expected.set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(5, SECONDS), Inclusive), "bN");
-    expected.set(Interval.between(Duration.of(5, SECONDS), Exclusive, Duration.of(7, SECONDS), Inclusive), "NN");
-    expected.set(Interval.between(Duration.of(7, SECONDS), Exclusive, Duration.of(8, SECONDS), Exclusive), "bN");
-    expected.set(Interval.at(Duration.of(8, SECONDS)), "NN");
-    expected.set(Interval.between(Duration.of(8, SECONDS), Exclusive, Duration.of(9, SECONDS), Exclusive), "bN");
-    expected.set(Interval.between(Duration.of(9, SECONDS), Inclusive, Duration.MAX_VALUE, Inclusive), "NN");
+    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(3, SECONDS), Inclusive), "NN")
+        .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(5, SECONDS), Inclusive), "bN")
+        .set(Interval.between(Duration.of(5, SECONDS), Exclusive, Duration.of(7, SECONDS), Inclusive), "NN")
+        .set(Interval.between(Duration.of(7, SECONDS), Exclusive, Duration.of(8, SECONDS), Exclusive), "bN")
+        .set(Interval.at(Duration.of(8, SECONDS)), "NN")
+        .set(Interval.between(Duration.of(8, SECONDS), Exclusive, Duration.of(9, SECONDS), Exclusive), "bN")
+        .set(Interval.between(Duration.of(9, SECONDS), Inclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
@@ -233,8 +232,8 @@ public class IntervalMapMap2BasicTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<>(new IntervalAlgebra());
-    expected.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.MAX_VALUE, Inclusive), "NN");
+    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }

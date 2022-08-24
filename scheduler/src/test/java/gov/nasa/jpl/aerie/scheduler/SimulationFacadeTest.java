@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.All;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
@@ -151,7 +152,7 @@ public class SimulationFacadeTest {
 
     final var goal = new CoexistenceGoal.Builder()
         .forEach(ActivityExpression.ofType(actTypePeel))
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(horizon.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(horizon.getHor(), true)))
         .thereExistsOne(new ActivityCreationTemplate.Builder().
                            ofType(actTypeBite)
                            .withArgument("biteSize", SerializedValue.of(0.1))
@@ -199,8 +200,8 @@ public class SimulationFacadeTest {
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new GreaterThan(getFruitRes(), new RealValue(2.9)).evaluate(facade.getLatestConstraintSimulationResults());
     var expected = new Windows(
-        Pair.of(interval(0, Inclusive, 2, Exclusive, SECONDS), true),
-        Pair.of(interval(2, 5, SECONDS), false)
+        Segment.of(interval(0, Inclusive, 2, Exclusive, SECONDS), true),
+        Segment.of(interval(2, 5, SECONDS), false)
     );
     assertThat(actual).isEqualTo(expected);
   }
@@ -211,8 +212,8 @@ public class SimulationFacadeTest {
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new LessThan(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
     var expected = new Windows(
-        Pair.of(interval(0, Inclusive, 2, Exclusive, SECONDS), false),
-        Pair.of(interval(2, 5, SECONDS), true)
+        Segment.of(interval(0, Inclusive, 2, Exclusive, SECONDS), false),
+        Segment.of(interval(2, 5, SECONDS), true)
     );
     assertThat(actual).isEqualTo(expected);
   }
@@ -223,9 +224,9 @@ public class SimulationFacadeTest {
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new All(new GreaterThanOrEqual(getFruitRes(), new RealValue(3.0)), new LessThanOrEqual(getFruitRes(), new RealValue(3.99))).evaluate(facade.getLatestConstraintSimulationResults());
     var expected = new Windows(
-        Pair.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
-        Pair.of(interval(1, Inclusive, 2, Exclusive, SECONDS), true),
-        Pair.of(interval(2, Inclusive, 5, Inclusive, SECONDS), false)
+        Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
+        Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), true),
+        Segment.of(interval(2, Inclusive, 5, Inclusive, SECONDS), false)
     );
     assertThat(actual).isEqualTo(expected);
   }
@@ -236,9 +237,9 @@ public class SimulationFacadeTest {
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new Equal<>(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
     var expected = new Windows(
-        Pair.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
-        Pair.of(interval(1, Inclusive, 2, Exclusive, SECONDS), true),
-        Pair.of(interval(2, Inclusive, 5, Inclusive, SECONDS), false)
+        Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
+        Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), true),
+        Segment.of(interval(2, Inclusive, 5, Inclusive, SECONDS), false)
     );
     assertThat(actual).isEqualTo(expected);
   }
@@ -249,9 +250,9 @@ public class SimulationFacadeTest {
     facade.computeSimulationResultsUntil(tEnd);
     var actual = new NotEqual<>(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
     var expected = new Windows(
-        Pair.of(interval(0, Inclusive, 1, Exclusive, SECONDS), true),
-        Pair.of(interval(1, Inclusive, 2, Exclusive, SECONDS), false),
-        Pair.of(interval(2, Inclusive, 5, Inclusive, SECONDS), true)
+        Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), true),
+        Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), false),
+        Segment.of(interval(2, Inclusive, 5, Inclusive, SECONDS), true)
     );
     assertThat(actual).isEqualTo(expected);
   }
@@ -277,7 +278,7 @@ public class SimulationFacadeTest {
     final var actTypePeel = problem.getActivityType("PeelBanana");
 
     CoexistenceGoal cg = new CoexistenceGoal.Builder()
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(horizon.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(horizon.getHor(), true)))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(actTypePeel)
                             .withArgument("peelDirection", SerializedValue.of("fromStem"))
@@ -320,7 +321,7 @@ public class SimulationFacadeTest {
         = (p) -> externalActs;
 
     final var proceduralGoalWithConstraints = new ProceduralCreationGoal.Builder()
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(horizon.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(horizon.getHor(), true)))
         .attachStateConstraint(constraint)
         .generateWith(fixedGenerator)
         .owned(ChildCustody.Jointly)
@@ -362,7 +363,7 @@ public class SimulationFacadeTest {
         = (p) -> externalActs;
 
     final var proceduralgoalwithoutconstraints = new ProceduralCreationGoal.Builder()
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(horizon.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(horizon.getHor(), true)))
         .generateWith(fixedGenerator)
         .owned(ChildCustody.Jointly)
         .build();

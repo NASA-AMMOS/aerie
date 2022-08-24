@@ -69,11 +69,11 @@ public class TestFilters {
 
     final var res = tre2.computeRange(simResults, null, horizonW);
 
-    final var expected = new Windows(interval(0, Inclusive, 20, Exclusive, SECONDS), false);
-    expected.setAllTrue(List.of(
-        interval(3, Inclusive, 6, Exclusive, SECONDS),
-        interval(11, Inclusive, 15, Exclusive, SECONDS)
-    ));
+    final var expected = new Windows(interval(0, Inclusive, 20, Exclusive, SECONDS), false)
+        .set(List.of(
+            interval(3, Inclusive, 6, Exclusive, SECONDS),
+            interval(11, Inclusive, 15, Exclusive, SECONDS)
+        ), true);
 
     assertEquals(expected, res);
   }
@@ -111,11 +111,11 @@ public class TestFilters {
     Interval r5 = Interval.betweenClosedOpen(Duration.of(11, Duration.SECONDS), Duration.of(15, Duration.SECONDS));
     Interval r7 = Interval.betweenClosedOpen(Duration.of(18, Duration.SECONDS), Duration.of(22, Duration.SECONDS));
 
-    Windows tw = Windows.definedEverywhere(List.of(r1,r2,r3,r5,r7), true);
+    Windows tw = new Windows(false).set(List.of(r1,r2,r3,r5,r7), true);
 
     Windows res = fsm.filter(null, null, tw);
 
-    var expected = Windows.definedEverywhere(List.of(r2,r3), true);
+    var expected = new Windows(false).set(List.of(r2,r3), true);
     assertEquals(expected, res);
   }
 
@@ -136,9 +136,9 @@ public class TestFilters {
     ranges.add(r5);
     ranges.add(r7);
 
-    Windows tw = Windows.definedEverywhere(ranges, true);
+    Windows tw = new Windows(false).set(ranges, true);
 
-    Windows expected = Windows.definedEverywhere(List.of(r1,r5,r7), true);
+    Windows expected = new Windows(false).set(List.of(r1,r5,r7), true);
     Windows res = fsm.filter(null, null, tw);
     assertEquals(res, expected);
 
