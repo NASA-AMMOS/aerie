@@ -7,9 +7,9 @@ import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingCompilationError;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
-import org.json.JSONObject;
 
 import javax.json.Json;
+import javax.json.JsonObject;
 import javax.json.stream.JsonParsingException;
 import java.io.File;
 import java.io.IOException;
@@ -57,11 +57,15 @@ public class SchedulingDSLCompilationService {
     } catch (IOException | MissionModelService.MissionModelServiceException e) {
       throw new Error(e);
     }
-    final var schedulerGeneratedCode = JSONObject.quote(TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelTypes));
-    final var debug = gov.nasa.jpl.aerie.constraints.TypescriptCodeGenerationService.generateTypescriptTypes(
+    final var schedulerGeneratedCode = TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelTypes);
+    final var constraintsGeneratedCode = gov.nasa.jpl.aerie.constraints.TypescriptCodeGenerationService.generateTypescriptTypes(
         activityTypes(missionModelTypes),
         resources(missionModelTypes));
-    final var constraintsGeneratedCode = JSONObject.quote(debug);
+    final JsonObject messageJson = Json.createObjectBuilder()
+        .add("goalCode", goalTypescript)
+        .add("schedulerGeneratedCode", schedulerGeneratedCode)
+        .add("constraintsGeneratedCode", constraintsGeneratedCode)
+        .build();
 
     /*
     * PROTOCOL:
@@ -73,9 +77,8 @@ public class SchedulingDSLCompilationService {
     * */
     final var inputWriter = this.nodeProcess.outputWriter();
     final var outputReader = this.nodeProcess.inputReader();
-    final var quotedGoalTypescript = JSONObject.quote(goalTypescript); // adds extra quotes to start and end
     try {
-      inputWriter.write("{ \"goalCode\": " + quotedGoalTypescript + ", \"schedulerGeneratedCode\": " + schedulerGeneratedCode + ", \"constraintsGeneratedCode\": " + constraintsGeneratedCode + " }\n");
+      inputWriter.write(messageJson+"\n");
       inputWriter.flush();
       final var status = outputReader.readLine();
       return switch (status) {

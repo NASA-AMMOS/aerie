@@ -7,9 +7,9 @@ import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.merlin.server.models.ConstraintsCompilationError;
 import gov.nasa.jpl.aerie.constraints.json.ConstraintParsers;
-import org.json.JSONObject;
 
 import javax.json.Json;
+import javax.json.JsonObject;
 import javax.json.stream.JsonParsingException;
 import java.io.File;
 import java.io.IOException;
@@ -52,8 +52,11 @@ public class ConstraintsDSLCompilationService {
   synchronized public ConstraintsDSLCompilationResult compileConstraintsDSL(final String missionModelId, final String constraintTypescript)
   throws MissionModelService.NoSuchMissionModelException
   {
-    final var missionModelGeneratedCode = JSONObject.quote(this.typescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelId));
-
+    final var missionModelGeneratedCode = this.typescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelId);
+    final JsonObject messageJson = Json.createObjectBuilder()
+        .add("constraintCode", constraintTypescript)
+        .add("missionModelGeneratedCode", missionModelGeneratedCode)
+        .build();
     /*
      * PROTOCOL:
      *   denote this java program as JAVA, and the node subprocess as NODE
@@ -64,9 +67,8 @@ public class ConstraintsDSLCompilationService {
      * */
     final var inputWriter = this.nodeProcess.outputWriter();
     final var outputReader = this.nodeProcess.inputReader();
-    final var quotedConstraintTypescript = JSONObject.quote(constraintTypescript); // adds extra quotes to start and end
     try {
-      inputWriter.write("{ \"constraintCode\": " + quotedConstraintTypescript + ", \"missionModelGeneratedCode\": " + missionModelGeneratedCode + " }\n");
+      inputWriter.write(messageJson +"\n");
       inputWriter.flush();
       final var status = outputReader.readLine();
       return switch (status) {
