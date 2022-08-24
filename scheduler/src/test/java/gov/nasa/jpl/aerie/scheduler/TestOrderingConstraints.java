@@ -80,7 +80,7 @@ public class TestOrderingConstraints {
     simulationFacade.simulateActivities(plan.getActivities());
 
     //constraint is invalid in interval (0,10)
-    ConstraintState cs = cc.isEnforced(plan, Windows.definedEverywhere(Interval.between(t0, h.toDur(TestUtility.timeFromEpochSeconds(10))), true), simulationFacade.getLatestConstraintSimulationResults());
+    ConstraintState cs = cc.isEnforced(plan, new Windows(false).set(Interval.between(t0, h.toDur(TestUtility.timeFromEpochSeconds(10))), true), simulationFacade.getLatestConstraintSimulationResults());
     assertTrue(cs.isViolation);
     CardinalityConstraint cc2 =
         new CardinalityConstraint.Builder().atMost(0).type(type1).inInterval(Interval.between(
@@ -88,7 +88,7 @@ public class TestOrderingConstraints {
                     t10)).build();
 
     //constraint is valid in interval (8,10)
-    ConstraintState cs2 = cc2.isEnforced(plan, Windows.definedEverywhere(Interval.between(t8, t10), true), simulationFacade.getLatestConstraintSimulationResults());
+    ConstraintState cs2 = cc2.isEnforced(plan, new Windows(false).set(Interval.between(t8, t10), true), simulationFacade.getLatestConstraintSimulationResults());
     assertFalse(cs2.isViolation);
   }
 
@@ -109,12 +109,12 @@ public class TestOrderingConstraints {
     simulationFacade.simulateActivities(plan.getActivities());
 
     //constraint is invalid in interval (0,10)
-    ConstraintState cs = mc.isEnforced(plan, Windows.definedEverywhere(Interval.between(t0, t10), true), simulationFacade.getLatestConstraintSimulationResults());
+    ConstraintState cs = mc.isEnforced(plan, new Windows(false).set(Interval.between(t0, t10), true), simulationFacade.getLatestConstraintSimulationResults());
     assertTrue(cs.isViolation);
-    assertEquals(cs.violationWindows, Windows.definedEverywhere(Interval.betweenClosedOpen(t3, t5), true));
+    assertEquals(cs.violationWindows, new Windows(false).set(Interval.betweenClosedOpen(t3, t5), true));
 
     //constraint is valid in interval (8,10)
-    cs = mc.isEnforced(plan, Windows.definedEverywhere(Interval.between(t8, t10), true), simulationFacade.getLatestConstraintSimulationResults());
+    cs = mc.isEnforced(plan, new Windows(false).set(Interval.between(t8, t10), true), simulationFacade.getLatestConstraintSimulationResults());
     assertFalse(cs.isViolation);
     assertNull(cs.violationWindows);
 
@@ -135,7 +135,7 @@ public class TestOrderingConstraints {
     plan.add(act1);
     plan.add(act2);
     BinaryMutexConstraint mc = GlobalConstraints.buildBinaryMutexConstraint(type1, type2);
-    Windows tw1 = Windows.definedEverywhere(Interval.between(t0, t10), true);
+    Windows tw1 = new Windows(false).set(Interval.between(t0, t10), true);
 
     final var simulationFacade = new SimulationFacade(h, SimulationUtility.getFooMissionModel());
     simulationFacade.simulateActivities(plan.getActivities());
@@ -146,7 +146,7 @@ public class TestOrderingConstraints {
         new MissingActivityInstanceConflict(new ActivityExistentialGoal(), act2), null);
 
     Windows expectedWindows = new Windows(tw1);
-    expectedWindows = expectedWindows.and(Windows.definedEverywhere(Interval.between(t1, Interval.Inclusivity.Inclusive, t5, Interval.Inclusivity.Exclusive), false));
+    expectedWindows = expectedWindows.and(new Windows(true).set(Interval.between(t1, Interval.Inclusivity.Inclusive, t5, Interval.Inclusivity.Exclusive), false));
     assertEquals(expectedWindows, foundWindows);
 
 
@@ -168,7 +168,7 @@ public class TestOrderingConstraints {
             t0,
             t10)).build();
 
-    Windows tw1 = Windows.definedEverywhere(Interval.between(t0, t10), true);
+    Windows tw1 = new Windows(false).set(Interval.between(t0, t10), true);
 
     Windows foundWindows = cc.findWindows(
         plan,

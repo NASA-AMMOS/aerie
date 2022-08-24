@@ -3,8 +3,8 @@ package gov.nasa.jpl.aerie.constraints.tree;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
 import java.util.Objects;
@@ -21,8 +21,8 @@ public final class EndOf implements Expression<Windows> {
   public Windows evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
     final var activity = environment.get(this.activityAlias);
     return new Windows(
-        Pair.of(Interval.FOREVER, false),
-        Pair.of(Interval.at(activity.interval.end), true)
+        Segment.of(Interval.FOREVER, false),
+        Segment.of(Interval.at(activity.interval.end), true)
     );
   }
 

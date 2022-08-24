@@ -55,7 +55,7 @@ public class BinaryMutexConstraint extends GlobalConstraint {
     List<Interval> rangesActs = acts.stream().map(a -> Interval.betweenClosedOpen(a.getStartTime(), a.getEndTime())).collect(
         Collectors.toList());
 
-    validWindows.setAll(rangesActs, false);
+    validWindows = validWindows.set(rangesActs, false);
 
     return validWindows;
   }
@@ -69,7 +69,7 @@ public class BinaryMutexConstraint extends GlobalConstraint {
     Windows violationWindows = new Windows(Interval.FOREVER, false);
 
 
-    for (final var interval: windows.iterateTrue()) {
+    for (final var interval: windows.iterateEqualTo(true)) {
       final var actSearch = new ActivityExpression.Builder()
           .ofType(actType).startsOrEndsIn(interval).build();
       final var otherActSearch = new ActivityExpression.Builder()
@@ -78,19 +78,19 @@ public class BinaryMutexConstraint extends GlobalConstraint {
       final var otherActs = new java.util.LinkedList<>(plan.find(otherActSearch, simulationResults));
 
       List<Interval> rangesActs = acts.stream().map(a -> Interval.betweenClosedOpen(a.getStartTime(), a.getEndTime())).toList();
-      Windows twActs = Windows.definedEverywhere(rangesActs, true);
+      Windows twActs = new Windows(false).set(rangesActs, true);
       List<Interval> rangesOtherActs = otherActs
           .stream()
           .map(a -> Interval.betweenClosedOpen(a.getStartTime(), a.getEndTime()))
           .toList();
-      Windows twOtherActs = Windows.definedEverywhere(rangesOtherActs, true);
+      Windows twOtherActs = new Windows(false).set(rangesOtherActs, true);
 
-      final var intervalWindows = Windows.definedEverywhere(interval, true);
+      final var intervalWindows = new Windows(false).set(interval, true);
       //intersection with current interval to be sure we are not analyzing intersections happenning outside
       violationWindows = new Windows(twActs).and(twOtherActs).and(intervalWindows).or(violationWindows);
     }
     ConstraintState cState;
-    if (!violationWindows.isAllFalse()) {
+    if (!violationWindows.isAllEqualTo(false)) {
       cState = new ConstraintState(this, true, violationWindows);
     } else {
       cState = new ConstraintState(this, false, null);

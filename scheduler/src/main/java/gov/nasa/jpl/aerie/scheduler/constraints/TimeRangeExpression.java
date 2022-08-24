@@ -33,15 +33,15 @@ public class TimeRangeExpression {
   public Windows computeRange(final SimulationResults simulationResults, final Plan plan, final Windows domain) {
 
     Windows inter = new Windows(domain);
-    if(inter.isEmpty()) return inter;
+    if(inter.isAllEqualTo(false)) return inter;
 
-    if (constantWin != null && !inter.isEmpty()) {
+    if (constantWin != null) {
       inter = inter.and(constantWin);
-      if(inter.isEmpty()) return inter;
+      if(inter.isAllEqualTo(false)) return inter;
     }
 
     if (actTemplate != null) {
-      Windows actTw = new Windows(Interval.FOREVER, false);
+      Windows actTw = new Windows(false);
       var minTimepoint = inter.minTrueTimePoint();
       var maxTimepoint = inter.maxTrueTimePoint();
       if(minTimepoint.isPresent() && maxTimepoint.isPresent()) {
@@ -54,38 +54,42 @@ public class TimeRangeExpression {
           if(anchorAct.getDuration().isZero()){
             endInclusivity = Interval.Inclusivity.Inclusive;
           }
-          actTw.setTrue(Interval.between(anchorAct.getStartTime(), Interval.Inclusivity.Inclusive, anchorAct.getEndTime(), endInclusivity));
+          actTw = actTw.set(Interval.between(anchorAct.getStartTime(), Interval.Inclusivity.Inclusive, anchorAct.getEndTime(), endInclusivity), true);
         }
       }
       inter = inter.and(actTw);
-      if(inter.isAllFalse()) return inter;
+      if(inter.isAllEqualTo(false)) return inter;
     }
 
     for (var otherExpr : timeRangeExpressions) {
       Windows windowsState = otherExpr.computeRange(simulationResults, plan, domain);
       inter = inter.and(windowsState);
-      if(inter.isEmpty()) return inter;
+      if(inter.isAllEqualTo(false)) return inter;
     }
 
     for (var expr : stateExpr) {
       final var domainOfInter = Interval.between(inter.minTrueTimePoint().get().getKey(), inter.maxTrueTimePoint().get().getKey());
       Windows windowsState = expr.evaluate(simulationResults, domainOfInter, Map.of());
       inter = inter.and(windowsState);
-      if(inter.isEmpty()) return inter;
+      if(inter.isAllEqualTo(false)) return inter;
     }
 
     for (var constState : constantsStates) {
       final var domainOfInter = Interval.between(inter.minTrueTimePoint().get().getKey(), inter.maxTrueTimePoint().get().getKey());
       final var changePoints = simulationResults.discreteProfiles.get(constState).changePoints(domainOfInter);
-      final var timeline = new Windows(Interval.FOREVER, false);
+
+      // can't use non-final variables in lambdas, so its an array now.
+      final Windows[] timeline = {new Windows(false)};
+
+
       final var container = new ArrayList<Interval>();
-      changePoints.iterateTrue().iterator().forEachRemaining(container::add);
+      changePoints.iterateEqualTo(true).iterator().forEachRemaining(container::add);
       container.stream().reduce((a, b) -> {
-        timeline.setTrue(Interval.interval(a.start, Interval.Inclusivity.Exclusive, b.start, Interval.Inclusivity.Exclusive));
+        timeline[0] = timeline[0].set(Interval.interval(a.start, Interval.Inclusivity.Exclusive, b.start, Interval.Inclusivity.Exclusive), true);
         return b;
       });
-      inter = inter.and(timeline);
-      if(inter.isEmpty()) return inter;
+      inter = inter.and(timeline[0]);
+      if(inter.isAllEqualTo(false)) return inter;
     }
 
     for (var filterOrTransform : filtersAndTransformers) {
@@ -94,7 +98,7 @@ public class TimeRangeExpression {
       } else if (filterOrTransform instanceof TimeWindowsTransformer timeWindowsTransformer) {
         inter = timeWindowsTransformer.transformWindows(plan, inter, simulationResults);
       }
-      if(inter.isEmpty()) return inter;
+      if(inter.isAllEqualTo(false)) return inter;
     }
 
     return inter;

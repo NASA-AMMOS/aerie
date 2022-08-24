@@ -23,7 +23,7 @@ public final class WindowsOf implements Expression<Windows> {
     var ret = new Windows(bounds, false);
     final var unsatisfiedWindows = this.expression.evaluate(results, bounds, environment);
     for(var unsatisfiedWindow : unsatisfiedWindows){
-      ret.setAllTrue(unsatisfiedWindow.violationWindows);
+      ret = ret.set(unsatisfiedWindow.violationWindows, true);
     }
     return ret.not();
   }

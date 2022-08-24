@@ -96,7 +96,7 @@ public class AerieLanderRules extends Problem {
 
     ProceduralCreationGoal dsnGoal = new ProceduralCreationGoal.Builder()
         .named("Schedule DSN contacts for initial setup")
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(planningHorizon.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
         .generateWith((plan) -> actList)
         .build();
 
@@ -133,7 +133,7 @@ public class AerieLanderRules extends Problem {
                              Duration.of(1,Duration.MINUTE)));
     ProceduralCreationGoal pro = new ProceduralCreationGoal.Builder()
         .named("TurnOnAndOFFMonitoring")
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(planningHorizon.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
         .generateWith((plan) -> turnONFFMonitoring)
         .owned(ChildCustody.Jointly)
         .build();
@@ -153,7 +153,7 @@ public class AerieLanderRules extends Problem {
         .named("1a")
         .repeatingEvery(Duration.of(60, Duration.MINUTE))
         .attachStateConstraint(sce)
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
         .thereExistsOne(HP3Acts)
         .owned(ChildCustody.Jointly)
         .build();
@@ -171,7 +171,7 @@ public class AerieLanderRules extends Problem {
 
     CardinalityGoal goal1c = new CardinalityGoal.Builder()
         .named("1c")
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(planningHorizon.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
         .thereExistsOne(HP3Acts)
         .attachStateConstraint(sce)
         .owned(ChildCustody.Jointly)
@@ -210,7 +210,7 @@ public class AerieLanderRules extends Problem {
 
   ProceduralCreationGoal goal2a = new ProceduralCreationGoal.Builder()
       .named("SchedIDAMoveArm")
-      .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(planningHorizon.getHor(), true)))
+      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
       .generateWith((plan) -> List.of(new ActivityInstance(actTypeIDAMoveArm,stMoveArm, duroveArm)))
       .build();
 
@@ -226,7 +226,7 @@ public class AerieLanderRules extends Problem {
 
   CoexistenceGoal goal2b= new CoexistenceGoal.Builder()
       .named("Grapple IDA")
-      .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(atGrapple)
                           .duration(Duration.of(20, Duration.MINUTE))
@@ -243,7 +243,7 @@ public class AerieLanderRules extends Problem {
   */
   CoexistenceGoal goal2c= new CoexistenceGoal.Builder()
       .named("SchedIDAMoveArm Back")
-      .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDAMoveArm)
                           .duration(Duration.of(1, Duration.HOUR))
@@ -266,7 +266,7 @@ public class AerieLanderRules extends Problem {
 
     CoexistenceGoal goal2d= new CoexistenceGoal.Builder()
         .named("Grapple IDA second")
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(atGrapple)
                             .duration(Duration.of(20, Duration.MINUTE))
@@ -298,7 +298,7 @@ public class AerieLanderRules extends Problem {
 
   CoexistenceGoal goal2e= new CoexistenceGoal.Builder()
       .named("Heaters ON")
-      .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDAHeatersOn)
                           .duration(Duration.of(3, Duration.MINUTE))
@@ -322,7 +322,7 @@ public class AerieLanderRules extends Problem {
 
   CoexistenceGoal goal2f= new CoexistenceGoal.Builder()
       .named("Heaters Off")
-      .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDAHeatersOff)
                           .duration(Duration.of(3, Duration.MINUTE))
@@ -344,7 +344,7 @@ public class AerieLanderRules extends Problem {
 
   CoexistenceGoal goal2g= new CoexistenceGoal.Builder()
       .named("Image before grapple")
-      .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDCImage)
                           .duration(Duration.of(6, Duration.MINUTE))
@@ -366,7 +366,7 @@ public class AerieLanderRules extends Problem {
 */
   CoexistenceGoal goal2h= new CoexistenceGoal.Builder()
       .named("Image after grapple")
-      .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDCImage)
                           .duration(Duration.of(6, Duration.MINUTE))
@@ -402,7 +402,7 @@ public class AerieLanderRules extends Problem {
 
   CoexistenceGoal goal2i= new CoexistenceGoal.Builder()
       .named("Heaters before earliest image")
-      .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDCHeatersOn)
                           .duration(Duration.of(15, Duration.MINUTE))
@@ -427,7 +427,7 @@ public class AerieLanderRules extends Problem {
 
   CoexistenceGoal goal2j= new CoexistenceGoal.Builder()
       .named("Heaters after latest image")
-      .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIDCHeatersOff)
                           .duration(Duration.of(15, Duration.MINUTE))
@@ -454,7 +454,7 @@ public class AerieLanderRules extends Problem {
 
   CoexistenceGoal goal2k= new CoexistenceGoal.Builder()
       .named("image stowed device in context before pickup")
-      .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeICCImages)
                           .duration(Duration.of(6, Duration.MINUTE))
@@ -477,7 +477,7 @@ public class AerieLanderRules extends Problem {
 
   CoexistenceGoal goal2l= new CoexistenceGoal.Builder()
       .named("image stowage area after relocating device")
-      .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeICCImages)
                           .duration(Duration.of(6, Duration.MINUTE))
@@ -507,7 +507,7 @@ public class AerieLanderRules extends Problem {
 
   CoexistenceGoal goal2m= new CoexistenceGoal.Builder()
       .named("preheat for ICC image")
-      .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIccHeatersOn)
                           .duration(Duration.of(15, Duration.MINUTE))
@@ -536,7 +536,7 @@ public class AerieLanderRules extends Problem {
 
   CoexistenceGoal goal2n= new CoexistenceGoal.Builder()
       .named("turn off heaters for ICC image")
-      .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeIccHeatersOff)
                           .duration(Duration.of(10, Duration.SECONDS))
@@ -598,7 +598,7 @@ public class AerieLanderRules extends Problem {
 
   CoexistenceGoal goal3a= new CoexistenceGoal.Builder()
       .named("xbandactivegoal")
-      .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
       .thereExistsOne(new ActivityCreationTemplate.Builder()
                           .ofType(actTypeXbandActive)
                           .build())
@@ -627,7 +627,7 @@ public class AerieLanderRules extends Problem {
 
     CoexistenceGoal goal3b= new CoexistenceGoal.Builder()
         .named("xbandprepgoal")
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(actTypeXbandPrep)
                             .duration(prepDur)
@@ -654,7 +654,7 @@ public class AerieLanderRules extends Problem {
 
     CoexistenceGoal goal3c= new CoexistenceGoal.Builder()
         .named("xbandcleanupgoal")
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(actTypeXbandCleanup)
                             .duration(cleanupDur)
@@ -695,7 +695,7 @@ public class AerieLanderRules extends Problem {
 
     CoexistenceGoal goal3d= new CoexistenceGoal.Builder()
         .named("xbancommgoal")
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(DEFAULT_PLANNING_HORIZON.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(DEFAULT_PLANNING_HORIZON.getHor(), true)))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(actTypeXbandCommched)
                             .withArgument("DSNTrack", "/dsn/allocstation")

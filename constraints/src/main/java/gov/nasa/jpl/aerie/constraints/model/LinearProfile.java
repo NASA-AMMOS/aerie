@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -91,36 +92,34 @@ public final class LinearProfile implements Profile<LinearProfile> {
   }
 
   private Windows getWindowsSatisfying(final LinearProfile other, final Interval bounds, final BiFunction<LinearProfilePiece, LinearProfilePiece, List<Pair<Interval, Boolean>>> condition) {
-    final var windows = new Windows();
-    for (final var intervals : processIntersections(this, other, condition, bounds)) {
-      for (final var interval: intervals) {
-        windows.set(interval.getKey(), interval.getValue());
+    List<Segment<Boolean>> segments = new ArrayList<>();
+    for (final var intersections : processIntersections(this, other, condition, bounds)) {
+      for (final var pair: intersections) {
+        segments.add(Segment.of(pair.getKey(), pair.getValue()));
       }
     }
-    windows.bound(bounds);
-    return windows;
+    return new Windows(segments).select(bounds);
   }
 
-    // TODO: Gaps in profiles will cause an error
-    //       We may want to deal with gaps someday
     @Override
     public Windows changePoints(final Interval bounds) {
-      final var changePoints = new Windows();
+      var changePoints = new Windows();
       if (this.profilePieces.size() == 0) return changePoints;
 
       final var iter = this.profilePieces.iterator();
       var prev = iter.next();
       if(!profileOutsideBounds(prev, bounds)) {
-        changePoints.setAll(prev.changePoints());
+        changePoints = changePoints.set(prev.changePoints());
       }
       while (iter.hasNext()) {
         final var curr = iter.next();
         if(!profileOutsideBounds(curr, bounds)) {
-          changePoints.setAll(curr.changePoints());
+          changePoints = changePoints.set(curr.changePoints());
         }
 
         if (Interval.meets(prev.interval, curr.interval)) {
-          if (prev.finalValue() != curr.initialValue && !profileOutsideBounds(prev, bounds)) changePoints.setTrue(Interval.at(prev.interval.end));
+          if (prev.finalValue() != curr.initialValue && !profileOutsideBounds(prev, bounds))
+            changePoints = changePoints.set(Interval.at(prev.interval.end), true);
         } else {
           throw new Error("Unexpected gap in profile pieces not allowed");
         }
@@ -128,8 +127,7 @@ public final class LinearProfile implements Profile<LinearProfile> {
         prev = curr;
       }
 
-      changePoints.bound(bounds);
-      return changePoints;
+      return changePoints.select(bounds);
     }
 
   /**

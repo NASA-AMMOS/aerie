@@ -193,7 +193,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
     //the rest is the same if no such bisection has happened
     final var conflicts = new java.util.LinkedList<Conflict>();
-    for (var window : anchors.iterateTrue()) {
+    for (var window : anchors.iterateEqualTo(true)) {
 
       boolean disj = false;
       ActivityExpression.AbstractBuilder actTB = null;

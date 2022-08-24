@@ -160,11 +160,11 @@ public class SpansTest {
     ).intoWindows();
 
     final var expected = List.of(
-        Pair.of(interval(Duration.MIN_VALUE, Inclusive, Duration.ZERO, Exclusive), false),
-        Pair.of(interval(0, 3, SECONDS), true),
-        Pair.of(interval(3, Exclusive, 5, Exclusive, SECONDS), false),
-        Pair.of(at(5, SECONDS), true),
-        Pair.of(interval(Duration.of(5, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), false)
+        Segment.of(interval(Duration.MIN_VALUE, Inclusive, Duration.ZERO, Exclusive), false),
+        Segment.of(interval(0, 3, SECONDS), true),
+        Segment.of(interval(3, Exclusive, 5, Exclusive, SECONDS), false),
+        Segment.of(at(5, SECONDS), true),
+        Segment.of(interval(Duration.of(5, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), false)
     );
 
     assertIterableEquals(expected, intervals);

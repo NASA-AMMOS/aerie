@@ -37,7 +37,7 @@ public class TestUtility {
    * Returns true if there is at least one activity of type activityType in timewindows tw in the plan
    */
   public static boolean atLeastOneActivityOfTypeInTW(Plan plan, Windows tw, ActivityType activityType) {
-    for (Interval interval : tw.iterateTrue()) {
+    for (Interval interval : tw.iterateEqualTo(true)) {
       if (!atLeastOneActivityOfTypeInRange(plan, interval, activityType)) {
         return false;
       }

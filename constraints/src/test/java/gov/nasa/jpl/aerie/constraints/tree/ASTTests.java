@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -40,17 +41,17 @@ public class ASTTests {
         Map.of()
     );
 
-    final var windows = new Windows();
-    windows.set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), true);
-    windows.set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), false);
-    windows.set(Interval.at(20, SECONDS), true);
+    final var windows = new Windows()
+        .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), true)
+        .set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), false)
+        .set(Interval.at(20, SECONDS), true);
 
     final var result = new Invert(Supplier.of(windows)).evaluate(simResults, Map.of());
 
-    final var expected = new Windows();
-    expected.set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), false);
-    expected.set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), true);
-    expected.set(Interval.at(20, SECONDS), false);
+    final var expected = new Windows()
+        .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), false)
+        .set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), true)
+        .set(Interval.at(20, SECONDS), false);
 
     assertEquivalent(expected, result);
   }
@@ -64,25 +65,25 @@ public class ASTTests {
         Map.of()
     );
 
-    final var left = new Windows();
-    left.setTrue(Interval.between(0, Inclusive, 5, Exclusive, SECONDS));
-    left.setTrue(Interval.between(6, Inclusive, 7, Inclusive, SECONDS));
-    left.setTrue(Interval.between(8, Exclusive, 9, Exclusive, SECONDS));
-    left.setTrue(Interval.between(10, Exclusive, 15, Exclusive, SECONDS));
-    left.setTrue(Interval.at(20, SECONDS));
+    final var left = new Windows()
+        .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), true)
+        .set(Interval.between(6, Inclusive, 7, Inclusive, SECONDS), true)
+        .set(Interval.between(8, Exclusive, 9, Exclusive, SECONDS), true)
+        .set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), true)
+        .set(Interval.at(20, SECONDS), true);
 
-    final var right = new Windows();
-    right.setTrue(Interval.between(0, Inclusive, 5, Inclusive, SECONDS));
-    right.setTrue(Interval.between(7, Inclusive, 8, Exclusive, SECONDS));
-    right.setTrue(Interval.between(10, Inclusive, 12, Inclusive, SECONDS));
-    right.setTrue(Interval.between(15, Inclusive, 20, Exclusive, SECONDS));
+    final var right = new Windows()
+        .set(Interval.between(0, Inclusive, 5, Inclusive, SECONDS), true)
+        .set(Interval.between(7, Inclusive, 8, Exclusive, SECONDS), true)
+        .set(Interval.between(10, Inclusive, 12, Inclusive, SECONDS), true)
+        .set(Interval.between(15, Inclusive, 20, Exclusive, SECONDS), true);
 
     final var result = new All(Supplier.of(left), Supplier.of(right)).evaluate(simResults, Map.of());
 
-    final var expected = new Windows();
-    expected.setTrue(Interval.between( 0, Inclusive,  5, Exclusive, SECONDS));
-    expected.setTrue(Interval.at(7, SECONDS));
-    expected.setTrue(Interval.between( 10, Exclusive,  12, Inclusive, SECONDS));
+    final var expected = new Windows()
+        .set(Interval.between( 0, Inclusive,  5, Exclusive, SECONDS), true)
+        .set(Interval.at(7, SECONDS), true)
+        .set(Interval.between( 10, Exclusive,  12, Inclusive, SECONDS), true);
 
     assertEquivalent(expected, result);
   }
@@ -96,26 +97,26 @@ public class ASTTests {
         Map.of()
     );
 
-    final var left = new Windows();
-    left.setTrue(Interval.between(0, Inclusive, 5, Exclusive, SECONDS));
-    left.setTrue(Interval.between(6, Inclusive, 7, Inclusive, SECONDS));
-    left.setTrue(Interval.between(8, Exclusive, 9, Exclusive, SECONDS));
-    left.setTrue(Interval.between(10, Exclusive, 15, Exclusive, SECONDS));
-    left.setTrue(Interval.at(20, SECONDS));
+    final var left = new Windows()
+        .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), true)
+        .set(Interval.between(6, Inclusive, 7, Inclusive, SECONDS), true)
+        .set(Interval.between(8, Exclusive, 9, Exclusive, SECONDS), true)
+        .set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), true)
+        .set(Interval.at(20, SECONDS), true);
 
-    final var right = new Windows();
-    right.setTrue(Interval.between(0, Inclusive, 5, Inclusive, SECONDS));
-    right.setTrue(Interval.between(7, Inclusive, 8, Exclusive, SECONDS));
-    right.setTrue(Interval.between(10, Inclusive, 12, Inclusive, SECONDS));
-    right.setTrue(Interval.between(15, Inclusive, 20, Exclusive, SECONDS));
+    final var right = new Windows()
+        .set(Interval.between(0, Inclusive, 5, Inclusive, SECONDS), true)
+        .set(Interval.between(7, Inclusive, 8, Exclusive, SECONDS), true)
+        .set(Interval.between(10, Inclusive, 12, Inclusive, SECONDS), true)
+        .set(Interval.between(15, Inclusive, 20, Exclusive, SECONDS), true);
 
     final var result = new Any(Supplier.of(left), Supplier.of(right)).evaluate(simResults, Map.of());
 
-    final var expected = new Windows();
-    expected.setTrue(Interval.between(  0, Inclusive,   5, Inclusive, SECONDS));
-    expected.setTrue(Interval.between(  6, Inclusive,   8, Exclusive, SECONDS));
-    expected.setTrue(Interval.between(  8, Exclusive,   9, Exclusive, SECONDS));
-    expected.setTrue(Interval.between( 10, Inclusive,  20, Inclusive, SECONDS));
+    final var expected = new Windows()
+        .set(Interval.between(  0, Inclusive,   5, Inclusive, SECONDS), true)
+        .set(Interval.between(  6, Inclusive,   8, Exclusive, SECONDS), true)
+        .set(Interval.between(  8, Exclusive,   9, Exclusive, SECONDS), true)
+        .set(Interval.between( 10, Inclusive,  20, Inclusive, SECONDS), true);
 
     assertEquivalent(expected, result);
   }
@@ -129,25 +130,25 @@ public class ASTTests {
         Map.of()
     );
 
-    final var left = new Windows();
-    left.setTrue(Interval.between(0, Inclusive, 5, Exclusive, SECONDS));
-    left.setTrue(Interval.between(6, Inclusive, 7, Inclusive, SECONDS));
-    left.setTrue(Interval.between(8, Exclusive, 9, Exclusive, SECONDS));
-    left.setTrue(Interval.between(10, Exclusive, 15, Exclusive, SECONDS));
-    left.setTrue(Interval.at(20, SECONDS));
-    left.set(interval(22, 23, SECONDS), false);
+    final var left = new Windows()
+        .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), true)
+        .set(Interval.between(6, Inclusive, 7, Inclusive, SECONDS), true)
+        .set(Interval.between(8, Exclusive, 9, Exclusive, SECONDS), true)
+        .set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), true)
+        .set(Interval.at(20, SECONDS), true)
+        .set(interval(22, 23, SECONDS), false);
 
     final var expandByFromStart = Duration.of(-1, SECONDS);
     final var expandByFromEnd = Duration.of(0, SECONDS);
 
     final var result = new ShiftBy(Supplier.of(left), expandByFromStart, expandByFromEnd).evaluate(simResults, Map.of());
 
-    final var expected = new Windows();
-    expected.setTrue(Interval.between(-1, Inclusive, 7, Inclusive, SECONDS));
-    expected.setTrue(Interval.between(7, Exclusive, 9, Exclusive, SECONDS));
-    expected.setTrue(Interval.between(9, Exclusive, 15, Exclusive, SECONDS));
-    expected.setTrue(Interval.between(19, 20, SECONDS));
-    expected.set(interval(22, 23, SECONDS), false);
+    final var expected = new Windows()
+        .set(Interval.between(-1, Inclusive, 7, Inclusive, SECONDS), true)
+        .set(Interval.between(7, Exclusive, 9, Exclusive, SECONDS), true)
+        .set(Interval.between(9, Exclusive, 15, Exclusive, SECONDS), true)
+        .set(Interval.between(19, 20, SECONDS), true)
+        .set(interval(22, 23, SECONDS), false);
 
     assertEquivalent(expected, result);
   }
@@ -161,30 +162,30 @@ public class ASTTests {
         Map.of()
     );
 
-    final var left = new Windows();
-    left.setTrue(Interval.between(0, Inclusive, 5, Exclusive, SECONDS));
-    left.setTrue(Interval.between(6, Inclusive, 7, Inclusive, SECONDS));
-    left.setTrue(Interval.between(8, Exclusive, 9, Exclusive, SECONDS));
-    left.setTrue(Interval.between(10, Exclusive, 15, Exclusive, SECONDS));
-    left.setTrue(Interval.at(20, SECONDS));
-    left.set(interval(22, 23, SECONDS), false);
+    final var left = new Windows()
+        .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), true)
+        .set(Interval.between(6, Inclusive, 7, Inclusive, SECONDS), true)
+        .set(Interval.between(8, Exclusive, 9, Exclusive, SECONDS), true)
+        .set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), true)
+        .set(Interval.at(20, SECONDS), true)
+        .set(interval(22, 23, SECONDS), false);
 
     final var clampFromStart = Duration.of(1, SECONDS);
     final var clampFromEnd = Duration.negate(Duration.of(1, SECONDS));
 
     final var result = new ShiftBy(Supplier.of(left), clampFromStart, clampFromEnd).evaluate(simResults, Map.of());
 
-    final var expected = new Windows();
-    expected.set(interval(0, Inclusive, 1, Exclusive, SECONDS), false);
-    expected.setTrue(Interval.between(1, Inclusive, 4, Exclusive, SECONDS));
-    expected.set(interval(4, Inclusive, 5, Exclusive, SECONDS), false);
-    expected.set(Interval.between(6, Inclusive, 7, Inclusive, SECONDS), false);
-    expected.set(Interval.between(8, Exclusive, 9, Exclusive, SECONDS), false);
-    expected.set(Interval.between(10, Exclusive, 11, Inclusive, SECONDS), false);
-    expected.setTrue(Interval.between(11, Exclusive, 14, Exclusive, SECONDS));
-    expected.set(Interval.between(14, Inclusive, 15, Exclusive, SECONDS), false);
-    expected.set(Interval.at(20, SECONDS), false);
-    expected.set(interval(22, 23, SECONDS), false);
+    final var expected = new Windows()
+        .set(interval(0, Inclusive, 1, Exclusive, SECONDS), false)
+        .set(Interval.between(1, Inclusive, 4, Exclusive, SECONDS), true)
+        .set(interval(4, Inclusive, 5, Exclusive, SECONDS), false)
+        .set(Interval.between(6, Inclusive, 7, Inclusive, SECONDS), false)
+        .set(Interval.between(8, Exclusive, 9, Exclusive, SECONDS), false)
+        .set(Interval.between(10, Exclusive, 11, Inclusive, SECONDS), false)
+        .set(Interval.between(11, Exclusive, 14, Exclusive, SECONDS), true)
+        .set(Interval.between(14, Inclusive, 15, Exclusive, SECONDS), false)
+        .set(Interval.at(20, SECONDS), false)
+        .set(interval(22, 23, SECONDS), false);
 
     assertEquivalent(expected, result);
   }
@@ -288,7 +289,7 @@ public class ASTTests {
             "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(4, SECONDS), SerializedValue.of("one"))),
             "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(5, SECONDS), SerializedValue.of(2))),
             "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(6, SECONDS), SerializedValue.of("three")))
-            )
+        )
     );
 
     final var result = new RealResource("real2").evaluate(simResults, Map.of());
@@ -324,20 +325,20 @@ public class ASTTests {
 
   @Test
   public void testRealResourceFailureOnDiscrete() {
-      final var simResults = new SimulationResults(
-          Interval.between(0, 20, SECONDS),
-          List.of(),
-          Map.of(
-              "real1", new LinearProfile(new LinearProfilePiece(Interval.at(1, SECONDS), 0, 1)),
-              "real2", new LinearProfile(new LinearProfilePiece(Interval.at(2, SECONDS), 0, 1)),
-              "real3", new LinearProfile(new LinearProfilePiece(Interval.at(3, SECONDS), 0, 1))
-          ),
-          Map.of(
-              "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(4, SECONDS), SerializedValue.of("one"))),
-              "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(5, SECONDS), SerializedValue.of(2))),
-              "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(6, SECONDS), SerializedValue.of("three")))
-          )
-      );
+    final var simResults = new SimulationResults(
+        Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(
+            "real1", new LinearProfile(new LinearProfilePiece(Interval.at(1, SECONDS), 0, 1)),
+            "real2", new LinearProfile(new LinearProfilePiece(Interval.at(2, SECONDS), 0, 1)),
+            "real3", new LinearProfile(new LinearProfilePiece(Interval.at(3, SECONDS), 0, 1))
+        ),
+        Map.of(
+            "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(4, SECONDS), SerializedValue.of("one"))),
+            "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(5, SECONDS), SerializedValue.of(2))),
+            "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(6, SECONDS), SerializedValue.of("three")))
+        )
+    );
 
     try {
       new RealResource("discrete1").evaluate(simResults, Map.of());
@@ -433,9 +434,10 @@ public class ASTTests {
         Map.of()
     );
 
-    final var windows = new Windows();
-    windows.setTrue(Interval.between(1, 4, SECONDS));
-    windows.setTrue(Interval.between(7,20, SECONDS));
+    final var windows = new Windows()
+        .set(Interval.between(1, 4, SECONDS), true)
+        .set(Interval.between(7,20, SECONDS), true);
+
     final var result = new ViolationsOf(new Supplier<>(windows)).evaluate(simResults, Map.of());
 
     final var expected = List.of(new Violation(windows.not().and(new Windows(simResults.bounds, true))));
@@ -464,8 +466,8 @@ public class ASTTests {
     final var result = new ActivityWindow("act").evaluate(simResults, environment);
 
     final var expected = new Windows(
-        Pair.of(FOREVER, false),
-        Pair.of(interval(4, 8, SECONDS), true)
+        Segment.of(FOREVER, false),
+        Segment.of(interval(4, 8, SECONDS), true)
     );
 
     assertEquivalent(expected, result);
@@ -492,8 +494,8 @@ public class ASTTests {
     final var result = new StartOf("act").evaluate(simResults, environment);
 
     final var expected = new Windows(
-        Pair.of(FOREVER, false),
-        Pair.of(at(4, SECONDS), true)
+        Segment.of(FOREVER, false),
+        Segment.of(at(4, SECONDS), true)
     );
 
     assertEquivalent(expected, result);
@@ -520,8 +522,8 @@ public class ASTTests {
     final var result = new EndOf("act").evaluate(simResults, environment);
 
     final var expected = new Windows(
-        Pair.of(FOREVER, false),
-        Pair.of(at(8, SECONDS), true)
+        Segment.of(FOREVER, false),
+        Segment.of(at(8, SECONDS), true)
     );
 
     assertEquivalent(expected, result);
@@ -536,26 +538,26 @@ public class ASTTests {
         Map.of()
     );
 
-    final var left = new Windows();
-    left.setTrue(Interval.between(0, Inclusive, 5, Exclusive, SECONDS));
-    left.setTrue(Interval.between(6, Inclusive, 7, Inclusive, SECONDS));
-    left.setTrue(Interval.between(8, Exclusive, 9, Exclusive, SECONDS));
-    left.setTrue(Interval.between(10, Exclusive, 15, Exclusive, SECONDS));
-    left.setTrue(Interval.at(20, SECONDS));
-    left.set(interval(22, 23, SECONDS), false);
-    left.set(interval(24, 30, SECONDS), false);
+    final var left = new Windows()
+        .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), true)
+        .set(Interval.between(6, Inclusive, 7, Inclusive, SECONDS), true)
+        .set(Interval.between(8, Exclusive, 9, Exclusive, SECONDS), true)
+        .set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), true)
+        .set(Interval.at(20, SECONDS), true)
+        .set(interval(22, 23, SECONDS), false)
+        .set(interval(24, 30, SECONDS), false);
 
     final var right = Duration.of(2, SECONDS);
     final var result = new LongerThan(Supplier.of(left), right).evaluate(simResults, Map.of());
 
-    final var expected = new Windows();
-    expected.set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), true);
-    expected.set(Interval.between(6, Inclusive, 7, Inclusive, SECONDS), false);
-    expected.set(Interval.between(8, Exclusive, 9, Exclusive, SECONDS), false);
-    expected.set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), true);
-    expected.set(Interval.at(20, SECONDS), false);
-    expected.set(interval(22, 23, SECONDS), false);
-    expected.set(interval(24, 30, SECONDS), false);
+    final var expected = new Windows()
+        .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), true)
+        .set(Interval.between(6, Inclusive, 7, Inclusive, SECONDS), false)
+        .set(Interval.between(8, Exclusive, 9, Exclusive, SECONDS), false)
+        .set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), true)
+        .set(Interval.at(20, SECONDS), false)
+        .set(interval(22, 23, SECONDS), false)
+        .set(interval(24, 30, SECONDS), false);
 
     assertEquivalent(expected, result);
   }
@@ -569,26 +571,26 @@ public class ASTTests {
         Map.of()
     );
 
-    final var left = new Windows();
-    left.setTrue(Interval.between(0, Inclusive, 5, Exclusive, SECONDS));
-    left.setTrue(Interval.between(6, Inclusive, 7, Inclusive, SECONDS));
-    left.setTrue(Interval.between(8, Exclusive, 9, Exclusive, SECONDS));
-    left.setTrue(Interval.between(10, Exclusive, 15, Exclusive, SECONDS));
-    left.setTrue(Interval.at(20, SECONDS));
-    left.set(interval(22, 23, SECONDS), false);
-    left.set(interval(24, 30, SECONDS), false);
+    final var left = new Windows()
+        .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), true)
+        .set(Interval.between(6, Inclusive, 7, Inclusive, SECONDS), true)
+        .set(Interval.between(8, Exclusive, 9, Exclusive, SECONDS), true)
+        .set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), true)
+        .set(Interval.at(20, SECONDS), true)
+        .set(interval(22, 23, SECONDS), false)
+        .set(interval(24, 30, SECONDS), false);
 
     final var right = Duration.of(2, SECONDS);
     final var result = new ShorterThan(Supplier.of(left), right).evaluate(simResults, Map.of());
 
-    final var expected = new Windows();
-    expected.set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), false);
-    expected.set(Interval.between(6, Inclusive, 7, Inclusive, SECONDS), true);
-    expected.set(Interval.between(8, Exclusive, 9, Exclusive, SECONDS), true);
-    expected.set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), false);
-    expected.set(Interval.at(20, SECONDS), true);
-    expected.set(interval(22, 23, SECONDS), false);
-    expected.set(interval(24, 30, SECONDS), false);
+    final var expected = new Windows()
+        .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), false)
+        .set(Interval.between(6, Inclusive, 7, Inclusive, SECONDS), true)
+        .set(Interval.between(8, Exclusive, 9, Exclusive, SECONDS), true)
+        .set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), false)
+        .set(Interval.at(20, SECONDS), true)
+        .set(interval(22, 23, SECONDS), false)
+        .set(interval(24, 30, SECONDS), false);
 
     assertEquivalent(expected, result);
   }

@@ -144,7 +144,7 @@ public class PrioritySolverTest {
     final var goal = new ProceduralCreationGoal.Builder()
         .named("g0")
         .generateWith((plan) -> expectedPlan.getActivitiesByTime())
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(h.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(h.getHor(), true)))
         .build();
     problem.setGoals(List.of(goal));
     final var solver = makeProblemSolver(problem);
@@ -163,7 +163,7 @@ public class PrioritySolverTest {
     final var goal = new ProceduralCreationGoal.Builder()
         .named("g0")
         .generateWith((plan) -> expectedPlan.getActivitiesByTime())
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(h.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(h.getHor(), true)))
         .build();
     problem.setGoals(List.of(goal));
     final var solver = makeProblemSolver(problem);
@@ -215,7 +215,7 @@ public class PrioritySolverTest {
     final var actTypeB = problem.getActivityType("OtherControllableDurationActivity");
     final var goal = new CoexistenceGoal.Builder()
         .named("g0")
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(h.getHor(), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(h.getHor(), true)))
         .forEach(new ActivityExpression.Builder()
                      .ofType(actTypeA)
                      .build())

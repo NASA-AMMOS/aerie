@@ -188,7 +188,7 @@ public class Goal {
       if (range != null) {
         goal.temporalContext = range;
       } else {
-        final var windows = Windows.definedEverywhere(Interval.between(starting, ending), true);
+        final var windows = new Windows(false).set(Interval.between(starting, ending), true);
         goal.temporalContext = new WindowsWrapperExpression(windows);
       }
 

@@ -24,8 +24,8 @@ public class LinearProfileTimeDomainTest {
 
     final var result = profile.changePoints(Interval.between(9, 16, SECONDS));
 
-    final var expected = new Windows(interval(9, 16, SECONDS), false);
-    expected.setTrue(Interval.between(10, Exclusive, 15, Inclusive, SECONDS));
+    final var expected = new Windows(interval(9, 16, SECONDS), false)
+    		.set(Interval.between(10, Exclusive, 15, Inclusive, SECONDS), true);
 
     assertEquivalent(result, expected);
   }
@@ -51,8 +51,8 @@ public class LinearProfileTimeDomainTest {
 
     final var result = profile.lessThan(other, Interval.between(9, 14, SECONDS));
 
-    final var expected = new Windows(interval(9, 14, SECONDS), false);
-    expected.setTrue(Interval.between(9, Inclusive, 14, Exclusive, SECONDS));
+    final var expected = new Windows(interval(9, 14, SECONDS), false)
+    		.set(Interval.between(9, Inclusive, 14, Exclusive, SECONDS), true);
 
     assertEquivalent(expected, result);
   }
@@ -78,9 +78,9 @@ public class LinearProfileTimeDomainTest {
 
     final var result = profile.lessThanOrEqualTo(other, Interval.between(0, 8, SECONDS));
 
-    final var expected = new Windows(interval(0, 8, SECONDS), false);
-    expected.setTrue(Interval.between( 0, Inclusive,  2, Inclusive, SECONDS));
-    expected.setTrue(Interval.between( 6, Inclusive, 8, Inclusive, SECONDS));
+    final var expected = new Windows(interval(0, 8, SECONDS), false)
+    		.set(Interval.between( 0, Inclusive,  2, Inclusive, SECONDS), true)
+    		.set(Interval.between( 6, Inclusive, 8, Inclusive, SECONDS), true);
 
     assertEquivalent(expected, result);
   }
@@ -106,9 +106,9 @@ public class LinearProfileTimeDomainTest {
 
     final var result = profile.greaterThan(other, Interval.between(2, 15, SECONDS));
 
-    final var expected = new Windows(interval(2, 15, SECONDS), false);
-    expected.setTrue(Interval.between( 2, Exclusive,  6, Exclusive, SECONDS));
-    expected.setTrue(Interval.between(14, Exclusive, 15, Inclusive, SECONDS));
+    final var expected = new Windows(interval(2, 15, SECONDS), false)
+    		.set(Interval.between( 2, Exclusive,  6, Exclusive, SECONDS), true)
+    		.set(Interval.between(14, Exclusive, 15, Inclusive, SECONDS), true);
 
     assertEquivalent(expected, result);
   }
@@ -134,9 +134,9 @@ public class LinearProfileTimeDomainTest {
 
     final var result = profile.greaterThanOrEqualTo(other, Interval.between(8, 20, SECONDS));
 
-    final var expected = new Windows(interval(8, 20, SECONDS), false);
-    expected.setTrue(Interval.at(8, SECONDS));
-    expected.setTrue(Interval.between(14, Inclusive, 20, Inclusive, SECONDS));
+    final var expected = new Windows(interval(8, 20, SECONDS), false)
+    		.set(Interval.at(8, SECONDS), true)
+    		.set(Interval.between(14, Inclusive, 20, Inclusive, SECONDS), true);
 
     assertEquivalent(expected, result);
   }
@@ -162,10 +162,10 @@ public class LinearProfileTimeDomainTest {
 
     final var result = profile.equalTo(other, Interval.between(7, 17, SECONDS));
 
-    final var expected = new Windows(interval(7, 17, SECONDS), false);
-    expected.setTrue(Interval.between( 7, Inclusive,  8, Inclusive, SECONDS));
-    expected.setTrue(Interval.at(14, SECONDS));
-    expected.setTrue(Interval.between( 16, Inclusive,  17, Inclusive, SECONDS));
+    final var expected = new Windows(interval(7, 17, SECONDS), false)
+    		.set(Interval.between( 7, Inclusive,  8, Inclusive, SECONDS), true)
+    		.set(Interval.at(14, SECONDS), true)
+    		.set(Interval.between( 16, Inclusive,  17, Inclusive, SECONDS), true);
 
     assertEquivalent(expected, result);
   }
@@ -191,9 +191,9 @@ public class LinearProfileTimeDomainTest {
 
     final var result = profile.notEqualTo(other, Interval.between(2, 11, SECONDS));
 
-    final var expected = new Windows(interval(2, 11, SECONDS), false);
-    expected.setTrue(Interval.between(2, Exclusive, 6, Exclusive, SECONDS));
-    expected.setTrue(Interval.between(8, Exclusive, 11, Inclusive, SECONDS));
+    final var expected = new Windows(interval(2, 11, SECONDS), false)
+    		.set(Interval.between(2, Exclusive, 6, Exclusive, SECONDS), true)
+    		.set(Interval.between(8, Exclusive, 11, Inclusive, SECONDS), true);
 
     assertEquivalent(expected, result);
   }

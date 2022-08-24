@@ -50,7 +50,7 @@ public class NAryMutexConstraint extends GlobalConstraintWithIntrospection {
             .stream()
             .map(a -> Interval.between(a.getStartTime(), a.getEndTime()))
             .collect(Collectors.toList());
-        Windows twActs = Windows.definedEverywhere(rangesActs, false);
+        Windows twActs = new Windows(true).set(rangesActs, false);
 
         validWindows = validWindows.and(twActs);
       }

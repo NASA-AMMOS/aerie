@@ -12,10 +12,10 @@ public abstract class FilterFunctional implements TimeWindowsFilter {
 
   @Override
   public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
-    final Windows ret = new Windows(windows);
-    for (final var interval: windows.iterateTrue()) {
+    Windows ret = new Windows(windows);
+    for (final var interval: windows.iterateEqualTo(true)) {
       if (!shouldKeep(simulationResults, plan, interval)) {
-        ret.set(interval, false);
+        ret = ret.set(interval, false);
       }
     }
     return new Windows(ret);

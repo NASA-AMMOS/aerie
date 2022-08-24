@@ -466,7 +466,7 @@ public class PrioritySolver implements Solver {
           //no global constraint for the same reason above mentioned
           //only the target goal state constraints to consider
           for(var act : actToChooseFrom){
-            var actWindow = Windows.definedEverywhere(Interval.between(act.getStartTime(), act.getEndTime()), true);
+            var actWindow = new Windows(false).set(Interval.between(act.getStartTime(), act.getEndTime()), true);
             var stateConstraints = goal.getResourceConstraints();
             var narrowed = actWindow;
             if(stateConstraints!= null) {
@@ -601,7 +601,7 @@ public class PrioritySolver implements Solver {
 
     //create new act if there is any valid time (otherwise conflict is
     //unsatisfiable in current plan)
-    if (!startWindows.isAllFalse()) {
+    if (!startWindows.isAllEqualTo(false)) {
       //TODO: move this into a polymorphic method? definitely don't want to be
       //demuxing on all the conflict types here
       if (missing instanceof final MissingActivityInstanceConflict missingInstance) {
@@ -653,7 +653,7 @@ public class PrioritySolver implements Solver {
     assert constraints != null;
     Windows ret = new Windows(windows);
     //short circuit on already empty windows or no constraints: no work to do!
-    if (windows.isAllFalse() || constraints.isEmpty()) {
+    if (windows.isAllEqualTo(false) || constraints.isEmpty()) {
       return ret;
     }
 
@@ -668,7 +668,7 @@ public class PrioritySolver implements Solver {
       final var validity = constraint.evaluate(simulationFacade.getLatestConstraintSimulationResults(), totalDomain);
       ret = ret.and(validity);
       //short-circuit if no possible windows left
-      if (ret.isEmpty()) {
+      if (ret.isAllEqualTo(false)) {
         break;
       }
     }
@@ -681,7 +681,7 @@ public class PrioritySolver implements Solver {
       Windows windows,
       Collection<GlobalConstraint> constraints) {
     Windows tmp = new Windows(windows);
-    if(tmp.isAllFalse()){
+    if(tmp.isAllEqualTo(false)){
       return tmp;
     }
     //make sure the simulation results cover the domain

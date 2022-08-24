@@ -29,7 +29,7 @@ public class TestRecurrenceGoal {
     final var activityType = problem.getActivityType("ControllableDurationActivity");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
-        .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(20, Duration.SECONDS)), true)))
+        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(20, Duration.SECONDS)), true)))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .duration(Duration.of(2, Duration.SECONDS))
                             .ofType(activityType)
@@ -63,7 +63,7 @@ public class TestRecurrenceGoal {
       final var activityType = problem.getActivityType("ControllableDurationActivity");
       final var goal = new RecurrenceGoal.Builder()
           .named("Test recurrence goal")
-          .forAllTimeIn(new WindowsWrapperExpression(Windows.definedEverywhere(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS),
+          .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS),
                                                  Duration.of(20, Duration.SECONDS)), true)))
           .thereExistsOne(new ActivityCreationTemplate.Builder()
                               .duration(Duration.of(2, Duration.SECONDS))

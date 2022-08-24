@@ -168,9 +168,9 @@ public class ActivityExpression {
      */
     public @NotNull
     B startsOrEndsIn(@Nullable Windows windows) {
-      Windows wins = new Windows(Interval.FOREVER, false);
-      for(final var win : windows.iterateTrue()){
-        wins.setTrue(extendUpToAbsoluteError(win, acceptableAbsoluteTimingError));
+      Windows wins = new Windows(false);
+      for(final var win : windows.iterateEqualTo(true)){
+        wins = wins.set(extendUpToAbsoluteError(win, acceptableAbsoluteTimingError), true);
       }
       this.startsOrEndsInW = wins;
       return getThis();
@@ -200,9 +200,9 @@ public class ActivityExpression {
 
     public @NotNull
     B startsIn(Windows ranges) {
-      Windows wins = new Windows(Interval.FOREVER, false);
-      for(final var win : ranges.iterateTrue()){
-        wins.setTrue(extendUpToAbsoluteError(win, acceptableAbsoluteTimingError));
+      Windows wins = new Windows(false);
+      for(final var win : ranges.iterateEqualTo(true)) {
+        wins = wins.set(extendUpToAbsoluteError(win, acceptableAbsoluteTimingError), true);
       }
       this.startsInR = wins;
       return getThis();

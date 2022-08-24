@@ -158,8 +158,8 @@ public class CardinalityGoal extends ActivityTemplateGoal {
     //iterate through it and then within each iteration do exactly what you did before
     final var conflicts = new LinkedList<Conflict>();
 
-    for(Interval subInterval : windows.iterateTrue()) {
-      final var subIntervalWindows = Windows.definedEverywhere(subInterval, true);
+    for(Interval subInterval : windows.iterateEqualTo(true)) {
+      final var subIntervalWindows = new Windows(false).set(subInterval, true);
       ActivityCreationTemplate actTB =
           new ActivityCreationTemplate.Builder().basedOn(this.desiredActTemplate).startsOrEndsIn(new Windows(subIntervalWindows)).build();
 

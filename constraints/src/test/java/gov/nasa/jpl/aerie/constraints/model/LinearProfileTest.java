@@ -113,9 +113,9 @@ public class LinearProfileTest {
 
     final var result = profile.changePoints(interval(0, 20, SECONDS));
 
-    final var expected = new Windows(interval(0, 20, SECONDS), false);
-    expected.setTrue(Interval.at(8, SECONDS));
-    expected.setTrue(Interval.between(10, Exclusive, 15, Inclusive, SECONDS));
+    final var expected = new Windows(interval(0, 20, SECONDS), false)
+    		.set(Interval.at(8, SECONDS), true)
+    		.set(Interval.between(10, Exclusive, 15, Inclusive, SECONDS), true);
 
     assertIterableEquals(expected, result);
   }
@@ -141,8 +141,8 @@ public class LinearProfileTest {
 
     final var result = profile.lessThan(other, Interval.between(0, 20, SECONDS));
 
-    final var expected = new Windows(interval(0, 20, SECONDS), false);
-    expected.setTrue(Interval.between(8, Exclusive, 14, Exclusive, SECONDS));
+    final var expected = new Windows(interval(0, 20, SECONDS), false)
+    		.set(Interval.between(8, Exclusive, 14, Exclusive, SECONDS), true);
 
     assertEquivalent(expected, result);
   }
@@ -168,10 +168,10 @@ public class LinearProfileTest {
 
     final var result = profile.lessThanOrEqualTo(other, Interval.between(0, 20, SECONDS));
 
-    final var expected = new Windows(interval(0, 20, SECONDS), false);
-    expected.setTrue(Interval.between( 0, Inclusive,  2, Inclusive, SECONDS));
-    expected.setTrue(Interval.between( 6, Inclusive, 14, Inclusive, SECONDS));
-    expected.setTrue(Interval.between(16, Inclusive, 20, Inclusive, SECONDS));
+    final var expected = new Windows(interval(0, 20, SECONDS), false)
+    		.set(Interval.between( 0, Inclusive,  2, Inclusive, SECONDS), true)
+    		.set(Interval.between( 6, Inclusive, 14, Inclusive, SECONDS), true)
+    		.set(Interval.between(16, Inclusive, 20, Inclusive, SECONDS), true);
 
     assertEquivalent(expected, result);
   }
@@ -197,9 +197,9 @@ public class LinearProfileTest {
 
     final var result = profile.greaterThan(other, Interval.between(0, 20, SECONDS));
 
-    final var expected = new Windows(interval(0, 20, SECONDS), false);
-    expected.setTrue(Interval.between( 2, Exclusive,  6, Exclusive, SECONDS));
-    expected.setTrue(Interval.between(14, Exclusive, 16, Exclusive, SECONDS));
+    final var expected = new Windows(interval(0, 20, SECONDS), false)
+    		.set(Interval.between( 2, Exclusive,  6, Exclusive, SECONDS), true)
+    		.set(Interval.between(14, Exclusive, 16, Exclusive, SECONDS), true);
 
     assertEquivalent(expected, result);
   }
@@ -225,9 +225,9 @@ public class LinearProfileTest {
 
     final var result = profile.greaterThanOrEqualTo(other, Interval.between(0, 20, SECONDS));
 
-    final var expected = new Windows(interval(0, 20, SECONDS), false);
-    expected.setTrue(Interval.between( 0, Inclusive,  8, Inclusive, SECONDS));
-    expected.setTrue(Interval.between(14, Inclusive, 20, Inclusive, SECONDS));
+    final var expected = new Windows(interval(0, 20, SECONDS), false)
+    		.set(Interval.between( 0, Inclusive,  8, Inclusive, SECONDS), true)
+    		.set(Interval.between(14, Inclusive, 20, Inclusive, SECONDS), true);
 
     assertEquivalent(expected, result);
   }
@@ -253,11 +253,11 @@ public class LinearProfileTest {
 
     final var result = profile.equalTo(other, Interval.between(0, 20, SECONDS));
 
-    final var expected = new Windows(interval(0, 20, SECONDS), false);
-    expected.setTrue(Interval.between( 0, Inclusive,  2, Inclusive, SECONDS));
-    expected.setTrue(Interval.between( 6, Inclusive,  8, Inclusive, SECONDS));
-    expected.setTrue(Interval.at(14, SECONDS));
-    expected.setTrue(Interval.between( 16, Inclusive,  20, Inclusive, SECONDS));
+    final var expected = new Windows(interval(0, 20, SECONDS), false)
+    		.set(Interval.between( 0, Inclusive,  2, Inclusive, SECONDS), true)
+    		.set(Interval.between( 6, Inclusive,  8, Inclusive, SECONDS), true)
+    		.set(Interval.at(14, SECONDS), true)
+    		.set(Interval.between( 16, Inclusive,  20, Inclusive, SECONDS), true);
 
     assertEquivalent(expected, result);
   }
@@ -283,10 +283,10 @@ public class LinearProfileTest {
 
     final var result = profile.notEqualTo(other, Interval.between(0, 20, SECONDS));
 
-    final var expected = new Windows(interval(0, 20, SECONDS), false);
-    expected.setTrue(Interval.between(2, Exclusive, 6, Exclusive, SECONDS));
-    expected.setTrue(Interval.between(8, Exclusive, 14, Exclusive, SECONDS));
-    expected.setTrue(Interval.between(14, Exclusive, 16, Exclusive, SECONDS));
+    final var expected = new Windows(interval(0, 20, SECONDS), false)
+    		.set(Interval.between(2, Exclusive, 6, Exclusive, SECONDS), true)
+    		.set(Interval.between(8, Exclusive, 14, Exclusive, SECONDS), true)
+    		.set(Interval.between(14, Exclusive, 16, Exclusive, SECONDS), true);
 
     assertEquivalent(expected, result);
   }
