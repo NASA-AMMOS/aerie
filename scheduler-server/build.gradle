@@ -101,7 +101,6 @@ dependencies {
   implementation 'org.apache.commons:commons-lang3:3.12.0'
   implementation 'io.javalin:javalin:4.6.0'
   implementation 'org.eclipse:yasson:1.0.5'
-  implementation 'org.json:json:20220320'
   implementation 'org.apache.bcel:bcel:6.5.0'
 
   implementation 'com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9'
