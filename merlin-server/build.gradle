@@ -85,7 +85,6 @@ dependencies {
   implementation 'org.slf4j:slf4j-simple:1.7.26'
   implementation 'org.glassfish:javax.json:1.1.4'
   implementation 'org.apache.bcel:bcel:6.5.0'
-  implementation 'org.json:json:20220320'
 
   implementation 'com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9'
   implementation 'com.zaxxer:HikariCP:5.0.1'
