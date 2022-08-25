@@ -22,6 +22,7 @@ import org.junit.jupiter.api.TestInstance;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -895,6 +896,7 @@ public class SchedulingIntegrationTests {
   throws MissionModelLoader.MissionModelLoadException
   {
     final var missionModel = MissionModelLoader.loadMissionModel(
+        Instant.EPOCH,
         SerializedValue.of(configuration),
         Path.of(jarPath),
         "",

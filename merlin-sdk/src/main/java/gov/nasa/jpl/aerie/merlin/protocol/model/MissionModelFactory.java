@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol.model;
 
+import java.time.Instant;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeRegistrar;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 
@@ -8,5 +9,5 @@ public interface MissionModelFactory<Registry, Config, Model> {
 
   ConfigurationType<Config> getConfigurationType();
 
-  Model instantiate(Registry registry, Config configuration, Initializer builder);
+  Model instantiate(Registry registry, Instant planStart, Config configuration, Initializer builder);
 }

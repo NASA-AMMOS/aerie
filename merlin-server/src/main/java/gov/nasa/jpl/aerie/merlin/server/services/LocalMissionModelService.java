@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -33,13 +34,16 @@ public final class LocalMissionModelService implements MissionModelService {
 
   private final Path missionModelDataPath;
   private final MissionModelRepository missionModelRepository;
+  private final Instant untruePlanStart;
 
   public LocalMissionModelService(
       final Path missionModelDataPath,
-      final MissionModelRepository missionModelRepository
+      final MissionModelRepository missionModelRepository,
+      final Instant untruePlanStart
   ) {
     this.missionModelDataPath = missionModelDataPath;
     this.missionModelRepository = missionModelRepository;
+    this.untruePlanStart = untruePlanStart;
   }
 
   @Override
@@ -189,7 +193,7 @@ public final class LocalMissionModelService implements MissionModelService {
     }
 
     // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
-    return loadConfiguredMissionModel(message.missionModelId(), SerializedValue.of(config))
+    return loadConfiguredMissionModel(message.missionModelId(), message.startTime(), SerializedValue.of(config))
         .simulate(message.activityInstances(), message.samplingDuration(), message.startTime());
   }
 
@@ -246,7 +250,7 @@ public final class LocalMissionModelService implements MissionModelService {
   private MissionModelFacade loadConfiguredMissionModel(final String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
-    return loadConfiguredMissionModel(missionModelId, SerializedValue.of(Map.of()));
+    return loadConfiguredMissionModel(missionModelId, untruePlanStart, SerializedValue.of(Map.of()));
   }
 
   /**
@@ -259,13 +263,20 @@ public final class LocalMissionModelService implements MissionModelService {
    * it contains may not abide by the expected contract at load time.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
-  private MissionModelFacade loadConfiguredMissionModel(final String missionModelId, final SerializedValue configuration)
+  private MissionModelFacade loadConfiguredMissionModel(
+      final String missionModelId,
+      final Instant planStart,
+      final SerializedValue configuration)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     try {
       final var missionModelJar = this.missionModelRepository.getMissionModel(missionModelId);
-      final var missionModel =
-          MissionModelLoader.loadMissionModel(configuration, missionModelDataPath.resolve(missionModelJar.path), missionModelJar.name, missionModelJar.version);
+      final var missionModel = MissionModelLoader.loadMissionModel(
+          planStart,
+          configuration,
+          missionModelDataPath.resolve(missionModelJar.path),
+          missionModelJar.name,
+          missionModelJar.version);
       return new MissionModelFacade(missionModel);
     } catch (final MissionModelRepository.NoSuchMissionModelException ex) {
       throw new NoSuchMissionModelException(missionModelId, ex);

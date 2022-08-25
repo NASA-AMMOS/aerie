@@ -19,6 +19,7 @@ import gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresSimulationNotificationP
 import io.javalin.Javalin;
 
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -49,7 +50,10 @@ public final class MerlinWorkerAppDriver {
         new PostgresMissionModelRepository(hikariDataSource),
         new PostgresResultsCellRepository(hikariDataSource));
 
-    final var missionModelController = new LocalMissionModelService(configuration.merlinFileStore(), stores.missionModels());
+    final var missionModelController = new LocalMissionModelService(
+        configuration.merlinFileStore(),
+        stores.missionModels(),
+        configuration.untruePlanStart());
     final var planController = new LocalPlanService(stores.plans());
     final var simulationAgent = new SynchronousSimulationAgent(planController, missionModelController);
 
@@ -91,12 +95,13 @@ public final class MerlinWorkerAppDriver {
 
   private static WorkerAppConfiguration loadConfiguration() {
     return new WorkerAppConfiguration(
-        Path.of(getEnv("MERLIN_WORKER_LOCAL_STORE","/usr/src/app/merlin_file_store")),
-        new PostgresStore(getEnv("MERLIN_WORKER_DB_SERVER","postgres"),
-                          getEnv("MERLIN_WORKER_DB_USER",""),
-                          Integer.parseInt(getEnv("MERLIN_WORKER_DB_PORT","5432")),
-                          getEnv("MERLIN_WORKER_DB_PASSWORD",""),
-                          getEnv("MERLIN_WORKER_DB","aerie_merlin"))
+        Path.of(getEnv("MERLIN_WORKER_LOCAL_STORE", "/usr/src/app/merlin_file_store")),
+        new PostgresStore(getEnv("MERLIN_WORKER_DB_SERVER", "postgres"),
+                          getEnv("MERLIN_WORKER_DB_USER", ""),
+                          Integer.parseInt(getEnv("MERLIN_WORKER_DB_PORT", "5432")),
+                          getEnv("MERLIN_WORKER_DB_PASSWORD", ""),
+                          getEnv("MERLIN_WORKER_DB", "aerie_merlin")),
+        Instant.parse(getEnv("UNTRUE_PLAN_START", ""))
     );
   }
 }

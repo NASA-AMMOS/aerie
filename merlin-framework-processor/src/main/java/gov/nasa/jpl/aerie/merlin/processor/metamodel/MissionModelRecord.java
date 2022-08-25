@@ -13,17 +13,20 @@ public final class MissionModelRecord {
   public final TypeElement topLevelModel;
   public final List<TypeRule> typeRules;
   public final List<ActivityTypeRecord> activityTypes;
+  public final boolean expectsPlanStart;
   public final Optional<ConfigurationTypeRecord> modelConfigurationType;
 
   public MissionModelRecord(
       final PackageElement $package,
       final TypeElement topLevelModel,
+      final boolean expectsPlanStart,
       final Optional<ConfigurationTypeRecord> modelConfigurationType,
       final List<TypeRule> typeRules,
       final List<ActivityTypeRecord> activityTypes)
   {
     this.$package = Objects.requireNonNull($package);
     this.topLevelModel = Objects.requireNonNull(topLevelModel);
+    this.expectsPlanStart = expectsPlanStart;
     this.modelConfigurationType = Objects.requireNonNull(modelConfigurationType);
     this.typeRules = Objects.requireNonNull(typeRules);
     this.activityTypes = Objects.requireNonNull(activityTypes);

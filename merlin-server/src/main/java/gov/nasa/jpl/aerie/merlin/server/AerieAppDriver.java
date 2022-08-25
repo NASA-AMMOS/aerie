@@ -40,15 +40,19 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Instant;
 
 public final class AerieAppDriver {
 
-  public static void main(final String[] args) throws InterruptedException {
+  public static void main(final String[] args) {
     // Fetch application configuration properties.
     final var configuration = loadConfiguration();
     final var stores = loadStores(configuration);
 
-    final var missionModelController = new LocalMissionModelService(configuration.merlinFileStore(), stores.missionModels());
+    final var missionModelController = new LocalMissionModelService(
+        configuration.merlinFileStore(),
+        stores.missionModels(),
+        configuration.untruePlanStart());
 
     final var typescriptCodeGenerationService = new TypescriptCodeGenerationServiceAdapter(missionModelController);
 
@@ -138,7 +142,7 @@ public final class AerieAppDriver {
     }
   }
 
-  private static final String getEnv(final String key, final String fallback){
+  private static String getEnv(final String key, final String fallback) {
     final var env = System.getenv(key);
     return env == null ? fallback : env;
   }
@@ -146,14 +150,15 @@ public final class AerieAppDriver {
   private static AppConfiguration loadConfiguration() {
     final var logger = LoggerFactory.getLogger(AerieAppDriver.class);
     return new AppConfiguration(
-        Integer.parseInt(getEnv("MERLIN_PORT","27183")),
+        Integer.parseInt(getEnv("MERLIN_PORT", "27183")),
         logger.isDebugEnabled(),
-        Path.of(getEnv("MERLIN_LOCAL_STORE","/usr/src/app/merlin_file_store")),
-        new PostgresStore(getEnv("MERLIN_DB_SERVER","postgres"),
-                          getEnv("MERLIN_DB_USER",""),
-                          Integer.parseInt(getEnv("MERLIN_DB_PORT","5432")),
-                          getEnv("MERLIN_DB_PASSWORD",""),
-                          getEnv("MERLIN_DB","aerie_merlin"))
+        Path.of(getEnv("MERLIN_LOCAL_STORE", "/usr/src/app/merlin_file_store")),
+        new PostgresStore(getEnv("MERLIN_DB_SERVER", "postgres"),
+                          getEnv("MERLIN_DB_USER", ""),
+                          Integer.parseInt(getEnv("MERLIN_DB_PORT", "5432")),
+                          getEnv("MERLIN_DB_PASSWORD", ""),
+                          getEnv("MERLIN_DB", "aerie_merlin")),
+        Instant.parse(getEnv("UNTRUE_PLAN_START", ""))
     );
   }
 }

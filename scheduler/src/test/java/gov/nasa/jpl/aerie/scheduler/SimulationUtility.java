@@ -10,23 +10,24 @@ import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 
 import java.nio.file.Path;
+import java.time.Instant;
 
 public final class SimulationUtility {
 
   private static MissionModel<?> makeMissionModel(final MissionModelBuilder builder, final Configuration config) {
     final var factory = new gov.nasa.jpl.aerie.banananation.generated.GeneratedMissionModelFactory();
     final var registry = DirectiveTypeRegistry.extract(factory);
-    final var model = factory.instantiate(registry.registry(), config, builder);
+    final var model = factory.instantiate(registry.registry(), Instant.EPOCH, config, builder);
     return builder.build(model, factory.getConfigurationType(), registry);
   }
 
   public static MissionModel<RootModel<ActivityTypes, Mission>>
   getFooMissionModel() {
-    final var conf = new gov.nasa.jpl.aerie.foomissionmodel.Configuration();
+    final var config = new gov.nasa.jpl.aerie.foomissionmodel.Configuration();
     final var factory = new gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory();
     final var registry = DirectiveTypeRegistry.extract(factory);
     final var builder = new MissionModelBuilder();
-    final var model = factory.instantiate(registry.registry(), conf, builder);
+    final var model = factory.instantiate(registry.registry(), Instant.EPOCH, config, builder);
     return builder.build(model, factory.getConfigurationType(), registry);
   }
 
@@ -42,5 +43,4 @@ public final class SimulationUtility {
   public static SchedulerModel getBananaSchedulerModel(){
     return new gov.nasa.jpl.aerie.banananation.generated.GeneratedSchedulerModel();
   }
-
 }

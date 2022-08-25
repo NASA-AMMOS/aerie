@@ -17,6 +17,7 @@ import io.javalin.Javalin;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Instant;
 
 public final class DevAppDriver {
   private static final int HTTP_PORT = 27183;
@@ -24,7 +25,7 @@ public final class DevAppDriver {
   public static void main(final String[] args) {
     // Assemble the core non-web object graph.
     final var fixtures = new Fixtures();
-    final var missionModelController = new LocalMissionModelService(Path.of("/dev/null"), new InMemoryMissionModelRepository());
+    final var missionModelController = new LocalMissionModelService(Path.of("/dev/null"), new InMemoryMissionModelRepository(), Instant.EPOCH);
     final var planController = new LocalPlanService(fixtures.planRepository);
 
     final var typescriptCodeGenerationService = new TypescriptCodeGenerationServiceAdapter(missionModelController);

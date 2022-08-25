@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.processor;
 
 import com.squareup.javapoet.ClassName;
+import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
@@ -30,6 +31,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Repeatable;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -48,23 +50,73 @@ import java.util.function.Predicate;
   public MissionModelRecord parseMissionModel(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
-    final var topLevelModel = this.getMissionModelModel(missionModelElement);
-    final var modelConfigurationType = this.getMissionModelConfigurationType(missionModelElement);
-    final var activityTypes = new ArrayList<ActivityTypeRecord>();
-    final var typeRules = new ArrayList<TypeRule>();
+    final var topLevelModel = this.getMissionModel(missionModelElement);
 
+    final var typeRules = new ArrayList<TypeRule>();
     for (final var factory : this.getMissionModelMapperClasses(missionModelElement)) {
       typeRules.addAll(this.parseValueMappers(factory));
     }
 
+    final var activityTypes = new ArrayList<ActivityTypeRecord>();
     for (final var activityTypeElement : this.getMissionModelActivityTypes(missionModelElement)) {
       activityTypes.add(this.parseActivityType(missionModelElement, activityTypeElement));
     }
 
-    return new MissionModelRecord(missionModelElement, topLevelModel, modelConfigurationType, typeRules, activityTypes);
+    return new MissionModelRecord(
+        missionModelElement,
+        topLevelModel.type,
+        topLevelModel.expectsPlanStart,
+        topLevelModel.configurationType,
+        typeRules,
+        activityTypes);
   }
 
-  private TypeElement getMissionModelModel(final PackageElement missionModelElement)
+  private record MissionModelTypeRecord(
+      TypeElement type,
+      boolean expectsPlanStart,
+      Optional<ConfigurationTypeRecord> configurationType) { }
+
+  private MissionModelTypeRecord getMissionModel(final PackageElement missionModelElement)
+  throws InvalidMissionModelException
+  {
+    final var configurationType = this.getMissionModelConfigurationType(missionModelElement);
+    final var modelTypeElement = this.getMissionModelTypeElement(missionModelElement);
+
+    final var parameters = this.getMissionModelConstructor(modelTypeElement).getParameters().stream()
+        .map(p -> ClassName.get(p.asType()))
+        .toList();
+    final var nParameters = parameters.size();
+    final var foundPlanStart = parameters.contains(ClassName.get(Instant.class));
+
+    // Ensure model only has one constructor, one of:
+    // - (Registrar, Instant, Configuration)
+    // - (Registrar, Configuration)
+    // - (Registrar, Instant)
+    // - (Registrar)
+    final var expectedParameters = configurationType
+        // Configuration expected
+        .map(configType -> foundPlanStart && nParameters > 2 ? // If plan start `Instant` truly is expected
+            List.of(ClassName.get(Registrar.class), ClassName.get(Instant.class), ClassName.get(configType.declaration())) :
+            List.of(ClassName.get(Registrar.class), ClassName.get(configType.declaration())))
+        // No configuration expected
+        .orElseGet(() -> foundPlanStart && nParameters > 1 ? // If plan start `Instant` truly is expected
+            List.of(ClassName.get(Registrar.class), ClassName.get(Instant.class)) :
+            List.of(ClassName.get(Registrar.class)));
+
+    if (!parameters.equals(expectedParameters)) {
+      throw new InvalidMissionModelException(
+          "The top-level model's constructor is expected to accept %s, found: %s"
+              .formatted(expectedParameters.toString(), parameters.toString()),
+          missionModelElement);
+    }
+
+    // TODO: Consider enrolling the given model in a dependency injection framework,
+    //   such that the Cursor can be injected like any other constructor argument,
+    //   and indeed such that other arguments can flexibly be supported.
+    return new MissionModelTypeRecord(modelTypeElement, foundPlanStart, configurationType);
+  }
+
+  private TypeElement getMissionModelTypeElement(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
     final var annotationMirror = this
@@ -73,23 +125,34 @@ import java.util.function.Predicate;
             "The missionModel package is somehow missing an @MissionModel annotation",
             missionModelElement));
 
-    final var modelAttribute =
-        getAnnotationAttribute(annotationMirror, "model").orElseThrow();
-    if (!(modelAttribute.getValue() instanceof DeclaredType)) {
+    final var modelAttribute = getAnnotationAttribute(annotationMirror, "model").orElseThrow();
+    if (!(modelAttribute.getValue() instanceof final DeclaredType model)) {
       throw new InvalidMissionModelException(
           "The top-level model is not yet defined",
           missionModelElement,
           annotationMirror,
           modelAttribute);
     }
+    return (TypeElement) model.asElement();
+  }
 
-    // TODO: Check that the given model conforms to the expected protocol.
-    //   * Has a (1,1) constructor that takes a Registrar.
-    //   It doesn't actually need to subclass Model.
-    // TODO: Consider enrolling the given model in a dependency injection framework,
-    //   such that the Cursor can be injected like any other constructor argument,
-    //   and indeed such that other arguments can flexibly be supported.
-    return (TypeElement) ((DeclaredType) modelAttribute.getValue()).asElement();
+  private ExecutableElement getMissionModelConstructor(final TypeElement missionModelTypeElement)
+  throws InvalidMissionModelException
+  {
+    final var constructors = missionModelTypeElement.getEnclosedElements().stream()
+        .filter(e -> e.getKind() == ElementKind.CONSTRUCTOR && e.getModifiers().contains(Modifier.PUBLIC))
+        .toList();
+    if (constructors.isEmpty()) {
+      throw new InvalidMissionModelException(
+          "The top-level model declares no public constructor",
+          missionModelTypeElement);
+    }
+    if (constructors.size() > 1) {
+      throw new InvalidMissionModelException(
+          "The top-level model declares more than one public constructor",
+          missionModelTypeElement);
+    }
+    return (ExecutableElement) constructors.get(0);
   }
 
   private Optional<ConfigurationTypeRecord> getMissionModelConfigurationType(final PackageElement missionModelElement)
