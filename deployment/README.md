@@ -17,19 +17,23 @@ Before you can deploy Aerie, you must install and configure the following produc
 
 ## Setting the Environment Variables
 
-Each container has environment variables that can be used to fine-tune your deployment. See the [environment variable documentation](./Environment.md) for the complete set of variables. See the example [docker-compose.yml](./docker-compose.yml) file for examples on how to set the environment variables.
+Each container has environment variables that can be used to fine-tune your deployment.
+See the [environment variable documentation](./Environment.md) for the complete set of variables.
+See the example [docker-compose.yml](./docker-compose.yml) file for examples on how to set the environment variables.
 
-Inside the [.env](./.env) there is a collection of variables that **must** be set in order to deploy Aerie using the default [init-aerie.sh](./postgres-init-db/init-aerie.sh) and [docker-compose.yml](./docker-compose.yml). They are, as follows:
+Inside the [.env](./.env) there is a collection of variables that **must** be set in order to deploy Aerie using the default [init-aerie.sh](./postgres-init-db/init-aerie.sh) and [docker-compose.yml](./docker-compose.yml).
+They are, as follows:
 
-| Name                  | Description                                                                  |
-|-----------------------|------------------------------------------------------------------------------|
-| REPOSITORY_DOCKER_URL | The URL used to fetch images of Aerie packages.                              |
-| DOCKER_TAG            | The version of the Aerie images to fetch.                                    |
-| AERIE_USERNAME        | The username used for Aerie services when they access the Postgres database. |
-| AERIE_PASSWORD        | The password used for Aerie services when they access the Postgres database. |
-| POSTGRES_DB           | The name of the Postgres database.                                           |
-| POSTGRES_USER         | The username of the superuser for the Postgres database.                     |
-| POSTGRES_PASSWORD     | The password of the superuser for the Postgres database.                     |
+| Name                    | Description                                                                                                                  |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `REPOSITORY_DOCKER_URL` | The URL used to fetch images of Aerie packages.                                                                              |
+| `DOCKER_TAG`            | The version of the Aerie images to fetch.                                                                                    |
+| `AERIE_USERNAME`        | The username used for Aerie services when they access the Postgres database.                                                 |
+| `AERIE_PASSWORD`        | The password used for Aerie services when they access the Postgres database.                                                 |
+| `POSTGRES_DB`           | The name of the Postgres database.                                                                                           |
+| `POSTGRES_USER`         | The username of the superuser for the Postgres database.                                                                     |
+| `POSTGRES_PASSWORD`     | The password of the superuser for the Postgres database.                                                                     |
+| `UNTRUE_PLAN_START`     | Temporary solution to provide plan start time to models, should be set to a time that models will not fail to initialize on. |
 
 ### **At minimum, you _must_ assign values to the environment variables already present in [.env](./.env) in order to deploy Aerie**.
 

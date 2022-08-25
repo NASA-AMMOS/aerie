@@ -34,13 +34,16 @@ public final class LocalMissionModelService implements MissionModelService {
 
   private final Path missionModelDataPath;
   private final MissionModelRepository missionModelRepository;
+  private final Instant untruePlanStart;
 
   public LocalMissionModelService(
       final Path missionModelDataPath,
-      final MissionModelRepository missionModelRepository
+      final MissionModelRepository missionModelRepository,
+      final Instant untruePlanStart
   ) {
     this.missionModelDataPath = missionModelDataPath;
     this.missionModelRepository = missionModelRepository;
+    this.untruePlanStart = untruePlanStart;
   }
 
   @Override
@@ -247,7 +250,7 @@ public final class LocalMissionModelService implements MissionModelService {
   private MissionModelFacade loadConfiguredMissionModel(final String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
-    return loadConfiguredMissionModel(missionModelId, Instant.EPOCH, SerializedValue.of(Map.of()));
+    return loadConfiguredMissionModel(missionModelId, untruePlanStart, SerializedValue.of(Map.of()));
   }
 
   /**
