@@ -32,7 +32,7 @@ public class TimeExpressionLatching extends TimeExpression {
   public Interval computeTime(final SimulationResults simulationResults, final Plan plan, final Interval interval) {
 
     List<Interval> resetPeriods = StreamSupport
-        .stream(resetWindowsExpression.computeRange(simulationResults, plan, new Windows(true)).spliterateEqualTo(true), false)
+        .stream(resetWindowsExpression.computeRange(simulationResults, plan, new Windows(true)).iterateEqualTo(true).spliterator(), false)
         .toList();
     boolean first = true;
     for (var window : resetPeriods) {

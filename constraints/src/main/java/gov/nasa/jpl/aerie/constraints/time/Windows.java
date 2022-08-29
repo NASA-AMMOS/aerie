@@ -342,10 +342,6 @@ public final class Windows implements Iterable<Segment<Boolean>> {
     return segments.iterateEqualTo(value);
   }
 
-  public Spliterator<Interval> spliterateEqualTo(final Boolean value) {
-    return segments.spliterateEqualTo(value);
-  }
-
   public boolean isAllEqualTo(final Boolean value) {
     return segments.isAllEqualTo(value);
   }
