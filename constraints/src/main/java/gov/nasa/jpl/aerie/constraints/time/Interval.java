@@ -117,15 +117,6 @@ public final class Interval implements Comparable<Interval>{
     return new Interval(point, Inclusive, point, Inclusive);
   }
 
-  /**
-   * Creates an empty interval at a specific point - necessary for map2 to work right in IntervalMap.java.
-   * @param point
-   * @return
-   */
-  public static Interval atExclusive(final Duration point) {
-    return between(point, Exclusive, point, Exclusive);
-  }
-
   public static Interval at(final long quantity, final Duration unit) {
     return at(Duration.of(quantity, unit));
   }
