@@ -55,7 +55,7 @@ public final class Interval implements Comparable<Interval>{
   }
 
   /**
-   * Constructs a interval between two durations based on a common instant.
+   * Constructs an interval between two durations based on a common instant.
    *
    * @param start The starting time of the interval.
    * @param end The ending time of the interval.
