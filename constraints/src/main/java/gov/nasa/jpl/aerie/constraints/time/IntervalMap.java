@@ -244,124 +244,113 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
       final IntervalMap<V2> right,
       final BiFunction<Optional<V1>, Optional<V2>, Optional<R>> transform
   ) {
-    final var alg = left.alg;
+    final var resultMap = new IntervalMap<R>();
+    final List<Segment<R>> result = resultMap.segments;
 
-    final var accumulator = new Object() {
-      final ArrayList<Segment<R>> results = new ArrayList<>();
-      Interval accInterval = alg.bottom();
-      Optional<R> accValue = Optional.empty();
+    var startTime = Duration.MIN_VALUE;
+    var startInclusivity = Inclusive;
+    Duration endTime;
+    Interval.Inclusivity endInclusivity;
 
-      void flush() {
-        //if we have a value, add it
-        this.accValue.ifPresent(r -> this.results.add(Segment.of(this.accInterval, r)));
-        this.accInterval = Interval.atExclusive(this.accInterval.end); //reset interval TODO: better value??
-        this.accValue = Optional.empty(); //reset acc value, probably doing this at the end of intervals or smth
-      }
+    var leftIndex = 0;
+    var rightIndex = 0;
+    var nextLeftIndex = 0;
+    var nextRightIndex = 0;
 
-      void append(final Interval interval, final Optional<R> newValue) {
-        if (interval.isEmpty()) return; //if nothing to append, don't act
+    Interval leftInterval;
+    Interval rightInterval;
+    Optional<V1> leftValue;
+    Optional<V2> rightValue;
 
-        if (!(alg.overlaps(this.accInterval, interval) || alg.meets(this.accInterval, interval)) || !Objects.equals(this.accValue, newValue)) { //if no longer an overlap or the values not equal, time to flush
-          this.flush();
+    Optional<R> previousValue = Optional.empty();
+
+    while (startTime.shorterThan(Duration.MAX_VALUE) || startInclusivity == Inclusive) {
+      if (leftIndex < left.size()) {
+        var leftNextDefinedSegment = left.get(leftIndex);
+        if (leftNextDefinedSegment.interval().start.shorterThan(startTime) || (leftNextDefinedSegment.interval().start.isEqualTo(startTime) && !leftNextDefinedSegment.interval().startInclusivity.moreRestrictiveThan(startInclusivity))) {
+          leftInterval = leftNextDefinedSegment.interval();
+          leftValue = Optional.of(leftNextDefinedSegment.value());
+          nextLeftIndex = leftIndex + 1;
+        } else {
+          leftInterval = Interval.between(
+              Duration.MIN_VALUE,
+              Inclusive,
+              leftNextDefinedSegment.interval().start,
+              leftNextDefinedSegment.interval().startInclusivity.opposite());
+          leftValue = Optional.empty();
         }
-
-        this.accInterval = alg.unify(this.accInterval, interval); //otherwise, merge the intervals if theres even a little overlap and the values r the same
-        this.accValue = newValue;
+      } else {
+        leftInterval = Interval.FOREVER;
+        leftValue = Optional.empty();
       }
-    };
 
-    int leftIndex = -1;
-    Interval leftInterval = alg.bottom();
-    int rightIndex = -1;
-    Interval rightInterval = alg.bottom();
+      if (rightIndex < right.size()) {
+        var rightNextDefinedSegment = right.get(rightIndex);
+        if (rightNextDefinedSegment.interval().start.shorterThan(startTime) || (rightNextDefinedSegment.interval().start.isEqualTo(startTime) && !rightNextDefinedSegment.interval().startInclusivity.moreRestrictiveThan(startInclusivity))) {
+          rightInterval = rightNextDefinedSegment.interval();
+          rightValue = Optional.of(rightNextDefinedSegment.value());
+          nextRightIndex = rightIndex + 1;
+        } else {
+          rightInterval = Interval.between(
+              Duration.MIN_VALUE,
+              Inclusive,
+              rightNextDefinedSegment.interval().start,
+              rightNextDefinedSegment.interval().startInclusivity.opposite());
+          rightValue = Optional.empty();
+        }
+      } else {
+        rightInterval = Interval.FOREVER;
+        rightValue = Optional.empty();
+      }
 
-    //handle everything between
-    while (leftIndex < left.segments.size() || rightIndex < right.segments.size()) {
-      // Advance to the next interval, if we've fully consumed the one prior.
-      if (alg.isEmpty(leftInterval)) { //i.e. if we are at the edge of the interval
-        leftIndex++; //it's weird to increment and check again like this. but we need to increment only in the isEmpty
-                     // case. after that, if we have just incremented, and we are in bounds, we want to check if we are
-                     // in bounds. Not doing this can cause an  infinite loop!
-        if (leftIndex < left.segments.size()) {
-          leftInterval = left.getInterval(leftIndex);
+      if (leftInterval.end.isEqualTo(rightInterval.end)) {
+        endTime = leftInterval.end;
+        if (leftInterval.includesEnd() && rightInterval.includesEnd()) {
+          endInclusivity = Inclusive;
+          leftIndex = nextLeftIndex;
+          rightIndex = nextRightIndex;
+        } else if (leftInterval.includesEnd()) {
+          endInclusivity = Exclusive;
+          rightIndex = nextRightIndex;
+        } else if (rightInterval.includesEnd()) {
+          endInclusivity = Exclusive;
+          leftIndex = nextLeftIndex;
+        } else {
+          endInclusivity = Exclusive;
+          rightIndex = nextRightIndex;
+        }
+      } else if (leftInterval.end.shorterThan(rightInterval.end)) {
+        endTime = leftInterval.end;
+        endInclusivity = leftInterval.endInclusivity;
+        leftIndex = nextLeftIndex;
+      } else {
+        endTime = rightInterval.end;
+        endInclusivity = rightInterval.endInclusivity;
+        rightIndex = nextRightIndex;
+      }
+      var finalInterval = Interval.between(startTime, startInclusivity, endTime, endInclusivity);
+      if (finalInterval.isEmpty()) continue;
+
+      var newValue = transform.apply(leftValue, rightValue);
+      if (newValue.isPresent()) {
+        if (!newValue.equals(previousValue)) {
+          result.add(Segment.of(finalInterval, newValue.get()));
+        } else {
+          var previousInterval = result.remove(result.size() - 1).interval();
+          result.add(
+              Segment.of(
+                  Interval.unify(previousInterval, finalInterval),
+                  newValue.get()
+              )
+          );
         }
       }
-      if (alg.isEmpty(rightInterval)) {
-        rightIndex++;
-        if (rightIndex < right.segments.size()) {
-          rightInterval = right.getInterval(rightIndex);
-        }
-      }
-
-      // Extract the prefix and overlap between these intervals.
-      // At most one prefix will be non-empty (they can't each start before the other),
-      // but pretending otherwise makes the code simpler.
-      final var nullGap = alg.intersect(alg.intersect(alg.lowerBoundsOf(rightInterval), alg.lowerBoundsOf(leftInterval)),
-                                          alg.upperBoundsOf(accumulator.accInterval));
-      final var leftPrefix = alg.intersect(leftInterval, alg.lowerBoundsOf(rightInterval));
-      final var rightPrefix = alg.intersect(rightInterval, alg.lowerBoundsOf(leftInterval));
-      final var overlap = alg.intersect(leftInterval, rightInterval);
-      // At most one interval will have anything left over, but we need to analyze it against the next
-      // interval on the opposing timeline.
-      leftInterval = alg.intersect(leftInterval, alg.upperBoundsOf(alg.unify(leftPrefix, overlap)));
-      rightInterval = alg.intersect(rightInterval, alg.upperBoundsOf(alg.unify(rightPrefix, overlap)));
-
-      if (!alg.isEmpty(nullGap)) {
-        accumulator.append(nullGap, transform.apply(
-            Optional.empty(),
-            Optional.empty()
-        ));
-      }
-      // Compute a new value on each interval.
-      if (!alg.isEmpty(leftPrefix)) {
-        accumulator.append(leftPrefix, transform.apply(
-            Optional.of(left.getValue(leftIndex)),
-            Optional.empty()));
-      }
-      if (!alg.isEmpty(rightPrefix)) {
-        accumulator.append(rightPrefix, transform.apply(
-            Optional.empty(),
-            Optional.of(right.getValue(rightIndex))));
-      }
-      if (!alg.isEmpty(overlap)) {
-        accumulator.append(overlap, transform.apply(
-            Optional.of(left.getValue(leftIndex)),
-            Optional.of(right.getValue(rightIndex))));
-      }
+      previousValue = newValue;
+      startTime = endTime;
+      startInclusivity = endInclusivity.opposite();
     }
 
-    //handle end -> infinity, but only if we haven't earlier (which happens if both left and right are empty)
-    if (left.segments.size() > 0 || right.segments.size() > 0)
-    {
-      Interval leftSuffix;
-      Interval rightSuffix;
-      if (left.segments.size() > 0) {
-        //-infinity (or whatever the lowest point is) up to this point
-        leftSuffix = alg.upperBoundsOf(left.getInterval(left.segments.size()-1));
-      } else {
-        //-infinity to infinity, because this is empty
-        leftSuffix = alg.upperBoundsOf(alg.bottom());
-      }
-
-      if (right.segments.size() > 0) {
-        //-infinity (or whatever the lowest point is) up to this point
-        rightSuffix = alg.upperBoundsOf(right.getInterval(right.segments.size()-1));
-      } else {
-        //-infinity to infinity, because this is empty
-        rightSuffix = alg.upperBoundsOf(alg.bottom());
-      }
-
-      final var overallPrefix = alg.intersect(leftSuffix, rightSuffix);
-      if (!alg.isEmpty(overallPrefix)) { //in the offchance that the first intervals start at Duration.MIN, it's worth checking
-        accumulator.append(overallPrefix, transform.apply(
-            Optional.empty(),
-            Optional.empty()));
-      }
-    }
-
-    accumulator.flush(); //flush the final interval
-
-    return new IntervalMap<>(alg, accumulator.results);
+    return resultMap;
   }
 
   /**
