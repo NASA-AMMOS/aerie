@@ -197,8 +197,7 @@ public class WindowsTest {
         Segment.of(at(12, SECONDS), true),
         Segment.of(at(13, SECONDS), false),
         Segment.of(at(Duration.MAX_VALUE), true)
-    )
-        .unset(at(9, SECONDS));
+    ).unset(at(9, SECONDS));
 
     main = main.not();
 
@@ -374,18 +373,16 @@ public class WindowsTest {
 
   @Test
   public void shiftByFromStartFromEndPermsWithInterval() {
-    var restrictedAlgebra = new IntervalAlgebra(interval(0, 10, SECONDS));
-
     var leftEnd = interval(0, 2, SECONDS);
     var rightEnd = interval(8, 10, SECONDS);
 
-    var orig = new Windows(restrictedAlgebra)
+    var orig = new Windows()
         .set(new Windows(Segment.of(leftEnd, true), Segment.of(rightEnd, true)));
 
     var fromStartPosFromEndPos = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(1, SECONDS));
     assertIterableEquals(fromStartPosFromEndPos, new Windows(
-        Segment.of(interval(0, 3, SECONDS), true),
-        Segment.of(interval(7, 10, SECONDS), true)
+        Segment.of(interval(-1, 3, SECONDS), true),
+        Segment.of(interval(7, 11, SECONDS), true)
     ));
 
     var fromStartPosFromEndNeg = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(-1, SECONDS));
@@ -403,12 +400,12 @@ public class WindowsTest {
         Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
         Segment.of(interval(1, 3, SECONDS), true),
         Segment.of(interval(8, Inclusive, 9, Exclusive, SECONDS), false),
-        Segment.of(interval(9, 10, SECONDS), true)
+        Segment.of(interval(9, 11, SECONDS), true)
     ));
 
     var fromStartNegFromEndNeg = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(-1, SECONDS));
     assertEquals(fromStartNegFromEndNeg, new Windows(
-        Segment.of(interval(0, 1, SECONDS), true),
+        Segment.of(interval(-1, 1, SECONDS), true),
         Segment.of(interval(1, Exclusive, 2, Inclusive, SECONDS), false),
         Segment.of(interval(7, 9, SECONDS), true),
         Segment.of(interval(9, Exclusive, 10, Inclusive, SECONDS), false)
@@ -423,29 +420,27 @@ public class WindowsTest {
 
   @Test
   public void shiftByFromStartFromEndPermsWithPoint() {
-    var restrictedAlgebra = new IntervalAlgebra(interval(0, 4, SECONDS));
-
     var leftEnd = at(0, SECONDS);
     var rightEnd = at(4, SECONDS);
 
-    var orig = new Windows(restrictedAlgebra)
+    var orig = new Windows()
         .set(new Windows(Segment.of(leftEnd, true), Segment.of(rightEnd, true)));
 
     var fromStartPosFromEndPos = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(1, SECONDS));
-    assertEquals(fromStartPosFromEndPos, new Windows(Segment.of(interval(0, 1, SECONDS), true),
-                                                     Segment.of(interval(3, 4, SECONDS), true)));
+    assertEquals(fromStartPosFromEndPos, new Windows(Segment.of(interval(-1, 1, SECONDS), true),
+                                                     Segment.of(interval(3, 5, SECONDS), true)));
 
     var fromStartPosFromEndNeg = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(-1, SECONDS));
     assertEquals(fromStartPosFromEndNeg, new Windows(Segment.of(leftEnd, false), Segment.of(rightEnd, false)));
 
     var fromStartNegFromEndPos = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(1, SECONDS));
-    assertEquals(fromStartNegFromEndPos, new Windows(Segment.of(leftEnd, false), Segment.of(interval(1, 1, SECONDS), true), Segment.of(rightEnd, false)));
+    assertEquals(fromStartNegFromEndPos, new Windows(Segment.of(leftEnd, false), Segment.of(interval(1, 1, SECONDS), true), Segment.of(rightEnd, false), Segment.of(interval(5, 5, SECONDS), true)));
 
     var fromStartNegFromEndNeg = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(-1, SECONDS));
-    assertEquals(fromStartNegFromEndNeg, new Windows(Segment.of(leftEnd, false), Segment.of(interval(3, 3, SECONDS), true), Segment.of(rightEnd, false)));
+    assertEquals(fromStartNegFromEndNeg, new Windows(Segment.of(interval(-1, -1, SECONDS), true), Segment.of(leftEnd, false), Segment.of(interval(3, 3, SECONDS), true), Segment.of(rightEnd, false)));
 
     var coalesce = orig.shiftBy(Duration.of(-2, SECONDS), Duration.of(2, SECONDS));
-    assertEquals(coalesce, new Windows(restrictedAlgebra.bounds(), true));
+    assertEquals(coalesce, new Windows(interval(-2, 6, SECONDS), true));
   }
 
   @Test
@@ -482,7 +477,7 @@ public class WindowsTest {
 
   @Test
   public void iterator() {
-    var nw = new Windows(new IntervalAlgebra(interval(1, 2, SECONDS)))
+    var nw = new Windows()
         .set(interval(1, 2, SECONDS), true);
 
     //some simple iterator tests

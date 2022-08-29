@@ -18,10 +18,6 @@ public final class Windows implements Iterable<Segment<Boolean>> {
     this.segments = new IntervalMap<>();
   }
 
-  public Windows(final IntervalAlgebra alg) {
-    this.segments = new IntervalMap<Boolean>(alg);
-  }
-
   public Windows(final Windows other) {
     this.segments = new IntervalMap<>(other.segments);
   }
@@ -32,7 +28,7 @@ public final class Windows implements Iterable<Segment<Boolean>> {
   }
 
   public Windows(final List<Segment<Boolean>> segments) {
-    this.segments = new IntervalMap<Boolean>(segments);
+    this.segments = new IntervalMap<>(segments);
   }
 
   public Windows(final Interval interval, final boolean value) {
@@ -352,10 +348,6 @@ public final class Windows implements Iterable<Segment<Boolean>> {
 
   public boolean isAllEqualTo(final Boolean value) {
     return segments.isAllEqualTo(value);
-  }
-
-  public IntervalAlgebra getAlg() {
-    return segments.getAlg();
   }
 
   @Override
