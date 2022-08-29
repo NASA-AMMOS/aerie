@@ -25,6 +25,10 @@ public final class Interval implements Comparable<Interval>{
     public Inclusivity opposite() {
       return (this == Inclusive) ? Exclusive : Inclusive;
     }
+
+    public boolean moreRestrictiveThan(final Inclusivity other) {
+      return this == Exclusive && other == Inclusive;
+    }
   }
 
   public boolean includesStart() {
