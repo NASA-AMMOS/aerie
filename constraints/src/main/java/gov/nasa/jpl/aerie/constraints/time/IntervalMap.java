@@ -415,16 +415,6 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
         .iterator();
   }
 
-  public Spliterator<Interval> spliterateEqualTo(final V value) {
-    return StreamSupport.stream(this.spliterator(), false).flatMap(pair -> {
-      if (pair.value().equals(value)) {
-        return Stream.of(pair.interval());
-      } else {
-        return Stream.of();
-      }
-    }).spliterator();
-  }
-
   public boolean isAllEqualTo(final V value) {
     for (final var segment: segments) {
       if (!segment.value().equals(value)) {

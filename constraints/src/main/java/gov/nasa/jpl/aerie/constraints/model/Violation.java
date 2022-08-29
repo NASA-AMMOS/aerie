@@ -16,7 +16,8 @@ public final class Violation {
   public Violation(final List<Long> activityInstanceIds, final List<String> resourceNames, final Windows violationWindows) {
     this.activityInstanceIds = new ArrayList<>(activityInstanceIds);
     this.resourceNames = new ArrayList<>(resourceNames);
-    this.violationWindows = StreamSupport.stream(violationWindows.spliterateEqualTo(true), false).toList();
+    this.violationWindows = new ArrayList<>(violationWindows.size());
+    for (final var interval: violationWindows.iterateEqualTo(true)) this.violationWindows.add(interval);
   }
 
   public Violation(final Windows violationWindows) {
