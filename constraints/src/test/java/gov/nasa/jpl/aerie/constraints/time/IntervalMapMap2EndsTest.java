@@ -4,25 +4,22 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
 public class IntervalMapMap2EndsTest {
 
   @Test
   public void map2nonoverlap() {
-    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra())
+    IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "a")
         .set(Interval.between(Duration.of(8, SECONDS), Exclusive, Duration.of(9, SECONDS), Exclusive), "a");
 
 
-    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra())
+    IntervalMap<String> right = new IntervalMap<String>()
         .set(Interval.between(Duration.of(6, SECONDS), Exclusive, Duration.of(7, SECONDS), Exclusive), "b");
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
@@ -42,7 +39,7 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+    IntervalMap<String> expected = new IntervalMap<String>()
         .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Inclusive), "NN")
         .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "aN")
         .set(Interval.between(Duration.of(4, SECONDS), Inclusive, Duration.of(6, SECONDS), Inclusive), "NN")
@@ -57,12 +54,12 @@ public class IntervalMapMap2EndsTest {
   @Test
   public void map2bothStartAt() {
 
-    Interval horizon = Interval.between(0, Inclusive, 4, Inclusive, SECONDS);
-    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra(horizon))
+
+    IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.at(Duration.of(0, SECONDS)), "a")
         .set(Interval.between(1, 3, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra(horizon))
+    IntervalMap<String> right = new IntervalMap<String>()
         .set(Interval.at(Duration.of(0, SECONDS)), "b")
         .set(Interval.between(1, 2, SECONDS), "a");
 
@@ -84,12 +81,14 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+    IntervalMap<String> expected = new IntervalMap<String>()
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.at(Duration.of(0, SECONDS)), "ab")
         .set(Interval.between(Duration.of(0, SECONDS), Exclusive, Duration.of(1, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Inclusive), "ba")
         .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Inclusive), "bN")
-        .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "NN");
+        .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "NN")
+        .set(Interval.between(Duration.of(4, SECONDS), Inclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
@@ -97,12 +96,11 @@ public class IntervalMapMap2EndsTest {
   @Test
   public void map2bothEndAt() {
 
-    Interval horizon = Interval.between(0, Inclusive, 4, Inclusive, SECONDS);
-    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra(horizon))
+    IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(1, 3, SECONDS), "b")
         .set(Interval.at(Duration.of(4, SECONDS)), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra(horizon))
+    IntervalMap<String> right = new IntervalMap<String>()
         .set(Interval.between(1, 2, SECONDS), "a")
         .set(Interval.at(Duration.of(4, SECONDS)), "b");
 
@@ -124,12 +122,13 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
-        .set(Interval.between(Duration.of(0, SECONDS), Inclusive, Duration.of(1, SECONDS), Exclusive), "NN")
+    IntervalMap<String> expected = new IntervalMap<String>()
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Inclusive), "ba")
         .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Inclusive), "bN")
         .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "NN")
-        .set(Interval.at(Duration.of(4, SECONDS)), "ab");
+        .set(Interval.at(Duration.of(4, SECONDS)), "ab")
+        .set(Interval.between(Duration.of(4, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
@@ -137,12 +136,12 @@ public class IntervalMapMap2EndsTest {
   @Test
   public void map2oneStartAtOneEndAt() {
 
-    Interval horizon = Interval.between(0, Inclusive, 4, Inclusive, SECONDS);
-    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra(horizon))
+
+    IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(1, 3, SECONDS), "b")
         .set(Interval.at(Duration.of(4, SECONDS)), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra(horizon))
+    IntervalMap<String> right = new IntervalMap<String>()
         .set(Interval.between(1, 2, SECONDS), "a")
         .set(Interval.at(Duration.of(0, SECONDS)), "b");
 
@@ -164,13 +163,15 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+    IntervalMap<String> expected = new IntervalMap<String>()
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.at(Duration.of(0, SECONDS)), "Nb")
         .set(Interval.between(Duration.of(0, SECONDS), Exclusive, Duration.of(1, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Inclusive), "ba")
         .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Inclusive), "bN")
         .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "NN")
-        .set(Interval.at(Duration.of(4, SECONDS)), "aN");
+        .set(Interval.at(Duration.of(4, SECONDS)), "aN")
+        .set(Interval.between(Duration.of(4, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
@@ -178,11 +179,11 @@ public class IntervalMapMap2EndsTest {
   @Test
   public void map2bothStartInt() {
 
-    Interval horizon = Interval.between(0, Inclusive, 4, Inclusive, SECONDS);
-    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra(horizon))
+
+    IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(0, 3, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra(horizon))
+    IntervalMap<String> right = new IntervalMap<String>()
         .set(Interval.between(0, 2, SECONDS), "a");
 
 
@@ -203,10 +204,12 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+    IntervalMap<String> expected = new IntervalMap<String>()
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(0, SECONDS), Inclusive, Duration.of(2, SECONDS), Inclusive), "ba")
         .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Inclusive), "bN")
-        .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "NN");
+        .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "NN")
+        .set(Interval.between(Duration.of(4, SECONDS), Inclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
@@ -214,11 +217,11 @@ public class IntervalMapMap2EndsTest {
   @Test
   public void map2bothEndInt() {
 
-    Interval horizon = Interval.between(0, Inclusive, 4, Inclusive, SECONDS);
-    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra(horizon))
+
+    IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(2, 4, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra(horizon))
+    IntervalMap<String> right = new IntervalMap<String>()
         .set(Interval.between(1, 4, SECONDS), "a");
 
 
@@ -239,10 +242,12 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+    IntervalMap<String> expected = new IntervalMap<String>()
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(0, SECONDS), Inclusive, Duration.of(1, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "Na")
-        .set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(4, SECONDS), Inclusive), "ba");
+        .set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(4, SECONDS), Inclusive), "ba")
+        .set(Interval.between(Duration.of(4, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
@@ -250,11 +255,11 @@ public class IntervalMapMap2EndsTest {
   @Test
   public void map2oneStartIntOneEndInt() {
 
-    Interval horizon = Interval.between(0, Inclusive, 4, Inclusive, SECONDS);
-    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra(horizon))
+
+    IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(0, 3, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra(horizon))
+    IntervalMap<String> right = new IntervalMap<String>()
         .set(Interval.between(2, 4, SECONDS), "a");
 
 
@@ -275,10 +280,12 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+    IntervalMap<String> expected = new IntervalMap<String>()
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(0, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "bN")
         .set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Inclusive), "ba")
-        .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "Na");
+        .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "Na")
+        .set(Interval.between(Duration.of(4, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
@@ -286,11 +293,11 @@ public class IntervalMapMap2EndsTest {
   @Test
   public void map2oneEndIntOneNullEnd() {
 
-    Interval horizon = Interval.between(0, Inclusive, 4, Inclusive, SECONDS);
-    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra(horizon))
+
+    IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(2, 4, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra(horizon))
+    IntervalMap<String> right = new IntervalMap<String>()
         .set(Interval.between(1, 3, SECONDS), "a");
 
 
@@ -311,11 +318,13 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+    IntervalMap<String> expected = new IntervalMap<String>()
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(0, SECONDS), Inclusive, Duration.of(1, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "Na")
         .set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Inclusive), "ba")
-        .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "bN");
+        .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "bN")
+        .set(Interval.between(Duration.of(4, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
@@ -323,11 +332,11 @@ public class IntervalMapMap2EndsTest {
   @Test
   public void map2oneStartIntOneNullStart() {
 
-    Interval horizon = Interval.between(0, Inclusive, 4, Inclusive, SECONDS);
-    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra(horizon))
+
+    IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(0, 2, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra(horizon))
+    IntervalMap<String> right = new IntervalMap<String>()
         .set(Interval.between(1, 3, SECONDS), "a");
 
 
@@ -348,11 +357,13 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+    IntervalMap<String> expected = new IntervalMap<String>()
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(0, SECONDS), Inclusive, Duration.of(1, SECONDS), Exclusive), "bN")
         .set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Inclusive), "ba")
         .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Inclusive), "Na")
-        .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "NN");
+        .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "NN")
+        .set(Interval.between(Duration.of(4, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
@@ -360,11 +371,11 @@ public class IntervalMapMap2EndsTest {
   @Test
   public void map2oneEndIntOneEndAt() {
 
-    Interval horizon = Interval.between(0, Inclusive, 4, Inclusive, SECONDS);
-    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra(horizon))
+
+    IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(2, 4, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra(horizon))
+    IntervalMap<String> right = new IntervalMap<String>()
         .set(Interval.between(1, 3, SECONDS), "a")
         .set(Interval.at(Duration.of(4, SECONDS)), "b");
 
@@ -386,12 +397,14 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+    IntervalMap<String> expected = new IntervalMap<String>()
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(0, SECONDS), Inclusive, Duration.of(1, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "Na")
         .set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Inclusive), "ba")
         .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "bN")
-        .set(Interval.at(Duration.of(4, SECONDS)), "bb");
+        .set(Interval.at(Duration.of(4, SECONDS)), "bb")
+        .set(Interval.between(Duration.of(4, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
@@ -399,11 +412,11 @@ public class IntervalMapMap2EndsTest {
   @Test
   public void map2oneStartIntStartAt() {
 
-    Interval horizon = Interval.between(0, Inclusive, 4, Inclusive, SECONDS);
-    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra(horizon))
+
+    IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(0, 2, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra(horizon))
+    IntervalMap<String> right = new IntervalMap<String>()
         .set(Interval.at(Duration.of(0, SECONDS)), "b")
         .set(Interval.between(1, 3, SECONDS), "a");
 
@@ -425,12 +438,14 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+    IntervalMap<String> expected = new IntervalMap<String>()
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.at(Duration.of(0, SECONDS)), "bb")
         .set(Interval.between(Duration.of(0, SECONDS), Exclusive, Duration.of(1, SECONDS), Exclusive), "bN")
         .set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Inclusive), "ba")
         .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Inclusive), "Na")
-        .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "NN");
+        .set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(4, SECONDS), Inclusive), "NN")
+        .set(Interval.between(Duration.of(4, SECONDS), Inclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
@@ -438,12 +453,12 @@ public class IntervalMapMap2EndsTest {
   @Test
   public void map2alternateStartEndAtInt() {
 
-    Interval horizon = Interval.between(0, Inclusive, 4, Inclusive, SECONDS);
-    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra(horizon))
+
+    IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(0, 2, SECONDS), "b")
         .set(Interval.at(Duration.of(4, SECONDS)), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra(horizon))
+    IntervalMap<String> right = new IntervalMap<String>()
         .set(Interval.at(Duration.of(0, SECONDS)), "b")
         .set(Interval.between(1, 4, SECONDS), "a");
 
@@ -465,12 +480,14 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+    IntervalMap<String> expected = new IntervalMap<String>()
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.at(Duration.of(0, SECONDS)), "bb")
         .set(Interval.between(Duration.of(0, SECONDS), Exclusive, Duration.of(1, SECONDS), Exclusive), "bN")
         .set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Inclusive), "ba")
         .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "Na")
-        .set(Interval.at(Duration.of(4, SECONDS)), "aa");
+        .set(Interval.at(Duration.of(4, SECONDS)), "aa")
+        .set(Interval.between(Duration.of(4, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
@@ -478,11 +495,11 @@ public class IntervalMapMap2EndsTest {
   @Test
   public void map2nullStartEnd() {
 
-    Interval horizon = Interval.between(0, Inclusive, 4, Inclusive, SECONDS);
-    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra(horizon))
+
+    IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(Duration.of(0, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra(horizon))
+    IntervalMap<String> right = new IntervalMap<String>()
         .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "b");
 
 
@@ -503,12 +520,13 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
+    IntervalMap<String> expected = new IntervalMap<String>()
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.at(Duration.of(0, SECONDS)), "NN")
         .set(Interval.between(Duration.of(0, SECONDS), Exclusive, Duration.of(2, SECONDS), Inclusive), "aN")
         .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "ab")
         .set(Interval.between(Duration.of(3, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "Nb")
-        .set(Interval.at(Duration.of(4, SECONDS)), "NN");
+        .set(Interval.between(Duration.of(4, SECONDS), Inclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
@@ -531,9 +549,7 @@ public class IntervalMapMap2EndsTest {
     //                                            (cutoff here, at 35)
 
 
-    Interval horizon = Interval.between(0, Inclusive, 35, Inclusive, SECONDS);
-    System.out.println(horizon);
-    IntervalMap<String> left = new IntervalMap<String>(new IntervalAlgebra(horizon))
+    IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(6, 7, SECONDS), "b")
         .set(Interval.between(10, 11, SECONDS), "a")
         .set(Interval.between(13, 15, SECONDS), "b")
@@ -544,7 +560,7 @@ public class IntervalMapMap2EndsTest {
         .set(Interval.at(Duration.of(32, SECONDS)), "a")
         .set(Interval.at(Duration.of(35, SECONDS)), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>(new IntervalAlgebra(horizon))
+    IntervalMap<String> right = new IntervalMap<String>()
         .set(Interval.between(4,10, SECONDS), "a")
         .set(Interval.between(11,13, SECONDS), "b")
         .set(Interval.between(15,16, SECONDS), "a")
@@ -572,8 +588,8 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>(new IntervalAlgebra())
-        .set(Interval.between(Duration.of(0, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "NN")
+    IntervalMap<String> expected = new IntervalMap<String>()
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(4, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(4, SECONDS), Inclusive, Duration.of(6, SECONDS), Exclusive), "Na")
         .set(Interval.between(Duration.of(6, SECONDS), Inclusive, Duration.of(7, SECONDS), Inclusive), "ba")
         .set(Interval.between(Duration.of(7, SECONDS), Exclusive, Duration.of(10, SECONDS), Exclusive), "Na")
@@ -602,7 +618,8 @@ public class IntervalMapMap2EndsTest {
         .set(Interval.between(Duration.of(32, SECONDS), Exclusive, Duration.of(33, SECONDS), Exclusive), "NN")
         .set(Interval.at(Duration.of(33, SECONDS)), "Nb")
         .set(Interval.between(Duration.of(33, SECONDS), Exclusive, Duration.of(35, SECONDS), Exclusive), "NN")
-        .set(Interval.at(Duration.of(35, SECONDS)), "aN");
+        .set(Interval.at(Duration.of(35, SECONDS)), "aN")
+        .set(Interval.between(Duration.of(35, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), "NN");
 
     assertIterableEquals(expected, mapped);
   }
