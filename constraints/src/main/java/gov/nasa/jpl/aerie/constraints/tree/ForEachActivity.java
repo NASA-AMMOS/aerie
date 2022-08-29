@@ -39,7 +39,7 @@ public final class ForEachActivity implements Expression<List<Violation>> {
         final var expressionViolations = this.expression.evaluate(results, bounds, newEnvironment);
         for (final var violation : expressionViolations) {
           if (!violation.violationWindows.isEmpty()) {
-            final var newViolation = violation.clone();
+            final var newViolation = new Violation(violation);
             newViolation.addActivityId(activity.id);
             violations.add(newViolation);
           }

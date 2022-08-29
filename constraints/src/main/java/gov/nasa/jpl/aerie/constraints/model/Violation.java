@@ -25,13 +25,13 @@ public final class Violation {
   }
 
   public Violation(final List<Long> activityInstanceIds, final List<String> resourceNames, final List<Interval> intervals) {
-    this.activityInstanceIds = activityInstanceIds;
-    this.resourceNames = resourceNames;
-    this.violationWindows = intervals;
+    this.activityInstanceIds = new ArrayList<>(activityInstanceIds);
+    this.resourceNames = List.copyOf(resourceNames);
+    this.violationWindows = List.copyOf(intervals);
   }
 
-  public Violation clone() {
-    return new Violation(new ArrayList<>(this.activityInstanceIds), new ArrayList<>(this.resourceNames), new ArrayList<>(violationWindows));
+  public Violation(final Violation other) {
+    this(other.activityInstanceIds, other.resourceNames, other.violationWindows);
   }
 
   public void addActivityId(final long activityId) {
