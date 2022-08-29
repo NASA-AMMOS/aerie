@@ -408,13 +408,11 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
   }
 
   public Iterable<Interval> iterateEqualTo(final V value) {
-    return () -> segments.stream().flatMap(pair -> {
-      if (pair.value().equals(value)) {
-        return Stream.of(pair.interval());
-      } else {
-        return Stream.of();
-      }
-    }).iterator();
+    return () -> segments
+        .stream()
+        .filter($ -> $.value().equals(value))
+        .map(Segment::interval)
+        .iterator();
   }
 
   public Spliterator<Interval> spliterateEqualTo(final V value) {
