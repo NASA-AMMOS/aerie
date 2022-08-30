@@ -19,7 +19,7 @@ public class FilterMaxDuration extends FilterFunctional {
 
   @Override
   public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
-    Windows result = new Windows(windows);
+    Windows result = windows;
     result = result.filterByDuration(Duration.ZERO, this.maxDuration);
     return result;
   }

@@ -41,7 +41,7 @@ public class NAryMutexConstraint extends GlobalConstraintWithIntrospection {
 
 
   private Windows findWindows(Plan plan, Windows windows, ActivityType actToBeScheduled, final SimulationResults simulationResults) {
-    Windows validWindows = new Windows(windows);
+    Windows validWindows = windows;
     for (var expression : activityExpressions) {
       if (!expression.getType().equals(actToBeScheduled)) {
         final var acts = new LinkedList<>(plan.find(expression, simulationResults));

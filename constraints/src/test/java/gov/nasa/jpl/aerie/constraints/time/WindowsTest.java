@@ -19,11 +19,7 @@ public class WindowsTest {
 
   @Test
   public void constructorTests() {
-
     //just verify the constructors work right
-    var windows1 = new Windows();
-    var windows2 = new Windows(windows1);
-    assertIterableEquals(windows1, windows2);
     var windows3 = new Windows(
         Segment.of(interval(Duration.MIN_VALUE, Duration.of(0, SECONDS)), true),
         Segment.of(at(1, SECONDS), true),
@@ -32,10 +28,6 @@ public class WindowsTest {
     );
 
     assertEquals(windows3.minValidTimePoint().get().getKey(), Duration.MIN_VALUE);
-
-
-    windows2 = new Windows(windows3);
-    assertIterableEquals(windows2, windows3);
   }
 
   @Test

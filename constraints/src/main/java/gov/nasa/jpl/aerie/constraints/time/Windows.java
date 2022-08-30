@@ -6,41 +6,34 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Spliterator;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public final class Windows implements Iterable<Segment<Boolean>> {
-
   private final IntervalMap<Boolean> segments;
 
   public Windows() {
-    this.segments = new IntervalMap<>();
-  }
-
-  public Windows(final Windows other) {
-    this.segments = new IntervalMap<>(other.segments);
+    this.segments = IntervalMap.of();
   }
 
   @SafeVarargs
   public Windows(final Segment<Boolean>... segments) {
-    this.segments = new IntervalMap<>(segments);
+    this.segments = IntervalMap.of(segments);
   }
 
   public Windows(final List<Segment<Boolean>> segments) {
-    this.segments = new IntervalMap<>(segments);
+    this.segments = IntervalMap.of(segments);
   }
 
   public Windows(final Interval interval, final boolean value) {
-    this.segments = new IntervalMap<>(interval, value);
+    this.segments = IntervalMap.of(interval, value);
   }
 
   public Windows(final IntervalMap<Boolean> segments) {
     this.segments = segments;
   }
 
-  public Windows(final Boolean bool) {
-    this.segments = new IntervalMap<>(bool);
+  public Windows(final boolean bool) {
+    this.segments = IntervalMap.of(bool);
   }
 
   public Windows and(final Windows other) {
@@ -94,7 +87,7 @@ public final class Windows implements Iterable<Segment<Boolean>> {
     //should not be a subtraction because then if it was null originally, then subtracting original from forever
     //  yields true where once was null, which isn't good. we want a simple inversion of true and false here, without
     //  filling nulls.
-    return new Windows(this.segments.map($ -> $.map(b -> !b)));
+    return new Windows(this.segments.map(b -> !b));
   }
 
   public Optional<Pair<Duration, Interval.Inclusivity>> minTrueTimePoint(){
@@ -129,54 +122,46 @@ public final class Windows implements Iterable<Segment<Boolean>> {
   }
 
   public Windows removeTrueSegment(final int indexToRemove) {
-    if (indexToRemove >= 0) {
-      int index = 0;
-      for (final var interval : this.segments.iterateEqualTo(true)) {
-        if (index == indexToRemove) {
-          return new Windows(this.segments.set(interval, false));
-        } else {
-          index += 1;
-        }
+    var index = 0;
+    for (final var segment : this.segments) {
+      if (!segment.value()) continue;
+
+      // Every true segment can be addressed in two ways: a nonnegative offset (from the left)
+      // or a negative offset (from the right). Check both.
+      if ((index != indexToRemove) && (index != this.segments.size() - indexToRemove)) {
+        index += 1;
+        continue;
       }
-    } else {
-      int index = -1;
-      for (int i = this.segments.size() - 1; i >= 0; i--) {
-        final var segment = this.segments.get(i);
-        if (segment.value()) {
-          if (index == indexToRemove) {
-            return new Windows(this.segments.set(segment.interval(), false));
-          } else {
-            index -= 1;
-          }
-        }
-      }
+
+      return new Windows(this.segments.set(segment.interval(), false));
     }
-    return new Windows(this);
+
+    return this;
   }
 
   public Windows keepTrueSegment(final int indexToKeep) {
-    var result = new Windows(this);
-    if (indexToKeep >= 0) {
-      int index = 0;
-      for (final var interval : this.segments.iterateEqualTo(true)) {
-        if (index != indexToKeep) {
-          result.segments.setInternal(interval, false, 0);
-        }
+    final var builder = IntervalMap.<Boolean>builder();
+
+    var index = 0;
+    for (final var segment : this.segments) {
+      if (!segment.value()) {
+        builder.add(segment.interval(), false);
+        continue;
+      }
+
+      // Every true segment can be addressed in two ways: a nonnegative offset (from the left)
+      // or a negative offset (from the right). Check both.
+      if ((index != indexToKeep) && (index != this.segments.size() - indexToKeep)) {
+        builder.add(segment.interval(), false);
         index += 1;
+        continue;
       }
-    } else {
-      int index = -1;
-      for (int i = this.segments.size() - 1; i >= 0; i--) {
-        final var segment = this.segments.get(i);
-        if (segment.value()) {
-          if (index != indexToKeep) {
-            result.segments.setInternal(segment.interval(), false, 0);
-          }
-          index -= 1;
-        }
-      }
+
+      builder.add(segment.interval(), true);
+      index += 1;
     }
-    return result;
+
+    return new Windows(builder.build());
   }
 
     public boolean includes(final Windows other) {
@@ -238,45 +223,36 @@ public final class Windows implements Iterable<Segment<Boolean>> {
     //  N   |    F     |   N
 
 
-    return new Windows(this.segments.contextMap((value, interval) -> {
-      if (value.isPresent() && value.get()) {
-        final var duration = interval.duration();
-        if (duration.shorterThan(minDur) || duration.longerThan(maxDur)) {
-          return Optional.of(false);
-        } else {
-          return Optional.of(true);
-        }
-      }
-      return value;
+    return new Windows(this.segments.map((value, interval) -> {
+      if (!value) return false;
+
+      final var duration = interval.duration();
+      return !(duration.shorterThan(minDur) || duration.longerThan(maxDur));
     }));
   }
 
   public Windows shiftBy(Duration fromStart, Duration fromEnd){
-    final Windows result = new Windows(this.segments.map($ -> $.map(b -> false)));
-    for (final var segment: this.segments) {
-      if (segment.value()) {
-        final var interval = segment.interval();
-        if (interval.end.plus(fromEnd).noShorterThan(interval.start.plus(fromStart))) {
-          result.segments.setInternal(Interval.between(
-              interval.start.plus(fromStart),
-              interval.startInclusivity,
-              interval.end.plus(fromEnd),
-              interval.endInclusivity), true, 0);
-        }
-      }
+    final var builder = IntervalMap.<Boolean>builder();
+
+    for (final var segment : this.segments) {
+      final var interval = segment.interval();
+
+      final var shiftedInterval = Interval.between(
+            interval.start.plus(fromStart), interval.startInclusivity,
+            interval.end.plus(fromEnd),     interval.endInclusivity);
+
+      builder.add(shiftedInterval, segment.value());
     }
-    return result;
+
+    return new Windows(builder.build());
   }
 
   public Spans intoSpans() {
-    final var trueIntervals = StreamSupport.stream(this.segments.spliterator(), false).flatMap($ -> {
-      if ($.value()) {
-        return Stream.of($.interval());
-      } else {
-        return Stream.of();
-      }
-    }).toList();
-    return new Spans(trueIntervals);
+    return new Spans(StreamSupport
+        .stream(this.segments.spliterator(), false)
+        .filter($ -> $.value())
+        .map($ -> $.interval())
+        .toList());
   }
 
   ////// DELEGATED METHODS

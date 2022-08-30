@@ -145,7 +145,7 @@ public class TestOrderingConstraints {
         tw1,
         new MissingActivityInstanceConflict(new ActivityExistentialGoal(), act2), null);
 
-    Windows expectedWindows = new Windows(tw1);
+    Windows expectedWindows = tw1;
     expectedWindows = expectedWindows.and(new Windows(true).set(Interval.between(t1, Interval.Inclusivity.Inclusive, t5, Interval.Inclusivity.Exclusive), false));
     assertEquals(expectedWindows, foundWindows);
 

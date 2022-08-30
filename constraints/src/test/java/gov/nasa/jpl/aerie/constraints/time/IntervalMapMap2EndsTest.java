@@ -14,12 +14,12 @@ public class IntervalMapMap2EndsTest {
 
   @Test
   public void map2nonoverlap() {
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
         .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "a")
         .set(Interval.between(Duration.of(8, SECONDS), Exclusive, Duration.of(9, SECONDS), Exclusive), "a");
 
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
         .set(Interval.between(Duration.of(6, SECONDS), Exclusive, Duration.of(7, SECONDS), Exclusive), "b");
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
@@ -39,7 +39,7 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
         .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Inclusive), "NN")
         .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "aN")
         .set(Interval.between(Duration.of(4, SECONDS), Inclusive, Duration.of(6, SECONDS), Inclusive), "NN")
@@ -55,11 +55,11 @@ public class IntervalMapMap2EndsTest {
   public void map2bothStartAt() {
 
 
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
         .set(Interval.at(Duration.of(0, SECONDS)), "a")
         .set(Interval.between(1, 3, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
         .set(Interval.at(Duration.of(0, SECONDS)), "b")
         .set(Interval.between(1, 2, SECONDS), "a");
 
@@ -81,7 +81,7 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
         .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.at(Duration.of(0, SECONDS)), "ab")
         .set(Interval.between(Duration.of(0, SECONDS), Exclusive, Duration.of(1, SECONDS), Exclusive), "NN")
@@ -96,11 +96,11 @@ public class IntervalMapMap2EndsTest {
   @Test
   public void map2bothEndAt() {
 
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
         .set(Interval.between(1, 3, SECONDS), "b")
         .set(Interval.at(Duration.of(4, SECONDS)), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
         .set(Interval.between(1, 2, SECONDS), "a")
         .set(Interval.at(Duration.of(4, SECONDS)), "b");
 
@@ -122,7 +122,7 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
         .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Inclusive), "ba")
         .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Inclusive), "bN")
@@ -137,11 +137,11 @@ public class IntervalMapMap2EndsTest {
   public void map2oneStartAtOneEndAt() {
 
 
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
         .set(Interval.between(1, 3, SECONDS), "b")
         .set(Interval.at(Duration.of(4, SECONDS)), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
         .set(Interval.between(1, 2, SECONDS), "a")
         .set(Interval.at(Duration.of(0, SECONDS)), "b");
 
@@ -163,7 +163,7 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
         .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.at(Duration.of(0, SECONDS)), "Nb")
         .set(Interval.between(Duration.of(0, SECONDS), Exclusive, Duration.of(1, SECONDS), Exclusive), "NN")
@@ -180,10 +180,10 @@ public class IntervalMapMap2EndsTest {
   public void map2bothStartInt() {
 
 
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
         .set(Interval.between(0, 3, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
         .set(Interval.between(0, 2, SECONDS), "a");
 
 
@@ -204,7 +204,7 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
         .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(0, SECONDS), Inclusive, Duration.of(2, SECONDS), Inclusive), "ba")
         .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Inclusive), "bN")
@@ -218,10 +218,10 @@ public class IntervalMapMap2EndsTest {
   public void map2bothEndInt() {
 
 
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
         .set(Interval.between(2, 4, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
         .set(Interval.between(1, 4, SECONDS), "a");
 
 
@@ -242,7 +242,7 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
         .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(0, SECONDS), Inclusive, Duration.of(1, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "Na")
@@ -256,10 +256,10 @@ public class IntervalMapMap2EndsTest {
   public void map2oneStartIntOneEndInt() {
 
 
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
         .set(Interval.between(0, 3, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
         .set(Interval.between(2, 4, SECONDS), "a");
 
 
@@ -280,7 +280,7 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
         .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(0, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "bN")
         .set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Inclusive), "ba")
@@ -294,10 +294,10 @@ public class IntervalMapMap2EndsTest {
   public void map2oneEndIntOneNullEnd() {
 
 
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
         .set(Interval.between(2, 4, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
         .set(Interval.between(1, 3, SECONDS), "a");
 
 
@@ -318,7 +318,7 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
         .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(0, SECONDS), Inclusive, Duration.of(1, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "Na")
@@ -333,10 +333,10 @@ public class IntervalMapMap2EndsTest {
   public void map2oneStartIntOneNullStart() {
 
 
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
         .set(Interval.between(0, 2, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
         .set(Interval.between(1, 3, SECONDS), "a");
 
 
@@ -357,7 +357,7 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
         .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(0, SECONDS), Inclusive, Duration.of(1, SECONDS), Exclusive), "bN")
         .set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Inclusive), "ba")
@@ -372,10 +372,10 @@ public class IntervalMapMap2EndsTest {
   public void map2oneEndIntOneEndAt() {
 
 
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
         .set(Interval.between(2, 4, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
         .set(Interval.between(1, 3, SECONDS), "a")
         .set(Interval.at(Duration.of(4, SECONDS)), "b");
 
@@ -397,7 +397,7 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
         .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(0, SECONDS), Inclusive, Duration.of(1, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "Na")
@@ -413,10 +413,10 @@ public class IntervalMapMap2EndsTest {
   public void map2oneStartIntStartAt() {
 
 
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
         .set(Interval.between(0, 2, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
         .set(Interval.at(Duration.of(0, SECONDS)), "b")
         .set(Interval.between(1, 3, SECONDS), "a");
 
@@ -438,7 +438,7 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
         .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.at(Duration.of(0, SECONDS)), "bb")
         .set(Interval.between(Duration.of(0, SECONDS), Exclusive, Duration.of(1, SECONDS), Exclusive), "bN")
@@ -454,11 +454,11 @@ public class IntervalMapMap2EndsTest {
   public void map2alternateStartEndAtInt() {
 
 
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
         .set(Interval.between(0, 2, SECONDS), "b")
         .set(Interval.at(Duration.of(4, SECONDS)), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
         .set(Interval.at(Duration.of(0, SECONDS)), "b")
         .set(Interval.between(1, 4, SECONDS), "a");
 
@@ -480,7 +480,7 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
         .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.at(Duration.of(0, SECONDS)), "bb")
         .set(Interval.between(Duration.of(0, SECONDS), Exclusive, Duration.of(1, SECONDS), Exclusive), "bN")
@@ -496,10 +496,10 @@ public class IntervalMapMap2EndsTest {
   public void map2nullStartEnd() {
 
 
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
         .set(Interval.between(Duration.of(0, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
         .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "b");
 
 
@@ -520,7 +520,7 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
         .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Exclusive), "NN")
         .set(Interval.at(Duration.of(0, SECONDS)), "NN")
         .set(Interval.between(Duration.of(0, SECONDS), Exclusive, Duration.of(2, SECONDS), Inclusive), "aN")
@@ -549,7 +549,7 @@ public class IntervalMapMap2EndsTest {
     //                                            (cutoff here, at 35)
 
 
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
         .set(Interval.between(6, 7, SECONDS), "b")
         .set(Interval.between(10, 11, SECONDS), "a")
         .set(Interval.between(13, 15, SECONDS), "b")
@@ -560,7 +560,7 @@ public class IntervalMapMap2EndsTest {
         .set(Interval.at(Duration.of(32, SECONDS)), "a")
         .set(Interval.at(Duration.of(35, SECONDS)), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
         .set(Interval.between(4,10, SECONDS), "a")
         .set(Interval.between(11,13, SECONDS), "b")
         .set(Interval.between(15,16, SECONDS), "a")
@@ -588,7 +588,7 @@ public class IntervalMapMap2EndsTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
         .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(4, SECONDS), Exclusive), "NN")
         .set(Interval.between(Duration.of(4, SECONDS), Inclusive, Duration.of(6, SECONDS), Exclusive), "Na")
         .set(Interval.between(Duration.of(6, SECONDS), Inclusive, Duration.of(7, SECONDS), Inclusive), "ba")

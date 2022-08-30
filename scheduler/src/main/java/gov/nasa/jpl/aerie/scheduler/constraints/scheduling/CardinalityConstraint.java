@@ -115,7 +115,7 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
   @Override
   public ConstraintState isEnforced(Plan plan, Windows windows, SimulationResults simulationResults) {
 
-    Windows evalSet = new Windows(windows);
+    Windows evalSet = windows;
     evalSet = evalSet.and(new Windows(false).set(this.interval, true));
 
     //to avoid recounting twice the same activities in case they span over multiples windows
@@ -147,7 +147,7 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
 
   public Collection<ActivityInstance> getAllActs(Plan plan, Windows windows, SimulationResults simulationResults) {
 
-    Windows evalSet = new Windows(windows);
+    Windows evalSet = windows;
     evalSet = evalSet.and(new Windows(false).set(this.interval, true));
 
     //to avoid recounting twice the same activities in case they span over multiples windows
@@ -172,7 +172,7 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
 
   @Override
   public Windows findWindows(Plan plan, Windows windows, Conflict conflict, SimulationResults simulationResults) {
-    Windows intersect = new Windows(windows);
+    Windows intersect = windows;
     intersect = intersect.and(new Windows(false).set(this.interval, true));
     if (!intersect.isAllEqualTo(false)) {
       final var allActs = getAllActs(plan, intersect, simulationResults);

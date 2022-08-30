@@ -32,7 +32,7 @@ public class TimeRangeExpression {
    */
   public Windows computeRange(final SimulationResults simulationResults, final Plan plan, final Windows domain) {
 
-    Windows inter = new Windows(domain);
+    Windows inter = domain;
     if(inter.isAllEqualTo(false)) return inter;
 
     if (constantWin != null) {

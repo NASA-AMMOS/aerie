@@ -42,7 +42,7 @@ public class BinaryMutexConstraint extends GlobalConstraint {
 
 
   private Windows findWindows(Plan plan, Windows windows, ActivityType actToBeScheduled, SimulationResults simulationResults) {
-    Windows validWindows = new Windows(windows);
+    Windows validWindows = windows;
     if (!(actToBeScheduled.equals(actType) || actToBeScheduled.equals(otherActType))) {
       //not concerned by this constraint
       return validWindows;
@@ -87,7 +87,7 @@ public class BinaryMutexConstraint extends GlobalConstraint {
 
       final var intervalWindows = new Windows(false).set(interval, true);
       //intersection with current interval to be sure we are not analyzing intersections happenning outside
-      violationWindows = new Windows(twActs).and(twOtherActs).and(intervalWindows).or(violationWindows);
+      violationWindows = twActs.and(twOtherActs).and(intervalWindows).or(violationWindows);
     }
     ConstraintState cState;
     if (!violationWindows.isAllEqualTo(false)) {

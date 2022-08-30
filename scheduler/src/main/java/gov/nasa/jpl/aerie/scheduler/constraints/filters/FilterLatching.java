@@ -24,7 +24,7 @@ public class FilterLatching implements TimeWindowsFilter {
 
   @Override
   public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
-    Windows ret = new Windows(windows);
+    Windows ret = windows;
     boolean first = true;
     for (final var interval: windows.iterateEqualTo(true)) {
       if (first) {
