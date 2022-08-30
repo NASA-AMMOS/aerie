@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 /**
  * Class implementing a n-ary mutex constraint between activity types
  */
-public class NAryMutexConstraint extends GlobalConstraintWithIntrospection {
+public class NAryMutexConstraint implements GlobalConstraintWithIntrospection {
 
   Set<ActivityExpression> activityExpressions;
 
@@ -29,6 +29,7 @@ public class NAryMutexConstraint extends GlobalConstraintWithIntrospection {
     this.activityExpressions = new HashSet<>(Arrays.asList(activityExpressions));
   }
 
+  @Override
   public Windows findWindows(Plan plan, Windows windows, Conflict conflict, final SimulationResults simulationResults) {
     if (conflict instanceof MissingActivityInstanceConflict) {
       return findWindows(plan, windows, ((MissingActivityInstanceConflict) conflict).getInstance().getType(), simulationResults);

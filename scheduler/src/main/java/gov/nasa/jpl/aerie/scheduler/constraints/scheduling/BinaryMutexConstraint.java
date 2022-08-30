@@ -14,7 +14,7 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class BinaryMutexConstraint extends GlobalConstraint {
+public class BinaryMutexConstraint implements GlobalConstraint {
 
   ActivityType actType;
   ActivityType otherActType;
