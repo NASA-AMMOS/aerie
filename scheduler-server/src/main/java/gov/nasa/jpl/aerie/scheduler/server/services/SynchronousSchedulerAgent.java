@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
 /**
  * agent that handles posed scheduling requests by blocking the requester thread until scheduling is complete
  *
- * @param merlinService interface for querying plan details from merlin
+ * @param planService interface for querying plan details from merlin
  * @param modelJarsDir path to parent directory for mission model jars (interim backdoor jar file access)
  * @param goalsJarPath path to jar file to load scheduling goals from (interim solution for user input goals)
  * @param outputMode how the scheduling output should be returned to aerie (eg overwrite or new container)
@@ -63,7 +63,7 @@ import java.util.stream.Collectors;
 //TODO: will eventually need scheduling goal service arg to pull goals from scheduler's own data store
 public record SynchronousSchedulerAgent(
     SpecificationService specificationService,
-    PlanService.OwnerRole merlinService,
+    PlanService.OwnerRole planService,
     Path modelJarsDir,
     Path goalsJarPath,
     PlanOutputMode outputMode
@@ -71,7 +71,7 @@ public record SynchronousSchedulerAgent(
     implements SchedulerAgent
 {
   public SynchronousSchedulerAgent {
-    Objects.requireNonNull(merlinService);
+    Objects.requireNonNull(planService);
     Objects.requireNonNull(modelJarsDir);
     Objects.requireNonNull(goalsJarPath);
   }
@@ -92,7 +92,7 @@ public record SynchronousSchedulerAgent(
       //TODO: maybe some kind of high level db transaction wrapping entire read/update of target plan revision
 
       final var specification = specificationService.getSpecification(request.specificationId());
-      final var planMetadata = merlinService.getPlanMetadata(specification.planId());
+      final var planMetadata = planService.getPlanMetadata(specification.planId());
       ensureRequestIsCurrent(request);
       ensurePlanRevisionMatch(specification, planMetadata.planRev());
       //create scheduler problem seeded with initial plan
@@ -185,7 +185,7 @@ public record SynchronousSchedulerAgent(
    */
   private long getMerlinPlanRev(final PlanId planId) {
     try {
-      return merlinService.getPlanRevision(planId);
+      return planService.getPlanRevision(planId);
     } catch (NoSuchPlanException | IOException | PlanServiceException e) {
       throw new ResultsProtocolFailure(e);
     }
@@ -247,7 +247,7 @@ public record SynchronousSchedulerAgent(
   private PlanComponents loadInitialPlan(final PlanMetadata planMetadata, final Problem problem) {
     //TODO: maybe paranoid check if plan rev has changed since original metadata?
     try {
-      final var merlinPlan =  merlinService.getPlanActivityDirectives(planMetadata, problem);
+      final var merlinPlan =  planService.getPlanActivityDirectives(planMetadata, problem);
       final Map<SchedulingActivityInstanceId, ActivityInstanceId> schedulingIdToMerlinId = new HashMap<>();
       final var plan = new PlanInMemory();
       final var activityTypes = problem.getActivityTypes().stream().collect(Collectors.toMap(ActivityType::getName, at -> at));
@@ -407,10 +407,10 @@ public record SynchronousSchedulerAgent(
     try {
       switch (this.outputMode) {
         case CreateNewOutputPlan -> {
-          return merlinService.createNewPlanWithActivityDirectives(planMetadata, newPlan, goalToActivity).getValue();
+          return planService.createNewPlanWithActivityDirectives(planMetadata, newPlan, goalToActivity).getValue();
         }
         case UpdateInputPlanWithNewActivities -> {
-          return merlinService.updatePlanActivityDirectives(
+          return planService.updatePlanActivityDirectives(
               planMetadata.planId(),
               idsFromInitialPlan,
               initialPlan,
