@@ -467,6 +467,23 @@ class SchedulingDSLCompilationServiceTests {
           ),
           r.value()
       );
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+      fail(r.toString());
+    }
+  }
+
+  @Test
+  void testWindowsExpression() {
+    final var result = schedulingDSLCompilationService.compileGlobalSchedulingCondition(
+        missionModelService,
+        PLAN_ID,
+        """
+          export default function() {
+            return Real.Resource("/sample/resource/1").lessThan(5.0);
+          }
+        """);
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+      assertEquals(new LessThan(new RealResource("/sample/resource/1"), new RealValue(5.0)), r.value());
     } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
       fail(r.toString());
     }

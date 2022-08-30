@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
@@ -18,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.windowsExpressionP;
 
 public class SchedulingDSLCompilationService {
 
@@ -44,6 +48,10 @@ public class SchedulingDSLCompilationService {
 
   public void close() {
     this.nodeProcess.destroy();
+  }
+
+  public SchedulingDSLCompilationResult<Expression<Windows>> compileGlobalSchedulingCondition(final MissionModelService missionModelService, final PlanId planId, final String conditionTypescript) {
+    return compile(missionModelService, planId, conditionTypescript, windowsExpressionP, "Windows");
   }
 
   /**
