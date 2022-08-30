@@ -872,9 +872,11 @@ public class SchedulingIntegrationTests {
     final var agent = new SynchronousSchedulerAgent(
         specificationService,
         mockMerlinService,
+        mockMerlinService,
         desc.libPath(),
         Path.of(""),
-        PlanOutputMode.UpdateInputPlanWithNewActivities);
+        PlanOutputMode.UpdateInputPlanWithNewActivities,
+        schedulingDSLCompiler);
     // Scheduling Goals -> Scheduling Specification
     final var writer = new MockResultsProtocolWriter();
     agent.schedule(new ScheduleRequest(new SpecificationId(1L), $ -> RevisionData.MatchResult.success()), writer);

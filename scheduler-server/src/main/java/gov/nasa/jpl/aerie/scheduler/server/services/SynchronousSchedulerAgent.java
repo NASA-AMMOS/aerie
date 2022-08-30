@@ -56,6 +56,7 @@ import java.util.stream.Collectors;
  * agent that handles posed scheduling requests by blocking the requester thread until scheduling is complete
  *
  * @param planService interface for querying plan details from merlin
+ * @param missionModelService interface for querying mission model details from merlin
  * @param modelJarsDir path to parent directory for mission model jars (interim backdoor jar file access)
  * @param goalsJarPath path to jar file to load scheduling goals from (interim solution for user input goals)
  * @param outputMode how the scheduling output should be returned to aerie (eg overwrite or new container)
@@ -64,16 +65,20 @@ import java.util.stream.Collectors;
 public record SynchronousSchedulerAgent(
     SpecificationService specificationService,
     PlanService.OwnerRole planService,
+    MissionModelService missionModelService,
     Path modelJarsDir,
     Path goalsJarPath,
-    PlanOutputMode outputMode
+    PlanOutputMode outputMode,
+    SchedulingDSLCompilationService schedulingDSLCompilationService
 )
     implements SchedulerAgent
 {
   public SynchronousSchedulerAgent {
     Objects.requireNonNull(planService);
+    Objects.requireNonNull(missionModelService);
     Objects.requireNonNull(modelJarsDir);
     Objects.requireNonNull(goalsJarPath);
+    Objects.requireNonNull(schedulingDSLCompilationService);
   }
 
   /**

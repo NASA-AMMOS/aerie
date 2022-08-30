@@ -77,9 +77,11 @@ public final class SchedulerAppDriver {
         "scheduler-agent",
         new SynchronousSchedulerAgent(specificationService,
                                       merlinService,
+                                      merlinService,
                                       config.merlinFileStore(),
                                       config.missionRuleJarPath(),
-                                      config.outputMode()));
+                                      config.outputMode(),
+                                      schedulingDSLCompilationService));
     final var schedulerService = new CachedSchedulerService(stores.results(), scheduleAgent);
     final var scheduleAction = new ScheduleAction(specificationService, schedulerService);
 
