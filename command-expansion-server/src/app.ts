@@ -582,7 +582,15 @@ app.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, res, next)
 // General error handler
 app.use((err: any, _: Request, res: Response, next: NextFunction) => {
   logger.error(err);
-  res.status(err.status ?? err.statusCode ?? 500).send({ message: err.message });
+
+  res.status(err.status ?? err.statusCode ?? 500).send({
+    message: err.message,
+    extensions: {
+      ...(err.cause ? { cause: err.cause } : {}),
+      ...(err.stack ? { stack: err.stack } : {}),
+      object: err,
+    },
+  });
   return next();
 });
 
