@@ -29,6 +29,10 @@ const lineReader = readline.createInterface({
 });
 lineReader.once('line', handleRequest);
 
+interface AstNode {
+  __astNode: object
+}
+
 async function handleRequest(data: Buffer) {
   try {
     // Test the health of the service by responding to "ping" with "pong".
@@ -37,9 +41,10 @@ async function handleRequest(data: Buffer) {
       lineReader.once('line', handleRequest);
       return;
     }
-    const { constraintCode, missionModelGeneratedCode } = JSON.parse(data.toString()) as {
+    const { constraintCode, missionModelGeneratedCode, expectedReturnType } = JSON.parse(data.toString()) as {
       constraintCode: string;
       missionModelGeneratedCode: string;
+      expectedReturnType: string;
     };
 
     const additionalSourceFiles: { 'filename': string, 'contents': string}[] = [
@@ -48,12 +53,10 @@ async function handleRequest(data: Buffer) {
       { 'filename': 'mission-model-generated-code.ts', 'contents': missionModelGeneratedCode },
     ];
 
-    const outputType = 'Constraint';
-
-    const result = await codeRunner.executeUserCode<[], Constraint>(
+    const result = await codeRunner.executeUserCode<[], AstNode>(
         constraintCode,
         [],
-        outputType,
+        expectedReturnType,
         [],
         10000,
         additionalSourceFiles.map(({filename, contents}) => ts.createSourceFile(filename, contents, compilerTarget))

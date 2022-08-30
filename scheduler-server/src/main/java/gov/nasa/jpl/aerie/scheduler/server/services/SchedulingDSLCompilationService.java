@@ -65,6 +65,7 @@ public class SchedulingDSLCompilationService {
         .add("goalCode", goalTypescript)
         .add("schedulerGeneratedCode", schedulerGeneratedCode)
         .add("constraintsGeneratedCode", constraintsGeneratedCode)
+        .add("expectedReturnType", "Goal")
         .build();
 
     /*

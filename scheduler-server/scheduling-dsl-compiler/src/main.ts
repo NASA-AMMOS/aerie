@@ -1,7 +1,6 @@
 import fs from 'fs';
 import ts from 'typescript';
 import {UserCodeRunner} from '@nasa-jpl/aerie-ts-user-code-runner';
-import type {Goal} from './libs/scheduler-edsl-fluent-api.js';
 import * as readline from 'readline';
 
 const codeRunner = new UserCodeRunner();
@@ -38,6 +37,10 @@ const lineReader = readline.createInterface({
 });
 lineReader.once('line', handleRequest);
 
+interface AstNode {
+  __astNode: object
+}
+
 async function handleRequest(data: Buffer) {
   try {
     // Test the health of the service by responding to "ping" with "pong".
@@ -46,10 +49,11 @@ async function handleRequest(data: Buffer) {
       lineReader.once('line', handleRequest);
       return;
     }
-    const { goalCode, schedulerGeneratedCode, constraintsGeneratedCode } = JSON.parse(data.toString()) as {
+    const { goalCode, schedulerGeneratedCode, constraintsGeneratedCode, expectedReturnType } = JSON.parse(data.toString()) as {
       goalCode: string,
       schedulerGeneratedCode: string,
-      constraintsGeneratedCode: string
+      constraintsGeneratedCode: string,
+      expectedReturnType: string
     };
 
     const additionalSourceFiles: {'filename': string, 'contents': string}[] = [
@@ -61,12 +65,10 @@ async function handleRequest(data: Buffer) {
       { 'filename': 'scheduler-mission-model-generated-code.ts', 'contents': schedulerGeneratedCode},
     ];
 
-    const outputType = 'Goal';
-
-    const result = await codeRunner.executeUserCode<[], Goal>(
+    const result = await codeRunner.executeUserCode<[], AstNode>(
         goalCode,
         [],
-        outputType,
+        expectedReturnType,
         [],
         10000,
         additionalSourceFiles.map(({filename, contents}) => ts.createSourceFile(filename, contents, compilerTarget))
