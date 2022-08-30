@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
@@ -854,12 +855,7 @@ public class SchedulingIntegrationTests {
     final var goalsByPriority = new ArrayList<GoalRecord>();
 
     for (final var goal : goals) {
-      final var goalResult = schedulingDSLCompiler.compileSchedulingGoalDSL(mockMerlinService, planId, goal.definition());
-      if (goalResult instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success s) {
-        goalsByPriority.add(new GoalRecord(goal.goalId(), s.goalSpecifier(), goal.enabled()));
-      } else if (goalResult instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error e) {
-        fail(e.toString());
-      }
+      goalsByPriority.add(new GoalRecord(goal.goalId(), new GoalSource(goal.definition()), goal.enabled()));
     }
     final var specificationService = new MockSpecificationService(Map.of(new SpecificationId(1L), new Specification(
         planId,

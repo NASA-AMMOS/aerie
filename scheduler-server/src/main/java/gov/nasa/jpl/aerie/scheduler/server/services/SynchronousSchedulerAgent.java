@@ -25,15 +25,18 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationExcepti
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.ResultsProtocolFailure;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.SpecificationLoadException;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingCompilationError;
+import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.GoalBuilder;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import gov.nasa.jpl.aerie.scheduler.solver.Solver;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -124,15 +127,35 @@ public record SynchronousSchedulerAgent(
 
       final var orderedGoals = new ArrayList<Goal>();
       final var goals = new HashMap<Goal, GoalId>();
+      final var compiledGoals = new ArrayList<Pair<GoalId, SchedulingDSL.GoalSpecifier>>();
+      final var failedGoals = new ArrayList<Pair<GoalId, List<SchedulingCompilationError.UserCodeError>>>();
       for (final var goalRecord : specification.goalsByPriority()) {
+        if (!goalRecord.enabled()) continue;
+        final var result = compileGoalDefinition(
+            missionModelService,
+            planMetadata.planId(),
+            goalRecord.definition(),
+            schedulingDSLCompilationService);
+        if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+          compiledGoals.add(Pair.of(goalRecord.id(), r.goalSpecifier()));
+        } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+          failedGoals.add(Pair.of(goalRecord.id(), r.errors()));
+        } else {
+          throw new Error("Unhandled variant of %s: %s".formatted(SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(), result));
+        }
+      }
+      if (!failedGoals.isEmpty()) {
+        writer.failWith(failedGoals.toString());
+      }
+      for (final var compiledGoal : compiledGoals) {
         final var goal = GoalBuilder
             .goalOfGoalSpecifier(
-                goalRecord.definition(),
+                compiledGoal.getValue(),
                 specification.horizonStartTimestamp(),
                 specification.horizonEndTimestamp(),
                 problem::getActivityType);
         orderedGoals.add(goal);
-        goals.put(goal, goalRecord.id());
+        goals.put(goal, compiledGoal.getKey());
       }
       problem.setGoals(orderedGoals);
 
@@ -173,6 +196,19 @@ public record SynchronousSchedulerAgent(
       // unwrap failure message from any anticipated exceptions and forward to subscribers
       writer.failWith(e.toString());
     }
+  }
+
+  private static SchedulingDSLCompilationService.SchedulingDSLCompilationResult compileGoalDefinition(
+      final MissionModelService missionModelService,
+      final PlanId planId,
+      final GoalSource goalDefinition,
+      final SchedulingDSLCompilationService schedulingDSLCompilationService)
+  {
+    return schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
+        planId,
+        goalDefinition.source()
+    );
   }
 
   private void ensurePlanRevisionMatch(final Specification specification, final long actualPlanRev) {
