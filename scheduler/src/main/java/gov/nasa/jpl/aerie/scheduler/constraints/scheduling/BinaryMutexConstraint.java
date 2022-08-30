@@ -14,7 +14,7 @@ import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class BinaryMutexConstraint implements GlobalConstraint {
+public class BinaryMutexConstraint implements GlobalConstraintWithIntrospection {
 
   ActivityType actType;
   ActivityType otherActType;
@@ -31,6 +31,7 @@ public class BinaryMutexConstraint implements GlobalConstraint {
   }
 
 
+  @Override
   public Windows findWindows(Plan plan, Windows windows, Conflict conflict, SimulationResults simulationResults) {
     if (conflict instanceof MissingActivityInstanceConflict) {
       return findWindows(plan, windows, ((MissingActivityInstanceConflict) conflict).getInstance().getType(), simulationResults);
