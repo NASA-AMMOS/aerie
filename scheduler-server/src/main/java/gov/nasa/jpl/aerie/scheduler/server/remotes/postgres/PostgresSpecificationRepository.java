@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.SpecificationLoadException;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
@@ -9,9 +8,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
-import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.scheduler.server.services.RevisionData;
-import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingDSLCompilationService;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -19,18 +16,14 @@ import java.util.List;
 
 public final class PostgresSpecificationRepository implements SpecificationRepository {
   private final DataSource dataSource;
-  private final SchedulingDSLCompilationService schedulingDSLCompilationService;
-  private final MissionModelService missionModelService;
 
-  public PostgresSpecificationRepository(final DataSource dataSource, final SchedulingDSLCompilationService schedulingDSLCompilationService, final MissionModelService missionModelService) {
+  public PostgresSpecificationRepository(final DataSource dataSource) {
     this.dataSource = dataSource;
-    this.schedulingDSLCompilationService = schedulingDSLCompilationService;
-    this.missionModelService = missionModelService;
   }
 
   @Override
   public Specification getSpecification(final SpecificationId specificationId)
-  throws NoSuchSpecificationException, SpecificationLoadException
+  throws NoSuchSpecificationException
   {
     final SpecificationRecord specificationRecord;
     final PlanId planId;
