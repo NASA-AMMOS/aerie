@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationExcepti
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.SpecificationLoadException;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingCompilationError;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
@@ -28,6 +29,8 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
     this.schedulingDSLCompilationService = schedulingDSLCompilationService;
     this.missionModelService = missionModelService;
   }
+
+  public record TempGoalRecord(GoalId id, GoalSource definition, boolean enabled) {} // TODO: This will be moved to gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord in an upcoming commit
 
   @Override
   public Specification getSpecification(final SpecificationId specificationId)
@@ -55,7 +58,11 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
         .map((PostgresGoalRecord pgGoal) -> compileGoalDefinition(
             missionModelService,
             planId,
-            pgGoal,
+            new TempGoalRecord(
+                new GoalId(pgGoal.id()),
+                new GoalSource(pgGoal.definition()),
+                pgGoal.enabled()
+            ),
             this.schedulingDSLCompilationService))
         .toList();
 
@@ -95,19 +102,19 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
   private static GoalCompilationResult compileGoalDefinition(
       final MissionModelService missionModelService,
       final PlanId planId,
-      final PostgresGoalRecord pgGoal,
+      final TempGoalRecord goalRecord,
       final SchedulingDSLCompilationService schedulingDSLCompilationService)
   {
     final var goalCompilationResult = schedulingDSLCompilationService.compileSchedulingGoalDSL(
         missionModelService,
         planId,
-        pgGoal.definition()
+        goalRecord.definition().source()
     );
 
     if (goalCompilationResult instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error g) {
       return new GoalCompilationResult.Failure(g.errors());
     } else if (goalCompilationResult instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success g) {
-      return new GoalCompilationResult.Success(new GoalRecord(new GoalId(pgGoal.id()), g.goalSpecifier(), pgGoal.enabled()));
+      return new GoalCompilationResult.Success(new GoalRecord(goalRecord.id(), g.goalSpecifier(), goalRecord.enabled()));
     } else {
       throw new Error("Unhandled variant of SchedulingDSLCompilationResult: " + goalCompilationResult);
     }
