@@ -864,7 +864,8 @@ public class SchedulingIntegrationTests {
         new Timestamp(planningHorizon.getStartInstant()),
         new Timestamp(planningHorizon.getEndInstant()),
         Map.of(),
-        false)));
+        false,
+        List.of())));
     final var agent = new SynchronousSchedulerAgent(
         specificationService,
         mockMerlinService,

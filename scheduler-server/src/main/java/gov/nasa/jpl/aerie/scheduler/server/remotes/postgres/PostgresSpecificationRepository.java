@@ -57,7 +57,8 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
         specificationRecord.horizonStartTimestamp(),
         specificationRecord.horizonEndTimestamp(),
         specificationRecord.simulationArguments(),
-        specificationRecord.analysisOnly()
+        specificationRecord.analysisOnly(),
+        List.of() // TODO this will be loaded from the database in an upcoming commit
     );
   }
 
