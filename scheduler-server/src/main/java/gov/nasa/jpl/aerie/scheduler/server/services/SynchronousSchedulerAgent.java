@@ -136,9 +136,9 @@ public record SynchronousSchedulerAgent(
             planMetadata.planId(),
             goalRecord.definition(),
             schedulingDSLCompilationService);
-        if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
-          compiledGoals.add(Pair.of(goalRecord.id(), r.goalSpecifier()));
-        } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+        if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
+          compiledGoals.add(Pair.of(goalRecord.id(), r.value()));
+        } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
           failedGoals.add(Pair.of(goalRecord.id(), r.errors()));
         } else {
           throw new Error("Unhandled variant of %s: %s".formatted(SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(), result));
@@ -198,7 +198,7 @@ public record SynchronousSchedulerAgent(
     }
   }
 
-  private static SchedulingDSLCompilationService.SchedulingDSLCompilationResult compileGoalDefinition(
+  private static SchedulingDSLCompilationService.SchedulingDSLCompilationResult<SchedulingDSL.GoalSpecifier> compileGoalDefinition(
       final MissionModelService missionModelService,
       final PlanId planId,
       final GoalSource goalDefinition,

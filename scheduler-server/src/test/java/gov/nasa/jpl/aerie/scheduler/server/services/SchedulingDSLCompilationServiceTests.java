@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
+import gov.nasa.jpl.aerie.constraints.tree.LessThan;
 import gov.nasa.jpl.aerie.constraints.tree.LongerThan;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
@@ -57,8 +58,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testSchedulingDSL_basic()
   {
-    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
-    result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
         missionModelService,
         PLAN_ID, """
                 export default function myGoal() {
@@ -86,9 +86,9 @@ class SchedulingDSLCompilationServiceTests {
         ),
         Duration.HOUR
     );
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
-      assertEquals(expectedGoalDefinition, r.goalSpecifier());
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
+      assertEquals(expectedGoalDefinition, r.value());
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
       fail(r.toString());
     }
   }
@@ -96,8 +96,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testSchedulingDSL_helper_function()
   {
-    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
-    result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
         missionModelService,
         PLAN_ID, """
                 export default function myGoal() {
@@ -128,16 +127,16 @@ class SchedulingDSLCompilationServiceTests {
         ),
         Duration.HOUR);
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
-      assertEquals(expectedGoalDefinition, r.goalSpecifier());
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      assertEquals(expectedGoalDefinition, r.value());
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
       fail(r.toString());
     }
   }
 
   @Test
   void testSchedulingDSL_variable_not_defined() {
-    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error actualErrors;
-    actualErrors = (SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error) schedulingDSLCompilationService.compileSchedulingGoalDSL(
+    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> actualErrors;
+    actualErrors = (SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier>) schedulingDSLCompilationService.compileSchedulingGoalDSL(
         missionModelService,
           PLAN_ID, """
                 export default function myGoal() {
@@ -165,8 +164,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testSchedulingDSL_applyWhen()
   {
-    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
-    result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
         missionModelService,
         PLAN_ID, """
         export default function myGoal() {
@@ -205,16 +203,16 @@ class SchedulingDSLCompilationServiceTests {
         )
     );
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
-      assertEquals(expectedGoalDefinition, r.goalSpecifier());
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      assertEquals(expectedGoalDefinition, r.value());
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
       fail(r.toString());
     }
   }
 
   @Test
   void testSchedulingDSL_wrong_return_type() {
-    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error actualErrors;
-    actualErrors = (SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error) schedulingDSLCompilationService.compileSchedulingGoalDSL(
+    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> actualErrors;
+    actualErrors = (SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier>) schedulingDSLCompilationService.compileSchedulingGoalDSL(
         missionModelService,
           PLAN_ID, """
                 export default function myGoal() {
@@ -231,8 +229,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testHugeGoal() {
     // This test is intended to create a Goal that is bigger than the node subprocess's standard input buffer
-    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
-    result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
         missionModelService,
         PLAN_ID, """
                 export default function myGoal() {
@@ -261,8 +258,8 @@ class SchedulingDSLCompilationServiceTests {
         Duration.HOUR
     );
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
-      assertEquals(expectedGoalDefinition, r.goalSpecifier());
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      assertEquals(expectedGoalDefinition, r.value());
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
       fail(r.toString());
     }
   }
@@ -302,9 +299,9 @@ class SchedulingDSLCompilationServiceTests {
               Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, Duration.of(100000000, Duration.MICROSECONDS), true)),
               Optional.empty()
           ),
-          r.goalSpecifier()
+          r.value()
       );
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
       fail(r.toString());
     }
   }
@@ -336,7 +333,7 @@ class SchedulingDSLCompilationServiceTests {
           }
         """);
 
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
       assertEquals(r.errors().size(), 1);
       assertEquals(
           "TypeError: TS2741 Incorrect return type. Expected: 'Goal', Actual: 'FakeGoal'.",
@@ -364,7 +361,7 @@ class SchedulingDSLCompilationServiceTests {
           }
         """);
 
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
       assertEquals(1, r.errors().size());
       assertEquals(
           "TypeError: TS2345 Argument of type 'string' is not assignable to parameter of type 'number'.",
@@ -376,8 +373,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testSchedulingDSL_emptyActivityCorrect()
   {
-    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
-    result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
         missionModelService,
         PLAN_ID, """
                 export default function myGoal() {
@@ -395,8 +391,8 @@ class SchedulingDSLCompilationServiceTests {
         Duration.HOUR
     );
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
-      assertEquals(expectedGoalDefinition, r.goalSpecifier());
-    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      assertEquals(expectedGoalDefinition, r.value());
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
       fail(r.toString());
     }
   }
@@ -404,8 +400,7 @@ class SchedulingDSLCompilationServiceTests {
   @Test
   void testSchedulingDSL_emptyActivityBogus()
   {
-    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
-    result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
         missionModelService,
         PLAN_ID, """
                 export default function myGoal() {
@@ -422,7 +417,7 @@ class SchedulingDSLCompilationServiceTests {
         ),
         Duration.HOUR
     );
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
       assertEquals(1, r.errors().size());
       assertEquals(
           "TypeError: TS2554 Expected 0 arguments, but got 1.",
@@ -430,7 +425,7 @@ class SchedulingDSLCompilationServiceTests {
       );
     }
     else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
-      fail(r.goalSpecifier().toString());
+      fail(r.value().toString());
     }
   }
 
@@ -470,7 +465,7 @@ class SchedulingDSLCompilationServiceTests {
               Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.END, TimeUtility.Operator.PLUS, Duration.ZERO, true)),
               Optional.empty()
           ),
-          r.goalSpecifier()
+          r.value()
       );
     } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
       fail(r.toString());
@@ -479,8 +474,7 @@ class SchedulingDSLCompilationServiceTests {
 
   @Test
   void testAndGoal(){
-    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
-    result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
         missionModelService,
         PLAN_ID, """
                 export default function myGoal() {
@@ -512,7 +506,7 @@ class SchedulingDSLCompilationServiceTests {
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
       assertEquals(
           expectedGoalDefinition,
-          r.goalSpecifier()
+          r.value()
       );
     } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
       fail(r.toString());
@@ -521,8 +515,7 @@ class SchedulingDSLCompilationServiceTests {
 
   @Test
   void testOrGoal(){
-    final SchedulingDSLCompilationService.SchedulingDSLCompilationResult result;
-    result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
         missionModelService,
         PLAN_ID, """
                 export default function myGoal() {
@@ -551,10 +544,10 @@ class SchedulingDSLCompilationServiceTests {
             ),
             Duration.HOUR.times(2)
         )));
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
       assertEquals(
           expectedGoalDefinition,
-          r.goalSpecifier()
+          r.value()
       );
     } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
       fail(r.toString());
