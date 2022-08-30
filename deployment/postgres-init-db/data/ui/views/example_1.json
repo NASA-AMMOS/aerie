@@ -1,23 +1,7 @@
 {
   "plan": {
-    "activityTables": [
-      {
-        "columnDefs": [
-          { "field": "id", "name": "ID", "sortable": true },
-          { "field": "type", "name": "Type", "sortable": true },
-          { "field": "start_time", "name": "Start Time", "sortable": true },
-          { "field": "duration", "name": "Duration", "sortable": true }
-        ],
-        "id": 0
-      }
-    ],
-    "iFrames": [
-      {
-        "id": 0,
-        "src": "https://iss-sim.spacex.com/",
-        "title": "ISS-Docking-Simulator"
-      }
-    ],
+    "activityTables": [],
+    "iFrames": [],
     "layout": {
       "gridName": "View",
       "id": 0,
