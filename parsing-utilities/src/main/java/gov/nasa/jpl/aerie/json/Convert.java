@@ -14,7 +14,7 @@ import java.util.function.Function;
  * @param <T>
  *   the "target" type of the conversion
  */
-public interface Iso<S, T> {
+public interface Convert<S, T> {
   /**
    * Converts a value forward from the source type to the target type.
    *
@@ -36,8 +36,8 @@ public interface Iso<S, T> {
   S to(T target);
 
   /**
-   * Constructs an {@code Iso} from two individual transformations. The functions must be inverses, i.e.
-   * {@code Objects.equals(to(from(s)), s)} and {@code Objects.equals(from(to(t)), t)} must always be true.
+   * Constructs a conversion from two individual transformations. The first function must be
+   * a left inverse of the second, i.e. {@code Objects.equals(from(to(t)), t)} must always be true.
    *
    * @param <S>
    *   the "source" type of the conversion
@@ -48,11 +48,11 @@ public interface Iso<S, T> {
    * @param to
    *   an infallible transformation to the source type from the target type
    */
-  static <S, T> Iso<S, T> of(final Function<S, ? extends T> from, final Function<? super T, S> to) {
+  static <S, T> Convert<S, T> between(final Function<S, ? extends T> from, final Function<? super T, S> to) {
     Objects.requireNonNull(from);
     Objects.requireNonNull(to);
 
-    return new Iso<>() {
+    return new Convert<>() {
       @Override
       public T from(final S source) {
         return from.apply(source);
@@ -66,17 +66,17 @@ public interface Iso<S, T> {
   }
 
   /**
-   * Constructs a trivial {@code Iso} between a type and itself.
+   * Constructs a trivial conversion between a type and itself.
    *
-   * <p> This is most useful as an initial value when accumulating multiple {@code Iso}s together. </p>
+   * <p> This is most useful as an initial value when accumulating multiple conversions together. </p>
    *
    * @param <T>
    *   the type to trivially convert into itself
    * @return
    *   a trivial two-way conversion from a type to itself
    */
-  static <T> Iso<T, T> identity() {
-    return Iso.of(Function.identity(), Function.identity());
+  static <T> Convert<T, T> identity() {
+    return Convert.between(Function.identity(), Function.identity());
   }
 
   /**
@@ -89,10 +89,10 @@ public interface Iso<S, T> {
    * @return
    *   a combined conversion from this source type to the new target type
    */
-  default <X> Iso<S, X> compose(final Iso<T, X> other) {
+  default <X> Convert<S, X> compose(final Convert<T, X> other) {
     Objects.requireNonNull(other);
 
-    return Iso.of(
+    return Convert.between(
         $ -> other.from(this.from($)),
         $ -> this.to(other.to($)));
   }
@@ -103,7 +103,7 @@ public interface Iso<S, T> {
    * @return
    *   a two-way conversion with the same logic as this one, but with its source and target types swapped
    */
-  default Iso<T, S> invert() {
-    return Iso.of(this::to, this::from);
+  default Convert<T, S> invert() {
+    return Convert.between(this::to, this::from);
   }
 }

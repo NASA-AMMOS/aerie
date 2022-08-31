@@ -108,9 +108,9 @@ public interface JsonParser<T> {
    * in the business domain. This method turns a parser that works with one (parsing-relevant) type
    * into a parser that works with another (domain-relevant) type (typically the domain-relevant one).</p>
    *
-   * <p> To do this, we need to know the precise relationship between the two types.
-   * Specifically, we need a way to turn any value of one into a value of the other, and vice versa.
-   * This is captured by the {@link Iso} parameter, which provides a pair of forward and backward transformations. </p>
+   * <p> To do this, we need to know the precise relationship between the two types. Specifically, we need a way to
+   * turn any value of one into a value of the other, and vice versa. This is captured by the {@link Convert} parameter,
+   * which provides a pair of forward and backward transformations. </p>
    *
    * @param <S>
    *   the new domain type to convert to
@@ -119,7 +119,7 @@ public interface JsonParser<T> {
    * @return
    *   a parser supporting the same JSON documents as this parser, but for domain type {@code S}.
    */
-  default <S> JsonParser<S> map(final Iso<T, S> transform) {
+  default <S> JsonParser<S> map(final Convert<T, S> transform) {
     Objects.requireNonNull(transform);
 
     final var self = this;
@@ -162,6 +162,6 @@ public interface JsonParser<T> {
    *   a parser supporting the same JSON documents as this parser, but for domain type {@code S}.
    */
   default <S> JsonParser<S> map(final Function<T, S> from, final Function<S, T> to) {
-    return this.map(Iso.of(from, to));
+    return this.map(Convert.between(from, to));
   }
 }

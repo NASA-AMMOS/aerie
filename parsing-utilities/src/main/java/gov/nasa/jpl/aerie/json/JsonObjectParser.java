@@ -10,7 +10,7 @@ public interface JsonObjectParser<T> extends JsonParser<T> {
   JsonObject unparse(final T value);
 
   @Override
-  default <S> JsonObjectParser<S> map(final Iso<T, S> transform) {
+  default <S> JsonObjectParser<S> map(final Convert<T, S> transform) {
     Objects.requireNonNull(transform);
 
     final var self = this;
@@ -35,6 +35,6 @@ public interface JsonObjectParser<T> extends JsonParser<T> {
 
   @Override
   default <S> JsonObjectParser<S> map(final Function<T, S> from, final Function<S, T> to) {
-    return this.map(Iso.of(from, to));
+    return this.map(Convert.between(from, to));
   }
 }
