@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
-import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.SchemaCache;
@@ -14,7 +13,6 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.time.format.DateTimeParseException;
-import java.util.Map;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
@@ -55,19 +53,19 @@ public abstract class MerlinParsers {
 
   public static final JsonParser<Duration> durationP
       = longP
-      . map(Iso.of(
+      . map(
           microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
-          duration -> duration.in(Duration.MICROSECONDS)));
+          duration -> duration.in(Duration.MICROSECONDS));
 
   public static final JsonParser<ActivityInstanceId> activityInstanceIdP
       = longP
-      . map(Iso.of(
+      . map(
           ActivityInstanceId::new,
-          ActivityInstanceId::id));
+          ActivityInstanceId::id);
 
   public static final JsonParser<PlanId> planIdP
       = longP
-      . map(Iso.of(
+      . map(
           PlanId::new,
-          PlanId::id));
+          PlanId::id);
 }

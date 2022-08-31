@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.worker.postgres;
 
-import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
@@ -19,7 +18,7 @@ public final class PostgresNotificationJsonParsers {
       . field("plan_id", longP)
       . field("dataset_id", longP)
       . field("simulation_id", longP)
-      . map(Iso.of(
+      . map(
           untuple(PostgresSimulationNotificationPayload::new),
           $ -> tuple($.modelRevision(),
                      $.planRevision(),
@@ -27,6 +26,5 @@ public final class PostgresNotificationJsonParsers {
                      $.simulationTemplateRevision(),
                      $.planId(),
                      $.datasetId(),
-                     $.simulationId())
-  ));
+                     $.simulationId()));
 }

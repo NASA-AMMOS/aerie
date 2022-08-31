@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
-import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
 
 import java.util.List;
@@ -14,18 +13,18 @@ public class ConstraintsCompilationError {
       productP
           .field("line", intP)
           .field("column", intP)
-          .map(Iso.of(
+          .map(
               untuple(CodeLocation::new),
-              $ -> tuple($.line, $.column)));
+              $ -> tuple($.line, $.column));
 
   private static final JsonParser<UserCodeError> userCodeErrorP =
       productP
           .field("message", stringP)
           .field("stack", stringP)
           .field("location", codeLocationP)
-          .map(Iso.of(
+          .map(
               untuple(UserCodeError::new),
-              $ -> tuple($.message, $.stack, $.location)));
+              $ -> tuple($.message, $.stack, $.location));
 
   public static final JsonParser<List<UserCodeError>> constraintsErrorJsonP = listP(userCodeErrorP);
 

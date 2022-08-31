@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
-import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -50,7 +49,7 @@ public final class MerlinParsersTest {
   @Test
   public void testRecursiveList() {
     final var listsP =
-        recursiveP((JsonParser<NestedLists> self) -> listP(self).map(Iso.of(NestedLists::new, $ -> $.lists)));
+        recursiveP((JsonParser<NestedLists> self) -> listP(self).map(NestedLists::new, $ -> $.lists));
 
     final var foo = Json
         . createArrayBuilder()

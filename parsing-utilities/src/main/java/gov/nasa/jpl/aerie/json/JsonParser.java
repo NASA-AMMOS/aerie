@@ -102,7 +102,7 @@ public interface JsonParser<T> {
   }
 
   /**
-   * Adapts this parser losslessly from one domain type to another.
+   * Adapts this parser losslessly from one domain type to another with a two-way conversion.
    *
    * <p> The data types most convenient for building parsers are not always the ones we actually want to end up with
    * in the business domain. This method turns a parser that works with one (parsing-relevant) type
@@ -140,5 +140,28 @@ public interface JsonParser<T> {
         return self.unparse(transform.to(value));
       }
     };
+  }
+
+  /**
+   * Adapts this parser losslessly from one domain type to another.
+   *
+   * <p> The data types most convenient for building parsers are not always the ones we actually want to end up with
+   * in the business domain. This method turns a parser that works with one (parsing-relevant) type
+   * into a parser that works with another (domain-relevant) type (typically the domain-relevant one).</p>
+   *
+   * <p> To do this, we need to know the precise relationship between the two types. Specifically, we need a way to
+   * turn any value of one into a value of the other, and vice versa. </p>
+   *
+   * @param <S>
+   *   the new domain type to convert to
+   * @param from
+   *   an infallible transformation from the source type to the target type
+   * @param to
+   *   an infallible transformation to the source type from the target type
+   * @return
+   *   a parser supporting the same JSON documents as this parser, but for domain type {@code S}.
+   */
+  default <S> JsonParser<S> map(final Function<T, S> from, final Function<S, T> to) {
+    return this.map(Iso.of(from, to));
   }
 }

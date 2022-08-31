@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.driver.json;
 
-import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.SchemaCache;
@@ -78,16 +77,16 @@ public final class ValueSchemaJsonParser implements JsonParser<ValueSchema> {
         productP
             .field("key", stringP)
             .field("label", stringP)
-            .map(Iso.of(
+            .map(
                 untuple(ValueSchema.Variant::new),
-                        $ -> tuple($.key(), $.label())));
+                $ -> tuple($.key(), $.label()));
     final JsonParser<ValueSchema> variantsP =
         productP
             .field("type", literalP("variant"))
             .field("variants", listP(variantP))
-            .map(Iso.of(
+            .map(
                 untuple((type, variants) -> ValueSchema.ofVariant(variants)),
-                        $ -> tuple(Unit.UNIT, $.asVariant().get())));
+                $ -> tuple(Unit.UNIT, $.asVariant().get()));
 
     return variantsP.parse(obj);
   }

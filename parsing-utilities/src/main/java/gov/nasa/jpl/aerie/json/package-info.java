@@ -65,32 +65,31 @@
  * {@snippet :
  *   final JsonParser<Expr.Num> numP
  *     = intP
- *     . map(Iso.of(Expr.Num::new, Expr.Num::value));
+ *     . map(Expr.Num::new, Expr.Num::value);
  *
  *   final JsonParser<Expr.Str> strP
  *     = stringP
- *     . map(Iso.of(Expr.Str::new, Expr.Str::value)); }
+ *     . map(Expr.Str::new, Expr.Str::value));}
  *
  * <p> The {@link gov.nasa.jpl.aerie.json.BasicParsers#intP} and {@link gov.nasa.jpl.aerie.json.BasicParsers#stringP}
  * parsers are provided by {@link gov.nasa.jpl.aerie.json.BasicParsers}, and can be statically imported for brevity.
  * They work with the {@code Integer} and {@code String} type, respectively. In order to adapt these to our custom
  * {@code Expr} subclasses, we use the {@link gov.nasa.jpl.aerie.json.JsonParser#map} helper method, which takes two
  * functions: a conversion to the new type from the current type, and a conversion from the new type back to the current
- * type. Here, we are only constructing and deconstructing a wrapper around a single value.
- * The {@link gov.nasa.jpl.aerie.json.Iso} class bundles these conversions together. </p>
+ * type. Here, we are only constructing and deconstructing a wrapper around a single value.  </p>
  *
  * {@snippet :
  *   static JsonObjectParser<Expr.Negate> negateP(final JsonParser<Expr<Integer>> integerExprP) {
  *     return productP
  *         . field("operand", integerExprP)
- *         . map(Iso.of(Expr.Negate::new, Expr.Negate::operand));
+ *         . map(Expr.Negate::new, Expr.Negate::operand);
  *   }
  *
  *   static JsonObjectParser<Expr.ToString> toStringP(final JsonParser<Expr<Integer>> integerExprP) {
  *     return productP
  *         . field("operand", integerExprP)
- *         . map(Iso.of(Expr.ToString::new, Expr.ToString::operand));
- *   } }
+ *         . map(Expr.ToString::new, Expr.ToString::operand);
+ *   }}
  *
  * <p> Our next two parsers depend on a parser we haven't defined yet -- the top-level integer expression and string
  * expression parsers. Since the top-level parsers, in turn, depend on these individual parsers, we will have a cyclic

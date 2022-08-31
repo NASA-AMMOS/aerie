@@ -6,8 +6,8 @@ import java.util.function.Function;
 /**
  * An infallible two-way conversion between types {@code S} and {@code T}.
  *
- * <p> When round-tripping a value from one type to the other and back, the result must be equal to the original value.
- * That is, {@code Objects.equals(to(from(s)), s)} and {@code Objects.equals(from(to(t)), t)} must always be true. </p>
+ * <p> When round-tripping a value of type {@code T} through {@code S} and back, the result must be equal to the
+ * original value. That is, {@code Objects.equals(from(to(t)), t)} must always be true. </p>
  *
  * @param <S>
  *   the "source" type of the conversion

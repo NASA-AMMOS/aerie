@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -301,7 +300,7 @@ public final class PostgresPlanRepository implements PlanRepository {
               .field("start_offset_in_micros", longP)
               .field("type", stringP)
               .field("arguments", mapP(serializedValueP))
-              .map(Iso.of(
+              .map(
                   untuple((actId, startOffsetInMicros, type, arguments) ->
                               tuple(
                                   actId,
@@ -309,7 +308,7 @@ public final class PostgresPlanRepository implements PlanRepository {
                                                        planStartTime.plusMicros(startOffsetInMicros),
                                                        arguments))),
                   untuple((ActivityInstanceId actId, ActivityInstance $) ->
-                              tuple(actId, planStartTime.microsUntil($.startTimestamp), $.type, $.arguments))));
+                              tuple(actId, planStartTime.microsUntil($.startTimestamp), $.type, $.arguments)));
 
       final var activities = new HashMap<ActivityInstanceId, ActivityInstance>();
       for (final var entry : parseJson(json, listP(activityRowP))) {
