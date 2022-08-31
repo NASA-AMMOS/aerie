@@ -11,5 +11,6 @@ begin;
   \ir tables/activity_instance_commands.sql
   \ir tables/sequence.sql
   \ir tables/sequence_to_simulated_activity.sql
+  \ir tables/user_sequence.sql
 
 end;

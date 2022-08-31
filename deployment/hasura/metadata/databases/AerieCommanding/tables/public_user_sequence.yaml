@@ -1,0 +1,13 @@
+table:
+  name: user_sequence
+  schema: public
+object_relationships:
+- name: command_dictionary
+  using:
+    manual_configuration:
+      remote_table:
+        schema: public
+        name: command_dictionary
+      insertion_order: null
+      column_mapping:
+        authoring_command_dict_id: id
