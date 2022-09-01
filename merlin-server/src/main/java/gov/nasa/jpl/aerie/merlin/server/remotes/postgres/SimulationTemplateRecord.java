@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
 
-public final record SimulationTemplateRecord(
+public record SimulationTemplateRecord(
     long id,
     long revision,
     long modelId,
