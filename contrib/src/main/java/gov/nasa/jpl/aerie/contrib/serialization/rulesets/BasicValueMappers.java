@@ -23,14 +23,20 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.PrimitiveLongArrayValueM
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.PrimitiveShortArrayValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.ShortValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.StringValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.UnitValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
 public final class BasicValueMappers {
+  // Unit is an enum, so `$unit` needs to be defined before `$enum()`
+  // in order to override the latter's representation.
+  public static ValueMapper<Unit> $unit() { return new UnitValueMapper(); }
+
   public static ValueMapper<Boolean> $boolean() {
     return new BooleanValueMapper();
   }
