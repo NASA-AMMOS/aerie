@@ -86,5 +86,7 @@ import java.util.List;
   }
 
   @Override
-  public void close() {}
+  public void close() {
+    // Nothing to clean up. The method is an intentionally-blank override.
+  }
 }
