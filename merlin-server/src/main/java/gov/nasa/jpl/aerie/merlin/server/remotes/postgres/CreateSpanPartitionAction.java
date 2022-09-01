@@ -8,7 +8,7 @@ import java.sql.SQLException;
 /*package-local*/ final class CreateSpanPartitionAction implements AutoCloseable {
   private final Connection connection;
 
-  public CreateSpanPartitionAction(final Connection connection) throws SQLException {
+  public CreateSpanPartitionAction(final Connection connection) {
     this.connection = connection;
   }
 

@@ -26,7 +26,7 @@ import java.util.Optional;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Optional<PlanRecord> get(final long planId) throws SQLException, NoSuchPlanException {
+  public Optional<PlanRecord> get(final long planId) throws SQLException {
     this.statement.setLong(1, planId);
 
     try (final var results = this.statement.executeQuery()) {
