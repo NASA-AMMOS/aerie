@@ -105,8 +105,9 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
   ) throws SQLException {
     final var realProfiles = profileSet.realProfiles();
     final var discreteProfiles = profileSet.discreteProfiles();
-    for (final var resource : records.keySet()) {
-      final ProfileRecord record = records.get(resource);
+    for (final var entry : records.entrySet()) {
+      final ProfileRecord record =  entry.getValue();
+      final var resource =  entry.getKey();
       switch (record.type().getLeft()) {
         case "real" -> postRealProfileSegments(
             connection,

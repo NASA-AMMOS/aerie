@@ -26,8 +26,9 @@ import java.util.Map;
       final Map<Long, SpanRecord> simulatedActivities,
       final Map<Long, Long> simIdToPgId
   ) throws SQLException {
-    for (final var id : simulatedActivities.keySet()) {
-      final var activity =  simulatedActivities.get(id);
+    for (final var entry : simulatedActivities.entrySet()) {
+      final var activity =  entry.getValue();
+      final var id =  entry.getKey();
       if (activity.parentId().isEmpty()) continue;
 
       this.statement.setLong(1, simIdToPgId.get(activity.parentId().get()));
