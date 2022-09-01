@@ -58,40 +58,49 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueS
 
   private record ParameterRecord(String name, int order, ValueSchema schema) {}
   private static List<Parameter> parseParameters(final Reader stream) {
-    final var json = Json.createReader(stream).readValue();
-    final var parametersMap =
-        mapP(productP
-                 .field("order", intP)
-                 .field("schema", valueSchemaP))
-        .parse(json)
-        .getSuccessOrThrow(
-            failureReason -> new Error("Corrupt activity type parameters cannot be parsed: " + failureReason.reason())
-        );
-    return parametersMap
-        .entrySet()
-        .stream()
-        .map(entry -> new ParameterRecord(entry.getKey(), entry.getValue().getKey(), entry.getValue().getValue()))
-        .sorted(Comparator.comparingInt(ParameterRecord::order))
-        .map(record -> new Parameter(record.name(), record.schema()))
-        .toList();
+    try(final var reader = Json.createReader(stream)) {
+      final var json = reader.readValue();
+      final var parametersMap =
+          mapP(productP
+                   .field("order", intP)
+                   .field("schema", valueSchemaP))
+              .parse(json)
+              .getSuccessOrThrow(
+                  failureReason -> new Error("Corrupt activity type parameters cannot be parsed: "
+                                             + failureReason.reason())
+              );
+      return parametersMap
+          .entrySet()
+          .stream()
+          .map(entry -> new ParameterRecord(entry.getKey(), entry.getValue().getKey(), entry.getValue().getValue()))
+          .sorted(Comparator.comparingInt(ParameterRecord::order))
+          .map(parameterRecord -> new Parameter(parameterRecord.name(), parameterRecord.schema()))
+          .toList();
+    }
   }
 
   private static List<String> parseRequiredParameters(final Reader stream) {
-    final var json = Json.createReader(stream).readValue();
-    return listP(stringP)
-        .parse(json)
-        .getSuccessOrThrow(
-            failureReason -> new Error("Corrupt activity type required parameters cannot be parsed: " + failureReason.reason())
-        );
+    try(final var reader = Json.createReader(stream)) {
+      final var json = reader.readValue();
+      return listP(stringP)
+          .parse(json)
+          .getSuccessOrThrow(
+              failureReason -> new Error("Corrupt activity type required parameters cannot be parsed: "
+                                         + failureReason.reason())
+          );
+    }
   }
 
   private static ValueSchema parseComputedAttributesValueSchema(final Reader stream) {
-    final var json = Json.createReader(stream).readValue();
-    return valueSchemaP
-        .parse(json)
-        .getSuccessOrThrow(
-            failureReason -> new Error("Corrupt activity type computed attribute schema cannot be parsed: " + failureReason.reason())
-        );
+    try(final var reader = Json.createReader(stream)) {
+      final var json = reader.readValue();
+      return valueSchemaP
+          .parse(json)
+          .getSuccessOrThrow(
+              failureReason -> new Error("Corrupt activity type computed attribute schema cannot be parsed: "
+                                         + failureReason.reason())
+          );
+    }
   }
 
   @Override

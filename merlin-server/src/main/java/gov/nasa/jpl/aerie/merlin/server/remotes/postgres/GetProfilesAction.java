@@ -47,12 +47,14 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
   }
 
   private Pair<String, ValueSchema> parseProfileType(final Reader jsonStream) {
-    final var json = Json.createReader(jsonStream).readValue();
-    return profileTypeP
-        .parse(json)
-        .getSuccessOrThrow(
-            failureReason -> new Error(
-                "Corrupt profile type: " + failureReason.reason()));
+    try(final var reader = Json.createReader(jsonStream)) {
+      final var json = reader.readValue();
+      return profileTypeP
+          .parse(json)
+          .getSuccessOrThrow(
+              failureReason -> new Error(
+                  "Corrupt profile type: " + failureReason.reason()));
+    }
   }
 
   @Override

@@ -50,12 +50,14 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
   }
 
   private Map<String, SerializedValue> parseActivityArguments(final Reader stream) {
-    final var json = Json.createReader(stream).readValue();
-    return activityArgumentsP
-        .parse(json)
-        .getSuccessOrThrow(
-            failureReason -> new Error("Corrupt activity arguments cannot be parsed: " + failureReason.reason())
-        );
+    try(final var reader = Json.createReader(stream)) {
+      final var json = reader.readValue();
+      return activityArgumentsP
+          .parse(json)
+          .getSuccessOrThrow(
+              failureReason -> new Error("Corrupt activity arguments cannot be parsed: " + failureReason.reason())
+          );
+    }
   }
 
   @Override

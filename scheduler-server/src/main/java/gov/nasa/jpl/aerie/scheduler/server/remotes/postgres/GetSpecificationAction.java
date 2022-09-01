@@ -61,12 +61,14 @@ import java.util.Optional;
   }
 
   private Map<String, SerializedValue> parseSimulationArguments(final Reader stream) {
-    final var json = Json.createReader(stream).readValue();
-    return PostgresParsers.simulationArgumentsP
-        .parse(json)
-        .getSuccessOrThrow(
-            failureReason -> new Error("Corrupt simulation arguments cannot be parsed: " + failureReason.reason())
-        );
+    try(final var reader = Json.createReader(stream)) {
+      final var json = reader.readValue();
+      return PostgresParsers.simulationArgumentsP
+          .parse(json)
+          .getSuccessOrThrow(
+              failureReason -> new Error("Corrupt simulation arguments cannot be parsed: " + failureReason.reason())
+          );
+    }
   }
 
   @Override

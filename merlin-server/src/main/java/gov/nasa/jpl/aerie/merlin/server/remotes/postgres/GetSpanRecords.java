@@ -86,11 +86,13 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
   }
 
   private static ActivityAttributesRecord parseActivityAttributes(final Reader jsonStream) {
-    final var json = Json.createReader(jsonStream).readValue();
-    return activityAttributesP
-        .parse(json)
-        .getSuccessOrThrow(
-            failureReason -> new Error("Corrupt activity arguments cannot be parsed: " + failureReason.reason()));
+    try(final var reader = Json.createReader(jsonStream)) {
+      final var json = reader.readValue();
+      return activityAttributesP
+          .parse(json)
+          .getSuccessOrThrow(
+              failureReason -> new Error("Corrupt activity arguments cannot be parsed: " + failureReason.reason()));
+    }
   }
 
   @Override
