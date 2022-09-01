@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
-import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
@@ -32,52 +31,47 @@ public final class ProfileParsers {
       = productP
       . field("initial", doubleP)
       . field("rate", doubleP)
-      . map(Iso.of(
+      . map(
           untuple(RealDynamics::linear),
-          $ -> tuple($.initial, $.rate)
-      ));
+          $ -> tuple($.initial, $.rate));
 
   public static final JsonParser<Pair<Duration, RealDynamics>> realProfileSegmentP
       = productP
       . field("duration", durationP)
       . field("dynamics", realDynamicsP)
-      . map(Iso.of(
+      . map(
           untuple((BiFunction<Duration, RealDynamics, Pair<Duration, RealDynamics>>) Pair::of),
-          $ -> tuple($.getLeft(), $.getRight())
-      ));
+          $ -> tuple($.getLeft(), $.getRight()));
 
   public static final JsonParser<Pair<Duration, SerializedValue>> discreteProfileSegmentP
       = productP
       . field("duration", durationP)
       . field("dynamics", serializedValueP)
-      . map(Iso.of(
+      . map(
           untuple((BiFunction<Duration, SerializedValue, Pair<Duration, SerializedValue>>) Pair::of),
-          $ -> tuple($.getLeft(), $.getRight())
-      ));
+          $ -> tuple($.getLeft(), $.getRight()));
 
   public static final JsonParser<RealProfile> realProfileP
       = productP
       . field("type", literalP("real"))
       . field("schema", valueSchemaP)
       . field("segments", listP(realProfileSegmentP))
-      . map(Iso.of(
+      . map(
           untuple((type, schema, segments) -> new RealProfile(schema, segments)),
-          $ -> tuple(null, $.schema(), $.segments())
-      ));
+          $ -> tuple(null, $.schema(), $.segments()));
 
   public static final JsonParser<DiscreteProfile> discreteProfileP
       = productP
       . field("type", literalP("discrete"))
       . field("schema", valueSchemaP)
       . field("segments", listP(discreteProfileSegmentP))
-      . map(Iso.of(
+      . map(
           untuple((type, schema, segments) -> new DiscreteProfile(schema, segments)),
-          $ -> tuple(null, $.schema(), $.segments())
-      ));
+          $ -> tuple(null, $.schema(), $.segments()));
 
   public static final JsonParser<ProfileSet> profileSetP
       = mapP(chooseP(realProfileP, discreteProfileP))
-      . map(Iso.of(
+      . map(
           profiles -> {
             final var realProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>>();
             final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
@@ -109,5 +103,5 @@ public final class ProfileParsers {
                              profiles.put(name, new DiscreteProfile(profile.getLeft(), profile.getRight())));
             return profiles;
           }
-      ));
+      );
 }

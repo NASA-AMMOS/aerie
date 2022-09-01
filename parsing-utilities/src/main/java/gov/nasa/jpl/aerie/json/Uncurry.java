@@ -5,29 +5,42 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+/**
+ * A set of utility functions for transforming the fields of an object parser.
+ *
+ * <p> The parsers produced from {@link ProductParsers} work with iteratively nested {@link Pair}s, which are
+ * inconvenient to work with directly. The static functions in this class let you use an n-ary function where
+ * a nested tuple would normally be given, or return an n-tuple rather than a series of nested 2-tuples. </p>
+ */
 public final class Uncurry {
   private Uncurry() {}
 
+  @FunctionalInterface
   public interface Function3<Result, T1, T2, T3> {
     Result apply(T1 t1, T2 t2, T3 t3);
   }
 
+  @FunctionalInterface
   public interface Function4<Result, T1, T2, T3, T4> {
     Result apply(T1 t1, T2 t2, T3 t3, T4 t4);
   }
 
+  @FunctionalInterface
   public interface Function5<Result, T1, T2, T3, T4, T5> {
     Result apply(T1 t1, T2 t2, T3 t3, T4 t4, T5 t5);
   }
 
+  @FunctionalInterface
   public interface Function6<Result, T1, T2, T3, T4, T5, T6> {
     Result apply(T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6);
   }
 
+  @FunctionalInterface
   public interface Function7<Result, T1, T2, T3, T4, T5, T6, T7> {
     Result apply(T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7);
   }
 
+  @FunctionalInterface
   public interface Function8<Result, T1, T2, T3, T4, T5, T6, T7, T8> {
     Result apply(T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8);
   }

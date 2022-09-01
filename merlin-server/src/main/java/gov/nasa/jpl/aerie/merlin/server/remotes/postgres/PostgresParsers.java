@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import com.impossibl.postgres.api.data.Interval;
-import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -30,17 +29,17 @@ public final class PostgresParsers {
       productP
           .field("type", literalP("discrete"))
           .field("schema", valueSchemaP)
-          .map(Iso.of(
+          .map(
               untuple((type, schema) -> Pair.of("discrete", schema)),
-              $ -> tuple(Unit.UNIT, $.getRight())));
+              $ -> tuple(Unit.UNIT, $.getRight()));
 
   public static final JsonParser<Pair<String, ValueSchema>> realProfileTypeP =
       productP
           .field("type", literalP("real"))
           .field("schema", valueSchemaP)
-          .map(Iso.of(
+          .map(
               untuple((type, schema) -> Pair.of("real", schema)),
-              $ -> tuple(Unit.UNIT, $.getRight())));
+              $ -> tuple(Unit.UNIT, $.getRight()));
 
   static final JsonParser<Pair<String, ValueSchema>> profileTypeP =
       chooseP(
@@ -64,8 +63,7 @@ public final class PostgresParsers {
       .optionalField("directiveId", longP)
       .field("arguments", activityArgumentsP)
       .optionalField("computedAttributes", serializedValueP)
-        .map(Iso.of(
+        .map(
             untuple(ActivityAttributesRecord::new),
-            $ -> tuple($.directiveId(), $.arguments(), $.computedAttributes())
-        ));
+            $ -> tuple($.directiveId(), $.arguments(), $.computedAttributes()));
 }

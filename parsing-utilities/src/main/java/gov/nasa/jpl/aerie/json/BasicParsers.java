@@ -25,24 +25,9 @@ import java.util.function.Function;
 public abstract class BasicParsers {
   private BasicParsers() {}
 
-  public static JsonObject getCachedSchema(final Map<Object, String> anchors, final JsonParser<?> parser) {
-    if (anchors.containsKey(parser)) {
-      return Json.createObjectBuilder().add("$ref", "#" + anchors.get(parser)).build();
-    } else {
-      final var anchor = "_" + UUID.randomUUID();
-      anchors.put(parser, anchor);
-
-      return Json
-          .createObjectBuilder()
-          .add("$anchor", anchor)
-          .addAll(Json.createObjectBuilder(parser.getSchema(anchors)))
-          .build();
-    }
-  }
-
   public static final JsonParser<JsonValue> anyP = new JsonParser<>() {
     @Override
-    public JsonObject getSchema(final Map<Object, String> anchors) {
+    public JsonObject getSchema(final SchemaCache anchors) {
       // The empty object represents no constraints on JSON to be parsed.
       return Json.createObjectBuilder().build();
     }
@@ -58,9 +43,27 @@ public abstract class BasicParsers {
     }
   };
 
+  public static final JsonParser<Void> noneP = new JsonParser<>() {
+    @Override
+    public JsonObject getSchema(final SchemaCache anchors) {
+      // The schema `{"not": {}}` validates no JSON document.
+      return Json.createObjectBuilder().add("not", Json.createObjectBuilder()).build();
+    }
+
+    @Override
+    public JsonParseResult<Void> parse(final JsonValue json) {
+      return JsonParseResult.failure();
+    }
+
+    @Override
+    public JsonValue unparse(final Void value) {
+      throw new IllegalArgumentException("There are no valid instances of Void.");
+    }
+  };
+
   public static final JsonParser<Boolean> boolP = new JsonParser<>() {
     @Override
-    public JsonObject getSchema(final Map<Object, String> anchors) {
+    public JsonObject getSchema(final SchemaCache anchors) {
       return Json
           .createObjectBuilder()
           .add("type", "boolean")
@@ -82,7 +85,7 @@ public abstract class BasicParsers {
 
   public static final JsonParser<String> stringP = new JsonParser<>() {
     @Override
-    public JsonObject getSchema(final Map<Object, String> anchors) {
+    public JsonObject getSchema(final SchemaCache anchors) {
       return Json
           .createObjectBuilder()
           .add("type", "string")
@@ -104,7 +107,7 @@ public abstract class BasicParsers {
 
   public static final JsonParser<Integer> intP = new JsonParser<>() {
     @Override
-    public JsonObject getSchema(final Map<Object, String> anchors) {
+    public JsonObject getSchema(final SchemaCache anchors) {
       return Json
           .createObjectBuilder()
           // must be an integer
@@ -135,7 +138,7 @@ public abstract class BasicParsers {
 
   public static final JsonParser<Long> longP = new JsonParser<>() {
     @Override
-    public JsonObject getSchema(final Map<Object, String> anchors) {
+    public JsonObject getSchema(final SchemaCache anchors) {
       return Json
           .createObjectBuilder()
           // must be an integer
@@ -162,7 +165,7 @@ public abstract class BasicParsers {
 
   public static final JsonParser<Double> doubleP = new JsonParser<>() {
     @Override
-    public JsonObject getSchema(final Map<Object, String> anchors) {
+    public JsonObject getSchema(final SchemaCache anchors) {
       return Json
           .createObjectBuilder()
           // must be a number
@@ -189,7 +192,7 @@ public abstract class BasicParsers {
 
   public static final JsonParser<Unit> nullP = new JsonParser<>() {
     @Override
-    public JsonObject getSchema(final Map<Object, String> anchors) {
+    public JsonObject getSchema(final SchemaCache anchors) {
       return Json
           .createObjectBuilder()
           .add("type", "null")
@@ -212,7 +215,7 @@ public abstract class BasicParsers {
   public static <E extends Enum<E>> JsonParser<E> enumP(final Class<E> klass, final Function<E, String> valueOf) {
     return new JsonParser<>() {
       @Override
-      public JsonObject getSchema(final Map<Object, String> anchors) {
+      public JsonObject getSchema(final SchemaCache anchors) {
         final var builder = Json.createArrayBuilder();
         for (final var enumConstant : klass.getEnumConstants()) {
           builder.add(Json.createValue(valueOf.apply(enumConstant)));
@@ -249,7 +252,7 @@ public abstract class BasicParsers {
   public static JsonParser<Unit> literalP(final String x) {
     return new JsonParser<>() {
       @Override
-      public JsonObject getSchema(final Map<Object, String> anchors) {
+      public JsonObject getSchema(final SchemaCache anchors) {
         return Json
             .createObjectBuilder()
             .add("const", unparse(Unit.UNIT))
@@ -275,7 +278,7 @@ public abstract class BasicParsers {
   public static JsonParser<Unit> literalP(final long x) {
     return new JsonParser<>() {
       @Override
-      public JsonObject getSchema(final Map<Object, String> anchors) {
+      public JsonObject getSchema(final SchemaCache anchors) {
         return Json
             .createObjectBuilder()
             .add("const", unparse(Unit.UNIT))
@@ -301,7 +304,7 @@ public abstract class BasicParsers {
   public static JsonParser<Unit> literalP(final double x) {
     return new JsonParser<>() {
       @Override
-      public JsonObject getSchema(final Map<Object, String> anchors) {
+      public JsonObject getSchema(final SchemaCache anchors) {
         return Json
             .createObjectBuilder()
             .add("const", unparse(Unit.UNIT))
@@ -327,7 +330,7 @@ public abstract class BasicParsers {
   public static JsonParser<Unit> literalP(final boolean x) {
     return new JsonParser<>() {
       @Override
-      public JsonObject getSchema(final Map<Object, String> anchors) {
+      public JsonObject getSchema(final SchemaCache anchors) {
         return Json
             .createObjectBuilder()
             .add("const", unparse(Unit.UNIT))
@@ -353,11 +356,11 @@ public abstract class BasicParsers {
   public static <T> JsonParser<List<T>> listP(final JsonParser<T> elementParser) {
     return new JsonParser<>() {
       @Override
-      public JsonObject getSchema(final Map<Object, String> anchors) {
+      public JsonObject getSchema(final SchemaCache anchors) {
         return Json
             .createObjectBuilder()
             .add("type", "array")
-            .add("items", getCachedSchema(anchors, elementParser))
+            .add("items", anchors.lookup(elementParser))
             .build();
       }
 
@@ -393,11 +396,11 @@ public abstract class BasicParsers {
   public static <S> JsonParser<Map<String, S>> mapP(final JsonParser<S> fieldParser) {
     return new JsonParser<>() {
       @Override
-      public JsonObject getSchema(final Map<Object, String> anchors) {
+      public JsonObject getSchema(final SchemaCache anchors) {
         return Json
             .createObjectBuilder()
             .add("type", "object")
-            .add("additionalProperties", getCachedSchema(anchors, fieldParser))
+            .add("additionalProperties", anchors.lookup(fieldParser))
             .build();
       }
 
@@ -433,7 +436,7 @@ public abstract class BasicParsers {
       private final JsonParser<S> target = scope.apply(this);
 
       @Override
-      public JsonObject getSchema(final Map<Object, String> anchors) {
+      public JsonObject getSchema(final SchemaCache anchors) {
         return this.target.getSchema(anchors);
       }
 
@@ -453,10 +456,10 @@ public abstract class BasicParsers {
   public static <T> JsonParser<T> chooseP(final JsonParser<? extends T>... options) {
     return new JsonParser<>() {
       @Override
-      public JsonObject getSchema(final Map<Object, String> anchors) {
+      public JsonObject getSchema(final SchemaCache anchors) {
         final var optionSchemas = Json.createArrayBuilder();
         for (final var option : options) {
-          optionSchemas.add(getCachedSchema(anchors, option));
+          optionSchemas.add(anchors.lookup(option));
         }
 
         return Json

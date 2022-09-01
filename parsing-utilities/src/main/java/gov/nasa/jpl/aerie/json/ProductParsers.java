@@ -10,50 +10,20 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-
-import static gov.nasa.jpl.aerie.json.BasicParsers.getCachedSchema;
 
 public abstract class ProductParsers {
   private ProductParsers() {}
 
   public static final EmptyProductParser productP = new EmptyProductParser();
 
-  public interface JsonObjectParser<T> extends JsonParser<T> {
-    @Override JsonObject unparse(final T value);
-
-    @Override default <S> JsonObjectParser<S> map(final Iso<T, S> transform) {
-      Objects.requireNonNull(transform);
-
-      final var self = this;
-
-      return new JsonObjectParser<>() {
-        @Override
-        public JsonObject getSchema(final Map<Object, String> anchors) {
-          return self.getSchema(anchors);
-        }
-
-        @Override
-        public JsonParseResult<S> parse(final JsonValue json) {
-          return self.parse(json).mapSuccess(transform::from);
-        }
-
-        @Override
-        public JsonObject unparse(final S value) {
-          return self.unparse(transform.to(value));
-        }
-      };
-    }
-  }
-
 
   public static final class EmptyProductParser implements JsonObjectParser<Unit> {
     private EmptyProductParser() {}
 
     @Override
-    public JsonObject getSchema(final Map<Object, String> anchors) {
+    public JsonObject getSchema(final SchemaCache anchors) {
       return Json
           .createObjectBuilder()
           .add("type", "object")
@@ -85,7 +55,7 @@ public abstract class ProductParsers {
     public JsonObjectParser<Unit> rest() {
       return new JsonObjectParser<>() {
         @Override
-        public JsonObject getSchema(final Map<Object, String> anchors) {
+        public JsonObject getSchema(final SchemaCache anchors) {
           return Json
               .createObjectBuilder()
               .add("type", "object")
@@ -190,10 +160,10 @@ public abstract class ProductParsers {
     }
 
     @Override
-    public JsonObject getSchema(final Map<Object, String> anchors) {
+    public JsonObject getSchema(final SchemaCache anchors) {
       final var fieldSchemas = Json.createObjectBuilder();
       for (final var field : this.fields) {
-        fieldSchemas.add(field.name, getCachedSchema(anchors, field.valueParser));
+        fieldSchemas.add(field.name, anchors.lookup(field.valueParser));
       }
 
       final var requiredFields = Json.createArrayBuilder();

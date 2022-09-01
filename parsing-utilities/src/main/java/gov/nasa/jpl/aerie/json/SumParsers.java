@@ -1,12 +1,9 @@
 package gov.nasa.jpl.aerie.json;
 
-import gov.nasa.jpl.aerie.json.ProductParsers.JsonObjectParser;
-
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
@@ -25,7 +22,7 @@ public final class SumParsers {
   JsonParser<T> sumP(final String tagField, final Class<T> klass, final List<Variant<? extends T>> variants) {
     return new JsonObjectParser<T>() {
       @Override
-      public JsonObject getSchema(final Map<Object, String> anchors) {
+      public JsonObject getSchema(final SchemaCache anchors) {
         final var builder = Json.createArrayBuilder();
         for (final var variant : variants) {
           final var schema = variant.parser.getSchema(anchors);
@@ -36,14 +33,14 @@ public final class SumParsers {
               .createObjectBuilder(schema)
               .add("properties", Json
                   .createObjectBuilder()
-                  .add("type", Json
+                  .add(tagField, Json
                       .createObjectBuilder()
                       .add("const", Json.createValue(variant.tag()))
                       .build())
                   .addAll(Json.createObjectBuilder(properties)))
               .add("required", Json
                   .createArrayBuilder()
-                  .add("type")
+                  .add(tagField)
                   .addAll(Json.createArrayBuilder(requiredProperties)))
               .build());
         }

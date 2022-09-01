@@ -1,8 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.driver.json;
 
-import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.json.SchemaCache;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
@@ -25,7 +25,7 @@ public final class ValueSchemaJsonParser implements JsonParser<ValueSchema> {
   public static final JsonParser<ValueSchema> valueSchemaP = new ValueSchemaJsonParser();
 
   @Override
-  public JsonObject getSchema(final Map<Object, String> anchors) {
+  public JsonObject getSchema(final SchemaCache anchors) {
     // TODO: Figure out what this should be
     return Json.createObjectBuilder().add("type", "any").build();
   }
@@ -77,16 +77,16 @@ public final class ValueSchemaJsonParser implements JsonParser<ValueSchema> {
         productP
             .field("key", stringP)
             .field("label", stringP)
-            .map(Iso.of(
+            .map(
                 untuple(ValueSchema.Variant::new),
-                        $ -> tuple($.key(), $.label())));
+                $ -> tuple($.key(), $.label()));
     final JsonParser<ValueSchema> variantsP =
         productP
             .field("type", literalP("variant"))
             .field("variants", listP(variantP))
-            .map(Iso.of(
+            .map(
                 untuple((type, variants) -> ValueSchema.ofVariant(variants)),
-                        $ -> tuple(Unit.UNIT, $.asVariant().get())));
+                $ -> tuple(Unit.UNIT, $.asVariant().get()));
 
     return variantsP.parse(obj);
   }
