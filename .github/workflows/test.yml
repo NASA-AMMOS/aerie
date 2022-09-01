@@ -50,7 +50,6 @@ jobs:
         env:
           AERIE_USERNAME: "${{secrets.AERIE_USERNAME}}"
           AERIE_PASSWORD: "${{secrets.AERIE_PASSWORD}}"
-          POSTGRES_DB: "${{secrets.POSTGRES_DB}}"
           POSTGRES_USER: "${{secrets.POSTGRES_USER}}"
           POSTGRES_PASSWORD: "${{secrets.POSTGRES_PASSWORD}}"
       - name: Sleep for 30 Seconds

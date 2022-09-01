@@ -2,7 +2,7 @@
 
 set -e
 
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL
   \echo 'Initializing aerie user...'
   CREATE USER "$AERIE_USERNAME" WITH PASSWORD '$AERIE_PASSWORD';
   \echo 'Done!'

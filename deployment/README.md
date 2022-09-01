@@ -29,8 +29,7 @@ They are, as follows:
 | `REPOSITORY_DOCKER_URL` | The URL used to fetch images of Aerie packages.                                                                              |
 | `DOCKER_TAG`            | The version of the Aerie images to fetch.                                                                                    |
 | `AERIE_USERNAME`        | The username used for Aerie services when they access the Postgres database.                                                 |
-| `AERIE_PASSWORD`        | The password used for Aerie services when they access the Postgres database.                                                 |
-| `POSTGRES_DB`           | The name of the Postgres database.                                                                                           |
+| `AERIE_PASSWORD`        | The password used for Aerie services when they access the Postgres database.                                                 ||
 | `POSTGRES_USER`         | The username of the superuser for the Postgres database.                                                                     |
 | `POSTGRES_PASSWORD`     | The password of the superuser for the Postgres database.                                                                     |
 | `UNTRUE_PLAN_START`     | Temporary solution to provide plan start time to models, should be set to a time that models will not fail to initialize on. |
