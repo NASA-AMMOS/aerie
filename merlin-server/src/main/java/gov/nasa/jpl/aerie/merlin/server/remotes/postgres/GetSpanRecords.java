@@ -44,26 +44,30 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     final var spans = new HashMap<Long, SpanRecord>();
 
     this.statement.setLong(1, datasetId);
-    final var resultSet = statement.executeQuery();
-    while (resultSet.next()) {
-      final var id = resultSet.getLong(1);
-      final var type = resultSet.getString(2);
-      final var parentId = readOptionalLong(resultSet, 3);
-      final var startOffset = parseOffset(resultSet, 4, simulationStart);
-      final var start = simulationStart.toInstant().plus(startOffset.in(MICROSECONDS), ChronoUnit.MICROS);
-      final var duration = isNull(resultSet, 5) ? Optional.<Duration>empty() : Optional.of(parseOffset(resultSet, 5, start));
-      final var attributes = parseActivityAttributes(resultSet.getCharacterStream(6));
+    try (final var resultSet = statement.executeQuery()) {
+      while (resultSet.next()) {
+        final var id = resultSet.getLong(1);
+        final var type = resultSet.getString(2);
+        final var parentId = readOptionalLong(resultSet, 3);
+        final var startOffset = parseOffset(resultSet, 4, simulationStart);
+        final var start = simulationStart.toInstant().plus(startOffset.in(MICROSECONDS), ChronoUnit.MICROS);
+        final var duration = isNull(resultSet, 5) ? Optional.<Duration>empty() : Optional.of(parseOffset(
+            resultSet,
+            5,
+            start));
+        final var attributes = parseActivityAttributes(resultSet.getCharacterStream(6));
 
-      final var initialChildIds = new ArrayList<Long>();
+        final var initialChildIds = new ArrayList<Long>();
 
-      spans.put(id, new SpanRecord(
-          type,
-          start,
-          duration,
-          parentId,
-          initialChildIds,
-          attributes
-      ));
+        spans.put(id, new SpanRecord(
+            type,
+            start,
+            duration,
+            parentId,
+            initialChildIds,
+            attributes
+        ));
+      }
     }
 
     // Since child IDs are not stored, we assign them by examining the parent ID of each activity

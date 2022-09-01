@@ -35,25 +35,25 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueS
       final long datasetId) throws SQLException
   {
     this.statement.setLong(1, datasetId);
-    final var resultSet = this.statement.executeQuery();
-
-    final var topics = new ArrayList<Triple<Integer, String, ValueSchema>>();
-    while (resultSet.next()) {
-      topics.add(
-          Triple.of(
-              resultSet.getInt(1),
-              resultSet.getString(2),
-              parseValueSchema(resultSet.getString(3))
-          )
-      );
+    try (final var resultSet = this.statement.executeQuery()) {
+      final var topics = new ArrayList<Triple<Integer, String, ValueSchema>>();
+      while (resultSet.next()) {
+        topics.add(
+            Triple.of(
+                resultSet.getInt(1),
+                resultSet.getString(2),
+                parseValueSchema(resultSet.getString(3))
+            )
+        );
+      }
+      return topics;
     }
-    return topics;
   }
 
   private static ValueSchema parseValueSchema(final String valueSchemaString) {
     final ValueSchema valueSchema;
     try (
-        final var valueSchemaReader = Json.createReader(new StringReader(valueSchemaString));
+        final var valueSchemaReader = Json.createReader(new StringReader(valueSchemaString))
     ) {
       valueSchema = valueSchemaP.parse(valueSchemaReader.readValue()).getSuccessOrThrow();
     }

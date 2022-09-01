@@ -37,31 +37,32 @@ import java.util.Optional;
   ) throws SQLException {
     this.statement.setLong(1, specificationId);
 
-    final var resultSet = this.statement.executeQuery();
-    if (!resultSet.next()) return Optional.empty();
+    try (final var resultSet = this.statement.executeQuery()) {
+      if (!resultSet.next()) return Optional.empty();
 
-    final var revision = resultSet.getLong("revision");
-    final var planId = resultSet.getLong("plan_id");
-    final var planRevision = resultSet.getLong("plan_revision");
-    final var horizonStart = Timestamp.fromString(resultSet.getString("horizon_start"));
-    final var horizonEnd = Timestamp.fromString(resultSet.getString("horizon_end"));
-    final var arguments = parseSimulationArguments(resultSet.getCharacterStream("simulation_arguments"));
-    final var analysisOnly = resultSet.getBoolean("analysis_only");
+      final var revision = resultSet.getLong("revision");
+      final var planId = resultSet.getLong("plan_id");
+      final var planRevision = resultSet.getLong("plan_revision");
+      final var horizonStart = Timestamp.fromString(resultSet.getString("horizon_start"));
+      final var horizonEnd = Timestamp.fromString(resultSet.getString("horizon_end"));
+      final var arguments = parseSimulationArguments(resultSet.getCharacterStream("simulation_arguments"));
+      final var analysisOnly = resultSet.getBoolean("analysis_only");
 
-    return Optional.of(new SpecificationRecord(
-        specificationId,
-        revision,
-        planId,
-        planRevision,
-        horizonStart,
-        horizonEnd,
-        arguments,
-        analysisOnly
-    ));
+      return Optional.of(new SpecificationRecord(
+          specificationId,
+          revision,
+          planId,
+          planRevision,
+          horizonStart,
+          horizonEnd,
+          arguments,
+          analysisOnly
+      ));
+    }
   }
 
   private Map<String, SerializedValue> parseSimulationArguments(final Reader stream) {
-    try(final var reader = Json.createReader(stream)) {
+    try (final var reader = Json.createReader(stream)) {
       final var json = reader.readValue();
       return PostgresParsers.simulationArgumentsP
           .parse(json)
