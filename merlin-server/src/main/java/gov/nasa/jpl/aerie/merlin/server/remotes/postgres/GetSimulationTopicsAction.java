@@ -4,8 +4,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Triple;
 import org.intellij.lang.annotations.Language;
 
-import javax.json.Json;
-import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -13,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
 
 /*package-local*/ final class GetSimulationTopicsAction implements AutoCloseable {
   @Language("SQL") private final String sql = """
@@ -42,22 +41,14 @@ import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueS
             Triple.of(
                 resultSet.getInt(1),
                 resultSet.getString(2),
-                parseValueSchema(resultSet.getString(3))
+                getJsonColumn(resultSet, "value_schema", valueSchemaP)
+                  .getSuccessOrThrow($ -> new Error("Corrupt activity type required parameters cannot be parsed: "
+                                                  + $.reason()))
             )
         );
       }
       return topics;
     }
-  }
-
-  private static ValueSchema parseValueSchema(final String valueSchemaString) {
-    final ValueSchema valueSchema;
-    try (
-        final var valueSchemaReader = Json.createReader(new StringReader(valueSchemaString))
-    ) {
-      valueSchema = valueSchemaP.parse(valueSchemaReader.readValue()).getSuccessOrThrow();
-    }
-    return valueSchema;
   }
 
   @Override

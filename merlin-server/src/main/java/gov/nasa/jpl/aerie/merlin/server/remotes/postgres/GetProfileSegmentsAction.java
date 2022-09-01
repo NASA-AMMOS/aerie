@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.parseOffset;
 
 /*package-local*/ final class GetProfileSegmentsAction implements AutoCloseable {
@@ -49,14 +50,17 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     final var simulationDuration = simulationWindow.duration();
     if (resultSet.next()) {
       var offset = parseOffset(resultSet, 1, simulationStart);
-      var dynamics = parseDynamics(resultSet.getCharacterStream(2), dynamicsP);
+      var dynamics = getJsonColumn(resultSet, "dynamics", dynamicsP)
+          .getSuccessOrThrow(failureReason -> new Error("Corrupt profile dynamics: " + failureReason.reason()));
 
       while (resultSet.next()) {
         final var nextOffset = parseOffset(resultSet, 1, simulationStart);
         final var duration = nextOffset.minus(offset);
         segments.add(Pair.of(duration, dynamics));
         offset = nextOffset;
-        dynamics = parseDynamics(resultSet.getCharacterStream(2), dynamicsP);
+        dynamics = getJsonColumn(resultSet, "dynamics", dynamicsP)
+            .getSuccessOrThrow(
+                failureReason -> new Error("Corrupt profile dynamics: " + failureReason.reason()));
       }
 
       final var duration = simulationDuration.minus(offset);
@@ -64,17 +68,6 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     }
 
     return segments;
-  }
-
-  private <Dynamics> Dynamics parseDynamics(final Reader jsonStream, final JsonParser<Dynamics> dynamicsP) {
-    try(final var reader = Json.createReader(jsonStream)) {
-      final var json = reader.readValue();
-      return dynamicsP
-          .parse(json)
-          .getSuccessOrThrow(
-              failureReason -> new Error(
-                  "Corrupt profile dynamics: " + failureReason.reason()));
-    }
   }
 
   @Override

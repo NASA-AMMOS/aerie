@@ -18,6 +18,7 @@ import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.activityAttributesP;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.parseOffset;
 
 /*package-local*/ final class GetSpanRecords implements AutoCloseable {
@@ -55,8 +56,9 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
             resultSet,
             5,
             start));
-        final var attributes = parseActivityAttributes(resultSet.getCharacterStream(6));
-
+        final var attributes = getJsonColumn(resultSet, "attributes", activityAttributesP)
+            .getSuccessOrThrow(
+              failureReason -> new Error("Corrupt activity arguments cannot be parsed: " + failureReason.reason()));
         final var initialChildIds = new ArrayList<Long>();
 
         spans.put(id, new SpanRecord(
@@ -87,16 +89,6 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
   private static Optional<Long> readOptionalLong(final ResultSet resultSet, final int index) throws SQLException {
     final var value = resultSet.getLong(index);
     return resultSet.wasNull() ? Optional.empty() : Optional.of(value);
-  }
-
-  private static ActivityAttributesRecord parseActivityAttributes(final Reader jsonStream) {
-    try(final var reader = Json.createReader(jsonStream)) {
-      final var json = reader.readValue();
-      return activityAttributesP
-          .parse(json)
-          .getSuccessOrThrow(
-              failureReason -> new Error("Corrupt activity arguments cannot be parsed: " + failureReason.reason()));
-    }
   }
 
   @Override

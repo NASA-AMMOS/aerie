@@ -1,17 +1,14 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.intellij.lang.annotations.Language;
 
-import javax.json.Json;
-import java.io.Reader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Map;
 import java.util.Optional;
 
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.simulationArgumentsP;
 
 /*package local*/ final class GetSimulationTemplateAction implements AutoCloseable {
@@ -41,20 +38,12 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       final var modelId = results.getLong(1);
       final var revision = results.getLong(2);
       final var description = results.getString(3);
-      final var arguments = parseSimulationArguments(results.getCharacterStream(4));
-      return Optional.of(new SimulationTemplateRecord(simulationTemplateId, revision, modelId, description, arguments));
-  }
-
-  private Map<String, SerializedValue> parseSimulationArguments(final Reader stream) {
-    try(final var reader = Json.createReader(stream)) {
-      final var json = reader.readValue();
-      return simulationArgumentsP
-          .parse(json)
+      final var arguments = getJsonColumn(results, "arguments", simulationArgumentsP)
           .getSuccessOrThrow(
               failureReason -> new Error("Corrupt simulation template arguments cannot be parsed: "
                                          + failureReason.reason())
           );
-    }
+      return Optional.of(new SimulationTemplateRecord(simulationTemplateId, revision, modelId, description, arguments));
   }
 
   @Override
@@ -62,4 +51,3 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement.close();
   }
 }
-
