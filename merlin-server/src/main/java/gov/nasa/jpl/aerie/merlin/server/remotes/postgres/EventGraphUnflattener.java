@@ -69,7 +69,7 @@ public final class EventGraphUnflattener {
           self.children.put(tag.index(), Trie.of(tag.suffix(), event));
         }
       } else {
-        throw new IllegalArgumentException("Unexpected variant %s of type $s".formatted(this, Trie.class));
+        throw new IllegalArgumentException("Unexpected variant %s of type %s".formatted(this, Trie.class));
       }
     }
 
@@ -83,7 +83,7 @@ public final class EventGraphUnflattener {
         }
         return graph;
       } else {
-        throw new IllegalArgumentException("Unexpected variant %s of type $s".formatted(this, Trie.class));
+        throw new IllegalArgumentException("Unexpected variant %s of type %s".formatted(this, Trie.class));
       }
     }
 
@@ -97,7 +97,7 @@ public final class EventGraphUnflattener {
         }
         return graph;
       } else {
-        throw new IllegalArgumentException("Unexpected variant %s of type $s".formatted(this, Trie.class));
+        throw new IllegalArgumentException("Unexpected variant %s of type %s".formatted(this, Trie.class));
       }
     }
 
