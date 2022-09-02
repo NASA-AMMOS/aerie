@@ -45,7 +45,7 @@ public class TypescriptCodeGenerationServiceAdapter implements ConstraintsCodeGe
   static Map<String, ValueSchema> resourceTypes(final MissionModelService missionModelService, final String modelId)
   throws MissionModelService.NoSuchMissionModelException
   {
-    return missionModelService.getStatesSchemas(modelId);
+    return missionModelService.getResourceSchemas(modelId);
   }
 }
 

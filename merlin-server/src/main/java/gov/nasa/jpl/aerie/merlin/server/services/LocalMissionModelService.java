@@ -70,11 +70,11 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<String, ValueSchema> getStatesSchemas(final String missionModelId)
+  public Map<String, ValueSchema> getResourceSchemas(final String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
-    return loadConfiguredMissionModel(missionModelId).getStateSchemas();
+    return loadConfiguredMissionModel(missionModelId).getResourceSchemas();
   }
 
   /**

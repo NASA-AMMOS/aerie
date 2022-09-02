@@ -37,7 +37,7 @@ public final class MissionModelFacade {
     return SimulationDriver.simulate(this.missionModel, schedule, startTime, simulationDuration);
   }
 
-  public Map<String, ValueSchema> getStateSchemas() {
+  public Map<String, ValueSchema> getResourceSchemas() {
     final var schemas = new HashMap<String, ValueSchema>();
 
     for (final var entry : this.missionModel.getResources().entrySet()) {

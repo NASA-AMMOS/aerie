@@ -149,7 +149,7 @@ public final class MerlinBindings implements Plugin {
     try {
       final var missionModelId = parseJson(ctx.body(), hasuraMissionModelActionP).input().missionModelId();
 
-      final var schemaMap = this.missionModelService.getStatesSchemas(missionModelId);
+      final var schemaMap = this.missionModelService.getResourceSchemas(missionModelId);
 
       ctx.result(ResponseSerializers.serializeValueSchemas(schemaMap).toString());
     } catch (final InvalidJsonException ex) {
