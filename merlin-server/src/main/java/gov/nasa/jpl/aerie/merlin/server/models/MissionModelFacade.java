@@ -6,9 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
@@ -47,91 +45,6 @@ public final class MissionModelFacade {
     }
 
     return schemas;
-  }
-
-  public List<String> validateActivity(final SerializedActivity activity)
-  throws NoSuchActivityTypeException, InvalidArgumentsException
-  {
-    final var specType = Optional
-        .ofNullable(this.missionModel.getDirectiveTypes().taskSpecTypes().get(activity.getTypeName()))
-        .orElseThrow(() -> new NoSuchActivityTypeException(activity.getTypeName()));
-
-    return getValidationFailures(specType, activity.getArguments());
-  }
-
-  private <Specification, Return> List<String> getValidationFailures(
-      final TaskSpecType<?, Specification, Return> specType,
-      final Map<String, SerializedValue> arguments)
-  throws InvalidArgumentsException
-  {
-    return specType.getValidationFailures(specType.instantiate(arguments));
-  }
-
-  public Map<String, SerializedValue> getActivityEffectiveArguments(
-      final String typeName,
-      final Map<String, SerializedValue> arguments)
-  throws NoSuchActivityTypeException, InvalidArgumentsException
-  {
-    final var specType = Optional
-        .ofNullable(this.missionModel.getDirectiveTypes().taskSpecTypes().get(typeName))
-        .orElseThrow(() -> new NoSuchActivityTypeException(typeName));
-
-    return getActivityEffectiveArguments(specType, arguments);
-  }
-
-  private static <Specification, Return> Map<String, SerializedValue> getActivityEffectiveArguments(
-      final TaskSpecType<?, Specification, Return> specType,
-      final Map<String, SerializedValue> arguments)
-  throws InvalidArgumentsException
-  {
-    final var activity = specType.instantiate(arguments);
-    return specType.getArguments(activity);
-  }
-
-  public List<String> validateConfiguration(final Map<String, SerializedValue> arguments)
-  throws InvalidArgumentsException
-  {
-    return getValidationFailures(this.missionModel.getConfigurationType(), arguments);
-  }
-
-  private <Config> List<String> getValidationFailures(
-      final ConfigurationType<Config> configurationType,
-      final Map<String, SerializedValue> arguments)
-  throws InvalidArgumentsException
-  {
-    return configurationType.getValidationFailures(configurationType.instantiate(arguments));
-  }
-
-  /** Get mission model configuration effective arguments. */
-  public Map<String, SerializedValue> getEffectiveArguments(final Map<String, SerializedValue> arguments)
-  throws InvalidArgumentsException
-  {
-    return getEffectiveArguments(this.missionModel.getConfigurationType(), arguments);
-  }
-
-  private static <Config> Map<String, SerializedValue> getEffectiveArguments(
-      final ConfigurationType<Config> configurationType,
-      final Map<String, SerializedValue> arguments)
-  throws InvalidArgumentsException
-  {
-    final var config = configurationType.instantiate(arguments);
-    return configurationType.getArguments(config);
-  }
-
-  /** Get activity instantiation failure messages as a mapping of activity instance ID to failure. */
-  public Map<ActivityInstanceId, String> validateActivityInstantiations(final Map<ActivityInstanceId, SerializedActivity> activities)
-  {
-    final var failures = new HashMap<ActivityInstanceId, String>();
-
-    activities.forEach((id, act) -> {
-      try {
-        getActivityEffectiveArguments(act.getTypeName(), act.getArguments());
-      } catch (final NoSuchActivityTypeException | InvalidArgumentsException e) {
-        failures.put(id, e.toString());
-      }
-    });
-
-    return failures;
   }
 
   public static final class Unconfigured<Model> {
