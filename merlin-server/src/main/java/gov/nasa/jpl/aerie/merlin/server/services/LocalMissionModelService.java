@@ -52,7 +52,7 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public MissionModelJar getMissionModelById(String id) throws NoSuchMissionModelException {
+  public MissionModelJar getMissionModelById(final String id) throws NoSuchMissionModelException {
     try {
       return this.missionModelRepository.getMissionModel(id);
     } catch (MissionModelRepository.NoSuchMissionModelException ex) {
@@ -162,7 +162,8 @@ public final class LocalMissionModelService implements MissionModelService {
   public List<Parameter> getModelParameters(final String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
-    return loadUnconfiguredMissionModel(missionModelId).getParameters();
+    return this.loadUnconfiguredMissionModel(missionModelId)
+               .getParameters();
   }
 
   @Override
@@ -173,7 +174,7 @@ public final class LocalMissionModelService implements MissionModelService {
   {
     return this.loadConfiguredMissionModel(missionModelId)
                .getEffectiveArguments(arguments);
-}
+  }
 
   /**
    * Validate that a set of activity parameters conforms to the expectations of a named mission model.
@@ -213,9 +214,8 @@ public final class LocalMissionModelService implements MissionModelService {
   throws NoSuchMissionModelException
   {
     try {
-      final var activityTypes =
-          loadUnconfiguredMissionModel(missionModelId)
-              .getActivityTypes();
+      final var activityTypes = this.loadUnconfiguredMissionModel(missionModelId)
+                                    .getActivityTypes();
       this.missionModelRepository.updateActivityTypes(missionModelId, activityTypes);
     } catch (final MissionModelRepository.NoSuchMissionModelException ex) {
       throw new NoSuchMissionModelException(missionModelId, ex);
