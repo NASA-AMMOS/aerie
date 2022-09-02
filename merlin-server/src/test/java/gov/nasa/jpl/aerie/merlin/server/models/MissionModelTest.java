@@ -110,7 +110,7 @@ public final class MissionModelTest {
                                                     "y", SerializedValue.of("test")));
 
         // WHEN
-        final var failures = missionModel.validateActivity(new SerializedActivity(typeName, parameters));
+        final var failures = unconfiguredMissionModel.validateActivityArguments(new SerializedActivity(typeName, parameters));
 
         // THEN
         assertThat(failures).isEmpty();
@@ -124,7 +124,7 @@ public final class MissionModelTest {
                                                     "y", SerializedValue.of(1.0)));
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> missionModel.validateActivity(new SerializedActivity(typeName, parameters)));
+        final Throwable thrown = catchThrowable(() -> unconfiguredMissionModel.validateActivityArguments(new SerializedActivity(typeName, parameters)));
 
         // THEN
         assertThat(thrown).isInstanceOf(InvalidArgumentsException.class);
@@ -137,7 +137,7 @@ public final class MissionModelTest {
         final var parameters = new HashMap<>(Map.of("Nonexistent", SerializedValue.of("")));
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> missionModel.validateActivity(new SerializedActivity(typeName, parameters)));
+        final Throwable thrown = catchThrowable(() -> unconfiguredMissionModel.validateActivityArguments(new SerializedActivity(typeName, parameters)));
 
         // THEN
         assertThat(thrown).isInstanceOf(InvalidArgumentsException.class);
