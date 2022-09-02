@@ -161,8 +161,42 @@ public final class MissionModelFacade {
       return new ActivityType(typeName, specType.getParameters(), specType.getRequiredParameters(), specType.getReturnValueSchema());
     }
 
+    public Map<String, SerializedValue> getActivityEffectiveArguments(final SerializedActivity activity)
+    throws NoSuchActivityTypeException, InvalidArgumentsException
+    {
+      final var specType = Optional
+          .ofNullable(registry.taskSpecTypes().get(activity.getTypeName()))
+          .orElseThrow(() -> new NoSuchActivityTypeException(activity.getTypeName()));
+      return specType.getEffectiveArguments(activity.getArguments());
+    }
+
+    public List<String> validateActivityArguments(final SerializedActivity activity)
+    throws NoSuchActivityTypeException, InvalidArgumentsException
+    {
+      final var specType = Optional
+          .ofNullable(this.registry.taskSpecTypes().get(activity.getTypeName()))
+          .orElseThrow(() -> new NoSuchActivityTypeException(activity.getTypeName()));
+      return specType.validateArguments(activity.getArguments());
+    }
+
     public List<Parameter> getParameters() {
       return this.factory.getConfigurationType().getParameters();
+    }
+
+    public Map<String, SerializedValue> getMissionModelEffectiveArguments(final Map<String, SerializedValue> arguments)
+    throws InvalidArgumentsException
+    {
+      return this.factory
+          .getConfigurationType()
+          .getEffectiveArguments(arguments);
+    }
+
+    public List<String> validateMissionModelArguments(final Map<String, SerializedValue> arguments)
+    throws InvalidArgumentsException
+    {
+      return this.factory
+          .getConfigurationType()
+          .validateArguments(arguments);
     }
   }
 

@@ -27,4 +27,27 @@ public interface TaskSpecType<Model, Specification, Return> {
       super(message);
     }
   }
+
+  /**
+   * This method must behave as though implemented as:
+   * {@snippet :
+   * return this.getValidationFailures(this.instantiate(activity));
+   * }
+   */
+  default List<String> validateArguments(final Map<String, SerializedValue> arguments)
+  throws InvalidArgumentsException {
+    return this.getValidationFailures(this.instantiate(arguments));
+  }
+
+  /**
+   * This method must behave as though implemented as:
+   * {@snippet :
+   * return this.getArguments(this.instantiate(arguments));
+   * }
+   */
+  default Map<String, SerializedValue> getEffectiveArguments(final Map<String, SerializedValue> arguments)
+  throws InvalidArgumentsException
+  {
+    return this.getArguments(this.instantiate(arguments));
+  }
 }

@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -113,7 +114,8 @@ public final class LocalMissionModelService implements MissionModelService {
   {
     try {
       // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
-      return this.loadConfiguredMissionModel(missionModelId).validateActivity(activity);
+      return this.loadUnconfiguredMissionModel(missionModelId)
+                 .validateActivityArguments(activity);
     } catch (final MissionModelFacade.NoSuchActivityTypeException ex) {
       return List.of("unknown activity type");
     }
@@ -130,7 +132,19 @@ public final class LocalMissionModelService implements MissionModelService {
   public Map<ActivityInstanceId, String> validateActivityInstantiations(final String missionModelId, final Map<ActivityInstanceId, SerializedActivity> activities)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
-    return this.loadConfiguredMissionModel(missionModelId).validateActivityInstantiations(activities);
+    final var failures = new HashMap<ActivityInstanceId, String>();
+
+    for (final var entry : activities.entrySet()) {
+      final var id = entry.getKey();
+      final var act = entry.getValue();
+      try {
+        this.getActivityEffectiveArguments(missionModelId, act); // The return value is intentionally ignored - we are only interested in failures
+      } catch (final MissionModelService.NoSuchActivityTypeException | InvalidArgumentsException e) {
+        failures.put(id, e.toString());
+      }
+    }
+
+    return failures;
   }
 
   @Override
@@ -141,8 +155,8 @@ public final class LocalMissionModelService implements MissionModelService {
          InvalidArgumentsException
   {
     try {
-      return this.loadConfiguredMissionModel(missionModelId)
-                 .getActivityEffectiveArguments(activity.getTypeName(), activity.getArguments());
+      return this.loadUnconfiguredMissionModel(missionModelId)
+                 .getActivityEffectiveArguments(activity);
     } catch (final MissionModelFacade.NoSuchActivityTypeException ex) {
       throw new NoSuchActivityTypeException(activity.getTypeName(), ex);
     }
@@ -154,8 +168,8 @@ public final class LocalMissionModelService implements MissionModelService {
          MissionModelLoadException,
          InvalidArgumentsException
   {
-    return this.loadConfiguredMissionModel(missionModelId)
-               .validateConfiguration(arguments);
+    return this.loadUnconfiguredMissionModel(missionModelId)
+               .validateMissionModelArguments(arguments);
   }
 
   @Override
@@ -172,8 +186,8 @@ public final class LocalMissionModelService implements MissionModelService {
          MissionModelLoadException,
          InvalidArgumentsException
   {
-    return this.loadConfiguredMissionModel(missionModelId)
-               .getEffectiveArguments(arguments);
+    return this.loadUnconfiguredMissionModel(missionModelId)
+               .getMissionModelEffectiveArguments(arguments);
   }
 
   /**
