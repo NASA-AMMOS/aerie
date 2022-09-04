@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
-import gov.nasa.jpl.aerie.merlin.server.models.MissionModelFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.apache.commons.lang3.tuple.Pair;
@@ -74,7 +73,7 @@ public record SynchronousSimulationAgent (
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       writer.failWith("mission model for existing plan does not exist");
       return;
-    } catch (final MissionModelFacade.NoSuchActivityTypeException ex) {
+    } catch (final MissionModelService.NoSuchActivityTypeException ex) {
       writer.failWith("activity could not be instantiated");
       return;
     }
