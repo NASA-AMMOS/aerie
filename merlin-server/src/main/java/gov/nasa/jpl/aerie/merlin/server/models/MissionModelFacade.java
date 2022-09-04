@@ -1,52 +1,18 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public final class MissionModelFacade {
-  private final MissionModel<?> missionModel;
-
-  public MissionModelFacade(final MissionModel<?> missionModel) {
-    this.missionModel = missionModel;
-  }
-
-  public SimulationResults simulate(
-      final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule,
-      final Duration simulationDuration,
-      final Instant startTime
-  ) {
-    return SimulationDriver.simulate(this.missionModel, schedule, startTime, simulationDuration);
-  }
-
-  public Map<String, ValueSchema> getResourceSchemas() {
-    final var schemas = new HashMap<String, ValueSchema>();
-
-    for (final var entry : this.missionModel.getResources().entrySet()) {
-      final var name = entry.getKey();
-      final var resource = entry.getValue();
-      schemas.put(name, resource.getSchema());
-    }
-
-    return schemas;
-  }
-
   public static final class Unconfigured<Model> {
     private final MissionModelFactory<?, ?, Model> factory;
     private final DirectiveTypeRegistry<?, Model> registry;

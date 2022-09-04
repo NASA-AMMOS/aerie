@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
@@ -75,7 +76,15 @@ public final class LocalMissionModelService implements MissionModelService {
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
-    return loadConfiguredMissionModel(missionModelId).getResourceSchemas();
+    final var schemas = new HashMap<String, ValueSchema>();
+
+    for (final var entry : loadConfiguredMissionModel(missionModelId).getResources().entrySet()) {
+      final var name = entry.getKey();
+      final var resource = entry.getValue();
+      schemas.put(name, resource.getSchema());
+    }
+
+    return schemas;
   }
 
   /**
@@ -208,8 +217,11 @@ public final class LocalMissionModelService implements MissionModelService {
     }
 
     // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
-    return loadConfiguredMissionModel(message.missionModelId(), message.startTime(), SerializedValue.of(config))
-        .simulate(message.activityInstances(), message.samplingDuration(), message.startTime());
+    return SimulationDriver.simulate(
+        loadConfiguredMissionModel(message.missionModelId(), message.startTime(), SerializedValue.of(config)),
+        message.activityInstances(),
+        message.startTime(),
+        message.samplingDuration());
   }
 
   @Override
@@ -261,7 +273,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * it contains may not abide by the expected contract at load time.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
-  private MissionModelFacade loadConfiguredMissionModel(final String missionModelId)
+  private MissionModel<?> loadConfiguredMissionModel(final String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     return loadConfiguredMissionModel(missionModelId, untruePlanStart, SerializedValue.of(Map.of()));
@@ -277,7 +289,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * it contains may not abide by the expected contract at load time.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
-  private MissionModelFacade loadConfiguredMissionModel(
+  private MissionModel<?> loadConfiguredMissionModel(
       final String missionModelId,
       final Instant planStart,
       final SerializedValue configuration)
@@ -285,13 +297,12 @@ public final class LocalMissionModelService implements MissionModelService {
   {
     try {
       final var missionModelJar = this.missionModelRepository.getMissionModel(missionModelId);
-      final var missionModel = MissionModelLoader.loadMissionModel(
+      return MissionModelLoader.loadMissionModel(
           planStart,
           configuration,
           missionModelDataPath.resolve(missionModelJar.path),
           missionModelJar.name,
           missionModelJar.version);
-      return new MissionModelFacade(missionModel);
     } catch (final MissionModelRepository.NoSuchMissionModelException ex) {
       throw new NoSuchMissionModelException(missionModelId, ex);
     } catch (final MissionModelLoader.MissionModelLoadException ex) {

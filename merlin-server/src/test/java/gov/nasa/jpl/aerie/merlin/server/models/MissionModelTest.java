@@ -1,10 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
-import gov.nasa.jpl.aerie.foomissionmodel.Configuration;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
-import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
@@ -15,7 +12,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,21 +21,11 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 public final class MissionModelTest {
 
-    private MissionModelFacade missionModel;
-    private MissionModelFacade.Unconfigured<?> unconfiguredMissionModel;
+  private MissionModelFacade.Unconfigured<?> unconfiguredMissionModel;
 
     @BeforeEach
     public void initialize() {
-        final var configuration = new Configuration();
-        this.missionModel = makeMissionModel(new MissionModelBuilder(), configuration);
         this.unconfiguredMissionModel = new MissionModelFacade.Unconfigured<>(new GeneratedMissionModelFactory());
-    }
-
-    private static MissionModelFacade makeMissionModel(final MissionModelBuilder builder, final Configuration config) {
-        final var factory = new GeneratedMissionModelFactory();
-        final var registry = DirectiveTypeRegistry.extract(factory);
-        final var model = factory.instantiate(registry.registry(), Instant.EPOCH, config, builder);
-        return new MissionModelFacade(builder.build(model, factory.getConfigurationType(), registry));
     }
 
     @AfterEach
