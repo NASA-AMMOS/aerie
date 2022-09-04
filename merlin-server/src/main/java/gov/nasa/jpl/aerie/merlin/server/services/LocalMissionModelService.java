@@ -124,7 +124,7 @@ public final class LocalMissionModelService implements MissionModelService {
   throws NoSuchMissionModelException, MissionModelLoadException, InvalidArgumentsException
   {
     // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
-    final var factory = this.loadUnconfiguredMissionModel(missionModelId);
+    final var factory = this.loadMissionModelFactory(missionModelId);
     final var registry = DirectiveTypeRegistry.extract(factory);
     final var specType = registry.taskSpecTypes().get(activity.getTypeName());
     if (specType == null) return List.of("unknown activity type");
@@ -164,7 +164,7 @@ public final class LocalMissionModelService implements MissionModelService {
          MissionModelLoadException,
          InvalidArgumentsException
   {
-    final var factory = this.loadUnconfiguredMissionModel(missionModelId);
+    final var factory = this.loadMissionModelFactory(missionModelId);
     final var registry = DirectiveTypeRegistry.extract(factory);
     final var specType = Optional
         .ofNullable(registry.taskSpecTypes().get(activity.getTypeName()))
@@ -178,7 +178,7 @@ public final class LocalMissionModelService implements MissionModelService {
          MissionModelLoadException,
          InvalidArgumentsException
   {
-    return this.loadUnconfiguredMissionModel(missionModelId)
+    return this.loadMissionModelFactory(missionModelId)
         .getConfigurationType()
         .validateArguments(arguments);
   }
@@ -187,7 +187,7 @@ public final class LocalMissionModelService implements MissionModelService {
   public List<Parameter> getModelParameters(final String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
-    return this.loadUnconfiguredMissionModel(missionModelId).getConfigurationType().getParameters();
+    return this.loadMissionModelFactory(missionModelId).getConfigurationType().getParameters();
   }
 
   @Override
@@ -196,7 +196,7 @@ public final class LocalMissionModelService implements MissionModelService {
          MissionModelLoadException,
          InvalidArgumentsException
   {
-    return this.loadUnconfiguredMissionModel(missionModelId)
+    return this.loadMissionModelFactory(missionModelId)
         .getConfigurationType()
         .getEffectiveArguments(arguments);
   }
@@ -243,7 +243,7 @@ public final class LocalMissionModelService implements MissionModelService {
   {
     try {
       final var activityTypes1 = new HashMap<String, ActivityType>();
-      final var factory = this.loadUnconfiguredMissionModel(missionModelId);
+      final var factory = this.loadMissionModelFactory(missionModelId);
       final var registry = DirectiveTypeRegistry.extract(factory);
       registry.taskSpecTypes().forEach((name, specType) -> {
         activityTypes1.put(name, new ActivityType(name, specType.getParameters(), specType.getRequiredParameters(), specType.getReturnValueSchema()));
@@ -255,7 +255,7 @@ public final class LocalMissionModelService implements MissionModelService {
     }
   }
 
-  private MissionModelFactory<?, ?, ?> loadUnconfiguredMissionModel(final String missionModelId)
+  private MissionModelFactory<?, ?, ?> loadMissionModelFactory(final String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     try {
