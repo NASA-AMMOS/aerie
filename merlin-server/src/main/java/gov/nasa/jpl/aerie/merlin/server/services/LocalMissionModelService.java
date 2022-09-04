@@ -80,7 +80,7 @@ public final class LocalMissionModelService implements MissionModelService {
     // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
     final var schemas = new HashMap<String, ValueSchema>();
 
-    for (final var entry : loadConfiguredMissionModel(missionModelId).getResources().entrySet()) {
+    for (final var entry : loadAndInstantiateMissionModel(missionModelId).getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
       schemas.put(name, resource.getSchema());
@@ -220,7 +220,7 @@ public final class LocalMissionModelService implements MissionModelService {
 
     // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
     return SimulationDriver.simulate(
-        loadConfiguredMissionModel(message.missionModelId(), message.startTime(), SerializedValue.of(config)),
+        loadAndInstantiateMissionModel(message.missionModelId(), message.startTime(), SerializedValue.of(config)),
         message.activityInstances(),
         message.startTime(),
         message.samplingDuration());
@@ -277,10 +277,10 @@ public final class LocalMissionModelService implements MissionModelService {
    * it contains may not abide by the expected contract at load time.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
-  private MissionModel<?> loadConfiguredMissionModel(final String missionModelId)
+  private MissionModel<?> loadAndInstantiateMissionModel(final String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
-    return loadConfiguredMissionModel(missionModelId, untruePlanStart, SerializedValue.of(Map.of()));
+    return loadAndInstantiateMissionModel(missionModelId, untruePlanStart, SerializedValue.of(Map.of()));
   }
 
   /**
@@ -293,7 +293,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * it contains may not abide by the expected contract at load time.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
-  private MissionModel<?> loadConfiguredMissionModel(
+  private MissionModel<?> loadAndInstantiateMissionModel(
       final String missionModelId,
       final Instant planStart,
       final SerializedValue configuration)
