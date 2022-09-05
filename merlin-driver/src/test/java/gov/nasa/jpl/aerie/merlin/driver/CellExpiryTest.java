@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
@@ -133,7 +132,7 @@ public final class CellExpiryTest {
     initializer.resource(resourceName, resource);
 
     return initializer.build(
-        new Phantom<>(ref),
+        ref,
         new EmptyConfigurationType(),
         new DirectiveTypeRegistry<>(Map.of(), Map.of()));
   }
