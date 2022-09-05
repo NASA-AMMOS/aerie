@@ -148,7 +148,7 @@ public final class MerlinExtension<Registry extends Scoping<Registry, Model>, Mo
           ? registry.registry()
           : $ -> () -> {};
       this.missionModel = this.builder.build(
-          new RootModel<>(this.context.model(), registry.registry(), executor),
+          new RootModel<>(this.context.model(), executor),
           new EmptyConfigurationType(),
           registry);
 

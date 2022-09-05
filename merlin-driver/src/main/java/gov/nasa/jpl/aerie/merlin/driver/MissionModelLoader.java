@@ -52,7 +52,7 @@ public final class MissionModelLoader {
 
             final var config = factory.getConfigurationType().instantiate(serializedConfigMap);
             final var registry = DirectiveTypeRegistry.extract(factory);
-            final var model = factory.instantiate(registry.registry(), planStart, config, builder);
+            final var model = factory.instantiate(planStart, config, builder);
             return builder.build(model, factory.getConfigurationType(), registry);
         } catch (final ConfigurationType.UnconstructableConfigurationException | InstantiationException ex) {
             throw new MissionModelInstantiationException(ex);

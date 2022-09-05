@@ -172,9 +172,12 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         Modifier.FINAL)
                     .returns(missionModel.getTypesName())
                     .addStatement(
-                        "return $T.register($L)",
+                        "$T.register($L)",
                         missionModel.getTypesName(),
                         "registrar")
+                    .addStatement(
+                        "return new $T()",
+                        missionModel.getTypesName())
                     .build())
             .addMethod(
                 MethodSpec
@@ -197,10 +200,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
                     .addParameter(
-                        missionModel.getTypesName(),
-                        "registry",
-                        Modifier.FINAL)
-                    .addParameter(
                         ClassName.get(Instant.class),
                        "planStart",
                         Modifier.FINAL)
@@ -220,8 +219,8 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             missionModel.getTypesName(),
                             ClassName.get(missionModel.topLevelModel)))
                     .addStatement(
-                        "$L.registerTopics($L)",
-                        "registry",
+                        "$T.registerTopics($L)",
+                        missionModel.getTypesName(),
                         "builder")
                     .addCode("\n")
                     .addStatement(
@@ -242,10 +241,9 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         "builder",
                         generateMissionModelInstantiation(missionModel))
                     .addStatement(
-                        "return new $T<>($L, $L, $L)",
+                        "return new $T<>($L, $L)",
                         gov.nasa.jpl.aerie.merlin.framework.RootModel.class,
                         "model",
-                        "registry",
                         "executor")
                     .build())
             .build();
@@ -382,24 +380,13 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     typeName,
                                     "model")
                                 .addStatement(
-                                    "final var $L = $L.registry()",
-                                    "registry",
-                                    "model")
-                                .addStatement(
-                                    "final var $L = $L.$L",
-                                    "id",
-                                    "registry",
-                                    entry.declaration().getQualifiedName().toString().replace(".", "_"))
-                                .addStatement(
                                     "final var $L = $T.$L",
                                     "mapper",
                                     missionModel.getTypesName(),
                                     entry.mapper().name.canonicalName().replace(".", "_"))
                                 .addStatement(
-                                    "return $T.spawn($L, $L, $L.createTask($L, $L))",
+                                    "return $T.spawn($L.createTask($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
-                                    "id",
-                                    "activity",
                                     "mapper",
                                     "model",
                                     "activity")
@@ -425,25 +412,14 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     typeName,
                                     "model")
                                 .addStatement(
-                                    "final var $L = $L.registry()",
-                                    "registry",
-                                    "model")
-                                .addStatement(
-                                    "final var $L = $L.$L",
-                                    "id",
-                                    "registry",
-                                    entry.declaration().getQualifiedName().toString().replace(".", "_"))
-                                .addStatement(
                                     "final var $L = $T.$L",
                                     "mapper",
                                     missionModel.getTypesName(),
                                     entry.mapper().name.canonicalName().replace(".", "_"))
                                 .addStatement(
-                                    "return $T.defer($L, $L, $L, $L.createTask($L, $L))",
+                                    "return $T.defer($L, $L.createTask($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "duration",
-                                    "id",
-                                    "activity",
                                     "mapper",
                                     "model",
                                     "activity")
@@ -502,11 +478,9 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
   public JavaFile generateActivityTypes(final MissionModelRecord missionModel) {
     final var typeName = missionModel.getTypesName();
 
-    // Java's 255 parameter limit prevents us from using a long constructor or record definition for activity types
     final var typeSpec =
         TypeSpec
             .classBuilder(typeName)
-            .addType(generateActivityTypesBuilder(missionModel))
             .addAnnotation(
                 AnnotationSpec
                     .builder(javax.annotation.processing.Generated.class)
@@ -518,7 +492,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     ClassName.get(Scoping.class),
                     missionModel.getTypesName(),
                     ClassName.get(missionModel.topLevelModel)))
-            .addFields(generateActivityDirectiveFields(missionModel, Modifier.PUBLIC, Modifier.FINAL))
             .addFields(
                 missionModel.activityTypes
                     .stream()
@@ -532,27 +505,38 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .toList())
             .addMethod(
                 MethodSpec
-                    .constructorBuilder()
-                    .addModifiers(Modifier.PRIVATE)
-                    .addParameter(typeName.nestedClass("Builder"), "builder", Modifier.FINAL)
-                    .addCode(
-                        missionModel.activityTypes
-                            .stream()
-                            .map(activityType -> CodeBlock
-                                .builder()
-                                .addStatement(
-                                    "this.$L = builder.$L",
-                                    activityType.declaration().getQualifiedName().toString().replace(".", "_"),
-                                    activityType.declaration().getQualifiedName().toString().replace(".", "_")))
-                            .reduce((x, y) -> x.add(y.build()))
-                            .orElse(CodeBlock.builder())
-                            .build())
+                    .methodBuilder("register")
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                    .addParameter(
+                        ParameterizedTypeName.get(
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeRegistrar.class),
+                            ParameterizedTypeName.get(
+                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                                missionModel.getTypesName(),
+                                ClassName.get(missionModel.topLevelModel))),
+                        "registrar",
+                        Modifier.FINAL)
+                    .returns(missionModel.getTypesName())
+                    .addCode(missionModel.activityTypes
+                        .stream()
+                        .map(activityType -> CodeBlock
+                            .builder()
+                            .addStatement(
+                                "$L.registerDirectiveType($S, $T.$L)",
+                                "registrar",
+                                activityType.name(),
+                                typeName,
+                                activityType.mapper().name.canonicalName().replace(".", "_")))
+                        .reduce((x, y) -> x.add(y.build()))
+                        .orElse(CodeBlock.builder())
+                        .build())
+                    .addCode("\n")
+                    .addStatement("return new $T()", missionModel.getTypesName())
                     .build())
-            .addMethod(generateActivityTypesRegisterMethod(missionModel))
             .addMethod(
                 MethodSpec
                     .methodBuilder("registerTopics")
-                    .addModifiers(Modifier.PUBLIC)
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                     .addParameter(TypeName.get(Initializer.class), "initializer", Modifier.FINAL)
                     .addCode(
                         missionModel.activityTypes
@@ -614,87 +598,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
         .builder(typeName.packageName(), typeSpec)
         .skipJavaLangImports(true)
         .build();
-  }
-
-  /** Generate `ActivityTypes.Builder` class. */
-  private static TypeSpec generateActivityTypesBuilder(final MissionModelRecord missionModel) {
-    final var activityFields = generateActivityDirectiveFields(missionModel, Modifier.PRIVATE);
-    return TypeSpec.classBuilder("Builder")
-        .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
-        .addFields(activityFields)
-        .addMethods(activityFields.stream()
-            .map(af ->
-                MethodSpec.methodBuilder(af.name)
-                    .addModifiers(Modifier.PRIVATE)
-                    .returns(missionModel.getTypesName().nestedClass("Builder"))
-                    .addParameter(af.type, af.name, Modifier.FINAL)
-                    .addStatement(
-                        "this.$L = $L",
-                        af.name,
-                        af.name)
-                    .addStatement("return this")
-                    .build())
-            .toList())
-        .build();
-  }
-
-  /** Generate `ActivityTypes.Builder` class. */
-  private static MethodSpec generateActivityTypesRegisterMethod(final MissionModelRecord missionModel) {
-    final var typeName = missionModel.getTypesName();
-
-    final var activityTypesBuilderChain = CodeBlock.builder();
-    for (final var activityType : missionModel.activityTypes) {
-      final var qualifiedName = activityType.declaration().getQualifiedName().toString().replace(".", "_");
-      final var mapperQualifiedName = activityType.mapper().name.canonicalName().replace(".", "_");
-      activityTypesBuilderChain.add(
-          "$W.$L($L.registerDirectiveType($S, $T.$L))", // $W is a line-wrapping directive
-          qualifiedName,
-          "registrar",
-          activityType.name(),
-          typeName,
-          mapperQualifiedName);
-    }
-
-    return MethodSpec
-        .methodBuilder("register")
-        .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-        .addParameter(
-            ParameterizedTypeName.get(
-                ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeRegistrar.class),
-                ParameterizedTypeName.get(
-                    ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                    missionModel.getTypesName(),
-                    ClassName.get(missionModel.topLevelModel))),
-            "registrar",
-            Modifier.FINAL)
-        .returns(typeName)
-        .addStatement(
-            "return new $T(new $T()$L)",
-            typeName,
-            typeName.nestedClass("Builder"),
-            activityTypesBuilderChain.build())
-        .build();
-  }
-
-  /** Generate common `${activity_name}` directive fields. */
-  private static List<FieldSpec> generateActivityDirectiveFields(final MissionModelRecord missionModel, final Modifier... modifiers) {
-    return missionModel.activityTypes
-        .stream()
-        .map(activityType -> FieldSpec
-            .builder(
-                ParameterizedTypeName.get(
-                    ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId.class),
-                    ClassName.get(activityType.declaration()),
-                    activityType
-                        .effectModel()
-                        .flatMap(EffectModelRecord::returnType)
-                        .map(TypeName::get)
-                        .orElse(TypeName.get(Unit.class))
-                        .box()),
-                activityType.declaration().getQualifiedName().toString().replace(".", "_"),
-                modifiers)
-            .build())
-        .toList();
   }
 
   public Pair<JavaFile, List<TypeRule>> generateAutoValueMappers(
@@ -1016,7 +919,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                         """
                                           return $T
                                           .$L(() -> {
-                                            try (final var restore = $L.registry().contextualizeModel($L)) {
+                                            try (final var restore = new $T().contextualizeModel($L)) {
                                               $T.emit($L, this.$L);
                                               final var result = $L.$L($L.model());
                                               $T.emit(result, this.$L);
@@ -1029,7 +932,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                           case Threaded -> "threaded";
                                           case Replaying -> "replaying";
                                         },
-                                        "model",
+                                        missionModel.getTypesName(),
                                         "model",
                                         ModelActions.class,
                                         "activity",
@@ -1047,7 +950,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                         """
                                           return $T
                                           .$L(() -> {
-                                            try (final var restore = $L.registry().contextualizeModel($L)) {
+                                            try (final var restore = new $T().contextualizeModel($L)) {
                                               $T.emit($L, this.$L);
                                               $L.$L($L.model());
                                               $T.emit($T.UNIT, this.$L);
@@ -1060,7 +963,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                           case Threaded -> "threaded";
                                           case Replaying -> "replaying";
                                         },
-                                        "model",
+                                        missionModel.getTypesName(),
                                         "model",
                                         ModelActions.class,
                                         "activity",

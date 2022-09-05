@@ -21,7 +21,7 @@ public final class SimulationUtility {
     final var factory = new GeneratedMissionModelFactory();
     final var registry = DirectiveTypeRegistry.extract(factory);
     // TODO: [AERIE-1516] Teardown the model to release any system resources (e.g. threads).
-    final var model = factory.instantiate(registry.registry(), planStart, config, builder);
+    final var model = factory.instantiate(planStart, config, builder);
     return builder.build(model, factory.getConfigurationType(), registry);
   }
 

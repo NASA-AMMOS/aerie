@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
@@ -77,10 +76,9 @@ final class ReplayingReactionContext implements Context {
   }
 
   @Override
-  public <Input, Output>
-  String spawn(final DirectiveTypeId<Input, Output> id, final Input input, final Task<Output> task) {
+  public <Output> String spawn(final Task<Output> task) {
     return this.memory.doOnce(() -> {
-      return this.scheduler.spawn(id, input, task);
+      return this.scheduler.spawn(task);
     });
   }
 

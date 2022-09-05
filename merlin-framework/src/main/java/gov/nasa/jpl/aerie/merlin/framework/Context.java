@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
@@ -36,7 +35,7 @@ public interface Context {
   interface TaskFactory<Return> { Task<Return> create(ExecutorService executor); }
 
   <Return> String spawn(TaskFactory<Return> task);
-  <Input, Output> String spawn(DirectiveTypeId<Input, Output> id, Input activity, Task<Output> task);
+  <Output> String spawn(Task<Output> task);
 
   void delay(Duration duration);
   void waitFor(String id);

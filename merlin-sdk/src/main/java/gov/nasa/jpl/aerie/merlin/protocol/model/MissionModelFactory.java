@@ -9,5 +9,5 @@ public interface MissionModelFactory<Registry, Config, Model> {
 
   ConfigurationType<Config> getConfigurationType();
 
-  Model instantiate(Registry registry, Instant planStart, Config configuration, Initializer builder);
+  Model instantiate(Instant planStart, Config configuration, Initializer builder);
 }

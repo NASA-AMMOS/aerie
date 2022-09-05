@@ -10,7 +10,6 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
@@ -716,22 +715,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public <Return> String spawn(final Task<Return> state) {
-      final var task = TaskId.generate();
-      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state));
-      SimulationEngine.this.taskParent.put(task, this.activeTask);
-      SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
-      this.frame.signal(JobId.forTask(task));
-
-      return task.id();
-    }
-
-    @Override
-    public <Input, Output> String spawn(
-        final DirectiveTypeId<Input, Output> rawDirectiveTypeId,
-        final Input input,
-        final Task<Output> state)
-    {
+    public <Output> String spawn(final Task<Output> state) {
       final var task = TaskId.generate();
       SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state));
       SimulationEngine.this.taskParent.put(task, this.activeTask);

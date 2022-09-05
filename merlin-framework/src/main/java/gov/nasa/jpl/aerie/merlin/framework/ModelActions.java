@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -58,9 +57,8 @@ public /*non-final*/ class ModelActions {
     return context.get().spawn(task);
   }
 
-  public static <Input, Output>
-  String spawn(final DirectiveTypeId<Input, Output> id, final Input activity, final Task<Output> task) {
-    return context.get().spawn(id, activity, task);
+  public static <Output> String spawn(final Task<Output> task) {
+    return context.get().spawn(task);
   }
 
   public static void call(final Runnable task) {
@@ -83,8 +81,8 @@ public /*non-final*/ class ModelActions {
     return spawn(replaying(() -> { delay(duration); spawn(task); }));
   }
 
-  public static <Input, Output> String defer(final Duration duration, final DirectiveTypeId<Input, Output> id, final Input activity, final Task<Output> task) {
-    return spawn(replaying(() -> { delay(duration); spawn(id, activity, task); }));
+  public static <Output> String defer(final Duration duration, final Task<Output> task) {
+    return spawn(replaying(() -> { delay(duration); spawn(task); }));
   }
 
   public static String defer(final long quantity, final Duration unit, final Runnable task) {
@@ -95,8 +93,8 @@ public /*non-final*/ class ModelActions {
     return spawn(replaying(() -> { delay(quantity, unit); spawn(task); }));
   }
 
-  public static <Input, Output> String defer(final long quantity, final Duration unit, final DirectiveTypeId<Input, Output> id, final Input activity, final Task<Output> task) {
-    return spawn(replaying(() -> { delay(quantity, unit); spawn(id, activity, task); }));
+  public static <Output> String defer(final long quantity, final Duration unit, final Task<Output> task) {
+    return spawn(replaying(() -> { delay(quantity, unit); spawn(task); }));
   }
 
 

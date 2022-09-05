@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
@@ -29,16 +28,7 @@ public final class ThreadedTaskTest {
       }
 
       @Override
-      public <Return> String spawn(final Task<Return> task) {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public <Input, Output> String spawn(
-          final DirectiveTypeId<Input, Output> directiveType,
-          final Input input,
-          final Task<Output> task)
-      {
+      public <Output> String spawn(final Task<Output> task) {
         throw new UnsupportedOperationException();
       }
     };
