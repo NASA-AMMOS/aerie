@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -977,7 +977,7 @@ public class SchedulingIntegrationTests {
         Path.of(jarPath),
         "",
         "");
-    final Map<String, ? extends TaskSpecType<?, ?, ?>> taskSpecTypes = missionModel.getDirectiveTypes().taskSpecTypes();
+    final Map<String, ? extends DirectiveType<?, ?, ?>> taskSpecTypes = missionModel.getDirectiveTypes().taskSpecTypes();
     final var activityTypes = new ArrayList<MissionModelService.ActivityType>();
     for (final var entry : taskSpecTypes.entrySet()) {
       final var activityTypeName = entry.getKey();

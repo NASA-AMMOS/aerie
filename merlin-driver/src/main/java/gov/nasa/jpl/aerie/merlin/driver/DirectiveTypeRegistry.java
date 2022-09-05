@@ -1,13 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeRegistrar;
+import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public record DirectiveTypeRegistry<Model>(Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes) {
+public record DirectiveTypeRegistry<Model>(Map<String, DirectiveType<Model, ?, ?>> taskSpecTypes) {
   public static <Model>
   DirectiveTypeRegistry<Model> extract(final MissionModelFactory<?, Model> factory) {
     final var builder = new Builder<Model>();
@@ -16,15 +16,15 @@ public record DirectiveTypeRegistry<Model>(Map<String, TaskSpecType<Model, ?, ?>
   }
 
   private static final class Builder<Model> implements DirectiveTypeRegistrar<Model> {
-    private final Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes = new HashMap<>();
+    private final Map<String, DirectiveType<Model, ?, ?>> taskSpecTypes = new HashMap<>();
 
     @Override
     public <Input, Output> void registerDirectiveType(
         final String name,
-        final TaskSpecType<Model, Input, Output> taskSpecType)
+        final DirectiveType<Model, Input, Output> directiveType)
     {
       // TODO: Throw an exception if this name already has already been registered.
-      this.taskSpecTypes.put(name, taskSpecType);
+      this.taskSpecTypes.put(name, directiveType);
     }
   }
 }

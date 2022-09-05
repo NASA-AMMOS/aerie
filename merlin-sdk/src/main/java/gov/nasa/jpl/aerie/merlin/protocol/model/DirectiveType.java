@@ -9,17 +9,17 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import java.util.List;
 import java.util.Map;
 
-public interface TaskSpecType<Model, Specification, Return> {
+public interface DirectiveType<Model, Directive, Return> {
   List<Parameter> getParameters();
   List<String> getRequiredParameters();
 
-  Specification instantiate(Map<String, SerializedValue> arguments)
+  Directive instantiate(Map<String, SerializedValue> arguments)
   throws InstantiationException;
 
-  Map<String, SerializedValue> getArguments(Specification taskSpec);
-  List<ValidationNotice> getValidationFailures(Specification taskSpec);
+  Map<String, SerializedValue> getArguments(Directive directive);
+  List<ValidationNotice> getValidationFailures(Directive directive);
 
-  Task<Return> createTask(Model model, Specification taskSpec);
+  Task<Return> createTask(Model model, Directive directive);
   ValueSchema getReturnValueSchema();
   SerializedValue serializeReturnValue(Return returnValue);
 
@@ -35,8 +35,8 @@ public interface TaskSpecType<Model, Specification, Return> {
     return this.createTask(model, this.instantiate(arguments));
   }
 
-  final class UnconstructableTaskSpecException extends Exception {
-    public UnconstructableTaskSpecException(final String message) {
+  final class UnconstructableDirectiveException extends Exception {
+    public UnconstructableDirectiveException(final String message) {
       super(message);
     }
   }

@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -177,7 +177,7 @@ public class SimulationFacade {
 
     try {
       driver.simulateActivity(serializedActivity, activity.getStartTime(), activityIdSim);
-    } catch (TaskSpecType.UnconstructableTaskSpecException | InstantiationException e) {
+    } catch (DirectiveType.UnconstructableDirectiveException | InstantiationException e) {
       throw new SimulationException("Failed to simulate " + activity + ", possibly because it has invalid arguments", e);
     }
     insertedActivities.put(activity, serializedActivity);

@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.simulation;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.SimulationUtility;
@@ -25,8 +25,7 @@ public class IncrementalSimulationTest {
   Duration endOfLastAct;
 
   @BeforeEach
-  public void init() throws TaskSpecType.UnconstructableTaskSpecException, InstantiationException
-  {
+  public void init() throws DirectiveType.UnconstructableDirectiveException, InstantiationException {
     final var acts = getActivities();
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     incrementalSimulationDriver = new IncrementalSimulationDriver<>(fooMissionModel);
@@ -79,8 +78,7 @@ public class IncrementalSimulationTest {
   }
 
   @Test
-  public void testThreadsReleased() throws TaskSpecType.UnconstructableTaskSpecException, InstantiationException
-  {
+  public void testThreadsReleased() throws DirectiveType.UnconstructableDirectiveException, InstantiationException {
     final var activity = new TestSimulatedActivity(
         Duration.of(0, SECONDS),
         new SerializedActivity("BasicActivity", Map.of()),

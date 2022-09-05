@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.framework.Scoping;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeRegistrar;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 
 import java.util.function.Function;
 
@@ -24,7 +24,7 @@ public final class MerlinTestContext<UNUSED, Model> {
     this.scoping = scope.apply(new DirectiveTypeRegistrar<>() {
       @Override
       public <Input, Output>
-      void registerDirectiveType(final String name, final TaskSpecType<RootModel<Model>, Input, Output> taskSpecType) {
+      void registerDirectiveType(final String name, final DirectiveType<RootModel<Model>, Input, Output> directiveType) {
       }
     });
   }
