@@ -23,6 +23,18 @@ public interface TaskSpecType<Model, Specification, Return> {
   ValueSchema getReturnValueSchema();
   SerializedValue serializeReturnValue(Return returnValue);
 
+  /**
+   * This method must behave as though implemented as:
+   * {@snippet :
+   * return this.createTask(model, this.instantiate(arguments));
+   * }
+   */
+  default Task<Return> createTask(final Model model, final Map<String, SerializedValue> arguments)
+  throws InstantiationException
+  {
+    return this.createTask(model, this.instantiate(arguments));
+  }
+
   final class UnconstructableTaskSpecException extends Exception {
     public UnconstructableTaskSpecException(final String message) {
       super(message);

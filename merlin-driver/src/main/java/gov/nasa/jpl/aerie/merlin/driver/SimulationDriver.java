@@ -1,13 +1,11 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.driver.engine.Directive;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -56,16 +54,15 @@ public final class SimulationDriver {
         final var startOffset = entry.getValue().getLeft();
         final var serializedDirective = entry.getValue().getRight();
 
-        final Directive<Model, ?, ?> directive;
+        final Task<?> task;
         try {
-          directive = missionModel.instantiateDirective(serializedDirective);
-        } catch (final TaskSpecType.UnconstructableTaskSpecException | InstantiationException ex) {
+          task = missionModel.createTask(serializedDirective);
+        } catch (final InstantiationException ex) {
           // All activity instantiations are assumed to be validated by this point
           throw new Error("Unexpected state: activity instantiation %s failed with: %s"
               .formatted(serializedDirective.getTypeName(), ex.toString()));
         }
 
-        final var task = directive.createTask(missionModel.getModel());
         final var taskId = engine.scheduleTask(startOffset, emitAndThen(directiveId, activityTopic, task));
       }
 

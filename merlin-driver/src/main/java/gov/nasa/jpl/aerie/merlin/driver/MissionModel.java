@@ -1,13 +1,11 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.driver.engine.Directive;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -59,10 +57,11 @@ public final class MissionModel<Model> {
     return this.directiveTypes;
   }
 
-  public Directive<Model, ?, ?> instantiateDirective(final SerializedActivity specification)
-  throws TaskSpecType.UnconstructableTaskSpecException, InstantiationException
-  {
-    return Directive.instantiate(this.directiveTypes.taskSpecTypes().get(specification.getTypeName()), specification);
+  public Task<?> createTask(final SerializedActivity specification) throws InstantiationException {
+    return this.directiveTypes
+        .taskSpecTypes()
+        .get(specification.getTypeName())
+        .createTask(this.model, specification.getArguments());
   }
 
   public Task<Unit> getDaemon() {

@@ -189,8 +189,7 @@ public class IncrementalSimulationDriver<Model> {
       final var startOffset = entry.getValue().getLeft();
       final var serializedDirective = entry.getValue().getRight();
 
-      final var directive = missionModel.instantiateDirective(serializedDirective);
-      final var task = directive.createTask(missionModel.getModel());
+      final var task = missionModel.createTask(serializedDirective);
       final var taskId = engine.scheduleTask(startOffset, emitAndThen(directiveId, this.activityTopic, task));
 
       plannedDirectiveToTask.put(directiveId,taskId);
