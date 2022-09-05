@@ -25,7 +25,7 @@ public final class MissionModel<Model> {
   private final LiveCells initialCells;
   private final Map<String, Resource<?>> resources;
   private final List<SerializableTopic<?>> topics;
-  private final DirectiveTypeRegistry<?, Model> directiveTypes;
+  private final DirectiveTypeRegistry<Model> directiveTypes;
   private final ConfigurationType<?> configurationType;
   private final List<Initializer.TaskFactory<?>> daemons;
 
@@ -36,7 +36,7 @@ public final class MissionModel<Model> {
       final List<SerializableTopic<?>> topics,
       final List<Initializer.TaskFactory<?>> daemons,
       final ConfigurationType<?> configurationType,
-      final DirectiveTypeRegistry<?, Model> directiveTypes)
+      final DirectiveTypeRegistry<Model> directiveTypes)
   {
     this.model = Objects.requireNonNull(model);
     this.initialCells = Objects.requireNonNull(initialCells);
@@ -55,7 +55,7 @@ public final class MissionModel<Model> {
     return this.configurationType;
   }
 
-  public DirectiveTypeRegistry<?, Model> getDirectiveTypes() {
+  public DirectiveTypeRegistry<Model> getDirectiveTypes() {
     return this.directiveTypes;
   }
 

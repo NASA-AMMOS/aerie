@@ -6,22 +6,13 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
-public record DirectiveTypeRegistry<Registry, Model>(
-    Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes,
-    Registry registry)
-{
-  public static <Registry, Model>
-  DirectiveTypeRegistry<Registry, Model> extract(final MissionModelFactory<Registry, ?, Model> factory) {
-    return extract(factory::buildRegistry);
-  }
-
-  public static <Registry, Model>
-  DirectiveTypeRegistry<Registry, Model> extract(final Function<DirectiveTypeRegistrar<Model>, Registry> scope) {
+public record DirectiveTypeRegistry<Model>(Map<String, TaskSpecType<Model, ?, ?>> taskSpecTypes) {
+  public static <Model>
+  DirectiveTypeRegistry<Model> extract(final MissionModelFactory<?, Model> factory) {
     final var builder = new Builder<Model>();
-    final var registry = scope.apply(builder);
-    return new DirectiveTypeRegistry<>(builder.taskSpecTypes, registry);
+    factory.buildRegistry(builder);
+    return new DirectiveTypeRegistry<>(builder.taskSpecTypes);
   }
 
   private static final class Builder<Model> implements DirectiveTypeRegistrar<Model> {

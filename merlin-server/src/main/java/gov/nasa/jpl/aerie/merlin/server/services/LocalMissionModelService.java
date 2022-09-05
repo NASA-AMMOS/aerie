@@ -276,7 +276,7 @@ public final class LocalMissionModelService implements MissionModelService {
     this.missionModelRepository.updateActivityDirectiveValidations(directive.id(), directive.argumentsModifiedTime(), notices);
   }
 
-  private MissionModelFactory<?, ?, ?> loadMissionModelFactory(final String missionModelId)
+  private MissionModelFactory<?, ?> loadMissionModelFactory(final String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     try {

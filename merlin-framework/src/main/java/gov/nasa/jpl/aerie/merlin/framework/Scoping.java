@@ -11,8 +11,8 @@ package gov.nasa.jpl.aerie.merlin.framework;
  *   this method emulates *dynamic scoping* in combination with a `try-with-resources` method.
  * </p>
  */
-public interface Scoping<Registry, Model> {
-  Undo contextualizeModel(final RootModel<Registry, Model> model);
+public interface Scoping<Model> {
+  Undo contextualizeModel(final RootModel<Model> model);
 
   // Undos must not throw exceptions, and should be usable in try-with-resources without an Exception catch-all block.
   interface Undo extends AutoCloseable {

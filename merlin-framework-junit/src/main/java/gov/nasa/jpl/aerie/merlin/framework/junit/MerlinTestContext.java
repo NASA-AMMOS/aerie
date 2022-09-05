@@ -1,26 +1,32 @@
 package gov.nasa.jpl.aerie.merlin.framework.junit;
 
-import java.util.Map;
-import java.util.function.Function;
-
-import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.framework.Scoping;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeRegistrar;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 
-public final class MerlinTestContext<Registry extends Scoping<Registry, Model>, Model> {
+import java.util.function.Function;
+
+public final class MerlinTestContext<UNUSED, Model> {
   private final Registrar registrar;
   private Model model = null;
-  private DirectiveTypeRegistry<Registry, RootModel<Registry, Model>> activityTypes = new DirectiveTypeRegistry<>(Map.of(), null);
+  private Scoping<Model> scoping = $ -> () -> {};
 
   public MerlinTestContext(final Registrar registrar) {
     this.registrar = registrar;
   }
 
-  public void use(final Model model, final Function<DirectiveTypeRegistrar<RootModel<Registry, Model>>, Registry> scope) {
+  public void use(final Model model, final Function<DirectiveTypeRegistrar<RootModel<Model>>, ? extends Scoping<Model>> scope) {
     this.model = model;
-    this.activityTypes = DirectiveTypeRegistry.extract(scope);
+
+    // Don't bother storing the directive types -- we don't care about them! We just want the `Scoping` return value.
+    this.scoping = scope.apply(new DirectiveTypeRegistrar<>() {
+      @Override
+      public <Input, Output>
+      void registerDirectiveType(final String name, final TaskSpecType<RootModel<Model>, Input, Output> taskSpecType) {
+      }
+    });
   }
 
   public Registrar registrar() {
@@ -31,7 +37,7 @@ public final class MerlinTestContext<Registry extends Scoping<Registry, Model>, 
     return model;
   }
 
-  public DirectiveTypeRegistry<Registry, RootModel<Registry, Model>> activityTypes() {
-    return activityTypes;
+  public Scoping<Model> scoping() {
+    return scoping;
   }
 }

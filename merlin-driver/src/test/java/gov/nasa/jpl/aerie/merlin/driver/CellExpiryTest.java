@@ -134,6 +134,6 @@ public final class CellExpiryTest {
     return initializer.build(
         ref,
         new EmptyConfigurationType(),
-        new DirectiveTypeRegistry<>(Map.of(), Map.of()));
+        new DirectiveTypeRegistry<>(Map.of()));
   }
 }

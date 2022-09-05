@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 public final class MissionModelTest {
 
-  private DirectiveTypeRegistry<?, ?> registry;
+  private DirectiveTypeRegistry<?> registry;
 
   @BeforeEach
   public void initialize() {
