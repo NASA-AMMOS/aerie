@@ -1,12 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.framework.junit;
 
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
-import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.framework.Scoping;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeRegistrar;
-import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 public final class MerlinTestContext<UNUSED, Model> {
   private final Registrar registrar;
@@ -17,16 +14,9 @@ public final class MerlinTestContext<UNUSED, Model> {
     this.registrar = registrar;
   }
 
-  public void use(final Model model, final Function<DirectiveTypeRegistrar<RootModel<Model>>, ? extends Scoping<Model>> scope) {
+  public void use(final Model model, final Supplier<? extends Scoping<Model>> scope) {
     this.model = model;
-
-    // Don't bother storing the directive types -- we don't care about them! We just want the `Scoping` return value.
-    this.scoping = scope.apply(new DirectiveTypeRegistrar<>() {
-      @Override
-      public <Input, Output>
-      void registerDirectiveType(final String name, final DirectiveType<RootModel<Model>, Input, Output> directiveType) {
-      }
-    });
+    this.scoping = scope.get();
   }
 
   public Registrar registrar() {

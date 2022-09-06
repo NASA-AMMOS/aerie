@@ -10,7 +10,10 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.TypeVariableName;
+import com.squareup.javapoet.WildcardTypeName;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.RecordValueMapper;
+import gov.nasa.jpl.aerie.merlin.framework.ActivityMapper;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
@@ -156,21 +159,24 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         ClassName.get(missionModel.topLevelModel))))
             .addMethod(
                 MethodSpec
-                    .methodBuilder("buildRegistry")
+                    .methodBuilder("getDirectiveTypes")
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
-                    .addParameter(
+                    .returns(
                         ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeRegistrar.class),
+                            ClassName.get(Map.class),
+                            ClassName.get(String.class),
                             ParameterizedTypeName.get(
-                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                                ClassName.get(missionModel.topLevelModel))),
-                        "registrar",
-                        Modifier.FINAL)
+                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper.class),
+                                ParameterizedTypeName.get(
+                                    ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                                    ClassName.get(missionModel.topLevelModel)),
+                                WildcardTypeName.subtypeOf(Object.class),
+                                WildcardTypeName.subtypeOf(Object.class))))
                     .addStatement(
-                        "$T.register($L)",
+                        "return $T.$L",
                         missionModel.getTypesName(),
-                        "registrar")
+                        "directiveTypes")
                     .build())
             .addMethod(
                 MethodSpec
@@ -493,33 +499,42 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         .initializer("new $T()", activityType.mapper().name)
                         .build())
                     .toList())
+            .addField(
+                FieldSpec
+                    .builder(
+                        ParameterizedTypeName.get(
+                            ClassName.get(Map.class),
+                            ClassName.get(String.class),
+                            ParameterizedTypeName.get(
+                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper.class),
+                                ParameterizedTypeName.get(
+                                    ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                                    ClassName.get(missionModel.topLevelModel)),
+                                WildcardTypeName.subtypeOf(Object.class),
+                                WildcardTypeName.subtypeOf(Object.class))),
+                        "directiveTypes",
+                        Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                    .initializer(
+                        "$T.ofEntries($>$>$L$<$<)",
+                        ClassName.get(Map.class),
+                        missionModel.activityTypes
+                            .stream()
+                            .map(activityType -> CodeBlock
+                                .builder()
+                                .add(
+                                    "\n$T.entry($S, $L)",
+                                    ClassName.get(Map.class),
+                                    activityType.name(),
+                                    activityType.mapper().name.canonicalName().replace(".", "_")))
+                            .reduce((x, y) -> x.add(",").add(y.build()))
+                            .orElse(CodeBlock.builder())
+                            .build())
+                    .build())
             .addMethod(
                 MethodSpec
                     .methodBuilder("register")
                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                    .addParameter(
-                        ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeRegistrar.class),
-                            ParameterizedTypeName.get(
-                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                                ClassName.get(missionModel.topLevelModel))),
-                        "registrar",
-                        Modifier.FINAL)
                     .returns(missionModel.getTypesName())
-                    .addCode(missionModel.activityTypes
-                        .stream()
-                        .map(activityType -> CodeBlock
-                            .builder()
-                            .addStatement(
-                                "$L.registerDirectiveType($S, $T.$L)",
-                                "registrar",
-                                activityType.name(),
-                                typeName,
-                                activityType.mapper().name.canonicalName().replace(".", "_")))
-                        .reduce((x, y) -> x.add(y.build()))
-                        .orElse(CodeBlock.builder())
-                        .build())
-                    .addCode("\n")
                     .addStatement("return new $T()", missionModel.getTypesName())
                     .build())
             .addMethod(
@@ -527,42 +542,10 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .methodBuilder("registerTopics")
                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                     .addParameter(TypeName.get(Initializer.class), "initializer", Modifier.FINAL)
-                    .addCode(
-                        missionModel.activityTypes
-                            .stream()
-                            .map(activityType ->
-                                     CodeBlock
-                                         .builder()
-                                         .addStatement(
-                                           """
-                                             $L.topic(
-                                             "ActivityType.Input." + $S,
-                                             $L.getInputTopic(),
-                                             $T.ofStruct($L.getParameters().stream().collect($T.toMap($$ -> $$.name(), $$ -> $$.schema()))),
-                                             $$ -> $T.of($L.getArguments($$)))""",
-                                           "initializer",
-                                           activityType.name(),
-                                           activityType.mapper().name.canonicalName().replace(".", "_"),
-                                           ValueSchema.class,
-                                           activityType.mapper().name.canonicalName().replace(".", "_"),
-                                           Collectors.class,
-                                           SerializedValue.class,
-                                           activityType.mapper().name.canonicalName().replace(".", "_"))
-                                         .addStatement(
-                                           """
-                                             $L.topic(
-                                             "ActivityType.Output." + $S,
-                                             $L.getOutputTopic(),
-                                             $L.getReturnValueSchema(),
-                                             $L::serializeReturnValue)""",
-                                           "initializer",
-                                           activityType.name(),
-                                           activityType.mapper().name.canonicalName().replace(".", "_"),
-                                           activityType.mapper().name.canonicalName().replace(".", "_"),
-                                           activityType.mapper().name.canonicalName().replace(".", "_")))
-                            .reduce((x, y) -> x.add("\n").add(y.build()))
-                            .orElse(CodeBlock.builder())
-                            .build())
+                    .addStatement(
+                        "$L.forEach((name, mapper) -> registerDirectiveType($L, name, mapper))",
+                        "directiveTypes",
+                        "initializer")
                     .build())
             .addMethod(
                 MethodSpec
@@ -570,8 +553,8 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addModifiers(Modifier.PUBLIC)
                     .addParameter(
                         ParameterizedTypeName.get(
-                                ClassName.get(RootModel.class),
-                                ClassName.get(missionModel.topLevelModel)),
+                            ClassName.get(RootModel.class),
+                            ClassName.get(missionModel.topLevelModel)),
                         "model",
                         Modifier.FINAL)
                     .returns(Scoping.Undo.class)
@@ -580,6 +563,45 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         missionModel.getActivityActionsName(),
                         "model")
                     .build())
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("registerDirectiveType")
+                    .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
+                    .addTypeVariable(TypeVariableName.get("Input"))
+                    .addTypeVariable(TypeVariableName.get("Output"))
+                    .addParameter(ClassName.get(Initializer.class), "initializer", Modifier.FINAL)
+                    .addParameter(ClassName.get(String.class), "name", Modifier.FINAL)
+                    .addParameter(
+                        ParameterizedTypeName.get(
+                            ClassName.get(ActivityMapper.class),
+                            ParameterizedTypeName.get(
+                                ClassName.get(RootModel.class),
+                                ClassName.get(missionModel.topLevelModel)),
+                            TypeVariableName.get("Input"),
+                            TypeVariableName.get("Output")),
+                        "mapper",
+                        Modifier.FINAL)
+                    .addStatement(
+                        "$L.topic(\n$L,\n$L,\n$L,\n$L)",
+                        "initializer",
+                        CodeBlock.of("$S + $L", "ActivityType.Input.", "name"),
+                        CodeBlock.of("$L.getInputTopic()", "mapper"),
+                        CodeBlock.of(
+                            "$T.ofStruct($L.getParameters().stream().collect($T.toMap($$ -> $$.name(), $$ -> $$.schema())))",
+                            ValueSchema.class,
+                            "mapper",
+                            Collectors.class),
+                        CodeBlock.of("$$ -> $T.of($L.getArguments($$))", SerializedValue.class, "mapper"))
+                    .addCode("\n")
+                    .addStatement(
+                        "$L.topic(\n$L,\n$L,\n$L,\n$L)",
+                        "initializer",
+                        CodeBlock.of("$S + $L", "ActivityType.Output.", "name"),
+                        CodeBlock.of("$L.getOutputTopic()", "mapper"),
+                        CodeBlock.of("$L.getReturnValueSchema()", "mapper"),
+                        CodeBlock.of("$L::serializeReturnValue", "mapper"))
+                    .build()
+            )
             .build();
 
     return JavaFile
