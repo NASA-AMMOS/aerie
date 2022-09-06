@@ -529,6 +529,14 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                 MethodSpec
                     .methodBuilder("register")
                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                    .addAnnotation(
+                        AnnotationSpec
+                            .builder(Deprecated.class)
+                            .addMember("forRemoval", CodeBlock.of("true"))
+                            .build())
+                    .addJavadoc(
+                        "@deprecated This method has no effect, and simply returns $T.model.",
+                        missionModel.getFactoryName())
                     .returns(
                         ParameterizedTypeName.get(
                             ClassName.get(Scoped.class),

@@ -15,9 +15,20 @@ public final class MerlinTestContext<UNUSED, Model> {
     this.registrar = registrar;
   }
 
+  /**
+   * @deprecated
+   *   If you previously passed {@code ActivityTypes::register} to this method,
+   *   pass {@code GeneratedMissionModelFactory.model} instead.
+   */
+  @Deprecated(forRemoval = true)
   public void use(final Model model, final Supplier<? extends Scoped<RootModel<Model>>> scope) {
     this.model = model;
     this.scoping = scope.get();
+  }
+
+  public void use(final Model model, final Scoped<RootModel<Model>> scope) {
+    this.model = model;
+    this.scoping = scope;
   }
 
   public Registrar registrar() {

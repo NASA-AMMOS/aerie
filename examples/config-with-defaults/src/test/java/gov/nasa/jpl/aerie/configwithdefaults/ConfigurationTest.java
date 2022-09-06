@@ -2,9 +2,9 @@ package gov.nasa.jpl.aerie.configwithdefaults;
 
 import gov.nasa.jpl.aerie.configwithdefaults.generated.ActivityTypes;
 import gov.nasa.jpl.aerie.configwithdefaults.generated.ConfigurationMapper;
+import gov.nasa.jpl.aerie.configwithdefaults.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinTestContext;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -24,13 +24,13 @@ public final class ConfigurationTest {
   private final Mission model;
 
   public ConfigurationTest(final MerlinTestContext<ActivityTypes, Mission> ctx)
-  throws ConfigurationType.UnconstructableConfigurationException, InstantiationException
+  throws InstantiationException
   {
     // Rely on config. defaults by instantiating config. with empty argument map
     final var config = new ConfigurationMapper().instantiate(Map.of());
 
     this.model = new Mission(ctx.registrar(), config);
-    ctx.use(model, ActivityTypes::register);
+    ctx.use(model, GeneratedMissionModelFactory.model);
   }
 
   @Test
