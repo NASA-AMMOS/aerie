@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"gov.nasa.jpl.aerie.merlin.protocol"},{"l":"gov.nasa.jpl.aerie.merlin.protocol.driver"},{"l":"gov.nasa.jpl.aerie.merlin.protocol.model"},{"l":"gov.nasa.jpl.aerie.merlin.protocol.types"},{"l":"gov.nasa.jpl.aerie.spice"}];updateSearchResults();
