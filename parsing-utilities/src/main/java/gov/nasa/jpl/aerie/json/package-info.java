@@ -101,7 +101,7 @@
  * which specifies a JSON object whose fields are described by other parsers -- rather than using {@code integerExprP}
  * directly. There are two reasons for this! First, we want parsers to be "productive", which means that they should
  * consume some part of the input before descending into a subparser. This is not always a hard-and-fast rule, but since
- * our grammar is recursive, we <i>>must</i make progress on the input before cycling back to the same point in the
+ * our grammar is recursive, we <i>must</i> make progress on the input before cycling back to the same point in the
  * grammar. Otherwise, we will have an infinite loop on our hands! </p>
  *
  * <p> The other reason not to use `integerExprP` directly is because the operators described by these parsers are
