@@ -10,7 +10,6 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
@@ -18,6 +17,7 @@ import gov.nasa.jpl.aerie.merlin.framework.Scoping;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.processor.MissionModelProcessor;
 import gov.nasa.jpl.aerie.merlin.processor.Resolver;
+import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ConfigurationTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
@@ -812,7 +812,10 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
       }
       computedAttributesTypeName = TypeName.get(typeMirror.get());
     } else {
-      effectModelReturnMapperBlock = Optional.of(CodeBlock.of("new $T($T.class)", EnumValueMapper.class, Unit.class));
+      effectModelReturnMapperBlock = new Resolver(
+          this.typeUtils, this.elementUtils, missionModel.typeRules).applyRules(
+          new TypePattern.ClassPattern(ClassName.get(ValueMapper.class),
+                                       List.of(new TypePattern.ClassPattern(ClassName.get(Unit.class), List.of()))));
       computedAttributesTypeName = TypeName.get(Unit.class);
     }
     return Optional.of(new ComputedAttributesCodeBlocks(
