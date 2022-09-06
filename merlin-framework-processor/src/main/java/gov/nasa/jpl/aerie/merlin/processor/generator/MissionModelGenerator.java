@@ -17,7 +17,6 @@ import gov.nasa.jpl.aerie.merlin.framework.ActivityMapper;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
-import gov.nasa.jpl.aerie.merlin.framework.Scoping;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.processor.MissionModelProcessor;
 import gov.nasa.jpl.aerie.merlin.processor.Resolver;
@@ -484,10 +483,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
                     .build())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-            .addSuperinterface(
-                ParameterizedTypeName.get(
-                    ClassName.get(Scoping.class),
-                    ClassName.get(missionModel.topLevelModel)))
             .addFields(
                 missionModel.activityTypes
                     .stream()
@@ -534,8 +529,13 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                 MethodSpec
                     .methodBuilder("register")
                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                    .returns(missionModel.getTypesName())
-                    .addStatement("return new $T()", missionModel.getTypesName())
+                    .returns(
+                        ParameterizedTypeName.get(
+                            ClassName.get(Scoped.class),
+                            ParameterizedTypeName.get(
+                                ClassName.get(RootModel.class),
+                                ClassName.get(missionModel.topLevelModel))))
+                    .addStatement("return $T.model", missionModel.getActivityActionsName())
                     .build())
             .addMethod(
                 MethodSpec
@@ -546,22 +546,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         "$L.forEach((name, mapper) -> registerDirectiveType($L, name, mapper))",
                         "directiveTypes",
                         "initializer")
-                    .build())
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("contextualizeModel")
-                    .addModifiers(Modifier.PUBLIC)
-                    .addParameter(
-                        ParameterizedTypeName.get(
-                            ClassName.get(RootModel.class),
-                            ClassName.get(missionModel.topLevelModel)),
-                        "model",
-                        Modifier.FINAL)
-                    .returns(Scoping.Undo.class)
-                    .addStatement(
-                        "return $T.model.set($L)::close",
-                        missionModel.getActivityActionsName(),
-                        "model")
                     .build())
             .addMethod(
                 MethodSpec
@@ -927,7 +911,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                         """
                                           return $T
                                           .$L(() -> {
-                                            try (final var restore = new $T().contextualizeModel($L)) {
+                                            try (final var restore = $T.model.set($L)) {
                                               $T.emit($L, this.$L);
                                               final var result = $L.$L($L.model());
                                               $T.emit(result, this.$L);
@@ -940,7 +924,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                           case Threaded -> "threaded";
                                           case Replaying -> "replaying";
                                         },
-                                        missionModel.getTypesName(),
+                                        missionModel.getActivityActionsName(),
                                         "model",
                                         ModelActions.class,
                                         "activity",
@@ -958,7 +942,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                         """
                                           return $T
                                           .$L(() -> {
-                                            try (final var restore = new $T().contextualizeModel($L)) {
+                                            try (final var restore = $T.model.set($L)) {
                                               $T.emit($L, this.$L);
                                               $L.$L($L.model());
                                               $T.emit($T.UNIT, this.$L);
@@ -971,7 +955,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                           case Threaded -> "threaded";
                                           case Replaying -> "replaying";
                                         },
-                                        missionModel.getTypesName(),
+                                        missionModel.getActivityActionsName(),
                                         "model",
                                         ModelActions.class,
                                         "activity",
