@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.json.BasicParsers;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
@@ -240,7 +241,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
    */
   @Override
   public MerlinPlan getPlanActivityDirectives(final PlanMetadata planMetadata, final Problem problem)
-  throws IOException, NoSuchPlanException, PlanServiceException, InvalidJsonException
+  throws IOException, NoSuchPlanException, PlanServiceException, InvalidJsonException, InvalidArgumentsException
   {
     final var merlinPlan = new MerlinPlan();
     final var request =
@@ -258,7 +259,14 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
           .mapP(new SerializedValueJsonParser())
           .parse(arguments)
           .getSuccessOrThrow((reason) -> new InvalidJsonException(new InvalidEntityException(List.of(reason))));
-      final var merlinActivity = new MerlinActivityInstance(type, Duration.of(parseGraphQLInterval(start).getDuration().toNanos() / 1000, Duration.MICROSECONDS), deserializedArguments);
+      final var effectiveArguments = problem
+          .getActivityType(type)
+          .getSpecType()
+          .getEffectiveArguments(deserializedArguments);
+      final var merlinActivity = new MerlinActivityInstance(
+          type,
+          Duration.of(parseGraphQLInterval(start).getDuration().toNanos() / 1000, Duration.MICROSECONDS),
+          effectiveArguments);
       final var actPK = new ActivityInstanceId(jsonActivity.getJsonNumber("id").longValue());
       merlinPlan.addActivity(actPK, merlinActivity);
     }
