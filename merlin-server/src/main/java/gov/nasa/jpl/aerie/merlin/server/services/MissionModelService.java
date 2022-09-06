@@ -10,7 +10,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.models.MissionModelFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 
 import java.util.List;
@@ -25,7 +24,7 @@ public interface MissionModelService {
   Map<String, Constraint> getConstraints(String missionModelId)
   throws NoSuchMissionModelException;
 
-  Map<String, ValueSchema> getStatesSchemas(String missionModelId)
+  Map<String, ValueSchema> getResourceSchemas(String missionModelId)
   throws NoSuchMissionModelException;
 
   /**
@@ -60,7 +59,7 @@ public interface MissionModelService {
          InvalidArgumentsException;
 
   SimulationResults runSimulation(CreateSimulationMessage message)
-          throws NoSuchMissionModelException, MissionModelFacade.NoSuchActivityTypeException;
+          throws NoSuchMissionModelException, MissionModelService.NoSuchActivityTypeException;
 
   void refreshModelParameters(String missionModelId) throws NoSuchMissionModelException;
   void refreshActivityTypes(String missionModelId) throws NoSuchMissionModelException;

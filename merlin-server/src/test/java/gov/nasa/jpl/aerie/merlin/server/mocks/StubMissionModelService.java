@@ -115,7 +115,7 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<String, ValueSchema> getStatesSchemas(final String missionModelId) throws NoSuchMissionModelException {
+  public Map<String, ValueSchema> getResourceSchemas(final String missionModelId) throws NoSuchMissionModelException {
     if (!Objects.equals(missionModelId, EXISTENT_MISSION_MODEL_ID)) {
       throw new NoSuchMissionModelException(missionModelId);
     }

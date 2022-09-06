@@ -1,17 +1,19 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.models.MissionModelFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 import org.slf4j.Logger;
@@ -19,8 +21,10 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Implements the missionModel service {@link MissionModelService} interface on a set of local domain objects.
@@ -52,7 +56,7 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public MissionModelJar getMissionModelById(String id) throws NoSuchMissionModelException {
+  public MissionModelJar getMissionModelById(final String id) throws NoSuchMissionModelException {
     try {
       return this.missionModelRepository.getMissionModel(id);
     } catch (MissionModelRepository.NoSuchMissionModelException ex) {
@@ -70,11 +74,19 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<String, ValueSchema> getStatesSchemas(final String missionModelId)
+  public Map<String, ValueSchema> getResourceSchemas(final String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
-    return loadConfiguredMissionModel(missionModelId).getStateSchemas();
+    final var schemas = new HashMap<String, ValueSchema>();
+
+    for (final var entry : loadAndInstantiateMissionModel(missionModelId).getResources().entrySet()) {
+      final var name = entry.getKey();
+      final var resource = entry.getValue();
+      schemas.put(name, resource.getSchema());
+    }
+
+    return schemas;
   }
 
   /**
@@ -111,12 +123,12 @@ public final class LocalMissionModelService implements MissionModelService {
   public List<String> validateActivityArguments(final String missionModelId, final SerializedActivity activity)
   throws NoSuchMissionModelException, MissionModelLoadException, InvalidArgumentsException
   {
-    try {
-      // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
-      return this.loadConfiguredMissionModel(missionModelId).validateActivity(activity);
-    } catch (final MissionModelFacade.NoSuchActivityTypeException ex) {
-      return List.of("unknown activity type");
-    }
+    // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
+    final var factory = this.loadMissionModelFactory(missionModelId);
+    final var registry = DirectiveTypeRegistry.extract(factory);
+    final var specType = registry.taskSpecTypes().get(activity.getTypeName());
+    if (specType == null) return List.of("unknown activity type");
+    return specType.validateArguments(activity.getArguments());
   }
 
   /**
@@ -130,7 +142,19 @@ public final class LocalMissionModelService implements MissionModelService {
   public Map<ActivityInstanceId, String> validateActivityInstantiations(final String missionModelId, final Map<ActivityInstanceId, SerializedActivity> activities)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
-    return this.loadConfiguredMissionModel(missionModelId).validateActivityInstantiations(activities);
+    final var failures = new HashMap<ActivityInstanceId, String>();
+
+    for (final var entry : activities.entrySet()) {
+      final var id = entry.getKey();
+      final var act = entry.getValue();
+      try {
+        this.getActivityEffectiveArguments(missionModelId, act); // The return value is intentionally ignored - we are only interested in failures
+      } catch (final MissionModelService.NoSuchActivityTypeException | InvalidArgumentsException e) {
+        failures.put(id, e.toString());
+      }
+    }
+
+    return failures;
   }
 
   @Override
@@ -140,12 +164,12 @@ public final class LocalMissionModelService implements MissionModelService {
          MissionModelLoadException,
          InvalidArgumentsException
   {
-    try {
-      return this.loadConfiguredMissionModel(missionModelId)
-                 .getActivityEffectiveArguments(activity.getTypeName(), activity.getArguments());
-    } catch (final MissionModelFacade.NoSuchActivityTypeException ex) {
-      throw new NoSuchActivityTypeException(activity.getTypeName(), ex);
-    }
+    final var factory = this.loadMissionModelFactory(missionModelId);
+    final var registry = DirectiveTypeRegistry.extract(factory);
+    final var specType = Optional
+        .ofNullable(registry.taskSpecTypes().get(activity.getTypeName()))
+        .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(activity.getTypeName()));
+    return specType.getEffectiveArguments(activity.getArguments());
   }
 
   @Override
@@ -154,15 +178,16 @@ public final class LocalMissionModelService implements MissionModelService {
          MissionModelLoadException,
          InvalidArgumentsException
   {
-    return this.loadConfiguredMissionModel(missionModelId)
-               .validateConfiguration(arguments);
+    return this.loadMissionModelFactory(missionModelId)
+        .getConfigurationType()
+        .validateArguments(arguments);
   }
 
   @Override
   public List<Parameter> getModelParameters(final String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
-    return loadUnconfiguredMissionModel(missionModelId).getParameters();
+    return this.loadMissionModelFactory(missionModelId).getConfigurationType().getParameters();
   }
 
   @Override
@@ -171,9 +196,10 @@ public final class LocalMissionModelService implements MissionModelService {
          MissionModelLoadException,
          InvalidArgumentsException
   {
-    return this.loadConfiguredMissionModel(missionModelId)
-               .getEffectiveArguments(arguments);
-}
+    return this.loadMissionModelFactory(missionModelId)
+        .getConfigurationType()
+        .getEffectiveArguments(arguments);
+  }
 
   /**
    * Validate that a set of activity parameters conforms to the expectations of a named mission model.
@@ -193,8 +219,11 @@ public final class LocalMissionModelService implements MissionModelService {
     }
 
     // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
-    return loadConfiguredMissionModel(message.missionModelId(), message.startTime(), SerializedValue.of(config))
-        .simulate(message.activityInstances(), message.samplingDuration(), message.startTime());
+    return SimulationDriver.simulate(
+        loadAndInstantiateMissionModel(message.missionModelId(), message.startTime(), SerializedValue.of(config)),
+        message.activityInstances(),
+        message.startTime(),
+        message.samplingDuration());
   }
 
   @Override
@@ -213,23 +242,25 @@ public final class LocalMissionModelService implements MissionModelService {
   throws NoSuchMissionModelException
   {
     try {
-      final var activityTypes =
-          loadUnconfiguredMissionModel(missionModelId)
-              .getActivityTypes();
+      final var activityTypes1 = new HashMap<String, ActivityType>();
+      final var factory = this.loadMissionModelFactory(missionModelId);
+      final var registry = DirectiveTypeRegistry.extract(factory);
+      registry.taskSpecTypes().forEach((name, specType) -> {
+        activityTypes1.put(name, new ActivityType(name, specType.getParameters(), specType.getRequiredParameters(), specType.getReturnValueSchema()));
+      });
+      final var activityTypes = (Map<String, ActivityType>) activityTypes1;
       this.missionModelRepository.updateActivityTypes(missionModelId, activityTypes);
     } catch (final MissionModelRepository.NoSuchMissionModelException ex) {
       throw new NoSuchMissionModelException(missionModelId, ex);
     }
   }
 
-  private MissionModelFacade.Unconfigured<?> loadUnconfiguredMissionModel(final String missionModelId)
+  private MissionModelFactory<?, ?, ?> loadMissionModelFactory(final String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     try {
       final var missionModelJar = this.missionModelRepository.getMissionModel(missionModelId);
-      final var missionModel =
-          MissionModelLoader.loadMissionModelFactory(missionModelDataPath.resolve(missionModelJar.path), missionModelJar.name, missionModelJar.version);
-      return new MissionModelFacade.Unconfigured<>(missionModel);
+      return MissionModelLoader.loadMissionModelFactory(missionModelDataPath.resolve(missionModelJar.path), missionModelJar.name, missionModelJar.version);
     } catch (final MissionModelRepository.NoSuchMissionModelException ex) {
       throw new NoSuchMissionModelException(missionModelId, ex);
     } catch (final MissionModelLoader.MissionModelLoadException ex) {
@@ -238,32 +269,31 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   /**
-   * Load an {@link MissionModel} from the mission model repository using the mission model's default mission model configuration,
-   * and wrap it in an {@link MissionModelFacade} domain object.
+   * Load a {@link MissionModel} from the mission model repository using the mission model's default mission model configuration
    *
    * @param missionModelId The ID of the mission model in the mission model repository to load.
-   * @return An {@link MissionModelFacade} domain object allowing use of the loaded mission model.
+   * @return A {@link MissionModel} domain object allowing use of the loaded mission model.
    * @throws MissionModelLoadException If the mission model cannot be loaded -- the JAR may be invalid, or the mission model
    * it contains may not abide by the expected contract at load time.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
-  private MissionModelFacade loadConfiguredMissionModel(final String missionModelId)
+  private MissionModel<?> loadAndInstantiateMissionModel(final String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
-    return loadConfiguredMissionModel(missionModelId, untruePlanStart, SerializedValue.of(Map.of()));
+    return loadAndInstantiateMissionModel(missionModelId, untruePlanStart, SerializedValue.of(Map.of()));
   }
 
   /**
-   * Load an {@link MissionModel} from the mission model repository, and wrap it in an {@link MissionModelFacade} domain object.
+   * Load a {@link MissionModel} from the mission model repository.
    *
    * @param missionModelId The ID of the mission model in the mission model repository to load.
    * @param configuration The mission model configuration to load the mission model with.
-   * @return An {@link MissionModelFacade} domain object allowing use of the loaded mission model.
+   * @return A {@link MissionModel} domain object allowing use of the loaded mission model.
    * @throws MissionModelLoadException If the mission model cannot be loaded -- the JAR may be invalid, or the mission model
    * it contains may not abide by the expected contract at load time.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
-  private MissionModelFacade loadConfiguredMissionModel(
+  private MissionModel<?> loadAndInstantiateMissionModel(
       final String missionModelId,
       final Instant planStart,
       final SerializedValue configuration)
@@ -271,13 +301,12 @@ public final class LocalMissionModelService implements MissionModelService {
   {
     try {
       final var missionModelJar = this.missionModelRepository.getMissionModel(missionModelId);
-      final var missionModel = MissionModelLoader.loadMissionModel(
+      return MissionModelLoader.loadMissionModel(
           planStart,
           configuration,
           missionModelDataPath.resolve(missionModelJar.path),
           missionModelJar.name,
           missionModelJar.version);
-      return new MissionModelFacade(missionModel);
     } catch (final MissionModelRepository.NoSuchMissionModelException ex) {
       throw new NoSuchMissionModelException(missionModelId, ex);
     } catch (final MissionModelLoader.MissionModelLoadException ex) {

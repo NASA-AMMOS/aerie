@@ -1,45 +1,34 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
-import gov.nasa.jpl.aerie.foomissionmodel.Configuration;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 public final class MissionModelTest {
 
-    private MissionModelFacade missionModel;
-    private MissionModelFacade.Unconfigured<?> unconfiguredMissionModel;
+  private DirectiveTypeRegistry<?, ?> registry;
 
     @BeforeEach
     public void initialize() {
-        final var configuration = new Configuration();
-        this.missionModel = makeMissionModel(new MissionModelBuilder(), configuration);
-        this.unconfiguredMissionModel = new MissionModelFacade.Unconfigured<>(new GeneratedMissionModelFactory());
-    }
-
-    private static MissionModelFacade makeMissionModel(final MissionModelBuilder builder, final Configuration config) {
-        final var factory = new GeneratedMissionModelFactory();
-        final var registry = DirectiveTypeRegistry.extract(factory);
-        final var model = factory.instantiate(registry.registry(), Instant.EPOCH, config, builder);
-        return new MissionModelFacade(builder.build(model, factory.getConfigurationType(), registry));
+        this.registry = DirectiveTypeRegistry.extract(new GeneratedMissionModelFactory());
     }
 
     @AfterEach
@@ -62,14 +51,18 @@ public final class MissionModelTest {
             ));
 
         // WHEN
-        final Map<String, ActivityType> typeList = unconfiguredMissionModel.getActivityTypes();
+        final var activityTypes = new HashMap<String, ActivityType>();
+        registry.taskSpecTypes().forEach((name, specType) -> {
+            activityTypes.put(name, new ActivityType(name, specType.getParameters(), specType.getRequiredParameters(), specType.getReturnValueSchema()));
+        });
+        final Map<String, ActivityType> typeList = activityTypes;
 
         // THEN
         assertThat(typeList).containsAllEntriesOf(expectedTypes);
     }
 
     @Test
-    public void shouldGetActivityType() throws MissionModelFacade.NoSuchActivityTypeException {
+    public void shouldGetActivityType() throws MissionModelService.NoSuchActivityTypeException {
         // GIVEN
       final ActivityType expectedType = new ActivityType(
             "foo",
@@ -82,7 +75,16 @@ public final class MissionModelTest {
         );
 
         // WHEN
-        final ActivityType type = unconfiguredMissionModel.getActivityType(expectedType.name());
+        final var typeName = expectedType.name();
+        final var specType = Optional
+            .ofNullable(registry.taskSpecTypes().get(typeName))
+            .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(typeName));
+
+        final var type = new ActivityType(
+            typeName,
+            specType.getParameters(),
+            specType.getRequiredParameters(),
+            specType.getReturnValueSchema());
 
         // THEN
         assertThat(type).isEqualTo(expectedType);
@@ -94,15 +96,25 @@ public final class MissionModelTest {
         final String activityId = "nonexistent activity type";
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> unconfiguredMissionModel.getActivityType(activityId));
+        final var thrown = catchThrowable(() -> {
+            final var specType = Optional
+                .ofNullable(registry.taskSpecTypes().get(activityId))
+                .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(activityId));
+
+            new ActivityType(
+                activityId,
+                specType.getParameters(),
+                specType.getRequiredParameters(),
+                specType.getReturnValueSchema());
+        });
 
         // THEN
-        assertThat(thrown).isInstanceOf(MissionModelFacade.NoSuchActivityTypeException.class);
+        assertThat(thrown).isInstanceOf(MissionModelService.NoSuchActivityTypeException.class);
     }
 
     @Test
     public void shouldInstantiateActivityInstance()
-    throws MissionModelFacade.NoSuchActivityTypeException, InvalidArgumentsException
+    throws MissionModelService.NoSuchActivityTypeException, InvalidArgumentsException
     {
         // GIVEN
         final var typeName = "foo";
@@ -110,7 +122,11 @@ public final class MissionModelTest {
                                                     "y", SerializedValue.of("test")));
 
         // WHEN
-        final var failures = missionModel.validateActivity(new SerializedActivity(typeName, parameters));
+        final var activity = new SerializedActivity(typeName, parameters);
+        final var specType = Optional
+            .ofNullable(registry.taskSpecTypes().get(activity.getTypeName()))
+            .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(activity.getTypeName()));
+        final var failures = specType.validateArguments(activity.getArguments());
 
         // THEN
         assertThat(failures).isEmpty();
@@ -124,7 +140,13 @@ public final class MissionModelTest {
                                                     "y", SerializedValue.of(1.0)));
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> missionModel.validateActivity(new SerializedActivity(typeName, parameters)));
+        final var thrown = catchThrowable(() -> {
+            final var activity = new SerializedActivity(typeName, parameters);
+            final var specType = Optional
+                .ofNullable(registry.taskSpecTypes().get(activity.getTypeName()))
+                .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(activity.getTypeName()));
+            specType.validateArguments(activity.getArguments());
+        });
 
         // THEN
         assertThat(thrown).isInstanceOf(InvalidArgumentsException.class);
@@ -137,7 +159,13 @@ public final class MissionModelTest {
         final var parameters = new HashMap<>(Map.of("Nonexistent", SerializedValue.of("")));
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> missionModel.validateActivity(new SerializedActivity(typeName, parameters)));
+        final var thrown = catchThrowable(() -> {
+            final var activity = new SerializedActivity(typeName, parameters);
+            final var specType = Optional
+                .ofNullable(registry.taskSpecTypes().get(activity.getTypeName()))
+                .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(activity.getTypeName()));
+            specType.validateArguments(activity.getArguments());
+        });
 
         // THEN
         assertThat(thrown).isInstanceOf(InvalidArgumentsException.class);
