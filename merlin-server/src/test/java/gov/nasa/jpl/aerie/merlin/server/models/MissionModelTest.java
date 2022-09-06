@@ -1,13 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
-import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.UnitValueMapper;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 import org.junit.jupiter.api.AfterEach;
@@ -47,18 +46,20 @@ public final class MissionModelTest {
                     new Parameter("y", ValueSchema.STRING),
                     new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
                 List.of(),
-                new EnumValueMapper<>(Unit.class).getValueSchema()
+                new UnitValueMapper().getValueSchema()
             ));
 
         // WHEN
         final var activityTypes = new HashMap<String, ActivityType>();
-        registry.taskSpecTypes().forEach((name, specType) -> {
-            activityTypes.put(name, new ActivityType(name, specType.getParameters(), specType.getRequiredParameters(), specType.getReturnValueSchema()));
-        });
-        final Map<String, ActivityType> typeList = activityTypes;
+        registry.taskSpecTypes().forEach((name, specType) -> activityTypes.put(
+            name,
+            new ActivityType(name,
+                             specType.getParameters(),
+                             specType.getRequiredParameters(),
+                             specType.getReturnValueSchema())));
 
-        // THEN
-        assertThat(typeList).containsAllEntriesOf(expectedTypes);
+      // THEN
+        assertThat(activityTypes).containsAllEntriesOf(expectedTypes);
     }
 
     @Test
@@ -71,7 +72,7 @@ public final class MissionModelTest {
                 new Parameter("y", ValueSchema.STRING),
                 new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
             List.of(),
-            new EnumValueMapper<>(Unit.class).getValueSchema()
+            new UnitValueMapper().getValueSchema()
         );
 
         // WHEN
