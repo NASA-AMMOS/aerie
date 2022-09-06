@@ -156,6 +156,18 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     ParameterizedTypeName.get(
                         ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                         ClassName.get(missionModel.topLevelModel))))
+            .addField(
+                FieldSpec
+                    .builder(
+                        ParameterizedTypeName.get(
+                            ClassName.get(Scoped.class),
+                            ParameterizedTypeName.get(
+                                ClassName.get(RootModel.class),
+                                ClassName.get(missionModel.topLevelModel))),
+                        "model",
+                        Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                    .initializer("$T.create()", Scoped.class)
+                    .build())
             .addMethod(
                 MethodSpec
                     .methodBuilder("getDirectiveTypes")
@@ -344,18 +356,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .build())
             .addModifiers(Modifier.PUBLIC)
             .superclass(gov.nasa.jpl.aerie.merlin.framework.ModelActions.class)
-            .addField(
-                FieldSpec
-                    .builder(
-                        ParameterizedTypeName.get(
-                            ClassName.get(Scoped.class),
-                            ParameterizedTypeName.get(
-                                ClassName.get(RootModel.class),
-                                ClassName.get(missionModel.topLevelModel))),
-                        "model",
-                        Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-                    .initializer("$T.create()", Scoped.class)
-                    .build())
             .addMethod(MethodSpec.constructorBuilder().addModifiers(Modifier.PRIVATE).build())
             .addMethods(
                 missionModel.activityTypes
@@ -373,7 +373,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 .addStatement(
                                     "final var $L = $T.$L.get()",
                                     "model",
-                                    typeName,
+                                    missionModel.getFactoryName(),
                                     "model")
                                 .addStatement(
                                     "final var $L = $T.$L",
@@ -405,7 +405,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 .addStatement(
                                     "final var $L = $T.$L.get()",
                                     "model",
-                                    typeName,
+                                    missionModel.getFactoryName(),
                                     "model")
                                 .addStatement(
                                     "final var $L = $T.$L",
@@ -535,7 +535,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             ParameterizedTypeName.get(
                                 ClassName.get(RootModel.class),
                                 ClassName.get(missionModel.topLevelModel))))
-                    .addStatement("return $T.model", missionModel.getActivityActionsName())
+                    .addStatement("return $T.model", missionModel.getFactoryName())
                     .build())
             .addMethod(
                 MethodSpec
@@ -924,7 +924,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                           case Threaded -> "threaded";
                                           case Replaying -> "replaying";
                                         },
-                                        missionModel.getActivityActionsName(),
+                                        missionModel.getFactoryName(),
                                         "model",
                                         ModelActions.class,
                                         "activity",
@@ -955,7 +955,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                           case Threaded -> "threaded";
                                           case Replaying -> "replaying";
                                         },
-                                        missionModel.getActivityActionsName(),
+                                        missionModel.getFactoryName(),
                                         "model",
                                         ModelActions.class,
                                         "activity",
