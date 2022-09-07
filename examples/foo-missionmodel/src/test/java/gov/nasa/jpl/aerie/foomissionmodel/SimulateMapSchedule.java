@@ -32,7 +32,7 @@ public class SimulateMapSchedule {
     final var factory = new GeneratedMissionModelFactory();
     final var registry = DirectiveTypeRegistry.extract(factory);
     final var model = factory.instantiate(planStart, config, builder);
-    return builder.build(model, factory.getConfigurationType(), registry);
+    return builder.build(model, registry);
   }
 
   private static

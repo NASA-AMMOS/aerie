@@ -28,7 +28,7 @@ public class AerieLanderTestUtility {
     final var factory = new gov.nasa.jpl.aerielander.generated.GeneratedMissionModelFactory();
     final var registry = DirectiveTypeRegistry.extract(factory);
     final var model = factory.instantiate(Instant.EPOCH, configuration, builder);
-    return builder.build(model, factory.getConfigurationType(), registry);
+    return builder.build(model, registry);
   }
 
   static SchedulerModel getMerlinSightSchedulerModel() {

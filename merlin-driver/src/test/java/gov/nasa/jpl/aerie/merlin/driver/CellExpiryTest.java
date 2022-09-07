@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.framework.EmptyConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
@@ -131,9 +130,6 @@ public final class CellExpiryTest {
 
     initializer.resource(resourceName, resource);
 
-    return initializer.build(
-        ref,
-        new EmptyConfigurationType(),
-        new DirectiveTypeRegistry<>(Map.of()));
+    return initializer.build(ref, new DirectiveTypeRegistry<>(Map.of()));
   }
 }

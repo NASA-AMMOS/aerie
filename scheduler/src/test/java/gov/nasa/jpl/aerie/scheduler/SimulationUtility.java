@@ -17,7 +17,7 @@ public final class SimulationUtility {
     final var factory = new gov.nasa.jpl.aerie.banananation.generated.GeneratedMissionModelFactory();
     final var registry = DirectiveTypeRegistry.extract(factory);
     final var model = factory.instantiate(Instant.EPOCH, config, builder);
-    return builder.build(model, factory.getConfigurationType(), registry);
+    return builder.build(model, registry);
   }
 
   public static MissionModel<RootModel<Mission>>
@@ -27,7 +27,7 @@ public final class SimulationUtility {
     final var registry = DirectiveTypeRegistry.extract(factory);
     final var builder = new MissionModelBuilder();
     final var model = factory.instantiate(Instant.EPOCH, config, builder);
-    return builder.build(model, factory.getConfigurationType(), registry);
+    return builder.build(model, registry);
   }
 
   public static SchedulerModel getFooSchedulerModel(){
