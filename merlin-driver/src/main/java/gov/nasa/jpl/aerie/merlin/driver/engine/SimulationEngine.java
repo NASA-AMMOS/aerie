@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel.SerializableTopic;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
@@ -126,13 +126,12 @@ public final class SimulationEngine implements AutoCloseable {
       final Collection<JobId> jobs,
       final LiveCells context,
       final Duration currentTime,
-      final Duration maximumTime,
-      final MissionModel<?> model
+      final Duration maximumTime
   ) {
     var tip = EventGraph.<Event>empty();
     for (final var job$ : jobs) {
       tip = EventGraph.concurrently(tip, TaskFrame.run(job$, context, (job, frame) -> {
-        this.performJob(job, frame, currentTime, maximumTime, model);
+        this.performJob(job, frame, currentTime, maximumTime);
       }));
     }
 
@@ -144,11 +143,10 @@ public final class SimulationEngine implements AutoCloseable {
       final JobId job,
       final TaskFrame<JobId> frame,
       final Duration currentTime,
-      final Duration maximumTime,
-      final MissionModel<?> model
+      final Duration maximumTime
   ) {
     if (job instanceof JobId.TaskJobId j) {
-      this.stepTask(j.id(), frame, currentTime, model);
+      this.stepTask(j.id(), frame, currentTime);
     } else if (job instanceof JobId.SignalJobId j) {
       this.stepSignalledTasks(j.id(), frame);
     } else if (job instanceof JobId.ConditionJobId j) {
@@ -161,29 +159,23 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Perform the next step of a modeled task. */
-  public void stepTask(
-      final TaskId task,
-      final TaskFrame<JobId> frame,
-      final Duration currentTime,
-      final MissionModel<?> model
-  ) {
+  public void stepTask(final TaskId task, final TaskFrame<JobId> frame, final Duration currentTime) {
     // The handler for each individual task stage is responsible
     //   for putting an updated lifecycle back into the task set.
     var lifecycle = this.tasks.remove(task);
 
-    stepTaskHelper(task, frame, currentTime, model, lifecycle);
+    stepTaskHelper(task, frame, currentTime, lifecycle);
   }
 
   private <Return> void stepTaskHelper(
       final TaskId task,
       final TaskFrame<JobId> frame,
       final Duration currentTime,
-      final MissionModel<?> model,
       final ExecutionState<Return> lifecycle)
   {
     // Extract the current modeling state.
     if (lifecycle instanceof ExecutionState.InProgress<Return> e) {
-      stepEffectModel(task, e, frame, currentTime, model);
+      stepEffectModel(task, e, frame, currentTime);
     } else if (lifecycle instanceof ExecutionState.AwaitingChildren<Return> e) {
       stepWaitingTask(task, e, frame, currentTime);
     } else {
@@ -197,11 +189,10 @@ public final class SimulationEngine implements AutoCloseable {
       final TaskId task,
       final ExecutionState.InProgress<Return> progress,
       final TaskFrame<JobId> frame,
-      final Duration currentTime,
-      final MissionModel<?> model
+      final Duration currentTime
   ) {
     // Step the modeling state forward.
-    final var scheduler = new EngineScheduler(model, currentTime, task, frame);
+    final var scheduler = new EngineScheduler(currentTime, task, frame);
     final var status = progress.state().step(scheduler);
 
     // TODO: Report which topics this activity wrote to at this point in time. This is useful insight for any user.
@@ -345,9 +336,7 @@ public final class SimulationEngine implements AutoCloseable {
       return this.input.containsKey(id.id());
     }
 
-    public record Trait(MissionModel<?> missionModel, Topic<ActivityInstanceId> activityTopic)
-        implements EffectTrait<Consumer<TaskInfo>>
-    {
+    public record Trait(Iterable<SerializableTopic<?>> topics, Topic<ActivityInstanceId> activityTopic) implements EffectTrait<Consumer<TaskInfo>> {
       @Override
       public Consumer<TaskInfo> empty() {
         return taskInfo -> {};
@@ -370,7 +359,7 @@ public final class SimulationEngine implements AutoCloseable {
           ev.extract(this.activityTopic)
             .ifPresent(directiveId -> taskInfo.taskToPlannedDirective.put(ev.provenance().id(), directiveId));
 
-          for (final var topic : this.missionModel.getTopics()) {
+          for (final var topic : this.topics) {
             // Identify activity inputs.
             extractInput(topic, ev, taskInfo);
 
@@ -381,7 +370,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
 
       private static <T>
-      void extractInput(final MissionModel.SerializableTopic<T> topic, final Event ev, final TaskInfo taskInfo) {
+      void extractInput(final SerializableTopic<T> topic, final Event ev, final TaskInfo taskInfo) {
         if (!topic.name().startsWith("ActivityType.Input.")) return;
 
         ev.extract(topic.topic()).ifPresent(input -> {
@@ -394,7 +383,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
 
       private static <T>
-      void extractOutput(final MissionModel.SerializableTopic<T> topic, final Event ev, final TaskInfo taskInfo) {
+      void extractOutput(final SerializableTopic<T> topic, final Event ev, final TaskInfo taskInfo) {
         if (!topic.name().startsWith("ActivityType.Output.")) return;
 
         ev.extract(topic.topic()).ifPresent(output -> {
@@ -419,7 +408,7 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration elapsedTime,
       final Topic<ActivityInstanceId> activityTopic,
       final TemporalEventSource timeline,
-      final MissionModel<?> missionModel
+      final Iterable<SerializableTopic<?>> serializableTopics
   ) {
     // Collect per-task information from the event graph.
     final var taskInfo = new TaskInfo();
@@ -427,7 +416,7 @@ public final class SimulationEngine implements AutoCloseable {
     for (final var point : timeline) {
       if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
 
-      final var trait = new TaskInfo.Trait(missionModel, activityTopic);
+      final var trait = new TaskInfo.Trait(serializableTopics, activityTopic);
       p.events().evaluate(trait, trait::atom).accept(taskInfo);
     }
 
@@ -546,8 +535,8 @@ public final class SimulationEngine implements AutoCloseable {
     });
 
     final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
-    final var serializableTopicToId = new HashMap<MissionModel.SerializableTopic<?>, Integer>();
-    for (final var serializableTopic : missionModel.getTopics()) {
+    final var serializableTopicToId = new HashMap<SerializableTopic<?>, Integer>();
+    for (final var serializableTopic : serializableTopics) {
       serializableTopicToId.put(serializableTopic, topics.size());
       topics.add(Triple.of(topics.size(), serializableTopic.name(), serializableTopic.valueSchema()));
     }
@@ -561,7 +550,7 @@ public final class SimulationEngine implements AutoCloseable {
         final var serializedEventGraph = commit.events().substitute(
             event -> {
               EventGraph<Pair<Integer, SerializedValue>> output = EventGraph.empty();
-              for (final var serializableTopic : missionModel.getTopics()) {
+              for (final var serializableTopic : serializableTopics) {
                 Optional<SerializedValue> serializedEvent = trySerializeEvent(event, serializableTopic);
                 if (serializedEvent.isPresent()) {
                   output = EventGraph.concurrently(output, EventGraph.atom(Pair.of(serializableTopicToId.get(serializableTopic), serializedEvent.get())));
@@ -596,7 +585,7 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
 
-  private static <EventType> Optional<SerializedValue> trySerializeEvent(Event event, MissionModel.SerializableTopic<EventType> serializableTopic) {
+  private static <EventType> Optional<SerializedValue> trySerializeEvent(Event event, SerializableTopic<EventType> serializableTopic) {
     return event.extract(serializableTopic.topic(), serializableTopic.serializer());
   }
 
@@ -676,19 +665,11 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** A handle for processing requests and effects from a modeled task. */
   private final class EngineScheduler implements Scheduler {
-    private final MissionModel<?> model;
-
     private final Duration currentTime;
     private final TaskId activeTask;
     private final TaskFrame<JobId> frame;
 
-    public EngineScheduler(
-        final MissionModel<?> model,
-        final Duration currentTime,
-        final TaskId activeTask,
-        final TaskFrame<JobId> frame
-    ) {
-      this.model = Objects.requireNonNull(model);
+    public EngineScheduler(final Duration currentTime, final TaskId activeTask, final TaskFrame<JobId> frame) {
       this.currentTime = Objects.requireNonNull(currentTime);
       this.activeTask = Objects.requireNonNull(activeTask);
       this.frame = Objects.requireNonNull(frame);
