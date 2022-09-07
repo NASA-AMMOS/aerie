@@ -370,7 +370,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
       final Plan plan,
       final Map<ActivityInstance, GoalId> activityToGoalId
   )
-  throws IOException, NoSuchPlanException, NoSuchActivityInstanceException, PlanServiceException
+  throws IOException, NoSuchPlanException, PlanServiceException
   {
     final var ids = new HashMap<ActivityInstance, ActivityInstanceId>();
     //creation are done in batch as that's what the scheduler does the most
@@ -390,8 +390,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
         final var schedulerActIntoMerlinAct = new MerlinActivityInstance(activity.getType().getName(), activity.getStartTime(), activity.getArguments());
         final var activityInstanceId = idsFromInitialPlan.get(activity.getId());
         if (!schedulerActIntoMerlinAct.equals(actFromInitialPlan.get())) {
-          //update if it has changed
-          updateActivityDirective(planId, schedulerActIntoMerlinAct, activityInstanceId, activityToGoalId.get(activity));
+          throw new PlanServiceException("The scheduler should not be updating activity instances");
+          //updateActivityDirective(planId, schedulerActIntoMerlinAct, activityInstanceId, activityToGoalId.get(activity));
         }
         ids.put(activity, activityInstanceId);
       } else {
@@ -402,8 +402,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     final var actsFromNewPlan = plan.getActivitiesById();
     for (final var idActInInitialPlan : idsFromInitialPlan.entrySet()) {
       if (!actsFromNewPlan.containsKey(idActInInitialPlan.getKey())) {
-        //activity has been removed by the scheduler, delete it
-        deleteActivityDirective(idActInInitialPlan.getValue());
+        throw new PlanServiceException("The scheduler should not be deleting activity instances");
+        //deleteActivityDirective(idActInInitialPlan.getValue());
       }
     }
 
