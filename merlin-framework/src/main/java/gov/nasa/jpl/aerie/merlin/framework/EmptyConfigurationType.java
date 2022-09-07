@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,7 @@ public final class EmptyConfigurationType implements ConfigurationType<Unit> {
   }
 
   @Override
-  public List<String> getValidationFailures(final Unit configuration) {
+  public List<ValidationNotice> getValidationFailures(final Unit configuration) {
     return List.of();
   }
 }

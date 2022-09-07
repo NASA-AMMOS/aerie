@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelAccessException;
@@ -282,6 +283,26 @@ public final class ResponseSerializers {
                  .add("success", JsonValue.TRUE)
                  .build();
     }
+  }
+
+  public static JsonValue serializeValidationNotices(final List<ValidationNotice> notices) {
+    if (notices.size() > 0) {
+      return Json.createObjectBuilder()
+          .add("success", JsonValue.FALSE)
+          .add("errors", serializeIterable(ResponseSerializers::serializeValidationNotice, notices))
+          .build();
+    } else {
+      return Json.createObjectBuilder()
+          .add("success", JsonValue.TRUE)
+          .build();
+}
+  }
+
+  private static JsonValue serializeValidationNotice(final ValidationNotice notice) {
+    return Json.createObjectBuilder()
+        .add("subjects", serializeStringList(notice.subjects()))
+        .add("message", notice.message())
+        .build();
   }
 
   public static JsonValue serializeInvalidArgumentsException(final InvalidArgumentsException ex) {

@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
@@ -120,14 +121,14 @@ public final class LocalMissionModelService implements MissionModelService {
    * it contains may not abide by the expected contract at load time.
    */
   @Override
-  public List<String> validateActivityArguments(final String missionModelId, final SerializedActivity activity)
+  public List<ValidationNotice> validateActivityArguments(final String missionModelId, final SerializedActivity activity)
   throws NoSuchMissionModelException, MissionModelLoadException, InvalidArgumentsException
   {
     // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
     final var factory = this.loadMissionModelFactory(missionModelId);
     final var registry = DirectiveTypeRegistry.extract(factory);
     final var specType = registry.taskSpecTypes().get(activity.getTypeName());
-    if (specType == null) return List.of("unknown activity type");
+    if (specType == null) return List.of(new ValidationNotice(List.of(), "unknown activity type"));
     return specType.validateArguments(activity.getArguments());
   }
 
@@ -173,7 +174,7 @@ public final class LocalMissionModelService implements MissionModelService {
   }
 
   @Override
-  public List<String> validateModelArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
+  public List<ValidationNotice> validateModelArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
          MissionModelLoadException,
          InvalidArgumentsException

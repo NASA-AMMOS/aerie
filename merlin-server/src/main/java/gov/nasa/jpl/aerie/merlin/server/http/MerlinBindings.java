@@ -223,9 +223,9 @@ public final class MerlinBindings implements Plugin {
 
       final var serializedActivity = new SerializedActivity(activityTypeName, activityArguments);
 
-      final var failures = this.missionModelService.validateActivityArguments(missionModelId, serializedActivity);
+      final var notices = this.missionModelService.validateActivityArguments(missionModelId, serializedActivity);
 
-      ctx.result(ResponseSerializers.serializeFailures(failures).toString());
+      ctx.result(ResponseSerializers.serializeValidationNotices(notices).toString());
     } catch (final InvalidArgumentsException ex) {
       ctx.status(400)
          .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
@@ -244,9 +244,9 @@ public final class MerlinBindings implements Plugin {
 
       final var missionModelId = input.missionModelId();
       final var arguments = input.arguments();
-      final var failures = this.missionModelService.validateModelArguments(missionModelId, arguments);
+      final var notices = this.missionModelService.validateModelArguments(missionModelId, arguments);
 
-      ctx.result(ResponseSerializers.serializeFailures(failures).toString());
+      ctx.result(ResponseSerializers.serializeValidationNotices(notices).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
     } catch (final InvalidArgumentsException ex) {

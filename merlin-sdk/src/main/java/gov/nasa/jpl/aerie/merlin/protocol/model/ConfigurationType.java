@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.protocol.model;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 
 import java.util.List;
 import java.util.Map;
@@ -15,7 +16,7 @@ public interface ConfigurationType<Config> {
   throws InvalidArgumentsException;
 
   Map<String, SerializedValue> getArguments(Config configuration);
-  List<String> getValidationFailures(Config configuration);
+  List<ValidationNotice> getValidationFailures(Config configuration);
 
   final class UnconstructableConfigurationException extends Exception {
     public UnconstructableConfigurationException() {
@@ -33,7 +34,7 @@ public interface ConfigurationType<Config> {
    * return this.getValidationFailures(this.instantiate(arguments));
    * }
    */
-  default List<String> validateArguments(final Map<String, SerializedValue> arguments)
+  default List<ValidationNotice> validateArguments(final Map<String, SerializedValue> arguments)
   throws InvalidArgumentsException
   {
     return this.getValidationFailures(this.instantiate(arguments));

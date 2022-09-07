@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
@@ -34,7 +35,7 @@ public interface MissionModelService {
   Map<String, ActivityType> getActivityTypes(String missionModelId)
   throws NoSuchMissionModelException;
   // TODO: Provide a finer-scoped validation return type. Mere strings make all validations equally severe.
-  List<String> validateActivityArguments(String missionModelId, SerializedActivity activity)
+  List<ValidationNotice> validateActivityArguments(String missionModelId, SerializedActivity activity)
   throws NoSuchMissionModelException, InvalidArgumentsException;
 
   Map<ActivityInstanceId, String> validateActivityInstantiations(String missionModelId, Map<ActivityInstanceId, SerializedActivity> activities)
@@ -45,7 +46,7 @@ public interface MissionModelService {
          NoSuchActivityTypeException,
          InvalidArgumentsException;
 
-  List<String> validateModelArguments(String missionModelId, Map<String, SerializedValue> arguments)
+  List<ValidationNotice> validateModelArguments(String missionModelId, Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
          LocalMissionModelService.MissionModelLoadException,
          InvalidArgumentsException;
