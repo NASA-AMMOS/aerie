@@ -64,7 +64,7 @@ public final class Resolver {
     return new ClassPattern(ClassName.get(ValueMapper.class), mapperArguments);
   }
 
-  private Optional<CodeBlock> applyRules(final TypePattern goal) {
+  public Optional<CodeBlock> applyRules(final TypePattern goal) {
     if (goal instanceof ClassPattern && ((ClassPattern)goal).name.equals(ClassName.get(Class.class))) {
       final var pattern = ((ClassPattern)goal).arguments.get(0);
       return Optional.of(
