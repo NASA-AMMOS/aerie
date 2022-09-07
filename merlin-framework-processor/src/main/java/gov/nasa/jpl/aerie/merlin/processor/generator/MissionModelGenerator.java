@@ -33,6 +33,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -179,9 +180,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             ClassName.get(String.class),
                             ParameterizedTypeName.get(
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper.class),
-                                ParameterizedTypeName.get(
-                                    ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                                    ClassName.get(missionModel.topLevelModel)),
+                                ClassName.get(missionModel.topLevelModel),
                                 WildcardTypeName.subtypeOf(Object.class),
                                 WildcardTypeName.subtypeOf(Object.class))))
                     .addStatement(
@@ -502,9 +501,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             ClassName.get(String.class),
                             ParameterizedTypeName.get(
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper.class),
-                                ParameterizedTypeName.get(
-                                    ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                                    ClassName.get(missionModel.topLevelModel)),
+                                ClassName.get(missionModel.topLevelModel),
                                 WildcardTypeName.subtypeOf(Object.class),
                                 WildcardTypeName.subtypeOf(Object.class))),
                         "directiveTypes",
@@ -566,9 +563,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addParameter(
                         ParameterizedTypeName.get(
                             ClassName.get(ActivityMapper.class),
-                            ParameterizedTypeName.get(
-                                ClassName.get(RootModel.class),
-                                ClassName.get(missionModel.topLevelModel)),
+                            ClassName.get(missionModel.topLevelModel),
                             TypeVariableName.get("Input"),
                             TypeVariableName.get("Output")),
                         "mapper",
@@ -717,9 +712,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
       }
       superInterface = ParameterizedTypeName.get(
           ClassName.get(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper.class),
-          ParameterizedTypeName.get(
-              ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-              ClassName.get(missionModel.topLevelModel)),
+          ClassName.get(missionModel.topLevelModel),
           ClassName.get(exportType.declaration()),
           computedAttributesCodeBlocks.get().typeName().box());
     } else { // is instanceof ConfigurationTypeRecord
@@ -893,15 +886,11 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
                     .returns(ParameterizedTypeName.get(
-                        ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.Task.class),
-                        activityType
-                            .effectModel()
-                            .flatMap(EffectModelRecord::returnType)
-                            .map(returnType -> TypeName.get(returnType).box())
-                            .orElse(TypeName.get(Unit.class))))
+                        ClassName.get(Task.class),
+                        activityType.getOutputTypeName()))
                     .addParameter(
                         ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                            ClassName.get(RootModel.class),
                             ClassName.get(missionModel.topLevelModel)),
                         "model",
                         Modifier.FINAL)
