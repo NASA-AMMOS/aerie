@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
@@ -17,7 +18,6 @@ import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,9 +61,13 @@ public final class StubMissionModelService implements MissionModelService {
 
   public static final Map<String, ValueSchema> RESOURCES;
 
-  public static final List<String> NO_SUCH_ACTIVITY_TYPE_FAILURES = List.of("no such activity type");
-  public static final List<String> INVALID_ACTIVITY_INSTANCE_FAILURES = List.of("just wrong");
-  public static final List<String> UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURES = List.of(
+  public static final ValidationNotice NO_SUCH_ACTIVITY_TYPE_FAILURE = new ValidationNotice(List.of(),
+      "no such activity type");
+
+  public static final ValidationNotice INVALID_ACTIVITY_INSTANCE_FAILURE = new ValidationNotice(List.of(),
+      "just wrong");
+
+  public static final ValidationNotice UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURE = new ValidationNotice(List.of(),
       "Unconstructable activity instance");
 
   public static final SimulationResults SUCCESSFUL_SIMULATION_RESULTS = new SimulationResults(
@@ -136,7 +140,7 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public List<String> validateActivityArguments(final String missionModelId, final SerializedActivity activity)
+  public List<ValidationNotice> validateActivityArguments(final String missionModelId, final SerializedActivity activity)
   throws NoSuchMissionModelException
   {
     if (!Objects.equals(missionModelId, EXISTENT_MISSION_MODEL_ID)) {
@@ -144,13 +148,13 @@ public final class StubMissionModelService implements MissionModelService {
     }
 
     if (Objects.equals(activity.getTypeName(), NONEXISTENT_ACTIVITY_INSTANCE.getTypeName())) {
-      return NO_SUCH_ACTIVITY_TYPE_FAILURES;
+      return List.of(NO_SUCH_ACTIVITY_TYPE_FAILURE);
     } else if (Objects.equals(activity, UNCONSTRUCTABLE_ACTIVITY_INSTANCE)) {
-      return UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURES;
+      return List.of(UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURE);
     } else if (Objects.equals(activity, INVALID_ACTIVITY_INSTANCE)) {
-      return INVALID_ACTIVITY_INSTANCE_FAILURES;
+      return List.of(INVALID_ACTIVITY_INSTANCE_FAILURE);
     } else {
-      return Collections.emptyList();
+      return List.of();
     }
   }
 
@@ -172,7 +176,7 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public List<String> validateModelArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
+  public List<ValidationNotice> validateModelArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
   throws LocalMissionModelService.MissionModelLoadException
   {
     return List.of();

@@ -32,5 +32,11 @@ public @interface Export {
   @Target(ElementType.METHOD)
   @interface Validation {
     String value();
+
+    @Retention(RetentionPolicy.CLASS)
+    @Target(ElementType.METHOD)
+    @interface Subject {
+      String[] value();
+    }
   }
 }

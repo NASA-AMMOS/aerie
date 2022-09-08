@@ -163,8 +163,13 @@ type MerlinSimulationResponse {
 }
 
 type ValidationResponse {
-  errors: [String!]
+  errors: [ValidationNotice!]!
   success: Boolean!
+}
+
+type ValidationNotice {
+  subjects: [String!]!
+  message: String!
 }
 
 type EffectiveArgumentsResponse {

@@ -10,8 +10,10 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableArgumentException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 
 import javax.lang.model.element.Modifier;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -144,32 +146,43 @@ public abstract sealed class MapperMethodMaker permits
         .addAnnotation(Override.class)
         .returns(ParameterizedTypeName.get(
             java.util.List.class,
-            String.class))
+            ValidationNotice.class))
         .addParameter(
             TypeName.get(exportType.declaration().asType()),
             metaName,
             Modifier.FINAL)
         .addStatement(
             "final var $L = new $T()",
-            "failures",
+            "notices",
             ParameterizedTypeName.get(
                 java.util.ArrayList.class,
-                String.class))
+                ValidationNotice.class))
         .addCode(
             exportType.validations()
                 .stream()
-                .map(validation -> CodeBlock
-                    .builder()
-                    .addStatement(
-                        "if (!$L.$L()) failures.add($S)",
-                        metaName,
-                        validation.methodName,
-                        validation.failureMessage))
+                .map(validation -> {
+                    final var subjects = Arrays.stream(validation.subjects())
+                        .map(subject -> CodeBlock.builder().add("$S", subject))
+                        .reduce((x, y) -> x.add(", ").add(y.build()))
+                        .orElse(CodeBlock.builder())
+                        .build();
+
+                    return CodeBlock
+                        .builder()
+                        .addStatement(
+                            "if (!$L.$L()) notices.add(new $T($T.of($L), $S))",
+                            metaName,
+                            validation.methodName(),
+                            ValidationNotice.class,
+                            List.class,
+                            subjects,
+                            validation.failureMessage());
+                })
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
                 .build())
         .addStatement(
             "return $L",
-            "failures")
+            "notices")
         .build();
   }
 

@@ -131,6 +131,7 @@ custom_types:
     - name: ResourceType
     - name: MerlinSimulationResponse
     - name: ValidationResponse
+    - name: ValidationNotice
     - name: EffectiveArgumentsResponse
     - name: AddExternalDatasetResponse
     - name: SchedulingResponse
