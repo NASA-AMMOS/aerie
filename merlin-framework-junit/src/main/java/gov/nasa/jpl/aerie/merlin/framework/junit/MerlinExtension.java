@@ -8,7 +8,6 @@ import gov.nasa.jpl.aerie.merlin.framework.InitializationContext;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
-import gov.nasa.jpl.aerie.merlin.framework.Scoped;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.DynamicTestInvocationContext;
@@ -118,7 +117,6 @@ public final class MerlinExtension<UNUSED, Model>
     public MerlinTestContext<UNUSED, Model> context;
 
     public MissionModel<RootModel<Model>> missionModel = null;
-    public Scoped<RootModel<Model>> scoping = null;
 
     public State(final MissionModelBuilder builder) {
       this.builder = Objects.requireNonNull(builder);
@@ -143,8 +141,6 @@ public final class MerlinExtension<UNUSED, Model>
         throw ex.wrapped;
       }
 
-      this.scoping = this.context.scoping();
-
       this.missionModel = this.builder.build(
           new RootModel<>(this.context.model(), executor),
           new DirectiveTypeRegistry<>(Map.of()));
@@ -162,7 +158,7 @@ public final class MerlinExtension<UNUSED, Model>
       final var model = this.missionModel.getModel();
       final var task = ModelActions
           .threaded(() -> {
-            try (final var token = this.scoping.set(model)) {
+            try {
               invocation.proceed();
             } catch (final Throwable ex) {
               throw new WrappedException(ex);

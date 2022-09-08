@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.configwithoutdefaults;
 
 import gov.nasa.jpl.aerie.configwithoutdefaults.generated.ActivityTypes;
 import gov.nasa.jpl.aerie.configwithoutdefaults.generated.ConfigurationMapper;
-import gov.nasa.jpl.aerie.configwithoutdefaults.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinTestContext;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -38,7 +37,7 @@ public final class ConfigurationTest {
     ));
 
     this.model = new Mission(ctx.registrar(), config);
-    ctx.use(model, GeneratedMissionModelFactory.model);
+    ctx.use(model);
   }
 
   @Test

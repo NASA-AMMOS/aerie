@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityTypes;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.activities.FooActivityMapper;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.FooActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityTypes;
-import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinTestContext;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -47,7 +46,7 @@ public final class FooActivityTest {
     this.model = new Mission(ctx.registrar(), Instant.EPOCH, new Configuration());
 
     // Before spawning activities, a model instance must be registered with the test harness.
-    ctx.use(model, GeneratedMissionModelFactory.model);
+    ctx.use(model);
   }
 
   @Test

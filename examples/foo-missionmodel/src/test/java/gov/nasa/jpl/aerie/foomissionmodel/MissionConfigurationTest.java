@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.foomissionmodel;
 
 import gov.nasa.jpl.aerie.foomissionmodel.activities.FooActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityTypes;
-import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinTestContext;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -30,7 +29,7 @@ public final class MissionConfigurationTest {
 
     public Test1(final MerlinTestContext<ActivityTypes, Mission> ctx) {
       this.model = new Mission(ctx.registrar(), Instant.EPOCH, new Configuration());
-      ctx.use(model, GeneratedMissionModelFactory.model);
+      ctx.use(model);
     }
 
     @Test
@@ -52,7 +51,7 @@ public final class MissionConfigurationTest {
 
     public Test2(final MerlinTestContext<ActivityTypes, Mission> ctx) {
       this.model = new Mission(ctx.registrar(), Instant.EPOCH.plusSeconds(1), new Configuration(2.0));
-      ctx.use(model, GeneratedMissionModelFactory.model);
+      ctx.use(model);
     }
 
     @Test

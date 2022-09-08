@@ -159,18 +159,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     ParameterizedTypeName.get(
                         ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                         ClassName.get(missionModel.topLevelModel))))
-            .addField(
-                FieldSpec
-                    .builder(
-                        ParameterizedTypeName.get(
-                            ClassName.get(Scoped.class),
-                            ParameterizedTypeName.get(
-                                ClassName.get(RootModel.class),
-                                ClassName.get(missionModel.topLevelModel))),
-                        "model",
-                        Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-                    .initializer("$T.create()", Scoped.class)
-                    .build())
             .addMethod(
                 MethodSpec
                     .methodBuilder("getDirectiveTypes")
@@ -530,26 +518,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             .reduce((x, y) -> x.add(",").add(y.build()))
                             .orElse(CodeBlock.builder())
                             .build())
-                    .build())
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("register")
-                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                    .addAnnotation(
-                        AnnotationSpec
-                            .builder(Deprecated.class)
-                            .addMember("forRemoval", CodeBlock.of("true"))
-                            .build())
-                    .addJavadoc(
-                        "@deprecated This method has no effect, and simply returns $T.model.",
-                        missionModel.getFactoryName())
-                    .returns(
-                        ParameterizedTypeName.get(
-                            ClassName.get(Scoped.class),
-                            ParameterizedTypeName.get(
-                                ClassName.get(RootModel.class),
-                                ClassName.get(missionModel.topLevelModel))))
-                    .addStatement("return $T.model", missionModel.getFactoryName())
                     .build())
             .addMethod(
                 MethodSpec
