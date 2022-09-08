@@ -207,10 +207,15 @@ public final class SimulationEngine implements AutoCloseable {
     } else if (status instanceof TaskStatus.Delayed<Return> s) {
       this.tasks.put(task, progress.continueWith(s.continuation()));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
-    } else if (status instanceof TaskStatus.AwaitingTask<Return> s) {
+    } else if (status instanceof TaskStatus.CallingTask<Return> s) {
+      final var target = TaskId.generate();
+      SimulationEngine.this.tasks.put(target, new ExecutionState.InProgress<>(currentTime, s.child()));
+      SimulationEngine.this.taskParent.put(target, task);
+      SimulationEngine.this.taskChildren.computeIfAbsent(task, $ -> new HashSet<>()).add(target);
+      frame.signal(JobId.forTask(target));
+
       this.tasks.put(task, progress.continueWith(s.continuation()));
 
-      final var target = new TaskId(s.target());
       final var targetExecution = this.tasks.get(target);
       if (targetExecution == null) {
         // TODO: Log that we saw a task ID that doesn't exist. Try to make this as visible as possible to users.
@@ -218,7 +223,7 @@ public final class SimulationEngine implements AutoCloseable {
       } else if (targetExecution instanceof ExecutionState.Terminated) {
         this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
       } else {
-        this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(new TaskId(s.target()))));
+        this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(target)));
       }
     } else if (status instanceof TaskStatus.AwaitingCondition<Return> s) {
       final var condition = ConditionId.generate();
@@ -696,14 +701,12 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public <Output> String spawn(final Task<Output> state) {
+    public <Output> void spawn(final Task<Output> state) {
       final var task = TaskId.generate();
       SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state));
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       this.frame.signal(JobId.forTask(task));
-
-      return task.id();
     }
   }
 

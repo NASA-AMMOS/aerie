@@ -366,7 +366,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             MethodSpec
                                 .methodBuilder("spawn")
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                                .returns(String.class)
                                 .addParameter(
                                     ClassName.get(missionModel.topLevelModel),
                                     "model",
@@ -381,7 +380,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     missionModel.getTypesName(),
                                     entry.mapper().name.canonicalName().replace(".", "_"))
                                 .addStatement(
-                                    "return $T.spawn($L.getTaskFactory($L, $L))",
+                                    "$T.spawn($L.getTaskFactory($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "mapper",
                                     "model",
@@ -390,7 +389,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             MethodSpec
                                 .methodBuilder("defer")
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                                .returns(String.class)
                                 .addParameter(
                                     ClassName.get(Duration.class),
                                     "duration",
@@ -409,7 +407,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     missionModel.getTypesName(),
                                     entry.mapper().name.canonicalName().replace(".", "_"))
                                 .addStatement(
-                                    "return $T.defer($L, $L.getTaskFactory($L, $L))",
+                                    "$T.defer($L, $L.getTaskFactory($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "duration",
                                     "mapper",
@@ -419,7 +417,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             MethodSpec
                                 .methodBuilder("defer")
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                                .returns(String.class)
                                 .addParameter(
                                     ParameterSpec
                                         .builder(
@@ -443,7 +440,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     "activity",
                                     Modifier.FINAL)
                                 .addStatement(
-                                    "return defer($L.times($L), $L, $L)",
+                                    "defer($L.times($L), $L, $L)",
                                     "unit",
                                     "quantity",
                                     "model",
@@ -452,7 +449,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             MethodSpec
                                 .methodBuilder("call")
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                                .returns(TypeName.VOID)
                                 .addParameter(
                                     ClassName.get(missionModel.topLevelModel),
                                     "model",
@@ -462,8 +458,14 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     "activity",
                                     Modifier.FINAL)
                                 .addStatement(
-                                    "$T.waitFor(spawn($L, $L))",
+                                    "final var $L = $T.$L",
+                                    "mapper",
+                                    missionModel.getTypesName(),
+                                    entry.mapper().name.canonicalName().replace(".", "_"))
+                                .addStatement(
+                                    "$T.call($L.getTaskFactory($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
+                                    "mapper",
                                     "model",
                                     "activity")
                                 .build()))

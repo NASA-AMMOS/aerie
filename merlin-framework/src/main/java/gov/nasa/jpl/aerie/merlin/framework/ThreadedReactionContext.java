@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.Objects;
@@ -58,25 +57,20 @@ final class ThreadedReactionContext implements Context {
   }
 
   @Override
-  public <T> String spawn(final TaskFactory<T> task) {
-    return this.scheduler.spawn(task.create(this.executor));
+  public <T> void spawn(final TaskFactory<T> task) {
+    this.scheduler.spawn(task.create(this.executor));
   }
 
   @Override
-  public <Output> String spawn(final Task<Output> task) {
-    return this.scheduler.spawn(task);
+  public <T> void call(final TaskFactory<T> task) {
+    this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
+    this.scheduler = this.handle.call(task.create(this.executor));
   }
 
   @Override
   public void delay(final Duration duration) {
     this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
     this.scheduler = this.handle.delay(duration);
-  }
-
-  @Override
-  public void waitFor(final String id) {
-    this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
-    this.scheduler = this.handle.await(id);
   }
 
   @Override

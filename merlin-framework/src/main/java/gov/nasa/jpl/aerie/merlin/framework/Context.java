@@ -34,10 +34,9 @@ public interface Context {
 
   interface TaskFactory<Return> { Task<Return> create(ExecutorService executor); }
 
-  <Return> String spawn(TaskFactory<Return> task);
-  <Output> String spawn(Task<Output> task);
+  <Return> void spawn(TaskFactory<Return> task);
+  <Return> void call(TaskFactory<Return> task);
 
   void delay(Duration duration);
-  void waitFor(String id);
   void waitUntil(Condition condition);
 }

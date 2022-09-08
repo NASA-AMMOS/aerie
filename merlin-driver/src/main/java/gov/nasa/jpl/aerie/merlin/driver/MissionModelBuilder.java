@@ -60,8 +60,8 @@ public final class MissionModelBuilder implements Initializer {
   }
 
   @Override
-  public <Return> String daemon(final TaskFactory<Return> task) {
-    return this.state.daemon(task);
+  public <Return> void daemon(final TaskFactory<Return> task) {
+    this.state.daemon(task);
   }
 
   public <Model>
@@ -134,9 +134,8 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
-    public <Return> String daemon(final TaskFactory<Return> task) {
+    public <Return> void daemon(final TaskFactory<Return> task) {
       this.daemons.add(task);
-      return null;  // TODO: get some way to refer to the daemon task
     }
 
     @Override
@@ -192,7 +191,7 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
-    public <Return> String daemon(final TaskFactory<Return> task) {
+    public <Return> void daemon(final TaskFactory<Return> task) {
       throw new IllegalStateException("Daemons cannot be added after the schema is built");
     }
 
