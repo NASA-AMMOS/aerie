@@ -33,12 +33,14 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Repeatable;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /** Parses mission model annotations to record type metamodels. */
 /*package-private*/ record MissionModelParser(Elements elementUtils, Types typeUtils) {
@@ -174,7 +176,7 @@ import java.util.function.Predicate;
     final var declaration = (TypeElement) ((DeclaredType) attribute.getValue()).asElement();
     final var name = declaration.getSimpleName().toString();
     final var parameters = getExportParameters(declaration);
-    final var validations = this.getExportValidations(declaration);
+    final var validations = this.getExportValidations(declaration, parameters);
     final var mapper = getExportMapper(missionModelElement, declaration);
     final var defaultsStyle = getExportDefaultsStyle(declaration);
     return Optional.of(new ConfigurationTypeRecord(name, declaration, parameters, validations, mapper, defaultsStyle));
@@ -304,15 +306,14 @@ import java.util.function.Predicate;
   {
     final var name = this.getActivityTypeName(activityTypeElement);
     final var mapper = this.getExportMapper(missionModelElement, activityTypeElement);
-    final var validations = this.getExportValidations(activityTypeElement);
     final var parameters = this.getExportParameters(activityTypeElement);
+    final var validations = this.getExportValidations(activityTypeElement, parameters);
     final var effectModel = this.getActivityEffectModel(activityTypeElement);
 
     final var durationParameterName = effectModel.flatMap(EffectModelRecord::durationParameter);
     if (durationParameterName.isPresent()) {
       validateControllableDurationParameter(name, parameters, durationParameterName.get());
     }
-
 
     /*
     The following parameter was created as a result of AERIE-1295/1296/1297 on JIRA
@@ -411,17 +412,35 @@ import java.util.function.Predicate;
         ClassName.get((TypeElement) mapperType.asElement()));
   }
 
-  private List<ParameterValidationRecord> getExportValidations(final TypeElement exportTypeElement)
+  private List<ParameterValidationRecord> getExportValidations(
+      final TypeElement exportTypeElement,
+      final List<ParameterRecord> parameters)
+  throws InvalidMissionModelException
   {
     final var validations = new ArrayList<ParameterValidationRecord>();
+    final var parameterNames = parameters.stream().map(p -> p.name).collect(Collectors.toUnmodifiableSet());
 
     for (final var element : exportTypeElement.getEnclosedElements()) {
       if (element.getAnnotation(Export.Validation.class) == null) continue;
 
       final var name = element.getSimpleName().toString();
       final var message = element.getAnnotation(Export.Validation.class).value();
+      final var subjects = element.getAnnotation(Export.Validation.Subject.class) == null ?
+          new String[] { } :
+          element.getAnnotation(Export.Validation.Subject.class).value();
 
-      validations.add(new ParameterValidationRecord(name, message));
+      final var missingSubjects$ = Arrays.stream(subjects)
+          .filter(Predicate.not(parameterNames::contains))
+          .map("\"%s\""::formatted)
+          .reduce((x, y) -> x + ", " + y);
+
+      if (missingSubjects$.isPresent()) {
+        throw new InvalidMissionModelException(
+            "Validation subjects for validation \"%s\" do not exist: %s"
+                .formatted(name, missingSubjects$.get()), exportTypeElement);
+      }
+
+      validations.add(new ParameterValidationRecord(name, subjects, message));
     }
 
     return validations;
