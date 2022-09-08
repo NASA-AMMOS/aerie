@@ -44,7 +44,7 @@ class CommandExpansionDatabaseTests {
   class ExpansionRuleTriggers {
     @Test
     void shouldModifyUpdatedAtTimeOnUpdate() throws SQLException {
-      try(final var statement = connection.createStatement()) {
+      try (final var statement = connection.createStatement()) {
         final var insertRes = statement.executeQuery("""
           insert into expansion_rule (activity_type, expansion_logic)
           values ('test-activity-type', 'test-activity-logic')
@@ -77,7 +77,7 @@ class CommandExpansionDatabaseTests {
   class SequenceTriggers {
     @Test
     void shouldModifyUpdatedAtTimeOnUpdate() throws SQLException {
-      try(final var statement = connection.createStatement()) {
+      try (final var statement = connection.createStatement()) {
         final var insertRes = statement.executeQuery("""
           insert into sequence (seq_id, simulation_dataset_id, metadata)
           values ('%s', 1, '{}')
@@ -108,7 +108,7 @@ class CommandExpansionDatabaseTests {
 
     @Test
     void shouldModifyUpdatedAtTimeOnInsertToSequenceToSimulatedActivityTable() throws SQLException {
-      try(final var statement = connection.createStatement()) {
+      try (final var statement = connection.createStatement()) {
         final var insertRes = statement.executeQuery("""
           insert into sequence (seq_id, simulation_dataset_id, metadata)
           values ('%s', 1, '{}')
