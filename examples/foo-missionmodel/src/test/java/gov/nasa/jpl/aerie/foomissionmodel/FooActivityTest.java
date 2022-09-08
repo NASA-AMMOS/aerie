@@ -53,7 +53,7 @@ public final class FooActivityTest {
   @Test
   public void testActivity() {
     // Within a Merlin test, simulation actions and test assertions can be mixed freely.
-    spawn(new FooActivity());
+    spawn(model, new FooActivity());
     delay(1, Duration.SECOND);
     assertThat(model.simpleData.totalVolume.get()).isCloseTo(15.0, within(1e-9));
     delay(10, Duration.SECOND);

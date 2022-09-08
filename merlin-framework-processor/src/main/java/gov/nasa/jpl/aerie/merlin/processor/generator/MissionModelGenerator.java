@@ -14,6 +14,7 @@ import com.squareup.javapoet.TypeVariableName;
 import com.squareup.javapoet.WildcardTypeName;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.RecordValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.ActivityMapper;
+import gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
@@ -34,6 +35,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -366,21 +368,20 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                                 .returns(String.class)
                                 .addParameter(
+                                    ClassName.get(missionModel.topLevelModel),
+                                    "model",
+                                    Modifier.FINAL)
+                                .addParameter(
                                     ClassName.get(entry.declaration()),
                                     "activity",
                                     Modifier.FINAL)
-                                .addStatement(
-                                    "final var $L = $T.$L.get()",
-                                    "model",
-                                    missionModel.getFactoryName(),
-                                    "model")
                                 .addStatement(
                                     "final var $L = $T.$L",
                                     "mapper",
                                     missionModel.getTypesName(),
                                     entry.mapper().name.canonicalName().replace(".", "_"))
                                 .addStatement(
-                                    "return $T.spawn($L.createTask($L, $L))",
+                                    "return $T.spawn($L.getTaskFactory($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "mapper",
                                     "model",
@@ -391,28 +392,24 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                                 .returns(String.class)
                                 .addParameter(
-                                    ParameterSpec
-                                        .builder(
-                                            gov.nasa.jpl.aerie.merlin.protocol.types.Duration.class,
-                                            "duration")
-                                        .addModifiers(Modifier.FINAL)
-                                        .build())
+                                    ClassName.get(Duration.class),
+                                    "duration",
+                                    Modifier.FINAL)
+                                .addParameter(
+                                    ClassName.get(missionModel.topLevelModel),
+                                    "model",
+                                    Modifier.FINAL)
                                 .addParameter(
                                     ClassName.get(entry.declaration()),
                                     "activity",
                                     Modifier.FINAL)
-                                .addStatement(
-                                    "final var $L = $T.$L.get()",
-                                    "model",
-                                    missionModel.getFactoryName(),
-                                    "model")
                                 .addStatement(
                                     "final var $L = $T.$L",
                                     "mapper",
                                     missionModel.getTypesName(),
                                     entry.mapper().name.canonicalName().replace(".", "_"))
                                 .addStatement(
-                                    "return $T.defer($L, $L.createTask($L, $L))",
+                                    "return $T.defer($L, $L.getTaskFactory($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "duration",
                                     "mapper",
@@ -438,13 +435,18 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                         .addModifiers(Modifier.FINAL)
                                         .build())
                                 .addParameter(
+                                    ClassName.get(missionModel.topLevelModel),
+                                    "model",
+                                    Modifier.FINAL)
+                                .addParameter(
                                     ClassName.get(entry.declaration()),
                                     "activity",
                                     Modifier.FINAL)
                                 .addStatement(
-                                    "return defer($L.times($L), $L)",
+                                    "return defer($L.times($L), $L, $L)",
                                     "unit",
                                     "quantity",
+                                    "model",
                                     "activity")
                                 .build(),
                             MethodSpec
@@ -452,12 +454,17 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                                 .returns(TypeName.VOID)
                                 .addParameter(
+                                    ClassName.get(missionModel.topLevelModel),
+                                    "model",
+                                    Modifier.FINAL)
+                                .addParameter(
                                     ClassName.get(entry.declaration()),
                                     "activity",
                                     Modifier.FINAL)
                                 .addStatement(
-                                    "$T.waitFor(spawn($L))",
+                                    "$T.waitFor(spawn($L, $L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
+                                    "model",
                                     "activity")
                                 .build()))
                     .collect(Collectors.toList()))
@@ -898,90 +905,64 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         TypeName.get(activityType.declaration().asType()),
                         "activity",
                         Modifier.FINAL)
+                    .addStatement(
+                        "return this.getTaskFactory($L.model(), $L).create($L.executor())",
+                        "model",
+                        "activity",
+                        "model")
+                    .build())
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("getTaskFactory")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addAnnotation(Override.class)
+                    .returns(ParameterizedTypeName.get(
+                        ClassName.get(TaskFactory.class),
+                        activityType.getOutputTypeName()))
+                    .addParameter(
+                        ClassName.get(missionModel.topLevelModel),
+                        "model",
+                        Modifier.FINAL)
+                    .addParameter(
+                        TypeName.get(activityType.declaration().asType()),
+                        "activity",
+                        Modifier.FINAL)
                     .addCode(
                         activityType.effectModel()
-                            .map(effectModel -> effectModel
-                                .returnType()
-                                .map(returnType -> CodeBlock
-                                    .builder()
-                                    .addStatement(
-                                        """
-                                          return $T
-                                          .$L(() -> {
-                                            try (final var restore = $T.model.set($L)) {
-                                              $T.emit($L, this.$L);
-                                              final var result = $L.$L($L.model());
-                                              $T.emit(result, this.$L);
-                                              return result;
-                                            }
-                                          })
-                                          .create($L.executor())""",
-                                        ModelActions.class,
-                                        switch (effectModel.executor()) {
-                                          case Threaded -> "threaded";
-                                          case Replaying -> "replaying";
-                                        },
-                                        missionModel.getFactoryName(),
-                                        "model",
-                                        ModelActions.class,
-                                        "activity",
-                                        "inputTopic",
-                                        "activity",
-                                        effectModel.methodName(),
-                                        "model",
-                                        ModelActions.class,
-                                        "outputTopic",
-                                        "model")
-                                    .build())
-                                .orElseGet(() -> CodeBlock
-                                    .builder()
-                                    .addStatement(
-                                        """
-                                          return $T
-                                          .$L(() -> {
-                                            try (final var restore = $T.model.set($L)) {
-                                              $T.emit($L, this.$L);
-                                              $L.$L($L.model());
-                                              $T.emit($T.UNIT, this.$L);
-                                              return $T.UNIT;
-                                            }
-                                          })
-                                          .create($L.executor())""",
-                                        ModelActions.class,
-                                        switch (effectModel.executor()) {
-                                          case Threaded -> "threaded";
-                                          case Replaying -> "replaying";
-                                        },
-                                        missionModel.getFactoryName(),
-                                        "model",
-                                        ModelActions.class,
-                                        "activity",
-                                        "inputTopic",
-                                        "activity",
-                                        effectModel.methodName(),
-                                        "model",
-                                        ModelActions.class,
-                                        Unit.class,
-                                        "outputTopic",
-                                        Unit.class,
-                                        "model")
-                                    .build()))
+                            .map(effectModel -> CodeBlock
+                                .builder()
+                                .add(
+                                    "return $T.$L(() -> {$>\n$L$<});\n",
+                                    ModelActions.class,
+                                    switch (effectModel.executor()) {
+                                      case Threaded -> "threaded";
+                                      case Replaying -> "replaying";
+                                    },
+                                    effectModel.returnType()
+                                        .map(returnType -> CodeBlock
+                                            .builder()
+                                            .addStatement("$T.emit($L, this.$L)", ModelActions.class, "activity", "inputTopic")
+                                            .addStatement("final var result = $L.$L($L)", "activity", effectModel.methodName(), "model")
+                                            .addStatement("$T.emit(result, this.$L)", ModelActions.class, "outputTopic")
+                                            .addStatement("return result")
+                                            .build())
+                                        .orElseGet(() -> CodeBlock
+                                            .builder()
+                                            .addStatement("$T.emit($L, this.$L)", ModelActions.class, "activity", "inputTopic")
+                                            .addStatement("$L.$L($L)", "activity", effectModel.methodName(), "model")
+                                            .addStatement("$T.emit($T.UNIT, this.$L)", ModelActions.class, Unit.class, "outputTopic")
+                                            .addStatement("return $T.UNIT", Unit.class)
+                                            .build()))
+                                .build())
                             .orElseGet(() -> CodeBlock
                                 .builder()
                                 .add(
-                                    """
-                                      return scheduler -> {
-                                        scheduler.emit($L, this.$L);
-                                        scheduler.emit($T.UNIT, this.$L);
-                                        return $T.completed($T.UNIT);
-                                      };
-                                      """,
-                                    "activity",
-                                    "inputTopic",
-                                    Unit.class,
-                                    "outputTopic",
-                                    TaskStatus.class,
-                                    Unit.class)
+                                    "return executor -> scheduler -> {$>\n$L$<};\n",
+                                    CodeBlock.builder()
+                                        .addStatement("scheduler.emit($L, this.$L)", "activity", "inputTopic")
+                                        .addStatement("scheduler.emit($T.UNIT, this.$L)", Unit.class, "outputTopic")
+                                        .addStatement("return $T.completed($T.UNIT)", TaskStatus.class, Unit.class)
+                                        .build())
                                 .build()))
                     .build())
             .build())

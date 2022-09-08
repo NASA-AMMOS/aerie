@@ -36,7 +36,7 @@ public final class MissionConfigurationTest {
     @Test
     public void test() {
       assertThat(model.startingAfterUnixEpoch.get()).isEqualTo(false);
-      spawn(new FooActivity());
+      spawn(model, new FooActivity());
       delay(1, Duration.SECOND);
       assertThat(model.sink.get()).isCloseTo(0.5, within(1e-9));
     }
@@ -58,7 +58,7 @@ public final class MissionConfigurationTest {
     @Test
     public void test() {
       assertThat(model.startingAfterUnixEpoch.get()).isEqualTo(true);
-      spawn(new FooActivity());
+      spawn(model, new FooActivity());
       delay(1, Duration.SECOND);
       assertThat(model.sink.get()).isCloseTo(2.0, within(1e-9));
     }

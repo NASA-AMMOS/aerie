@@ -18,9 +18,9 @@ public final class DecomposingSpawnActivity {
 
     @EffectModel
     public void run(final Mission mission) {
-      spawn(new DecomposingSpawnChildActivity(1));
+      spawn(mission, new DecomposingSpawnChildActivity(1));
       delay(1, SECOND);
-      spawn(new DecomposingSpawnChildActivity(2));
+      spawn(mission, new DecomposingSpawnChildActivity(2));
     }
   }
 
