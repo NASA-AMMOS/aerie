@@ -163,7 +163,7 @@ type MerlinSimulationResponse {
 }
 
 type ValidationResponse {
-  errors: [ValidationNotice!]!
+  errors: [ValidationNotice!]
   success: Boolean!
 }
 
