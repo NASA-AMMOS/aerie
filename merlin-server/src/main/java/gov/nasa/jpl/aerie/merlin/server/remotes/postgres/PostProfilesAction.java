@@ -36,8 +36,9 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
   ) throws SQLException {
     final var resourceNames = new ArrayList<String>();
     final var resourceTypes = new ArrayList<Pair<String, ValueSchema>>();
-    for (final var resource : realProfiles.keySet()) {
-      final var schema = realProfiles.get(resource).getLeft();
+    for (final var entry : realProfiles.entrySet()) {
+      final var resource = entry.getKey();
+      final var schema = entry.getValue().getLeft();
       final var realResourceType = Pair.of("real", schema);
       resourceNames.add(resource);
       resourceTypes.add(realResourceType);
@@ -47,8 +48,9 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       this.statement.addBatch();
     }
 
-    for (final var resource : discreteProfiles.keySet()) {
-      final var schema = discreteProfiles.get(resource).getLeft();
+    for (final var entry : discreteProfiles.entrySet()) {
+      final var resource = entry.getKey();
+      final var schema = entry.getValue().getLeft();
       final var resourceType = Pair.of("discrete", schema);
       resourceNames.add(resource);
       resourceTypes.add(resourceType);

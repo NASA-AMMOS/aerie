@@ -28,5 +28,6 @@ import java.sql.SQLException;
 
   @Override
   public void close() throws SQLException {
+    // Nothing to clean up. The method is an intentionally-blank override.
   }
 }

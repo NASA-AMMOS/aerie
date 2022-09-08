@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import com.impossibl.postgres.api.data.Interval;
+import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -9,12 +10,14 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.json.Json;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Map;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
@@ -66,4 +69,17 @@ public final class PostgresParsers {
         .map(
             untuple(ActivityAttributesRecord::new),
             $ -> tuple($.directiveId(), $.arguments(), $.computedAttributes()));
+
+  public static final JsonParser<Map<String, Pair<Integer, ValueSchema>>> parameterRecordP =
+      mapP(
+          productP
+              .field("order", intP)
+              .field("schema", valueSchemaP));
+
+  public static <V> JsonParseResult<V>
+  getJsonColumn(final ResultSet results, final String column, final JsonParser<V> parser) throws SQLException {
+    try (final var reader = Json.createReader(results.getCharacterStream(column))) {
+      return parser.parse(reader.readValue());
+    }
+  }
 }

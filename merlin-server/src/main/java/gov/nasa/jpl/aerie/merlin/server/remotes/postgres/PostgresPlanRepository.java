@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository.NoSuchMis
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 
 import javax.json.Json;
+import javax.json.JsonReader;
 import javax.json.stream.JsonParsingException;
 import javax.sql.DataSource;
 import java.io.StringReader;
@@ -326,8 +327,8 @@ public final class PostgresPlanRepository implements PlanRepository {
   private static <T> T parseJson(final String subject, final JsonParser<T> parser)
   throws InvalidJsonException, InvalidEntityException
   {
-    try {
-      final var requestJson = Json.createReader(new StringReader(subject)).readValue();
+    try (JsonReader reader = Json.createReader(new StringReader(subject))) {
+      final var requestJson = reader.readValue();
       final var result = parser.parse(requestJson);
       return result.getSuccessOrThrow($ -> new InvalidEntityException(List.of($)));
     } catch (final JsonParsingException ex) {

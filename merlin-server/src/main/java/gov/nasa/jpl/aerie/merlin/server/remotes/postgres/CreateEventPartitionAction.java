@@ -8,7 +8,7 @@ import java.sql.SQLException;
 /*package-local*/ final class CreateEventPartitionAction implements AutoCloseable {
   private final Connection connection;
 
-  public CreateEventPartitionAction(final Connection connection) throws SQLException {
+  public CreateEventPartitionAction(final Connection connection) {
     this.connection = connection;
   }
 
@@ -28,5 +28,6 @@ import java.sql.SQLException;
 
   @Override
   public void close() throws SQLException {
+    // Nothing to clean up. The method is an intentionally-blank override.
   }
 }

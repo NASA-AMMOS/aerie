@@ -44,33 +44,34 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
     PreparedStatements.setTimestamp(this.statement, 2, simulationStart);
     PreparedStatements.setTimestamp(this.statement, 3, planStart);
 
-    final var results = this.statement.executeQuery();
-    if (!results.next()) throw new FailedInsertException("simulation_dataset");
-    final Status status;
-    try {
-      status = Status.fromString(results.getString(2));
-    } catch (final Status.InvalidSimulationStatusException ex) {
-      throw new Error("Simulation Dataset initialized with invalid state.");
+    try (final var results = this.statement.executeQuery()) {
+      if (!results.next()) throw new FailedInsertException("simulation_dataset");
+      final Status status;
+      try {
+        status = Status.fromString(results.getString(2));
+      } catch (final Status.InvalidSimulationStatusException ex) {
+        throw new Error("Simulation Dataset initialized with invalid state.");
+      }
+
+      final var datasetId = results.getLong(1);
+      final var reason = results.getString(3);
+
+      final var state = new SimulationStateRecord(
+          status,
+          reason);
+      final var canceled = results.getBoolean(4);
+
+      final var simulationDatasetId = results.getLong(5);
+
+      return new SimulationDatasetRecord(
+          simulationId,
+          datasetId,
+          state,
+          canceled,
+          offsetFromPlanStart,
+          simulationDatasetId
+      );
     }
-
-    final var datasetId = results.getLong(1);
-    final var reason = results.getString(3);
-
-    final var state = new SimulationStateRecord(
-        status,
-        reason);
-    final var canceled = results.getBoolean(4);
-
-    final var simulationDatasetId = results.getLong(5);
-
-    return new SimulationDatasetRecord(
-        simulationId,
-        datasetId,
-        state,
-        canceled,
-        offsetFromPlanStart,
-        simulationDatasetId
-    );
   }
 
   @Override

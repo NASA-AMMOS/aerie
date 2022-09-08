@@ -392,8 +392,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     final var pgIdToSimId = new HashMap<Long, ActivityInstanceId>(activityRecords.size());
     final var simIds = new HashSet<Long>(activityRecords.size());
 
-    for (final var id : activityRecords.keySet()) {
-      final var record = activityRecords.get(id);
+    for (final var entry : activityRecords.entrySet()) {
+      final var id = entry.getKey();
+      final var record = entry.getValue();
       if (record.attributes().directiveId().isEmpty()) continue;
 
       final var directiveId = new ActivityInstanceId(record.attributes().directiveId().get());
@@ -402,8 +403,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
 
     var counter = 1L;
-    for (final var id : activityRecords.keySet()) {
-      final var record = activityRecords.get(id);
+    for (final var entry : activityRecords.entrySet()) {
+      final var id = entry.getKey();
+      final var record = entry.getValue();
       if (record.attributes().directiveId().isPresent()) continue;
 
       long newId;

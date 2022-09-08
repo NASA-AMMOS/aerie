@@ -42,7 +42,7 @@ class SchedulerDatabaseTests {
   }
 
   int insertSpecification() throws SQLException {
-    try(final var statement = connection.createStatement()) {
+    try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery("""
         insert into scheduling_specification(
           revision, plan_id, plan_revision, horizon_start, horizon_end, simulation_arguments, analysis_only
@@ -54,7 +54,7 @@ class SchedulerDatabaseTests {
   }
 
   int insertTemplate() throws SQLException {
-    try(final var statement = connection.createStatement()) {
+    try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery("""
         insert into scheduling_template(
           revision, model_id, description, simulation_arguments
@@ -66,7 +66,7 @@ class SchedulerDatabaseTests {
   }
 
   int insertGoal() throws SQLException {
-    try(final var statement = connection.createStatement()) {
+    try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery("""
         insert into scheduling_goal(
           revision, name, definition, model_id, description, author, last_modified_by, created_date, modified_date

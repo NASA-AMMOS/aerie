@@ -62,33 +62,34 @@ import java.util.Optional;
   ) throws SQLException {
     this.statement.setLong(1, simulationId);
 
-    final var results = this.statement.executeQuery();
-    if (!results.next()) return Optional.empty();
+    try (final var results = this.statement.executeQuery()) {
+      if (!results.next()) return Optional.empty();
 
-    final Status status;
-    try {
-      status = Status.fromString(results.getString(2));
-    } catch (final Status.InvalidSimulationStatusException ex) {
-      throw new Error("Simulation Dataset initialized with invalid state.");
+      final Status status;
+      try {
+        status = Status.fromString(results.getString(2));
+      } catch (final Status.InvalidSimulationStatusException ex) {
+        throw new Error("Simulation Dataset initialized with invalid state.");
+      }
+
+      final var datasetId = results.getLong(1);
+      final var reason = results.getString(3);
+      final var canceled = results.getBoolean(4);
+      final var offsetFromPlanStart = PostgresParsers.parseOffset(results, 5, planStart);
+      final var simulationDatasetId = results.getLong(6);
+      final var state = new SimulationStateRecord(
+          status,
+          reason);
+
+      return Optional.of(
+          new SimulationDatasetRecord(
+              simulationId,
+              datasetId,
+              state,
+              canceled,
+              offsetFromPlanStart,
+              simulationDatasetId));
     }
-
-    final var datasetId = results.getLong(1);
-    final var reason = results.getString(3);
-    final var canceled = results.getBoolean(4);
-    final var offsetFromPlanStart = PostgresParsers.parseOffset(results, 5, planStart);
-    final var simulationDatasetId = results.getLong(6);
-    final var state = new SimulationStateRecord(
-        status,
-        reason);
-
-    return Optional.of(
-        new SimulationDatasetRecord(
-            simulationId,
-            datasetId,
-            state,
-            canceled,
-            offsetFromPlanStart,
-            simulationDatasetId));
   }
 
   @Override

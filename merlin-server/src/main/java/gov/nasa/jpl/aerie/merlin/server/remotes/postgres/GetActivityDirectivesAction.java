@@ -1,18 +1,19 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.json.JsonParseResult;
+import gov.nasa.jpl.aerie.json.JsonParser;
 import org.intellij.lang.annotations.Language;
 
 import javax.json.Json;
-import java.io.Reader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.activityArgumentsP;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
 
 /*package-local*/ final class GetActivityDirectivesAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
@@ -42,20 +43,12 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
                 results.getLong("id"),
                 results.getString("type"),
                 results.getLong("start_offset_in_micros"),
-                parseActivityArguments(results.getCharacterStream("arguments"))));
+                getJsonColumn(results, "arguments", activityArgumentsP)
+                    .getSuccessOrThrow($ -> new Error("Corrupt activity arguments cannot be parsed: " + $.reason()))));
       }
     }
 
     return activities;
-  }
-
-  private Map<String, SerializedValue> parseActivityArguments(final Reader stream) {
-    final var json = Json.createReader(stream).readValue();
-    return activityArgumentsP
-        .parse(json)
-        .getSuccessOrThrow(
-            failureReason -> new Error("Corrupt activity arguments cannot be parsed: " + failureReason.reason())
-        );
   }
 
   @Override

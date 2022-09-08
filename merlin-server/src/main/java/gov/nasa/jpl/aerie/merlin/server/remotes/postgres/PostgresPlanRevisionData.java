@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
 
 import java.util.Optional;
 
-public final record PostgresPlanRevisionData(
+public record PostgresPlanRevisionData(
     long modelRevision,
     long planRevision,
     long simulationRevision,

@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -70,7 +69,7 @@ public final class EventGraphUnflattener {
           self.children.put(tag.index(), Trie.of(tag.suffix(), event));
         }
       } else {
-        throw new IllegalArgumentException("Unexpected variant %s of type $s".formatted(this, Trie.class));
+        throw new IllegalArgumentException("Unexpected variant %s of type %s".formatted(this, Trie.class));
       }
     }
 
@@ -84,7 +83,7 @@ public final class EventGraphUnflattener {
         }
         return graph;
       } else {
-        throw new IllegalArgumentException("Unexpected variant %s of type $s".formatted(this, Trie.class));
+        throw new IllegalArgumentException("Unexpected variant %s of type %s".formatted(this, Trie.class));
       }
     }
 
@@ -98,7 +97,7 @@ public final class EventGraphUnflattener {
         }
         return graph;
       } else {
-        throw new IllegalArgumentException("Unexpected variant %s of type $s".formatted(this, Trie.class));
+        throw new IllegalArgumentException("Unexpected variant %s of type %s".formatted(this, Trie.class));
       }
     }
 

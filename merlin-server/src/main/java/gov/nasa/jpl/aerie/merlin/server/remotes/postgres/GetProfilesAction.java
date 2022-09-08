@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.profileTypeP;
 
 /*package-local*/ final class GetProfilesAction implements AutoCloseable {
@@ -38,21 +39,13 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     while (resultSet.next()) {
       final var profileId = resultSet.getLong(1);
       final var resourceName = resultSet.getString(2);
-      final var type = parseProfileType(resultSet.getCharacterStream(3));
-
+      final var type = getJsonColumn(resultSet, "type", profileTypeP).getSuccessOrThrow(
+              failureReason -> new Error(
+                  "Corrupt profile type: " + failureReason.reason()));
       records.add(new ProfileRecord(profileId, datasetId, resourceName, type));
     }
 
     return records;
-  }
-
-  private Pair<String, ValueSchema> parseProfileType(final Reader jsonStream) {
-    final var json = Json.createReader(jsonStream).readValue();
-    return profileTypeP
-        .parse(json)
-        .getSuccessOrThrow(
-            failureReason -> new Error(
-                "Corrupt profile type: " + failureReason.reason()));
   }
 
   @Override

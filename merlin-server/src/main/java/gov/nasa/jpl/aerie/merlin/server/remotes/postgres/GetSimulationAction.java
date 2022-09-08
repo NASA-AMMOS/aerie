@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
 
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.simulationArgumentsP;
 
 /*package local*/ final class GetSimulationAction implements AutoCloseable {
@@ -44,17 +45,11 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           results.getObject(3) == null ?
               Optional.<Long>empty() :
               Optional.of(results.getLong(3));
-      final var arguments = parseSimulationArguments(results.getCharacterStream(4));
+      final var arguments = getJsonColumn(results, "arguments", simulationArgumentsP)
+          .getSuccessOrThrow(
+              failureReason -> new Error("Corrupt simulation arguments cannot be parsed: " + failureReason.reason())
+          );
       return Optional.of(new SimulationRecord(id, revision, planId, templateId$, arguments));
-  }
-
-  private Map<String, SerializedValue> parseSimulationArguments(final Reader stream) {
-    final var json = Json.createReader(stream).readValue();
-    return simulationArgumentsP
-        .parse(json)
-        .getSuccessOrThrow(
-            failureReason -> new Error("Corrupt simulation arguments cannot be parsed: " + failureReason.reason())
-        );
   }
 
   @Override

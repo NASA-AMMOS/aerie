@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 
-public final record PlanRecord(
+public record PlanRecord(
     long id,
     long revision,
     String name,
