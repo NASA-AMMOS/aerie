@@ -21,6 +21,7 @@ public final class BiteBananaActivity {
   public double biteSize = 1.0;
 
   @Validation("bite size must be positive")
+  @Validation.Subject({"biteSize"})
   public boolean validateBiteSize() {
     return this.biteSize > 0;
   }

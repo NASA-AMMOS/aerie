@@ -10,8 +10,15 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.WithDefaults;
 public record BakeBananaBreadActivity(double temperature, int tbSugar, boolean glutenFree) {
 
   @Validation("Temperature must be positive")
+  @Validation.Subject({"temperature"})
   public boolean validateTemperature() {
     return this.temperature() > 0;
+  }
+
+  @Validation("Gluten-free bread must be baked at a temperature >= 100")
+  @Validation.Subject({"glutenFree", "temperature"})
+  public boolean validateGlutenFreeTemperature() {
+    return !glutenFree || temperature >= 100;
   }
 
   @EffectModel
