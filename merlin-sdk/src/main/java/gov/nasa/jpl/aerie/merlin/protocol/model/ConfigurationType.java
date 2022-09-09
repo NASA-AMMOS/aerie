@@ -18,16 +18,6 @@ public interface ConfigurationType<Config> {
   Map<String, SerializedValue> getArguments(Config configuration);
   List<ValidationNotice> getValidationFailures(Config configuration);
 
-  final class UnconstructableConfigurationException extends Exception {
-    public UnconstructableConfigurationException() {
-      super();
-    }
-
-    public UnconstructableConfigurationException(final String message) {
-      super(message);
-    }
-  }
-
   /**
    * This method must behave as though implemented as:
    * {@snippet :

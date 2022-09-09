@@ -10,7 +10,6 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -111,11 +110,10 @@ public class IncrementalSimulationDriver<Model> {
    * @param activity the activity to simulate
    * @param startTime the start time of the activity
    * @param activityId the activity id for the activity to simulate
-   * @throws DirectiveType.UnconstructableDirectiveException
    * @throws InstantiationException
    */
   public void simulateActivity(SerializedActivity activity, Duration startTime, ActivityInstanceId activityId)
-  throws DirectiveType.UnconstructableDirectiveException, InstantiationException
+  throws InstantiationException
   {
     final var activityToSimulate = new SimulatedActivity(startTime, activity, activityId);
     if(startTime.noLongerThan(curTime)){
@@ -177,7 +175,7 @@ public class IncrementalSimulationDriver<Model> {
   }
 
   private void simulateSchedule(final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule)
-  throws DirectiveType.UnconstructableDirectiveException, InstantiationException
+  throws InstantiationException
   {
 
     if(schedule.isEmpty()){

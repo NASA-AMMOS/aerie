@@ -35,12 +35,6 @@ public interface DirectiveType<Model, Directive, Return> {
     return this.createTask(model, this.instantiate(arguments));
   }
 
-  final class UnconstructableDirectiveException extends Exception {
-    public UnconstructableDirectiveException(final String message) {
-      super(message);
-    }
-  }
-
   /**
    * This method must behave as though implemented as:
    * {@snippet :

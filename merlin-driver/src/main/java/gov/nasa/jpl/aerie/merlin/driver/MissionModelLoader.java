@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -47,14 +46,14 @@ public final class MissionModelLoader {
         final MissionModelBuilder builder)
     {
         try {
-            final var serializedConfigMap =
-                missionModelConfig.asMap().orElseThrow(ConfigurationType.UnconstructableConfigurationException::new);
+            final var serializedConfigMap = missionModelConfig.asMap().orElseThrow(() ->
+                new InstantiationException.Builder("configuration", "Configuration").build());
 
             final var config = modelType.getConfigurationType().instantiate(serializedConfigMap);
             final var registry = DirectiveTypeRegistry.extract(modelType);
             final var model = modelType.instantiate(planStart, config, builder);
             return builder.build(model, registry);
-        } catch (final ConfigurationType.UnconstructableConfigurationException | InstantiationException ex) {
+        } catch (final InstantiationException ex) {
             throw new MissionModelInstantiationException(ex);
         }
     }

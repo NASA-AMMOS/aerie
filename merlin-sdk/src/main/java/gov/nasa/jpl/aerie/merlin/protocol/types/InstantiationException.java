@@ -87,13 +87,18 @@ public final class InstantiationException extends Exception {
             unconstructableArguments.isEmpty() &&
             missingArguments.isEmpty()))
       {
-        throw new InstantiationException(metaName,
-                                         containerName,
-                                         extraneousArguments,
-                                         unconstructableArguments,
-                                         missingArguments,
-                                         validArguments);
+        throw this.build();
       }
+    }
+
+    public InstantiationException build() {
+      return new InstantiationException(
+          metaName,
+          containerName,
+          extraneousArguments,
+          unconstructableArguments,
+          missingArguments,
+          validArguments);
     }
   }
 }
