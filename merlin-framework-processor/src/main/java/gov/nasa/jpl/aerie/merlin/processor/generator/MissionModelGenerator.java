@@ -17,7 +17,6 @@ import gov.nasa.jpl.aerie.merlin.framework.ActivityMapper;
 import gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
-import gov.nasa.jpl.aerie.merlin.framework.Scoped;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.processor.MissionModelProcessor;
 import gov.nasa.jpl.aerie.merlin.processor.Resolver;
@@ -31,7 +30,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
-import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
@@ -82,13 +81,13 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             .addSuperinterface(MerlinPlugin.class)
             .addMethod(
                 MethodSpec
-                    .methodBuilder("getFactory")
+                    .methodBuilder("getModelType")
                     .addAnnotation(Override.class)
                     .addModifiers(Modifier.PUBLIC)
-                    .returns(missionModel.getFactoryName())
+                    .returns(missionModel.getModelTypeName())
                     .addStatement(
                         "return new $T()",
-                        missionModel.getFactoryName())
+                        missionModel.getModelTypeName())
                     .build())
             .build();
 
@@ -129,7 +128,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
         .build();
   }
 
-  /** Generate `GeneratedMissionModelFactory` class. */
+  /** Generate `ConfigurationMapper` class. */
   public Optional<JavaFile> generateMissionModelConfigurationMapper(final MissionModelRecord missionModel, final ConfigurationTypeRecord configType) {
     return generateCommonMapperMethods(missionModel, configType).map(typeSpec -> JavaFile
         .builder(configType.mapper().name.packageName(), typeSpec)
@@ -137,9 +136,9 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
         .build());
   }
 
-  /** Generate `GeneratedMissionModelFactory` class. */
-  public JavaFile generateMissionModelFactory(final MissionModelRecord missionModel) {
-    final var typeName = missionModel.getFactoryName();
+  /** Generate `GeneratedModelType` class. */
+  public JavaFile generateModelType(final MissionModelRecord missionModel) {
+    final var typeName = missionModel.getModelTypeName();
 
     final var typeSpec =
         TypeSpec
@@ -152,7 +151,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addSuperinterface(
                 ParameterizedTypeName.get(
-                    ClassName.get(MissionModelFactory.class),
+                    ClassName.get(ModelType.class),
                     missionModel.modelConfigurationType
                         .map($ -> ClassName.get($.declaration()))
                         .orElse(ClassName.get(Unit.class)),
@@ -200,7 +199,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addAnnotation(Override.class)
                     .addParameter(
                         ClassName.get(Instant.class),
-                       "planStart",
+                        "planStart",
                         Modifier.FINAL)
                     .addParameter(
                         missionModel.modelConfigurationType
@@ -873,12 +872,12 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         Modifier.FINAL)
                     .addParameter(
                         TypeName.get(activityType.declaration().asType()),
-                        "activity",
+                        "directive",
                         Modifier.FINAL)
                     .addStatement(
                         "return this.getTaskFactory($L.model(), $L).create($L.executor())",
                         "model",
-                        "activity",
+                        "directive",
                         "model")
                     .build())
             .addMethod(

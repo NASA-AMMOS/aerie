@@ -977,7 +977,7 @@ public class SchedulingIntegrationTests {
         Path.of(jarPath),
         "",
         "");
-    final Map<String, ? extends DirectiveType<?, ?, ?>> taskSpecTypes = missionModel.getDirectiveTypes().taskSpecTypes();
+    final Map<String, ? extends DirectiveType<?, ?, ?>> taskSpecTypes = missionModel.getDirectiveTypes().directiveTypes();
     final var activityTypes = new ArrayList<MissionModelService.ActivityType>();
     for (final var entry : taskSpecTypes.entrySet()) {
       final var activityTypeName = entry.getKey();

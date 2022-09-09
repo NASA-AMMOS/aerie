@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
-import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
@@ -18,11 +18,11 @@ import java.time.Instant;
 import java.util.jar.JarFile;
 
 public final class MissionModelLoader {
-    public static MissionModelFactory<?, ?> loadMissionModelFactory(final Path path, final String name, final String version)
+    public static ModelType<?, ?> loadModelType(final Path path, final String name, final String version)
     throws MissionModelLoadException
     {
         final var service = loadMissionModelProvider(path, name, version);
-        return service.getFactory();
+        return service.getModelType();
     }
 
     public static MissionModel<?> loadMissionModel(
@@ -34,25 +34,25 @@ public final class MissionModelLoader {
     throws MissionModelLoadException
     {
         final var service = loadMissionModelProvider(path, name, version);
-        final var factory = service.getFactory();
+        final var modelType = service.getModelType();
         final var builder = new MissionModelBuilder();
-        return loadMissionModel(planStart, missionModelConfig, factory, builder);
+        return loadMissionModel(planStart, missionModelConfig, modelType, builder);
     }
 
     private static <Config, Model>
     MissionModel<Model> loadMissionModel(
         final Instant planStart,
         final SerializedValue missionModelConfig,
-        final MissionModelFactory<Config, Model> factory,
+        final ModelType<Config, Model> modelType,
         final MissionModelBuilder builder)
     {
         try {
             final var serializedConfigMap =
                 missionModelConfig.asMap().orElseThrow(ConfigurationType.UnconstructableConfigurationException::new);
 
-            final var config = factory.getConfigurationType().instantiate(serializedConfigMap);
-            final var registry = DirectiveTypeRegistry.extract(factory);
-            final var model = factory.instantiate(planStart, config, builder);
+            final var config = modelType.getConfigurationType().instantiate(serializedConfigMap);
+            final var registry = DirectiveTypeRegistry.extract(modelType);
+            final var model = modelType.instantiate(planStart, config, builder);
             return builder.build(model, registry);
         } catch (final ConfigurationType.UnconstructableConfigurationException | InstantiationException ex) {
             throw new MissionModelInstantiationException(ex);
@@ -62,7 +62,7 @@ public final class MissionModelLoader {
     public static MerlinPlugin loadMissionModelProvider(final Path path, final String name, final String version)
     throws MissionModelLoadException
     {
-        // Look for a MerlinMissionModel implementor in the mission model. For correctness, we're assuming there's
+        // Look for a MerlinPlugin implementor in the mission model. For correctness, we're assuming there's
         // only one matching MerlinMissionModel in any given mission model.
         final var className = getImplementingClassName(path, name, version);
 
@@ -70,12 +70,12 @@ public final class MissionModelLoader {
         final var classLoader = new URLClassLoader(new URL[] {missionModelPathToUrl(path)});
 
         try {
-            final var factoryClass$ = classLoader.loadClass(className);
-            if (!MerlinPlugin.class.isAssignableFrom(factoryClass$)) {
+            final var pluginClass$ = classLoader.loadClass(className);
+            if (!MerlinPlugin.class.isAssignableFrom(pluginClass$)) {
                 throw new MissionModelLoadException(path, name, version);
             }
 
-            return (MerlinPlugin) factoryClass$.getConstructor().newInstance();
+            return (MerlinPlugin) pluginClass$.getConstructor().newInstance();
         } catch (final ReflectiveOperationException ex) {
             throw new MissionModelLoadException(path, name, version, ex);
         }

@@ -109,7 +109,7 @@ public final class MissionModelProcessor implements Processor {
             .ifPresent(generatedFiles::add);
 
         generatedFiles.addAll(List.of(
-            missionModelGen.generateMissionModelFactory(missionModelRecord$),
+            missionModelGen.generateModelType(missionModelRecord$),
             missionModelGen.generateSchedulerModel(missionModelRecord$),
             missionModelGen.generateActivityActions(missionModelRecord$),
             missionModelGen.generateActivityTypes(missionModelRecord$)

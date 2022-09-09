@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
-import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
+import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedModelType;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -26,7 +26,7 @@ public final class MissionModelTest {
 
   @BeforeEach
   public void initialize() {
-      this.registry = DirectiveTypeRegistry.extract(new GeneratedMissionModelFactory());
+      this.registry = DirectiveTypeRegistry.extract(new GeneratedModelType());
   }
 
   @AfterEach
@@ -51,7 +51,7 @@ public final class MissionModelTest {
 
     // WHEN
     final var activityTypes = new HashMap<String, ActivityType>();
-    registry.taskSpecTypes().forEach((name, specType) -> activityTypes.put(
+    registry.directiveTypes().forEach((name, specType) -> activityTypes.put(
         name,
         new ActivityType(name,
                          specType.getParameters(),
@@ -79,7 +79,7 @@ public final class MissionModelTest {
     // WHEN
     final var typeName = expectedType.name();
     final var specType = Optional
-        .ofNullable(registry.taskSpecTypes().get(typeName))
+        .ofNullable(registry.directiveTypes().get(typeName))
         .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(typeName));
 
     final var type = new ActivityType(
@@ -100,7 +100,7 @@ public final class MissionModelTest {
     // WHEN
     final var thrown = catchThrowable(() -> {
         final var specType = Optional
-            .ofNullable(registry.taskSpecTypes().get(activityId))
+            .ofNullable(registry.directiveTypes().get(activityId))
             .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(activityId));
 
         new ActivityType(
@@ -120,14 +120,14 @@ public final class MissionModelTest {
   {
     // GIVEN
     final var typeName = "foo";
-    final var parameters = new HashMap<>(Map.of("x", SerializedValue.of(0),
-                                                "y", SerializedValue.of("test"),
-                                                "z", SerializedValue.of(1)));
+    final var arguments = new HashMap<>(Map.of("x", SerializedValue.of(0),
+                                               "y", SerializedValue.of("test"),
+                                               "z", SerializedValue.of(1)));
 
     // WHEN
-    final var activity = new SerializedActivity(typeName, parameters);
+    final var activity = new SerializedActivity(typeName, arguments);
     final var specType = Optional
-        .ofNullable(registry.taskSpecTypes().get(activity.getTypeName()))
+        .ofNullable(registry.directiveTypes().get(activity.getTypeName()))
         .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(activity.getTypeName()));
     final var failures = specType.validateArguments(activity.getArguments());
 
@@ -146,7 +146,7 @@ public final class MissionModelTest {
     final var thrown = catchThrowable(() -> {
         final var activity = new SerializedActivity(typeName, parameters);
         final var specType = Optional
-            .ofNullable(registry.taskSpecTypes().get(activity.getTypeName()))
+            .ofNullable(registry.directiveTypes().get(activity.getTypeName()))
             .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(activity.getTypeName()));
         specType.validateArguments(activity.getArguments());
     });
@@ -171,7 +171,7 @@ public final class MissionModelTest {
     final var thrown = catchThrowable(() -> {
         final var activity = new SerializedActivity(typeName, parameters);
         final var specType = Optional
-            .ofNullable(registry.taskSpecTypes().get(activity.getTypeName()))
+            .ofNullable(registry.directiveTypes().get(activity.getTypeName()))
             .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(activity.getTypeName()));
         specType.validateArguments(activity.getArguments());
     });

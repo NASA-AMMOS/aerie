@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -52,7 +51,7 @@ public final class MissionModel<Model> {
 
   public Task<?> createTask(final SerializedActivity specification) throws InstantiationException {
     return this.directiveTypes
-        .taskSpecTypes()
+        .directiveTypes()
         .get(specification.getTypeName())
         .createTask(this.model, specification.getArguments());
   }

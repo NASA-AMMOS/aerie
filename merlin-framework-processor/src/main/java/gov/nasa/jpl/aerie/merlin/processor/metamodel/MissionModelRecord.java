@@ -44,8 +44,8 @@ public final class MissionModelRecord {
     return ClassName.get(this.$package.getQualifiedName() + ".generated", "GeneratedSchedulerPlugin");
   }
 
-  public ClassName getFactoryName() {
-    return ClassName.get(this.$package.getQualifiedName() + ".generated", "GeneratedMissionModelFactory");
+  public ClassName getModelTypeName() {
+    return ClassName.get(this.$package.getQualifiedName() + ".generated", "GeneratedModelType");
   }
 
   public ClassName getSchedulerModelName() {
