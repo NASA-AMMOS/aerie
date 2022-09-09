@@ -31,7 +31,7 @@ to get up-and-running with a GraphQL client capable of communicating with the Ae
 ### Create a Plan
 
 Create a plan `test-plan`. This will trigger Merlin to create a new simulation that can be queried for from the GraphQL API:
-```graphql
+```
 query  {
   simulation { 
     id
@@ -55,7 +55,7 @@ This ID will be used to identify the newly created simulation.
 ### Create a Simulation Template
 
 A simulation template must be associated with a mission model. In this example the only existing mission model ID is `1`.
-```graphql
+```
 mutation  {
   insert_simulation_template(objects: {
     model_id: 1,
@@ -85,7 +85,7 @@ Resulting in:
 This ID will be used to identify the newly created simulation template.
 
 Note that the arguments supplied here are not the full set of arguments required for simulation:
-```graphql
+```
 query  {
   mission_model_parameters_by_pk(model_id: 1) { 
     parameters
@@ -127,7 +127,7 @@ In this case this must be provided by the simulation's argument set prior to sim
 ### Associate Simulation with Simulation Template
 
 Attach the simulation template to the current simulation and update the simulation's arguments.
-```graphql
+```
 mutation {
   update_simulation(
     _set: {
@@ -149,7 +149,7 @@ In addition to being associated with a template, the simulation has defined a `i
 
 ### Run the Simulation
 
-```graphql
+```
 query {
   simulate(planId: 1) {
     results

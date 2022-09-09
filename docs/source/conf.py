@@ -11,12 +11,12 @@ sys.path.insert(0, os.path.abspath(".."))
 # -- Global variables
 
 # Build documentation for the following tags and branches
-TAGS = ["v0.12.2", "v0.12.3"]
+TAGS = ["test_tag", "test_tag_2"]
 BRANCHES = ["develop"]
 # Set the latest version.
-LATEST_VERSION = "v0.12.3"
+LATEST_VERSION = "test_tag"
 # Set which versions are not released yet.
-UNSTABLE_VERSIONS = ["develop"]
+UNSTABLE_VERSIONS = [""]
 # Set which versions are deprecated
 DEPRECATED_VERSIONS = [""]
 
@@ -30,7 +30,7 @@ extensions = [
     "sphinx.ext.githubpages",
     "sphinx.ext.extlinks",
     "sphinx_sitemap",
-    # "sphinx_scylladb_theme",
+    "sphinx_scylladb_theme",
     "sphinx_multiversion",  # optional
     "recommonmark",  # optional
 ]
@@ -78,7 +78,8 @@ smv_branch_whitelist = multiversion_regex_builder(BRANCHES)
 # Defines which version is considered to be the latest stable version.
 smv_latest_version = LATEST_VERSION
 # Whitelist pattern for remotes (set to None to use local branches only)
-smv_remote_whitelist = r"^origin$"
+# smv_remote_whitelist = r"^origin$"
+smv_remote_whitelist = None
 # Pattern for released versions
 smv_released_pattern = r"^tags/.*$"
 # Format for versioned output directories inside the build directory
@@ -88,7 +89,7 @@ smv_outputdir_format = "{ref.name}"
 
 # The theme to use for pages.
 html_theme = "sphinx_scylladb_theme"
-html_theme_path = ["../../sphinx-scylladb-theme-1.3.0"]
+html_theme_path = ["../"]
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for the theme, see the
@@ -100,7 +101,7 @@ html_theme_options = {
     "github_issues_repository": "",
     "github_repository": "https://github.com/nasa-ammos/aerie/",
     "site_description": "Aerie documentation.",
-    "hide_version_dropdown": ["develop"],
+    "hide_version_dropdown": [],
     "versions_unstable": UNSTABLE_VERSIONS,
     "versions_deprecated": DEPRECATED_VERSIONS,
 }

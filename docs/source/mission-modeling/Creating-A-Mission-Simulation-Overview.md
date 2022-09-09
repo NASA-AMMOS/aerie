@@ -1,4 +1,4 @@
-
+# Creating a Mission Simulation Overview
 
 Running an Aerie simulation requires a mission model that describes effects of activities over modeled resources, and a plan file that declares a schedule of activity instances with specified parameters.
 A plan file must be created with respect to an mission model file, since activities in a plan and their parameters are validated against activity type definitions in the mission model.

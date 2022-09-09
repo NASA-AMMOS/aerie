@@ -36,7 +36,7 @@ A discrete profile's dynamics should match the format specified by the `schema` 
 ## Deleting External Datasets
 There may be a time when you find an external dataset you've been using is no longer relevant, and must be removed. This is easily done by providing the ID of the dataset you wish to delete to the `delete_dataset_by_pk` mutation. For example, the following mutation will delete the dataset with id 5:
 
-```gql
+```
 mutation deletedDataset {
   delete_dataset_by_pk(id: 5) {
     id
@@ -48,7 +48,7 @@ mutation deletedDataset {
 ### Example 1
 This example shows an external dataset being uploaded to the plan with ID `2` starting at `2018-331T04:00:00`. Two precomputed profiles are included in the external dataset. First a real profile called `batteryEnergy` starts at a value of 50 and decreases at a rate of -0.5 units per second over 30 seconds. At that point, the value is 35 and the rate is changed to -0.1 units per second for 30 more seconds. The second profile, a discrete profile called `awake` contains a schema that tells us its values are boolean. The segments tell us that for the first 30 seconds the profile's dynamics are the value `true` and for the next 30 seconds the value `false`. At the end we see the ID of the external dataset that is created is queried as the result of this mutation.
 
-```gql
+``` 
 mutation {
   addExternalDataset(
     planId: 2
@@ -79,7 +79,7 @@ mutation {
 ### Example 2
 This mutation adds to plan with id `7` an external dataset starting at `2038-192T14:00:00` with a single precomputed profile, `orientation`. This discrete profile's schema tells us that its values are structs with real-valued `x`, `y` and `z` fields. For the first hour, the profile takes a value of `x=0`, `y=0`, `z=1`. For the next hour thereafter, the profile is valued at `x=1`, `y=1`, `z=0`.
 
-```gql
+```
 mutation {
   addExternalDataset(
     planId: 7

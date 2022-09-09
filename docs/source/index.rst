@@ -7,16 +7,10 @@
 :hide-post-content:
 
 
-.. title:: Scylla Sphinx Theme
+.. title:: Aerie Documentation
 
 .. hero-box::
-  :button_icon: fa fa-github
-  :button_url: https://github.com/scylladb/sphinx-scylladb-theme
-  :button_text: Source code
-  :title: Welcome to Scylla Sphinx Theme documentation
-  :image: /_static/img/mascots/scylla-docs.svg
-
-  The documentation toolchain for Scylla projects.
+  :title: Welcome to Aerie Documentation
 
 .. raw:: html
 
@@ -35,7 +29,7 @@
   :class: large-6
   :anchor: Learn more
 
-  Create a new documentation project with the Sphinx theme and preview the documentation in your browser.
+  Start using Aerie on your local machine.
 
 .. topic-box::
   :title: Deployment
@@ -44,7 +38,7 @@
   :class: large-6
   :anchor: Learn more
 
-  Publish documentation sites using GitHub Actions & Pages.
+  Deploy Aerie for individual users, small and large missions.
 
 .. topic-box::
   :title: Mission Modeling
@@ -53,16 +47,16 @@
   :class: large-6
   :anchor: Learn more
 
-  Publish documentation sites using GitHub Actions & Pages.
+  Develop a mission model to support simulation and mission planning.
 
 .. topic-box::
-  :title: Demos and Examples
+  :title: Demos and Tutorials
   :link: examples
   :icon: scylla-icon scylla-icon--tech-talks
   :class: large-6
   :anchor: Learn more
 
-  Explore example pages and components you can use in Scylla docs.
+  Explore examples and tutorials for how you can get the most from Aerie.
 
 .. topic-box::
   :title: Contribute
@@ -71,8 +65,7 @@
   :class: large-6
   :anchor: Learn more
 
-  Notes to set up the developer environment,
-  update the static assets, and distribute the theme.
+  Get setup for development as a contributor to the Aerie project.
 
 .. raw:: html
 
@@ -84,11 +77,13 @@
 
 .. toctree::
   :hidden:
+  :includehidden:
 
-  getting-started/index
   deployment/index
   mission-modeling/index
   simulation-and-analysis/index
-  aerie-glossary
   upgrade/index
   contribute/index
+  aerie-glossary
+
+  examples/index

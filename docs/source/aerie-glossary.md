@@ -1,4 +1,4 @@
-# Aerie Gloassary
+# Aerie Glossary
 
 ## Aerie Domain
 

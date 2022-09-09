@@ -23,8 +23,7 @@ Sphinx comes with directives and extensions, which add additional options for fo
 Scylla Sphinx Theme
 -------------------
 
-All Scylla documentation projects share a theme to have a common look and feel.
-In addition, Scylla Sphinx Theme preinstalls a set of custom functionalities to make them available for all projects.
+Aerie makes use of a customized version of the ScyllaDB documentation Sphinx theme.
 
 `Learn more <https://github.com/scylladb/sphinx-scylladb-theme>`__
 
@@ -34,13 +33,6 @@ Multiversion extension
 We use the third-party extension ``sphinx-multiversion`` to build docs for different versions.
 
 `Learn more <https://github.com/Holzhaus/sphinx-multiversion>`__
-
-GitHub
-------
-
-Hosts the code and docs source files of Scylla's projects.
-
-`Learn more <https://github.com>`__
 
 GitHub Pages
 ------------
@@ -53,20 +45,5 @@ GitHub Actions
 --------------
 
 Builds and deploys the documentation to GitHub Pages whenever new content is in the GitHub repository default branch.
-All the repositories deploy the documentation automatically except the repository ``scylla-docs``, which is deployed manually.
 
 `Learn more <https://docs.github.com/actions>`__
-
-AWS Amplify
------------
-
-Builds a preview site for the docs every time someone sends a pull request that updates the docs folder.
-
-`Learn more <https://docs.aws.amazon.com/amplify/latest/userguide/pr-previews.html>`__
-
-Expertrec
----------
-
-Crawls all the documentation sites to offer a unified search experience.
-
-`Learn more <https://blog.expertrec.com/knowledge-base/>`__
