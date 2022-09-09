@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.InputType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -10,7 +10,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 import java.util.List;
 import java.util.Map;
 
-public final class EmptyConfigurationType implements ConfigurationType<Unit> {
+public final class EmptyInputType implements InputType<Unit> {
   @Override
   public List<Parameter> getParameters() {
     return List.of();

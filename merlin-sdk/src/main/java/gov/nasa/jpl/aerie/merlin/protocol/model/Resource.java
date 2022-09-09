@@ -5,8 +5,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 public interface Resource<Dynamics> {
+  OutputType<Dynamics> getOutputType();
+
   String getType();
-  ValueSchema getSchema();
   Dynamics getDynamics(Querier querier);
-  SerializedValue serialize(Dynamics dynamics);
 }

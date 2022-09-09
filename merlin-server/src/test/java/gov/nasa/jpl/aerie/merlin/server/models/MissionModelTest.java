@@ -54,9 +54,9 @@ public final class MissionModelTest {
     registry.directiveTypes().forEach((name, specType) -> activityTypes.put(
         name,
         new ActivityType(name,
-                         specType.getParameters(),
-                         specType.getRequiredParameters(),
-                         specType.getReturnValueSchema())));
+                         specType.getInputType().getParameters(),
+                         specType.getInputType().getRequiredParameters(),
+                         specType.getOutputType().getSchema())));
 
     // THEN
     assertThat(activityTypes).containsAllEntriesOf(expectedTypes);
@@ -84,9 +84,9 @@ public final class MissionModelTest {
 
     final var type = new ActivityType(
         typeName,
-        specType.getParameters(),
-        specType.getRequiredParameters(),
-        specType.getReturnValueSchema());
+        specType.getInputType().getParameters(),
+        specType.getInputType().getRequiredParameters(),
+        specType.getOutputType().getSchema());
 
     // THEN
     assertThat(type).isEqualTo(expectedType);
@@ -105,9 +105,9 @@ public final class MissionModelTest {
 
         new ActivityType(
             activityId,
-            specType.getParameters(),
-            specType.getRequiredParameters(),
-            specType.getReturnValueSchema());
+            specType.getInputType().getParameters(),
+            specType.getInputType().getRequiredParameters(),
+            specType.getOutputType().getSchema());
     });
 
     // THEN
@@ -129,7 +129,7 @@ public final class MissionModelTest {
     final var specType = Optional
         .ofNullable(registry.directiveTypes().get(activity.getTypeName()))
         .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(activity.getTypeName()));
-    final var failures = specType.validateArguments(activity.getArguments());
+    final var failures = specType.getInputType().validateArguments(activity.getArguments());
 
     // THEN
     assertThat(failures).isEmpty();
@@ -148,7 +148,7 @@ public final class MissionModelTest {
         final var specType = Optional
             .ofNullable(registry.directiveTypes().get(activity.getTypeName()))
             .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(activity.getTypeName()));
-        specType.validateArguments(activity.getArguments());
+        specType.getInputType().validateArguments(activity.getArguments());
     });
 
     // THEN
@@ -173,7 +173,7 @@ public final class MissionModelTest {
         final var specType = Optional
             .ofNullable(registry.directiveTypes().get(activity.getTypeName()))
             .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(activity.getTypeName()));
-        specType.validateArguments(activity.getArguments());
+        specType.getInputType().validateArguments(activity.getArguments());
     });
 
     // THEN

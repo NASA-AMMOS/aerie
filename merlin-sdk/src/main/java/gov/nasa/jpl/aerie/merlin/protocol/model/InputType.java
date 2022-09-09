@@ -8,15 +8,17 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 import java.util.List;
 import java.util.Map;
 
-public interface ConfigurationType<Config> {
+public interface InputType<T> {
   List<Parameter> getParameters();
+
   List<String> getRequiredParameters();
 
-  Config instantiate(Map<String, SerializedValue> arguments)
-  throws InstantiationException;
+  T instantiate(Map<String, SerializedValue> arguments)
+      throws InstantiationException;
 
-  Map<String, SerializedValue> getArguments(Config configuration);
-  List<ValidationNotice> getValidationFailures(Config configuration);
+  Map<String, SerializedValue> getArguments(T value);
+
+  List<ValidationNotice> getValidationFailures(T value);
 
   /**
    * This method must behave as though implemented as:

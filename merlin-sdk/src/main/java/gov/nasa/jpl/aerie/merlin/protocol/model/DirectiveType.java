@@ -9,53 +9,20 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import java.util.List;
 import java.util.Map;
 
-public interface DirectiveType<Model, Directive, Return> {
-  List<Parameter> getParameters();
-  List<String> getRequiredParameters();
-
-  Directive instantiate(Map<String, SerializedValue> arguments)
-  throws InstantiationException;
-
-  Map<String, SerializedValue> getArguments(Directive directive);
-  List<ValidationNotice> getValidationFailures(Directive directive);
-
-  Task<Return> createTask(Model model, Directive directive);
-  ValueSchema getReturnValueSchema();
-  SerializedValue serializeReturnValue(Return returnValue);
+public interface DirectiveType<Model, Arguments, Result> {
+  InputType<Arguments> getInputType();
+  OutputType<Result> getOutputType();
+  Task<Result> createTask(Model model, Arguments arguments);
 
   /**
    * This method must behave as though implemented as:
    * {@snippet :
-   * return this.createTask(model, this.instantiate(arguments));
+   * return this.createTask(model, this.getInputType().instantiate(arguments));
    * }
    */
-  default Task<Return> createTask(final Model model, final Map<String, SerializedValue> arguments)
+  default Task<Result> createTask(final Model model, final Map<String, SerializedValue> arguments)
   throws InstantiationException
   {
-    return this.createTask(model, this.instantiate(arguments));
-  }
-
-  /**
-   * This method must behave as though implemented as:
-   * {@snippet :
-   * return this.getValidationFailures(this.instantiate(activity));
-   * }
-   */
-  default List<ValidationNotice> validateArguments(final Map<String, SerializedValue> arguments)
-  throws InstantiationException
-  {
-    return this.getValidationFailures(this.instantiate(arguments));
-  }
-
-  /**
-   * This method must behave as though implemented as:
-   * {@snippet :
-   * return this.getArguments(this.instantiate(arguments));
-   * }
-   */
-  default Map<String, SerializedValue> getEffectiveArguments(final Map<String, SerializedValue> arguments)
-  throws InstantiationException
-  {
-    return this.getArguments(this.instantiate(arguments));
+    return this.createTask(model, this.getInputType().instantiate(arguments));
   }
 }

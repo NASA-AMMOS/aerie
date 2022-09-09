@@ -8,7 +8,7 @@ import java.util.Map;
 public interface ModelType<Config, Model> {
   Map<String, ? extends DirectiveType<Model, ?, ?>> getDirectiveTypes();
 
-  ConfigurationType<Config> getConfigurationType();
+  InputType<Config> getConfigurationType();
 
   Model instantiate(Instant planStart, Config configuration, Initializer builder);
 }

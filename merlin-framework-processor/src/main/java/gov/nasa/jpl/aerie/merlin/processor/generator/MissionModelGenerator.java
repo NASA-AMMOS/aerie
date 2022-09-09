@@ -15,6 +15,7 @@ import com.squareup.javapoet.WildcardTypeName;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.RecordValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.ActivityMapper;
 import gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory;
+import gov.nasa.jpl.aerie.merlin.framework.EmptyInputType;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
@@ -185,12 +186,12 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .returns(
                         missionModel.modelConfigurationType
                             .map(configType -> configType.mapper().name)
-                            .orElse(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.EmptyConfigurationType.class)))
+                            .orElse(ClassName.get(EmptyInputType.class)))
                     .addStatement(
                         "return new $T()",
                         missionModel.modelConfigurationType
                             .map(configType -> configType.mapper().name)
-                            .orElse(ClassName.get(gov.nasa.jpl.aerie.merlin.framework.EmptyConfigurationType.class)))
+                            .orElse(ClassName.get(EmptyInputType.class)))
                 .build())
             .addMethod(
                 MethodSpec
@@ -561,8 +562,8 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         "initializer",
                         CodeBlock.of("$S + $L", "ActivityType.Output.", "name"),
                         CodeBlock.of("$L.getOutputTopic()", "mapper"),
-                        CodeBlock.of("$L.getReturnValueSchema()", "mapper"),
-                        CodeBlock.of("$L::serializeReturnValue", "mapper"))
+                        CodeBlock.of("$L.getSchema()", "mapper"),
+                        CodeBlock.of("$L::serialize", "mapper"))
                     .build()
             )
             .build();
@@ -694,7 +695,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
     } else { // is instanceof ConfigurationTypeRecord
       computedAttributesCodeBlocks = Optional.empty();
       superInterface = ParameterizedTypeName.get(
-          ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType.class),
+          ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.InputType.class),
           ClassName.get(exportType.declaration()));
     }
 
@@ -942,7 +943,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
   }
 
   private static MethodSpec makeGetReturnValueSchemaMethod() {
-    return MethodSpec.methodBuilder("getReturnValueSchema")
+    return MethodSpec.methodBuilder("getSchema")
                      .addModifiers(Modifier.PUBLIC)
                      .addAnnotation(Override.class)
                      .returns(ValueSchema.class)
@@ -951,7 +952,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
   }
 
   private static MethodSpec makeSerializeReturnValueMethod(final ActivityTypeRecord activityType) {
-    return MethodSpec.methodBuilder("serializeReturnValue")
+    return MethodSpec.methodBuilder("serialize")
                      .addModifiers(Modifier.PUBLIC)
                      .addAnnotation(Override.class)
                      .returns(SerializedValue.class)

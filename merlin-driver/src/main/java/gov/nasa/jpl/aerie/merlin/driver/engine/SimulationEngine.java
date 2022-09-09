@@ -440,14 +440,14 @@ public final class SimulationEngine implements AutoCloseable {
         case "real" -> realProfiles.put(
             name,
             Pair.of(
-                resource.getSchema(),
+                resource.getOutputType().getSchema(),
                 serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics)));
 
         case "discrete" -> discreteProfiles.put(
             name,
             Pair.of(
-                resource.getSchema(),
-                serializeProfile(elapsedTime, state, Resource::serialize)));
+                resource.getOutputType().getSchema(),
+                serializeProfile(elapsedTime, state, SimulationEngine::extractDiscreteDynamics)));
 
         default ->
             throw new IllegalArgumentException(
@@ -628,11 +628,17 @@ public final class SimulationEngine implements AutoCloseable {
 
   private static <Dynamics>
   RealDynamics extractRealDynamics(final Resource<Dynamics> resource, final Dynamics dynamics) {
-    final var serializedSegment = resource.serialize(dynamics).asMap().orElseThrow();
+    final var serializedSegment = resource.getOutputType().serialize(dynamics).asMap().orElseThrow();
     final var initial = serializedSegment.get("initial").asReal().orElseThrow();
     final var rate = serializedSegment.get("rate").asReal().orElseThrow();
 
     return RealDynamics.linear(initial, rate);
+  }
+
+
+  private static <Dynamics>
+  SerializedValue extractDiscreteDynamics(final Resource<Dynamics> resource, final Dynamics dynamics) {
+    return resource.getOutputType().serialize(dynamics);
   }
 
   /** A handle for processing requests from a modeled resource or condition. */

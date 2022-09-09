@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -106,13 +107,23 @@ public final class CellExpiryTest {
 
     final var resource = new Resource<String>() {
       @Override
-      public String getType() {
-        return "discrete";
+      public OutputType<String> getOutputType() {
+        return new OutputType<>() {
+          @Override
+          public ValueSchema getSchema() {
+            return ValueSchema.STRING;
+          }
+
+          @Override
+          public SerializedValue serialize(final String value) {
+            return SerializedValue.of(value);
+          }
+        };
       }
 
       @Override
-      public ValueSchema getSchema() {
-        return ValueSchema.STRING;
+      public String getType() {
+        return "discrete";
       }
 
       @Override
@@ -120,11 +131,6 @@ public final class CellExpiryTest {
         // Color this resource with the expiry of the cell.
         querier.getState(ref);
         return resourceValue;
-      }
-
-      @Override
-      public SerializedValue serialize(final String value) {
-        return SerializedValue.of(value);
       }
     };
 

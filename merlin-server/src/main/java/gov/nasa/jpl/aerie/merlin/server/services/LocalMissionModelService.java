@@ -85,7 +85,7 @@ public final class LocalMissionModelService implements MissionModelService {
     for (final var entry : loadAndInstantiateMissionModel(missionModelId).getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
-      schemas.put(name, resource.getSchema());
+      schemas.put(name, resource.getOutputType().getSchema());
     }
 
     return schemas;
@@ -130,7 +130,7 @@ public final class LocalMissionModelService implements MissionModelService {
     final var registry = DirectiveTypeRegistry.extract(modelType);
     final var directiveType = registry.directiveTypes().get(activity.getTypeName());
     if (directiveType == null) return List.of(new ValidationNotice(List.of(), "unknown activity type"));
-    return directiveType.validateArguments(activity.getArguments());
+    return directiveType.getInputType().validateArguments(activity.getArguments());
   }
 
   /**
@@ -159,7 +159,7 @@ public final class LocalMissionModelService implements MissionModelService {
         final var specType = Optional
         .ofNullable(registry.directiveTypes().get(act.getTypeName()))
         .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(act.getTypeName()));
-        specType.getEffectiveArguments(act.getArguments());
+        specType.getInputType().getEffectiveArguments(act.getArguments());
       } catch (final NoSuchActivityTypeException ex) {
         failures.put(id, new ActivityInstantiationFailure.NoSuchActivityType(ex));
       } catch (final InstantiationException ex) {
@@ -182,7 +182,7 @@ public final class LocalMissionModelService implements MissionModelService {
     final var directiveType = Optional
         .ofNullable(registry.directiveTypes().get(activity.getTypeName()))
         .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(activity.getTypeName()));
-    return directiveType.getEffectiveArguments(activity.getArguments());
+    return directiveType.getInputType().getEffectiveArguments(activity.getArguments());
   }
 
   @Override
@@ -259,11 +259,13 @@ public final class LocalMissionModelService implements MissionModelService {
       final var registry = DirectiveTypeRegistry.extract(modelType);
       final var activityTypes = new HashMap<String, ActivityType>();
       registry.directiveTypes().forEach((name, directiveType) -> {
+        final var inputType = directiveType.getInputType();
+        final var outputType = directiveType.getOutputType();
         activityTypes.put(name, new ActivityType(
             name,
-            directiveType.getParameters(),
-            directiveType.getRequiredParameters(),
-            directiveType.getReturnValueSchema()));
+            inputType.getParameters(),
+            inputType.getRequiredParameters(),
+            outputType.getSchema()));
       });
       this.missionModelRepository.updateActivityTypes(missionModelId, activityTypes);
     } catch (final MissionModelRepository.NoSuchMissionModelException ex) {

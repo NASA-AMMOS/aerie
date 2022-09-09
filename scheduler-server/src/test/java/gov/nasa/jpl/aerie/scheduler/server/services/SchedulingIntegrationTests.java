@@ -985,6 +985,7 @@ public class SchedulingIntegrationTests {
       activityTypes.add(new MissionModelService.ActivityType(
           activityTypeName,
           taskSpecType
+              .getInputType()
               .getParameters()
               .stream()
               .collect(Collectors.toMap(Parameter::name, Parameter::schema))));
@@ -994,7 +995,7 @@ public class SchedulingIntegrationTests {
     for (final var entry : missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
-      resourceTypes.add(new MissionModelService.ResourceType(name, resource.getSchema()));
+      resourceTypes.add(new MissionModelService.ResourceType(name, resource.getOutputType().getSchema()));
     }
 
     return new MissionModelService.MissionModelTypes(activityTypes, resourceTypes);

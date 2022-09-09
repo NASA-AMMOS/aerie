@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
+import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -36,13 +37,23 @@ public final class Registrar {
   ) {
     initializer.resource(name, new gov.nasa.jpl.aerie.merlin.protocol.model.Resource<Value>() {
       @Override
-      public String getType() {
-        return "discrete";
+      public OutputType<Value> getOutputType() {
+        return new OutputType<>() {
+          @Override
+          public ValueSchema getSchema() {
+            return mapper.getValueSchema();
+          }
+
+          @Override
+          public SerializedValue serialize(final Value value) {
+            return mapper.serializeValue(value);
+          }
+        };
       }
 
       @Override
-      public ValueSchema getSchema() {
-        return mapper.getValueSchema();
+      public String getType() {
+        return "discrete";
       }
 
       @Override
@@ -50,11 +61,6 @@ public final class Registrar {
         try (final var _token = ModelActions.context.set(new QueryContext(querier))) {
           return resource.getDynamics();
         }
-      }
-
-      @Override
-      public SerializedValue serialize(final Value value) {
-        return mapper.serializeValue(value);
       }
     });
   }
@@ -66,15 +72,27 @@ public final class Registrar {
   ) {
     initializer.resource(name, new gov.nasa.jpl.aerie.merlin.protocol.model.Resource<RealDynamics>() {
       @Override
-      public String getType() {
-        return "real";
+      public OutputType<RealDynamics> getOutputType() {
+        return new OutputType<>() {
+          @Override
+          public ValueSchema getSchema() {
+            return ValueSchema.ofStruct(Map.of(
+                "initial", ValueSchema.REAL,
+                "rate", ValueSchema.REAL));
+          }
+
+          @Override
+          public SerializedValue serialize(final RealDynamics dynamics) {
+            return SerializedValue.of(Map.of(
+                "initial", SerializedValue.of(dynamics.initial),
+                "rate", SerializedValue.of(dynamics.rate)));
+          }
+        };
       }
 
       @Override
-      public ValueSchema getSchema() {
-        return ValueSchema.ofStruct(Map.of(
-            "initial", ValueSchema.REAL,
-            "rate", ValueSchema.REAL));
+      public String getType() {
+        return "real";
       }
 
       @Override
@@ -82,13 +100,6 @@ public final class Registrar {
         try (final var _token = ModelActions.context.set(new QueryContext(querier))) {
           return resource.getDynamics();
         }
-      }
-
-      @Override
-      public SerializedValue serialize(final RealDynamics dynamics) {
-        return SerializedValue.of(Map.of(
-            "initial", SerializedValue.of(dynamics.initial),
-            "rate", SerializedValue.of(dynamics.rate)));
       }
     });
   }

@@ -130,7 +130,7 @@ public class ActivityType {
 
   public boolean isParamLegal(final String name){
     if(this.specType != null){
-      final var paramSpec = getParameterSpecification(this.specType.getParameters(), name);
+      final var paramSpec = getParameterSpecification(this.specType.getInputType().getParameters(), name);
       return paramSpec != null;
     }
     return true;
