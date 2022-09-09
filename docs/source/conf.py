@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.abspath(".."))
 
 # Build documentation for the following tags and branches
 TAGS = ["test_tag", "test_tag_2"]
-BRANCHES = ["develop"]
+BRANCHES = ["feature/AERIE-2053--integrate-sphinx-doc-generation"]
 # Set the latest version.
 LATEST_VERSION = "test_tag"
 # Set which versions are not released yet.
