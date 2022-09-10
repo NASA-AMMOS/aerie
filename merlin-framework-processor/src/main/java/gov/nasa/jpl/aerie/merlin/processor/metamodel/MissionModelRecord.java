@@ -16,13 +16,13 @@ public final class MissionModelRecord {
   public final List<ActivityTypeRecord> activityTypes;
   public final boolean expectsPlanStart;
   public final Collection<TypeElement> autoValueMapperRequests;
-  public final Optional<ConfigurationTypeRecord> modelConfigurationType;
+  public final Optional<InputTypeRecord> modelConfigurationType;
 
   public MissionModelRecord(
       final PackageElement $package,
       final TypeElement topLevelModel,
       final boolean expectsPlanStart,
-      final Optional<ConfigurationTypeRecord> modelConfigurationType,
+      final Optional<InputTypeRecord> modelConfigurationType,
       final List<TypeRule> typeRules,
       final List<ActivityTypeRecord> activityTypes,
       final Collection<TypeElement> autoValueMapperRequests)

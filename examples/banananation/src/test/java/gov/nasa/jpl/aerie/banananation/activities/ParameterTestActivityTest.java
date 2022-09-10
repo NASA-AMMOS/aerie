@@ -22,7 +22,7 @@ public class ParameterTestActivityTest {
 
   @Test
   public void testDefaultSerializationDoesNotThrow() {
-    this.mapper.getArguments(new ParameterTestActivity());
+    this.mapper.getInputType().getArguments(new ParameterTestActivity());
   }
 
   @Test
@@ -30,7 +30,7 @@ public class ParameterTestActivityTest {
     final Map<String, SerializedValue> sourceActivity = createSerializedArguments();
     final ParameterTestActivity testValues = new ParameterTestActivity();
 
-    final ParameterTestActivity deserializedActivity = this.mapper.instantiate(sourceActivity);
+    final ParameterTestActivity deserializedActivity = this.mapper.getInputType().instantiate(sourceActivity);
 
     // Verify the deserialized activity contains the expected values
     assertEquals(deserializedActivity.primitiveDouble, testValues.primitiveDouble, 0.0);
@@ -96,9 +96,9 @@ public class ParameterTestActivityTest {
   @Test
   public void testSerialization() throws InstantiationException {
     final ParameterTestActivity sourceActivity = new ParameterTestActivity();
-    final Map<String, SerializedValue> activityArgs = this.mapper.getArguments(sourceActivity);
+    final Map<String, SerializedValue> activityArgs = this.mapper.getInputType().getArguments(sourceActivity);
 
-    final ParameterTestActivity deserializedActivity = this.mapper.instantiate(activityArgs);
+    final ParameterTestActivity deserializedActivity = this.mapper.getInputType().instantiate(activityArgs);
 
     assertEquals(sourceActivity.primitiveDouble, deserializedActivity.primitiveDouble, 0.0);
     assertEquals(sourceActivity.primitiveFloat, deserializedActivity.primitiveFloat, 0.0);

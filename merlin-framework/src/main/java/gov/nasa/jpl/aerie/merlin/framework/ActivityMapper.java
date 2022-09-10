@@ -7,18 +7,12 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 
 public interface ActivityMapper<Model, Specification, Return> extends
     DirectiveType<RootModel<Model>, Specification, Return>,
-    InputType<Specification>,
     OutputType<Return>
 {
   Topic<Specification> getInputTopic();
   Topic<Return> getOutputTopic();
 
   Context.TaskFactory<Return> getTaskFactory(final Model model, final Specification activity);
-
-  @Override
-  default InputType<Specification> getInputType() {
-    return this;
-  }
 
   @Override
   default OutputType<Return> getOutputType() {

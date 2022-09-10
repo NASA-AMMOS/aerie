@@ -6,33 +6,30 @@ import java.util.List;
 
 public final class InstantiationException extends Exception {
 
-  public final String metaName, containerName;
+  public final String containerName;
   public final List<ExtraneousArgument> extraneousArguments;
   public final List<UnconstructableArgument> unconstructableArguments;
   public final List<MissingArgument> missingArguments;
   public final List<ValidArgument> validArguments;
 
   public InstantiationException(
-      final String metaName,
       final String containerName,
       final List<ExtraneousArgument> extraneousArguments,
       final List<UnconstructableArgument> unconstructableArguments,
       final List<MissingArgument> missingArguments,
       final List<ValidArgument> validArguments)
   {
-    super(("Invalid arguments for %s \"%s\": "+
+    super(("Invalid arguments for input type \"%s\": "+
           "extraneous arguments: %s, "+
           "unconstructable arguments: %s, "+
           "missing arguments: %s, "+
           "valid arguments: %s"
-          ).formatted(metaName,
-                      containerName,
+          ).formatted(containerName,
                       extraneousArguments,
                       unconstructableArguments,
                       missingArguments,
                       validArguments));
 
-    this.metaName = metaName;
     this.containerName = containerName;
     this.extraneousArguments = Collections.unmodifiableList(extraneousArguments);
     this.unconstructableArguments = Collections.unmodifiableList(unconstructableArguments);
@@ -50,14 +47,13 @@ public final class InstantiationException extends Exception {
 
   public static final class Builder {
 
-    private final String metaName, containerName;
+    private final String containerName;
     private final List<ExtraneousArgument> extraneousArguments = new ArrayList<>();
     private final List<UnconstructableArgument> unconstructableArguments = new ArrayList<>();
     private final List<MissingArgument> missingArguments = new ArrayList<>();
     private final List<ValidArgument> validArguments = new ArrayList<>();
 
-    public Builder(final String metaName, final String containerName) {
-      this.metaName = metaName;
+    public Builder(final String containerName) {
       this.containerName = containerName;
     }
 
@@ -93,7 +89,6 @@ public final class InstantiationException extends Exception {
 
     public InstantiationException build() {
       return new InstantiationException(
-          metaName,
           containerName,
           extraneousArguments,
           unconstructableArguments,

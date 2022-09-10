@@ -25,9 +25,9 @@ public final class EmptyInputType implements InputType<Unit> {
   public Unit instantiate(final Map<String, SerializedValue> arguments)
   throws InstantiationException
   {
-    final var instantiationExBuilder = new InstantiationException.Builder("configuration", getClass().getSimpleName());
-    arguments.forEach((k, v) -> instantiationExBuilder.withExtraneousArgument(k));
-    instantiationExBuilder.throwIfAny();
+    final var invalidArgsExBuilder = new InstantiationException.Builder(getClass().getSimpleName());
+    arguments.forEach((k, v) -> invalidArgsExBuilder.withExtraneousArgument(k));
+    invalidArgsExBuilder.throwIfAny();
 
     return Unit.UNIT;
   }

@@ -7,7 +7,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.InputTypeRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableArgumentException;
 
@@ -22,18 +22,18 @@ import java.util.stream.Collectors;
 /** Method maker for defaults style where some arguments are provided within an @WithDefaults static class. */
 /*package-private*/ final class SomeStaticallyDefinedMethodMaker extends MapperMethodMaker {
 
-  public SomeStaticallyDefinedMethodMaker(final ExportTypeRecord exportType) {
-    super(exportType);
+  public SomeStaticallyDefinedMethodMaker(final InputTypeRecord inputType) {
+    super(inputType);
   }
 
   @Override
   public MethodSpec makeInstantiateMethod() {
-    var activityTypeName = exportType.declaration().getSimpleName().toString();
+    var activityTypeName = inputType.declaration().getSimpleName().toString();
 
     var methodBuilder = MethodSpec.methodBuilder("instantiate")
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
-        .returns(TypeName.get(exportType.declaration().asType()))
+        .returns(TypeName.get(inputType.declaration().asType()))
         .addException(InstantiationException.class)
         .addParameter(
             ParameterizedTypeName.get(
@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
             "arguments",
             Modifier.FINAL);
 
-    for (final var element : exportType.declaration().getEnclosedElements()) {
+    for (final var element : inputType.declaration().getEnclosedElements()) {
       if (element.getAnnotation(Export.WithDefaults.class) == null) continue;
       var defaultsName = element.getSimpleName().toString();
       methodBuilder = methodBuilder.addStatement(
@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
           defaultsName);
 
       methodBuilder = methodBuilder.addCode(
-          exportType.parameters()
+          inputType.parameters()
               .stream()
               .map(parameter -> CodeBlock
                   .builder()
@@ -84,8 +84,8 @@ import java.util.stream.Collectors;
     // Add return statement with instantiation of class with parameters
     methodBuilder = methodBuilder.addStatement(
         "return new $T($L)",
-        exportType.declaration(),
-        exportType.parameters().stream().map(parameter -> parameter.name + ".get()").collect(Collectors.joining(", ")));
+        inputType.declaration(),
+        inputType.parameters().stream().map(parameter -> parameter.name + ".get()").collect(Collectors.joining(", ")));
 
     return methodBuilder.build();
   }
@@ -93,7 +93,7 @@ import java.util.stream.Collectors;
   @Override
   public List<String> getParametersWithDefaults() {
     Optional<Element> defaultsClass = Optional.empty();
-    for (final var element : exportType.declaration().getEnclosedElements()) {
+    for (final var element : inputType.declaration().getEnclosedElements()) {
       if (element.getAnnotation(Export.WithDefaults.class) == null) continue;
       defaultsClass = Optional.of(element);
     }

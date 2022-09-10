@@ -1,12 +1,8 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
-import java.time.Instant;
-import java.util.Map;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.FooActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityTypes;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.activities.FooActivityMapper;
-import gov.nasa.jpl.aerie.foomissionmodel.activities.FooActivity;
-import gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityTypes;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinTestContext;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -18,12 +14,13 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.time.Instant;
+import java.util.Map;
 
 import static gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityActions.spawn;
-import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
-import static org.assertj.core.api.Assertions.*;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.within;
 
 @TestInstance(Lifecycle.PER_CLASS)
@@ -64,14 +61,14 @@ public final class FooActivityTest {
 
     // Assert missing required argument throws exception
     assertThatExceptionOfType(InstantiationException.class).isThrownBy(() ->
-    new FooActivityMapper().instantiate(Map.of(
+    new FooActivityMapper().getInputType().instantiate(Map.of(
         "x", SerializedValue.of(42),
         "y", SerializedValue.of("test")
     )));
 
     // Assert provided required argument throws no exception
     assertThatNoException().isThrownBy(() ->
-        new FooActivityMapper().instantiate(Map.of(
+        new FooActivityMapper().getInputType().instantiate(Map.of(
            "x", SerializedValue.of(42),
            "y", SerializedValue.of("test"),
            "z", SerializedValue.of(43)

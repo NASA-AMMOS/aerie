@@ -47,7 +47,7 @@ public final class MissionModelLoader {
     {
         try {
             final var serializedConfigMap = missionModelConfig.asMap().orElseThrow(() ->
-                new InstantiationException.Builder("configuration", "Configuration").build());
+                new InstantiationException.Builder("Configuration").build());
 
             final var config = modelType.getConfigurationType().instantiate(serializedConfigMap);
             final var registry = DirectiveTypeRegistry.extract(modelType);

@@ -134,8 +134,8 @@ public final class MissionModelProcessor implements Processor {
         );
 
         for (final var activityRecord : missionModelRecord.activityTypes) {
-          this.ownedActivityTypes.add(activityRecord.declaration());
-          if (!activityRecord.mapper().isCustom) {
+          this.ownedActivityTypes.add(activityRecord.inputType().declaration());
+          if (!activityRecord.inputType().mapper().isCustom) {
             missionModelGen.generateActivityMapper(missionModelRecord, activityRecord).ifPresent(generatedFiles::add);
           }
         }

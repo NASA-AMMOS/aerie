@@ -6,7 +6,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.InputTypeRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableArgumentException;
 
@@ -17,8 +17,8 @@ import java.util.Optional;
 /** Method maker for defaults style where all default arguments are provided within @Parameter annotations. */
 /*package-private*/ final class AllDefinedMethodMaker extends MapperMethodMaker {
 
-  public AllDefinedMethodMaker(final ExportTypeRecord exportType) {
-    super(exportType);
+  public AllDefinedMethodMaker(final InputTypeRecord inputType) {
+    super(inputType);
   }
 
   @Override
@@ -27,7 +27,7 @@ import java.util.Optional;
     var methodBuilder = MethodSpec.methodBuilder("instantiate")
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
-        .returns(TypeName.get(exportType.declaration().asType()))
+        .returns(TypeName.get(inputType.declaration().asType()))
         .addException(InstantiationException.class)
         .addParameter(
             ParameterizedTypeName.get(
@@ -39,10 +39,10 @@ import java.util.Optional;
 
     methodBuilder = methodBuilder.addStatement(
         "final var template = new $T()",
-        TypeName.get(exportType.declaration().asType()));
+        TypeName.get(inputType.declaration().asType()));
 
     methodBuilder = methodBuilder.addCode(
-        exportType.parameters()
+        inputType.parameters()
             .stream()
             .map(parameter -> CodeBlock
                 .builder()
@@ -84,8 +84,8 @@ import java.util.Optional;
             String.class,
             gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
         .addParameter(
-            TypeName.get(exportType.declaration().asType()),
-            metaName,
+            TypeName.get(inputType.declaration().asType()),
+            "input",
             Modifier.FINAL)
         .addStatement(
             "final var $L = new $T()",
@@ -95,7 +95,7 @@ import java.util.Optional;
                 String.class,
                 gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
         .addCode(
-            exportType.parameters()
+            inputType.parameters()
                 .stream()
                 .map(parameter -> CodeBlock
                     .builder()
@@ -104,7 +104,7 @@ import java.util.Optional;
                         "arguments",
                         parameter.name,
                         parameter.name,
-                        metaName,
+                        "input",
                         parameter.name
                     ))
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))

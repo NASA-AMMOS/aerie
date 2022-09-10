@@ -4,8 +4,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.InputTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
@@ -28,25 +27,16 @@ public abstract sealed class MapperMethodMaker permits
     NoneDefinedMethodMaker,
     SomeStaticallyDefinedMethodMaker
 {
-  /*package-private*/ final ExportTypeRecord exportType;
-  /*package-private*/ final String metaName;
+  /*package-private*/ final InputTypeRecord inputType;
 
-  public MapperMethodMaker(final ExportTypeRecord exportType) {
-    this.exportType = exportType;
-
-    // TODO currently only 2 permitted classes (activity and config. type records),
-    //  this should be changed to a switch expression once sealed class pattern-matching switch expressions exist
-    if (exportType instanceof ActivityTypeRecord) {
-      this.metaName = "activity";
-    } else { // is instanceof ConfigurationTypeRecord
-      this.metaName = "configuration";
-    }
+  public MapperMethodMaker(final InputTypeRecord inputType) {
+    this.inputType = inputType;
   }
 
   public abstract MethodSpec makeInstantiateMethod();
 
   public /*non-final*/ List<String> getParametersWithDefaults() {
-    return exportType.parameters().stream().map(p -> p.name).toList();
+    return inputType.parameters().stream().map(p -> p.name).toList();
   }
 
   public /*non-final*/ MethodSpec makeGetParametersMethod() {
@@ -63,7 +53,7 @@ public abstract sealed class MapperMethodMaker permits
                 java.util.ArrayList.class,
                 Parameter.class))
         .addCode(
-            exportType.parameters()
+            inputType.parameters()
                 .stream()
                 .map(parameter -> CodeBlock
                     .builder()
@@ -91,8 +81,8 @@ public abstract sealed class MapperMethodMaker permits
             String.class,
             gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
         .addParameter(
-            TypeName.get(exportType.declaration().asType()),
-            metaName,
+            TypeName.get(inputType.declaration().asType()),
+            "input",
             Modifier.FINAL)
         .addStatement(
             "final var $L = new $T()",
@@ -102,7 +92,7 @@ public abstract sealed class MapperMethodMaker permits
                 String.class,
                 gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
         .addCode(
-            exportType.parameters()
+            inputType.parameters()
                 .stream()
                 .map(parameter -> CodeBlock
                     .builder()
@@ -111,7 +101,7 @@ public abstract sealed class MapperMethodMaker permits
                         "arguments",
                         parameter.name,
                         parameter.name,
-                        metaName,
+                        "input",
                         parameter.name
                     ))
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -124,7 +114,7 @@ public abstract sealed class MapperMethodMaker permits
 
   public final MethodSpec makeGetRequiredParametersMethod() {
     final var optionalParams = getParametersWithDefaults();
-    final var requiredParams = exportType.parameters().stream().filter(p -> !optionalParams.contains(p.name)).toList();
+    final var requiredParams = inputType.parameters().stream().filter(p -> !optionalParams.contains(p.name)).toList();
 
     return MethodSpec.methodBuilder("getRequiredParameters")
         .addModifiers(Modifier.PUBLIC)
@@ -148,8 +138,8 @@ public abstract sealed class MapperMethodMaker permits
             java.util.List.class,
             ValidationNotice.class))
         .addParameter(
-            TypeName.get(exportType.declaration().asType()),
-            metaName,
+            TypeName.get(inputType.declaration().asType()),
+            "input",
             Modifier.FINAL)
         .addStatement(
             "final var $L = new $T()",
@@ -158,7 +148,7 @@ public abstract sealed class MapperMethodMaker permits
                 java.util.ArrayList.class,
                 ValidationNotice.class))
         .addCode(
-            exportType.validations()
+            inputType.validations()
                 .stream()
                 .map(validation -> {
                     final var subjects = Arrays.stream(validation.subjects())
@@ -171,7 +161,7 @@ public abstract sealed class MapperMethodMaker permits
                         .builder()
                         .addStatement(
                             "if (!$L.$L()) notices.add(new $T($T.of($L), $S))",
-                            metaName,
+                            "input",
                             validation.methodName(),
                             ValidationNotice.class,
                             List.class,
@@ -194,15 +184,14 @@ public abstract sealed class MapperMethodMaker permits
 
     // Condition must be checked for otherwise a try/catch without an exception thrown
     // will not pass compilation
-    final var shouldExpectArguments = !exportType.parameters().isEmpty();
+    final var shouldExpectArguments = !inputType.parameters().isEmpty();
 
     mb = mb
         .addStatement(
-            "final var $L = new $T(\"$L\", \"$L\")",
+            "final var $L = new $T(\"$L\")",
             "instantiationExBuilder",
             InstantiationException.Builder.class,
-            metaName,
-            exportType.name())
+            inputType.name())
         .addCode("\n")
         .beginControlFlow(
             "for (final var $L : $L.entrySet())",
@@ -216,7 +205,7 @@ public abstract sealed class MapperMethodMaker permits
     mb = mb
         .beginControlFlow("switch ($L.getKey())", "entry")
         .addCode(
-            exportType.parameters()
+            inputType.parameters()
                 .stream()
                 .map(parameter -> {
                     final var caseBuilder = CodeBlock.builder()
@@ -262,7 +251,7 @@ public abstract sealed class MapperMethodMaker permits
     // Ensure all parameters are non-null
     return methodBuilder
         .addCode(
-            exportType.parameters()
+            inputType.parameters()
                 .stream()
                 .map(parameter -> CodeBlock
                     .builder()
@@ -284,12 +273,12 @@ public abstract sealed class MapperMethodMaker permits
             "instantiationExBuilder");
   }
 
-  static MapperMethodMaker make(final ExportTypeRecord exportType) {
-    return switch (exportType.defaultsStyle()) {
-      case AllStaticallyDefined -> new AllStaticallyDefinedMethodMaker(exportType);
-      case NoneDefined -> new NoneDefinedMethodMaker(exportType);
-      case AllDefined -> new AllDefinedMethodMaker(exportType);
-      case SomeStaticallyDefined -> new SomeStaticallyDefinedMethodMaker(exportType);
+  static MapperMethodMaker make(final InputTypeRecord inputType) {
+    return switch (inputType.defaultsStyle()) {
+      case AllStaticallyDefined -> new AllStaticallyDefinedMethodMaker(inputType);
+      case NoneDefined -> new NoneDefinedMethodMaker(inputType);
+      case AllDefined -> new AllDefinedMethodMaker(inputType);
+      case SomeStaticallyDefined -> new SomeStaticallyDefinedMethodMaker(inputType);
     };
   }
 }
