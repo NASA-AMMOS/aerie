@@ -29,8 +29,10 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.model.InputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
@@ -42,6 +44,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.annotation.processing.Generated;
 import javax.annotation.processing.Messager;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.RecordComponentElement;
@@ -562,8 +565,8 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         "initializer",
                         CodeBlock.of("$S + $L", "ActivityType.Output.", "name"),
                         CodeBlock.of("$L.getOutputTopic()", "mapper"),
-                        CodeBlock.of("$L.getSchema()", "mapper"),
-                        CodeBlock.of("$L::serialize", "mapper"))
+                        CodeBlock.of("$L.getOutputType().getSchema()", "mapper"),
+                        CodeBlock.of("$L.getOutputType()::serialize", "mapper"))
                     .build()
             )
             .build();
@@ -797,18 +800,26 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
         // TODO: Add an originating element for each of the mapper rulesets associated with the mission model.
         .addAnnotation(
             AnnotationSpec
-                .builder(javax.annotation.processing.Generated.class)
+                .builder(Generated.class)
                 .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
                 .build())
         .addSuperinterface(ParameterizedTypeName.get(
-            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper.class),
+            ClassName.get(ActivityMapper.class),
             ClassName.get(missionModel.topLevelModel),
             ClassName.get(activityType.inputType().declaration()),
             computedAttributesCodeBlocks.typeName().box()))
         .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
         .addType(inputTypeMapper)
-        .addMethod(makeGetReturnValueSchemaMethod())
-        .addMethod(makeSerializeReturnValueMethod(activityType))
+        .addType(TypeSpec
+            .classBuilder("OutputMapper")
+            .addSuperinterface(ParameterizedTypeName.get(
+                ClassName.get(OutputType.class),
+                computedAttributesCodeBlocks.typeName().box()))
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+            .addField(computedAttributesCodeBlocks.fieldDef())
+            .addMethod(makeGetReturnValueSchemaMethod())
+            .addMethod(makeSerializeReturnValueMethod(activityType))
+            .build())
         .addField(
             FieldSpec
                 .builder(
@@ -831,15 +842,23 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     Modifier.FINAL)
                 .initializer("new $T<>()", ClassName.get(Topic.class))
                 .build())
-        .addField(computedAttributesCodeBlocks.fieldDef())
         .addMethod(MethodSpec
             .methodBuilder("getInputType")
             .addModifiers(Modifier.PUBLIC)
             .addAnnotation(Override.class)
             .returns(ParameterizedTypeName.get(
-                ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.InputType.class),
+                ClassName.get(InputType.class),
                 ClassName.get(activityType.inputType().declaration())))
             .addStatement("return new $T()", activityType.inputType().mapper().name.nestedClass(inputTypeMapper.name))
+            .build())
+        .addMethod(MethodSpec
+            .methodBuilder("getOutputType")
+            .addModifiers(Modifier.PUBLIC)
+            .addAnnotation(Override.class)
+            .returns(ParameterizedTypeName.get(
+                ClassName.get(OutputType.class),
+                computedAttributesCodeBlocks.typeName().box()))
+            .addStatement("return new $T()", activityType.inputType().mapper().name.nestedClass("OutputMapper"))
             .build())
         .addMethod(
             MethodSpec
