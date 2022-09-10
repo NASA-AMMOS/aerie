@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
+import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
@@ -17,7 +17,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MILLISECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.duration;
@@ -63,7 +62,7 @@ public final class CellExpiryTest {
 
     final var ref = initializer.allocate(
         new Object(),
-        new Applicator<>() {
+        new CellType<>() {
           @Override
           public Object duplicate(final Object o) {
             // no internal state
@@ -84,24 +83,28 @@ public final class CellExpiryTest {
           public Optional<Duration> getExpiry(final Object o) {
             return Optional.of(expiry);
           }
-        },
-        new EffectTrait<>() {
-          @Override
-          public Object empty() {
-            return new Object();
-          }
 
           @Override
-          public Object sequentially(final Object prefix, final Object suffix) {
-            return empty();
-          }
+          public EffectTrait<Object> getEffectType() {
+            return new EffectTrait<>() {
+              @Override
+              public Object empty() {
+                return new Object();
+              }
 
-          @Override
-          public Object concurrently(final Object left, final Object right) {
-            return empty();
+              @Override
+              public Object sequentially(final Object prefix, final Object suffix) {
+                return empty();
+              }
+
+              @Override
+              public Object concurrently(final Object left, final Object right) {
+                return empty();
+              }
+            };
           }
         },
-        Function.identity(),
+        $ -> $,
         new Topic<>()
     );
 

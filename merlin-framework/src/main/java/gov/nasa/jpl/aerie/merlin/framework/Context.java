@@ -2,8 +2,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
@@ -17,16 +16,15 @@ public interface Context {
   ContextType getContextType();
 
   // Usable during both initialization & simulation
-  <CellType> CellType ask(Query<CellType> query);
+  <State> State ask(Query<State> query);
 
   // Usable during initialization
-  <Event, Effect, CellType>
-  Query<CellType>
+  <Event, Effect, State>
+  Query<State>
   allocate(
-      CellType initialState,
-      Applicator<Effect, CellType> applicator,
-      EffectTrait<Effect> trait,
-      Function<Event, Effect> projection,
+      State initialState,
+      CellType<Effect, State> cellType,
+      Function<Event, Effect> interpretation,
       Topic<Event> topic);
 
   // Usable during simulation

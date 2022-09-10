@@ -9,8 +9,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.RecursiveEventGraphEvaluator;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Selector;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -25,22 +24,21 @@ public final class MissionModelBuilder implements Initializer {
   private MissionModelBuilderState state = new UnbuiltState();
 
   @Override
-  public <CellType> CellType getInitialState(
-      final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<CellType> query)
+  public <State> State getInitialState(
+      final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<State> query)
   {
     return this.state.getInitialState(query);
   }
 
   @Override
-  public <EventType, Effect, CellType>
-  gov.nasa.jpl.aerie.merlin.protocol.driver.Query<CellType> allocate(
-      final CellType initialState,
-      final Applicator<Effect, CellType> applicator,
-      final EffectTrait<Effect> trait,
-      final Function<EventType, Effect> projection,
+  public <EventType, Effect, State>
+  gov.nasa.jpl.aerie.merlin.protocol.driver.Query<State> allocate(
+      final State initialState,
+      final CellType<Effect, State> cellType,
+      final Function<EventType, Effect> interpretation,
       final Topic<EventType> topic
   ) {
-    return this.state.allocate(initialState, applicator, trait, projection, topic);
+    return this.state.allocate(initialState, cellType, interpretation, topic);
   }
 
   @Override
@@ -83,12 +81,12 @@ public final class MissionModelBuilder implements Initializer {
     private final List<MissionModel.SerializableTopic<?>> topics = new ArrayList<>();
 
     @Override
-    public <CellType> CellType getInitialState(
-        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<CellType> token)
+    public <State> State getInitialState(
+        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<State> token)
     {
       // SAFETY: The only `Query` objects the model should have were returned by `UnbuiltState#allocate`.
       @SuppressWarnings("unchecked")
-      final var query = (EngineQuery<?, CellType>) token;
+      final var query = (EngineQuery<?, State>) token;
 
       final var state$ = this.initialCells.getState(query.query());
 
@@ -96,23 +94,24 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
-    public <EventType, Effect, CellType>
-    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<CellType> allocate(
-        final CellType initialState,
-        final Applicator<Effect, CellType> applicator,
-        final EffectTrait<Effect> trait,
-        final Function<EventType, Effect> projection,
+    public <EventType, Effect, State>
+    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<State> allocate(
+        final State initialState,
+        final CellType<Effect, State> cellType,
+        final Function<EventType, Effect> interpretation,
         final Topic<EventType> topic
     ) {
-      final var selector = new Selector<>(topic, projection);
-
       // TODO: The evaluator should probably be specified later, after the model is built.
       //   To achieve this, we'll need to defer the construction of the initial `LiveCells` until later,
       //   instead simply storing the cell specification provided to us (and its associated `Query` token).
       final var evaluator = new RecursiveEventGraphEvaluator();
 
-      final var query = new Query<CellType>();
-      this.initialCells.put(query, new Cell<>(applicator, trait, selector, evaluator, initialState));
+      final var query = new Query<State>();
+      this.initialCells.put(query, new Cell<>(
+          cellType,
+          new Selector<>(topic, interpretation),
+          evaluator,
+          initialState));
 
       return new EngineQuery<>(topic, query);
     }
@@ -156,19 +155,18 @@ public final class MissionModelBuilder implements Initializer {
 
   private static final class BuiltState implements MissionModelBuilderState {
     @Override
-    public <CellType> CellType getInitialState(
-        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<CellType> query)
+    public <State> State getInitialState(
+        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<State> query)
     {
       throw new IllegalStateException("Cannot interact with the builder after it is built");
     }
 
     @Override
-    public <EventType, Effect, CellType>
-    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<CellType> allocate(
-        final CellType initialState,
-        final Applicator<Effect, CellType> applicator,
-        final EffectTrait<Effect> trait,
-        final Function<EventType, Effect> projection,
+    public <EventType, Effect, State>
+    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<State> allocate(
+        final State initialState,
+        final CellType<Effect, State> cellType,
+        final Function<EventType, Effect> interpretation,
         final Topic<EventType> topic
     ) {
       throw new IllegalStateException("Cells cannot be allocated after the schema is built");

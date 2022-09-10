@@ -1,7 +1,8 @@
 package gov.nasa.jpl.aerie.contrib.cells.linear;
 
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
+import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 
@@ -29,8 +30,7 @@ public final class LinearIntegrationCell {
   allocate(final double initialVolume, final double rate, final Function<Event, LinearAccumulationEffect> interpreter) {
     return CellRef.allocate(
         new LinearIntegrationCell(initialVolume, rate),
-        new LinearIntegrationApplicator(),
-        LinearAccumulationEffect.TRAIT,
+        new LinearIntegrationCellType(),
         interpreter);
   }
 
@@ -42,9 +42,14 @@ public final class LinearIntegrationCell {
     return RealDynamics.constant(this.rate);
   }
 
-  public static final class LinearIntegrationApplicator
-      implements Applicator<LinearAccumulationEffect, LinearIntegrationCell>
+  public static final class LinearIntegrationCellType
+      implements CellType<LinearAccumulationEffect, LinearIntegrationCell>
   {
+    @Override
+    public EffectTrait<LinearAccumulationEffect> getEffectType() {
+      return LinearAccumulationEffect.TRAIT;
+    }
+
     @Override
     public LinearIntegrationCell duplicate(final LinearIntegrationCell cell) {
       return new LinearIntegrationCell(cell.initialVolume, cell.rate, cell.accumulatedVolume);

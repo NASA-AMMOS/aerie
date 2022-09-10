@@ -3,8 +3,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.Objects;
@@ -34,20 +33,19 @@ public final class InitializationContext implements Context {
   }
 
   @Override
-  public <CellType> CellType ask(final Query<CellType> query) {
+  public <State> State ask(final Query<State> query) {
     return this.builder.getInitialState(query);
   }
 
   @Override
-  public <Event, Effect, CellType>
-  Query<CellType> allocate(
-      final CellType initialState,
-      final Applicator<Effect, CellType> applicator,
-      final EffectTrait<Effect> trait,
-      final Function<Event, Effect> projection,
+  public <Event, Effect, State>
+  Query<State> allocate(
+      final State initialState,
+      final CellType<Effect, State> cellType,
+      final Function<Event, Effect> interpretation,
       final Topic<Event> topic
   ) {
-    return this.builder.allocate(initialState, applicator, trait, projection, topic);
+    return this.builder.allocate(initialState, cellType, interpretation, topic);
   }
 
   @Override

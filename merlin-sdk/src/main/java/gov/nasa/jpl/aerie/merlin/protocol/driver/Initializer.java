@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol.driver;
 
-import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -10,21 +9,29 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import java.util.function.Function;
 
 public interface Initializer {
-  <CellType> CellType getInitialState(Query<CellType> query);
+  <State>
+  State getInitialState(Query<State> query);
 
-  <Event, Effect, CellType>
-  Query<CellType> allocate(
-      CellType initialState,
-      Applicator<Effect, CellType> applicator,
-      EffectTrait<Effect> trait,
-      Function<Event, Effect> projection,
+  <Event, Effect, State>
+  Query<State> allocate(
+      State initialState,
+      CellType<Effect, State> cellType,
+      Function<Event, Effect> interpretation,
       Topic<Event> topic);
 
-  <Return> void daemon(TaskFactory<Return> factory);
+  <Return>
+  void daemon(TaskFactory<Return> factory);
 
-  void resource(String name, Resource<?> resource);
+  void resource(
+      String name,
+      Resource<?> resource);
 
-  <Event> void topic(String name, Topic<Event> topic, ValueSchema schema, Function<Event, SerializedValue> serializer);
+  <Event>
+  void topic(
+      String name,
+      Topic<Event> topic,
+      ValueSchema schema,
+      Function<Event, SerializedValue> serializer);
 
   interface TaskFactory<Return> {
     Task<Return> create();

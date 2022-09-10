@@ -1,7 +1,8 @@
 package gov.nasa.jpl.aerie.contrib.cells.register;
 
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
+import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -23,8 +24,7 @@ public final class RegisterCell<T> {
   allocate(final UnaryOperator<T> duplicator, final T initialValue, final Function<Event, RegisterEffect<T>> interpreter) {
     return CellRef.allocate(
         new RegisterCell<>(duplicator, initialValue, false),
-        new RegisterApplicator<>(),
-        new RegisterEffect.Trait<>(),
+        new RegisterCellType<>(),
         interpreter);
   }
 
@@ -42,7 +42,12 @@ public final class RegisterCell<T> {
     return "{value=%s, conflicted=%s}".formatted(this.getValue(), this.isConflicted());
   }
 
-  public static final class RegisterApplicator<T> implements Applicator<RegisterEffect<T>, RegisterCell<T>> {
+  public static final class RegisterCellType<T> implements CellType<RegisterEffect<T>, RegisterCell<T>> {
+    @Override
+    public EffectTrait<RegisterEffect<T>> getEffectType() {
+      return new RegisterEffect.Trait<>();
+    }
+
     @Override
     public RegisterCell<T> duplicate(final RegisterCell<T> cell) {
       return new RegisterCell<>(cell.duplicator, cell.value, cell.conflicted);
