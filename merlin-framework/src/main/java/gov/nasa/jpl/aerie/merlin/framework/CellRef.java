@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 
@@ -9,11 +9,11 @@ import java.util.function.Function;
 
 public final class CellRef<Event, State> {
   public final Topic<Event> topic;
-  public final Query<State> query;
+  public final CellId<State> cellId;
 
-  private CellRef(final Topic<Event> topic, final Query<State> query) {
+  private CellRef(final Topic<Event> topic, final CellId<State> cellId) {
     this.topic = topic;
-    this.query = query;
+    this.cellId = cellId;
   }
 
   public static <Event, Effect, State>
@@ -43,7 +43,7 @@ public final class CellRef<Event, State> {
   }
 
   public State get() {
-    return ModelActions.context.get().ask(this.query);
+    return ModelActions.context.get().ask(this.cellId);
   }
 
   public void emit(final Event event) {

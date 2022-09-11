@@ -10,10 +10,10 @@ import java.util.function.Function;
 
 public interface Initializer {
   <State>
-  State getInitialState(Query<State> query);
+  State getInitialState(CellId<State> cellId);
 
   <Event, Effect, State>
-  Query<State> allocate(
+  CellId<State> allocate(
       State initialState,
       CellType<Effect, State> cellType,
       Function<Event, Effect> interpretation,

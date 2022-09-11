@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -21,13 +21,13 @@ public final class QueryContext implements Context {
   }
 
   @Override
-  public <State> State ask(final Query<State> query) {
-    return this.querier.getState(query);
+  public <State> State ask(final CellId<State> cellId) {
+    return this.querier.getState(cellId);
   }
 
   @Override
   public <Event, Effect, State>
-  Query<State> allocate(
+  CellId<State> allocate(
       final State initialState,
       final CellType<Effect, State> cellType,
       final Function<Event, Effect> interpretation,

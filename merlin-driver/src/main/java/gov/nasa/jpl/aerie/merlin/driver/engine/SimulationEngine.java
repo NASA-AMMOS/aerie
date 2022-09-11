@@ -11,7 +11,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
@@ -652,10 +652,10 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public <State> State getState(final Query<State> token) {
+    public <State> State getState(final CellId<State> token) {
       // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
-      final var query = ((EngineQuery<?, State>) token);
+      final var query = ((EngineCellId<?, State>) token);
 
       this.expiry = min(this.expiry, this.frame.getExpiry(query.query()));
       this.referencedTopics.add(query.topic());
@@ -687,10 +687,10 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public <State> State get(final Query<State> token) {
+    public <State> State get(final CellId<State> token) {
       // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
-      final var query = ((EngineQuery<?, State>) token);
+      final var query = ((EngineCellId<?, State>) token);
 
       // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
       //  if the same state is requested multiple times in a row.

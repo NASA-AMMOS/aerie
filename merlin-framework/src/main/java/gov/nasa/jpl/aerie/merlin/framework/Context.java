@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
@@ -16,11 +16,11 @@ public interface Context {
   ContextType getContextType();
 
   // Usable during both initialization & simulation
-  <State> State ask(Query<State> query);
+  <State> State ask(CellId<State> cellId);
 
   // Usable during initialization
   <Event, Effect, State>
-  Query<State>
+  CellId<State>
   allocate(
       State initialState,
       CellType<Effect, State> cellType,

@@ -1,12 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.driver.engine.EngineQuery;
+import gov.nasa.jpl.aerie.merlin.driver.engine.EngineCellId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.CausalEventSource;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Cell;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.RecursiveEventGraphEvaluator;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Selector;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
@@ -25,14 +26,14 @@ public final class MissionModelBuilder implements Initializer {
 
   @Override
   public <State> State getInitialState(
-      final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<State> query)
+      final CellId<State> cellId)
   {
-    return this.state.getInitialState(query);
+    return this.state.getInitialState(cellId);
   }
 
   @Override
   public <EventType, Effect, State>
-  gov.nasa.jpl.aerie.merlin.protocol.driver.Query<State> allocate(
+  CellId<State> allocate(
       final State initialState,
       final CellType<Effect, State> cellType,
       final Function<EventType, Effect> interpretation,
@@ -82,11 +83,11 @@ public final class MissionModelBuilder implements Initializer {
 
     @Override
     public <State> State getInitialState(
-        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<State> token)
+        final CellId<State> token)
     {
       // SAFETY: The only `Query` objects the model should have were returned by `UnbuiltState#allocate`.
       @SuppressWarnings("unchecked")
-      final var query = (EngineQuery<?, State>) token;
+      final var query = (EngineCellId<?, State>) token;
 
       final var state$ = this.initialCells.getState(query.query());
 
@@ -95,7 +96,7 @@ public final class MissionModelBuilder implements Initializer {
 
     @Override
     public <EventType, Effect, State>
-    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<State> allocate(
+    CellId<State> allocate(
         final State initialState,
         final CellType<Effect, State> cellType,
         final Function<EventType, Effect> interpretation,
@@ -113,7 +114,7 @@ public final class MissionModelBuilder implements Initializer {
           evaluator,
           initialState));
 
-      return new EngineQuery<>(topic, query);
+      return new EngineCellId<>(topic, query);
     }
 
     @Override
@@ -156,14 +157,14 @@ public final class MissionModelBuilder implements Initializer {
   private static final class BuiltState implements MissionModelBuilderState {
     @Override
     public <State> State getInitialState(
-        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<State> query)
+        final CellId<State> cellId)
     {
       throw new IllegalStateException("Cannot interact with the builder after it is built");
     }
 
     @Override
     public <EventType, Effect, State>
-    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<State> allocate(
+    CellId<State> allocate(
         final State initialState,
         final CellType<Effect, State> cellType,
         final Function<EventType, Effect> interpretation,

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
@@ -35,13 +35,13 @@ final class ThreadedReactionContext implements Context {
   }
 
   @Override
-  public <State> State ask(final Query<State> query) {
-    return this.scheduler.get(query);
+  public <State> State ask(final CellId<State> cellId) {
+    return this.scheduler.get(cellId);
   }
 
   @Override
   public <Event, Effect, State>
-  Query<State> allocate(
+  CellId<State> allocate(
       final State initialState,
       final CellType<Effect, State> cellType,
       final Function<Event, Effect> interpretation,
