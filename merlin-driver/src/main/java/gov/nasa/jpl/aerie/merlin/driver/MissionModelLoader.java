@@ -68,8 +68,7 @@ public final class MissionModelLoader {
         final var className = getImplementingClassName(path, name, version);
 
         // Construct a ClassLoader with access to classes in the mission model location.
-        final var parentClassLoader = Thread.currentThread().getContextClassLoader();
-        final var classLoader = new URLClassLoader(new URL[] {missionModelPathToUrl(path)}, parentClassLoader);
+        final var classLoader = new URLClassLoader(new URL[] {missionModelPathToUrl(path)});
 
         try {
             final var factoryClass$ = classLoader.loadClass(className);
@@ -77,11 +76,7 @@ public final class MissionModelLoader {
                 throw new MissionModelLoadException(path, name, version);
             }
 
-            // SAFETY: We checked above that MissionModelFactory is assignable from this type.
-            @SuppressWarnings("unchecked")
-            final var factoryClass = (Class<? extends MerlinPlugin>) factoryClass$;
-
-            return factoryClass.getConstructor().newInstance();
+            return (MerlinPlugin) factoryClass$.getConstructor().newInstance();
         } catch (final ClassNotFoundException | NoSuchMethodException | InstantiationException
             | IllegalAccessException | InvocationTargetException ex)
         {

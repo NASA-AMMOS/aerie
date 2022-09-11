@@ -23,6 +23,7 @@ javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 dependencies {
   api project(':merlin-framework')
 
+  api 'JNISpice:JNISpice:1.0-20190517.205223-2'
   api 'org.apache.commons:commons-math3:3.6.1'
 
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
