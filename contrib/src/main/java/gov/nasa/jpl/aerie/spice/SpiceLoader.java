@@ -12,24 +12,23 @@ public final class SpiceLoader {
     private SpiceLoader() {}
 
     public static void loadSpice() {
-        final String library = "JNISpice";
+        try (final InputStream in = SpiceLoader.class.getResourceAsStream(getResourcePathByOS())) {
+            if (in == null) throw new RuntimeException("JNISpice native library not found");
 
-        // Attempt to load our copy of JNISpice via `System.load`.
-        try (final InputStream in = SpiceLoader.class.getResource(getResourcePathByOS()).openStream()) {
             // Copy the JNISpice library to a temporary location on-disk, then load it into the JVM.
-            final Path file = Files.createTempFile(library + "-", ".tmp");
-            deleteFileOnExit(file);
+            // This needs to be a distinct file from any other load, or else the OS will happily give
+            // the JVM a handle to the same previously-loaded image. We want distinct SPICE loads to
+            // get their own state, so we can't have that, can we?
+            final Path file = Files.createTempFile("JNISpice-", ".tmp");
 
             Files.copy(in, file, StandardCopyOption.REPLACE_EXISTING);
-
             System.load(file.toString());
-            return;
-        } catch (final IOException ex) {
-            // Swallow the error; fall through and try a different approach.
-        }
 
-        // Attempt to load a host-installed copy of JNISpice via `System.loadLibrary`.
-        System.loadLibrary(library);
+            // Unlinking the file from the filesystem won't affect the JVM's reference to the loaded library.
+            Files.delete(file);
+        } catch (final IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     private static String getResourcePathByOS() {
@@ -44,14 +43,5 @@ public final class SpiceLoader {
         }
 
         throw new UnsupportedOperationException("Platform " + osName + " is not supported by JNISpice.");
-    }
-
-    private static void deleteFileOnExit(final Path path) {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                Files.delete(path);
-            } catch (final IOException ex) {
-            }
-        }));
     }
 }

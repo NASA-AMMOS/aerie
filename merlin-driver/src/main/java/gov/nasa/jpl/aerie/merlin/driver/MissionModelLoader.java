@@ -9,7 +9,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -77,9 +76,7 @@ public final class MissionModelLoader {
             }
 
             return (MerlinPlugin) factoryClass$.getConstructor().newInstance();
-        } catch (final ClassNotFoundException | NoSuchMethodException | InstantiationException
-            | IllegalAccessException | InvocationTargetException ex)
-        {
+        } catch (final ReflectiveOperationException ex) {
             throw new MissionModelLoadException(path, name, version, ex);
         }
     }
