@@ -92,11 +92,8 @@ application {
 dependencies {
   implementation project(':merlin-driver')
   implementation project(':parsing-utilities')
-  implementation project(':contrib')
   implementation project(':constraints')
   implementation project(':scheduler')
-
-  implementation project(':merlin-framework')
 
   implementation 'org.apache.commons:commons-lang3:3.12.0'
   implementation 'io.javalin:javalin:4.6.0'
@@ -115,5 +112,3 @@ dependencies {
   testImplementation 'javax.json.bind:javax.json.bind-api:1.0'
   testImplementation 'org.glassfish:javax.json:1.1.4'
 }
-
-

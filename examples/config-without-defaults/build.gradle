@@ -8,6 +8,12 @@ java {
   }
 }
 
+jar {
+  from {
+    configurations.runtimeClasspath.filter{ it.exists() }.collect{ it.isDirectory() ? it : zipTree(it) }
+  }
+}
+
 test {
   useJUnitPlatform()
 }
@@ -15,11 +21,10 @@ test {
 dependencies {
   annotationProcessor project(':merlin-framework-processor')
 
-  compileOnly project(':merlin-framework')
-  compileOnly project(':contrib')
+  implementation project(':merlin-framework')
+  implementation project(':contrib')
 
   testImplementation project(':merlin-framework-junit')
-  testImplementation project(':contrib')
   testImplementation 'org.assertj:assertj-core:3.23.1'
 
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'

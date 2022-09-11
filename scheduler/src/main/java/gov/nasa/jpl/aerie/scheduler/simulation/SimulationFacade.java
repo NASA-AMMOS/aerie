@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.time.Window;
-import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
@@ -137,7 +136,7 @@ public class SimulationFacade {
     if (activity.hasDuration()) {
       final var durationType = activity.getType().getDurationType();
       if (durationType instanceof DurationType.Controllable dt) {
-        arguments.put(dt.parameterName(), new DurationValueMapper().serializeValue(activity.getDuration()));
+        arguments.put(dt.parameterName(), SerializedValue.of(activity.getDuration().in(Duration.MICROSECONDS)));
       } else if (durationType instanceof DurationType.Uncontrollable) {
         // If an activity has already been simulated, it will have a duration, even if its DurationType is Uncontrollable.
       } else {

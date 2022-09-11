@@ -75,10 +75,7 @@ application {
 dependencies {
   implementation project(':merlin-driver')
   implementation project(':parsing-utilities')
-  implementation project(':contrib')
   implementation project(':constraints')
-
-  runtimeOnly project(':merlin-framework')
 
   implementation 'org.apache.commons:commons-lang3:3.12.0'
   implementation 'io.javalin:javalin:4.6.0'

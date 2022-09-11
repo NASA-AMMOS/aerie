@@ -21,7 +21,7 @@ javadoc.options.links 'https://docs.oracle.com/en/java/javase/11/docs/api/'
 javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
 dependencies {
-  compileOnly project(':merlin-framework')
+  api project(':merlin-framework')
 
   api 'org.apache.commons:commons-math3:3.6.1'
 

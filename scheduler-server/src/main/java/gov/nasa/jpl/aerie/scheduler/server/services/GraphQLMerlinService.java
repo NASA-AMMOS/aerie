@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.json.BasicParsers;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -49,10 +48,10 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLInterval;
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLTimestamp;
 import static gov.nasa.jpl.aerie.scheduler.server.http.SerializedValueJsonParser.serializedValueP;
-import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
 
 /**
  * {@inheritDoc}
@@ -374,7 +373,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
         //add duration to parameters if controllable
         if (activity.getType().getDurationType() instanceof DurationType.Controllable durationType){
           if (!activity.getArguments().containsKey(durationType.parameterName())){
-            activity.addArgument(durationType.parameterName(), new DurationValueMapper().serializeValue(activity.getDuration()));
+            activity.addArgument(durationType.parameterName(), SerializedValue.of(activity.getDuration().in(Duration.MICROSECONDS)));
           }
         }
         final var actFromInitialPlan = initialPlan.getActivityById(idActFromInitialPlan);

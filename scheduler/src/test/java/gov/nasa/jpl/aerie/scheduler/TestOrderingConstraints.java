@@ -2,8 +2,8 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.BinaryMutexConstraint;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.CardinalityConstraint;
@@ -67,8 +67,8 @@ public class TestOrderingConstraints {
     ActivityType type1 = new ActivityType("ControllableDurationActivity");
     ActivityType type2 = new ActivityType("OtherControllableDurationActivity");
 
-    ActivityInstance act1 = new ActivityInstance(type1, t1, Duration.of(4, Duration.SECONDS), Map.of("duration", new DurationValueMapper().serializeValue(Duration.of(4, Duration.SECONDS))));
-    ActivityInstance act2 = new ActivityInstance(type2, t3, Duration.of(5, Duration.SECONDS), Map.of("duration", new DurationValueMapper().serializeValue(Duration.of(5, Duration.SECONDS))));
+    ActivityInstance act1 = new ActivityInstance(type1, t1, Duration.of(4, Duration.SECONDS), Map.of("duration", SerializedValue.of(Duration.of(4, Duration.SECONDS).in(Duration.MICROSECONDS))));
+    ActivityInstance act2 = new ActivityInstance(type2, t3, Duration.of(5, Duration.SECONDS), Map.of("duration", SerializedValue.of(Duration.of(5, Duration.SECONDS).in(Duration.MICROSECONDS))));
 
     plan.add(act1);
     CardinalityConstraint cc =
@@ -98,8 +98,8 @@ public class TestOrderingConstraints {
     ActivityType type1 = new ActivityType("ControllableDurationActivity");
     ActivityType type2 = new ActivityType("OtherControllableDurationActivity");
 
-    ActivityInstance act1 = new ActivityInstance(type1, t1, Duration.of(4, Duration.SECONDS), Map.of("duration", new DurationValueMapper().serializeValue(Duration.of(4, Duration.SECONDS))));
-    ActivityInstance act2 = new ActivityInstance(type2, t3, Duration.of(5, Duration.SECONDS), Map.of("duration", new DurationValueMapper().serializeValue(Duration.of(5, Duration.SECONDS))));
+    ActivityInstance act1 = new ActivityInstance(type1, t1, Duration.of(4, Duration.SECONDS), Map.of("duration", SerializedValue.of(Duration.of(4, Duration.SECONDS).in(Duration.MICROSECONDS))));
+    ActivityInstance act2 = new ActivityInstance(type2, t3, Duration.of(5, Duration.SECONDS), Map.of("duration", SerializedValue.of(Duration.of(5, Duration.SECONDS).in(Duration.MICROSECONDS))));
 
     plan.add(act1);
     plan.add(act2);
@@ -129,8 +129,8 @@ public class TestOrderingConstraints {
     ActivityType type1 = new ActivityType("ControllableDurationActivity");
     ActivityType type2 = new ActivityType("OtherControllableDurationActivity");
 
-    ActivityInstance act1 = new ActivityInstance(type1, t1, Duration.of(4, Duration.SECONDS), Map.of("duration", new DurationValueMapper().serializeValue(Duration.of(4, Duration.SECONDS))));
-    ActivityInstance act2 = new ActivityInstance(type2, t3, Duration.of(5, Duration.SECONDS), Map.of("duration", new DurationValueMapper().serializeValue(Duration.of(5, Duration.SECONDS))));
+    ActivityInstance act1 = new ActivityInstance(type1, t1, Duration.of(4, Duration.SECONDS), Map.of("duration", SerializedValue.of(Duration.of(4, Duration.SECONDS).in(Duration.MICROSECONDS))));
+    ActivityInstance act2 = new ActivityInstance(type2, t3, Duration.of(5, Duration.SECONDS), Map.of("duration", SerializedValue.of(Duration.of(5, Duration.SECONDS).in(Duration.MICROSECONDS))));
 
     plan.add(act1);
     plan.add(act2);
@@ -156,7 +156,7 @@ public class TestOrderingConstraints {
   public void testCardinalityFindWindows() throws SimulationFacade.SimulationException {
     ActivityType type1 = new ActivityType("ControllableDurationActivity");
 
-    ActivityInstance act1 = new ActivityInstance(type1, t1, Duration.of(4, Duration.SECONDS), Map.of("duration", new DurationValueMapper().serializeValue(Duration.of(4, Duration.SECONDS))));
+    ActivityInstance act1 = new ActivityInstance(type1, t1, Duration.of(4, Duration.SECONDS), Map.of("duration", SerializedValue.of(Duration.of(4, Duration.SECONDS).in(Duration.MICROSECONDS))));
 
     plan.add(act1);
 
