@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import req from '../utilities/requests';
+import req from '../utilities/requests.js';
 
 test.describe('Mission Models', () => {
   let jar_id: number;

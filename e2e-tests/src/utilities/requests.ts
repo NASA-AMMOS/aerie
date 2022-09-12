@@ -1,10 +1,10 @@
 import type { APIRequestContext } from '@playwright/test';
-import { sync as glob } from 'fast-glob';
+import FastGlob from "fast-glob";
 import { createReadStream } from 'fs';
 import { basename, resolve } from 'path';
-import * as urls from '../utilities/urls';
-import gql from './gql';
-import time from "./time";
+import * as urls from '../utilities/urls.js';
+import gql from './gql.js';
+import time from "./time.js";
 
 /**
  * Aerie API request functions.
@@ -95,7 +95,7 @@ const req = {
     searchPath: string = '../examples/banananation/build/libs/*',
   ): Promise<number> {
     const absoluteSearchPath = resolve(searchPath);
-    const [jarPath = 'ERROR_JAR_NOT_FOUND'] = glob(absoluteSearchPath);
+    const [jarPath = 'ERROR_JAR_NOT_FOUND'] = FastGlob.sync(absoluteSearchPath);
 
     const buffer = createReadStream(jarPath);
     const name = basename(jarPath);
