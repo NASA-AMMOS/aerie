@@ -91,8 +91,7 @@ public final class MissionModelLoader {
 
     private static String getImplementingClassName(final Path jarPath, final String name, final String version)
     throws MissionModelLoadException {
-        try {
-            final var jarFile = new JarFile(jarPath.toFile());
+        try (final var jarFile = new JarFile(jarPath.toFile())) {
             final var jarEntry = jarFile.getEntry("META-INF/services/" + MerlinPlugin.class.getCanonicalName());
             final var inputStream = jarFile.getInputStream(jarEntry);
 
