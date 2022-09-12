@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
-import req from '../utilities/requests';
-import time from '../utilities/time';
+import req from '../utilities/requests.js';
+import time from '../utilities/time.js';
 
 test.describe('Scheduling', () => {
   const rd = Math.random() * 100;

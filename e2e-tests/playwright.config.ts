@@ -1,5 +1,6 @@
-/** @type {import('@playwright/test').PlaywrightTestConfig} */
-const config = {
+import type { PlaywrightTestConfig } from '@playwright/test';
+
+const config: PlaywrightTestConfig = {
   reporter: [
     [process.env.CI ? 'github' : 'list'],
     ['html', { open: 'never', outputFile: 'index.html', outputFolder: 'test-results' }],
