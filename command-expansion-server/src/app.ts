@@ -37,7 +37,7 @@ const PORT: number = parseInt(getEnv().PORT, 10) ?? 27184;
 const app: Application = express();
 // WARNING: bodyParser.json() is vulnerable to a string too long issue. Iff that occurs,
 // we should switch to a stream parser like https://www.npmjs.com/package/stream-json
-app.use(bodyParser.json({ limit: '25mb' }));
+app.use(bodyParser.json({ limit: '100mb' }));
 
 DbExpansion.init();
 const db = DbExpansion.getDb();
