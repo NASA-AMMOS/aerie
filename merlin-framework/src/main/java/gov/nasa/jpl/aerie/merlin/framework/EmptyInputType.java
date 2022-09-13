@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;

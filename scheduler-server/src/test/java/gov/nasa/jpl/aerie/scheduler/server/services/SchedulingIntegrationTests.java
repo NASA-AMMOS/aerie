@@ -2,8 +2,8 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityTypeList;

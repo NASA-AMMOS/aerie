@@ -3,8 +3,8 @@ package gov.nasa.jpl.aerie.scheduler.model;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 
 import java.util.List;
 import java.util.Objects;

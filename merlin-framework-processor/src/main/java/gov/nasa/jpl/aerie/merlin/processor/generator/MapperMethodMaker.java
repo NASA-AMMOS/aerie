@@ -6,8 +6,8 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.InputTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
+import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableArgumentException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 
