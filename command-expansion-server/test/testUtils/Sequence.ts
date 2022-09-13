@@ -1,6 +1,7 @@
 import { gql, GraphQLClient } from 'graphql-request';
-import type { SequenceSeqJson } from '../../src/lib/codegen/CommandEDSLPreface';
-import { convertActivityDirectiveIdToSimulatedActivityId } from './ActivityDirective';
+import type { SequenceSeqJson } from '../../src/lib/codegen/CommandEDSLPreface.js';
+import { convertActivityDirectiveIdToSimulatedActivityId } from './ActivityDirective.js';
+import { FallibleStatus } from '../../src/types.js';
 
 export async function insertSequence(
   graphqlClient: GraphQLClient,
@@ -36,21 +37,38 @@ export async function generateSequenceEDSL(
   commandDictionaryID: number,
   edslBody: string,
 ): Promise<SequenceSeqJson> {
-  const res = await graphqlClient.request<{ getUserSequenceSeqJson: SequenceSeqJson }>(
+  const res = await graphqlClient.request<{
+    getUserSequenceSeqJson: {
+      status: FallibleStatus.FAILURE,
+      seqJson?: SequenceSeqJson,
+      errors: { message: string, stack: string}[]
+    } | {
+      status: FallibleStatus.SUCCESS,
+      seqJson: SequenceSeqJson,
+      errors: { message: string, stack: string}[]
+    }
+  }>(
     gql`
       query generateSequence($commandDictionaryID: Int!, $edslBody: String!) {
         getUserSequenceSeqJson(commandDictionaryID: $commandDictionaryID, edslBody: $edslBody) {
-          id
-          metadata
-          steps {
-            args
+          status
+          errors {
+            message
+            stack
+          }
+          seqJson {
+            id
             metadata
-            stem
-            time {
-              tag
+            steps {
+              args
+              metadata
+              stem
+              time {
+                tag
+                type
+              }
               type
             }
-            type
           }
         }
       }
@@ -61,7 +79,11 @@ export async function generateSequenceEDSL(
     },
   );
 
-  return res.getUserSequenceSeqJson;
+  if (res.getUserSequenceSeqJson.status === FallibleStatus.FAILURE) {
+    throw res.getUserSequenceSeqJson.errors;
+  }
+
+  return res.getUserSequenceSeqJson.seqJson;
 }
 
 export async function removeSequence(
