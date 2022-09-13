@@ -25,11 +25,12 @@ public final class InvalidArgumentsException extends Exception {
           "unconstructable arguments: %s, "+
           "missing arguments: %s, "+
           "valid arguments: %s"
-          ).formatted(metaName, containerName,
-              missingArguments,
-              extraneousArguments,
-              unconstructableArguments,
-              validArguments));
+          ).formatted(metaName,
+                      containerName,
+                      extraneousArguments,
+                      unconstructableArguments,
+                      missingArguments,
+                      validArguments));
 
     this.metaName = metaName;
     this.containerName = containerName;
@@ -85,11 +86,12 @@ public final class InvalidArgumentsException extends Exception {
             unconstructableArguments.isEmpty() &&
             missingArguments.isEmpty()))
       {
-        throw new InvalidArgumentsException(metaName, containerName,
-            extraneousArguments,
-            unconstructableArguments,
-            missingArguments,
-            validArguments);
+        throw new InvalidArgumentsException(metaName,
+                                            containerName,
+                                            extraneousArguments,
+                                            unconstructableArguments,
+                                            missingArguments,
+                                            validArguments);
       }
     }
   }
