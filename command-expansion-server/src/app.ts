@@ -13,22 +13,23 @@ import { InferredDataloader, objectCacheKeyFunction, unwrapPromiseSettledResults
 import { commandDictionaryTypescriptBatchLoader } from './lib/batchLoaders/commandDictionaryTypescriptBatchLoader.js';
 import { activitySchemaBatchLoader } from './lib/batchLoaders/activitySchemaBatchLoader.js';
 import {
-  SimulatedActivity,
   simulatedActivitiesBatchLoader,
+  SimulatedActivity,
   simulatedActivityInstanceBySimulatedActivityIdBatchLoader,
 } from './lib/batchLoaders/simulatedActivityBatchLoader.js';
 import { expansionSetBatchLoader } from './lib/batchLoaders/expansionSetBatchLoader.js';
 import Piscina from 'piscina';
-import type { executeExpansion, typecheckExpansion, executeEDSL } from './worker.js';
+import type { executeEDSL, typecheckExpansion, executeExpansionFromBuildArtifacts } from './worker.js';
 import { isRejected, isResolved } from './utils/typeguards.js';
 import { expansionBatchLoader } from './lib/batchLoaders/expansionBatchLoader.js';
-import type { UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
+import type { CacheItem, UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
 import { InheritedError } from './utils/InheritedError.js';
 import { defaultSeqBuilder } from './defaultSeqBuilder.js';
-import { CommandSeqJson, Command, Sequence } from './lib/codegen/CommandEDSLPreface.js';
+import { Command, CommandSeqJson, Sequence } from './lib/codegen/CommandEDSLPreface.js';
 import { assertOne } from './utils/assertions.js';
 import { Status } from './common.js';
 import { serializeWithTemporal } from './utils/temporalSerializers.js';
+import { Result } from '@nasa-jpl/aerie-ts-user-code-runner/build/utils/monads.js';
 
 const logger = getLogger('app');
 
@@ -62,7 +63,7 @@ app.use(async (_: Request, res: Response, next: NextFunction) => {
     cacheKeyFn: objectCacheKeyFunction,
   });
 
-  const context: Context = {
+  res.locals['context'] = {
     commandTypescriptDataLoader: new DataLoader(commandDictionaryTypescriptBatchLoader({ graphqlClient }), {
       cacheKeyFn: objectCacheKeyFunction,
     }),
@@ -91,9 +92,7 @@ app.use(async (_: Request, res: Response, next: NextFunction) => {
     expansionDataLoader: new DataLoader(expansionBatchLoader({ graphqlClient }), {
       cacheKeyFn: objectCacheKeyFunction,
     }),
-  };
-
-  res.locals['context'] = context;
+  } as Context;
   return next();
 });
 
@@ -176,16 +175,16 @@ app.post('/put-expansion', async (req, res, next) => {
   });
   const activityTypescript = generateTypescriptForGraphQLActivitySchema(activitySchema);
 
-  const result = await (piscina.run(
+  const result = Result.fromJSON(await (piscina.run(
     {
       expansionLogic,
       commandTypes: commandTypes,
       activityTypes: activityTypescript,
     },
     { name: 'typecheckExpansion' },
-  ) as ReturnType<typeof typecheckExpansion>);
+  ) as ReturnType<typeof typecheckExpansion>));
 
-  res.status(200).json({ id, errors: result.errors });
+  res.status(200).json({ id, errors: result.isErr() ? result.unwrapErr() : [] });
   return next();
 });
 
@@ -211,31 +210,32 @@ app.post('/put-expansion-set', async (req, res, next) => {
         activityTypeName: expansion.activityType,
       });
       const activityTypescript = generateTypescriptForGraphQLActivitySchema(activitySchema);
-      const result = await (piscina.run(
+      const result = Result.fromJSON(await (piscina.run(
         {
           expansionLogic: expansion.expansionLogic,
           commandTypes: commandTypes,
           activityTypes: activityTypescript,
         },
         { name: 'typecheckExpansion' },
-      ) as ReturnType<typeof typecheckExpansion>);
+      ) as ReturnType<typeof typecheckExpansion>));
 
-      return result.errors;
+      return result
     }),
   );
 
   const errors = unwrapPromiseSettledResults(typecheckErrorPromises).reduce((accum, item) => {
     if (item instanceof Error) {
       accum.push(item);
-    } else {
-      accum.concat(item);
+    }
+    else if (item.isErr()) {
+      accum.push(...item.unwrapErr());
     }
     return accum;
   }, [] as (Error | ReturnType<UserCodeError['toJSON']>)[]);
 
   if (errors.length > 0) {
     throw new InheritedError(
-      `Expansion set could not be typechecked`,
+      `Expansion set could not be type checked`,
       errors.map(e => ({
         name: 'TypeCheckError',
         stack: e.stack ?? null,
@@ -334,6 +334,10 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
   ]);
   const commandTypes = expansionSet.commandDictionary.commandTypesTypeScript;
 
+  // Note: We are keeping the Promise in the cache so that we don't have to wait for resolution to insert into
+  // the cache and consequently end up doing the compilation multiple times because of a cache miss.
+  const expansionBuildArtifactsCache = new Map<number, Promise<Result<CacheItem, ReturnType<UserCodeError["toJSON"]>[]>>>();
+
   const settledExpansionResults = await Promise.allSettled(
     simulatedActivities.map(async simulatedActivity => {
       const activitySchema = await context.activitySchemaDataLoader.load({
@@ -352,15 +356,52 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
         };
       }
       const activityTypes = generateTypescriptForGraphQLActivitySchema(activitySchema);
-      return (await piscina.run(
+
+      if (!expansionBuildArtifactsCache.has(expansion.id)) {
+        const typecheckResult = (piscina.run(
+            {
+              expansionLogic: expansion.expansionLogic,
+              commandTypes: commandTypes,
+              activityTypes,
+            },
+            { name: 'typecheckExpansion' },
+        ) as ReturnType<typeof typecheckExpansion>).then(Result.fromJSON);
+        expansionBuildArtifactsCache.set(expansion.id, typecheckResult);
+      }
+
+      const expansionBuildArtifacts = await expansionBuildArtifactsCache.get(expansion.id)!;
+
+      if (expansionBuildArtifacts.isErr()) {
+        return {
+          activityInstance: simulatedActivity,
+          commands: null,
+          errors: expansionBuildArtifacts.unwrapErr(),
+        }
+      }
+
+      const buildArtifacts = expansionBuildArtifacts.unwrap();
+
+      const executionResult = Result.fromJSON(await (piscina.run(
         {
-          expansionLogic: expansion.expansionLogic,
           serializedActivityInstance: serializeWithTemporal(simulatedActivity),
-          commandTypes,
-          activityTypes,
+          buildArtifacts,
         },
-        { name: 'executeExpansion' },
-      )) as ReturnType<typeof executeExpansion>;
+        { name: 'executeExpansionFromBuildArtifacts' },
+      ) as ReturnType<typeof executeExpansionFromBuildArtifacts>));
+
+      if (executionResult.isErr()) {
+        return {
+          activityInstance: simulatedActivity,
+          commands: null,
+          errors: executionResult.unwrapErr(),
+        };
+      }
+
+      return {
+        activityInstance: simulatedActivity,
+        commands: executionResult.unwrap(),
+        errors: [],
+      }
     }),
   );
 
@@ -450,23 +491,19 @@ app.post('/get-seqjson-for-sequence-standalone', async (req, res, next) => {
     return next();
   }
 
-  const result = await ((await piscina.run(
+  const result = Result.fromJSON(await (piscina.run(
     {
       edslBody,
       commandTypes,
     },
     { name: 'executeEDSL' },
-  )) as ReturnType<typeof executeEDSL>);
+  ) as ReturnType<typeof executeEDSL>));
 
-  const sequenceJson = result.sequenceJson;
-  if (sequenceJson != null && result.errors.length === 0) {
-    res.status(200).json(sequenceJson);
-  } else {
-    res.status(200).json({
-      message: 'Failure to generate sequence JSON',
-      cause: result.errors,
-    });
+  if (result.isErr()) {
+    throw result.unwrapErr();
   }
+
+  res.json(result.unwrap());
 
   return next();
 });
