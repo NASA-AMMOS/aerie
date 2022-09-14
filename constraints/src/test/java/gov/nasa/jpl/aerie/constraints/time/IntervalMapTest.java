@@ -67,7 +67,7 @@ public class IntervalMapTest {
 
   @Test
   public void setAllStandard2() {
-    Interval horizon = Interval.between(0, 23, SECONDS);
+
 
     IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(Duration.of(0, SECONDS), Inclusive, Duration.of(3, SECONDS), Inclusive), "a")
@@ -106,7 +106,7 @@ public class IntervalMapTest {
 
   @Test
   public void setAllAtStartNullEnd() {
-    Interval horizon = Interval.between(0, 4, SECONDS);
+
 
     IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(2, 3, SECONDS), "a")
@@ -128,7 +128,7 @@ public class IntervalMapTest {
 
   @Test
   public void setAllNullStartAtEnd() {
-    Interval horizon = Interval.between(0, 4, SECONDS);
+
 
     IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(2, 3, SECONDS), "a")
@@ -151,7 +151,7 @@ public class IntervalMapTest {
 
   @Test
   public void setAllCoverWholeHorizon() {
-    Interval horizon = Interval.between(0, 4, SECONDS);
+
 
     IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(2, 3, SECONDS), "a")
@@ -170,7 +170,7 @@ public class IntervalMapTest {
 
   @Test
   public void unsetInMiddleRange() {
-    Interval horizon = Interval.between(0, 7, SECONDS);
+
 
     IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(1, 3, SECONDS), "a")
@@ -188,7 +188,7 @@ public class IntervalMapTest {
 
   @Test
   public void unsetTouchingStart() {
-    Interval horizon = Interval.between(0, 7, SECONDS);
+
 
     IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(0, 6, SECONDS), "a")
@@ -202,7 +202,7 @@ public class IntervalMapTest {
 
   @Test
   public void unsetTouchingEnd() {
-    Interval horizon = Interval.between(0, 6, SECONDS);
+
 
     IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(0, 6, SECONDS), "a")
@@ -216,7 +216,7 @@ public class IntervalMapTest {
 
   @Test
   public void unsetTouchingAll() {
-    Interval horizon = Interval.between(0, 6, SECONDS);
+
 
     IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(0, 3, SECONDS), "a")
@@ -228,7 +228,7 @@ public class IntervalMapTest {
 
   @Test
   public void unsetAllTouchingBothEnds() {
-    Interval horizon = Interval.between(0, 6, SECONDS);
+
 
     IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(0, 3, SECONDS), "a")
@@ -245,7 +245,6 @@ public class IntervalMapTest {
 
   @Test
   public void unsetAllMiniGap(){
-    Interval horizon = Interval.between(0, 6, SECONDS);
 
     IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(1, 5, SECONDS), "a")
@@ -262,7 +261,6 @@ public class IntervalMapTest {
 
   @Test
   public void unsetAllSparseInMiddle() {
-    Interval horizon = Interval.between(0, 7, SECONDS);
 
     IntervalMap<String> left = new IntervalMap<String>()
         .set(Interval.between(1, 6, SECONDS), "a")
