@@ -558,7 +558,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
       final var insertionObjectArguments = Json.createObjectBuilder();
       if(act.getType().getDurationType() instanceof DurationType.Controllable durationType){
         if(!act.getArguments().containsKey(durationType.parameterName())){
-          insertionObjectArguments.add(durationType.parameterName(), serializeForGql(act.getDuration()));
+          insertionObjectArguments.add(durationType.parameterName(), act.getDuration().in(Duration.MICROSECOND));
         }
       }
 
@@ -732,17 +732,6 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     //TODO: (defensive) should escape contents of bare strings, eg internal quotes
     //NB: Time::toString will format correctly as HH:MM:SS.sss, just need to quote it here
     return "\"" + s + "\"";
-  }
-
-  /**
-   * serialize the given duration in a manner that can be used as a graphql argument value
-   * @param d the duration to serialize
-   * @return a serialization of the object suitable for use as a graphql value
-   */
-  public String serializeForGql(final Duration d) {
-    //TODO: can probably leverage some serializers from aerie
-    //NB: merlin uses durations in microseconds! (inconsistent with start_offset as a HH:MM:SS.sss string)
-    return Long.toString(d.in(Duration.MICROSECOND));
   }
 
   public String serializeForGql(final SerializedValue value) {
