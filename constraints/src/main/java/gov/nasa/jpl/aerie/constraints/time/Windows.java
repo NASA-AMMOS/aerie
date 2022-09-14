@@ -211,9 +211,9 @@ public final class Windows implements Iterable<Segment<Boolean>> {
     return this.includes(new Windows(probe, true));
   }
 
-  public boolean includesPoint(final long quantity, final Duration unit) {
-    return this.includes(new Windows(Interval.at(quantity, unit), true));
-  }
+  /**
+   * Sets true segments shorter than `minDur` or longer than `maxDur` to false.
+   *
 
   public Windows filterByDuration(Duration minDur, Duration maxDur){
     if (minDur.longerThan(maxDur)) {

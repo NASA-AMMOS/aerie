@@ -454,7 +454,7 @@ public class WindowsTest {
         Segment.of(interval(5, 6, SECONDS), true),
         Segment.of(interval(3, 5, SECONDS), false)
     )));
-    assertTrue(w.includesPoint(1, SECONDS));
+    assertTrue(w.includes(at(1, SECONDS)));
     assertFalse(w.includes(interval(0, 3, SECONDS)));
   }
 
@@ -463,7 +463,7 @@ public class WindowsTest {
     final var x = new Windows();
 
     assertTrue(x.includes(Interval.EMPTY));
-    assertFalse(x.includesPoint(0, MICROSECONDS));
+    assertFalse(x.includes(at(0, MICROSECONDS)));
   }
 
 
