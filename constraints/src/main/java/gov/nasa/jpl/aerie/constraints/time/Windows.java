@@ -313,14 +313,7 @@ public final class Windows implements Iterable<Segment<Boolean>> {
     return new Windows(segments.select(intervals));
   }
 
-  public Optional<Pair<Duration, Interval.Inclusivity>> minValidTimePoint() {
-    return segments.minValidTimePoint();
-  }
-
-  public Optional<Pair<Duration, Interval.Inclusivity>> maxValidTimePoint() {
-    return segments.maxValidTimePoint();
-  }
-
+  /** Delegated to {@link IntervalMap#get(int)} */
   public Segment<Boolean> get(final int index) {
     return segments.get(index);
   }
@@ -342,8 +335,9 @@ public final class Windows implements Iterable<Segment<Boolean>> {
     return segments.iterateEqualTo(value);
   }
 
-  public boolean isAllEqualTo(final Boolean value) {
-    return segments.isAllEqualTo(value);
+  /** Delegated to {@link IntervalMap#stream} */
+  public Stream<Segment<Boolean>> stream() {
+    return segments.stream();
   }
 
   @Override

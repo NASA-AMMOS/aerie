@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
@@ -47,7 +48,7 @@ public class TestEnvelopes {
     var ranges = tre.computeRange(null, null, horizon);
     assertTrue(ranges.includes(Interval.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(10, Duration.SECONDS))));
     ranges = ranges.removeTrueSegment(0);
-    assertTrue(ranges.isAllEqualTo(false));
+    assertTrue(ranges.stream().noneMatch(Segment::value));
   }
 }
 

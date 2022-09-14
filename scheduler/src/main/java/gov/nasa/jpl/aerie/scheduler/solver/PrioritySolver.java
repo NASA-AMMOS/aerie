@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.solver;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
@@ -601,7 +602,7 @@ public class PrioritySolver implements Solver {
 
     //create new act if there is any valid time (otherwise conflict is
     //unsatisfiable in current plan)
-    if (!startWindows.isAllEqualTo(false)) {
+    if (!startWindows.stream().noneMatch(Segment::value)) {
       //TODO: move this into a polymorphic method? definitely don't want to be
       //demuxing on all the conflict types here
       if (missing instanceof final MissingActivityInstanceConflict missingInstance) {
@@ -653,7 +654,7 @@ public class PrioritySolver implements Solver {
     assert constraints != null;
     Windows ret = new Windows(windows);
     //short circuit on already empty windows or no constraints: no work to do!
-    if (windows.isAllEqualTo(false) || constraints.isEmpty()) {
+    if (windows.stream().noneMatch(Segment::value) || constraints.isEmpty()) {
       return ret;
     }
 
@@ -668,7 +669,7 @@ public class PrioritySolver implements Solver {
       final var validity = constraint.evaluate(simulationFacade.getLatestConstraintSimulationResults(), totalDomain);
       ret = ret.and(validity);
       //short-circuit if no possible windows left
-      if (ret.isAllEqualTo(false)) {
+      if (ret.stream().noneMatch(Segment::value)) {
         break;
       }
     }
@@ -681,7 +682,7 @@ public class PrioritySolver implements Solver {
       Windows windows,
       Collection<GlobalConstraint> constraints) {
     Windows tmp = new Windows(windows);
-    if(tmp.isAllEqualTo(false)){
+    if(tmp.stream().noneMatch(Segment::value)){
       return tmp;
     }
     //make sure the simulation results cover the domain

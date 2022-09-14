@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.constraints;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
@@ -32,12 +33,12 @@ public class TimeRangeExpression {
    */
   public Windows computeRange(final SimulationResults simulationResults, final Plan plan, final Windows domain) {
 
-    Windows inter = new Windows(domain);
-    if(inter.isAllEqualTo(false)) return inter;
+    Windows inter = domain;
+    if(inter.stream().noneMatch(Segment::value)) return inter;
 
     if (constantWin != null) {
       inter = inter.and(constantWin);
-      if(inter.isAllEqualTo(false)) return inter;
+      if(inter.stream().noneMatch(Segment::value)) return inter;
     }
 
     if (actTemplate != null) {
@@ -58,20 +59,20 @@ public class TimeRangeExpression {
         }
       }
       inter = inter.and(actTw);
-      if(inter.isAllEqualTo(false)) return inter;
+      if(inter.stream().noneMatch(Segment::value)) return inter;
     }
 
     for (var otherExpr : timeRangeExpressions) {
       Windows windowsState = otherExpr.computeRange(simulationResults, plan, domain);
       inter = inter.and(windowsState);
-      if(inter.isAllEqualTo(false)) return inter;
+      if(inter.stream().noneMatch(Segment::value)) return inter;
     }
 
     for (var expr : stateExpr) {
       final var domainOfInter = Interval.between(inter.minTrueTimePoint().get().getKey(), inter.maxTrueTimePoint().get().getKey());
       Windows windowsState = expr.evaluate(simulationResults, domainOfInter, Map.of());
       inter = inter.and(windowsState);
-      if(inter.isAllEqualTo(false)) return inter;
+      if(inter.stream().noneMatch(Segment::value)) return inter;
     }
 
     for (var constState : constantsStates) {
@@ -89,7 +90,7 @@ public class TimeRangeExpression {
         return b;
       });
       inter = inter.and(timeline[0]);
-      if(inter.isAllEqualTo(false)) return inter;
+      if(inter.stream().noneMatch(Segment::value)) return inter;
     }
 
     for (var filterOrTransform : filtersAndTransformers) {
@@ -98,7 +99,7 @@ public class TimeRangeExpression {
       } else if (filterOrTransform instanceof TimeWindowsTransformer timeWindowsTransformer) {
         inter = timeWindowsTransformer.transformWindows(plan, inter, simulationResults);
       }
-      if(inter.isAllEqualTo(false)) return inter;
+      if(inter.stream().noneMatch(Segment::value)) return inter;
     }
 
     return inter;

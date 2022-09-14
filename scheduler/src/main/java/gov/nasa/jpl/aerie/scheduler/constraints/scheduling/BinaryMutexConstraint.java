@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.constraints.scheduling;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
@@ -90,7 +91,7 @@ public class BinaryMutexConstraint extends GlobalConstraint {
       violationWindows = new Windows(twActs).and(twOtherActs).and(intervalWindows).or(violationWindows);
     }
     ConstraintState cState;
-    if (!violationWindows.isAllEqualTo(false)) {
+    if (!violationWindows.stream().noneMatch(Segment::value)) {
       cState = new ConstraintState(this, true, violationWindows);
     } else {
       cState = new ConstraintState(this, false, null);

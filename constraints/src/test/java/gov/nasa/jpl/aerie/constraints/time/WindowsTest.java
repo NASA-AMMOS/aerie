@@ -31,7 +31,7 @@ public class WindowsTest {
         Segment.of(at(3, SECONDS), true)
     );
 
-    assertEquals(windows3.minValidTimePoint().get().getKey(), Duration.MIN_VALUE);
+    assertEquals(windows3.minTrueTimePoint().get().getKey(), Duration.MIN_VALUE);
 
 
     windows2 = new Windows(windows3);
@@ -158,31 +158,23 @@ public class WindowsTest {
 
     //check empty
     Windows w = new Windows();
-    assertFalse(w.minValidTimePoint().isPresent());
-    assertFalse(w.maxValidTimePoint().isPresent());
     assertFalse(w.minTrueTimePoint().isPresent());
     assertFalse(w.maxTrueTimePoint().isPresent());
 
     //check only 1 interval
     w = w.set(interval(Duration.ZERO, Duration.MAX_VALUE), false);
-    assertEquals(w.minValidTimePoint().get(), Pair.of(Duration.ZERO, Inclusive));
-    assertEquals(w.maxValidTimePoint().get(), Pair.of(Duration.MAX_VALUE, Inclusive));
     assertFalse(w.minTrueTimePoint().isPresent());
     assertFalse(w.maxTrueTimePoint().isPresent());
 
     //multiple intervals
     w = w.set(interval(3, 50, SECONDS), true)
          .set(interval(75, 200, SECONDS), true);
-    assertEquals(w.minValidTimePoint().get(), Pair.of(Duration.ZERO, Inclusive));
-    assertEquals(w.maxValidTimePoint().get(), Pair.of(Duration.MAX_VALUE, Inclusive));
     assertEquals(w.minTrueTimePoint().get(), Pair.of(Duration.of(3, SECONDS), Inclusive));
     assertEquals(w.maxTrueTimePoint().get(), Pair.of(Duration.of(200, SECONDS), Inclusive));
 
     //verify points work too
     w = w.unset(at(Duration.MAX_VALUE))
          .set(at(Duration.ZERO), true);
-    assertEquals(w.minValidTimePoint().get(), Pair.of(Duration.ZERO, Inclusive));
-    assertEquals(w.maxValidTimePoint().get(), Pair.of(Duration.MAX_VALUE, Exclusive));
     assertEquals(w.minTrueTimePoint().get(), Pair.of(Duration.of(0, SECONDS), Inclusive));
     assertEquals(w.maxTrueTimePoint().get(), Pair.of(Duration.of(200, SECONDS), Inclusive));
   }

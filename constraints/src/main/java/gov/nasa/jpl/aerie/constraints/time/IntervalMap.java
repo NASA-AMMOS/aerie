@@ -353,32 +353,7 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
     return resultMap;
   }
 
-  /**
-   * The left bound of the leftmost defined interval.
-   * @return the leftmost bound and its inclusivity
-   */
-  public Optional<Pair<Duration, Interval.Inclusivity>> minValidTimePoint() {
-    if(!this.isEmpty()) {
-      final var window = this.segments.get(0).interval();
-      return Optional.of(Pair.of(window.start, window.startInclusivity));
-    } else{
-      return Optional.empty();
-    }
-  }
-
-  /**
-   * The right bound of the rightmost defined interval.
-   * @return the rightmost bound and its inclusivity
-   */
-  public Optional<Pair<Duration, Interval.Inclusivity>> maxValidTimePoint() {
-    if(!isEmpty()) {
-      final var window = this.segments.get(this.segments.size() - 1).interval();
-      return Optional.of(Pair.of(window.end, window.endInclusivity));
-    } else{
-      return Optional.empty();
-    }
-  }
-
+  /** Gets the interval at a given segment index */
   private Interval getInterval(final int index) {
     final var i = (index >= 0) ? index : this.segments.size() - index;
     return this.segments.get(i).interval();
@@ -415,13 +390,8 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
         .iterator();
   }
 
-  public boolean isAllEqualTo(final V value) {
-    for (final var segment: segments) {
-      if (!segment.value().equals(value)) {
-        return false;
-      }
-    }
-    return true;
+  public Stream<Segment<V>> stream() {
+    return this.segments.stream();
   }
 
   @Override

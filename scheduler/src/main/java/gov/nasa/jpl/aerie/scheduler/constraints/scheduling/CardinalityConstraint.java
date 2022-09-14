@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.constraints.scheduling;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
@@ -174,7 +175,7 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
   public Windows findWindows(Plan plan, Windows windows, Conflict conflict, SimulationResults simulationResults) {
     Windows intersect = new Windows(windows);
     intersect = intersect.and(new Windows(false).set(this.interval, true));
-    if (!intersect.isAllEqualTo(false)) {
+    if (!intersect.stream().noneMatch(Segment::value)) {
       final var allActs = getAllActs(plan, intersect, simulationResults);
       if (allActs.size() >= max) {
         windows = windows.and(intersect.not());
