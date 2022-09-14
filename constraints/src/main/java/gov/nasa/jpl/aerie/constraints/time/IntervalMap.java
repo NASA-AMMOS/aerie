@@ -243,6 +243,21 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
     return new IntervalMap<>(result);
   }
 
+  public IntervalMap<V> shiftBy(final Duration delta) {
+    final var builder = IntervalMap.<V>builder();
+
+    for (final var segment : this.segments) {
+      final var interval = segment.interval();
+      builder.add(
+          Interval.between(
+              interval.start.plus(delta), interval.startInclusivity,
+              interval.end.plus(delta), interval.endInclusivity),
+          segment.value());
+    }
+
+    return builder.build();
+  }
+
   /**
    * The left bound of the leftmost defined interval.
    * @return the leftmost bound and its inclusivity

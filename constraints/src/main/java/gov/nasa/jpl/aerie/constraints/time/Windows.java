@@ -237,10 +237,18 @@ public final class Windows implements Iterable<Segment<Boolean>> {
     for (final var segment : this.segments) {
       final var interval = segment.interval();
 
-      final var shiftedInterval = Interval.between(
-            interval.start.plus(fromStart), interval.startInclusivity,
-            interval.end.plus(fromEnd),     interval.endInclusivity);
+      final var shiftedInterval = (segment.value()) ? (
+          Interval.between(
+              interval.start.plus(fromStart), interval.startInclusivity,
+              interval.end.plus(fromEnd),     interval.endInclusivity)
+      ) : (
+          Interval.between(
+              interval.start.plus(fromEnd), interval.startInclusivity,
+              interval.end.plus(fromStart), interval.endInclusivity)
+      );
 
+      // SAFETY: If two intervals overlap, they have the same value.
+      // Otherwise we'd need to make sure to `or` the overlap together.
       builder.add(shiftedInterval, segment.value());
     }
 
