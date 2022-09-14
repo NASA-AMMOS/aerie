@@ -21,6 +21,7 @@
         "rows": [
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 150,
             "horizontalGuides": [],
             "id": 0,
@@ -39,6 +40,7 @@
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 100,
             "horizontalGuides": [],
             "id": 1,
@@ -65,6 +67,7 @@
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 160,
             "horizontalGuides": [],
             "id": 2,
@@ -94,6 +97,7 @@
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 100,
             "horizontalGuides": [],
             "id": 3,
@@ -120,6 +124,7 @@
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 200,
             "horizontalGuides": [],
             "id": 4,
@@ -149,6 +154,7 @@
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 170,
             "horizontalGuides": [],
             "id": 5,
@@ -175,6 +181,7 @@
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 200,
             "horizontalGuides": [],
             "id": 6,
@@ -204,6 +211,7 @@
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 130,
             "horizontalGuides": [],
             "id": 7,
