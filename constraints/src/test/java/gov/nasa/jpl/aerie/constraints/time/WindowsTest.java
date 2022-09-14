@@ -340,92 +340,102 @@ public class WindowsTest {
                                Segment.of(interval(7, 8, SECONDS), false),
                                Segment.of(interval(8, Exclusive, 10, Exclusive, SECONDS), true),
                                Segment.of(interval(13, 14, SECONDS), true),
-                               Segment.of(interval(14, Exclusive, 16, Exclusive, SECONDS), false),
-                               Segment.of(at(Duration.MAX_VALUE.minus(Duration.of(1, SECONDS))), true)); //long overflow if at max value
+                               Segment.of(interval(14, Exclusive, 17, Exclusive, SECONDS), false),
+                               Segment.of(at(Duration.MAX_VALUE), true)); //long overflow if at max value
 
     Windows result = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(1, SECONDS));
 
 
-    Windows expected = new Windows(Segment.of(interval(-1, 1, SECONDS), true),
-                                   Segment.of(interval(1, Exclusive, 2, Inclusive, SECONDS), false),
-                                   Segment.of(interval(4, Inclusive, 11, Exclusive, SECONDS), true),
-                                   Segment.of(interval(12, 15, SECONDS), true),
-                                   Segment.of(interval(15, Exclusive, 16, Exclusive, SECONDS), false),
-                                   Segment.of(interval(Duration.MAX_VALUE.minus(Duration.of(2, SECONDS)),
-                                                       Duration.MAX_VALUE), true));
+    Windows expected = new Windows(
+        Segment.of(interval(-1, 1, SECONDS), true),
+        Segment.of(interval(4, Inclusive, 11, Exclusive, SECONDS), true),
+        Segment.of(interval(12, 15, SECONDS), true),
+        Segment.of(interval(15, Exclusive, 16, Exclusive, SECONDS), false),
+        Segment.of(interval(Duration.MAX_VALUE.minus(Duration.of(1, SECONDS)), Duration.MAX_VALUE), true)
+    );
     assertIterableEquals(expected, result);
   }
 
   @Test
-  public void shiftByFromStartFromEndPermsWithInterval() {
-    var leftEnd = interval(0, 2, SECONDS);
-    var rightEnd = interval(8, 10, SECONDS);
+  public void shiftByConnectedIntervals() {
 
     var orig = new Windows()
-        .set(new Windows(Segment.of(leftEnd, true), Segment.of(rightEnd, true)));
+        .set(interval(0, 10, SECONDS), false)
+        .set(interval(0, 2, SECONDS), true)
+        .set(interval(8, 10, SECONDS), true);
 
     var fromStartPosFromEndPos = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(1, SECONDS));
-    assertIterableEquals(fromStartPosFromEndPos, new Windows(
-        Segment.of(interval(-1, 3, SECONDS), true),
-        Segment.of(interval(7, 11, SECONDS), true)
-    ));
+    assertIterableEquals(
+        new Windows(interval(0, 10, SECONDS), false)
+            .set(interval(-1, 3, SECONDS), true)
+            .set(interval(7, 11, SECONDS), true),
+        fromStartPosFromEndPos
+    );
 
     var fromStartPosFromEndNeg = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(-1, SECONDS));
-    assertEquals(fromStartPosFromEndNeg, new Windows(
-        Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
-        Segment.of(interval(1, 1, SECONDS), true),
-        Segment.of(interval(1, Exclusive, 2, Inclusive, SECONDS), false),
-        Segment.of(interval(8, Inclusive, 9, Exclusive, SECONDS), false),
-        Segment.of(interval(9, 9, SECONDS), true),
-        Segment.of(interval(9, Exclusive, 10, Inclusive, SECONDS), false)
-    ));
+    assertEquals(
+        new Windows(interval(1, Exclusive, 9, Exclusive, SECONDS), false)
+            .set(at(1, SECONDS), true)
+            .set(at(9, SECONDS), true),
+        fromStartPosFromEndNeg
+    );
 
     var fromStartNegFromEndPos = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(1, SECONDS));
-    assertEquals(fromStartNegFromEndPos, new Windows(
-        Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
-        Segment.of(interval(1, 3, SECONDS), true),
-        Segment.of(interval(8, Inclusive, 9, Exclusive, SECONDS), false),
-        Segment.of(interval(9, 11, SECONDS), true)
-    ));
+    assertEquals(
+        new Windows(interval(1, 11, SECONDS), false)
+            .set(interval(1, 3, SECONDS), true)
+            .set(interval(9, 11, SECONDS), true),
+        fromStartNegFromEndPos
+    );
 
     var fromStartNegFromEndNeg = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(-1, SECONDS));
-    assertEquals(fromStartNegFromEndNeg, new Windows(
-        Segment.of(interval(-1, 1, SECONDS), true),
-        Segment.of(interval(1, Exclusive, 2, Inclusive, SECONDS), false),
-        Segment.of(interval(7, 9, SECONDS), true),
-        Segment.of(interval(9, Exclusive, 10, Inclusive, SECONDS), false)
-    ));
+    assertEquals(
+        new Windows(interval(-1, 9, SECONDS), false)
+            .set(interval(-1, 1, SECONDS), true)
+            .set(interval(7, 9, SECONDS), true),
+        fromStartNegFromEndNeg
+    );
 
     var removal = orig.shiftBy(Duration.of(0, SECONDS), Duration.of(-3, SECONDS));
-    assertEquals(new Windows(
-        Segment.of(interval(0, 2, SECONDS), false),
-        Segment.of(interval(8, 10, SECONDS), false)
-    ), removal);
+    assertEquals(
+        new Windows(interval(-1, Exclusive, 8, Exclusive, SECONDS), false),
+        removal
+    );
   }
 
   @Test
-  public void shiftByFromStartFromEndPermsWithPoint() {
-    var leftEnd = at(0, SECONDS);
-    var rightEnd = at(4, SECONDS);
-
+  public void shiftByDisconnectedPoints() {
     var orig = new Windows()
-        .set(new Windows(Segment.of(leftEnd, true), Segment.of(rightEnd, true)));
+        .set(at(0, SECONDS), true)
+        .set(at(2, SECONDS), false);
 
     var fromStartPosFromEndPos = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(1, SECONDS));
-    assertEquals(fromStartPosFromEndPos, new Windows(Segment.of(interval(-1, 1, SECONDS), true),
-                                                     Segment.of(interval(3, 5, SECONDS), true)));
+    assertIterableEquals(
+        new Windows(interval(-1, 1, SECONDS), true),
+        fromStartPosFromEndPos
+    );
 
     var fromStartPosFromEndNeg = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(-1, SECONDS));
-    assertEquals(fromStartPosFromEndNeg, new Windows(Segment.of(leftEnd, false), Segment.of(rightEnd, false)));
+    assertIterableEquals(
+        new Windows(interval(1, 3, SECONDS), false),
+        fromStartPosFromEndNeg
+    );
 
     var fromStartNegFromEndPos = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(1, SECONDS));
-    assertEquals(fromStartNegFromEndPos, new Windows(Segment.of(leftEnd, false), Segment.of(interval(1, 1, SECONDS), true), Segment.of(rightEnd, false), Segment.of(interval(5, 5, SECONDS), true)));
+    assertIterableEquals(
+        new Windows()
+            .set(at(1, SECONDS), true)
+            .set(at(3, SECONDS), false),
+        fromStartNegFromEndPos
+    );
 
     var fromStartNegFromEndNeg = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(-1, SECONDS));
-    assertEquals(fromStartNegFromEndNeg, new Windows(Segment.of(interval(-1, -1, SECONDS), true), Segment.of(leftEnd, false), Segment.of(interval(3, 3, SECONDS), true), Segment.of(rightEnd, false)));
-
-    var coalesce = orig.shiftBy(Duration.of(-2, SECONDS), Duration.of(2, SECONDS));
-    assertEquals(coalesce, new Windows(interval(-2, 6, SECONDS), true));
+    assertIterableEquals(
+        new Windows()
+            .set(at(-1, SECONDS), true)
+            .set(at(1, SECONDS), false),
+        fromStartNegFromEndNeg
+    );
   }
 
   @Test

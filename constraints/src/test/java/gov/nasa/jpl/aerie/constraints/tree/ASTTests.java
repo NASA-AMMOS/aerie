@@ -148,13 +148,13 @@ public class ASTTests {
         .set(Interval.between(7, Exclusive, 9, Exclusive, SECONDS), true)
         .set(Interval.between(9, Exclusive, 15, Exclusive, SECONDS), true)
         .set(Interval.between(19, 20, SECONDS), true)
-        .set(interval(22, 23, SECONDS), false);
+        .set(at(22, SECONDS), false);
 
-    assertEquivalent(expected, result);
+    assertIterableEquals(expected, result);
   }
 
   @Test
-  public void testShiftBy() {
+  public void testShrink() {
     final var simResults = new SimulationResults(
         Interval.between(0, 20, SECONDS),
         List.of(),
@@ -176,18 +176,13 @@ public class ASTTests {
     final var result = new ShiftBy(Supplier.of(left), clampFromStart, clampFromEnd).evaluate(simResults, Map.of());
 
     final var expected = new Windows()
-        .set(interval(0, Inclusive, 1, Exclusive, SECONDS), false)
         .set(Interval.between(1, Inclusive, 4, Exclusive, SECONDS), true)
-        .set(interval(4, Inclusive, 5, Exclusive, SECONDS), false)
-        .set(Interval.between(6, Inclusive, 7, Inclusive, SECONDS), false)
-        .set(Interval.between(8, Exclusive, 9, Exclusive, SECONDS), false)
-        .set(Interval.between(10, Exclusive, 11, Inclusive, SECONDS), false)
+        .set(Interval.between(7, Inclusive, 6, Inclusive, SECONDS), true)
+        .set(Interval.between(9, Exclusive, 8, Exclusive, SECONDS), true)
         .set(Interval.between(11, Exclusive, 14, Exclusive, SECONDS), true)
-        .set(Interval.between(14, Inclusive, 15, Exclusive, SECONDS), false)
-        .set(Interval.at(20, SECONDS), false)
-        .set(interval(22, 23, SECONDS), false);
+        .set(interval(21, 24, SECONDS), false);
 
-    assertEquivalent(expected, result);
+    assertIterableEquals(expected, result);
   }
 
   @Test

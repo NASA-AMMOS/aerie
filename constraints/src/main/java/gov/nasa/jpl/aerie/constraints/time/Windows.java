@@ -348,28 +348,40 @@ public final class Windows implements Iterable<Segment<Boolean>> {
     }));
   }
 
+  /**
+   * Shifts the true segments' start and end points by the given durations.
+   *
+   * Also shifts the false segments' start and end points by the opposite durations;
+   * i.e. the start is shifted by `fromEnd` and the end is shifted by `fromStart`.
+   * This keeps the falses in line with the trues when there are no gaps,
+   * and expands/shrinks gaps accordingly when there are.
+   *
+   * @param fromStart duration to shift false -> true rising edges
+   * @param fromEnd duration to shift true -> false falling edges
+   * @return a new Windows
+   */
   public Windows shiftBy(Duration fromStart, Duration fromEnd) {
-    final var builder = new IntervalMap<Boolean>();
+    final var map = new IntervalMap<Boolean>();
 
     for (final var segment : this.segments) {
       final var interval = segment.interval();
 
       final var shiftedInterval = (segment.value()) ? (
           Interval.between(
-              interval.start.plus(fromStart), interval.startInclusivity,
-              interval.end.plus(fromEnd),     interval.endInclusivity)
+              interval.start.saturatingPlus(fromStart), interval.startInclusivity,
+              interval.end.saturatingPlus(fromEnd),     interval.endInclusivity)
       ) : (
           Interval.between(
-              interval.start.plus(fromEnd), interval.startInclusivity,
-              interval.end.plus(fromStart), interval.endInclusivity)
+              interval.start.saturatingPlus(fromEnd), interval.startInclusivity,
+              interval.end.saturatingPlus(fromStart), interval.endInclusivity)
       );
 
       // SAFETY: If two intervals overlap, they have the same value.
       // Otherwise we'd need to make sure to `or` the overlap together.
-      builder.add(shiftedInterval, segment.value());
+      map.insertInPlace(Segment.of(shiftedInterval, segment.value()), 0);
     }
 
-    return new Windows(builder.build());
+    return new Windows(map);
   }
 
   /**

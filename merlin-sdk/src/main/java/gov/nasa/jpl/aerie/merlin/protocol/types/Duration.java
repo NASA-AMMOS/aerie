@@ -230,6 +230,18 @@ public final class Duration implements Comparable<Duration> {
     return new Duration(Math.addExact(left.durationInMicroseconds, right.durationInMicroseconds));
   }
 
+  public static Duration saturatingAdd(final Duration left, final Duration right) {
+    return new Duration(saturatingAddInternal(left.durationInMicroseconds, right.durationInMicroseconds));
+  }
+
+  private static long saturatingAddInternal(final long left, final long right) {
+    long result = left + right;
+    if (((result ^ left) & (result ^ right)) < 0) {
+      return Long.MIN_VALUE - (result >>> (Long.SIZE - 1));
+    }
+    return result;
+  }
+
   /**
    * Subtract one duration from another.
    *
@@ -346,6 +358,11 @@ public final class Duration implements Comparable<Duration> {
   /** @see Duration#add(Duration, Duration) */
   public Duration plus(final long quantity, final Duration unit) throws ArithmeticException {
     return Duration.add(this, duration(quantity, unit));
+  }
+
+  /** @see Duration#saturatingAdd(Duration, Duration) */
+  public Duration saturatingPlus(final Duration other) {
+    return Duration.saturatingAdd(this, other);
   }
 
   /** @see Duration#subtract(Duration, Duration) */
