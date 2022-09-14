@@ -6,8 +6,4 @@ public record Segment<V>(Interval interval, V value) {
   public static <V> Segment<V> of(final Interval interval, final V value) {
     return new Segment<>(interval, value);
   }
-
-  public Pair<Interval, V> toPair() {
-    return Pair.of(interval(), value());
-  }
 }
