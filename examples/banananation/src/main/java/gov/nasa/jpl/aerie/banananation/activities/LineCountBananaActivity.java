@@ -18,6 +18,7 @@ public final class LineCountBananaActivity {
                                                  //  supported. As a placeholder this defaults to a file that should exist.
 
   @Validation("path must exist")
+  @Validation.Subject("path")
   public boolean validatePath() {
     return Files.exists(path);
   }

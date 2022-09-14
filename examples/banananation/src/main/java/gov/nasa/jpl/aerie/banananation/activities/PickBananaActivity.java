@@ -15,6 +15,7 @@ public final class PickBananaActivity {
   public int quantity = 10;
 
   @Validation("quantity must be positive")
+  @Validation.Subject("quantity")
   public boolean validateQuantity() {
     return this.quantity > 0;
   }

@@ -26,11 +26,13 @@ public final class FooActivity {
   public List<Vector3D> vecs = List.of(new Vector3D(0.0, 0.0, 0.0));
 
   @Validation("x cannot be exactly 99")
+  @Validation.Subject("x")
   public boolean validateX() {
     return (x != 99);
   }
 
   @Validation("y cannot be 'bad'")
+  @Validation.Subject("y")
   public boolean validateY() {
     return !y.equals("bad");
   }

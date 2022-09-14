@@ -22,6 +22,7 @@ public record ThrowBananaActivity(double speed) {
   }
 
   @Validation("Speed must be positive")
+  @Validation.Subject("speed")
   public boolean validateBiteSize() {
     return this.speed() > 0;
   }
