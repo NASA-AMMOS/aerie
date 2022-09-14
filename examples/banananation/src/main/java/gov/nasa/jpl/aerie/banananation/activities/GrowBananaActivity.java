@@ -26,11 +26,13 @@ public record GrowBananaActivity(int quantity, Duration growingDuration) {
   }
 
   @Validation("Quantity must be positive")
+  @Validation.Subject("quantity")
   public boolean validateQuantity() {
     return this.quantity() > 0;
   }
 
   @Validation("Growing Duration must be positive")
+  @Validation.Subject("growingDuration")
   public boolean validateGrowingDuration() {
     return this.growingDuration().longerThan(Duration.ZERO);
   }
