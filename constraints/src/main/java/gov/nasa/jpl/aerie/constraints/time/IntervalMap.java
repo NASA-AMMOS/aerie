@@ -31,7 +31,7 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
   public IntervalMap(final List<Segment<V>> segments) {
     this.segments = new ArrayList<>(segments.size());
     for (final var segment: segments) {
-      this.setInternal(segment.interval(), segment.value(), 0);
+      this.insertInPlace(segment, 0);
     }
   }
 
@@ -43,7 +43,7 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
   public IntervalMap(final Segment<V>... segments) {
     this();
     for (final var segment: segments) {
-      this.setInternal(segment.interval(), segment.value(), 0);
+      this.insertInPlace(segment, 0);
     }
   }
 
@@ -65,21 +65,10 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
   public IntervalMap<V> set(final Interval interval, final V value) {
     return set(new IntervalMap<>(interval, value));
   }
+  int insertInPlace(final Segment<V> segment, int index) {
+    Interval interval = segment.interval();
+    final V value = segment.value();
 
-  public IntervalMap<V> set(final List<Interval> intervals, final V value) {
-    return set(new IntervalMap<>(intervals, value));
-  }
-
-  public IntervalMap<V> set(final IntervalMap<V> other) {
-    final var result = new IntervalMap<>(this);
-    int index = 0;
-    for (final var segment: other) {
-      index = result.setInternal(segment.interval(), segment.value(), index);
-    }
-    return result;
-  }
-
-  int setInternal(Interval interval, final V value, int index) {
     if (interval.isEmpty()) return index;
 
     // <> is `interval`, the interval to unset; [] is the currently-indexed interval in the map.
@@ -95,8 +84,8 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
       if (Objects.equals(this.getValue(index), value)) {
         interval = IntervalAlgebra.unify(this.segments.remove(index).interval(), interval);
       } else {
-        final var prefix = IntervalAlgebra.intersect(this.getInterval(index), IntervalAlgebra.lowerBoundsOf(interval));
-        final var suffix = IntervalAlgebra.intersect(this.getInterval(index), IntervalAlgebra.upperBoundsOf(interval));
+        final var prefix = IntervalAlgebra.intersect(this.getInterval(index), IntervalAlgebra.strictLowerBoundsOf(interval));
+        final var suffix = IntervalAlgebra.intersect(this.getInterval(index), IntervalAlgebra.strictUpperBoundsOf(interval));
 
         this.segments.set(index, Segment.of(prefix, this.getValue(index)));
         if (!IntervalAlgebra.isEmpty(suffix)) this.segments.add(index + 1, Segment.of(suffix, this.getValue(index)));
@@ -117,7 +106,7 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
       if (Objects.equals(this.getValue(index), value)) {
         interval = IntervalAlgebra.unify(this.segments.remove(index).interval(), interval);
       } else {
-        final var suffix = IntervalAlgebra.intersect(this.getInterval(index), IntervalAlgebra.upperBoundsOf(interval));
+        final var suffix = IntervalAlgebra.intersect(this.getInterval(index), IntervalAlgebra.strictUpperBoundsOf(interval));
 
         this.segments.set(index, Segment.of(suffix, this.getValue(index)));
       }
@@ -137,6 +126,8 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
 
   public IntervalMap<V> unset(final List<Interval> intervals) {
     return unset(new IntervalMap<>(intervals, new Object()));
+  public IntervalMap<V> set(final List<Interval> intervals, final V value) {
+    return set(new IntervalMap<>(intervals, value));
   }
 
   public IntervalMap<V> unset(final IntervalMap<?> other) {
@@ -144,6 +135,8 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
         this, other,
         (l, r) -> r.isPresent() ? Optional.empty() : l
     );
+  public IntervalMap<V> set(final IntervalMap<V> other) {
+    return map2(this, other, (a, b) -> (b.isPresent()) ? b : a);
   }
 
   public IntervalMap<V> select(final Interval bounds) {
@@ -173,68 +166,53 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
     return this.contextMap((v, i) -> transform.apply(v));
   }
 
-  public <R> IntervalMap<R> contextMap(final BiFunction<Optional<V>, Interval, Optional<R>> transform) {
-    final var segments = new ArrayList<Segment<R>>();
+  /**
+   * Maps intervals and the gaps between them in IntervalMap intervals to new values following some function transform
+   */
+  public <R> IntervalMap<R> map(final BiFunction<Optional<V>, Interval, Optional<R>> transform) {
+    final var result = new IntervalMap<R>();
+    var resultIndex = 0;
 
-    var previous = Interval.at(Duration.MIN_VALUE); //in the context of Windows, a interval at Duration.MIN; a minimum value when computing gaps at the next step
-    R previousValue = null;
+    var previous =
+        Interval.at(Duration.MIN_VALUE); //in the context of Windows, a interval at Duration.MIN; a minimum value when computing gaps at the next step
     for (final var segment : this.segments) {
       //previous might be ----TT---
       //segment might be  -------F-
       //gap is then       ------+--
-      final var gap = IntervalAlgebra.intersect(IntervalAlgebra.upperBoundsOf(previous), IntervalAlgebra.lowerBoundsOf(segment.interval()));
+      final var gap = IntervalAlgebra.intersect(
+          IntervalAlgebra.strictUpperBoundsOf(previous),
+          IntervalAlgebra.strictLowerBoundsOf(segment.interval()));
 
       //we apply the transform to the gap (if it has contents)
       //currently we pass in an Optional.Empty to the function so it can handle a gap that isn't in our intervals, in case
       //  that should actually be mapped to a value (i.e. turn null into false for whatever reason). Then the return value
       //  of that, which is now Optional<R>, is checked for value, if it has any, add that and the new R value
       if (!IntervalAlgebra.isEmpty(gap)) {
-        final var result = transform.apply(Optional.empty(), gap);
-        previousValue = insertAndCoalesce(segments, previousValue, gap, result);
+        final var value = transform.apply(Optional.empty(), gap);
+        if (value.isPresent())
+          resultIndex = result.insertInPlace(Segment.of(gap, value.get()), resultIndex);
       }
 
       //apply the transform to the actual segment
       //returns an Optional<R>, check if it has value (it might not, if for example the transform maps Optional<V> where
       //  the value in that optional is true to null/Optional.empty(), in which case it won't have value and we don't
       //  wish to add to the map), and then if so add to the map
-      final var result = transform.apply(Optional.of(segment.value()), segment.interval());
-      previousValue = insertAndCoalesce(segments, previousValue, segment.interval(), result);
+      final var value = transform.apply(Optional.of(segment.value()), segment.interval());
+      if (value.isPresent())
+        resultIndex = result.insertInPlace(Segment.of(segment.interval(), value.get()), resultIndex);
 
       previous = segment.interval();
     }
 
     //check the final gap
-    final var gap = IntervalAlgebra.upperBoundsOf(previous);
+    final var gap = IntervalAlgebra.strictUpperBoundsOf(previous);
     if (!IntervalAlgebra.isEmpty(gap)) {
-      final var result = transform.apply(Optional.empty(), gap);
-      insertAndCoalesce(segments, previousValue, gap, result);
-    }
-
-    return new IntervalMap<>(segments);
+      final var value = transform.apply(Optional.empty(), gap);
+      if (value.isPresent())
+        resultIndex = result.insertInPlace(Segment.of(gap, value.get()), resultIndex);
   }
 
-  private static <R> R insertAndCoalesce(
-      final ArrayList<Segment<R>> segments,
-      final R previousValue,
-      final Interval interval,
-      final Optional<R> result)
-  {
-    if (result.isPresent()) {
-      final var value = result.get();
-      if (previousValue != null && previousValue.equals(value)) {
-        final var newInterval = Interval.unify(segments.get(segments.size()-1).interval(), interval);
-        segments.add(Segment.of(
-            newInterval,
-            previousValue
-        ));
-        return previousValue;
-      } else {
-        segments.add(Segment.of(interval, value));
-        return value;
-      }
-    } else {
-      return null;
-    }
+    return result;
   }
 
   //Jonathan's implementation

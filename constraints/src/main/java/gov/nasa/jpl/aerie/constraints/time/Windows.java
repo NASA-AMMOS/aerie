@@ -160,7 +160,7 @@ public final class Windows implements Iterable<Segment<Boolean>> {
       int index = 0;
       for (final var interval : this.segments.iterateEqualTo(true)) {
         if (index != indexToKeep) {
-          result.segments.setInternal(interval, false, 0);
+          result.segments.insertInPlace(Segment.of(interval, false), 0);
         }
         index += 1;
       }
@@ -170,7 +170,7 @@ public final class Windows implements Iterable<Segment<Boolean>> {
         final var segment = this.segments.get(i);
         if (segment.value()) {
           if (index != indexToKeep) {
-            result.segments.setInternal(segment.interval(), false, 0);
+            result.segments.insertInPlace(Segment.of(segment.interval(), false), 0);
           }
           index -= 1;
         }
@@ -257,11 +257,11 @@ public final class Windows implements Iterable<Segment<Boolean>> {
       if (segment.value()) {
         final var interval = segment.interval();
         if (interval.end.plus(fromEnd).noShorterThan(interval.start.plus(fromStart))) {
-          result.segments.setInternal(Interval.between(
+          result.segments.insertInPlace(Segment.of(Interval.between(
               interval.start.plus(fromStart),
               interval.startInclusivity,
               interval.end.plus(fromEnd),
-              interval.endInclusivity), true, 0);
+              interval.endInclusivity), true), 0);
         }
       }
     }
