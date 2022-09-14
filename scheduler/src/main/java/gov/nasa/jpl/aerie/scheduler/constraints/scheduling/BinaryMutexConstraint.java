@@ -54,9 +54,8 @@ public class BinaryMutexConstraint extends GlobalConstraint {
     final var acts = new java.util.LinkedList<>(plan.find(actSearch, simulationResults));
     List<Interval> rangesActs = acts.stream().map(a -> Interval.betweenClosedOpen(a.getStartTime(), a.getEndTime())).collect(
         Collectors.toList());
-    var twActs = new Windows(rangesActs);
 
-    validWindows.subtractAll(twActs);
+    validWindows.setAll(rangesActs, false);
 
     return validWindows;
   }
@@ -67,33 +66,31 @@ public class BinaryMutexConstraint extends GlobalConstraint {
   @Override
   public ConstraintState isEnforced(Plan plan, Windows windows, SimulationResults simulationResults) {
 
-    Windows violationWindows = new Windows();
+    Windows violationWindows = new Windows(Interval.FOREVER, false);
 
-    for (var window : windows) {
+
+    for (final var interval: windows.iterateTrue()) {
       final var actSearch = new ActivityExpression.Builder()
-          .ofType(actType).startsOrEndsIn(window).build();
+          .ofType(actType).startsOrEndsIn(interval).build();
       final var otherActSearch = new ActivityExpression.Builder()
-          .ofType(otherActType).startsOrEndsIn(window).build();
+          .ofType(otherActType).startsOrEndsIn(interval).build();
       final var acts = new java.util.LinkedList<>(plan.find(actSearch, simulationResults));
       final var otherActs = new java.util.LinkedList<>(plan.find(otherActSearch, simulationResults));
 
-      List<Window> rangesActs = acts.stream().map(a -> Window.betweenClosedOpen(a.getStartTime(), a.getEndTime())).collect(
-          Collectors.toList());
-      Windows twActs = new Windows(rangesActs);
-      List<Window> rangesOtherActs = otherActs
+      List<Interval> rangesActs = acts.stream().map(a -> Interval.betweenClosedOpen(a.getStartTime(), a.getEndTime())).toList();
+      Windows twActs = Windows.definedEverywhere(rangesActs, true);
+      List<Interval> rangesOtherActs = otherActs
           .stream()
-          .map(a -> Window.betweenClosedOpen(a.getStartTime(), a.getEndTime()))
-          .collect(Collectors.toList());
-      Windows twOtherActs = new Windows(rangesOtherActs);
+          .map(a -> Interval.betweenClosedOpen(a.getStartTime(), a.getEndTime()))
+          .toList();
+      Windows twOtherActs = Windows.definedEverywhere(rangesOtherActs, true);
 
-      Windows result = new Windows(twActs);
-      result.intersectWith(twOtherActs);
-      //intersection with current window to be sure we are not analyzing intersections happenning outside
-      result.intersectWith(window);
-      violationWindows = Windows.union(violationWindows,result);
+      final var intervalWindows = Windows.definedEverywhere(interval, true);
+      //intersection with current interval to be sure we are not analyzing intersections happenning outside
+      violationWindows = new Windows(twActs).and(twOtherActs).and(intervalWindows).or(violationWindows);
     }
     ConstraintState cState;
-    if (!violationWindows.isEmpty()) {
+    if (!violationWindows.isAllFalse()) {
       cState = new ConstraintState(this, true, violationWindows);
     } else {
       cState = new ConstraintState(this, false, null);

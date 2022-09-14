@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,27 +24,17 @@ public class FilterSequenceMinGapAfter implements TimeWindowsFilter {
 
   @Override
   public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
-    List<Window> filtered = new ArrayList<>();
-    List<Window> windowsTo = StreamSupport
-        .stream(windows.spliterator(), false)
-        .collect(Collectors.toList());
-    if (windowsTo.size() > 1) {
-      int nextInd = 1;
-      while (nextInd < windowsTo.size()) {
-        Window after = windowsTo.get(nextInd);
-        Window cur = windowsTo.get(nextInd - 1);
-        if (after.start.minus(cur.end).compareTo(minDelay) >= 0) {
-          filtered.add(cur);
+    Interval before = null;
+    final var result = new Windows(windows);
+    for (final var interval: windows.iterateTrue()) {
+      if (before != null) {
+        if (interval.start.minus(before.end).compareTo(minDelay) < 0) {
+          result.set(before, false);
         }
-        nextInd++;
       }
-      //add last element
-      filtered.add(windowsTo.get(windowsTo.size() - 1));
-    } else if (windowsTo.size() == 1) {
-      filtered = windowsTo;
+      before = interval;
     }
-    return new Windows(filtered);
-
+    return result;
   }
 
 

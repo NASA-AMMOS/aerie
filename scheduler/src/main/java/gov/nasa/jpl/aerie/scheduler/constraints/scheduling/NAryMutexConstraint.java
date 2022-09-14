@@ -46,13 +46,13 @@ public class NAryMutexConstraint extends GlobalConstraintWithIntrospection {
       if (!expression.getType().equals(actToBeScheduled)) {
         final var acts = new LinkedList<>(plan.find(expression, simulationResults));
 
-        List<Window> rangesActs = acts
+        List<Interval> rangesActs = acts
             .stream()
-            .map(a -> Window.between(a.getStartTime(), a.getEndTime()))
+            .map(a -> Interval.between(a.getStartTime(), a.getEndTime()))
             .collect(Collectors.toList());
-        Windows twActs = new Windows(rangesActs);
+        Windows twActs = Windows.definedEverywhere(rangesActs, false);
 
-        validWindows.subtractAll(twActs);
+        validWindows = validWindows.and(twActs);
       }
     }
     return validWindows;

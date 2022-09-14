@@ -109,14 +109,14 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
 
     //make sure it hasn't changed
     if (this.initiallyEvaluatedTemporalContext != null && !windows.includes(this.initiallyEvaluatedTemporalContext)) {
-      throw new UnexpectedTemporalContextChangeException("The temporalContext Windows has changed from: " + this.initiallyEvaluatedTemporalContext.toString() + " to " + windows.toString());
+      throw new UnexpectedTemporalContextChangeException("The temporalContext Windows has changed from: " + this.initiallyEvaluatedTemporalContext.toString() + " to " + windows);
     }
     else if (this.initiallyEvaluatedTemporalContext == null) {
       this.initiallyEvaluatedTemporalContext = windows;
     }
 
     //iterate through it and then within each iteration do exactly what you did before
-    for (Window subWindow : windows) {
+    for (Interval subInterval : windows.iterateTrue()) {
       //collect all matching target acts ordered by start time
       //REVIEW: could collapse with prior template start time query too?
       final var satisfyingActSearch = new ActivityExpression.Builder()
@@ -202,10 +202,8 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
          ;
          intervalT = intervalT.plus(recurrenceInterval.max)
     ) {
-      var interval = Window.between(intervalT.minus(recurrenceInterval.max), Duration.min(intervalT, end));
-        conflicts.add(new MissingActivityTemplateConflict(
-            this, new Windows(
-            interval), this.getActTemplate()));
+      final var windows = Windows.definedEverywhere(Interval.between(intervalT.minus(recurrenceInterval.max), Duration.min(intervalT, end)), true);
+      conflicts.add(new MissingActivityTemplateConflict(this, windows, this.getActTemplate()));
       if(intervalT.compareTo(end) >= 0){
         break;
       }

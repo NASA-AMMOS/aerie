@@ -31,9 +31,9 @@ public class TimeExpressionLatching extends TimeExpression {
   @Override
   public Interval computeTime(final SimulationResults simulationResults, final Plan plan, final Interval interval) {
 
-    List<Window> resetPeriods = StreamSupport
-        .stream(resetWindowsExpression.computeRange(simulationResults, plan, Windows.forever()).spliterator(), false)
-        .collect(Collectors.toList());
+    List<Interval> resetPeriods = StreamSupport
+        .stream(resetWindowsExpression.computeRange(simulationResults, plan, new Windows(Interval.FOREVER, true)).spliterateTrue(), false)
+        .toList();
     boolean first = true;
     for (var window : resetPeriods) {
       Interval inter = Interval.intersect(window,interval);

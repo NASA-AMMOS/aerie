@@ -17,6 +17,6 @@ public class FilterAlwaysSatisfied extends FilterFunctional {
   @Override
   public boolean shouldKeep(final SimulationResults simulationResults, final Plan plan, final Interval range) {
     var valid = expr.evaluate(simulationResults);
-    return valid.equals(new Windows(range));
+    return valid.equals(new Windows(range, true));
   }
 }

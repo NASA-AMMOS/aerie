@@ -23,21 +23,19 @@ public class FilterWithReset implements TimeWindowsFilter {
 
   @Override
   public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windowsToFilter) {
-
     Windows ret = new Windows();
-
     int totalFiltered = 0;
 
     if (!windowsToFilter.isEmpty()) {
 
-      var resetPeriods = resetExpr.computeRange(simulationResults, plan, new Windows(Window.FOREVER));
+      var resetPeriods = resetExpr.computeRange(simulationResults, plan, new Windows(Interval.FOREVER, true));
 
-      for (var window : resetPeriods) {
+      for (var window : resetPeriods.iterateTrue()) {
         // get windows to filter that are completely contained in reset period
-        Windows cur = windowsToFilter.subsetContained(window);
+        Windows cur = windowsToFilter.trueSubsetContainedIn(window);
         if (!cur.isEmpty()) {
           //apply filter and union result
-          ret.addAll(filter.filter(simulationResults, plan, cur));
+          ret.setAll(filter.filter(simulationResults, plan, cur));
           totalFiltered += cur.size();
         }
         //short circuit
@@ -49,6 +47,4 @@ public class FilterWithReset implements TimeWindowsFilter {
 
     return ret;
   }
-
-
 }

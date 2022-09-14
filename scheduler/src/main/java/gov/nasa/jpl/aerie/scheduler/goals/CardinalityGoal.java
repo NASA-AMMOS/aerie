@@ -158,9 +158,10 @@ public class CardinalityGoal extends ActivityTemplateGoal {
     //iterate through it and then within each iteration do exactly what you did before
     final var conflicts = new LinkedList<Conflict>();
 
-    for(Window subWindow: windows) {
+    for(Interval subInterval : windows.iterateTrue()) {
+      final var subIntervalWindows = Windows.definedEverywhere(subInterval, true);
       ActivityCreationTemplate actTB =
-          new ActivityCreationTemplate.Builder().basedOn(this.desiredActTemplate).startsOrEndsIn(new Windows(subWindow)).build();
+          new ActivityCreationTemplate.Builder().basedOn(this.desiredActTemplate).startsOrEndsIn(new Windows(subIntervalWindows)).build();
 
       final var acts = new LinkedList<>(plan.find(actTB, simulationResults));
       acts.sort(Comparator.comparing(ActivityInstance::getStartTime));
@@ -217,7 +218,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       }
       //1) solve occurence part, we just need a certain number of activities
       for (int i = 0; i < nbToSchedule; i++) {
-        conflicts.add(new MissingActivityTemplateConflict(this, new Windows(subWindow), this.desiredActTemplate));
+        conflicts.add(new MissingActivityTemplateConflict(this, subIntervalWindows, this.desiredActTemplate));
       }
       /*
        * 2) solve duration part: we can't assume stuff about duration, we post one conflict. The scheduler will solve this conflict by inserting one
@@ -225,7 +226,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
        * conflict will be posted and so on
        * */
       if (nbToSchedule == 0 && durToSchedule.isPositive()) {
-        conflicts.add(new MissingActivityTemplateConflict(this, new Windows(subWindow), this.desiredActTemplate));
+        conflicts.add(new MissingActivityTemplateConflict(this, subIntervalWindows, this.desiredActTemplate));
       }
     }
 

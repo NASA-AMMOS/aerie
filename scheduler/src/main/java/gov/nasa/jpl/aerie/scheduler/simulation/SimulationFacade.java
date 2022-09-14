@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
@@ -84,11 +83,11 @@ public class SimulationFacade {
       logger.error("You need to simulate before requesting activity duration");
       return Optional.empty();
     }
-     var duration = driver.getActivityDuration(planActInstanceIdToSimulationActInstanceId.get(activityInstance.getId()));
-     if(duration.isEmpty()){
-       logger.error("Incremental simulation is probably outdated, check that no activity is removed between simulation and querying");
-     }
-     return duration;
+    var duration = driver.getActivityDuration(planActInstanceIdToSimulationActInstanceId.get(activityInstance.getId()));
+    if(duration.isEmpty()){
+      logger.error("Incremental simulation is probably outdated, check that no activity is removed between simulation and querying");
+    }
+    return duration;
   }
 
   public void removeActivitiesFromSimulation(final Collection<ActivityInstance> activities) throws SimulationException {
@@ -171,8 +170,8 @@ public class SimulationFacade {
     final var planDuration = planningHorizon.getAerieHorizonDuration();
 
     final var activities =  driverResults.simulatedActivities.entrySet().stream()
-                                                       .map(e -> convertToConstraintModelActivityInstance(e.getKey().id(), e.getValue(), driverResults.startTime))
-                                                       .collect(Collectors.toList());
+                                                             .map(e -> convertToConstraintModelActivityInstance(e.getKey().id(), e.getValue(), driverResults.startTime))
+                                                             .collect(Collectors.toList());
     return new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
         Interval.between(Duration.ZERO, planDuration),
         activities,
@@ -193,12 +192,12 @@ public class SimulationFacade {
   {
     final var startT = Duration.of(startTime.until(driverActivity.start(), ChronoUnit.MICROS), MICROSECONDS);
     final var endT = startT.plus(driverActivity.duration());
-    final var activityWindow = startT.isEqualTo(endT)
+    final var activityInterval = startT.isEqualTo(endT)
         ? Interval.between(startT, endT)
         : Interval.betweenClosedOpen(startT, endT);
     return new gov.nasa.jpl.aerie.constraints.model.ActivityInstance(
         id, driverActivity.type(), driverActivity.arguments(),
-        activityWindow);
+        activityInterval);
   }
 
   /**

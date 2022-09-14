@@ -26,20 +26,17 @@ public class FilterSequenceMinGapBefore implements TimeWindowsFilter {
 
   @Override
   public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
-    Window before = null;
-    List<Window> filtered = new ArrayList<>();
-    if (windows.size() > 0) {
-      filtered.add(windows.iterator().next());
-      for (var range : windows) {
-        if (before != null) {
-          if (range.start.minus(before.end).compareTo(delay) >= 0) {
-            filtered.add(range);
-          }
+    Interval before = null;
+    final var result = new Windows(windows);
+    for (final var interval: windows.iterateTrue()) {
+      if (before != null) {
+        if (interval.start.minus(before.end).compareTo(delay) < 0) {
+          result.set(interval, false);
         }
-        before = range;
       }
+      before = interval;
     }
-    return new Windows(filtered);
+    return result;
   }
 
 
