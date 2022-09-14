@@ -16,33 +16,32 @@ import java.util.stream.StreamSupport;
  * which are only valid on bools.
  */
 public final class Windows implements Iterable<Segment<Boolean>> {
-
   private final IntervalMap<Boolean> segments;
 
   /** Creates an empty Windows */
   public Windows() {
-    this.segments = new IntervalMap<>();
+    this.segments = IntervalMap.of();
   }
 
   /** Creates a Windows from potentially unordered, overlapping segments */
   @SafeVarargs
   public Windows(final Segment<Boolean>... segments) {
-    this.segments = new IntervalMap<>(segments);
+    this.segments = IntervalMap.of(segments);
   }
 
   /** Creates a Windows from potentially unordered, overlapping segments */
   public Windows(final List<Segment<Boolean>> segments) {
-    this.segments = new IntervalMap<>(segments);
+    this.segments = IntervalMap.of(segments);
   }
 
   /** Creates a Windows with a single segment */
   public Windows(final Interval interval, final boolean value) {
-    this.segments = new IntervalMap<>(interval, value);
+    this.segments = IntervalMap.of(interval, value);
   }
 
   /** Creates a Windows that is equal to a given value for all representable times */
   public Windows(final boolean bool) {
-    this.segments = new IntervalMap<>(bool);
+    this.segments = IntervalMap.of(bool);
   }
 
   /** Wraps an IntervalMap of Booleans in Windows. */
@@ -165,7 +164,7 @@ public final class Windows implements Iterable<Segment<Boolean>> {
     //should not be a subtraction because then if it was null originally, then subtracting original from forever
     //  yields true where once was null, which isn't good. we want a simple inversion of true and false here, without
     //  filling nulls.
-    return new Windows(this.segments.map($ -> $.map(b -> !b)));
+    return new Windows(this.segments.map(b -> !b));
   }
 
   /** Gets the time and inclusivity of the leading edge of the first true segment */
@@ -249,12 +248,12 @@ public final class Windows implements Iterable<Segment<Boolean>> {
    * @return a new Windows
    */
   public Windows keepTrueSegment(final int indexToKeep) {
-    var result = new Windows(this.segments.stream().toList());
+    final var builder = IntervalMap.<Boolean>builder().set(this.segments);
     if (indexToKeep >= 0) {
       int index = 0;
       for (final var interval : this.segments.iterateEqualTo(true)) {
         if (index != indexToKeep) {
-          result.segments.insertInPlace(Segment.of(interval, false), 0);
+          builder.set(Segment.of(interval, false));
         }
         index += 1;
       }
@@ -264,13 +263,14 @@ public final class Windows implements Iterable<Segment<Boolean>> {
         final var segment = this.segments.get(i);
         if (segment.value()) {
           if (index != indexToKeep) {
-            result.segments.insertInPlace(Segment.of(segment.interval(), false), 0);
+            builder.set(Segment.of(segment.interval(), false));
           }
           index -= 1;
         }
       }
     }
-    return result;
+
+    return new Windows(builder.build());
   }
 
   /** Whether all the true segments of the given Windows are contained in the true segments of this. */
@@ -336,15 +336,10 @@ public final class Windows implements Iterable<Segment<Boolean>> {
 
 
     return new Windows(this.segments.map((value, interval) -> {
-      if (value.isPresent() && value.get()) {
-        final var duration = interval.duration();
-        if (duration.shorterThan(minDur) || duration.longerThan(maxDur)) {
-          return Optional.of(false);
-        } else {
-          return Optional.of(true);
-        }
-      }
-      return value;
+      if (!value) return false;
+
+      final var duration = interval.duration();
+      return !(duration.shorterThan(minDur) || duration.longerThan(maxDur));
     }));
   }
 
@@ -361,7 +356,7 @@ public final class Windows implements Iterable<Segment<Boolean>> {
    * @return a new Windows
    */
   public Windows shiftBy(Duration fromStart, Duration fromEnd) {
-    final var map = new IntervalMap<Boolean>();
+    final var builder = IntervalMap.<Boolean>builder();
 
     for (final var segment : this.segments) {
       final var interval = segment.interval();
@@ -378,10 +373,10 @@ public final class Windows implements Iterable<Segment<Boolean>> {
 
       // SAFETY: If two intervals overlap, they have the same value.
       // Otherwise we'd need to make sure to `or` the overlap together.
-      map.insertInPlace(Segment.of(shiftedInterval, segment.value()), 0);
+      builder.set(Segment.of(shiftedInterval, segment.value()));
     }
 
-    return new Windows(map);
+    return new Windows(builder.build());
   }
 
   /**
@@ -390,14 +385,10 @@ public final class Windows implements Iterable<Segment<Boolean>> {
    * Gaps are treated the same as false.
    */
   public Spans intoSpans() {
-    final var trueIntervals = StreamSupport.stream(this.segments.spliterator(), false).flatMap($ -> {
-      if ($.value()) {
-        return Stream.of($.interval());
-      } else {
-        return Stream.of();
-      }
-    }).toList();
-    return new Spans(trueIntervals);
+    return new Spans(stream()
+        .filter(Segment::value)
+        .map(Segment::interval)
+        .toList());
   }
 
   ////// DELEGATED METHODS

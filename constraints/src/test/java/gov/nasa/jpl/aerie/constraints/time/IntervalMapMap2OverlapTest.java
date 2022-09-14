@@ -14,12 +14,12 @@ public class IntervalMapMap2OverlapTest {
 
   @Test
   public void map2overlapBothEnds() {
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
 
     		.set(Interval.between(1, 3, SECONDS), "a")
     		.set(Interval.between(4, 7, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
     		.set(Interval.between(2, 5, SECONDS), "b");
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
@@ -39,7 +39,7 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
     		.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN")
     		.set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "aN")
     		.set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Inclusive), "ab")
@@ -53,10 +53,10 @@ public class IntervalMapMap2OverlapTest {
 
   @Test
   public void map2overlapTotal() {
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
     		.set(Interval.between(1, 5, SECONDS), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
     		.set(Interval.between(2, 4, SECONDS), "b");
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
@@ -76,7 +76,7 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
     		.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN")
     		.set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "aN")
     		.set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(4, SECONDS), Inclusive), "ab")
@@ -88,10 +88,10 @@ public class IntervalMapMap2OverlapTest {
 
   @Test
   public void map2overlapEndMeetIncl() {
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
     		.set(Interval.between(1, 5, SECONDS), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
     		.set(Interval.between(2, 5, SECONDS), "b");
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
@@ -111,7 +111,7 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
     		.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN")
     		.set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "aN")
     		.set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(5, SECONDS), Inclusive), "ab")
@@ -122,10 +122,10 @@ public class IntervalMapMap2OverlapTest {
 
   @Test
   public void map2overlapEndMeetExcl() {
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
     		.set(Interval.between(1, 5, SECONDS), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
     		.set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(5, SECONDS), Exclusive), "b");
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
@@ -145,7 +145,7 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
     		.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN")
     		.set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "aN")
     		.set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(5, SECONDS), Exclusive), "ab")
@@ -157,10 +157,10 @@ public class IntervalMapMap2OverlapTest {
 
   @Test
   public void map2overlapEndMeetBothExcl() {
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
     		.set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(5, SECONDS), Exclusive), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
     		.set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(5, SECONDS), Exclusive), "b");
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
@@ -180,7 +180,7 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
     		.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN")
     		.set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(2, SECONDS), Exclusive), "aN")
     		.set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(5, SECONDS), Exclusive), "ab")
@@ -191,10 +191,10 @@ public class IntervalMapMap2OverlapTest {
 
   @Test
   public void map2overlapStartMeetIncl() {
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
     		.set(Interval.between(1, 5, SECONDS), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
     		.set(Interval.between(1, 3, SECONDS), "b");
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
@@ -214,7 +214,7 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
     		.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN")
     		.set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(3, SECONDS), Inclusive), "ab")
     		.set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(5, SECONDS), Inclusive), "aN")
@@ -225,10 +225,10 @@ public class IntervalMapMap2OverlapTest {
 
   @Test
   public void map2overlapStartMeetExcl() {
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
     		.set(Interval.between(1, 5, SECONDS), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
     		.set(Interval.between(Duration.of(1, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "b");
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
@@ -248,7 +248,7 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
     		.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN")
     		.set(Interval.at(Duration.of(1, SECONDS)), "aN")
     		.set(Interval.between(Duration.of(1, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "ab")
@@ -260,10 +260,10 @@ public class IntervalMapMap2OverlapTest {
 
   @Test
   public void map2overlapStartMeetBothExcl() {
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
     		.set(Interval.between(Duration.of(1, SECONDS), Exclusive, Duration.of( 5, SECONDS), Inclusive), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
     		.set(Interval.between(Duration.of(1, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "b");
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
@@ -283,7 +283,7 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
     		.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Inclusive), "NN")
     		.set(Interval.between(Duration.of(1, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "ab")
     		.set(Interval.between(Duration.of(3, SECONDS), Inclusive, Duration.of(5, SECONDS), Inclusive), "aN")
@@ -294,10 +294,10 @@ public class IntervalMapMap2OverlapTest {
 
   @Test
   public void map2overlapBothOffsetForward() {
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
     		.set(Interval.between(3, 5, SECONDS), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
     		.set(Interval.between(1, 4, SECONDS), "b");
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
@@ -317,7 +317,7 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
     		.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(1, SECONDS), Exclusive), "NN")
     		.set(Interval.between(Duration.of(1, SECONDS), Inclusive, Duration.of(3, SECONDS), Exclusive), "Nb")
     		.set(Interval.between(Duration.of(3, SECONDS), Inclusive, Duration.of(4, SECONDS), Inclusive), "ab")
@@ -329,11 +329,11 @@ public class IntervalMapMap2OverlapTest {
 
   @Test
   public void map2overlapBothEndsMeetIncl() {
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
     		.set(Interval.between(2, 3, SECONDS), "a")
     		.set(Interval.between(5, 6, SECONDS), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
     		.set(Interval.between(2, 6, SECONDS), "b");
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
@@ -353,7 +353,7 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
     		.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Exclusive), "NN")
     		.set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(3, SECONDS), Inclusive), "ab")
     		.set(Interval.between(Duration.of(3, SECONDS), Exclusive, Duration.of(5, SECONDS), Exclusive), "Nb")
@@ -365,11 +365,11 @@ public class IntervalMapMap2OverlapTest {
 
   @Test
   public void map2overlapBothEndsMeetExcl() {
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
     		.set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "a")
     		.set(Interval.between(Duration.of(5, SECONDS), Exclusive, Duration.of(6, SECONDS), Exclusive), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
     		.set(Interval.between(2, 6, SECONDS), "b");
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
@@ -389,7 +389,7 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
     		.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Exclusive), "NN")
     		.set(Interval.at(Duration.of(2, SECONDS)), "Nb")
     		.set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "ab")
@@ -403,11 +403,11 @@ public class IntervalMapMap2OverlapTest {
 
   @Test
   public void map2overlapBothEndsMeetBothExcl() {
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
     		.set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "a")
     		.set(Interval.between(Duration.of(5, SECONDS), Exclusive, Duration.of(6, SECONDS), Exclusive), "b");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
     		.set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(6, SECONDS), Exclusive), "b");
 
     IntervalMap<String> mapped = IntervalMap.map2(left,
@@ -427,7 +427,7 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
     		.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Inclusive), "NN")
     		.set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "ab")
     		.set(Interval.between(Duration.of(3, SECONDS), Inclusive, Duration.of(5, SECONDS), Inclusive), "Nb")
@@ -439,12 +439,12 @@ public class IntervalMapMap2OverlapTest {
 
   @Test
   public void map2overlapAdjacencies() {
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
     		.set(Interval.between(Duration.of(0, SECONDS), Exclusive, Duration.of(8, SECONDS), Exclusive), "a")
     		.set(Interval.between(Duration.of(9, SECONDS), Inclusive, Duration.of(13, SECONDS), Exclusive), "b")
     		.set(Interval.between(Duration.of(16, SECONDS), Inclusive, Duration.of(18, SECONDS), Exclusive), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
     		.set(Interval.between(Duration.of(1, SECONDS), Exclusive, Duration.of(3, SECONDS), Exclusive), "b")
     		.set(Interval.between(Duration.of(3, SECONDS), Inclusive, Duration.of(4, SECONDS), Exclusive), "b") //should coalesce
     		.set(Interval.between(Duration.of(4, SECONDS), Exclusive, Duration.of(5, SECONDS), Exclusive), "b") //shouldn't coalesce, should have null gap between
@@ -471,7 +471,7 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
     		.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(0, SECONDS), Inclusive), "NN")
     		.set(Interval.between(Duration.of(0, SECONDS), Exclusive, Duration.of(1, SECONDS), Inclusive), "aN")
     		.set(Interval.between(Duration.of(1, SECONDS), Exclusive, Duration.of(4, SECONDS), Exclusive), "ab")
@@ -493,10 +493,10 @@ public class IntervalMapMap2OverlapTest {
 
   @Test
   public void map2overlapAtsIncl() {
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
     		.set(Interval.between(Duration.of(2, SECONDS), Inclusive, Duration.of(10, SECONDS), Inclusive), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
     		.set(Interval.at(Duration.of(2, SECONDS)), "b")
     		.set(Interval.at(Duration.of(5, SECONDS)), "b")
     		.set(Interval.at(Duration.of(10, SECONDS)), "b");
@@ -518,7 +518,7 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
     		.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Exclusive), "NN")
     		.set(Interval.at(Duration.of(2, SECONDS)), "ab")
     		.set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(5, SECONDS), Exclusive), "aN")
@@ -532,10 +532,10 @@ public class IntervalMapMap2OverlapTest {
 
   @Test
   public void map2overlapAtsExcl() {
-    IntervalMap<String> left = new IntervalMap<String>()
+    IntervalMap<String> left = IntervalMap.<String>of()
     		.set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(10, SECONDS), Exclusive), "a");
 
-    IntervalMap<String> right = new IntervalMap<String>()
+    IntervalMap<String> right = IntervalMap.<String>of()
     		.set(Interval.at(Duration.of(2, SECONDS)), "b")
     		.set(Interval.at(Duration.of(5, SECONDS)), "b")
     		.set(Interval.at(Duration.of(10, SECONDS)), "b");
@@ -557,7 +557,7 @@ public class IntervalMapMap2OverlapTest {
                                                     }
                                                   });
 
-    IntervalMap<String> expected = new IntervalMap<String>()
+    IntervalMap<String> expected = IntervalMap.<String>of()
     		.set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.of(2, SECONDS), Exclusive), "NN")
     		.set(Interval.at(Duration.of(2, SECONDS)), "Nb")
     		.set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.of(5, SECONDS), Exclusive), "aN")
