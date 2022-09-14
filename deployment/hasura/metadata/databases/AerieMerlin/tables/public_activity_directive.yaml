@@ -26,3 +26,18 @@ remote_relationships:
         name: scheduling_goal
       field_mapping:
         source_scheduling_goal_id: id
+event_triggers:
+- definition:
+    enable_manual: false
+    insert:
+      columns:
+      - arguments
+    update:
+      columns:
+      - arguments
+  name: refreshActivityValidations
+  retry_conf:
+    interval_sec: 10
+    num_retries: 0
+    timeout_sec: 60
+  webhook: http://aerie_merlin:27183/refreshActivityValidations
