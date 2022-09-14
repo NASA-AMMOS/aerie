@@ -7,6 +7,10 @@ import java.util.Objects;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
 
+/**
+ * An Interval on the timeline, represented by start and end points
+ * and start and end inclusivity.
+ */
 public final class Interval implements Comparable<Interval>{
   // If end.shorterThan(start), this is the empty interval.
   // If end.equals(start), this is a single point.

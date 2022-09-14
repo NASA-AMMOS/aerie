@@ -1,33 +1,52 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Spliterator;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.interval;
 
+/**
+ * A generic container that maps non-overlapping intervals on the timeline to values.
+ *
+ * Currently, this is only used to represent Windows (booleans), but can be used to represent
+ * any type of profile.
+ *
+ * Gaps in the timeline that have no associated value are allowed, and are often referred to as
+ * `null`; although admittedly they are more analogous to `void`. It is not recommended to explicitly store `null`
+ * values in the map, although there is technically no reason why you couldn't.
+ *
+ * The meaning of a gap is typically interpreted to mean "unknown" rather than "undefined".
+ *
+ * @param <V> Type of data associated with each interval
+ */
 public final class IntervalMap<V> implements Iterable<Segment<V>> {
 
   // INVARIANT: `intervals` is list of non-empty, non-overlapping intervals in ascending order.
   // INVARIANT: If two adjacent intervals abut exactly (e.g. [0, 3), [3, 5]), their values are non-equal.
   private final List<Segment<V>> segments;
 
+  /** Create an empty IntervalMap. */
   public IntervalMap() {
     this.segments = new ArrayList<>();
   }
 
+  /**
+   * Creates an IntervalMap from a potentially un-ordered or overlapping list of segments.
+   *
+   * Segments are ordered. In the case of overlapping segments, the latter value in the list
+   * overwrites the former.
+   */
   public IntervalMap(final List<Segment<V>> segments) {
     this.segments = new ArrayList<>(segments.size());
     for (final var segment: segments) {
@@ -35,10 +54,16 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
     }
   }
 
+  /** Creates an IntervalMap with a single segment. */
   public IntervalMap(final Interval interval, final V value) {
     this.segments = List.of(Segment.of(interval, value));
   }
 
+  /**
+   * Creates an IntervalMap from a potentially un-ordered or overlapping list of segments.
+   *
+   * Delegates to {@link IntervalMap#IntervalMap(List)}.
+   */
   @SafeVarargs
   public IntervalMap(final Segment<V>... segments) {
     this();
@@ -47,24 +72,40 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
     }
   }
 
+  /**
+   * Creates an IntervalMap with many intervals all associated with the same value.
+   *
+   * Delegates to {@link IntervalMap#IntervalMap(List)}.
+   */
   public IntervalMap(final List<Interval> intervals, final V value) {
     this(
         intervals.stream().map($ -> Segment.of($, value)).toList()
     );
   }
 
-  // Copy constructor
+  /** Copy constructor */
   public IntervalMap(final IntervalMap<V> other) {
     this(new ArrayList<>(other.segments));
   }
 
+  /** Creates an IntervalMap that is equal to a single value for all representable time */
   public IntervalMap(final V value) {
    this(Interval.FOREVER, value);
   }
 
-  public IntervalMap<V> set(final Interval interval, final V value) {
-    return set(new IntervalMap<>(interval, value));
-  }
+  /**
+   * Inserts, overwrites, and coalesces a new segment into the map.
+   *
+   * This is a package-private helper function, only intended for use by IntervalMap
+   * and profile specializations like {@link Windows}. It does mutate `this`.
+   *
+   * @param segment segment to insert
+   * @param index index of the earliest segment in the map to check for overwriting and coalescing.
+   *              Used to optimize the insertion of consecutive segments.
+   *              If unsure about what value it should be, provide `0`.
+   * @return a new index, which will be valid input to the `index` argument if `insertInPlace` is called
+   *         again with another segment which is strictly after the current `segment`.
+   */
   int insertInPlace(final Segment<V> segment, int index) {
     Interval interval = segment.interval();
     final V value = segment.value();
@@ -120,32 +161,68 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
     return index;
   }
 
-  public IntervalMap<V> unset(final Interval interval) {
-    return unset(new IntervalMap<>(interval, new Object()));
+  /**
+   * Sets an interval to a value.
+   *
+   * @return a new IntervalMap
+   */
+  public IntervalMap<V> set(final Interval interval, final V value) {
+    return set(new IntervalMap<>(interval, value));
   }
 
-  public IntervalMap<V> unset(final List<Interval> intervals) {
-    return unset(new IntervalMap<>(intervals, new Object()));
+  /**
+   * Sets a list of intervals to a single value.
+   *
+   * @return a new IntervalMap
+   */
   public IntervalMap<V> set(final List<Interval> intervals, final V value) {
     return set(new IntervalMap<>(intervals, value));
   }
 
-  public IntervalMap<V> unset(final IntervalMap<?> other) {
-    return map2(
-        this, other,
-        (l, r) -> r.isPresent() ? Optional.empty() : l
-    );
+  /**
+   * Sets all segments from another IntervalMap on top of this map's segments.
+   *
+   * @return a new IntervalMap
+   */
   public IntervalMap<V> set(final IntervalMap<V> other) {
     return map2(this, other, (a, b) -> (b.isPresent()) ? b : a);
   }
 
-  public IntervalMap<V> select(final Interval bounds) {
-    return unset(List.of(
-        interval(Duration.MIN_VALUE, Inclusive, bounds.start, bounds.startInclusivity.opposite()),
-        interval(bounds.end, bounds.endInclusivity.opposite(), Duration.MAX_VALUE, Inclusive)
-    ));
+  /**
+   * Unsets the given intervals.
+   *
+   * Turns the given intervals into gaps, if they are not already.
+   *
+   * @return a new IntervalMap
+   */
+  public IntervalMap<V> unset(final Interval... intervals) {
+    return unset(Arrays.stream(intervals).toList());
   }
 
+  /**
+   * Unsets the given intervals.
+   *
+   * Turns the given intervals into gaps, if they are not already.
+   *
+   * @return a new IntervalMap
+   */
+  public IntervalMap<V> unset(final List<Interval> intervals) {
+    return map2(this, new IntervalMap<>(intervals, new Object()), (l, r) -> r.isEmpty() ? l : Optional.empty());
+  }
+
+  /**
+   * Unsets everything outside the given intervals.
+   * @return a new IntervalMap
+   */
+  public IntervalMap<V> select(final Interval... intervals) {
+    return select(Arrays.stream(intervals).toList());
+  }
+
+  /**
+   * Unsets everything outside the given intervals.
+   *
+   * @return a new IntervalMap
+   */
   public IntervalMap<V> select(final List<Interval> intervals) {
     return map2(
         this, new IntervalMap<>(intervals, new Object()),
@@ -154,20 +231,28 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
   }
 
   /**
-   * Authored by Jonathan
    * Maps intervals and the gaps between them in IntervalMap intervals to new values following some function transform
-   *  which converts the old values (or nulls, in the case of gaps) to new values.
+   *  which converts the old values and gaps to new values.
    *
-   * @param transform the function to apply to each value of intervals (or the gaps between!), mapping its original value type V to another value type R
+   * @param transform a function which transforms an {@link Optional} to an Optional, where {@link Optional#empty()} corresponds
+   *                  to a gap.
    * @return a new IntervalMap with newly mapped values
    * @param <R> The new value type that the returned IntervalMap's intervals should correspond to
    */
   public <R> IntervalMap<R> map(final Function<Optional<V>, Optional<R>> transform) {
-    return this.contextMap((v, i) -> transform.apply(v));
+    return this.map((v, i) -> transform.apply(v));
   }
 
   /**
    * Maps intervals and the gaps between them in IntervalMap intervals to new values following some function transform
+   * which converts the old values and gaps to new values.
+   *
+   * The intervals can also be provided to the transform for inspection, but not modification.
+   *
+   * @param transform a function which transforms an {@link Optional} and {@link Interval} to an Optional, where {@link Optional#empty()} corresponds
+   *                  to a gap.
+   * @return a new IntervalMap with newly mapped values
+   * @param <R> The new value type that the returned IntervalMap's intervals should correspond to
    */
   public <R> IntervalMap<R> map(final BiFunction<Optional<V>, Interval, Optional<R>> transform) {
     final var result = new IntervalMap<R>();
@@ -210,12 +295,23 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
       final var value = transform.apply(Optional.empty(), gap);
       if (value.isPresent())
         resultIndex = result.insertInPlace(Segment.of(gap, value.get()), resultIndex);
-  }
+    }
 
     return result;
   }
 
-  //Jonathan's implementation
+  /**
+   * A generalized binary operation between two IntervalMaps.
+   *
+   * @param left left operand
+   * @param right right operand
+   * @param transform a function that transforms two {@link Optional}s of the left and right operands' types to an
+   *                  optional of a new type.
+   * @param <V1> value type of the left operand
+   * @param <V2> value type of the right operand
+   * @param <R> value type of the result
+   * @return a new IntervalMap, the result of applying the transform
+   */
   public static <V1, V2, R>
   IntervalMap<R> map2(
       final IntervalMap<V1> left,
@@ -337,20 +433,24 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
     return this.segments.get(i).interval();
   }
 
+  /** Gets the value at a given segment index */
   private V getValue(final int index) {
     final var i = (index >= 0) ? index : this.segments.size() - index;
     return this.segments.get(i).value();
   }
 
+  /** Gets the segment at a given index */
   public Segment<V> get(final int index) {
     final var i = (index >= 0) ? index : this.segments.size() - index;
     return this.segments.get(i);
   }
 
+  /** The number of defined intervals in this. */
   public int size() {
     return segments.size();
   }
 
+  /** Whether this has no defined segments */
   public boolean isEmpty() {
     return segments.isEmpty();
   }
@@ -360,6 +460,7 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
     return this.segments.iterator();
   }
 
+  /** Creates an iterable over the Intervals where this map is equal to a value */
   public Iterable<Interval> iterateEqualTo(final V value) {
     return () -> segments
         .stream()
