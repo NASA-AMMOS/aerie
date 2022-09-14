@@ -212,4 +212,9 @@ public final class StubMissionModelService implements MissionModelService {
   public void refreshActivityTypes(final String missionModelId) throws NoSuchMissionModelException
   {
   }
+
+  @Override
+  public void refreshActivityValidations(final String missionModelId, final String activityDirectiveId, final SerializedActivity activity)
+  {
+  }
 }

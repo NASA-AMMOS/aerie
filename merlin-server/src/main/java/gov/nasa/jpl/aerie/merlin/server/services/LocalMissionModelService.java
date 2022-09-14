@@ -256,6 +256,18 @@ public final class LocalMissionModelService implements MissionModelService {
     }
   }
 
+  @Override
+  public void refreshActivityValidations(final String missionModelId, final String activityDirectiveId, final SerializedActivity activity)
+  throws NoSuchMissionModelException, NoSuchActivityDirectiveException, InvalidArgumentsException
+  {
+    try {
+      final var notices = validateActivityArguments(missionModelId, activity);
+      this.missionModelRepository.updateActivityDirectiveValidations(activityDirectiveId, notices);
+    } catch (final MissionModelRepository.NoSuchActivityDirectiveException ex) {
+      throw new NoSuchActivityDirectiveException(activityDirectiveId, ex);
+    }
+  }
+
   private MissionModelFactory<?, ?, ?> loadMissionModelFactory(final String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {

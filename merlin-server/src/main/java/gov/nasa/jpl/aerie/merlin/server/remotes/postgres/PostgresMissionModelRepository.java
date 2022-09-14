@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
@@ -127,6 +128,21 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
     }
   }
 
+  @Override
+  public void updateActivityDirectiveValidations(String activityDirectiveId, List<ValidationNotice> notices)
+  throws NoSuchActivityDirectiveException
+  {
+    try (final var connection = this.dataSource.getConnection()) {
+      try (final var updateActivityDirectiveValidationsAction = new UpdateActivityDirectiveValidationsAction(connection)) {
+        final var directiveId = toActivityDirectiveId(activityDirectiveId);
+        updateActivityDirectiveValidationsAction.apply(directiveId, notices);
+      }
+    } catch (final SQLException ex) {
+      throw new DatabaseException(
+          "Failed to update derived data for activity directive with id `%s`".formatted(activityDirectiveId), ex);
+    }
+  }
+
   private static long toMissionModelId(final String modelId)
   throws NoSuchMissionModelException
   {
@@ -134,6 +150,16 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
       return Long.parseLong(modelId, 10);
     } catch (final NumberFormatException ex) {
       throw new NoSuchMissionModelException();
+    }
+  }
+
+  private static long toActivityDirectiveId(final String directiveId)
+  throws NoSuchActivityDirectiveException
+  {
+    try {
+      return Long.parseLong(directiveId, 10);
+    } catch (final NumberFormatException ex) {
+      throw new NoSuchActivityDirectiveException();
     }
   }
 

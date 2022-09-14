@@ -19,12 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityActionP;
-import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraExternalDatasetActionP;
-import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelActionP;
-import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelArgumentsActionP;
-import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelEventTriggerP;
-import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraPlanActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.*;
 import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
@@ -84,6 +79,9 @@ public final class MerlinBindings implements Plugin {
       path("refreshActivityTypes", () -> {
         post(this::postRefreshActivityTypes);
       });
+      path("refreshActivityValidations", () -> {
+        post(this::postRefreshActivityValidations);
+      });
       path("validateActivityArguments", () -> {
         post(this::validateActivityArguments);
       });
@@ -140,6 +138,34 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    } catch (final MissionModelService.NoSuchMissionModelException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
+    }
+  }
+
+  private void postRefreshActivityValidations(final Context ctx) {
+    try {
+      final var input = parseJson(ctx.body(), hasuraActivityDirectiveEventTriggerP);
+      final var planId = input.planId();
+      final var activityDirectiveId = String.valueOf(input.activityDirectiveId().id());
+      final var activityArguments = input.arguments();
+      final var activityTypeName = input.activityTypeName();
+
+      final var serializedActivity = new SerializedActivity(activityTypeName, activityArguments);
+      final var plan = this.planService.getPlan(planId);
+      this.missionModelService.refreshActivityValidations(plan.missionModelId, activityDirectiveId, serializedActivity);
+      ctx.status(200);
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    } catch (final InvalidArgumentsException ex) {
+      ctx.status(400)
+          .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
+    } catch (final NoSuchPlanException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
+    } catch (final MissionModelService.NoSuchActivityDirectiveException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeNoSuchActivityDirectiveException(ex).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
     }

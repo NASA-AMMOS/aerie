@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
@@ -18,6 +19,9 @@ public interface MissionModelRepository {
     // Mutations
     void updateModelParameters(String missionModelId, final List<Parameter> modelParameters) throws NoSuchMissionModelException;
     void updateActivityTypes(String missionModelId, final Map<String, ActivityType> activityTypes) throws NoSuchMissionModelException;
+    void updateActivityDirectiveValidations(final String activityDirectiveId, final List<ValidationNotice> notices)
+    throws NoSuchActivityDirectiveException;
 
-    class NoSuchMissionModelException extends Exception {}
+    final class NoSuchMissionModelException extends Exception {}
+    final class NoSuchActivityDirectiveException extends Exception {}
 }

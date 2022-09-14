@@ -393,6 +393,13 @@ public final class ResponseSerializers {
         .build();
   }
 
+  public static JsonValue serializeNoSuchActivityDirectiveException(final MissionModelService.NoSuchActivityDirectiveException ex) {
+    // TODO: Improve diagnostic information
+    return Json.createObjectBuilder()
+        .add("message", "no such activity directive")
+        .build();
+  }
+
   public static JsonValue serializeNoSuchMissionModelException(final MissionModelService.NoSuchMissionModelException ex) {
     // TODO: Improve diagnostic information
     return Json.createObjectBuilder()

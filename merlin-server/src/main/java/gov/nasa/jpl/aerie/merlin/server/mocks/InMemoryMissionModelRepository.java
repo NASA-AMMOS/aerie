@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
@@ -58,6 +59,12 @@ public final class InMemoryMissionModelRepository implements MissionModelReposit
     @Override
     public void updateActivityTypes(final String missionModelId, final Map<String, ActivityType> activityTypes)
     throws NoSuchMissionModelException
+    {
+    }
+
+    @Override
+    public void updateActivityDirectiveValidations(final String activityDirectiveId, final List<ValidationNotice> notices)
+    throws NoSuchActivityDirectiveException
     {
     }
 
