@@ -34,6 +34,7 @@
                 "yAxisId": null
               }
             ],
+            "name": "Activity Timeline",
             "yAxes": []
           },
           {
@@ -51,6 +52,7 @@
                 "yAxisId": 1
               }
             ],
+            "name": "SEIS Power On",
             "yAxes": [
               {
                 "color": "#000000",
@@ -79,6 +81,7 @@
                 "yAxisId": 2
               }
             ],
+            "name": "Generic Power Used",
             "yAxes": [
               {
                 "color": "#000000",
@@ -104,6 +107,7 @@
                 "yAxisId": 3
               }
             ],
+            "name": "IDA Mode",
             "yAxes": [
               {
                 "color": "#000000",
@@ -132,6 +136,7 @@
                 "yAxisId": 4
               }
             ],
+            "name": "Full Wake Rate",
             "yAxes": [
               {
                 "color": "#000000",
@@ -157,6 +162,7 @@
                 "yAxisId": 5
               }
             ],
+            "name": "Harness",
             "yAxes": [
               {
                 "color": "#000000",
@@ -185,6 +191,7 @@
                 "yAxisId": 6
               }
             ],
+            "name": "HP3 Data Rate",
             "yAxes": [
               {
                 "color": "#000000",
@@ -215,6 +222,7 @@
                 "yAxisId": 7
               }
             ],
+            "name": "VC05 Data Volume",
             "yAxes": [
               {
                 "color": "#000000",
