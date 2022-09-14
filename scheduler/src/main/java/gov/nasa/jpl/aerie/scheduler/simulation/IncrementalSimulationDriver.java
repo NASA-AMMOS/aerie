@@ -137,6 +137,10 @@ public class IncrementalSimulationDriver<Model> {
     return getSimulationResultsUpTo(curTime);
   }
 
+  public Duration getCurrentSimulationEndTime(){
+    return curTime;
+  }
+
   /**
    * Get the simulation results from the Duration.ZERO to a specified end time point.
    * The provided simulation results might cover more than the required time period.
