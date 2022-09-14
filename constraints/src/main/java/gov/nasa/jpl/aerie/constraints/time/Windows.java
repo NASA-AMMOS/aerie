@@ -274,7 +274,7 @@ public final class Windows implements Iterable<Segment<Boolean>> {
   }
 
   /** Whether all the true segments of the given Windows are contained in the true segments of this. */
-    public boolean includes(final Windows other) {
+  public boolean includes(final Windows other) {
     //if you have:
     //  other:    ---TTTT---TTT------
     //  original: ---------TTTFF-----

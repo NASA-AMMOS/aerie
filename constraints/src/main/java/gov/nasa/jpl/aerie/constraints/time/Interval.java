@@ -72,8 +72,8 @@ public final class Interval implements Comparable<Interval>{
       final Inclusivity endInclusivity
   ) {
     return (end.shorterThan(start))
-      ? Interval.EMPTY
-      : new Interval(start, startInclusivity, end, endInclusivity);
+        ? Interval.EMPTY
+        : new Interval(start, startInclusivity, end, endInclusivity);
   }
 
   public static Interval between(final Duration start, final Duration end) {
@@ -300,10 +300,10 @@ public final class Interval implements Comparable<Interval>{
     if (!(o instanceof final Interval other)) return false;
 
     return ( (this.isEmpty() && other.isEmpty())
-          || ( Objects.equals(this.start, other.start)
-            && Objects.equals(this.startInclusivity, other.startInclusivity)
-            && Objects.equals(this.end, other.end)
-            && Objects.equals(this.endInclusivity, other.endInclusivity) ) );
+             || ( Objects.equals(this.start, other.start)
+                  && Objects.equals(this.startInclusivity, other.startInclusivity)
+                  && Objects.equals(this.end, other.end)
+                  && Objects.equals(this.endInclusivity, other.endInclusivity) ) );
   }
 
   @Override
