@@ -10,6 +10,7 @@ java {
 }
 
 dependencies {
+  implementation project(':merlin-sdk')
   implementation project(':merlin-framework')
   // TODO: Generate the NullableValueMapper class so we can remove the "contrib" dependency.
   implementation project(':contrib')

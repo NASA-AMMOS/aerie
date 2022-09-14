@@ -1,12 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
-import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
@@ -35,7 +33,7 @@ public final class StubMissionModelService implements MissionModelService {
       EXISTENT_ACTIVITY_TYPE,
       List.of(new Parameter("Param", ValueSchema.STRING), new Parameter("AnotherParam", ValueSchema.REAL)),
       List.of(),
-      new EnumValueMapper<>(Unit.class).getValueSchema());
+      ValueSchema.ofStruct(Map.of()));
   public static final String EXISTENT_ACTIVITY_TYPE_2 = "activity2";
   public static final ActivityType EXISTENT_ACTIVITY_2 = new ActivityType(
       EXISTENT_ACTIVITY_TYPE_2,
@@ -43,7 +41,7 @@ public final class StubMissionModelService implements MissionModelService {
           new ValueSchema.Variant("hello", "hello"), new ValueSchema.Variant("there", "there")
       )))),
       List.of(),
-      new EnumValueMapper<>(Unit.class).getValueSchema()
+      ValueSchema.ofStruct(Map.of())
   );
 
   public static final SerializedActivity VALID_ACTIVITY_INSTANCE = new SerializedActivity(

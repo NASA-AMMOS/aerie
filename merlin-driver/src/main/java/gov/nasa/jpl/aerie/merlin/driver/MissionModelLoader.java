@@ -9,7 +9,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -68,8 +67,7 @@ public final class MissionModelLoader {
         final var className = getImplementingClassName(path, name, version);
 
         // Construct a ClassLoader with access to classes in the mission model location.
-        final var parentClassLoader = Thread.currentThread().getContextClassLoader();
-        final var classLoader = new URLClassLoader(new URL[] {missionModelPathToUrl(path)}, parentClassLoader);
+        final var classLoader = new URLClassLoader(new URL[] {missionModelPathToUrl(path)});
 
         try {
             final var factoryClass$ = classLoader.loadClass(className);
@@ -77,14 +75,8 @@ public final class MissionModelLoader {
                 throw new MissionModelLoadException(path, name, version);
             }
 
-            // SAFETY: We checked above that MissionModelFactory is assignable from this type.
-            @SuppressWarnings("unchecked")
-            final var factoryClass = (Class<? extends MerlinPlugin>) factoryClass$;
-
-            return factoryClass.getConstructor().newInstance();
-        } catch (final ClassNotFoundException | NoSuchMethodException | InstantiationException
-            | IllegalAccessException | InvocationTargetException ex)
-        {
+            return (MerlinPlugin) factoryClass$.getConstructor().newInstance();
+        } catch (final ReflectiveOperationException ex) {
             throw new MissionModelLoadException(path, name, version, ex);
         }
     }

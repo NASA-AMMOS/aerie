@@ -25,7 +25,6 @@ javadoc.options.links 'https://commons.apache.org/proper/commons-lang/javadocs/a
 javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
 dependencies {
-  api 'JNISpice:JNISpice:1.0-20190517.205223-2'
   api 'org.apache.commons:commons-lang3:3.12.0'
 
   implementation 'org.apache.commons:commons-collections4:4.4'

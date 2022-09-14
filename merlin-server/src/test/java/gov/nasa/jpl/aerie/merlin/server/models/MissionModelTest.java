@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
-import gov.nasa.jpl.aerie.contrib.serialization.mappers.UnitValueMapper;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
@@ -46,7 +45,7 @@ public final class MissionModelTest {
                     new Parameter("y", ValueSchema.STRING),
                     new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
                 List.of(),
-                new UnitValueMapper().getValueSchema()
+                ValueSchema.ofStruct(Map.of())
             ));
 
         // WHEN
@@ -72,7 +71,7 @@ public final class MissionModelTest {
                 new Parameter("y", ValueSchema.STRING),
                 new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
             List.of(),
-            new UnitValueMapper().getValueSchema()
+            ValueSchema.ofStruct(Map.of())
         );
 
         // WHEN

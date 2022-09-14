@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -251,7 +250,7 @@ public class SchedulingIntegrationTests {
             "GrowBanana",
             Map.of(
                 "quantity", SerializedValue.of(1),
-                "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
             Duration.ZERO)),
         List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.CoexistenceGoal({
@@ -296,7 +295,7 @@ public class SchedulingIntegrationTests {
             "GrowBanana",
             Map.of(
                 "quantity", SerializedValue.of(1),
-                "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
             Duration.of(5, Duration.MINUTES))),
         List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.CoexistenceGoal({
@@ -346,7 +345,7 @@ public class SchedulingIntegrationTests {
             "GrowBanana",
             Map.of(
                 "quantity", SerializedValue.of(100),
-                "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
             Duration.of(2, Duration.HOURS)),
                 new MockMerlinService.PlannedActivityInstance(
                     "PickBanana",
@@ -390,7 +389,7 @@ public class SchedulingIntegrationTests {
                     "GrowBanana",
                     Map.of(
                         "quantity", SerializedValue.of(100),
-                        "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                        "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
                     Duration.of(4, Duration.HOURS))),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
@@ -462,7 +461,7 @@ public class SchedulingIntegrationTests {
             new MockMerlinService.PlannedActivityInstance(
                 "GrowBanana",
                 Map.of("quantity", SerializedValue.of(3.0),
-                       "growingDuration", new DurationValueMapper().serializeValue(Duration.of(3, Duration.HOURS))),
+                       "growingDuration", SerializedValue.of(Duration.of(3, Duration.HOURS).in(Duration.MICROSECONDS))),
                 Duration.of(1, Duration.HOURS))),
 
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -504,7 +503,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
-                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
                 Duration.of(4, Duration.HOURS))),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
@@ -544,7 +543,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
-                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
                 Duration.of(4, Duration.HOURS))),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
@@ -582,7 +581,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
-                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
                 Duration.of(4, Duration.HOURS))),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
@@ -622,7 +621,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
-                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
                 Duration.of(4, Duration.HOURS))),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
@@ -665,7 +664,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
-                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
                 Duration.of(4, Duration.HOURS))),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
@@ -759,19 +758,19 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
                 Duration.of(1, Duration.SECONDS)),
             new MockMerlinService.PlannedActivityInstance(
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
                 Duration.of(2, Duration.SECONDS)),
             new MockMerlinService.PlannedActivityInstance(
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
-                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
                 Duration.of(3, Duration.SECONDS)),
             new MockMerlinService.PlannedActivityInstance(
                 "PickBanana",
@@ -942,7 +941,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
-                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
                 Duration.of(15, Duration.MINUTES))),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
@@ -995,7 +994,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
-                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
                 Duration.of(4, Duration.MINUTES))),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
@@ -1037,7 +1036,7 @@ public class SchedulingIntegrationTests {
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
-                    "growingDuration", new DurationValueMapper().serializeValue(growBananaDuration)),
+                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
                 Duration.of(4, Duration.HOURS))),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
