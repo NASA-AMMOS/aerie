@@ -83,14 +83,9 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
     );
   }
 
-  /** Copy constructor */
-  public IntervalMap(final IntervalMap<V> other) {
-    this(new ArrayList<>(other.segments));
-  }
-
   /** Creates an IntervalMap that is equal to a single value for all representable time */
   public IntervalMap(final V value) {
-   this(Interval.FOREVER, value);
+    this(Interval.FOREVER, value);
   }
 
   /**

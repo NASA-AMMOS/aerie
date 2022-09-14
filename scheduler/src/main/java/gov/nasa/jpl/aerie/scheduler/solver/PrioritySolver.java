@@ -564,7 +564,7 @@ public class PrioritySolver implements Solver {
 
     //start from the time interval where the missing activity causes a problem
     //NB: these are start windows
-    var possibleWindows = new Windows(missing.getTemporalContext());
+    var possibleWindows = missing.getTemporalContext();
 
     //prune based on constraints on goal and activity type (mutex, state,
     //event, etc)
@@ -652,7 +652,7 @@ public class PrioritySolver implements Solver {
   {
     assert windows != null;
     assert constraints != null;
-    Windows ret = new Windows(windows);
+    Windows ret = windows;
     //short circuit on already empty windows or no constraints: no work to do!
     if (windows.stream().noneMatch(Segment::value) || constraints.isEmpty()) {
       return ret;
@@ -681,7 +681,7 @@ public class PrioritySolver implements Solver {
       MissingActivityConflict mac,
       Windows windows,
       Collection<GlobalConstraint> constraints) {
-    Windows tmp = new Windows(windows);
+    Windows tmp = windows;
     if(tmp.stream().noneMatch(Segment::value)){
       return tmp;
     }

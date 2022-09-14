@@ -21,21 +21,14 @@ public class WindowsTest {
   public void constructorTests() {
 
     //just verify the constructors work right
-    var windows1 = new Windows();
-    var windows2 = new Windows(windows1);
-    assertIterableEquals(windows1, windows2);
-    var windows3 = new Windows(
+    var windows = new Windows(
         Segment.of(interval(Duration.MIN_VALUE, Duration.of(0, SECONDS)), true),
         Segment.of(at(1, SECONDS), true),
         Segment.of(interval(2, 3, SECONDS), false),
         Segment.of(at(3, SECONDS), true)
     );
 
-    assertEquals(windows3.minTrueTimePoint().get().getKey(), Duration.MIN_VALUE);
-
-
-    windows2 = new Windows(windows3);
-    assertIterableEquals(windows2, windows3);
+    assertEquals(windows.minTrueTimePoint().get().getKey(), Duration.MIN_VALUE);
   }
 
   @Test

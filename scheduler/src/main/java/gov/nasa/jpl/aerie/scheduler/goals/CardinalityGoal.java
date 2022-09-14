@@ -161,7 +161,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
     for(Interval subInterval : windows.iterateEqualTo(true)) {
       final var subIntervalWindows = new Windows(false).set(subInterval, true);
       ActivityCreationTemplate actTB =
-          new ActivityCreationTemplate.Builder().basedOn(this.desiredActTemplate).startsOrEndsIn(new Windows(subIntervalWindows)).build();
+          new ActivityCreationTemplate.Builder().basedOn(this.desiredActTemplate).startsOrEndsIn(subIntervalWindows).build();
 
       final var acts = new LinkedList<>(plan.find(actTB, simulationResults));
       acts.sort(Comparator.comparing(ActivityInstance::getStartTime));

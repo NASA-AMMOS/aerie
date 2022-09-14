@@ -24,11 +24,6 @@ public final class Windows implements Iterable<Segment<Boolean>> {
     this.segments = new IntervalMap<>();
   }
 
-  /** Copy constructor */
-  public Windows(final Windows other) {
-    this.segments = new IntervalMap<>(other.segments);
-  }
-
   /** Creates a Windows from potentially unordered, overlapping segments */
   @SafeVarargs
   public Windows(final Segment<Boolean>... segments) {
@@ -242,7 +237,7 @@ public final class Windows implements Iterable<Segment<Boolean>> {
         }
       }
     }
-    return new Windows(this);
+    return this;
   }
 
   /**
@@ -254,7 +249,7 @@ public final class Windows implements Iterable<Segment<Boolean>> {
    * @return a new Windows
    */
   public Windows keepTrueSegment(final int indexToKeep) {
-    var result = new Windows(this);
+    var result = new Windows(this.segments.stream().toList());
     if (indexToKeep >= 0) {
       int index = 0;
       for (final var interval : this.segments.iterateEqualTo(true)) {
@@ -353,21 +348,28 @@ public final class Windows implements Iterable<Segment<Boolean>> {
     }));
   }
 
-  public Windows shiftBy(Duration fromStart, Duration fromEnd){
-    final Windows result = new Windows(this.segments.map($ -> $.map(b -> false)));
-    for (final var segment: this.segments) {
-      if (segment.value()) {
-        final var interval = segment.interval();
-        if (interval.end.plus(fromEnd).noShorterThan(interval.start.plus(fromStart))) {
-          result.segments.insertInPlace(Segment.of(Interval.between(
-              interval.start.plus(fromStart),
-              interval.startInclusivity,
-              interval.end.plus(fromEnd),
-              interval.endInclusivity), true), 0);
-        }
-      }
+  public Windows shiftBy(Duration fromStart, Duration fromEnd) {
+    final var builder = new IntervalMap<Boolean>();
+
+    for (final var segment : this.segments) {
+      final var interval = segment.interval();
+
+      final var shiftedInterval = (segment.value()) ? (
+          Interval.between(
+              interval.start.plus(fromStart), interval.startInclusivity,
+              interval.end.plus(fromEnd),     interval.endInclusivity)
+      ) : (
+          Interval.between(
+              interval.start.plus(fromEnd), interval.startInclusivity,
+              interval.end.plus(fromStart), interval.endInclusivity)
+      );
+
+      // SAFETY: If two intervals overlap, they have the same value.
+      // Otherwise we'd need to make sure to `or` the overlap together.
+      builder.add(shiftedInterval, segment.value());
     }
-    return result;
+
+    return new Windows(builder.build());
   }
 
   /**
