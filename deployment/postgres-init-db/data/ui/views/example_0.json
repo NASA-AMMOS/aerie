@@ -97,9 +97,9 @@
                 "lineWidth": 1,
                 "pointRadius": 2,
                 "yAxisId": 2
-              },
-              "name": "Peel and Fruit Usage",
+              }
             ],
+            "name": "Peel and Fruit Usage",
             "yAxes": [
               {
                 "color": "#000000",
