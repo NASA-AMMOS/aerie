@@ -172,6 +172,9 @@ public final class Interval implements Comparable<Interval>{
   }
 
   public static Interval unify(final Interval x, final Interval y) {
+    if (x.isEmpty()) return y;
+    if (y.isEmpty()) return x;
+
     final Duration start;
     final Inclusivity startInclusivity;
 
