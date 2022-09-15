@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.protocol.driver;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -30,8 +31,7 @@ public interface Initializer {
   void topic(
       String name,
       Topic<Event> topic,
-      ValueSchema schema,
-      Function<Event, SerializedValue> serializer);
+      OutputType<Event> outputType);
 
   interface TaskFactory<Return> {
     Task<Return> create();

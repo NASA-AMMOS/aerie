@@ -549,24 +549,17 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         "mapper",
                         Modifier.FINAL)
                     .addStatement(
-                        "$L.topic(\n$L,\n$L,\n$L,\n$L)",
+                        "$L.topic($L, $L, $L)",
                         "initializer",
                         CodeBlock.of("$S + $L", "ActivityType.Input.", "name"),
                         CodeBlock.of("$L.getInputTopic()", "mapper"),
-                        CodeBlock.of(
-                            "$T.ofStruct($L.getInputType().getParameters().stream().collect($T.toMap($$ -> $$.name(), $$ -> $$.schema())))",
-                            ValueSchema.class,
-                            "mapper",
-                            Collectors.class),
-                        CodeBlock.of("$$ -> $T.of($L.getInputType().getArguments($$))", SerializedValue.class, "mapper"))
-                    .addCode("\n")
+                        CodeBlock.of("$L.getInputAsOutput()", "mapper"))
                     .addStatement(
-                        "$L.topic(\n$L,\n$L,\n$L,\n$L)",
+                        "$L.topic($L, $L, $L)",
                         "initializer",
                         CodeBlock.of("$S + $L", "ActivityType.Output.", "name"),
                         CodeBlock.of("$L.getOutputTopic()", "mapper"),
-                        CodeBlock.of("$L.getOutputType().getSchema()", "mapper"),
-                        CodeBlock.of("$L.getOutputType()::serialize", "mapper"))
+                        CodeBlock.of("$L.getOutputType()", "mapper"))
                     .build()
             )
             .build();

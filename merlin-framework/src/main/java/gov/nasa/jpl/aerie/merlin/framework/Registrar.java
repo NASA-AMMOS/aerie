@@ -105,6 +105,18 @@ public final class Registrar {
   }
 
   public <Event> void topic(final String name, final CellRef<Event,?> ref, final ValueMapper<Event> mapper) {
-    this.builder.topic(name, ref.topic, mapper.getValueSchema(), mapper::serializeValue);
+    Objects.requireNonNull(mapper);
+
+    this.builder.topic(name, ref.topic, new OutputType<>() {
+      @Override
+      public ValueSchema getSchema() {
+        return mapper.getValueSchema();
+      }
+
+      @Override
+      public SerializedValue serialize(final Event value) {
+        return mapper.serializeValue(value);
+      }
+    });
   }
 }

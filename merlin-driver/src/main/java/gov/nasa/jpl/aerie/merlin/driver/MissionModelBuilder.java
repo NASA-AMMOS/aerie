@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -51,10 +52,9 @@ public final class MissionModelBuilder implements Initializer {
   public <Event> void topic(
       final String name,
       final Topic<Event> topic,
-      final ValueSchema schema,
-      final Function<Event, SerializedValue> serializer)
+      final OutputType<Event> outputType)
   {
-    this.state.topic(name, topic, schema, serializer);
+    this.state.topic(name, topic, outputType);
   }
 
   @Override
@@ -126,10 +126,9 @@ public final class MissionModelBuilder implements Initializer {
     public <Event> void topic(
         final String name,
         final Topic<Event> topic,
-        final ValueSchema schema,
-        final Function<Event, SerializedValue> serializer)
+        final OutputType<Event> outputType)
     {
-      this.topics.add(new MissionModel.SerializableTopic<>(name, topic, schema, serializer));
+      this.topics.add(new MissionModel.SerializableTopic<>(name, topic, outputType));
     }
 
     @Override
@@ -182,8 +181,7 @@ public final class MissionModelBuilder implements Initializer {
     public <Event> void topic(
         final String name,
         final Topic<Event> topic,
-        final ValueSchema schema,
-        final Function<Event, SerializedValue> serializer)
+        final OutputType<Event> outputType)
     {
       throw new IllegalStateException("Topics cannot be added after the schema is built");
     }

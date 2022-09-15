@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -78,7 +79,6 @@ public final class MissionModel<Model> {
   public record SerializableTopic<EventType> (
       String name,
       Topic<EventType> topic,
-      ValueSchema valueSchema,
-      Function<EventType, SerializedValue> serializer
+      OutputType<EventType> outputType
   ) {}
 }

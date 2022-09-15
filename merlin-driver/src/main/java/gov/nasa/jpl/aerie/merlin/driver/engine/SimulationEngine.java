@@ -383,7 +383,7 @@ public final class SimulationEngine implements AutoCloseable {
 
           taskInfo.input.put(
               ev.provenance().id(),
-              new SerializedActivity(activityType, topic.serializer().apply(input).asMap().orElseThrow()));
+              new SerializedActivity(activityType, topic.outputType().serialize(input).asMap().orElseThrow()));
         });
       }
 
@@ -394,7 +394,7 @@ public final class SimulationEngine implements AutoCloseable {
         ev.extract(topic.topic()).ifPresent(output -> {
           taskInfo.output.put(
               ev.provenance().id(),
-              topic.serializer().apply(output));
+              topic.outputType().serialize(output));
         });
       }
     }
@@ -543,7 +543,7 @@ public final class SimulationEngine implements AutoCloseable {
     final var serializableTopicToId = new HashMap<SerializableTopic<?>, Integer>();
     for (final var serializableTopic : serializableTopics) {
       serializableTopicToId.put(serializableTopic, topics.size());
-      topics.add(Triple.of(topics.size(), serializableTopic.name(), serializableTopic.valueSchema()));
+      topics.add(Triple.of(topics.size(), serializableTopic.name(), serializableTopic.outputType().getSchema()));
     }
 
     final var serializedTimeline = new TreeMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
@@ -591,7 +591,7 @@ public final class SimulationEngine implements AutoCloseable {
 
 
   private static <EventType> Optional<SerializedValue> trySerializeEvent(Event event, SerializableTopic<EventType> serializableTopic) {
-    return event.extract(serializableTopic.topic(), serializableTopic.serializer());
+    return event.extract(serializableTopic.topic(), serializableTopic.outputType()::serialize);
   }
 
   private interface Translator<Target> {
