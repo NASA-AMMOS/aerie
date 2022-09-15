@@ -510,26 +510,20 @@ public record SynchronousSchedulerAgent(
           final var goalResult = new ScheduleResults.GoalResult(
               goalEval
                   .getValue()
-                  .getInsertedActivities().stream().map(activityInstance -> {
-                    ActivityInstanceId id;
-                    if(activityInstance.isGenerated()){
-                      id = instancesToIds.get(activitiesById.get(activityInstance.getParentActivity()));
-                    } else{
-                      id = instancesToIds.get(activityInstance);
-                    }
-                    return id;
-                  }).toList(),
+                  .getInsertedActivities().stream()
+                      .map(activityInstance -> instancesToIds.get(
+                          activityInstance.getParentActivity()
+                              .map(activitiesById::get)
+                              .orElse(activityInstance))
+                  ).toList(),
               goalEval
                   .getValue()
-                  .getAssociatedActivities().stream().map(activityInstance -> {
-                    ActivityInstanceId id;
-                    if(activityInstance.isGenerated()){
-                      id = instancesToIds.get(activitiesById.get(activityInstance.getParentActivity()));
-                    } else{
-                      id = instancesToIds.get(activityInstance);
-                    }
-                    return id;
-                  }).toList(),
+                  .getAssociatedActivities().stream()
+                      .map(activityInstance -> instancesToIds.get(
+                        activityInstance.getParentActivity()
+                            .map(activitiesById::get)
+                            .orElse(activityInstance))
+                    ).toList(),
               goalEval.getValue().getScore() >= 0);
           goalResults.put(goalId, goalResult);
         }

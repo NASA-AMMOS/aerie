@@ -368,7 +368,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     //creation are done in batch as that's what the scheduler does the most
     final var toAdd = new ArrayList<ActivityInstance>();
     for (final var activity : plan.getActivities()) {
-      if(activity.isGenerated()) continue;
+      if(activity.getParentActivity().isPresent()) continue; // Skip generated activities
       final var idActFromInitialPlan = idsFromInitialPlan.get(activity.getId());
       if (idActFromInitialPlan != null) {
         //add duration to parameters if controllable

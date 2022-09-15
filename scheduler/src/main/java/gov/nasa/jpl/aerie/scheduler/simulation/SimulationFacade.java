@@ -169,8 +169,7 @@ public class SimulationFacade {
   }
 
   public void simulateActivity(final ActivityInstance activity) throws SimulationException {
-
-    if(activity.isGenerated()){
+    if(activity.getParentActivity().isPresent()) {
       throw new Error("This method should not be called with a generated activity but with its top-level parent.");
     }
     final var arguments = new HashMap<>(activity.getArguments());
