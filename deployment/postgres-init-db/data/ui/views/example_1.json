@@ -21,6 +21,7 @@
         "rows": [
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 150,
             "horizontalGuides": [],
             "id": 0,
@@ -34,10 +35,12 @@
                 "yAxisId": null
               }
             ],
+            "name": "Activity Timeline",
             "yAxes": []
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 100,
             "horizontalGuides": [],
             "id": 1,
@@ -51,6 +54,7 @@
                 "yAxisId": 1
               }
             ],
+            "name": "SEIS Power On",
             "yAxes": [
               {
                 "color": "#000000",
@@ -63,6 +67,7 @@
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 160,
             "horizontalGuides": [],
             "id": 2,
@@ -79,6 +84,7 @@
                 "yAxisId": 2
               }
             ],
+            "name": "Generic Power Used",
             "yAxes": [
               {
                 "color": "#000000",
@@ -91,6 +97,7 @@
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 100,
             "horizontalGuides": [],
             "id": 3,
@@ -104,6 +111,7 @@
                 "yAxisId": 3
               }
             ],
+            "name": "IDA Mode",
             "yAxes": [
               {
                 "color": "#000000",
@@ -116,6 +124,7 @@
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 200,
             "horizontalGuides": [],
             "id": 4,
@@ -132,6 +141,7 @@
                 "yAxisId": 4
               }
             ],
+            "name": "Full Wake Rate",
             "yAxes": [
               {
                 "color": "#000000",
@@ -144,6 +154,7 @@
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 170,
             "horizontalGuides": [],
             "id": 5,
@@ -157,6 +168,7 @@
                 "yAxisId": 5
               }
             ],
+            "name": "Harness",
             "yAxes": [
               {
                 "color": "#000000",
@@ -169,6 +181,7 @@
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 200,
             "horizontalGuides": [],
             "id": 6,
@@ -185,6 +198,7 @@
                 "yAxisId": 6
               }
             ],
+            "name": "HP3 Data Rate",
             "yAxes": [
               {
                 "color": "#000000",
@@ -197,6 +211,7 @@
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 130,
             "horizontalGuides": [],
             "id": 7,
@@ -215,6 +230,7 @@
                 "yAxisId": 7
               }
             ],
+            "name": "VC05 Data Volume",
             "yAxes": [
               {
                 "color": "#000000",

@@ -49,6 +49,7 @@
         "rows": [
           {
             "autoAdjustHeight": true,
+            "expanded": true,
             "height": 200,
             "horizontalGuides": [],
             "id": 0,
@@ -62,10 +63,12 @@
                 "yAxisId": null
               }
             ],
+            "name": "Activity Timeline",
             "yAxes": []
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 100,
             "horizontalGuides": [
               {
@@ -96,6 +99,7 @@
                 "yAxisId": 2
               }
             ],
+            "name": "Peel and Fruit Usage",
             "yAxes": [
               {
                 "color": "#000000",
@@ -115,6 +119,7 @@
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 100,
             "horizontalGuides": [],
             "id": 2,
@@ -128,6 +133,7 @@
                 "yAxisId": 3
               }
             ],
+            "name": "Flag",
             "yAxes": [
               {
                 "color": "#000000",
@@ -140,6 +146,7 @@
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 100,
             "horizontalGuides": [],
             "id": 3,
@@ -153,6 +160,7 @@
                 "yAxisId": 4
               }
             ],
+            "name": "Conflicted",
             "yAxes": [
               {
                 "color": "#000000",
@@ -165,6 +173,7 @@
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 100,
             "horizontalGuides": [],
             "id": 4,
@@ -179,6 +188,7 @@
                 "yAxisId": 5
               }
             ],
+            "name": "Conflicted Usage",
             "yAxes": [
               {
                 "color": "#000000",
@@ -191,6 +201,7 @@
           },
           {
             "autoAdjustHeight": false,
+            "expanded": true,
             "height": 100,
             "horizontalGuides": [],
             "id": 5,
@@ -205,6 +216,7 @@
                 "yAxisId": 6
               }
             ],
+            "name": "Plant Usage",
             "yAxes": [
               {
                 "color": "#000000",
