@@ -2,9 +2,11 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
+import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 
 import javax.sql.DataSource;
@@ -108,7 +110,7 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   }
 
   @Override
-  public void updateActivityTypes( final String missionModelId, final Map<String, ActivityType> activityTypes)
+  public void updateActivityTypes(final String missionModelId, final Map<String, ActivityType> activityTypes)
   throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var createActivityTypeAction = new CreateActivityTypeAction(connection)) {
@@ -129,17 +131,19 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   }
 
   @Override
-  public void updateActivityDirectiveValidations(String activityDirectiveId, List<ValidationNotice> notices)
-  throws NoSuchActivityDirectiveException
+  public void updateActivityDirectiveValidations(
+      final ActivityDirectiveId directiveId,
+      final Timestamp argumentsModifiedTime,
+      final List<ValidationNotice> notices
+  )
   {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var updateActivityDirectiveValidationsAction = new UpdateActivityDirectiveValidationsAction(connection)) {
-        final var directiveId = toActivityDirectiveId(activityDirectiveId);
-        updateActivityDirectiveValidationsAction.apply(directiveId, notices);
+        updateActivityDirectiveValidationsAction.apply(directiveId.id(), argumentsModifiedTime, notices);
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(
-          "Failed to update derived data for activity directive with id `%s`".formatted(activityDirectiveId), ex);
+          "Failed to update derived data for activity directive with id `%d`".formatted(directiveId.id()), ex);
     }
   }
 
@@ -150,16 +154,6 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
       return Long.parseLong(modelId, 10);
     } catch (final NumberFormatException ex) {
       throw new NoSuchMissionModelException();
-    }
-  }
-
-  private static long toActivityDirectiveId(final String directiveId)
-  throws NoSuchActivityDirectiveException
-  {
-    try {
-      return Long.parseLong(directiveId, 10);
-    } catch (final NumberFormatException ex) {
-      throw new NoSuchActivityDirectiveException();
     }
   }
 

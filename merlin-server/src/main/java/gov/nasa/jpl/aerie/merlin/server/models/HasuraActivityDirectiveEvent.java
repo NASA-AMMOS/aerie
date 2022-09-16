@@ -8,5 +8,6 @@ public record HasuraActivityDirectiveEvent
     PlanId planId,
     ActivityDirectiveId activityDirectiveId,
     String activityTypeName,
-    Map<String, SerializedValue> arguments
+    Map<String, SerializedValue> arguments,
+    Timestamp argumentsModifiedTime
 ) { }

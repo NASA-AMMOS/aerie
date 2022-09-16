@@ -2,9 +2,11 @@ package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
+import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelAccessException;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 
@@ -63,8 +65,7 @@ public final class InMemoryMissionModelRepository implements MissionModelReposit
     }
 
     @Override
-    public void updateActivityDirectiveValidations(final String activityDirectiveId, final List<ValidationNotice> notices)
-    throws NoSuchActivityDirectiveException
+    public void updateActivityDirectiveValidations(final ActivityDirectiveId directiveId, final Timestamp argumentsModifiedTime, final List<ValidationNotice> notices)
     {
     }
 

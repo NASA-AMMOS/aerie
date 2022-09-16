@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
@@ -214,7 +215,7 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public void refreshActivityValidations(final String missionModelId, final String activityDirectiveId, final SerializedActivity activity)
+  public void refreshActivityValidations(final String missionModelId, final ActivityDirective directive)
   {
   }
 }

@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
@@ -147,13 +148,11 @@ public final class MerlinBindings implements Plugin {
     try {
       final var input = parseJson(ctx.body(), hasuraActivityDirectiveEventTriggerP);
       final var planId = input.planId();
-      final var activityDirectiveId = String.valueOf(input.activityDirectiveId().id());
-      final var activityArguments = input.arguments();
-      final var activityTypeName = input.activityTypeName();
+      final var serializedActivity = new SerializedActivity(input.activityTypeName(), input.arguments());
+      final var activityDirective = new ActivityDirective(input.activityDirectiveId(), input.argumentsModifiedTime(), serializedActivity);
 
-      final var serializedActivity = new SerializedActivity(activityTypeName, activityArguments);
       final var plan = this.planService.getPlan(planId);
-      this.missionModelService.refreshActivityValidations(plan.missionModelId, activityDirectiveId, serializedActivity);
+      this.missionModelService.refreshActivityValidations(plan.missionModelId, activityDirective);
       ctx.status(200);
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
@@ -164,8 +163,6 @@ public final class MerlinBindings implements Plugin {
           .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
     } catch (final NoSuchPlanException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
-    } catch (final MissionModelService.NoSuchActivityDirectiveException ex) {
-      ctx.status(404).result(ResponseSerializers.serializeNoSuchActivityDirectiveException(ex).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
     }

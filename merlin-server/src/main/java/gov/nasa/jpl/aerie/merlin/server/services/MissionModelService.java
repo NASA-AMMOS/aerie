@@ -9,6 +9,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
@@ -64,8 +66,8 @@ public interface MissionModelService {
 
   void refreshModelParameters(String missionModelId) throws NoSuchMissionModelException;
   void refreshActivityTypes(String missionModelId) throws NoSuchMissionModelException;
-  void refreshActivityValidations(String missionModelId, String activityDirectiveId, SerializedActivity activity)
-  throws NoSuchMissionModelException, NoSuchActivityDirectiveException, InvalidArgumentsException;
+  void refreshActivityValidations(String missionModelId, ActivityDirective directive)
+  throws NoSuchMissionModelException, InvalidArgumentsException;
 
   final class NoSuchMissionModelException extends Exception {
     public final String missionModelId;
@@ -76,17 +78,6 @@ public interface MissionModelService {
     }
 
     public NoSuchMissionModelException(final String missionModelId) { this(missionModelId, null); }
-  }
-
-  final class NoSuchActivityDirectiveException extends Exception {
-    public final String activityDirectiveId;
-
-    public NoSuchActivityDirectiveException(final String activityDirectiveId, final Throwable cause) {
-      super("No activity directive exists with id `" + activityDirectiveId + "`", cause);
-      this.activityDirectiveId = activityDirectiveId;
-    }
-
-    public NoSuchActivityDirectiveException(final String activityDirectiveId) { this(activityDirectiveId, null); }
   }
 
   final class NoSuchActivityTypeException extends Exception {
