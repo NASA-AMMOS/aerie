@@ -10,6 +10,7 @@ create table activity_directive (
   start_offset interval not null,
   type text not null,
   arguments merlin_argument_set not null,
+  last_modified_arguments_at timestamptz not null default now(),
   metadata merlin_activity_directive_metadata_set default '{}'::jsonb,
 
   constraint activity_directive_synthetic_key
@@ -43,6 +44,8 @@ comment on column activity_directive.created_at is e''
   'The time at which this activity_directive was created.';
 comment on column activity_directive.last_modified_at is e''
   'The time at which this activity_directive was last modified.';
+comment on column activity_directive.last_modified_arguments_at is e''
+  'The time at which this activity_directive.arguments was last modified.';
 comment on column activity_directive.start_offset is e''
   'The non-negative time offset from the start of the plan at which this activity_directive is scheduled.';
 comment on column activity_directive.type is e''
@@ -138,6 +141,25 @@ execute function activity_directive_set_updated_at();
 
 comment on trigger set_timestamp on activity_directive is e''
   'Sets the last_modified_at field of an activity_directive to the current time.';
+
+create or replace function activity_directive_set_arguments_updated_at()
+  returns trigger
+  security definer
+  language plpgsql as $$begin
+  new.last_modified_arguments_at = now();
+  return new;
+end$$;
+
+comment on function activity_directive_set_arguments_updated_at() is e''
+  'Sets the last_modified_arguments_at field of an activity_directive to the current time.';
+
+create trigger set_arguments_timestamp
+  before update of arguments on activity_directive
+  for each row
+execute function activity_directive_set_arguments_updated_at();
+
+comment on trigger set_arguments_timestamp on activity_directive is e''
+  'Sets the last_modified_arguments_at field of an activity_directive to the current time.';
 
 create function check_activity_directive_metadata()
 returns trigger
