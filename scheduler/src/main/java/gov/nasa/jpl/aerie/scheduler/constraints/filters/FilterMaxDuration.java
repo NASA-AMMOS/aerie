@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.constraints.filters;
 
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -19,14 +19,14 @@ public class FilterMaxDuration extends FilterFunctional {
 
   @Override
   public Windows filter(final SimulationResults simulationResults, final Plan plan, final Windows windows) {
-    Windows result = new Windows(windows);
+    Windows result = windows;
     result = result.filterByDuration(Duration.ZERO, this.maxDuration);
     return result;
   }
 
 
   @Override
-  public boolean shouldKeep(final SimulationResults simulationResults, final Plan plan, final Window range) {
+  public boolean shouldKeep(final SimulationResults simulationResults, final Plan plan, final Interval range) {
     return range.duration().noLongerThan(maxDuration);
   }
 }

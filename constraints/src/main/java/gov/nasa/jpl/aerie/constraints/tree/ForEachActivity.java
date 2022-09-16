@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.constraints.tree;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,7 +28,7 @@ public final class ForEachActivity implements Expression<List<Violation>> {
   }
 
   @Override
-  public List<Violation> evaluate(final SimulationResults results, final Window bounds, final Map<String, ActivityInstance> environment) {
+  public List<Violation> evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
     final var violations = new ArrayList<Violation>();
     for (final var activity : results.activities) {
       if (activity.type.equals(this.activityType)) {
@@ -39,7 +39,7 @@ public final class ForEachActivity implements Expression<List<Violation>> {
         final var expressionViolations = this.expression.evaluate(results, bounds, newEnvironment);
         for (final var violation : expressionViolations) {
           if (!violation.violationWindows.isEmpty()) {
-            final var newViolation = violation.clone();
+            final var newViolation = new Violation(violation);
             newViolation.addActivityId(activity.id);
             violations.add(newViolation);
           }

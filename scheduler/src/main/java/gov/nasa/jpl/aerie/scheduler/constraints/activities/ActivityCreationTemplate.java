@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
@@ -99,12 +99,12 @@ public class ActivityCreationTemplate extends ActivityExpression {
      */
     public @NotNull
     Builder duration(@NotNull Duration duration) {
-      this.durationIn = Window.between(duration, duration);
+      this.durationIn = Interval.between(duration, duration);
       return getThis();
     }
 
     public @NotNull
-    Builder duration(@NotNull Window duration) {
+    Builder duration(@NotNull Interval duration) {
       this.durationIn = duration;
       return getThis();
     }
@@ -232,7 +232,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
   public @NotNull
   Optional<ActivityInstance> createActivity(String name, Windows windows, boolean instantiateVariableArguments, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
     //REVIEW: how to properly export any flexibility to instance?
-    for (var window : windows) {
+    for (var window : windows.iterateEqualTo(true)) {
       var act = createInstanceForReal(name, window, instantiateVariableArguments, facade, plan, planningHorizon);
       if (act.isPresent()) {
         return act;
@@ -242,14 +242,14 @@ public class ActivityCreationTemplate extends ActivityExpression {
 
   }
 
-  private Optional<ActivityInstance> createInstanceForReal(final String name, final Window window, final boolean instantiateVariableArguments, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
+  private Optional<ActivityInstance> createInstanceForReal(final String name, final Interval interval, final boolean instantiateVariableArguments, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
     final var act = new ActivityInstance(this.type);
     act.setArguments(this.arguments);
     act.setVariableArguments(this.variableArguments);
     final var tnw = new TaskNetworkAdapter(new TaskNetwork());
     tnw.addAct(name);
-    if (window != null) {
-      tnw.addEnveloppe(name, "window", window.start, window.end);
+    if (interval != null) {
+      tnw.addEnveloppe(name, "interval", interval.start, interval.end);
     }
     tnw.addEnveloppe(name, "planningHorizon", planningHorizon.getStartAerie(), planningHorizon.getEndAerie());
     if (this.startRange != null) {
@@ -339,7 +339,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
         //select smallest duration
         act.setDuration(solved.end().start.minus(solved.start().start));
       } else {
-        final var computedDur = this.parametricDur.compute(Window.between(earliestStart, earliestStart),
+        final var computedDur = this.parametricDur.compute(Interval.between(earliestStart, earliestStart),
                                                            facade.getLatestConstraintSimulationResults());
         if (solved.duration().contains(computedDur)) {
           act.setDuration(computedDur);

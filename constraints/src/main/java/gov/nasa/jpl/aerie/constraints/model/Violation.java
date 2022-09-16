@@ -1,28 +1,37 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.StreamSupport;
 
 public final class Violation {
   public final List<Long> activityInstanceIds;
   public final List<String> resourceNames;
-  public final Windows violationWindows;
+  public final List<Interval> violationWindows;
 
   public Violation(final List<Long> activityInstanceIds, final List<String> resourceNames, final Windows violationWindows) {
     this.activityInstanceIds = new ArrayList<>(activityInstanceIds);
     this.resourceNames = new ArrayList<>(resourceNames);
-    this.violationWindows = violationWindows;
+    this.violationWindows = new ArrayList<>(violationWindows.size());
+    for (final var interval: violationWindows.iterateEqualTo(true)) this.violationWindows.add(interval);
   }
 
   public Violation(final Windows violationWindows) {
     this(new ArrayList<>(), new ArrayList<>(), violationWindows);
   }
 
-  public Violation clone() {
-    return new Violation(List.copyOf(this.activityInstanceIds), List.copyOf(this.resourceNames), new Windows(violationWindows));
+  public Violation(final List<Long> activityInstanceIds, final List<String> resourceNames, final List<Interval> intervals) {
+    this.activityInstanceIds = new ArrayList<>(activityInstanceIds);
+    this.resourceNames = List.copyOf(resourceNames);
+    this.violationWindows = List.copyOf(intervals);
+  }
+
+  public Violation(final Violation other) {
+    this(other.activityInstanceIds, other.resourceNames, other.violationWindows);
   }
 
   public void addActivityId(final long activityId) {

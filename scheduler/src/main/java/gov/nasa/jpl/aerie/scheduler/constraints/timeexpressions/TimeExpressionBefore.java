@@ -1,12 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
-
-import java.util.Objects;
 
 public class TimeExpressionBefore extends TimeExpression {
 
@@ -19,7 +17,7 @@ public class TimeExpressionBefore extends TimeExpression {
   }
 
   @Override
-  public Window computeTime(final SimulationResults simulationResults, final Plan plan, final Window interval) {
+  public Interval computeTime(final SimulationResults simulationResults, final Plan plan, final Interval interval) {
     final var origin = expr.computeTime(simulationResults, plan, interval);
     assert(origin.isSingleton());
     final var from = origin.start;
@@ -30,7 +28,7 @@ public class TimeExpressionBefore extends TimeExpression {
     }
 
     return res.compareTo(from) > 0 ? // If we want a range of possibles
-        Window.between(from, res) :
-        Window.between(res, from);
+        Interval.between(from, res) :
+        Interval.between(res, from);
   }
 }

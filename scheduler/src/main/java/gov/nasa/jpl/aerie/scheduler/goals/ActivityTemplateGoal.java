@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
-import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
@@ -94,7 +93,7 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
    * @return the range of possible durations for the activity instances
    *     that may be created by this goal
    */
-  public Window getActivityDurationRange() {
+  public Interval getActivityDurationRange() {
     return desiredActTemplate.getDurationRange();
   }
 

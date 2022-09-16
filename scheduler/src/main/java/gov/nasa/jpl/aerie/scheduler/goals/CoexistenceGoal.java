@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
@@ -157,7 +157,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
    * should probably be created!)
    */
   @SuppressWarnings({"unchecked", "rawtypes"})
-  public java.util.Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) { //TODO: check if window gets split and if so, notify user?
+  public java.util.Collection<Conflict> getConflicts(Plan plan, final SimulationResults simulationResults) { //TODO: check if interval gets split and if so, notify user?
 
     //NOTE: temporalContext IS A WINDOWS OVER WHICH THE GOAL APPLIES, USUALLY SOMETHING BROAD LIKE A MISSION PHASE
     //NOTE: expr IS A WINDOWS OVER WHICH A COEXISTENCEGOAL APPLIES, FOR EXAMPLE THE WINDOWS CORRESPONDING TO 5 SECONDS AFTER EVERY BASICACTIVITY IS SCHEDULED
@@ -187,13 +187,13 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       this.evaluatedExpr = anchors;
     }
 
-    // can only check if bisection has happened if you can extract the window from expr like you do in computeRange but without the final windows parameter,
+    // can only check if bisection has happened if you can extract the interval from expr like you do in computeRange but without the final windows parameter,
     //    then use that and compare it to local variable windows to check for bisection;
     //    I can add that, but it doesn't seem necessary for now.
 
     //the rest is the same if no such bisection has happened
     final var conflicts = new java.util.LinkedList<Conflict>();
-    for (var window : anchors) {
+    for (var window : anchors.iterateEqualTo(true)) {
 
       boolean disj = false;
       ActivityExpression.AbstractBuilder actTB = null;
@@ -203,22 +203,23 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       } else if (this.desiredActTemplate != null) {
         actTB = new ActivityCreationTemplate.Builder();
       }
+      assert actTB != null;
       actTB.basedOn(this.desiredActTemplate);
 
       if(this.startExpr != null) {
-        Window startTimeRange = null;
+        Interval startTimeRange = null;
         startTimeRange = this.startExpr.computeTime(simulationResults, plan, window);
         actTB.startsIn(startTimeRange);
       }
       if(this.endExpr != null) {
-        Window endTimeRange = null;
+        Interval endTimeRange = null;
         endTimeRange = this.endExpr.computeTime(simulationResults, plan, window);
         actTB.endsIn(endTimeRange);
       }
       /* this will override whatever might be already present in the template */
       if(durExpr!=null){
         var durRange = this.durExpr.compute(window, simulationResults);
-        actTB.durationIn(Window.between(durRange, durRange));
+        actTB.durationIn(Interval.between(durRange, durRange));
       }
 
       ActivityCreationTemplate temp;

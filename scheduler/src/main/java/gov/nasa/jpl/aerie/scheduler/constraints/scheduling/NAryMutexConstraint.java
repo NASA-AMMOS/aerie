@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.scheduling;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
@@ -41,18 +41,18 @@ public class NAryMutexConstraint extends GlobalConstraintWithIntrospection {
 
 
   private Windows findWindows(Plan plan, Windows windows, ActivityType actToBeScheduled, final SimulationResults simulationResults) {
-    Windows validWindows = new Windows(windows);
+    Windows validWindows = windows;
     for (var expression : activityExpressions) {
       if (!expression.getType().equals(actToBeScheduled)) {
         final var acts = new LinkedList<>(plan.find(expression, simulationResults));
 
-        List<Window> rangesActs = acts
+        List<Interval> rangesActs = acts
             .stream()
-            .map(a -> Window.between(a.getStartTime(), a.getEndTime()))
+            .map(a -> Interval.between(a.getStartTime(), a.getEndTime()))
             .collect(Collectors.toList());
-        Windows twActs = new Windows(rangesActs);
+        Windows twActs = new Windows(true).set(rangesActs, false);
 
-        validWindows.subtractAll(twActs);
+        validWindows = validWindows.and(twActs);
       }
     }
     return validWindows;

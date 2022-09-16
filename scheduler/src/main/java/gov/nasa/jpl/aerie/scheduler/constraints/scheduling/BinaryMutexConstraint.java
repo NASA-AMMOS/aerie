@@ -1,7 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.scheduling;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
@@ -42,7 +43,7 @@ public class BinaryMutexConstraint extends GlobalConstraint {
 
 
   private Windows findWindows(Plan plan, Windows windows, ActivityType actToBeScheduled, SimulationResults simulationResults) {
-    Windows validWindows = new Windows(windows);
+    Windows validWindows = windows;
     if (!(actToBeScheduled.equals(actType) || actToBeScheduled.equals(otherActType))) {
       //not concerned by this constraint
       return validWindows;
@@ -52,11 +53,10 @@ public class BinaryMutexConstraint extends GlobalConstraint {
         .ofType(actToBeSearched).build();
 
     final var acts = new java.util.LinkedList<>(plan.find(actSearch, simulationResults));
-    List<Window> rangesActs = acts.stream().map(a -> Window.betweenClosedOpen(a.getStartTime(), a.getEndTime())).collect(
+    List<Interval> rangesActs = acts.stream().map(a -> Interval.betweenClosedOpen(a.getStartTime(), a.getEndTime())).collect(
         Collectors.toList());
-    var twActs = new Windows(rangesActs);
 
-    validWindows.subtractAll(twActs);
+    validWindows = validWindows.set(rangesActs, false);
 
     return validWindows;
   }
@@ -67,33 +67,31 @@ public class BinaryMutexConstraint extends GlobalConstraint {
   @Override
   public ConstraintState isEnforced(Plan plan, Windows windows, SimulationResults simulationResults) {
 
-    Windows violationWindows = new Windows();
+    Windows violationWindows = new Windows(Interval.FOREVER, false);
 
-    for (var window : windows) {
+
+    for (final var interval: windows.iterateEqualTo(true)) {
       final var actSearch = new ActivityExpression.Builder()
-          .ofType(actType).startsOrEndsIn(window).build();
+          .ofType(actType).startsOrEndsIn(interval).build();
       final var otherActSearch = new ActivityExpression.Builder()
-          .ofType(otherActType).startsOrEndsIn(window).build();
+          .ofType(otherActType).startsOrEndsIn(interval).build();
       final var acts = new java.util.LinkedList<>(plan.find(actSearch, simulationResults));
       final var otherActs = new java.util.LinkedList<>(plan.find(otherActSearch, simulationResults));
 
-      List<Window> rangesActs = acts.stream().map(a -> Window.betweenClosedOpen(a.getStartTime(), a.getEndTime())).collect(
-          Collectors.toList());
-      Windows twActs = new Windows(rangesActs);
-      List<Window> rangesOtherActs = otherActs
+      List<Interval> rangesActs = acts.stream().map(a -> Interval.betweenClosedOpen(a.getStartTime(), a.getEndTime())).toList();
+      Windows twActs = new Windows(false).set(rangesActs, true);
+      List<Interval> rangesOtherActs = otherActs
           .stream()
-          .map(a -> Window.betweenClosedOpen(a.getStartTime(), a.getEndTime()))
-          .collect(Collectors.toList());
-      Windows twOtherActs = new Windows(rangesOtherActs);
+          .map(a -> Interval.betweenClosedOpen(a.getStartTime(), a.getEndTime()))
+          .toList();
+      Windows twOtherActs = new Windows(false).set(rangesOtherActs, true);
 
-      Windows result = new Windows(twActs);
-      result.intersectWith(twOtherActs);
-      //intersection with current window to be sure we are not analyzing intersections happenning outside
-      result.intersectWith(window);
-      violationWindows = Windows.union(violationWindows,result);
+      final var intervalWindows = new Windows(false).set(interval, true);
+      //intersection with current interval to be sure we are not analyzing intersections happenning outside
+      violationWindows = twActs.and(twOtherActs).and(intervalWindows).or(violationWindows);
     }
     ConstraintState cState;
-    if (!violationWindows.isEmpty()) {
+    if (!violationWindows.stream().noneMatch(Segment::value)) {
       cState = new ConstraintState(this, true, violationWindows);
     } else {
       cState = new ConstraintState(this, false, null);

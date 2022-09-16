@@ -16,9 +16,9 @@ public class TransformerAfterEach implements TimeWindowsTransformer {
 
   @Override
   public Windows transformWindows(final Plan plan, final Windows windows, final SimulationResults simulationResults) {
-    var retWin = new Windows(windows);
-    retWin = retWin.complement();
-    retWin = retWin.removeFirst();
+    var retWin = windows;
+    retWin = retWin.not();
+    retWin = retWin.removeTrueSegment(0);
     retWin = retWin.shiftBy(dur, Duration.ZERO);
     return retWin;
   }

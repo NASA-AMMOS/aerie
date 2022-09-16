@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.conflicts;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityExistentialGoal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
@@ -57,7 +57,7 @@ public class MissingActivityInstanceConflict extends MissingActivityConflict {
    */
   @Override
   public Windows getTemporalContext() {
-    return new Windows(Window.between(instance.getStartTime(),instance.getStartTime()));
+    return new Windows(false).set(Interval.between(instance.getStartTime(), instance.getEndTime()), true);
   }
 
   /**

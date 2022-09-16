@@ -1,71 +1,240 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
+
 /**
- * An algebra for interval-like operations on some underlying type {@code I}.
+ * Provides helpful static methods for transforming and operating on {@link Interval}s.
  *
- * @param <Alg> A type witnessing the uniqueness of any given implementation.
- *     Another implementation should not be able to use this witness,
- *     and any implementations with the same witness must be equivalent.
- *     This allows containers that sort based on this algebra to constrain operations with other such collections,
- *     e.g. ensuring that `addAll()` is only allowed (or is differently optimized) when the same algebra is used.
+ * The relational methods (e.g. {@link IntervalAlgebra#startsBefore} or {@link IntervalAlgebra#meets}) correspond to
+ * Allen's Interval Algebra, and {@link IntervalAlgebra#unify} and {@link IntervalAlgebra#intersect} correspond to
+ * the operations on a Boolean Algebra on intervals.
  *
- *     If the implementation is unique for a type, and is private, the implementing class may witness itself.
- *     If the implementation is public, use a `private enum Witness {}` nested into the implementing class.
- *     If the implementation may vary in finitely many ways, use as many witnesses as there are ways.
- *     If the implementation may vary more broadly, may God have mercy on your soul --
- *     either use an existential, or use something less fine-grained and be very very careful.
- * @param <I> The type on which this algebra supports interval operations.
+ * @see <a href=”https://en.wikipedia.org/wiki/Allen%27s_interval_algebra”>Allen's Interval Algebra</a>
+ * @see <a href=”https://en.wikipedia.org/wiki/Boolean_algebra_(structure)”>Boolean Algebra</a>
  */
-public interface IntervalAlgebra<Alg, I> {
-  boolean isEmpty(I x);
+public class IntervalAlgebra {
 
-  I unify(I x, I y);
-  I intersect(I x, I y);
+  private IntervalAlgebra() {}
 
-  I lowerBoundsOf(I x);
-  I upperBoundsOf(I x);
+  /**
+   * Determines if an interval contains no points.
+   * @param x an interval
+   * @return `true` if no points on the timeline are in x, otherwise `false`.
+   */
+  public static boolean isEmpty(Interval x) {
+    return x.isEmpty();
+  }
 
+  /**
+   * The smallest interval that contains the union of the inputs.
+   *
+   * This is the "join" operation on the Boolean Algebra, but it is
+   * named "unify" to be more suggestive of what it does. Since the union
+   * of two intervals might not be an interval, this returns the smallest interval
+   * than contains the union.
+   *
+   * @param x left operand
+   * @param y right operand
+   * @return smallest interval that contains both operands
+   */
+  public static Interval unify(final Interval x, final Interval y) {
+    return Interval.unify(x, y);
+  }
 
-  default boolean overlaps(I x, I y) {
+  /**
+   * The intersection of two intervals.
+   *
+   * Also known as the "meet" operation on the Boolean Algebra.
+   *
+   * @param x left operand
+   * @param y right operand
+   * @return the intersection of the operands
+   */
+  public static Interval intersect(final Interval x, final Interval y) {
+    return Interval.intersect(x, y);
+  }
+
+  /**
+   * The set of strict lower bounds of an interval.
+   *
+   * A point is a lower bound of a subset if it is less than or equal
+   * to every point in the subset. A *strict* lower bound is not a standard
+   * mathematical concept, but we use it to mean a point that is strictly less than
+   * every point in the subset.
+   *
+   * In the case of a 1-dimensional timeline, lower and upper bounds are always intervals.
+   *
+   * @param x an interval
+   * @return the interval containing all points less than every point in x
+   */
+  public static Interval strictLowerBoundsOf(final Interval x) {
+    if (x.isEmpty()) return Interval.FOREVER;
+    return Interval.between(
+        Duration.MIN_VALUE,
+        Inclusive,
+        x.start,
+        x.startInclusivity.opposite()
+    );
+  }
+
+  /**
+   * The set of strict upper bounds of an interval.
+   *
+   * A point is an upper bound of a subset if it is greater than or equal
+   * to every point in the subset. A *strict* greater bound is not a standard
+   * mathematical concept, but we use it to mean a point that is strictly greater than
+   * every point in the subset.
+   *
+   * In the case of a 1-dimensional timeline, lower and upper bounds are always intervals.
+   *
+   * @param x an interval
+   * @return the interval containing all points greater than every point in x
+   */
+  public static Interval strictUpperBoundsOf(final Interval x) {
+    if (x.isEmpty()) return Interval.FOREVER;
+    return Interval.between(
+        x.end,
+        x.endInclusivity.opposite(),
+        Duration.MAX_VALUE,
+        Inclusive
+    );
+  }
+
+  /**
+   * Whether any point is contained in both operands.
+   *
+   * @param x left operand
+   * @param y right operand
+   * @return whether the operands overlap
+   */
+  static boolean overlaps(Interval x, Interval y) {
     return !isEmpty(intersect(x, y));
   }
-  default boolean contains(I outer, I inner) {
+
+  /**
+   * Whether an outer interval is a superset of an inner interval.
+   *
+   * @param outer outer interval
+   * @param inner inner interval
+   * @return whether `outer` contains every point in `inner`
+   */
+  static boolean contains(Interval outer, Interval inner) {
     // If `inner` doesn't overlap with the complement of `outer`,
     // then `inner` must exist entirely within `outer`.
-    return !(overlaps(inner, upperBoundsOf(outer)) || overlaps(inner, lowerBoundsOf(outer)));
+    return !(overlaps(inner, strictUpperBoundsOf(outer)) || overlaps(inner, strictLowerBoundsOf(outer)));
   }
-  default boolean strictlyContains(I outer, I inner) {
+
+  /**
+   * Whether an outer interval is a strict superset of an inner interval.
+   *
+   * Unlike {@link IntervalAlgebra#contains}, returns `false` if `inner` and `outer` are equal.
+   *
+   * @param outer outer interval
+   * @param inner inner interval
+   * @return whether `outer` contains every point in `inner`, but `inner` doesn't contain every point in `outer`
+   */
+  static boolean strictlyContains(Interval outer, Interval inner) {
     return contains(outer, inner) && !contains(inner, outer);
   }
-  default boolean equals(I x, I y) {
-    return contains(x, y) && contains(y, x);
+
+  /**
+   * Whether the operands are equal.
+   *
+   * @param x left operand
+   * @param y right operand
+   * @return whether the operands are equal
+   */
+  static boolean equals(Interval x, Interval y) {
+    return x.equals(y);
   }
 
-  default boolean startsBefore(I x, I y) {
-    return strictlyContains(lowerBoundsOf(y), lowerBoundsOf(x));
-  }
-  default boolean endsAfter(I x, I y) {
-    return strictlyContains(upperBoundsOf(y), upperBoundsOf(x));
+  /**
+   * Whether an interval starts before another.
+   *
+   * @param x interval
+   * @param y interval
+   * @return whether the start point of x is before all points in y
+   */
+  static boolean startsBefore(Interval x, Interval y) {
+    return strictlyContains(strictLowerBoundsOf(y), strictLowerBoundsOf(x));
   }
 
-  default boolean startsAfter(I x, I y) {
+  /**
+   * Whether an interval ends after another.
+   *
+   * @param x interval
+   * @param y interval
+   * @return whether the end point of x is after all points in y
+   */
+  static boolean endsAfter(Interval x, Interval y) {
+    return strictlyContains(strictUpperBoundsOf(y), strictUpperBoundsOf(x));
+  }
+
+  /**
+   * Whether an interval starts after or is met by another.
+   *
+   * @param x interval
+   * @param y interval
+   * @return whether the start point of x is after or equal to all points in y
+   */
+  static boolean startsAfter(Interval x, Interval y) {
     return endsBefore(y, x);
   }
-  default boolean endsBefore(I x, I y) {
+
+  /**
+   * Whether an interval ends before or meets another.
+   *
+   * @param x interval
+   * @param y interval
+   * @return whether the end point of x is before or equal to all points in y
+   */
+  static boolean endsBefore(Interval x, Interval y) {
     return endsStrictlyBefore(x, y) || meets(x, y);
   }
 
-  default boolean endsStrictlyBefore(I x, I y) {
-    return !isEmpty(intersect(upperBoundsOf(x), lowerBoundsOf(y)));
-  }
-  default boolean startsStrictlyAfter(I x, I y) {
+  /**
+   * Whether an interval starts strictly after another.
+   *
+   * @param x interval
+   * @param y interval
+   * @return whether the start point of x is strictly after all points in y
+   */
+  static boolean startsStrictlyAfter(Interval x, Interval y) {
     return endsStrictlyBefore(y, x);
   }
 
-  default boolean meets(I x, I y) {
-    return equals(upperBoundsOf(x), upperBoundsOf(lowerBoundsOf(y)));
+  /**
+   * Whether an interval ends strictly before another.
+   *
+   * @param x interval
+   * @param y interval
+   * @return whether the end point of x is strictly before all points in y
+   */
+  static boolean endsStrictlyBefore(Interval x, Interval y) {
+    return !isEmpty(intersect(strictUpperBoundsOf(x), strictLowerBoundsOf(y)));
   }
-  default boolean isMetBy(I x, I y) {
+
+  /**
+   * Whether an interval meets another interval.
+   *
+   * @param x interval
+   * @param y interval
+   * @return whether x ends when y begins, with no overlap and no gap
+   */
+  static boolean meets(Interval x, Interval y) {
+    return equals(strictUpperBoundsOf(x), strictUpperBoundsOf(strictLowerBoundsOf(y)));
+  }
+
+  /**
+   * Whether an interval is met by another interval.
+   *
+   * @param x interval
+   * @param y interval
+   * @return whether x begins when y ends, with no overlap and no gap
+   */
+  static boolean isMetBy(Interval x, Interval y) {
     return meets(y, x);
   }
 }

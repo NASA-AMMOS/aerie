@@ -16,9 +16,9 @@ public class TransformerBeforeEach implements TimeWindowsTransformer {
 
   @Override
   public Windows transformWindows(final Plan plan, final Windows windows, final SimulationResults simulationResults) {
-    var retWin = new Windows(windows);
-    retWin = retWin.complement();
-    retWin = retWin.removeLast();
+    var retWin = windows;
+    retWin = retWin.not();
+    retWin = retWin.removeTrueSegment(-1);
     retWin = retWin.shiftBy(Duration.ZERO, Duration.negate(dur));
     return retWin;
   }

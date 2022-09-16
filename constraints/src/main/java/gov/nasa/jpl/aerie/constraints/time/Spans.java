@@ -13,38 +13,38 @@ import java.util.stream.StreamSupport;
 /**
  * A collection of intervals that can overlap.
  */
-public class Spans implements Iterable<Window> {
-  private final List<Window> windows;
+public class Spans implements Iterable<Interval> {
+  private final List<Interval> intervals;
 
   public Spans() {
-    this.windows = new ArrayList<>();
+    this.intervals = new ArrayList<>();
   }
 
-  public Spans(final ArrayList<Window> windows) {
-    windows.removeIf(Window::isEmpty);
-    this.windows = windows;
+  public Spans(final ArrayList<Interval> intervals) {
+    intervals.removeIf(Interval::isEmpty);
+    this.intervals = intervals;
   }
 
-  public Spans(final Iterable<Window> iter) {
-    this.windows = StreamSupport.stream(iter.spliterator(), false).filter($ -> !$.isEmpty()).toList();
+  public Spans(final Iterable<Interval> iter) {
+    this.intervals = StreamSupport.stream(iter.spliterator(), false).filter($ -> !$.isEmpty()).toList();
   }
 
-  public Spans(final Window... windows) {
-    this.windows = Arrays.stream(windows).filter($ -> !$.isEmpty()).toList();
+  public Spans(final Interval... intervals) {
+    this.intervals = Arrays.stream(intervals).filter($ -> !$.isEmpty()).toList();
   }
 
   public Windows intoWindows() {
-    return new Windows(this.windows);
+    return new Windows(false).set(this.intervals, true);
   }
 
-  public void add(final Window window) {
+  public void add(final Interval window) {
     if (!window.isEmpty()) {
-      this.windows.add(window);
+      this.intervals.add(window);
     }
   }
 
-  public void addAll(final Iterable<Window> iter) {
-    this.windows.addAll(
+  public void addAll(final Iterable<Interval> iter) {
+    this.intervals.addAll(
         StreamSupport
             .stream(iter.spliterator(), false)
             .filter($ -> !$.isEmpty())
@@ -52,37 +52,37 @@ public class Spans implements Iterable<Window> {
     );
   }
 
-  public Spans map(final Function<Window, Window> mapper) {
-    return new Spans(this.windows.stream().map(mapper).filter($ -> !$.isEmpty()).toList());
+  public Spans map(final Function<Interval, Interval> mapper) {
+    return new Spans(this.intervals.stream().map(mapper).filter($ -> !$.isEmpty()).toList());
   }
 
-  public Spans flatMap(final Function<Window, ? extends Stream<Window>> mapper) {
-    return new Spans(this.windows.stream().flatMap(mapper).filter($ -> !$.isEmpty()).toList());
+  public Spans flatMap(final Function<Interval, ? extends Stream<Interval>> mapper) {
+    return new Spans(this.intervals.stream().flatMap(mapper).filter($ -> !$.isEmpty()).toList());
   }
 
-  public Spans filter(final Predicate<Window> filter) {
-    return new Spans(this.windows.stream().filter(filter).toList());
+  public Spans filter(final Predicate<Interval> filter) {
+    return new Spans(this.intervals.stream().filter(filter).toList());
   }
 
   @Override
   public boolean equals(final Object obj) {
     if (!(obj instanceof final Spans spans)) return false;
 
-    return Objects.equals(this.windows, spans.windows);
+    return Objects.equals(this.intervals, spans.intervals);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.windows);
+    return Objects.hash(this.intervals);
   }
 
   @Override
   public String toString() {
-    return this.windows.toString();
+    return this.intervals.toString();
   }
 
   @Override
-  public Iterator<Window> iterator() {
-    return this.windows.iterator();
+  public Iterator<Interval> iterator() {
+    return this.intervals.iterator();
   }
 }

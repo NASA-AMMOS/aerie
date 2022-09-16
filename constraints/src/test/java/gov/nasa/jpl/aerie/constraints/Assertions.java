@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.constraints;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 
@@ -45,10 +45,6 @@ public final class Assertions {
 
     // Things that are equal ought to be observationally equivalent.
     assertTrue(areEquivalent(expected, actual));
-  }
-
-  public static void assertEquivalent(final Collection<Window> expected, final Windows actual) {
-    assertTrue(areEquivalent(expected.iterator(), actual.iterator()));
   }
 
   public static <T> void assertEquivalent(final Iterable<T> xs, final Iterable<T> ys) {

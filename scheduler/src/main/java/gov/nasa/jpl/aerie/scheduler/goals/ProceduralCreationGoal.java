@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
@@ -209,7 +210,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
     final var evaluatedGoalContext = getTemporalContext().evaluate(simulationResults);
     final var filteredActs = allActs.stream().filter(
         act -> ((act.getStartTime() != null)
-                && evaluatedGoalContext.includesPoint(0,act.getStartTime()))
+                && evaluatedGoalContext.includes(Interval.at(0, act.getStartTime())))
     ).collect(java.util.stream.Collectors.toList());
 
     return filteredActs;

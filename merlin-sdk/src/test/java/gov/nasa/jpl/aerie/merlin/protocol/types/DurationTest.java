@@ -32,4 +32,12 @@ public final class DurationTest {
     assertEquals(duration(2756, MILLISECONDS), roundUpward(Math.nextDown(2.756), SECONDS));
     assertEquals(duration(2756, MILLISECONDS).plus(EPSILON), roundUpward(Math.nextUp(2.756), SECONDS));
   }
+
+  @Test
+  public void testSaturation() {
+    assertEquals(Duration.MAX_VALUE.saturatingPlus(Duration.SECOND), Duration.MAX_VALUE);
+    assertEquals(Duration.MAX_VALUE.minus(Duration.SECOND).saturatingPlus(Duration.of(2, SECONDS)), Duration.MAX_VALUE);
+    assertEquals(Duration.MIN_VALUE.saturatingPlus(Duration.of(-1, SECONDS)), Duration.MIN_VALUE);
+    assertEquals(Duration.MIN_VALUE.plus(Duration.SECOND).saturatingPlus(Duration.of(-2, SECONDS)), Duration.MIN_VALUE);
+  }
 }

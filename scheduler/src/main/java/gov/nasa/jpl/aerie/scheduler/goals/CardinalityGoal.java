@@ -1,32 +1,26 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.conflicts.UnsatisfiableGoalConflict;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.Range;
-import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
 
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -39,7 +33,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
   /**
    * minimum/maximum total duration of activities
    */
-  private Window durationRange;
+  private Interval durationRange;
 
   /*
    *minimum/maximum number of occurrence of activities
@@ -50,7 +44,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
   /**
    * Activities inserted so far to satisfy this goal
    */
-  private Set<SchedulingActivityInstanceId> insertedSoFar = new HashSet<>();
+  private final Set<SchedulingActivityInstanceId> insertedSoFar = new HashSet<>();
   /**
    * Current number of steps without inserting an activity with non-zero duration
    */
@@ -58,17 +52,17 @@ public class CardinalityGoal extends ActivityTemplateGoal {
   /**
    * Maximum acceptable number of steps without progress
    */
-  private static int maxNoProgressSteps = 50;
+  private static final int maxNoProgressSteps = 50;
 
   /**
    * the builder can construct goals piecemeal via a series of method calls
    */
   public static class Builder extends ActivityTemplateGoal.Builder<Builder> {
 
-    Window durationRange;
+    Interval durationRange;
     Range<Integer> occurrenceRange;
 
-    public Builder duration(Window durationRange) {
+    public Builder duration(Interval durationRange) {
       this.durationRange = durationRange;
       return getThis();
     }
@@ -164,9 +158,10 @@ public class CardinalityGoal extends ActivityTemplateGoal {
     //iterate through it and then within each iteration do exactly what you did before
     final var conflicts = new LinkedList<Conflict>();
 
-    for(Window subWindow: windows) {
+    for(Interval subInterval : windows.iterateEqualTo(true)) {
+      final var subIntervalWindows = new Windows(false).set(subInterval, true);
       ActivityCreationTemplate actTB =
-          new ActivityCreationTemplate.Builder().basedOn(this.desiredActTemplate).startsOrEndsIn(new Windows(subWindow)).build();
+          new ActivityCreationTemplate.Builder().basedOn(this.desiredActTemplate).startsOrEndsIn(subIntervalWindows).build();
 
       final var acts = new LinkedList<>(plan.find(actTB, simulationResults));
       acts.sort(Comparator.comparing(ActivityInstance::getStartTime));
@@ -223,7 +218,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       }
       //1) solve occurence part, we just need a certain number of activities
       for (int i = 0; i < nbToSchedule; i++) {
-        conflicts.add(new MissingActivityTemplateConflict(this, new Windows(subWindow), this.desiredActTemplate));
+        conflicts.add(new MissingActivityTemplateConflict(this, subIntervalWindows, this.desiredActTemplate));
       }
       /*
        * 2) solve duration part: we can't assume stuff about duration, we post one conflict. The scheduler will solve this conflict by inserting one
@@ -231,7 +226,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
        * conflict will be posted and so on
        * */
       if (nbToSchedule == 0 && durToSchedule.isPositive()) {
-        conflicts.add(new MissingActivityTemplateConflict(this, new Windows(subWindow), this.desiredActTemplate));
+        conflicts.add(new MissingActivityTemplateConflict(this, subIntervalWindows, this.desiredActTemplate));
       }
     }
 

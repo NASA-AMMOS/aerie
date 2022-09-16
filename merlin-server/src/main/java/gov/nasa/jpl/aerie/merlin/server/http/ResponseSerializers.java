@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.constraints.model.Violation;
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
@@ -134,10 +134,10 @@ public final class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeWindow(final Window window) {
+  public static JsonValue serializeWindow(final Interval interval) {
     return Json.createObjectBuilder()
-               .add("start", window.start.in(Duration.MICROSECONDS))
-               .add("end", window.end.in(Duration.MICROSECONDS))
+               .add("start", interval.start.in(Duration.MICROSECONDS))
+               .add("end", interval.end.in(Duration.MICROSECONDS))
                .build();
   }
 

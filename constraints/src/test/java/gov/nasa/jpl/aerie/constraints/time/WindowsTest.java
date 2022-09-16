@@ -1,559 +1,501 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.stream.StreamSupport;
 
-import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
-import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
-import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
-import static gov.nasa.jpl.aerie.constraints.time.Window.window;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.at;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.interval;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class WindowsTest {
+
   @Test
-  public void addEmpty() {
-    final var windows = new Windows();
-    windows.add(Window.EMPTY);
+  public void constructorTests() {
 
-    final var expected = new Windows();
+    //just verify the constructors work right
+    var windows = new Windows(
+        Segment.of(interval(Duration.MIN_VALUE, Duration.of(0, SECONDS)), true),
+        Segment.of(at(1, SECONDS), true),
+        Segment.of(interval(2, 3, SECONDS), false),
+        Segment.of(at(3, SECONDS), true)
+    );
 
-    assertEquivalent(expected, windows);
+    assertEquals(windows.minTrueTimePoint().get().getKey(), Duration.MIN_VALUE);
   }
 
   @Test
-  public void addOpenPoint() {
-    final var windows = new Windows();
-    windows.add(window(1, Exclusive, 1, Exclusive, MICROSECONDS));
+  public void setAndSetAll() {
 
-    final var expected = new Windows();
+    Windows w = new Windows()
+        .set(interval(Duration.ZERO, Duration.MAX_VALUE), false);
 
-    assertEquivalent(expected, windows);
+    //added correctly?
+    assertEquals(w.size(), 1);
+
+    //add at front, back, in between, make sure they're added correctly
+    w = w.set(at(Duration.ZERO), true) //don't coalesce
+         .set(at(Duration.MAX_VALUE), false) //coalesce implictly, nothing happens w/ this line
+         .set(interval(3, 50, SECONDS), true);
+
+    //added correctly?
+    assertEquals(w.size(), 4);
+
+    //do a setAll
+    Windows nw = new Windows()
+        .set(w);
+
+    assertEquals(w, nw);
+
   }
 
   @Test
-  public void addOpenAndClosed() {
-    final var windows = new Windows();
-    windows.add(window(0, Inclusive, 1, Exclusive, MICROSECONDS));
-    windows.add(window(1, Inclusive, 2, Inclusive, MICROSECONDS));
+  public void isEmptyVsIsFalse() {
 
-    final var expected = new Windows();
-    expected.add(window(0, Inclusive,2, Inclusive, MICROSECONDS));
+    //create a interval of just true blocks
+    Windows soTrue = new Windows(Segment.of(interval(3, 5, SECONDS), true),
+                                 Segment.of(interval(7, 10, SECONDS), true),
+                                 Segment.of(interval(12, 15, SECONDS), true),
+                                 Segment.of(interval(30, 35, SECONDS), true));
 
-    assertEquivalent(expected, windows);
+    //check isFalse, verify the return value is false as either true or null
+    //isEmpty is different from isFalse. isEmpty checks is there anything at all - all false would still return false
+    assertTrue(StreamSupport.stream(soTrue.spliterator(), false).allMatch(Segment::value));
+    assertFalse(soTrue.isEmpty());
   }
 
   @Test
-  public void addOpenAndOpen() {
-    final var first = window(0, Inclusive, 1, Exclusive, MICROSECONDS);
-    final var second = window(1, Exclusive, 2, Inclusive, MICROSECONDS);
-    final var windows = new Windows();
-    windows.add(first);
-    windows.add(second);
+  public void unsetMain() {
 
-    assertEquivalent(List.of(first, second), windows);
+    Windows result = new Windows(interval(Duration.ZERO, Duration.MAX_VALUE), true)
+
+        //try all unset variations, with different bound types
+        .unset(interval(5, Exclusive, 7, Inclusive, SECONDS))
+        .unset(List.of(interval(9, Exclusive, 12, Inclusive, SECONDS)))
+        .unset(List.of(interval(13, Exclusive, 15, Inclusive, SECONDS)))
+        .unset(
+            List.of(
+                interval(20, Exclusive, 25, Exclusive, SECONDS),
+                interval(26, Exclusive, 27, Exclusive, SECONDS)
+            )
+        )
+        .unset(interval(29, 30, SECONDS))
+        .unset(interval(29, 30, SECONDS));
+
+    //values of result should never have changed!
+    assertTrue(StreamSupport.stream(result.spliterator(), false).allMatch(Segment::value));
+
+    //check values
+    Windows expected = new Windows(Segment.of(interval(0, 5, SECONDS), true),
+                                   Segment.of(interval(7, Exclusive, 9, Inclusive, SECONDS), true),
+                                   Segment.of(interval(12, Exclusive, 13, Inclusive, SECONDS), true),
+                                   Segment.of(interval(15, Exclusive, 20, Inclusive, SECONDS), true),
+                                   Segment.of(interval(25, Inclusive, 26, Inclusive, SECONDS), true),
+                                   Segment.of(interval(27, Inclusive, 29, Exclusive, SECONDS), true),
+                                   Segment.of(interval(Duration.of(30, SECONDS), Exclusive,
+                                                       Duration.MAX_VALUE, Inclusive), true));
+
+    assertIterableEquals(expected, result);
   }
 
   @Test
-  public void addOverlapped() {
-    final var windows = new Windows();
-    windows.add(window(0,  2, MICROSECONDS));
-    windows.add(window(1,  3, MICROSECONDS));
+  public void and() {
 
-    final var expected = new Windows();
-    expected.add(window(0,  3, MICROSECONDS));
+    //just test truth table associated with the map2 call for this method, don't waste time
+    //  with bounds checking as that was done for map2!!
 
-    assertEquivalent(expected, windows);
+    // orig | inFilter | output
+    //  T   |    T     |   T
+    //  T   |    F     |   F
+    //  T   |    N     |   N
+    //  F   |    T     |   F
+    //  F   |    F     |   F
+    //  F   |    N     |   N
+    //  N   |    T     |   N
+    //  N   |    F     |   N
+    //  N   |    N     |   N
+
+    Windows orig = new Windows(
+        Segment.of(interval(1, 4, SECONDS), true),
+        Segment.of(interval(6, 11, SECONDS), false)
+    );
+
+    Windows intersectMe = new Windows(
+        Segment.of(interval(0, 2, SECONDS), true),
+        Segment.of(interval(2, Exclusive, 3, Inclusive, SECONDS), false),
+        Segment.of(interval(7, 8, SECONDS), true),
+        Segment.of(interval(9, 10, SECONDS), false),
+        Segment.of(interval(12, 13, SECONDS), true),
+        Segment.of(interval(14, 15, SECONDS), false)
+    );
+    Windows intersection = orig.and(intersectMe);
+
+    Windows expected = new Windows(
+        Segment.of(interval(1, 2, SECONDS), true),
+        Segment.of(interval(2, Exclusive, 3, Inclusive, SECONDS), false),
+        Segment.of(interval(6, 11, SECONDS), false),
+        Segment.of(interval(14, 15, SECONDS), false)
+    );
+    assertIterableEquals(expected, intersection);
   }
 
   @Test
-  public void addMeeting() {
-    final var windows = new Windows();
-    windows.add(window(0,  1, MICROSECONDS));
-    windows.add(window(1,  2, MICROSECONDS));
+  public void minMaxTimePoints() {
 
-    final var expected = new Windows();
-    expected.add(window(0,  2, MICROSECONDS));
+    //check empty
+    Windows w = new Windows();
+    assertFalse(w.minTrueTimePoint().isPresent());
+    assertFalse(w.maxTrueTimePoint().isPresent());
 
-    assertEquivalent(expected, windows);
+    //check only 1 interval
+    w = w.set(interval(Duration.ZERO, Duration.MAX_VALUE), false);
+    assertFalse(w.minTrueTimePoint().isPresent());
+    assertFalse(w.maxTrueTimePoint().isPresent());
+
+    //multiple intervals
+    w = w.set(interval(3, 50, SECONDS), true)
+         .set(interval(75, 200, SECONDS), true);
+    assertEquals(w.minTrueTimePoint().get(), Pair.of(Duration.of(3, SECONDS), Inclusive));
+    assertEquals(w.maxTrueTimePoint().get(), Pair.of(Duration.of(200, SECONDS), Inclusive));
+
+    //verify points work too
+    w = w.unset(at(Duration.MAX_VALUE))
+         .set(at(Duration.ZERO), true);
+    assertEquals(w.minTrueTimePoint().get(), Pair.of(Duration.of(0, SECONDS), Inclusive));
+    assertEquals(w.maxTrueTimePoint().get(), Pair.of(Duration.of(200, SECONDS), Inclusive));
   }
 
   @Test
-  public void addDoublyOverlapped() {
-    final var windows = new Windows();
-    // Add two disjoint windows
-    windows.add(window(0,  2, MICROSECONDS));
-    windows.add(window(3,  5, MICROSECONDS));
-    // Then add a window that overlaps both
-    windows.add(window(1,  4, MICROSECONDS));
+  public void complement() {
+    Windows main = new Windows(
+        Segment.of(at(0, SECONDS), false),
+        Segment.of(interval(1, 3, SECONDS), true),
+        Segment.of(interval(4, 7, SECONDS), false),
+        Segment.of(interval(8, 10, SECONDS), true),
+        Segment.of(at(12, SECONDS), true),
+        Segment.of(at(13, SECONDS), false),
+        Segment.of(at(Duration.MAX_VALUE), true)
+    ).unset(at(9, SECONDS));
 
-    final var expected = new Windows();
-    expected.add(window(0,  5, MICROSECONDS));
+    main = main.not();
 
-    assertEquivalent(expected, windows);
+    //check values
+    Windows expected = new Windows(
+        Segment.of(at(0, SECONDS), true),
+        Segment.of(interval(1, 3, SECONDS), false),
+        Segment.of(interval(4, 7, SECONDS), true),
+        Segment.of(interval(8, Inclusive, 9, Exclusive, SECONDS), false),
+        Segment.of(interval(9, Exclusive, 10, Inclusive, SECONDS), false),
+        Segment.of(at(12, SECONDS), false),
+        Segment.of(at(13, SECONDS), true),
+        Segment.of(at(Duration.MAX_VALUE), false)
+    );
+    assertIterableEquals(expected, main);
   }
 
   @Test
-  public void addContained() {
-    final var windows = new Windows();
-    windows.add(window(0,  2, MICROSECONDS));
-    windows.add(window(1,  1, MICROSECONDS));
+  public void filterByDurationNormal1() {
 
-    final var expected = new Windows();
-    expected.add(window(0,  2, MICROSECONDS));
+    //just test truth table associated with the map2 call for this method, don't waste time
+    //  with bounds checking as that was done for map2!!
 
-    assertEquivalent(expected, windows);
+    // orig | inFilter | output
+    //  T   |    T     |   T
+    //  T   |    F     |   F
+    //  T   |    N     |   N
+    //  F   |    T     |   F
+    //  F   |    F     |   F
+    //  F   |    N     |   N
+    //  N   |    T     |   N
+    //  N   |    F     |   N
+    //  N   |    N     |   N
+
+    Windows orig = new Windows(Segment.of(interval(0, 4, SECONDS), true),
+                               Segment.of(interval(6, 9, SECONDS), false),
+                               Segment.of(interval(11, 14, SECONDS), true),
+                               Segment.of(interval(16, 17, SECONDS), true));
+
+
+    orig = orig.filterByDuration(Duration.of(3, SECONDS), Duration.of(3, SECONDS));
+
+    Windows expected = new Windows(Segment.of(interval(0, 4, SECONDS), false),
+                                   Segment.of(interval(6, 9, SECONDS), false),
+                                   Segment.of(interval(11, 14, SECONDS), true),
+                                   Segment.of(interval(16, 17, SECONDS), false));
+    assertIterableEquals(expected, orig);
   }
 
   @Test
-  public void addAll() {
-    final var windows = new Windows();
-    windows.add(window(1,  4, MICROSECONDS));
-    windows.add(window(6,  6, MICROSECONDS));
+  public void filterByDurationNormal2() {
 
-    final var patch = new Windows();
-    patch.add(window(0,  2, MICROSECONDS));
-    patch.add(window(3,  5, MICROSECONDS));
 
-    windows.addAll(patch);
+    Windows orig = new Windows(Segment.of(interval(0, 4, SECONDS), true),
+                               Segment.of(interval(6, 9, SECONDS), false),
+                               Segment.of(interval(11, 14, SECONDS), true),
+                               Segment.of(interval(16, 17, SECONDS), true));
 
-    final var expected = new Windows();
-    expected.add(window(0,  5, MICROSECONDS));
-    expected.add(window(6,  6, MICROSECONDS));
 
-    assertEquivalent(expected, windows);
+    orig = orig.filterByDuration(Duration.of(1, SECONDS), Duration.of(3, SECONDS));
+
+    Windows expected = new Windows(Segment.of(interval(0, 4, SECONDS), false),
+                                   Segment.of(interval(6, 9, SECONDS), false),
+                                   Segment.of(interval(11, 14, SECONDS), true),
+                                   Segment.of(interval(16, 17, SECONDS), true));
+    assertIterableEquals(expected, orig);
   }
 
   @Test
-  public void subtractContained() {
-    final var windows = new Windows();
-    windows.add(window(0,  3, MICROSECONDS));
-    windows.subtractPoint(1, MICROSECONDS);
+  public void filterByDurationZero() {
 
-    final var expected = new Windows();
-    expected.add(window(0, Inclusive, 1, Exclusive, MICROSECONDS));
-    expected.add(window(1, Exclusive, 3, Inclusive, MICROSECONDS));
+    Windows orig = new Windows(Segment.of(interval(0, 4, SECONDS), true),
+                               Segment.of(interval(6, 9, SECONDS), false),
+                               Segment.of(interval(11, 14, SECONDS), true),
+                               Segment.of(interval(16, 17, SECONDS), true));
 
-    assertEquivalent(expected, windows);
+
+    orig = orig.filterByDuration(Duration.ZERO, Duration.ZERO);
+
+    Windows expected = new Windows(Segment.of(interval(0, 4, SECONDS), false),
+                                   Segment.of(interval(6, 9, SECONDS), false),
+                                   Segment.of(interval(11, 14, SECONDS), false),
+                                   Segment.of(interval(16, 17, SECONDS), false));
+    assertIterableEquals(expected, orig);
   }
 
   @Test
-  public void subtractOverlappedOnRight() {
-    final var windows = new Windows();
-    windows.add(window(1,  3, MICROSECONDS));
-    windows.subtract(window(2,  Inclusive, 4, Exclusive, MICROSECONDS));
+  public void filterByDurationMinZeroMaxMax() {
 
-    final var expected = new Windows();
-    expected.add(window(1, Inclusive, 2, Exclusive, MICROSECONDS));
+    Windows orig = new Windows(Segment.of(interval(0, 4, SECONDS), true),
+                               Segment.of(interval(6, 9, SECONDS), false),
+                               Segment.of(interval(11, 14, SECONDS), true),
+                               Segment.of(interval(16, 17, SECONDS), true));
 
-    assertEquivalent(expected, windows);
+
+    orig = orig.filterByDuration(Duration.ZERO, Duration.MAX_VALUE);
+
+    Windows expected = new Windows(Segment.of(interval(0, 4, SECONDS), true),
+                                   Segment.of(interval(6, 9, SECONDS), false),
+                                   Segment.of(interval(11, 14, SECONDS), true),
+                                   Segment.of(interval(16, 17, SECONDS), true));
+    assertIterableEquals(expected, orig);
   }
 
   @Test
-  public void subtractOverlappedOnLeft() {
-    final var windows = new Windows();
-    windows.add(window(1,  3, MICROSECONDS));
-    windows.subtract(window(0, Exclusive, 2, Inclusive, MICROSECONDS));
+  public void filterByDurationMinMaxMaxMax() {
 
-    final var expected = new Windows();
-    expected.add(window(2, Exclusive, 3, Inclusive, MICROSECONDS));
+    final var orig = new Windows(Segment.of(interval(0, 4, SECONDS), true),
+                                 Segment.of(interval(6, 9, SECONDS), false),
+                                 Segment.of(interval(11, 14, SECONDS), true),
+                                 Segment.of(interval(16, 17, SECONDS), true));
 
-    assertEquivalent(expected, windows);
+
+    final var result = orig.filterByDuration(Duration.MAX_VALUE, Duration.MAX_VALUE);
+
+    Windows expected = new Windows(Segment.of(interval(0, 4, SECONDS), false),
+                                   Segment.of(interval(6, 9, SECONDS), false),
+                                   Segment.of(interval(11, 14, SECONDS), false),
+                                   Segment.of(interval(16, 17, SECONDS), false));
+
+    assertIterableEquals(expected, result);
   }
 
   @Test
-  public void subtractDoublyOverlapped() {
-    final var windows = new Windows();
-    windows.add(window(0,  1, MICROSECONDS));
-    windows.add(window(2,  4, MICROSECONDS));
+  public void filterByDurationMinMaxMaxZero() {
 
-    windows.subtract(1,  2, MICROSECONDS);
+    final Windows orig = new Windows(Segment.of(interval(0, 4, SECONDS), true),
+                                     Segment.of(interval(6, 9, SECONDS), false),
+                                     Segment.of(interval(11, 14, SECONDS), true),
+                                     Segment.of(interval(16, 17, SECONDS), true));
 
-    final var expected = new Windows();
-    expected.add(window(0, Inclusive, 1, Exclusive, MICROSECONDS));
-    expected.add(window(2, Exclusive, 4, Inclusive, MICROSECONDS));
-
-    assertEquivalent(expected, windows);
+    assertThrows(
+        Exception.class,
+        () -> orig.filterByDuration(Duration.MAX_VALUE, Duration.ZERO),
+        "MaxDur +2562047788:00:54.775807 must be greater than MinDur +00:00:00.000000"
+    );
   }
 
   @Test
-  public void subtractExact() {
-    final var windows = new Windows();
-    windows.addPoint(-1, MICROSECONDS);
-    windows.add(window(0,  3, MICROSECONDS));
-    windows.addPoint(7, MICROSECONDS);
-
-    windows.subtract(0,  3, MICROSECONDS);
-
-    final var expected = new Windows();
-    expected.addPoint(-1, MICROSECONDS);
-    expected.addPoint(7, MICROSECONDS);
-
-    assertEquivalent(expected, windows);
+  public void removeEndsEmpty() {
+    Windows empty = new Windows();
+    Windows rf = empty.removeTrueSegment(0);
+    Windows rl = empty.removeTrueSegment(-1);
+    Windows rfl = empty.removeTrueSegment(0).removeTrueSegment(-1);
+    assertEquals(empty, rf);
+    assertEquals(rf, rl);
+    assertEquals(rl, rfl);
   }
 
   @Test
-  public void subtractContaining() {
-    final var windows = new Windows();
-    windows.addPoint(-2, MICROSECONDS);
-    windows.add(window(0, 3, MICROSECONDS));
-    windows.addPoint(7, MICROSECONDS);
+  public void shiftByStretch() {
+    Windows orig = new Windows(Segment.of(at(0, SECONDS), true),
+                               Segment.of(interval(1, 2, SECONDS), false),
+                               Segment.of(interval(5, 6, SECONDS), true),
+                               Segment.of(interval(7, 8, SECONDS), false),
+                               Segment.of(interval(8, Exclusive, 10, Exclusive, SECONDS), true),
+                               Segment.of(interval(13, 14, SECONDS), true),
+                               Segment.of(interval(14, Exclusive, 17, Exclusive, SECONDS), false),
+                               Segment.of(at(Duration.MAX_VALUE), true)); //long overflow if at max value
 
-    windows.subtract(-1,  5, MICROSECONDS);
+    Windows result = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(1, SECONDS));
 
-    final var expected = new Windows();
-    expected.addPoint(-2, MICROSECONDS);
-    expected.addPoint(7, MICROSECONDS);
 
-    assertEquivalent(expected, windows);
+    Windows expected = new Windows(
+        Segment.of(interval(-1, 1, SECONDS), true),
+        Segment.of(interval(4, Inclusive, 11, Exclusive, SECONDS), true),
+        Segment.of(interval(12, 15, SECONDS), true),
+        Segment.of(interval(15, Exclusive, 16, Exclusive, SECONDS), false),
+        Segment.of(interval(Duration.MAX_VALUE.minus(Duration.of(1, SECONDS)), Duration.MAX_VALUE), true)
+    );
+    assertIterableEquals(expected, result);
   }
 
   @Test
-  public void subtractUnincluded() {
-    final var windows = new Windows();
-    windows.addPoint(-2, MICROSECONDS);
-    windows.addPoint(7, MICROSECONDS);
+  public void shiftByConnectedIntervals() {
 
-    windows.subtractPoint(0, MICROSECONDS);
+    var orig = new Windows()
+        .set(interval(0, 10, SECONDS), false)
+        .set(interval(0, 2, SECONDS), true)
+        .set(interval(8, 10, SECONDS), true);
 
-    final var expected = new Windows();
-    expected.addPoint(-2, MICROSECONDS);
-    expected.addPoint(7, MICROSECONDS);
+    var fromStartPosFromEndPos = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(1, SECONDS));
+    assertIterableEquals(
+        new Windows(interval(0, 10, SECONDS), false)
+            .set(interval(-1, 3, SECONDS), true)
+            .set(interval(7, 11, SECONDS), true),
+        fromStartPosFromEndPos
+    );
 
-    assertEquivalent(expected, windows);
+    var fromStartPosFromEndNeg = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(-1, SECONDS));
+    assertEquals(
+        new Windows(interval(1, Exclusive, 9, Exclusive, SECONDS), false)
+            .set(at(1, SECONDS), true)
+            .set(at(9, SECONDS), true),
+        fromStartPosFromEndNeg
+    );
+
+    var fromStartNegFromEndPos = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(1, SECONDS));
+    assertEquals(
+        new Windows(interval(1, 11, SECONDS), false)
+            .set(interval(1, 3, SECONDS), true)
+            .set(interval(9, 11, SECONDS), true),
+        fromStartNegFromEndPos
+    );
+
+    var fromStartNegFromEndNeg = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(-1, SECONDS));
+    assertEquals(
+        new Windows(interval(-1, 9, SECONDS), false)
+            .set(interval(-1, 1, SECONDS), true)
+            .set(interval(7, 9, SECONDS), true),
+        fromStartNegFromEndNeg
+    );
+
+    var removal = orig.shiftBy(Duration.of(0, SECONDS), Duration.of(-3, SECONDS));
+    assertEquals(
+        new Windows(interval(-1, Exclusive, 8, Exclusive, SECONDS), false),
+        removal
+    );
   }
 
   @Test
-  public void subtractAll() {
-    final var windows = new Windows();
-    windows.add(window(0,  1, MICROSECONDS));
-    windows.add(window(2,  4, MICROSECONDS));
-    windows.add(window(5,  6, MICROSECONDS));
+  public void shiftByDisconnectedPoints() {
+    var orig = new Windows()
+        .set(at(0, SECONDS), true)
+        .set(at(2, SECONDS), false);
 
-    final var mask = new Windows();
-    mask.add(window(1,  2, MICROSECONDS));
-    mask.add(window(4,  5, MICROSECONDS));
+    var fromStartPosFromEndPos = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(1, SECONDS));
+    assertIterableEquals(
+        new Windows(interval(-1, 1, SECONDS), true),
+        fromStartPosFromEndPos
+    );
 
-    windows.subtractAll(mask);
+    var fromStartPosFromEndNeg = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(-1, SECONDS));
+    assertIterableEquals(
+        new Windows(interval(1, 3, SECONDS), false),
+        fromStartPosFromEndNeg
+    );
 
-    final var expected = new Windows();
-    expected.add(window(0, Inclusive, 1, Exclusive, MICROSECONDS));
-    expected.add(window(2, Exclusive, 4, Exclusive, MICROSECONDS));
-    expected.add(window(5, Exclusive, 6, Inclusive, MICROSECONDS));
+    var fromStartNegFromEndPos = orig.shiftBy(Duration.of(1, SECONDS), Duration.of(1, SECONDS));
+    assertIterableEquals(
+        new Windows()
+            .set(at(1, SECONDS), true)
+            .set(at(3, SECONDS), false),
+        fromStartNegFromEndPos
+    );
 
-    assertEquivalent(expected, windows);
+    var fromStartNegFromEndNeg = orig.shiftBy(Duration.of(-1, SECONDS), Duration.of(-1, SECONDS));
+    assertIterableEquals(
+        new Windows()
+            .set(at(-1, SECONDS), true)
+            .set(at(1, SECONDS), false),
+        fromStartNegFromEndNeg
+    );
   }
 
   @Test
-  public void subtractPoint() {
-    final var windows = new Windows();
-    windows.add(window(0, Inclusive, 2, Inclusive, MICROSECONDS));
-    windows.subtractPoint(1, MICROSECONDS);
+  public void includes() {
 
-    final var expected = new Windows();
-    expected.add(window(0, Inclusive, 1, Exclusive, MICROSECONDS));
-    expected.add(window(1, Exclusive, 2, Inclusive, MICROSECONDS));
+    var w = new Windows(
+        Segment.of(interval(0, 2, SECONDS), true),
+        Segment.of(interval(4, 5, SECONDS), false),
+        Segment.of(interval(5, 6, SECONDS), true)
+    );
 
-    assertEquivalent(expected, windows);
-  }
-
-  @Test
-  public void subtractAllButPoint() {
-    final var windows = new Windows(Window.between(0, Inclusive, 1, Exclusive, MICROSECONDS));
-    windows.subtract(Window.between(0, Exclusive, 1, Inclusive, MICROSECONDS));
-
-    final var expected = new Windows();
-    expected.add(Window.at(0, MICROSECONDS));
-
-    assertEquivalent(expected, windows);
-  }
-
-  @Test
-  public void subtractOpen() {
-    final var windows = new Windows();
-    windows.add(window(1,4, MICROSECONDS));
-    windows.subtract(window(2, Exclusive, 3, Exclusive, MICROSECONDS));
-
-    final var expected = new Windows();
-    expected.add(window(1,2, MICROSECONDS));
-    expected.add(window(3, 4, MICROSECONDS));
-
-    assertEquivalent(expected, windows);
-  }
-
-  @Test
-  public void subtractHalfOpen() {
-    final var windows = new Windows();
-    windows.add(window(1,4, MICROSECONDS));
-    windows.subtract(window(2, Exclusive, 3, Inclusive, MICROSECONDS));
-
-    final var expected = new Windows();
-    expected.add(window(1, Inclusive, 2, Inclusive, MICROSECONDS));
-    expected.add(window(3, Exclusive, 4, Inclusive, MICROSECONDS));
-
-    assertEquivalent(expected, windows);
-  }
-
-  @Test
-  public void subtractMeetingOpen() {
-    final var windows = new Windows();
-    windows.add(window(1, 2, MICROSECONDS));
-    windows.subtract(window(2, Exclusive, 3, Exclusive, MICROSECONDS));
-
-    final var expected = new Windows();
-    expected.add(window(1, 2, MICROSECONDS));
-
-    assertEquivalent(expected, windows);
-  }
-
-  @Test
-  public void subtractMetByOpen() {
-    final var windows = new Windows();
-    windows.add(window(1, 2, MICROSECONDS));
-    windows.subtract(window(0, Exclusive, 1, Exclusive, MICROSECONDS));
-
-    final var expected = new Windows();
-    expected.add(window(1, 2, MICROSECONDS));
-
-    assertEquivalent(expected, windows);
-  }
-
-  @Test
-  public void intersect() {
-    final var windows = new Windows();
-    windows.add(window(0,  1, MICROSECONDS));
-    windows.add(window(2,  4, MICROSECONDS));
-    windows.add(window(5,  6, MICROSECONDS));
-
-    windows.intersectWith(1,  3, MICROSECONDS);
-
-    final var expected = new Windows();
-    expected.addPoint(1, MICROSECONDS);
-    expected.add(window(2,  3, MICROSECONDS));
-
-    assertEquivalent(expected, windows);
-  }
-
-  @Test
-  public void intersectEmpty() {
-    final var windows = new Windows();
-    windows.add(window(0,  1, MICROSECONDS));
-    windows.add(window(2,  4, MICROSECONDS));
-
-    windows.intersectWith(Window.EMPTY);
-
-    final var expected = new Windows();
-
-    assertEquivalent(expected, windows);
-  }
-
-  @Test
-  public void intersectAdjacent() {
-    final var windows = new Windows();
-    windows.add(window(0,  1, MICROSECONDS));
-    windows.add(window(2,  4, MICROSECONDS));
-
-    windows.intersectWith(1,  2, MICROSECONDS);
-
-    final var expected = new Windows();
-    expected.addPoint(1, MICROSECONDS);
-    expected.addPoint(2, MICROSECONDS);
-
-    assertEquivalent(expected, windows);
-  }
-
-  @Test
-  public void intersectNonintersecting() {
-    final var windows = new Windows();
-    windows.add(window(0,  1, MICROSECONDS));
-    windows.add(window(2,  4, MICROSECONDS));
-
-    windows.intersectWith(-10,  -5, MICROSECONDS);
-
-    final var expected = new Windows();
-
-    assertEquivalent(expected, windows);
-  }
-
-  @Test
-  public void intersectAll() {
-    final var windows = new Windows();
-    windows.add(window(0,  1, MICROSECONDS));
-    windows.add(window(2,  4, MICROSECONDS));
-    windows.add(window(5,  6, MICROSECONDS));
-
-    final var mask = new Windows();
-    mask.addPoint(1, MICROSECONDS);
-    windows.intersectWith(1,  3, MICROSECONDS);
-
-    final var expected = new Windows();
-    expected.addPoint(1, MICROSECONDS);
-    expected.add(window(2,  3, MICROSECONDS));
-
-    assertEquivalent(expected, windows);
-  }
-
-  @Test
-  public void intersectMultiple() {
-    final var windows = new Windows();
-    windows.add(window(0, 20, MICROSECONDS));
-
-    final var mask = new Windows();
-    mask.add(window(0, 5, MICROSECONDS));
-    mask.add(window(6, Inclusive,7, Exclusive, MICROSECONDS));
-    mask.add(window(7, Exclusive, 8, Inclusive, MICROSECONDS));
-    windows.intersectWith(mask);
-
-    final var expected = new Windows();
-    expected.add(window(0, 5, MICROSECONDS));
-    expected.add(window(6, Inclusive,7, Exclusive, MICROSECONDS));
-    expected.add(window(7, Exclusive, 8, Inclusive, MICROSECONDS));
-
-    assertEquivalent(expected, windows);
-  }
-
-  @Test
-  public void intersectSinglePoint() {
-    final var windows = new Windows();
-    windows.add(window(0, 1, MICROSECONDS));
-
-    final var mask = new Windows();
-    mask.add(window(1, 2, MICROSECONDS));
-    windows.intersectWith(mask);
-
-    final var expected = new Windows();
-    expected.addPoint(1, MICROSECONDS);
-
-    assertEquivalent(expected, windows);
-  }
-
-  @Test
-  public void intersectMeeting() {
-    final var windows = new Windows();
-    windows.add(window(0, Inclusive, 1, Exclusive, MICROSECONDS));
-
-    final var mask = new Windows();
-    mask.add(window(1, Inclusive, 2, Inclusive, MICROSECONDS));
-    windows.intersectWith(mask);
-
-    final var expected = new Windows();
-
-    assertEquivalent(expected, windows);
+    assertTrue(w.includes(interval(1, 2, SECONDS)));
+    assertTrue(w.includes(new Windows(
+        Segment.of(interval(0, 1, SECONDS), true),
+        Segment.of(interval(5, 6, SECONDS), true)
+    )));
+    assertTrue(w.includes(new Windows(
+        Segment.of(interval(0, 1, SECONDS), true),
+        Segment.of(interval(5, 6, SECONDS), true),
+        Segment.of(interval(3, 5, SECONDS), false)
+    )));
+    assertTrue(w.includes(at(1, SECONDS)));
+    assertFalse(w.includes(interval(0, 3, SECONDS)));
   }
 
   @Test
   public void includesEmpty() {
     final var x = new Windows();
 
-    assertTrue(x.includes(Window.EMPTY));
-    assertFalse(x.includesPoint(0, MICROSECONDS));
+    assertTrue(x.includes(Interval.EMPTY));
+    assertFalse(x.includes(at(0, MICROSECONDS)));
   }
 
-  @Test
-  public void intersectNonintersectingMeeting() {
-    final var windows = new Windows();
-    windows.add(window(0,  1, MICROSECONDS));
-
-    windows.intersectWith(window(1, Exclusive, 2, Exclusive, MICROSECONDS));
-
-    final var expected = new Windows();
-
-    assertEquivalent(expected, windows);
-  }
 
   @Test
-  public void includesWindow() {
-    final var x = new Windows();
-    x.add(window(-10,  10, MICROSECONDS));
+  public void iterator() {
+    var nw = new Windows()
+        .set(interval(1, 2, SECONDS), true);
 
-    // included points
-    assertTrue(x.includesPoint( 0, MICROSECONDS));
-    assertTrue(x.includesPoint(10, MICROSECONDS));
-    // sub-intervals
-    assertTrue(x.includes(-10,   3, MICROSECONDS));
-    assertTrue(x.includes( -2,   3, MICROSECONDS));
-    assertTrue(x.includes(  5,  10, MICROSECONDS));
-    // exact intervals
-    assertTrue(x.includes(-10,  10, MICROSECONDS));
+    //some simple iterator tests
+    var iter = nw.iterator();
+    iter.forEachRemaining($ -> assertEquals($, Segment.of(interval(1, 2, SECONDS), true)));
 
-    // excluded points
-    assertFalse(x.includesPoint( 15, MICROSECONDS));
-    assertFalse(x.includesPoint(-15, MICROSECONDS));
-    // overlapping intervals
-    assertFalse(x.includes(  5,  15, MICROSECONDS));
-    assertFalse(x.includes(-15,  -5, MICROSECONDS));
-    // containing intervals
-    assertFalse(x.includes(-15,  -15, MICROSECONDS));
-  }
-
-  @Test
-  public void includesAll() {
-    final var x = new Windows();
-    x.add(window(-10, 10, MICROSECONDS));
-    x.addPoint(15, MICROSECONDS);
-    x.addPoint(20, MICROSECONDS);
-
-    final var y = new Windows();
-    y.add(window(-10,  -5, MICROSECONDS));
-    y.add(window(3,  6, MICROSECONDS));
-    y.addPoint(20, MICROSECONDS);
-
-    assertTrue(x.includes(y));
-  }
-
-  @Test
-  public void includesSelf() {
-    final var x = new Windows();
-    x.add(window(-10, 10, MICROSECONDS));
-    x.addPoint(15, MICROSECONDS);
-    x.addPoint(20, MICROSECONDS);
-
-    assertTrue(x.includes(x));
-  }
-
-  @Test
-  public void asEmptyList() {
-    final var windows = new Windows();
-
-    final var windowList = new ArrayList<Window>();
-    windows.forEach(windowList::add);
-
-    assertEquals(Collections.emptyList(), windowList);
-  }
-
-  @Test
-  public void asList() {
-    final var windows = new Windows();
-    windows.add(window(0,  2, MICROSECONDS));
-    windows.add(window(3,  5, MICROSECONDS));
-    windows.add(window(1,  4, MICROSECONDS));
-
-    final var windowList = new ArrayList<Window>();
-    windows.forEach(windowList::add);
-
-    final var expected = List.of(window(0, 5, MICROSECONDS));
-
-    assertEquals(expected, windowList);
+    iter = nw.iterator(); //everything has been consumed - need to reset
+    assertEquals(iter.next(), Segment.of(interval(1, 2, SECONDS), true));
+    assertFalse(iter.hasNext());
   }
 
   @Test
   public void intoSpans() {
-    final var spans = new Windows(List.of(
-        window(0, 2, SECONDS),
-        window(1, 3, SECONDS),
-        window(5, 5, SECONDS)
-    )).intoSpans();
+    final var spans = new Windows(
+        Segment.of(interval(0, 2, SECONDS), true),
+        Segment.of(interval(1, 3, SECONDS), true),
+        Segment.of(interval(5, 5, SECONDS), true),
+        Segment.of(interval(6, 8, SECONDS), false)
+    ).intoSpans();
 
     final var expected = new Spans(
-        window(0, 3, SECONDS),
-        window(5, 5, SECONDS)
+        interval(0, 3, SECONDS),
+        interval(5, 5, SECONDS)
     );
 
     assertIterableEquals(expected, spans);

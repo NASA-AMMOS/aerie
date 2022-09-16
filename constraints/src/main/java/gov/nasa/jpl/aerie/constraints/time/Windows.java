@@ -1,267 +1,452 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
+/**
+ * A boolean profile, which can contain gaps (a.k.a. nulls).
+ *
+ * Backed by an {@link IntervalMap} of type {@link Boolean}. This class provides additional operations
+ * which are only valid on bools.
+ */
+public final class Windows implements Iterable<Segment<Boolean>> {
+  private final IntervalMap<Boolean> segments;
 
-public final class Windows implements Iterable<Window> {
-  private final IntervalSet<WindowAlgebra, Window> windows = new IntervalSet<>(new WindowAlgebra());
-
-  public Windows() {}
-
-  public Windows(final Windows other) {
-    this.windows.addAll(other.windows);
+  /** Creates an empty Windows */
+  public Windows() {
+    this.segments = IntervalMap.of();
   }
 
-  public Windows(final List<Window> windows) {
-    for (final var window : windows) this.add(window);
+  /** Creates a Windows from potentially unordered, overlapping segments */
+  @SafeVarargs
+  public Windows(final Segment<Boolean>... segments) {
+    this.segments = IntervalMap.of(segments);
   }
 
-  public Windows(final Window... windows) {
-    for (final var window : windows) this.add(window);
+  /** Creates a Windows from potentially unordered, overlapping segments */
+  public Windows(final List<Segment<Boolean>> segments) {
+    this.segments = IntervalMap.of(segments);
   }
 
-  public Spans intoSpans() {
-    return new Spans(this);
+  /** Creates a Windows with a single segment */
+  public Windows(final Interval interval, final boolean value) {
+    this.segments = IntervalMap.of(interval, value);
   }
 
-  public void add(final Window window) {
-    this.windows.add(window);
+  /** Creates a Windows that is equal to a given value for all representable times */
+  public Windows(final boolean bool) {
+    this.segments = IntervalMap.of(bool);
   }
 
-  public void addAll(final Windows other) {
-    this.windows.addAll(other.windows);
+  /** Wraps an IntervalMap of Booleans in Windows. */
+  private Windows(final IntervalMap<Boolean> segments) {
+    this.segments = segments;
   }
 
-  public void addPoint(final long quantity, final Duration unit) {
-    this.add(Window.at(quantity, unit));
+  /**
+   * Perform the and operation on two Windows.
+   *
+   * The operation is symmetric, even in the case of gaps. The truth table is:
+   *
+   * L | R | L and R
+   * :---:|:---:|:---:
+   * T | T | T
+   * T | F | F
+   * F | F | F
+   * T | N | N
+   * F | N | F
+   * N | N | N
+   *
+   * N stands for Null.
+   *
+   * @param other right operand
+   * @return a new Windows
+   */
+  public Windows and(final Windows other) {
+    return new Windows(IntervalMap.map2(
+        this.segments, other.segments,
+        (l, r) -> {
+          if (l.isPresent() && r.isPresent()) {
+            return Optional.of(l.get() && r.get());
+          } else if (l.isPresent()) {
+            return l.get() ? Optional.empty() : Optional.of(Boolean.FALSE);
+          } else if (r.isPresent()) {
+            return r.get() ? Optional.empty() : Optional.of(Boolean.FALSE);
+          } else {
+            return Optional.empty();
+          }
+        }
+    ));
   }
 
-  public static Windows union(final Windows left, final Windows right) {
-    final var result = new Windows(left);
-    result.addAll(right);
-    return result;
+  /**
+   * Perform the or operation on two Windows.
+   *
+   * The operation is symmetric, even in the case of gaps. The truth table is:
+   *
+   * L | R | L or R
+   * :---:|:---:|:---:
+   * T | T | T
+   * T | F | T
+   * F | F | F
+   * T | N | T
+   * F | N | N
+   * N | N | N
+   *
+   * N stands for Null.
+   *
+   * @param other right operand
+   * @return a new Windows
+   */
+  public Windows or(final Windows other) {
+    return new Windows(IntervalMap.map2(
+        this.segments, other.segments,
+        (l, r) -> {
+          if (l.isPresent() && r.isPresent()) {
+            return Optional.of(l.get() || r.get());
+          } else if (l.isPresent()) {
+            return l.get() ? Optional.of(true) : Optional.empty();
+          } else if (r.isPresent()) {
+            return r.get() ? Optional.of(true) : Optional.empty();
+          } else {
+            return Optional.empty();
+          }
+        }
+    ));
   }
 
-
-  public void subtract(final Window window) {
-    this.windows.subtract(window);
+  /**
+   * "Adds" two Windows together.
+   *
+   * It is almost identical to {@link Windows#or}, except that F + N = F instead of N.
+   *
+   * L | R | L + R
+   * :---:|:---:|:---:
+   * T | T | T
+   * T | F | T
+   * F | F | F
+   * T | N | T
+   * F | N | F
+   * N | N | N
+   *
+   * N stands for Null.
+   *
+   * @param other right operand
+   * @return a new Windows
+   */
+  public Windows add(final Windows other) {
+    return new Windows(IntervalMap.map2(
+        this.segments, other.segments,
+        (l, r) -> {
+          if (l.isPresent() && r.isPresent()) {
+            return Optional.of(l.get() || r.get());
+          } else if (l.isPresent()) {
+            return l;
+          } else return r;
+        }
+    ));
   }
 
-  public void subtractAll(final Windows other) {
-    this.windows.subtractAll(other.windows);
+  /**
+   * Inverts the truth value of each segment.
+   *
+   * Leaves gaps unchanged.
+   *
+   * @return a new Windows
+   */
+  public Windows not() {
+    //should not be a subtraction because then if it was null originally, then subtracting original from forever
+    //  yields true where once was null, which isn't good. we want a simple inversion of true and false here, without
+    //  filling nulls.
+    return new Windows(this.segments.map(b -> !b));
   }
 
-  public void subtract(final long start, final long end, final Duration unit) {
-    this.subtract(Window.between(start, end, unit));
-  }
-
-  public void subtractPoint(final long quantity, final Duration unit) {
-    this.subtract(Window.at(quantity, unit));
-  }
-
-  public static Windows minus(final Windows left, final Windows right) {
-    final var result = new Windows(left);
-    result.subtractAll(right);
-    return result;
-  }
-
-  public void intersectWith(final Window window) {
-    this.windows.intersectWith(window);
-  }
-
-  public void intersectWith(final Windows other) {
-    this.windows.intersectWithAll(other.windows);
-  }
-
-  public void intersectWith(final long start, final long end, final Duration unit) {
-    this.intersectWith(Window.between(start, end, unit));
-  }
-
-  public Optional<Duration> minTimePoint(){
-    if(!isEmpty()) {
-      return Optional.of(this.windows.ascendingOrder().iterator().next().start);
-    } else{
-      return Optional.empty();
-    }
-  }
-  public Optional<Duration> maxTimePoint(){
-    if(!isEmpty()) {
-      return Optional.of(this.windows.descendingOrder().iterator().next().end);
-    } else{
-      return Optional.empty();
-    }
-  }
-
-  public Windows complement(){
-    var ret = Windows.forever();
-    ret.subtractAll(this);
-    return ret;
-  }
-
-  public Windows filterByDuration(Duration minDur, Duration maxDur){
-    final var ret = new Windows();
-    StreamSupport
-        .stream(windows.ascendingOrder().spliterator(), false)
-        .filter(win -> win.duration().noShorterThan(minDur) && win.duration().noLongerThan(maxDur))
-        .forEach(ret::add);
-    return ret;
-  }
-
-  public Windows removeFirst(){
-    var actualList = StreamSupport
-        .stream(windows.ascendingOrder().spliterator(), false)
-        .collect(Collectors.toList());
-    if(!actualList.isEmpty())
-      actualList.remove(0);
-    return new Windows(actualList);
-  }
-
-  public Windows removeLast(){
-    var actualList = StreamSupport
-        .stream(windows.ascendingOrder().spliterator(), false)
-        .collect(Collectors.toList());
-    if(!actualList.isEmpty())
-      actualList.remove(actualList.size()-1);
-    return new Windows(actualList);
-  }
-
-  public Windows shiftBy(Duration fromStart, Duration fromEnd){
-    Windows ret = new Windows();
-    StreamSupport.stream(windows.ascendingOrder().spliterator(), false)
-        .forEach((x)-> ret.add(Window.between(x.start.plus(fromStart), x.startInclusivity, x.end.plus(fromEnd), x.endInclusivity)));
-    return ret;
-  }
-
-  public Windows removeFirstAndLast(){
-    List<Window> actualList = StreamSupport
-        .stream(windows.ascendingOrder().spliterator(), false)
-        .collect(Collectors.toList());
-    if(actualList.size()>0)
-      actualList.remove(0);
-    if(actualList.size()>0)
-      actualList.remove(actualList.size()-1);
-    return new Windows(actualList);
-  }
-
-  public Windows subsetContained(Window gate){
-    Windows ret = new Windows();
-    for(var win : windows.ascendingOrder()){
-      if(gate.contains(win)){
-        ret.add(win);
+  /** Gets the time and inclusivity of the leading edge of the first true segment */
+  public Optional<Pair<Duration, Interval.Inclusivity>> minTrueTimePoint(){
+    for (final var segment: this.segments) {
+      if (segment.value()) {
+        final var window = segment.interval();
+        return Optional.of(Pair.of(window.start, window.startInclusivity));
       }
     }
-    return ret;
+    return Optional.empty();
   }
 
-  public int size(){
-    return windows.size();
+  /** Gets the time and inclusivity of the trailing edge of the last true segment */
+  public Optional<Pair<Duration, Interval.Inclusivity>> maxTrueTimePoint(){
+    for (int i = this.segments.size() - 1; i >= 0; i--) {
+      final var segment = this.segments.get(i);
+      if (segment.value()) {
+        final var window = segment.interval();
+        return Optional.of(Pair.of(window.end, window.endInclusivity));
+      }
+    }
+    return Optional.empty();
   }
 
-  public static Windows forever(){
-    return new Windows(Window.FOREVER);
-  }
-
-
-  public static Windows subtract(Window x, Window y){
-    var tmp = new Windows(y);
-    tmp.subtract(x);
-    return tmp;
-  }
-
-  public static Windows intersection(final Windows left, final Windows right) {
-    final var result = new Windows(left);
-    result.intersectWith(right);
+  /**
+   * Sets all true segments that are not fully contained in the interval to false.
+   *
+   * @return a new Windows
+   */
+  public Windows trueSubsetContainedIn(final Interval interval) {
+    var result = new Windows(interval, false);
+    for (final var segment: this.segments) {
+      if (segment.value() && interval.contains(segment.interval())) {
+        result = result.set(segment.interval(), true);
+      }
+    }
     return result;
   }
 
-
-  public boolean isEmpty() {
-    return this.windows.isEmpty();
+  /**
+   * Sets a specific true segment to false.
+   *
+   * If the argument is N and N >= 0, it will set the Nth true segment to false.
+   * If N < 0, it will index true segments from the end instead, where N = -1 is the last true segment.
+   *
+   * @return a new Windows
+   */
+  public Windows removeTrueSegment(final int indexToRemove) {
+    if (indexToRemove >= 0) {
+      int index = 0;
+      for (final var interval : this.segments.iterateEqualTo(true)) {
+        if (index == indexToRemove) {
+          return new Windows(this.segments.set(interval, false));
+        } else {
+          index += 1;
+        }
+      }
+    } else {
+      int index = -1;
+      for (int i = this.segments.size() - 1; i >= 0; i--) {
+        final var segment = this.segments.get(i);
+        if (segment.value()) {
+          if (index == indexToRemove) {
+            return new Windows(this.segments.set(segment.interval(), false));
+          } else {
+            index -= 1;
+          }
+        }
+      }
+    }
+    return this;
   }
 
+  /**
+   * Sets all but a specific true segment to false.
+   *
+   * If the argument is N and N >= 0, it will set all but the Nth true segment to false.
+   * If N < 0, it will index true segments from the end instead, where N = -1 is the last true segment.
+   *
+   * @return a new Windows
+   */
+  public Windows keepTrueSegment(final int indexToKeep) {
+    final var builder = IntervalMap.<Boolean>builder().set(this.segments);
+    if (indexToKeep >= 0) {
+      int index = 0;
+      for (final var interval : this.segments.iterateEqualTo(true)) {
+        if (index != indexToKeep) {
+          builder.set(Segment.of(interval, false));
+        }
+        index += 1;
+      }
+    } else {
+      int index = -1;
+      for (int i = this.segments.size() - 1; i >= 0; i--) {
+        final var segment = this.segments.get(i);
+        if (segment.value()) {
+          if (index != indexToKeep) {
+            builder.set(Segment.of(segment.interval(), false));
+          }
+          index -= 1;
+        }
+      }
+    }
 
-  public boolean includes(final Window probe) {
-    return this.windows.includes(probe);
+    return new Windows(builder.build());
   }
 
+  /** Whether all the true segments of the given Windows are contained in the true segments of this. */
   public boolean includes(final Windows other) {
-    return this.windows.includesAll(other.windows);
+    //if you have:
+    //  other:    ---TTTT---TTT------
+    //  original: ---------TTTFF-----
+    //  then you fail twice, once because first interval not contained at all, second because overlap with false
+    //  we can do this with a map2 with a truthtable, so wherever inclusion holds we say true, if its wrong we say false
+    //  and then reduce and if there's any falses you failed overall.
+
+    // other |  orig   | output
+    //  T    |    T     |   T
+    //  T    |    F     |   F
+    //  T    |    N     |   F
+    //  F    |    T     |   T     //probably won't pass false as a value anyways, but just in case we should handle
+    //  F    |    F     |   T     //  in case user passes a NewWindows from another method that has falses...
+    //  F    |    N     |   N     //since its false, not a problem if undefined. we handle actual null checks in isNotNull
+    //  N    |    T     |   N
+    //  N    |    F     |   N
+    //  N    |    N     |   N
+
+    final var inclusion = IntervalMap.map2(
+        this.segments, other.segments,
+        ($original, $other) -> $other.map($ -> !$ || ($original.isPresent() && $original.get()))
+    );
+
+    //anywhere where the above has false means inclusion wasn't perfect, so squash and get a truth value:
+    return StreamSupport.stream(inclusion.spliterator(), false).allMatch(Segment::value);
   }
 
-  public boolean includes(final long start, final long end, final Duration unit) {
-    return this.includes(Window.between(start, end, unit));
+  /** Whether the given interval is contained in a true segment in this. */
+  public boolean includes(final Interval probe) {
+    return this.includes(new Windows(probe, true));
   }
 
-  public boolean includesPoint(final long quantity, final Duration unit) {
-    return this.includes(Window.at(quantity, unit));
+  /**
+   * Sets true segments shorter than `minDur` or longer than `maxDur` to false.
+   *
+   * @return a new Windows
+   */
+  public Windows filterByDuration(Duration minDur, Duration maxDur) {
+    if (minDur.longerThan(maxDur)) {
+      throw new IllegalArgumentException("MaxDur %s must be greater than MinDur %s".formatted(minDur.toString(), maxDur.toString()));
+    }
+
+    return new Windows(this.segments.map((value, interval) -> {
+      if (!value) return false;
+
+      final var duration = interval.duration();
+      return !(duration.shorterThan(minDur) || duration.longerThan(maxDur));
+    }));
   }
 
+  /**
+   * Shifts the true segments' start and end points by the given durations.
+   *
+   * Also shifts the false segments' start and end points by the opposite durations;
+   * i.e. the start is shifted by `fromEnd` and the end is shifted by `fromStart`.
+   * This keeps the falses in line with the trues when there are no gaps,
+   * and expands/shrinks gaps accordingly when there are.
+   *
+   * @param fromStart duration to shift false -> true rising edges
+   * @param fromEnd duration to shift true -> false falling edges
+   * @return a new Windows
+   */
+  public Windows shiftBy(Duration fromStart, Duration fromEnd) {
+    final var builder = IntervalMap.<Boolean>builder();
+
+    for (final var segment : this.segments) {
+      final var interval = segment.interval();
+
+      final var shiftedInterval = (segment.value()) ? (
+          Interval.between(
+              interval.start.saturatingPlus(fromStart), interval.startInclusivity,
+              interval.end.saturatingPlus(fromEnd),     interval.endInclusivity)
+      ) : (
+          Interval.between(
+              interval.start.saturatingPlus(fromEnd), interval.startInclusivity,
+              interval.end.saturatingPlus(fromStart), interval.endInclusivity)
+      );
+
+      builder.set(Segment.of(shiftedInterval, segment.value()));
+    }
+
+    return new Windows(builder.build());
+  }
+
+  /**
+   * Converts this into a Spans object, where each true segment is a Span.
+   *
+   * Gaps are treated the same as false.
+   */
+  public Spans intoSpans() {
+    return new Spans(stream()
+        .filter(Segment::value)
+        .map(Segment::interval)
+        .toList());
+  }
+
+  ////// DELEGATED METHODS
+
+  /** Delegated to {@link IntervalMap#set(Interval, Object)} */
+  public Windows set(final Interval interval, final boolean value) {
+    return new Windows(segments.set(interval, value));
+  }
+
+  /** Delegated to {@link IntervalMap#set(List, Object)} */
+  public Windows set(final List<Interval> intervals, final boolean value) {
+    return new Windows(segments.set(intervals, value));
+  }
+
+  /** Delegated to {@link IntervalMap#set(IntervalMap)} */
+  public Windows set(final Windows other) {
+    return new Windows(segments.set(other.segments));
+  }
+
+  /** Delegated to {@link IntervalMap#unset(Interval...)} */
+  public Windows unset(final Interval... intervals) {
+    return new Windows(segments.unset(intervals));
+  }
+
+  /** Delegated to {@link IntervalMap#unset(List)} */
+  public Windows unset(final List<Interval> intervals) {
+    return new Windows(segments.unset(intervals));
+  }
+
+  /** Delegated to {@link IntervalMap#select(Interval...)} */
+  public Windows select(final Interval... intervals) {
+    return new Windows(segments.select(intervals));
+  }
+
+  /** Delegated to {@link IntervalMap#select(List)} */
+  public Windows select(final List<Interval> intervals) {
+    return new Windows(segments.select(intervals));
+  }
+
+  /** Delegated to {@link IntervalMap#get(int)} */
+  public Segment<Boolean> get(final int index) {
+    return segments.get(index);
+  }
+
+  /** Delegated to {@link IntervalMap#size()} */
+  public int size() {
+    return segments.size();
+  }
+
+  /** Delegated to {@link IntervalMap#isEmpty()} */
+  public boolean isEmpty() {
+    return segments.isEmpty();
+  }
+
+  /** Delegated to {@link IntervalMap#iterator()} */
+  @Override
+  public Iterator<Segment<Boolean>> iterator() {
+    return segments.iterator();
+  }
+
+  /** Delegated to {@link IntervalMap#iterateEqualTo(Object)} */
+  public Iterable<Interval> iterateEqualTo(final boolean value) {
+    return segments.iterateEqualTo(value);
+  }
+
+  /** Delegated to {@link IntervalMap#stream} */
+  public Stream<Segment<Boolean>> stream() {
+    return segments.stream();
+  }
 
   @Override
-  public Iterator<Window> iterator() {
-    return this.windows.ascendingOrder().iterator();
-  }
-
-  @Override
-  public boolean equals(final Object obj) {
-    if (!(obj instanceof Windows)) return false;
-    final var other = (Windows) obj;
-
-    return Objects.equals(this.windows, other.windows);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.windows);
+  public boolean equals(final Object other) {
+    if (!(other instanceof final Windows w)) return false;
+    return segments.equals(w.segments);
   }
 
   @Override
   public String toString() {
-    return this.windows.toString();
-  }
-
-  private static class WindowAlgebra implements IntervalAlgebra<WindowAlgebra, Window> {
-    @Override
-    public final boolean isEmpty(Window x) {
-      return x.isEmpty();
-    }
-
-    @Override
-    public final Window unify(final Window x, final Window y) {
-      return Window.unify(x, y);
-    }
-
-    @Override
-    public final Window intersect(final Window x, final Window y) {
-      return Window.intersect(x, y);
-    }
-
-    @Override
-    public final Window lowerBoundsOf(final Window x) {
-      if (x.isEmpty()) return Window.FOREVER;
-      return Window.between(
-          Duration.MIN_VALUE,
-          Inclusive, x.start,
-          x.startInclusivity.opposite()
-      );
-    }
-
-    @Override
-    public final Window upperBoundsOf(final Window x) {
-      if (x.isEmpty()) return Window.FOREVER;
-      return Window.between(
-          x.end,
-          x.endInclusivity.opposite(), Duration.MAX_VALUE,
-          Inclusive
-      );
-    }
+    return segments.toString();
   }
 }

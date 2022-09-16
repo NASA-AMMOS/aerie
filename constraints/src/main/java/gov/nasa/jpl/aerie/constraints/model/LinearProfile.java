@@ -1,7 +1,9 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +12,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public final class LinearProfile implements Profile<LinearProfile> {
-  // IMPORTANT: Profile pieces must be non-overlapping, and increasing (based on window field)
+  // IMPORTANT: Profile pieces must be non-overlapping, and increasing (based on interval field)
   public final List<LinearProfilePiece> profilePieces;
 
   public LinearProfile(final List<LinearProfilePiece> profilePieces) {
@@ -22,28 +24,28 @@ public final class LinearProfile implements Profile<LinearProfile> {
   }
 
   @Override
-  public Windows equalTo(final LinearProfile other, final Window bounds) {
+  public Windows equalTo(final LinearProfile other, final Interval bounds) {
     return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::equalTo);
   }
 
   @Override
-  public Windows notEqualTo(final LinearProfile other, final Window bounds) {
+  public Windows notEqualTo(final LinearProfile other, final Interval bounds) {
     return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::notEqualTo);
   }
 
-  public Windows lessThan(final LinearProfile other, final Window bounds) {
+  public Windows lessThan(final LinearProfile other, final Interval bounds) {
     return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::lessThan);
   }
 
-  public Windows lessThanOrEqualTo(final LinearProfile other, final Window bounds) {
+  public Windows lessThanOrEqualTo(final LinearProfile other, final Interval bounds) {
     return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::lessThanOrEqualTo);
   }
 
-  public Windows greaterThan(final LinearProfile other, final Window bounds) {
+  public Windows greaterThan(final LinearProfile other, final Interval bounds) {
     return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::greaterThan);
   }
 
-  public Windows greaterThanOrEqualTo(final LinearProfile other, final Window bounds) {
+  public Windows greaterThanOrEqualTo(final LinearProfile other, final Interval bounds) {
     return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::greaterThanOrEqualTo);
   }
 
@@ -52,14 +54,14 @@ public final class LinearProfile implements Profile<LinearProfile> {
         this,
         other,
         (p, o) -> {
-          final var intersection = Window.intersect(p.window, o.window);
+          final var intersection = Interval.intersect(p.interval, o.interval);
           return new LinearProfilePiece(
               intersection,
               p.valueAt(intersection.start) + o.valueAt(intersection.start),
               p.rate + o.rate
           );
         },
-        Window.FOREVER
+        Interval.FOREVER
     );
 
     return new LinearProfile(profilePieces);
@@ -68,7 +70,7 @@ public final class LinearProfile implements Profile<LinearProfile> {
   public LinearProfile times(final double multiplier) {
     return transformProfile(
         p -> new LinearProfilePiece(
-            p.window,
+            p.interval,
             p.initialValue * multiplier,
             p.rate * multiplier
         )
@@ -78,48 +80,46 @@ public final class LinearProfile implements Profile<LinearProfile> {
   public LinearProfile rate() {
     return transformProfile(
         p -> new LinearProfilePiece(
-            p.window,
+            p.interval,
             p.rate,
             0.0
         )
     );
   }
 
-  private static boolean profileOutsideBounds(final LinearProfilePiece piece, final Window bounds){
-    return piece.window.isStrictlyBefore(bounds) || piece.window.isStrictlyAfter(bounds);
+  private static boolean profileOutsideBounds(final LinearProfilePiece piece, final Interval bounds){
+    return piece.interval.isStrictlyBefore(bounds) || piece.interval.isStrictlyAfter(bounds);
   }
 
-  private Windows getWindowsSatisfying(final LinearProfile other, final Window bounds, final BiFunction<LinearProfilePiece, LinearProfilePiece, Windows> condition) {
-    final var windows = new Windows();
-    for (final var satisfying : processIntersections(this, other, condition, bounds)) {
-      windows.addAll(satisfying);
+  private Windows getWindowsSatisfying(final LinearProfile other, final Interval bounds, final BiFunction<LinearProfilePiece, LinearProfilePiece, List<Pair<Interval, Boolean>>> condition) {
+    List<Segment<Boolean>> segments = new ArrayList<>();
+    for (final var intersections : processIntersections(this, other, condition, bounds)) {
+      for (final var pair: intersections) {
+        segments.add(Segment.of(pair.getKey(), pair.getValue()));
+      }
     }
-    return Windows.intersection(
-        windows,
-        new Windows(bounds)
-    );
+    return new Windows(segments).select(bounds);
   }
 
-    // TODO: Gaps in profiles will cause an error
-    //       We may want to deal with gaps someday
     @Override
-    public Windows changePoints(final Window bounds) {
-      final var changePoints = new Windows();
+    public Windows changePoints(final Interval bounds) {
+      var changePoints = new Windows();
       if (this.profilePieces.size() == 0) return changePoints;
 
       final var iter = this.profilePieces.iterator();
       var prev = iter.next();
       if(!profileOutsideBounds(prev, bounds)) {
-        changePoints.add(prev.changePoints());
+        changePoints = changePoints.set(prev.changePoints());
       }
       while (iter.hasNext()) {
         final var curr = iter.next();
         if(!profileOutsideBounds(curr, bounds)) {
-          changePoints.add(curr.changePoints());
+          changePoints = changePoints.set(curr.changePoints());
         }
 
-        if (Window.meets(prev.window, curr.window)) {
-          if (prev.finalValue() != curr.initialValue && !profileOutsideBounds(prev, bounds)) changePoints.add(Window.at(prev.window.end));
+        if (Interval.meets(prev.interval, curr.interval)) {
+          if (prev.finalValue() != curr.initialValue && !profileOutsideBounds(prev, bounds))
+            changePoints = changePoints.set(Interval.at(prev.interval.end), true);
         } else {
           throw new Error("Unexpected gap in profile pieces not allowed");
         }
@@ -127,7 +127,7 @@ public final class LinearProfile implements Profile<LinearProfile> {
         prev = curr;
       }
 
-      return changePoints;
+      return changePoints.select(bounds);
     }
 
   /**
@@ -138,7 +138,7 @@ public final class LinearProfile implements Profile<LinearProfile> {
    * @param processor BiFunction taking two profile pieces and a desired result based on their intersection
    * @return Set of all windows within bounds for which condition is satisfied between this and another profile
    */
-  private static <T> List<T> processIntersections(final LinearProfile left, final LinearProfile right, final BiFunction<LinearProfilePiece, LinearProfilePiece, T> processor, Window bounds) {
+  private static <T> List<T> processIntersections(final LinearProfile left, final LinearProfile right, final BiFunction<LinearProfilePiece, LinearProfilePiece, T> processor, Interval bounds) {
     if (left.profilePieces.isEmpty() || right.profilePieces.isEmpty()) return new ArrayList<>();
 
     // Setup to step through profiles simultaneously,
@@ -154,11 +154,11 @@ public final class LinearProfile implements Profile<LinearProfile> {
       //if left piece ends before bounds start, skip left piece
       if (profileOutsideBounds(leftPiece, bounds)) continue;
       // If left piece ends before right piece, skip left piece
-      if (Window.compareEndToStart(leftPiece.window, rightPiece.window) < 0) continue;
+      if (Interval.compareEndToStart(leftPiece.interval, rightPiece.interval) < 0) continue;
 
       // Step through right pieces ending before left piece starts
       // If no right pieces ending after left piece starts exist, end the loop
-      while (Window.compareEndToStart(rightPiece.window, leftPiece.window) < 0) {
+      while (Interval.compareEndToStart(rightPiece.interval, leftPiece.interval) < 0) {
         if (rightIter.hasNext()) {
           rightPiece = rightIter.next();
         } else {
@@ -168,11 +168,11 @@ public final class LinearProfile implements Profile<LinearProfile> {
 
       // Process all intersections with right pieces that start before the left piece ends
       // If we run out of right pieces, end the loop
-      while (Window.compareStartToEnd(rightPiece.window, leftPiece.window) <= 0) {
+      while (Interval.compareStartToEnd(rightPiece.interval, leftPiece.interval) <= 0) {
         processedIntersections.add(processor.apply(leftPiece, rightPiece));
 
         // Only step passed right piece if it doesn't exceed the left piece
-        if (Window.compareEndToEnd(rightPiece.window, leftPiece.window) <= 0) {
+        if (Interval.compareEndToEnd(rightPiece.interval, leftPiece.interval) <= 0) {
           if (rightIter.hasNext()) {
             rightPiece = rightIter.next();
             continue;

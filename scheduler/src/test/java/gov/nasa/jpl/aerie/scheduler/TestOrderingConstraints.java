@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -72,7 +72,7 @@ public class TestOrderingConstraints {
 
     plan.add(act1);
     CardinalityConstraint cc =
-        new CardinalityConstraint.Builder().atMost(0).type(type1).inInterval(Window.between(
+        new CardinalityConstraint.Builder().atMost(0).type(type1).inInterval(Interval.between(
             t0,
             t10)).build();
 
@@ -80,15 +80,15 @@ public class TestOrderingConstraints {
     simulationFacade.simulateActivities(plan.getActivities());
 
     //constraint is invalid in interval (0,10)
-    ConstraintState cs = cc.isEnforced(plan, new Windows(Window.between(t0, h.toDur(TestUtility.timeFromEpochSeconds(10)))), simulationFacade.getLatestConstraintSimulationResults());
+    ConstraintState cs = cc.isEnforced(plan, new Windows(false).set(Interval.between(t0, h.toDur(TestUtility.timeFromEpochSeconds(10))), true), simulationFacade.getLatestConstraintSimulationResults());
     assertTrue(cs.isViolation);
     CardinalityConstraint cc2 =
-        new CardinalityConstraint.Builder().atMost(0).type(type1).inInterval(Window.between(
+        new CardinalityConstraint.Builder().atMost(0).type(type1).inInterval(Interval.between(
             t0,
                     t10)).build();
 
     //constraint is valid in interval (8,10)
-    ConstraintState cs2 = cc2.isEnforced(plan, new Windows(Window.between(t8, t10)), simulationFacade.getLatestConstraintSimulationResults());
+    ConstraintState cs2 = cc2.isEnforced(plan, new Windows(false).set(Interval.between(t8, t10), true), simulationFacade.getLatestConstraintSimulationResults());
     assertFalse(cs2.isViolation);
   }
 
@@ -109,12 +109,12 @@ public class TestOrderingConstraints {
     simulationFacade.simulateActivities(plan.getActivities());
 
     //constraint is invalid in interval (0,10)
-    ConstraintState cs = mc.isEnforced(plan, new Windows(Window.between(t0, t10)), simulationFacade.getLatestConstraintSimulationResults());
+    ConstraintState cs = mc.isEnforced(plan, new Windows(false).set(Interval.between(t0, t10), true), simulationFacade.getLatestConstraintSimulationResults());
     assertTrue(cs.isViolation);
-    assertEquals(cs.violationWindows, new Windows(Window.betweenClosedOpen(t3, t5)));
+    assertEquals(cs.violationWindows, new Windows(false).set(Interval.betweenClosedOpen(t3, t5), true));
 
     //constraint is valid in interval (8,10)
-    cs = mc.isEnforced(plan, new Windows(Window.between(t8, t10)), simulationFacade.getLatestConstraintSimulationResults());
+    cs = mc.isEnforced(plan, new Windows(false).set(Interval.between(t8, t10), true), simulationFacade.getLatestConstraintSimulationResults());
     assertFalse(cs.isViolation);
     assertNull(cs.violationWindows);
 
@@ -135,7 +135,7 @@ public class TestOrderingConstraints {
     plan.add(act1);
     plan.add(act2);
     BinaryMutexConstraint mc = GlobalConstraints.buildBinaryMutexConstraint(type1, type2);
-    Windows tw1 = new Windows(Window.between(t0, t10));
+    Windows tw1 = new Windows(false).set(Interval.between(t0, t10), true);
 
     final var simulationFacade = new SimulationFacade(h, SimulationUtility.getFooMissionModel());
     simulationFacade.simulateActivities(plan.getActivities());
@@ -145,11 +145,8 @@ public class TestOrderingConstraints {
         tw1,
         new MissingActivityInstanceConflict(new ActivityExistentialGoal(), act2), null);
 
-    Windows expectedWindows = new Windows(tw1);
-    expectedWindows.subtract(Window.between(t1, Window.Inclusivity.Inclusive, t5, Window.Inclusivity.Exclusive));
-    assertEquals(foundWindows, expectedWindows);
-
-
+    Windows expectedWindows = tw1.and(new Windows(true).set(Interval.between(t1, Interval.Inclusivity.Inclusive, t5, Interval.Inclusivity.Exclusive), false));
+    assertEquals(expectedWindows, foundWindows);
   }
 
   @Test
@@ -164,11 +161,11 @@ public class TestOrderingConstraints {
     simulationFacade.simulateActivities(plan.getActivities());
 
     CardinalityConstraint cc =
-        new CardinalityConstraint.Builder().atMost(1).type(type1).inInterval(Window.between(
+        new CardinalityConstraint.Builder().atMost(1).type(type1).inInterval(Interval.between(
             t0,
             t10)).build();
 
-    Windows tw1 = new Windows(Window.between(t0, t10));
+    Windows tw1 = new Windows(false).set(Interval.between(t0, t10), true);
 
     Windows foundWindows = cc.findWindows(
         plan,
@@ -176,7 +173,7 @@ public class TestOrderingConstraints {
         new MissingActivityInstanceConflict(new ActivityExistentialGoal(), act1),
         simulationFacade.getLatestConstraintSimulationResults());
 
-    Windows expectedWindows = new Windows();
+    Windows expectedWindows = new Windows(Interval.FOREVER, false);
     assertEquals(foundWindows, expectedWindows);
 
 
