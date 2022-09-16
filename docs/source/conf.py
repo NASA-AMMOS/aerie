@@ -11,10 +11,10 @@ sys.path.insert(0, os.path.abspath(".."))
 # -- Global variables
 
 # Build documentation for the following tags and branches
-TAGS = ["test_tag", "test_tag_2"]
-BRANCHES = ["feature/AERIE-2053--integrate-sphinx-doc-generation"]
+TAGS = ["v0.12.2", "v0.12.3", "v0.13.0"]
+BRANCHES = ["develop"]
 # Set the latest version.
-LATEST_VERSION = "test_tag"
+LATEST_VERSION = "test_tag_1"
 # Set which versions are not released yet.
 UNSTABLE_VERSIONS = [""]
 # Set which versions are deprecated
@@ -77,11 +77,12 @@ smv_tag_whitelist = multiversion_regex_builder(TAGS)
 smv_branch_whitelist = multiversion_regex_builder(BRANCHES)
 # Defines which version is considered to be the latest stable version.
 smv_latest_version = LATEST_VERSION
+smv_rename_latest_version = 'stable'  # Use the commit hash
 # Whitelist pattern for remotes (set to None to use local branches only)
 # smv_remote_whitelist = r"^origin$"
 smv_remote_whitelist = None
 # Pattern for released versions
-smv_released_pattern = r"^tags/.*$"
+smv_released_pattern = r"v\d+\.\d+\.\d+$"
 # Format for versioned output directories inside the build directory
 smv_outputdir_format = "{ref.name}"
 
@@ -98,10 +99,10 @@ html_theme_options = {
     "conf_py_path": "docs/source/",
     "hide_edit_this_page_button": "false",
     "hide_banner": "true",
-    "github_issues_repository": "",
-    "github_repository": "https://github.com/nasa-ammos/aerie/",
+    "github_issues_repository": "nasa-ammos/aerie",
+    "github_repository": "nasa-ammos/aerie",
     "site_description": "Aerie documentation.",
-    "hide_version_dropdown": [],
+    "hide_version_dropdown": ["develop"],
     "versions_unstable": UNSTABLE_VERSIONS,
     "versions_deprecated": DEPRECATED_VERSIONS,
 }
@@ -116,7 +117,7 @@ html_sidebars = {"**": ["side-nav.html"]}
 htmlhelp_basename = "AerieDocumentationdoc"
 
 # URL which points to the root of the HTML documentation.
-html_baseurl = "https://github.com/nasa-ammos/aerie"
+html_baseurl = "https://nasa-ammos.github.io/aerie"
 
 # Dictionary of values to pass into the template engine’s context for all pages
 html_context = {"html_baseurl": html_baseurl}
