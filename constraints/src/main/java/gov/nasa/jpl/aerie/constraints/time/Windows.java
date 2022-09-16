@@ -312,28 +312,10 @@ public final class Windows implements Iterable<Segment<Boolean>> {
    *
    * @return a new Windows
    */
-  public Windows filterByDuration(Duration minDur, Duration maxDur){
+  public Windows filterByDuration(Duration minDur, Duration maxDur) {
     if (minDur.longerThan(maxDur)) {
       throw new IllegalArgumentException("MaxDur %s must be greater than MinDur %s".formatted(minDur.toString(), maxDur.toString()));
     }
-
-    //if you have:
-    //  input:  ---TTTTFFFFTTTTFFFFTT---FFFTTTFF--TTT---, 3, 3
-    //  output: ---FFFFFFFFFFFFFFFFTT---FFF
-    //  then you want to shorten only the trues, and replace them with F, don't mess with nulls
-    //  so if false interval encountered, keep the same. if true interval encountered, and it is not in filter, replace
-    //     with false
-    //  if true interval enountered, and true, keep the same
-    //  if null, keep null
-
-    // orig | inFilter | output
-    //  T   |    T     |   T
-    //  T   |    F     |   F
-    //  F   |    T     |   F
-    //  F   |    F     |   F
-    //  N   |    T     |   N
-    //  N   |    F     |   N
-
 
     return new Windows(this.segments.map((value, interval) -> {
       if (!value) return false;
@@ -371,8 +353,6 @@ public final class Windows implements Iterable<Segment<Boolean>> {
               interval.end.saturatingPlus(fromStart), interval.endInclusivity)
       );
 
-      // SAFETY: If two intervals overlap, they have the same value.
-      // Otherwise we'd need to make sure to `or` the overlap together.
       builder.set(Segment.of(shiftedInterval, segment.value()));
     }
 
