@@ -37,8 +37,9 @@ public final class PreparedStatements {
     statement.setString(parameter, ResponseSerializers.serializeStringList(requiredParameters).toString());
   }
 
-  public static void setValidationNotices(final PreparedStatement statement, final int parameter, final List<ValidationNotice> notices)
+  public static void setValidationNotices(final PreparedStatement statement, final List<Integer> parameters, final List<ValidationNotice> notices)
   throws SQLException {
-    statement.setString(parameter, ResponseSerializers.serializeValidationNotices(notices).toString());
+    final var serializedNotices = ResponseSerializers.serializeValidationNotices(notices).toString();
+    for (final var p : parameters) statement.setString(p, serializedNotices);
   }
 }

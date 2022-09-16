@@ -10,7 +10,6 @@ create table activity_directive (
   start_offset interval not null,
   type text not null,
   arguments merlin_argument_set not null,
-  validations jsonb default '{}'::jsonb,
   metadata merlin_activity_directive_metadata_set default '{}'::jsonb,
 
   constraint activity_directive_synthetic_key

@@ -17,6 +17,7 @@ begin;
   \ir tables/activity_type.sql
   \ir tables/plan.sql
   \ir tables/activity_directive.sql
+  \ir tables/activity_directive_validations.sql
   \ir tables/simulation_template.sql
   \ir tables/simulation.sql
 

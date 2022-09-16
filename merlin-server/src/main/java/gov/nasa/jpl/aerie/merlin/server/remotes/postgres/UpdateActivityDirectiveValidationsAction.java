@@ -10,9 +10,9 @@ import java.util.List;
 
 /*package-local*/ final class UpdateActivityDirectiveValidationsAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    update activity_directive
-    set validations = ?::json
-    where id = ?
+    insert into activity_directive_validations (directive_id, validations)
+    values (?, ?::json)
+    on conflict (directive_id) do update set validations = ?::json
   """;
 
   private final PreparedStatement statement;
@@ -24,8 +24,8 @@ import java.util.List;
   public void apply(final long directiveId, final List<ValidationNotice> notices)
   throws SQLException, FailedUpdateException
   {
-    PreparedStatements.setValidationNotices(this.statement, 1, notices);
-    this.statement.setLong(2, directiveId);
+    this.statement.setLong(1, directiveId);
+    PreparedStatements.setValidationNotices(this.statement, List.of(2, 3), notices);
 
     statement.executeUpdate();
   }

@@ -5,6 +5,13 @@ object_relationships:
 - name: plan
   using:
     foreign_key_constraint_on: plan_id
+- name: validations
+  using:
+    foreign_key_constraint_on:
+      column: directive_id
+      table:
+        name: activity_directive_validations
+        schema: public
 array_relationships:
 - name: simulated_activities
   using:
