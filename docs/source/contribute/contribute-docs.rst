@@ -113,6 +113,17 @@ Best practices for content submission
 * Test the new / changed content using the make preview script. Confirm there are no compilation errors before submitting.
 * Give some text to your commit message. Explain why you did what you did. If you changed something in formatting, provide a before and after screenshot.
 
+Previewing local changes
+========================
+
+Before submitting docs changes, we ask that you build them first locally. To do so, you will need:
+
+* `Python 3.7 <https://www.python.org/downloads/>`_ or later.
+* `Poetry 1.12 <https://python-poetry.org/docs/master/>`_ or later.
+
+To preview your changes while you are working, run ``make preview`` from the command line in the ``docs`` directory. If you have previously run ``make preview``, it is recommended to run ``make clean`` first. Navigate to http://127.0.0.1:5500/. The site will automatically update as you work. Fix all warnings raised during the build.
+
+When you are finished making changes, run ``make clean`` and then ``make dirhtml`` to ensure that the site will deploy. Once the site builds successfully, you may proceed to the next step.
 
 Submit a pull request (PR)
 ==========================
