@@ -61,7 +61,9 @@ import java.util.Optional;
 
     methodBuilder = makeArgumentAssignments(methodBuilder, (builder, parameter) -> builder
         .addStatement(
-            "template.$L = this.mapper_$L.deserializeValue($L.getValue())$W.getSuccessOrThrow(failure -> new $T(\"$L\", failure))",
+            "$L = $T.ofNullable(template.$L = this.mapper_$L.deserializeValue($L.getValue())$W.getSuccessOrThrow(failure -> new $T(\"$L\", failure)))",
+            parameter.name,
+            Optional.class,
             parameter.name,
             parameter.name,
             "entry",
