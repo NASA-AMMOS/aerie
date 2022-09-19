@@ -57,3 +57,9 @@ test-report.html
 
 # Ignore any new .env files
 .env
+
+# Ignore docs-related build files
+docs/_build
+docs/**/__pycache__
+.doctrees
+*.log
