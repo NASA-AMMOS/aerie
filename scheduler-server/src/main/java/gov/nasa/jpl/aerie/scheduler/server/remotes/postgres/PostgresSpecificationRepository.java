@@ -1,37 +1,29 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.SpecificationLoadException;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
-import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingCompilationError;
 import gov.nasa.jpl.aerie.scheduler.server.models.Specification;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
-import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.scheduler.server.services.RevisionData;
-import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingDSLCompilationService;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 public final class PostgresSpecificationRepository implements SpecificationRepository {
   private final DataSource dataSource;
-  private final SchedulingDSLCompilationService schedulingDSLCompilationService;
-  private final MissionModelService missionModelService;
 
-  public PostgresSpecificationRepository(final DataSource dataSource, final SchedulingDSLCompilationService schedulingDSLCompilationService, final MissionModelService missionModelService) {
+  public PostgresSpecificationRepository(final DataSource dataSource) {
     this.dataSource = dataSource;
-    this.schedulingDSLCompilationService = schedulingDSLCompilationService;
-    this.missionModelService = missionModelService;
   }
 
   @Override
   public Specification getSpecification(final SpecificationId specificationId)
-  throws NoSuchSpecificationException, SpecificationLoadException
+  throws NoSuchSpecificationException
   {
     final SpecificationRecord specificationRecord;
     final PlanId planId;
@@ -51,71 +43,22 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
 
     final var goals = postgresGoalRecords
         .stream()
-        .filter(PostgresGoalRecord::enabled)
-        .map((PostgresGoalRecord pgGoal) -> compileGoalDefinition(
-            missionModelService,
-            planId,
-            pgGoal,
-            this.schedulingDSLCompilationService))
+        .map((PostgresGoalRecord pgGoal) -> new GoalRecord(
+                new GoalId(pgGoal.id()),
+                new GoalSource(pgGoal.definition()),
+                pgGoal.enabled()
+            ))
         .toList();
-
-    final var successfulGoals = new ArrayList<GoalRecord>();
-    final var failedGoals = new ArrayList<GoalCompilationResult.Failure>();
-    for (final var goalBuildResult : goals) {
-      if (goalBuildResult instanceof GoalCompilationResult.Failure g) {
-        failedGoals.add(g);
-      } else if (goalBuildResult instanceof GoalCompilationResult.Success g) {
-        successfulGoals.add(g.goalRecord());
-      } else {
-        throw new Error("Unhandled variant of GoalCompilationResult: " + goalBuildResult);
-      }
-    }
-
-    if (!failedGoals.isEmpty()) {
-      throw new SpecificationLoadException(specificationId,
-                                           failedGoals
-                                               .stream()
-                                               .map(GoalCompilationResult.Failure::errors)
-                                               .flatMap(List::stream)
-                                               .toList()
-                                               );
-    }
 
     return new Specification(
         planId,
         specificationRecord.planRevision(),
-        successfulGoals,
+        goals,
         specificationRecord.horizonStartTimestamp(),
         specificationRecord.horizonEndTimestamp(),
         specificationRecord.simulationArguments(),
         specificationRecord.analysisOnly()
     );
-  }
-
-  private static GoalCompilationResult compileGoalDefinition(
-      final MissionModelService missionModelService,
-      final PlanId planId,
-      final PostgresGoalRecord pgGoal,
-      final SchedulingDSLCompilationService schedulingDSLCompilationService)
-  {
-    final var goalCompilationResult = schedulingDSLCompilationService.compileSchedulingGoalDSL(
-        missionModelService,
-        planId,
-        pgGoal.definition()
-    );
-
-    if (goalCompilationResult instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error g) {
-      return new GoalCompilationResult.Failure(g.errors());
-    } else if (goalCompilationResult instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success g) {
-      return new GoalCompilationResult.Success(new GoalRecord(new GoalId(pgGoal.id()), g.goalSpecifier(), pgGoal.enabled()));
-    } else {
-      throw new Error("Unhandled variant of SchedulingDSLCompilationResult: " + goalCompilationResult);
-    }
-  }
-
-  private sealed interface GoalCompilationResult {
-    record Success(GoalRecord goalRecord) implements GoalCompilationResult {}
-    record Failure(List<SchedulingCompilationError.UserCodeError> errors) implements GoalCompilationResult {}
   }
 
   @Override

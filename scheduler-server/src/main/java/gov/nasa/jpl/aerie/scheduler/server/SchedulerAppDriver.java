@@ -19,7 +19,6 @@ import gov.nasa.jpl.aerie.scheduler.server.services.CachedSchedulerService;
 import gov.nasa.jpl.aerie.scheduler.server.services.GenerateSchedulingLibAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
 import gov.nasa.jpl.aerie.scheduler.server.services.LocalSpecificationService;
-import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingDSLCompilationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.SynchronousSchedulerAgent;
@@ -69,7 +68,7 @@ public final class SchedulerAppDriver {
 
     Runtime.getRuntime().addShutdownHook(new Thread(schedulingDSLCompilationService::close));
 
-    final var stores = loadStores(config, schedulingDSLCompilationService, merlinService);
+    final var stores = loadStores(config);
 
     //create objects in each service abstraction layer (mirroring MerlinApp)
     final var specificationService = new LocalSpecificationService(stores.specifications());
@@ -77,9 +76,11 @@ public final class SchedulerAppDriver {
         "scheduler-agent",
         new SynchronousSchedulerAgent(specificationService,
                                       merlinService,
+                                      merlinService,
                                       config.merlinFileStore(),
                                       config.missionRuleJarPath(),
-                                      config.outputMode()));
+                                      config.outputMode(),
+                                      schedulingDSLCompilationService));
     final var schedulerService = new CachedSchedulerService(stores.results(), scheduleAgent);
     final var scheduleAction = new ScheduleAction(specificationService, schedulerService);
 
@@ -114,9 +115,7 @@ public final class SchedulerAppDriver {
   private record Stores(SpecificationRepository specifications, ResultsCellRepository results) { }
 
   private static Stores loadStores(
-      final AppConfiguration config,
-      final SchedulingDSLCompilationService schedulingDSLCompilationService,
-      final MissionModelService missionModelService) {
+      final AppConfiguration config) {
     final var store = config.store();
     if (store instanceof final PostgresStore pgStore) {
       final var pgDataSource = new PGDataSource();
@@ -133,7 +132,7 @@ public final class SchedulerAppDriver {
       final var hikariDataSource = new HikariDataSource(hikariConfig);
 
       return new Stores(
-          new PostgresSpecificationRepository(hikariDataSource, schedulingDSLCompilationService, missionModelService),
+          new PostgresSpecificationRepository(hikariDataSource),
           new PostgresResultsCellRepository(hikariDataSource));
     } else if (store instanceof InMemoryStore) {
       final var inMemorySchedulerRepository = new InMemorySpecificationRepository();
