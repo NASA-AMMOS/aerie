@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath(".."))
 TAGS = ["v0.12.2", "v0.12.3", "v0.13.0"]
 BRANCHES = ["develop"]
 # Set the latest version.
-LATEST_VERSION = "test_tag_1"
+LATEST_VERSION = "develop"
 # Set which versions are not released yet.
 UNSTABLE_VERSIONS = [""]
 # Set which versions are deprecated
