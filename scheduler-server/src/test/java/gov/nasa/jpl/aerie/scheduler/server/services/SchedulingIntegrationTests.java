@@ -108,7 +108,7 @@ public class SchedulingIntegrationTests {
             activityTemplate: ActivityTemplates.PeelBanana({
               peelDirection: "fromStem",
             }),
-            interval: -25 // one day in microseconds
+            interval: -25 // intentionally invalid interval
           })
           """, true)), PLANNING_HORIZON);
     }
