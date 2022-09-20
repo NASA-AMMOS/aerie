@@ -13,3 +13,7 @@ A suite of software tools and services created to support activity planning and 
 ## Contributing
 
 Please read the [CONTRIBUTING.md](./CONTRIBUTING.md) guidelines for branch naming and pull request conventions.
+
+## Documentaion
+
+For information on how to use Aerie, see the documentation [on our website](https://nasa-ammos.github.io/aerie).
