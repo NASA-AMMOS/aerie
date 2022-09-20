@@ -103,14 +103,14 @@ services:
     container_name: aerie_ui
     depends_on: ["postgres"]
     environment:
-      AUTH_TYPE: none
-      GATEWAY_CLIENT_URL: http://localhost:9000
-      GATEWAY_SERVER_URL: http://aerie_gateway:9000
-      HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
-      HASURA_SERVER_URL: http://hasura:8080/v1/graphql
-      HASURA_WEB_SOCKET_URL: ws://localhost:8080/v1/graphql
       NODE_TLS_REJECT_UNAUTHORIZED: "0"
       ORIGIN: http://localhost
+      PUBLIC_AUTH_TYPE: none
+      PUBLIC_GATEWAY_CLIENT_URL: http://localhost:9000
+      PUBLIC_GATEWAY_SERVER_URL: http://aerie_gateway:9000
+      PUBLIC_HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
+      PUBLIC_HASURA_SERVER_URL: http://hasura:8080/v1/graphql
+      PUBLIC_HASURA_WEB_SOCKET_URL: ws://localhost:8080/v1/graphql
     image: "ghcr.io/nasa-ammos/aerie-ui:develop"
     ports: ["80:80"]
     restart: always

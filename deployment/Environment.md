@@ -71,32 +71,32 @@ This document provides detailed information about environment variables for each
 
 ## Aerie Scheduler
 
-| Name                    | Description                                                           | Type     | Default                                             |
-| ----------------------- | --------------------------------------------------------------------- | -------- | --------------------------------------------------- |
-| `JAVA_OPTS`             | Configuration for the scheduler's logging level and output file       | `string` | log level: warn. output: stderr                     |
-| `MERLIN_GRAPHQL_URL`    | URI of the Merlin graphql interface to call                           | `string` | http://hasura:8080/v1/graphql                       |
-| `MERLIN_LOCAL_STORE`    | Local storage for Merlin in the container (for backdoor jar access)   | `string` | /usr/src/app/merlin_file_store                      |
-| `SCHEDULER_DB`          | The DB for scheduler                                                  | `string` | aerie_scheduler                                     |
-| `SCHEDULER_DB_PASSWORD` | Password of the DB instance                                           | `string` |                                                     |
-| `SCHEDULER_DB_PORT`     | The DB instance port number that scheduler will connect with          | `number` | 5432                                                |
-| `SCHEDULER_DB_SERVER`   | The DB instance that scheduler will connect with                      | `string` |                                                     |
-| `SCHEDULER_DB_USER`     | Username of the DB instance                                           | `string` |                                                     |
-| `SCHEDULER_LOCAL_STORE` | Local storage for scheduler in the container                          | `string` | /usr/src/app/scheduler_file_store                   |
-| `SCHEDULER_LOGGING`     | Whether or not you want Javalin to log server information             | `string` | true                                                |
-| `SCHEDULER_OUTPUT_MODE` | how scheduler output is sent back to aerie                            | `string` | UpdateInputPlanWithNewActivities                    |
-| `SCHEDULER_PORT`        | Port number for the scheduler server                                  | `number` | 27185                                               |
-| `SCHEDULER_RULES_JAR`   | Jar file to load scheduling rules from (until user input to database) | `string` | /usr/src/app/merlin_file_store/scheduler_rules.jar  |
+| Name                    | Description                                                           | Type     | Default                                            |
+| ----------------------- | --------------------------------------------------------------------- | -------- | -------------------------------------------------- |
+| `JAVA_OPTS`             | Configuration for the scheduler's logging level and output file       | `string` | log level: warn. output: stderr                    |
+| `MERLIN_GRAPHQL_URL`    | URI of the Merlin graphql interface to call                           | `string` | http://hasura:8080/v1/graphql                      |
+| `MERLIN_LOCAL_STORE`    | Local storage for Merlin in the container (for backdoor jar access)   | `string` | /usr/src/app/merlin_file_store                     |
+| `SCHEDULER_DB`          | The DB for scheduler                                                  | `string` | aerie_scheduler                                    |
+| `SCHEDULER_DB_PASSWORD` | Password of the DB instance                                           | `string` |                                                    |
+| `SCHEDULER_DB_PORT`     | The DB instance port number that scheduler will connect with          | `number` | 5432                                               |
+| `SCHEDULER_DB_SERVER`   | The DB instance that scheduler will connect with                      | `string` |                                                    |
+| `SCHEDULER_DB_USER`     | Username of the DB instance                                           | `string` |                                                    |
+| `SCHEDULER_LOCAL_STORE` | Local storage for scheduler in the container                          | `string` | /usr/src/app/scheduler_file_store                  |
+| `SCHEDULER_LOGGING`     | Whether or not you want Javalin to log server information             | `string` | true                                               |
+| `SCHEDULER_OUTPUT_MODE` | how scheduler output is sent back to aerie                            | `string` | UpdateInputPlanWithNewActivities                   |
+| `SCHEDULER_PORT`        | Port number for the scheduler server                                  | `number` | 27185                                              |
+| `SCHEDULER_RULES_JAR`   | Jar file to load scheduling rules from (until user input to database) | `string` | /usr/src/app/merlin_file_store/scheduler_rules.jar |
 
 ## Aerie UI
 
-| Name                    | Description                                                                                               | Type     | Default                          |
-| ----------------------- | --------------------------------------------------------------------------------------------------------- | -------- | -------------------------------- |
-| `GATEWAY_CLIENT_URL`    | Url of the Gateway as called from the client (i.e. web browser)                                           | `string` | http://localhost:9000            |
-| `GATEWAY_SERVER_URL`    | Url of the Gateway as called from the server (i.e. Node.js container)                                     | `string` | http://localhost:9000            |
-| `HASURA_CLIENT_URL`     | Url of Hasura as called from the client (i.e. web browser)                                                | `string` | http://localhost:8080/v1/graphql |
-| `HASURA_SERVER_URL`     | Url of Hasura as called from the server (i.e. Node.js container)                                          | `string` | http://localhost:8080/v1/graphql |
-| `HASURA_WEB_SOCKET_URL` | Url of Hasura called to establish a web-socket connection from the client                                 | `string` | ws://localhost:8080/v1/graphql   |
-| `ORIGIN`                | Url of where the UI is served from. See the [Svelte Kit Adapter Node docs][svelte-kit-adapter-node-docs]. | `string` | http://localhost                 |
+| Name                           | Description                                                                                               | Type     | Default                          |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------- | -------- | -------------------------------- |
+| `ORIGIN`                       | Url of where the UI is served from. See the [Svelte Kit Adapter Node docs][svelte-kit-adapter-node-docs]. | `string` | http://localhost                 |
+| `PUBLIC_GATEWAY_CLIENT_URL`    | Url of the Gateway as called from the client (i.e. web browser)                                           | `string` | http://localhost:9000            |
+| `PUBLIC_GATEWAY_SERVER_URL`    | Url of the Gateway as called from the server (i.e. Node.js container)                                     | `string` | http://localhost:9000            |
+| `PUBLIC_HASURA_CLIENT_URL`     | Url of Hasura as called from the client (i.e. web browser)                                                | `string` | http://localhost:8080/v1/graphql |
+| `PUBLIC_HASURA_SERVER_URL`     | Url of Hasura as called from the server (i.e. Node.js container)                                          | `string` | http://localhost:8080/v1/graphql |
+| `PUBLIC_HASURA_WEB_SOCKET_URL` | Url of Hasura called to establish a web-socket connection from the client                                 | `string` | ws://localhost:8080/v1/graphql   |
 
 ## Hasura
 
