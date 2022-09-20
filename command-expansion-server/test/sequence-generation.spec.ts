@@ -1,7 +1,11 @@
 import { gql, GraphQLClient } from 'graphql-request';
 import { removeMissionModel, uploadMissionModel } from './testUtils/MissionModel.js';
 import { createPlan, removePlan } from './testUtils/Plan.js';
-import { convertActivityDirectiveIdToSimulatedActivityId, insertActivityDirective, removeActivityDirective } from './testUtils/ActivityDirective.js';
+import {
+  convertActivityDirectiveIdToSimulatedActivityId,
+  insertActivityDirective,
+  removeActivityDirective,
+} from './testUtils/ActivityDirective.js';
 import { executeSimulation, removeSimulationArtifacts } from './testUtils/Simulation.js';
 import {
   expand,
@@ -59,9 +63,9 @@ describe('sequence generation', () => {
       `
     export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
       return [
-        PREHEAT_OVEN({temperature: 70}),
-        PREPARE_LOAF(50, false),
-        BAKE_BREAD,
+        C.PREHEAT_OVEN({temperature: 70}),
+        C.PREPARE_LOAF(50, false),
+        C.BAKE_BREAD,
       ];
     }
     `,
@@ -72,9 +76,9 @@ describe('sequence generation', () => {
       `
     export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
       return [
-        PREHEAT_OVEN({temperature: 70}),
-        BAKE_BREAD,
-        PREPARE_LOAF(50, false),
+        C.PREHEAT_OVEN({temperature: 70}),
+        C.BAKE_BREAD,
+        C.PREPARE_LOAF(50, false),
       ];
     }
     `,
@@ -92,20 +96,20 @@ describe('sequence generation', () => {
         E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PREPARE_LOAF(50, false),
         E\`04:56:54\`.EAT_BANANA,
         C.PACKAGE_BANANA({
-          bundle_name1: "Chiquita",
-          number_of_bananas1: 43,
-          bundle_name2: "Dole",
-          number_of_bananas2: 12,
+          bundle_name_1: "Chiquita",
+          number_of_bananas_1: 43,
+          bundle_name_2: "Dole",
+          number_of_bananas_2: 12,
           lot_number: 1093,
         }),
         C.PACKAGE_BANANA({
-          bundle_name2: "Dole",
-          number_of_bananas1: 43,
-          bundle_name1: "Chiquita",
+          bundle_name_2: "Dole",
+          number_of_bananas_1: 43,
+          bundle_name_1: "Chiquita",
           lot_number: 1093,
-          number_of_bananas2: 12
+          number_of_bananas_2: 12
         }),
-        PACKAGE_BANANA("Chiquita",43,"Dole",12,"Blue",1,1093)
+        C.PACKAGE_BANANA("Chiquita",43,"Dole",12,"Blue",1,1093)
       ];
     }
     `,
@@ -573,8 +577,8 @@ describe('expansion regressions', () => {
       `
     export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
       return [
-        PREHEAT_OVEN({temperature: 70}).relativeTiming(props.activityInstance.startOffset),
-        PREHEAT_OVEN({temperature: 70}).relativeTiming(props.activityInstance.duration),
+        R(props.activityInstance.startOffset).PREHEAT_OVEN({temperature: 70}),
+        R(props.activityInstance.duration).PREHEAT_OVEN({temperature: 70}),
       ];
     }
     `,
@@ -746,11 +750,11 @@ it('generate sequence seqjson from static sequence', async () => {
           C.BAKE_BREAD,
           A\`2020-060T03:45:19\`.PREHEAT_OVEN(100),
           E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PACKAGE_BANANA({
-            bundle_name2: "Dole",
-            number_of_bananas1: 43,
-            bundle_name1: "Chiquita",
+            bundle_name_2: "Dole",
+            number_of_bananas_1: 43,
+            bundle_name_1: "Chiquita",
             lot_number: 1093,
-            number_of_bananas2: 12
+            number_of_bananas_2: 12
           }),
       ],
     });

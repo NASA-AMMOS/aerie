@@ -68,12 +68,6 @@ declare global {
     public static new<A extends any[] | { [argName: string]: any }>(opts: CommandOptions<A>): Command<A>;
 
     public toSeqJson(): CommandSeqJson;
-
-    public absoluteTiming(absoluteTime: Temporal.Instant): Command<A>;
-
-    public epochTiming(epochTime: Temporal.Duration): Command<A>;
-
-    public relativeTiming(relativeTime: Temporal.Duration): Command<A>;
   }
 
   class Sequence {

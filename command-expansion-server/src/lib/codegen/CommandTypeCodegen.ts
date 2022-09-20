@@ -12,7 +12,7 @@ function generateTypescriptCode(dictionary: ampcs.CommandDictionary): {
   declarations: string;
   values: string;
 } {
-  const typescriptFswCommands: { value: string; declaration: string }[] = [];
+  const typescriptFswCommands: { value: string; interfaces: string }[] = [];
   for (const fswCommand of dictionary.fswCommands) {
     typescriptFswCommands.push(generateFswCommandCode(fswCommand, dictionary.enumMap));
   }
@@ -20,7 +20,7 @@ function generateTypescriptCode(dictionary: ampcs.CommandDictionary): {
   // language=TypeScript
   const declarations = `
 declare global {
-${typescriptFswCommands.map(fswCommand => fswCommand.declaration).join('\n')}
+${typescriptFswCommands.map(fswCommand => fswCommand.interfaces).join('\n')}
 \tconst Commands: {\n${dictionary.fswCommands
     .map(fswCommand => `\t\t${fswCommand.stem}: typeof ${fswCommand.stem},\n`)
     .join('')}\t};
@@ -33,7 +33,7 @@ export const Commands = {${dictionary.fswCommands
     .map(fswCommand => `\t\t${fswCommand.stem}: ${fswCommand.stem},\n`)
     .join('')}};
 
-Object.assign(globalThis, Commands, { A:A, R:R, E:E, C:Commands, Sequence});
+Object.assign(globalThis, { A:A, R:R, E:E, C:Commands, Sequence});
 `;
 
   return {
@@ -45,7 +45,7 @@ Object.assign(globalThis, Commands, { A:A, R:R, E:E, C:Commands, Sequence});
 function generateFswCommandCode(
   fswCommand: ampcs.FswCommand,
   enumMap: ampcs.EnumMap,
-): { value: string; declaration: string } {
+): { value: string; interfaces: string } {
   const needsUnderscore =
     /^\d/.test(fswCommand.stem) ||
     reservedWords.check(fswCommand.stem) ||
@@ -63,19 +63,18 @@ function generateFswCommandCode(
     // language=TypeScript
     const value = `
 ${doc}
-export const ${fswCommandName}: ${fswCommandName} = Command.new({
+const ${fswCommandName}: ${fswCommandName} = Command.new({
 \tstem: '${fswCommand.stem}',
 \targuments: [],
 })`;
-    // language=TypeScript
-    const declaration = `
+
+    const interfaces = `
 ${doc}
-\tconst ${fswCommandName}: ${fswCommandName};
 \tinterface ${fswCommandName} extends Command<[]> {}
 `;
     return {
       value,
-      declaration,
+      interfaces,
     };
   }
 
@@ -85,65 +84,72 @@ ${doc}
     const minRepeat = repeatArg.repeat?.min ?? 0;
     const maxRepeat = repeatArg.repeat?.max ?? 10;
 
-    const overloadDeclarations: string[] = [];
+    let repeatArgsDeclaration: Array<{ name: string; type: string }>[] = [];
+    let methodParameters: string[] = [];
+    let interfaceParameters: string[] = [];
     let argsOrder: string[] = [];
+
     for (let i = minRepeat; i <= maxRepeat; i++) {
-      // language=TypeScript
-      let repeatArgsDeclaration = '';
-      let repeatArgsNames: string[] = [];
-      for (let n = 1; n < i; n++) {
-        if (repeatArg.repeat) {
-          repeatArgsNames = repeatArgsNames.concat(repeatArg.repeat?.arguments.map(arg => `"${arg.name}${n}"`));
+      let repeatArgs: Array<{ name: string; type: string }> = [];
+
+      if (repeatArg.repeat) {
+        for (let n = 1; n < i; n++) {
+          repeatArgs = repeatArgs.concat(
+            repeatArg.repeat.arguments.map(arg => {
+              return { name: `${arg.name}_${n}`, type: mapArgumentType(arg, enumMap) };
+            }),
+          );
         }
-        repeatArgsDeclaration += repeatArg.repeat?.arguments
-          .map(arg => `\t${arg.name}${n}: ${mapArgumentType(arg, enumMap)},\n`)
-          .join('');
       }
-      argsOrder = argsOrder.concat(`[${repeatArgsNames.concat(otherArgs.map(arg => `"${arg.name}"`))}]`);
-      // language=TypeScript
-      const overloadPositionalDeclaration = `
-${doc}
-\tfunction ${fswCommandName}(
-${repeatArgsDeclaration}${otherArgs.map(arg => `\t${arg.name}: ${mapArgumentType(arg, enumMap)}, \n`).join('')}
-\t): ${fswCommandName};`;
-      // language=TypeScript
-      const overloadNamedDeclaration = `
-${doc}
-\tfunction ${fswCommandName}(args: {
-${repeatArgsDeclaration}${otherArgs.map(arg => `\t${arg.name}: ${mapArgumentType(arg, enumMap)}, \n`).join('')}
-\t}): ${fswCommandName};`;
-      overloadDeclarations.push(overloadPositionalDeclaration);
-      overloadDeclarations.push(overloadNamedDeclaration);
+      repeatArgsDeclaration.push(repeatArgs);
     }
 
-    // language=TypeScript
+    repeatArgsDeclaration.forEach(repeat => {
+      const repeatArgNameAndType = `${repeat.map(arg => `\t${arg.name} : ${arg.type},`).join('')}`;
+      const repeatOtherNameAndType = `${otherArgs
+        .map(arg => `\t${arg.name}: ${mapArgumentType(arg, enumMap)}`)
+        .join(',')}`;
+      const repeatArgType = `${repeat.map(arg => `\t${arg.type},`).join('')}`;
+      const repeatOtherType = `${otherArgs.map(arg => `\t${mapArgumentType(arg, enumMap)}`).join(',')}`;
+
+      methodParameters = methodParameters.concat(
+        `[${repeatArgNameAndType}${repeatOtherNameAndType}] \n|[args : {${repeatArgNameAndType}${repeatOtherNameAndType}}]\n`,
+      );
+      interfaceParameters = interfaceParameters.concat(
+        `[${repeatArgType}${repeatOtherType}] \n|[args : {${repeatArgNameAndType}${repeatOtherNameAndType}}]\n`,
+      );
+
+      argsOrder = argsOrder.concat(
+        `[${repeat.map(arg => `"${arg.name}"`).concat(otherArgs.map(arg => `"${arg.name}"`))}]`,
+      );
+    });
+
     const value = `
-${doc}
 const ${fswCommandName}_ARGS_ORDERS = [${argsOrder.join(',')}];
-export function ${fswCommandName}<T extends any[]>(...args: T) {
+${doc}
+function ${fswCommandName}(...args:\n ${methodParameters.join('|')}) {
   return Command.new({
     stem: '${fswCommandName}',
     arguments: typeof args[0] === 'object' ? findAndOrderCommandArguments("${fswCommandName}",args[0],${fswCommandName}_ARGS_ORDERS) : args,
   }) as ${fswCommandName};
 }`;
 
-    const declaration = `
-${overloadDeclarations.join('')}
-\tinterface ${fswCommandName} extends Command<any[]> {}`;
+    const interfaces = `
+\tinterface ${fswCommandName} extends Command<[\n${interfaceParameters.join('|')}]> {}`;
     return {
       value,
-      declaration,
+      interfaces,
     };
   }
-  // language=TypeScript
 
-  // language=TypeScript
   const value = `
-${doc}
 const ${fswCommandName}_ARGS_ORDER = [${fswCommand.arguments.map(argument => `'${argument.name}'`).join(', ')}];
-export function ${fswCommandName}(...args: [\n${fswCommand.arguments
-    .map(argument => (argument.arg_type === 'repeat' ? '' : `\t${mapArgumentType(argument, enumMap)},\n`))
-    .join('')}] | [{\n${fswCommand.arguments
+${doc}
+function ${fswCommandName}(...args: [\n${fswCommand.arguments
+    .map(argument =>
+      argument.arg_type === 'repeat' ? '' : `\t${argument.name} : ${mapArgumentType(argument, enumMap)},\n`,
+    )
+    .join('')}] | [args : {\n${fswCommand.arguments
     .map(argument =>
       argument.arg_type === 'repeat' ? '' : `\t${argument.name}: ${mapArgumentType(argument, enumMap)},\n`,
     )
@@ -154,20 +160,8 @@ export function ${fswCommandName}(...args: [\n${fswCommand.arguments
   }) as ${fswCommandName};
 }`;
 
-  // language=TypeScript
-  const declaration = `
-${doc}
-\tfunction ${fswCommandName}(\n${fswCommand.arguments
-    .map(argument =>
-      argument.arg_type === 'repeat' ? '' : `\t\t${argument.name}: ${mapArgumentType(argument, enumMap)},\n`,
-    )
-    .join('')}\t): ${fswCommandName};
-${doc}
-\tfunction ${fswCommandName}(args: {\n${fswCommand.arguments
-    .map(argument =>
-      argument.arg_type === 'repeat' ? '' : `\t\t${argument.name}: ${mapArgumentType(argument, enumMap)},\n`,
-    )
-    .join('')}\t}): ${fswCommandName};
+  const interfaces = `
+  ${doc}
 \tinterface ${fswCommandName} extends Command<[\n${fswCommand.arguments
     .map(argument => (argument.arg_type === 'repeat' ? '' : `\t\t${mapArgumentType(argument, enumMap)},\n`))
     .join('')}\t] | {\n${fswCommand.arguments
@@ -178,7 +172,7 @@ ${doc}
 
   return {
     value,
-    declaration,
+    interfaces,
   };
 }
 
