@@ -82,19 +82,7 @@ After the introduction, there should be a numbered list of steps. Use the follow
 Aerie Style guide
 ..................
 
-The Aerie Style guide is being developed. You can view the document `here <https://docs.google.com/document/d/1lyHp1MKdyj0Hh3NprNFvEczA4dFSZIFoukGUvFJb9yE/edit>`_. The style guide outlines the way we write documentation. In short, use this handbook, the style guide, and the templates to write content.
-Documentation templates and cheat sheets
-In the Aerie-docs project we will store templates which can be used in every Aerie Project.
-
-Templates
-.........
-
-Use these templates to create new content. There are templates in .rst and .md for the following documents:
-
-* KB Articles
-* General Topics
-* Known Issues / Troubleshooting
-* Procedures (How To)
+The Aerie Docs Style guide is being developed. The style guide outlines the way we write documentation. In short, use this handbook, the style guide, and the templates to write content.
 
 Cheatsheets
 ...........
@@ -123,7 +111,7 @@ Before submitting docs changes, we ask that you build them first locally. To do 
 
 To preview your changes while you are working, run ``make preview`` from the command line in the ``docs`` directory. If you have previously run ``make preview``, it is recommended to run ``make clean`` first. Navigate to http://127.0.0.1:5500/. The site will automatically update as you work. Fix all warnings raised during the build.
 
-When you are finished making changes, run ``make clean`` and then ``make dirhtml`` to ensure that the site will deploy. Once the site builds successfully, you may proceed to the next step.
+When you are finished making changes, run ``make clean`` and then ``make dirhtml`` to ensure that the site will deploy. Once the site builds successfully without warnings, you may proceed to the next step.
 
 Submit a pull request (PR)
 ==========================
