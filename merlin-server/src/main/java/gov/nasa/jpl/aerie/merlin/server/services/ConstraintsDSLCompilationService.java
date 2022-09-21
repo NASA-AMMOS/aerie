@@ -78,7 +78,7 @@ public class ConstraintsDSLCompilationService {
           try {
             yield new ConstraintsDSLCompilationResult.Error(parseJson(output, ConstraintsCompilationError.constraintsErrorJsonP));
           } catch (InvalidJsonException | InvalidEntityException e) {
-            throw new Error("Could not parse JSON returned from typescript: " + output, e);
+            throw new Error("Could not parse error JSON returned from typescript: " + output, e);
           }
         }
         case "success" -> {
@@ -86,7 +86,7 @@ public class ConstraintsDSLCompilationService {
           try {
             yield new ConstraintsDSLCompilationResult.Success(parseJson(output, ConstraintParsers.constraintP));
           } catch (InvalidJsonException | InvalidEntityException e) {
-            throw new Error("Could not parse JSON returned from typescript: " + output, e);
+            throw new Error("Could not parse success JSON returned from typescript: " + output, e);
           }
         }
         default -> throw new Error("constraints dsl compiler returned unexpected status: " + status);

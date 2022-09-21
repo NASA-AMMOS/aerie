@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.*;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -556,6 +558,120 @@ class ConstraintsDSLCompilationServiceTests {
                 new Changes<>(new ProfileExpression<>(new DiscreteResource("mode")))
             )
         )
+    );
+  }
+
+  @Test
+  void testSplit() {
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(0.3).split(4).windows()
+          }
+        """,
+        new ViolationsOf(
+            new WindowsFromSpans(
+              new Split<>(
+                  new LessThan(new RealResource("state of charge"), new RealValue(0.3)),
+                  4,
+                  Interval.Inclusivity.Inclusive,
+                  Interval.Inclusivity.Exclusive
+              )
+            )
+        )
+    );
+
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(0.3).spans().split(4).windows()
+          }
+        """,
+        new ViolationsOf(
+            new WindowsFromSpans(
+              new Split<>(
+                  new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3))),
+                  4,
+                  Interval.Inclusivity.Inclusive,
+                  Interval.Inclusivity.Exclusive
+              )
+            )
+        )
+    );
+
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(0.3).split(4, Inclusivity.Exclusive, Inclusivity.Inclusive).windows()
+          }
+        """,
+        new ViolationsOf(
+            new WindowsFromSpans(
+                new Split<>(
+                    new LessThan(new RealResource("state of charge"), new RealValue(0.3)),
+                    4,
+                    Interval.Inclusivity.Exclusive,
+                    Interval.Inclusivity.Inclusive
+                )
+            )
+        )
+    );
+
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(0.3).spans().split(4, Inclusivity.Exclusive, Inclusivity.Exclusive).windows()
+          }
+        """,
+        new ViolationsOf(
+            new WindowsFromSpans(
+                new Split<>(
+                    new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3))),
+                    4,
+                    Interval.Inclusivity.Exclusive,
+                    Interval.Inclusivity.Exclusive
+                )
+            )
+        )
+    );
+  }
+
+  @Test
+  void testSplitArgumentError() {
+    checkFailedCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(0.3).split(0).windows()
+          }
+        """,
+        ".split numberOfSubSpans cannot be less than 1, but was: 0"
+    );
+
+    checkFailedCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(0.3).split(-2).windows()
+          }
+        """,
+        ".split numberOfSubSpans cannot be less than 1, but was: -2"
+    );
+
+    checkFailedCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(0.3).spans().split(0).windows()
+          }
+        """,
+        ".split numberOfSubSpans cannot be less than 1, but was: 0"
+    );
+
+    checkFailedCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(0.3).spans().split(-2).windows()
+          }
+        """,
+        ".split numberOfSubSpans cannot be less than 1, but was: -2"
     );
   }
 

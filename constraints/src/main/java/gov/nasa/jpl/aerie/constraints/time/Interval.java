@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Objects;
 

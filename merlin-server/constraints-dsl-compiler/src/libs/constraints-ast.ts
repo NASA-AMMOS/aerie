@@ -1,3 +1,5 @@
+import type * as API from "./constraints-edsl-fluent-api";
+
 export enum NodeKind {
   DiscreteProfileResource = 'DiscreteProfileResource',
   DiscreteProfileValue = 'DiscreteProfileValue',
@@ -17,6 +19,7 @@ export enum NodeKind {
   WindowsExpressionShiftBy = 'WindowsExpressionShiftBy',
   WindowsExpressionFromSpans = 'WindowsExpressionFromSpans',
   SpansExpressionFromWindows = 'SpansExpressionFromWindows',
+  SpansExpressionSplit = 'SpansExpressionSplit',
   ExpressionEqual = 'ExpressionEqual',
   ExpressionNotEqual = 'ExpressionNotEqual',
   RealProfileLessThan = 'RealProfileLessThan',
@@ -65,10 +68,15 @@ export type WindowsExpression =
   | WindowsExpressionShorterThan
   | WindowsExpressionInvert
   | WindowsExpressionShiftBy
-  | WindowsExpressionFromSpans;
+  | WindowsExpressionFromSpans
 
 export type SpansExpression =
+  | SpansExpressionSplit
   | SpansExpressionFromWindows;
+
+export type IntervalsExpression =
+  | WindowsExpression
+  | SpansExpression;
 
 export interface ProfileChanges {
   kind: NodeKind.ProfileChanges;
@@ -160,6 +168,14 @@ export interface WindowsExpressionLongerThan {
   kind: NodeKind.WindowsExpressionLongerThan,
   windowExpression: WindowsExpression,
   duration: number
+}
+
+export interface SpansExpressionSplit {
+  kind: NodeKind.SpansExpressionSplit,
+  intervals: IntervalsExpression,
+  numberOfSubIntervals: number,
+  internalStartInclusivity: API.Inclusivity,
+  internalEndInclusivity: API.Inclusivity
 }
 
 export interface WindowsExpressionFromSpans {

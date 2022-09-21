@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
+import gov.nasa.jpl.aerie.constraints.time.UnsplittableSpanException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
@@ -10,10 +11,10 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
+import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -26,8 +27,10 @@ import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.at;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.interval;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class ASTTests {
@@ -54,6 +57,76 @@ public class ASTTests {
         .set(Interval.at(20, SECONDS), false);
 
     assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testSplitWindows() {
+    final var simResults = new SimulationResults(
+        Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var windows = new Windows(false)
+        .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), true)
+        .set(Interval.between(10000000, Exclusive, 15000001, Exclusive, MICROSECONDS), true);
+
+    final var result = new WindowsFromSpans(new Split<>(Supplier.of(windows), 3, Exclusive, Exclusive)).evaluate(simResults, Map.of());
+
+    final var expected = new Windows(false)
+    		.set(Interval.between(0, Inclusive, 1666666, Exclusive, MICROSECONDS), true)
+    		.set(Interval.between(1666666, Exclusive, 3333332, Exclusive, MICROSECONDS), true)
+    		.set(Interval.between(3333332, Exclusive, 5000000, Exclusive, MICROSECONDS), true)
+
+    		.set(Interval.between(10000000, Exclusive, 11666667, Exclusive, MICROSECONDS), true)
+    		.set(Interval.between(11666667, Exclusive, 13333334, Exclusive, MICROSECONDS), true)
+    		.set(Interval.between(13333334, Exclusive, 15000001, Exclusive, MICROSECONDS), true);
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testSplitSpans() {
+    final var simResults = new SimulationResults(
+        Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var spans = new Spans();
+    spans.add(Interval.between(0, Inclusive, 5, Exclusive, SECONDS));
+    spans.add(Interval.between(0, Exclusive, 5000001, Inclusive, MICROSECONDS));
+
+    final var result = new Split<>(Supplier.of(spans), 3, Inclusive, Exclusive).evaluate(simResults, Map.of());
+
+    final var expected = new Spans();
+    expected.add(Interval.between(0, Inclusive, 1666666, Exclusive, MICROSECONDS));
+    expected.add(Interval.between(1666666, Inclusive, 3333332, Exclusive, MICROSECONDS));
+    expected.add(Interval.between(3333332, Inclusive, 5000000, Exclusive, MICROSECONDS));
+
+    expected.add(Interval.between(0, Exclusive, 1666667, Exclusive, MICROSECONDS));
+    expected.add(Interval.between(1666667, Inclusive, 3333334, Exclusive, MICROSECONDS));
+    expected.add(Interval.between(3333334, Inclusive, 5000001, Inclusive, MICROSECONDS));
+
+    assertIterableEquals(expected, result);
+  }
+
+  @Test
+  public void testUnsplittableInterval() {
+    final var simResults = new SimulationResults(
+        Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var spans = new Spans(
+        Interval.at(5, SECONDS)
+    );
+
+    assertThrows(UnsplittableSpanException.class, () -> new Split<Spans>(Supplier.of(spans), 3, Inclusive, Exclusive).evaluate(simResults, Map.of()));
   }
 
   @Test
