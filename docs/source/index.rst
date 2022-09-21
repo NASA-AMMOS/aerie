@@ -23,15 +23,6 @@
   <div class="grid-x grid-margin-x">
 
 .. topic-box::
-  :title: Getting started
-  :link: getting-started
-  :icon: scylla-icon scylla-icon--getting-started
-  :class: large-6
-  :anchor: Learn more
-
-  Start using Aerie on your local machine.
-
-.. topic-box::
   :title: Deployment
   :link: deployment
   :icon: fa fa-github
