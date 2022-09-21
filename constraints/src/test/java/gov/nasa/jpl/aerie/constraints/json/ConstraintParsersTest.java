@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.constraints.json;
 
-import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.tree.All;
 import gov.nasa.jpl.aerie.constraints.tree.Changes;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
@@ -23,6 +22,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Rate;
 import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
+import gov.nasa.jpl.aerie.constraints.tree.Split;
 import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.StartOf;
 import gov.nasa.jpl.aerie.constraints.tree.Times;
@@ -489,6 +489,57 @@ public final class ConstraintParsersTest {
     final var expected =
         new Invert(
             new ActivityWindow("A"));
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testParseSplitWindows() {
+    final var json = Json
+        .createObjectBuilder()
+        .add("kind", "IntervalsExpressionSplit")
+        .add("intervals", Json
+            .createObjectBuilder()
+            .add("kind", "WindowsExpressionActivityWindow")
+            .add("alias", "A"))
+        .add("numberOfSubIntervals", 3)
+        .build();
+
+    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+
+    final var expected =
+        new Split<>(
+            new ActivityWindow("A"),
+            3
+        );
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testParseSplitSpans() {
+    final var json = Json
+        .createObjectBuilder()
+        .add("kind", "IntervalsExpressionSplit")
+        .add("intervals", Json.createObjectBuilder()
+            .add("kind", "SpansExpressionFromWindows")
+            .add("windowsExpression", Json
+              .createObjectBuilder()
+              .add("kind", "WindowsExpressionActivityWindow")
+              .add("alias", "A"))
+        )
+        .add("numberOfSubIntervals", 3)
+        .build();
+
+    final var result = spansExpressionP.parse(json).getSuccessOrThrow();
+
+    final var expected =
+        new Split<>(
+            new SpansFromWindows(
+                new ActivityWindow("A")
+            ),
+            3
+        );
 
     assertEquivalent(expected, result);
   }
