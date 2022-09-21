@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
+import gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity;
+
 public interface IntervalContainer<T extends IntervalContainer<T>> {
-  T split(final int numberOfSubIntervals);
+  Spans split(final int numberOfSubIntervals, final Inclusivity internalStartInclusivity, final Inclusivity internalEndInclusivity);
 }

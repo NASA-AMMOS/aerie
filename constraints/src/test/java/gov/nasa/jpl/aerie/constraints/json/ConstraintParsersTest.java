@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.json;
 
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.All;
 import gov.nasa.jpl.aerie.constraints.tree.Changes;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
@@ -497,20 +498,24 @@ public final class ConstraintParsersTest {
   public void testParseSplitWindows() {
     final var json = Json
         .createObjectBuilder()
-        .add("kind", "IntervalsExpressionSplit")
+        .add("kind", "SpansExpressionSplit")
         .add("intervals", Json
             .createObjectBuilder()
             .add("kind", "WindowsExpressionActivityWindow")
             .add("alias", "A"))
         .add("numberOfSubIntervals", 3)
+        .add("internalStartInclusivity", "Exclusive")
+        .add("internalEndInclusivity", "Exclusive")
         .build();
 
-    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+    final var result = spansExpressionP.parse(json).getSuccessOrThrow();
 
     final var expected =
         new Split<>(
             new ActivityWindow("A"),
-            3
+            3,
+            Interval.Inclusivity.Exclusive,
+            Interval.Inclusivity.Exclusive
         );
 
     assertEquivalent(expected, result);
@@ -520,7 +525,7 @@ public final class ConstraintParsersTest {
   public void testParseSplitSpans() {
     final var json = Json
         .createObjectBuilder()
-        .add("kind", "IntervalsExpressionSplit")
+        .add("kind", "SpansExpressionSplit")
         .add("intervals", Json.createObjectBuilder()
             .add("kind", "SpansExpressionFromWindows")
             .add("windowsExpression", Json
@@ -529,6 +534,8 @@ public final class ConstraintParsersTest {
               .add("alias", "A"))
         )
         .add("numberOfSubIntervals", 3)
+        .add("internalStartInclusivity", "Inclusive")
+        .add("internalEndInclusivity", "Exclusive")
         .build();
 
     final var result = spansExpressionP.parse(json).getSuccessOrThrow();
@@ -538,7 +545,9 @@ public final class ConstraintParsersTest {
             new SpansFromWindows(
                 new ActivityWindow("A")
             ),
-            3
+            3,
+            Interval.Inclusivity.Inclusive,
+            Interval.Inclusivity.Exclusive
         );
 
     assertEquivalent(expected, result);

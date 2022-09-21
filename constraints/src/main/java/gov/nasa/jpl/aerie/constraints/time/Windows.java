@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Iterator;
@@ -15,7 +16,7 @@ import java.util.stream.StreamSupport;
  * Backed by an {@link IntervalMap} of type {@link Boolean}. This class provides additional operations
  * which are only valid on bools.
  */
-public final class Windows implements Iterable<Segment<Boolean>> {
+public final class Windows implements Iterable<Segment<Boolean>>, IntervalContainer<Windows> {
   private final IntervalMap<Boolean> segments;
 
   /** Creates an empty Windows */
@@ -357,22 +358,46 @@ public final class Windows implements Iterable<Segment<Boolean>> {
     }
     return new Windows(builder.build());
   }
-  
+
   /**
+   * Converts this into Spans and splits each Span into sub-spans.
    *
+   * @param numberOfSubWindows number of sub-spans for each span.
+   * @param internalStartInclusivity Inclusivity for any newly generated span start points (default Inclusive in eDSL).
+   * @param internalEndInclusivity Inclusivity for any newly generated span end points (default Exclusive in eDSL).
+   * @return a new Spans
+   * @throws UnsplittableSpanException if any span contains only one point or contains fewer microseconds than `numberOfSubSpans`.
+   * @throws UnsplittableSpanException if any span contains {@link Duration#MIN_VALUE} or {@link Duration#MAX_VALUE} (representing unbounded intervals)
+   * @throws InvalidGapsException if there are any gaps in the windows.
    */
   @Override
-  public Windows split(final int numberOfSubWindows) {
-    return this.intoSpans().split(numberOfSubWindows).intoWindows();
+  public Spans split(final int numberOfSubWindows, final Inclusivity internalStartInclusivity, final Inclusivity internalEndInclusivity) {
+    return this.intoSpans().split(numberOfSubWindows, internalStartInclusivity, internalEndInclusivity);
   }
 
 
   /**
    * Converts this into a Spans object, where each true segment is a Span.
    *
-   * Gaps are treated the same as false.
+   * @throws InvalidGapsException if there are any gaps in the windows.
    */
   public Spans intoSpans() {
+    if (!this.segments.get(0).interval().contains(Duration.MIN_VALUE)) {
+      throw new InvalidGapsException("cannot convert Windows with gaps into Spans (unbounded gap to -infinity)");
+    } else if (!this.segments.get(-1).interval().contains(Duration.MAX_VALUE)) {
+      throw new InvalidGapsException("cannot convert Windows with gaps into Spans (unbounded gap to +infinity)");
+    }
+    for (int i = 0; i < this.segments.size() - 1; i++) {
+      final var leftInterval = this.segments.get(i).interval();
+      final var rightInterval = this.segments.get(i+1).interval();
+      if (!leftInterval.adjacent(rightInterval)) {
+        var message = new StringBuilder("cannot convert Windows with gaps into Spans (gap at ");
+        final var gap = Interval.between(leftInterval.end, leftInterval.endInclusivity.opposite(), rightInterval.start, rightInterval.startInclusivity.opposite());
+        message.append(gap.toString());
+        message.append(").");
+        throw new InvalidGapsException(message.toString());
+      }
+    }
     return new Spans(stream()
         .filter(Segment::value)
         .map(Segment::interval)

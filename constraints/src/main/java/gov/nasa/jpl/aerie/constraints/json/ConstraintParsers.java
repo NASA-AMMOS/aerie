@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.IntervalContainer;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
@@ -18,6 +19,7 @@ import java.util.List;
 import static gov.nasa.jpl.aerie.constraints.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.doubleP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.enumP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
@@ -30,6 +32,9 @@ import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 
 public final class ConstraintParsers {
   private ConstraintParsers() {}
+
+  static final JsonParser<Interval.Inclusivity> inclusivityP =
+      enumP(Interval.Inclusivity.class, Enum::name);
 
   static final JsonParser<DiscreteResource> discreteResourceP =
       productP
@@ -285,12 +290,16 @@ public final class ConstraintParsers {
 
   static <I extends IntervalContainer<I>> JsonParser<Split<I>> splitF(final JsonParser<Expression<I>> intervalExpressionP) {
     return productP
-        .field("kind", literalP("IntervalsExpressionSplit"))
+        .field("kind", literalP("SpansExpressionSplit"))
         .field("intervals", intervalExpressionP)
         .field("numberOfSubIntervals", intP)
-        .map(Iso.of(
-            untuple((kind, expr, numberOfSubWindows) -> new Split<I>(expr, numberOfSubWindows)),
-            $ -> tuple(Unit.UNIT, $.intervals, $.numberOfSubIntervals)));
+        .field("internalStartInclusivity", inclusivityP)
+        .field("internalEndInclusivity", inclusivityP)
+        .map(
+            untuple((kind, expr, numberOfSubWindows, internalStartInclusivity, internalEndInclusivity) -> new Split<I>(
+                expr, numberOfSubWindows, internalStartInclusivity, internalEndInclusivity)
+            ),
+            $ -> tuple(Unit.UNIT, $.intervals, $.numberOfSubIntervals, $.internalStartInclusivity, $.internalEndInclusivity));
   }
 
   static JsonParser<WindowsFromSpans> windowsFromSpansF(final JsonParser<Expression<Spans>> spansExpressionP) {
@@ -342,7 +351,6 @@ public final class ConstraintParsers {
         anyF(selfP),
         invertF(selfP),
         shiftByF(selfP),
-        splitF(selfP),
         windowsFromSpansF(spansP)));
   }
 
@@ -358,6 +366,7 @@ public final class ConstraintParsers {
   private static JsonParser<Expression<Spans>> spansExpressionF(JsonParser<Expression<Windows>> windowsP) {
       return recursiveP(selfP -> chooseP(
           splitF(selfP),
+          splitF(windowsP),
           spansFromWindowsF(windowsP)
       ));
   }

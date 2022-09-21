@@ -1,3 +1,5 @@
+import type * as API from "./constraints-edsl-fluent-api";
+
 export enum NodeKind {
   DiscreteProfileResource = 'DiscreteProfileResource',
   DiscreteProfileValue = 'DiscreteProfileValue',
@@ -17,6 +19,7 @@ export enum NodeKind {
   WindowsExpressionShiftBy = 'WindowsExpressionShiftBy',
   WindowsExpressionFromSpans = 'WindowsExpressionFromSpans',
   SpansExpressionFromWindows = 'SpansExpressionFromWindows',
+  SpansExpressionSplit = 'SpansExpressionSplit',
   ExpressionEqual = 'ExpressionEqual',
   ExpressionNotEqual = 'ExpressionNotEqual',
   RealProfileLessThan = 'RealProfileLessThan',
@@ -26,7 +29,6 @@ export enum NodeKind {
   WindowsExpressionAll = 'WindowsExpressionAll',
   WindowsExpressionAny = 'WindowsExpressionAny',
   WindowsExpressionInvert = 'WindowsExpressionInvert',
-  IntervalsExpressionSplit = 'IntervalsExpressionSplit',
   ForEachActivity = 'ForEachActivity',
   ProfileChanges = 'ProfileChanges',
   ViolationsOf = 'ViolationsOf',
@@ -67,10 +69,9 @@ export type WindowsExpression =
   | WindowsExpressionInvert
   | WindowsExpressionShiftBy
   | WindowsExpressionFromSpans
-  | IntervalsExpressionSplit;
 
 export type SpansExpression =
-  | IntervalsExpressionSplit
+  | SpansExpressionSplit
   | SpansExpressionFromWindows;
 
 export type IntervalsExpression =
@@ -169,10 +170,12 @@ export interface WindowsExpressionLongerThan {
   duration: number
 }
 
-export interface IntervalsExpressionSplit {
-  kind: NodeKind.IntervalsExpressionSplit,
+export interface SpansExpressionSplit {
+  kind: NodeKind.SpansExpressionSplit,
   intervals: IntervalsExpression,
-  numberOfSubIntervals: number
+  numberOfSubIntervals: number,
+  internalStartInclusivity: API.Inclusivity,
+  internalEndInclusivity: API.Inclusivity
 }
 
 export interface WindowsExpressionFromSpans {

@@ -179,18 +179,41 @@ export class Windows {
       fromEnd: fromEnd
     })
   }
-
-  public split(numberOfSubWindows: number): Windows {
-    if (numberOfSubWindows < 1) {
-      throw RangeError(".split numberOfSubWindows cannot be less than 1, but was: " + numberOfSubWindows);
+  /**
+   * Splits each window into equal sized sub-intervals. Returns a Spans object.
+   *
+   * For `.split(N)`, N sub-windows will be created by removing N-1 points in the middle.
+   *
+   * @throws UnsplittableSpanException during backend evaluation if the duration of a window is fewer microseconds than N.
+   * @throws UnsplittableSpanException if any window is unbounded (i.e. contains MIN_VALUE or MAX_VALUE)
+   * @throws InvalidGapsException if this contains any gaps.
+   *
+   * @param numberOfSubSpans how many sub-windows to split each window into
+   * @param internalStartInclusivity Inclusivity for any newly generated span start points (default Inclusive).
+   * @param internalEndInclusivity Inclusivity for any newly generated span end points (default Exclusive).
+   */
+  public split(
+      numberOfSubSpans: number,
+      internalStartInclusivity: Inclusivity = Inclusivity.Inclusive,
+      internalEndInclusivity: Inclusivity = Inclusivity.Exclusive
+  ): Spans {
+    if (numberOfSubSpans < 1) {
+      throw RangeError(".split numberOfSubSpans cannot be less than 1, but was: " + numberOfSubSpans);
     }
-    return new Windows({
-      kind: AST.NodeKind.IntervalsExpressionSplit,
+    return new Spans({
+      kind: AST.NodeKind.SpansExpressionSplit,
       intervals: this.__astNode,
-      numberOfSubIntervals: numberOfSubWindows
+      numberOfSubIntervals: numberOfSubSpans,
+      internalStartInclusivity: internalStartInclusivity,
+      internalEndInclusivity: internalEndInclusivity
     })
   }
 
+  /**
+   * Convert this into a set of Spans.
+   *
+   * @throws InvalidGapsException if this contains any gaps.
+   */
   public spans(): Spans {
     return new Spans({
       kind: AST.NodeKind.SpansExpressionFromWindows,
@@ -207,19 +230,39 @@ export class Spans {
   public constructor(expression: AST.SpansExpression) {
     this.__astNode = expression;
   }
-
-  public split(numberOfSubSpans: number): Spans {
+  /**
+   * Splits each span into equal sized sub-spans.
+   *
+   * For `.split(N)`, N sub-spans will be created by removing N-1 points in the middle.
+   *
+   * @throws UnsplittableIntervalException during backend evaluation if the duration of a span is fewer microseconds than N.
+   * @param numberOfSubSpans how many sub-spans to split each span into
+   * @param internalStartInclusivity Inclusivity for any newly generated span start points (default Inclusive).
+   * @param internalEndInclusivity Inclusivity for any newly generated span end points (default Exclusive).
+   */
+  public split(
+      numberOfSubSpans: number,
+      internalStartInclusivity: Inclusivity = Inclusivity.Inclusive,
+      internalEndInclusivity: Inclusivity = Inclusivity.Exclusive
+  ): Spans {
     if (numberOfSubSpans < 1) {
       throw RangeError(".split numberOfSubSpans cannot be less than 1, but was: " + numberOfSubSpans);
     }
     return new Spans({
-      kind: AST.NodeKind.IntervalsExpressionSplit,
+      kind: AST.NodeKind.SpansExpressionSplit,
       intervals: this.__astNode,
-      numberOfSubIntervals: numberOfSubSpans
+      numberOfSubIntervals: numberOfSubSpans,
+      internalStartInclusivity: internalStartInclusivity,
+      internalEndInclusivity: internalEndInclusivity
     })
   }
 
-
+  /**
+   * Convert this into a set of Windows.
+   *
+   * This is a lossy operation.
+   * If any spans overlap or touch, they will be coalesced into a single window.
+   */
   public windows(): Windows {
     return new Windows({
       kind: AST.NodeKind.WindowsExpressionFromSpans,
@@ -529,6 +572,11 @@ export class ActivityInstance<A extends ActivityType> {
   }
 }
 
+export enum Inclusivity {
+  Inclusive = "Inclusive",
+  Exclusive = "Exclusive"
+}
+
 declare global {
   export class Constraint {
     /** Internal AST Node */
@@ -623,17 +671,24 @@ declare global {
     public shorterThan(duration: Duration): Windows;
 
     /**
-     * Splits each window into equal sized sub-windows.
+     * Splits each window into equal sized sub-intervals. Returns a Spans object.
      *
      * For `.split(N)`, N sub-windows will be created by removing N-1 points in the middle.
      *
-     * @throws UnsplittableIntervalException during backend evaluation if the duration of a window is fewer microseconds than N.
-     * @param numberOfSubWindows how many sub-windows to split each window into
+     * @throws UnsplittableSpanException during backend evaluation if the duration of a window is fewer microseconds than N.
+     * @throws UnsplittableSpanException if any window is unbounded (i.e. contains MIN_VALUE or MAX_VALUE)
+     * @throws InvalidGapsException if this contains any gaps.
+     *
+     * @param numberOfSubSpans how many sub-windows to split each window into
+     * @param internalStartInclusivity Inclusivity for any newly generated span start points (default Inclusive).
+     * @param internalEndInclusivity Inclusivity for any newly generated span end points (default Exclusive).
      */
-    public split(numberOfSubWindows: number): Windows;
+    public split(numberOfSubSpans: number, internalStartInclusivity?: Inclusivity, internalEndInclusivity?: Inclusivity): Spans;
 
     /**
      * Convert this into a set of Spans.
+     *
+     * @throws InvalidGapsException if this contains any gaps.
      */
     public spans(): Spans;
   }
@@ -651,8 +706,10 @@ declare global {
      *
      * @throws UnsplittableIntervalException during backend evaluation if the duration of a span is fewer microseconds than N.
      * @param numberOfSubSpans how many sub-spans to split each span into
+     * @param internalStartInclusivity Inclusivity for any newly generated span start points (default Inclusive).
+     * @param internalEndInclusivity Inclusivity for any newly generated span end points (default Exclusive).
      */
-    public split(numberOfSubSpans: number): Spans;
+    public split(numberOfSubSpans: number, internalStartInclusivity?: Inclusivity, internalEndInclusivity?: Inclusivity): Spans;
 
     /**
      * Convert this into a set of Windows.
@@ -798,7 +855,12 @@ declare global {
   }
 
   type Duration = number;
+
+  enum Inclusivity {
+    Inclusive = "Inclusive",
+    Exclusive = "Exclusive"
+  }
 }
 
 // Make Constraint available on the global object
-Object.assign(globalThis, { Constraint, Windows, Spans, Real, Discrete });
+Object.assign(globalThis, { Constraint, Windows, Spans, Real, Discrete, Inclusivity });

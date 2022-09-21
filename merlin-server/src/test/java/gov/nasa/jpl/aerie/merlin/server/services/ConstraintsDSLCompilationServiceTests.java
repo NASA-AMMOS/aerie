@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.*;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -564,13 +566,17 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Real.Resource("state of charge").lessThan(0.3).split(4)
+            return Real.Resource("state of charge").lessThan(0.3).split(4).windows()
           }
         """,
         new ViolationsOf(
-            new Split<>(
-                new LessThan(new RealResource("state of charge"), new RealValue(0.3)),
-                4
+            new WindowsFromSpans(
+              new Split<>(
+                  new LessThan(new RealResource("state of charge"), new RealValue(0.3)),
+                  4,
+                  Interval.Inclusivity.Inclusive,
+                  Interval.Inclusivity.Exclusive
+              )
             )
         )
     );
@@ -585,7 +591,9 @@ class ConstraintsDSLCompilationServiceTests {
             new WindowsFromSpans(
               new Split<>(
                   new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3))),
-                  4
+                  4,
+                  Interval.Inclusivity.Inclusive,
+                  Interval.Inclusivity.Exclusive
               )
             )
         )
@@ -633,19 +641,19 @@ class ConstraintsDSLCompilationServiceTests {
     checkFailedCompilation(
         """
           export default () => {
-            return Real.Resource("state of charge").lessThan(0.3).split(0)
+            return Real.Resource("state of charge").lessThan(0.3).split(0).windows()
           }
         """,
-        ".split numberOfSubWindows cannot be less than 1, but was: 0"
+        ".split numberOfSubSpans cannot be less than 1, but was: 0"
     );
 
     checkFailedCompilation(
         """
           export default () => {
-            return Real.Resource("state of charge").lessThan(0.3).split(-2)
+            return Real.Resource("state of charge").lessThan(0.3).split(-2).windows()
           }
         """,
-        ".split numberOfSubWindows cannot be less than 1, but was: -2"
+        ".split numberOfSubSpans cannot be less than 1, but was: -2"
     );
 
     checkFailedCompilation(

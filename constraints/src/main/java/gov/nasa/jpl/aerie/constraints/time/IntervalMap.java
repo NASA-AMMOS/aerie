@@ -325,7 +325,7 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
 
   /** Gets the segment at a given index */
   public Segment<V> get(final int index) {
-    final var i = (index >= 0) ? index : this.segments.size() - index;
+    final var i = (index >= 0) ? index : this.segments.size() + index;
     return this.segments.get(i);
   }
 
