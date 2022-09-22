@@ -179,6 +179,7 @@ export class Windows {
       fromEnd: fromEnd
     })
   }
+
   /**
    * Splits each window into equal sized sub-intervals. Returns a Spans object.
    *
@@ -206,6 +207,40 @@ export class Windows {
       numberOfSubIntervals: numberOfSubSpans,
       internalStartInclusivity: internalStartInclusivity,
       internalEndInclusivity: internalEndInclusivity
+    })
+  }
+
+  /**
+   * Replaces each window with its start point.
+   *
+   * Since gaps represent "unknown", true segments that come after a gap don't have a known start point.
+   * So instead their first known point is unset and the rest is set to false.
+   *
+   * True segments that explicitly come directly after false and include their start point have all except their
+   * start point set to false. If they don't include the start point, then the whole interval is set to false and the
+   * start point is set true.
+   */
+  public starts(): Windows {
+    return new Windows({
+      kind: AST.NodeKind.IntervalsExpressionStarts,
+      expression: this.__astNode
+    })
+  }
+
+  /**
+   * Replaces each window with its end point.
+   *
+   * Since gaps represent "unknown", true segments that come before a gap don't have a known end point.
+   * So instead their last known point is unset and the rest is set to false.
+   *
+   * True segments that explicitly come directly before false and include their end point have all except their
+   * end point set to false. If they don't include the end point, then the whole interval is set to false and the
+   * end point is set true.
+   */
+  public ends(): Windows {
+    return new Windows({
+      kind: AST.NodeKind.IntervalsExpressionEnds,
+      expression: this.__astNode
     })
   }
 
@@ -245,6 +280,7 @@ export class Spans {
       internalStartInclusivity: Inclusivity = Inclusivity.Inclusive,
       internalEndInclusivity: Inclusivity = Inclusivity.Exclusive
   ): Spans {
+
     if (numberOfSubSpans < 1) {
       throw RangeError(".split numberOfSubSpans cannot be less than 1, but was: " + numberOfSubSpans);
     }
@@ -254,6 +290,26 @@ export class Spans {
       numberOfSubIntervals: numberOfSubSpans,
       internalStartInclusivity: internalStartInclusivity,
       internalEndInclusivity: internalEndInclusivity
+    })
+  }
+
+  /**
+   * Replaces each Span with its start point.
+   */
+  public starts(): Spans {
+    return new Spans({
+      kind: AST.NodeKind.IntervalsExpressionStarts,
+      expression: this.__astNode
+    })
+  }
+
+  /**
+   * Replaces each Span with its end point.
+   */
+  public ends(): Spans {
+    return new Spans({
+      kind: AST.NodeKind.IntervalsExpressionEnds,
+      expression: this.__astNode
     })
   }
 
@@ -686,6 +742,30 @@ declare global {
     public split(numberOfSubSpans: number, internalStartInclusivity?: Inclusivity, internalEndInclusivity?: Inclusivity): Spans;
 
     /**
+     * Replaces each window with its start point.
+     *
+     * Since gaps represent "unknown", true segments that come after a gap don't have a known start point.
+     * So instead their first known point is unset and the rest is set to false.
+     *
+     * True segments that explicitly come directly after false and include their start point have all except their
+     * start point set to false. If they don't include the start point, then the whole interval is set to false and the
+     * start point is set true.
+     */
+    public starts(): Windows;
+
+    /**
+     * Replaces each window with its end point.
+     *
+     * Since gaps represent "unknown", true segments that come before a gap don't have a known end point.
+     * So instead their last known point is unset and the rest is set to false.
+     *
+     * True segments that explicitly come directly before false and include their end point have all except their
+     * end point set to false. If they don't include the end point, then the whole interval is set to false and the
+     * end point is set true.
+     */
+    public ends(): Windows;
+
+    /**
      * Convert this into a set of Spans.
      *
      * @throws InvalidGapsException if this contains any gaps.
@@ -698,6 +778,16 @@ declare global {
    */
   export class Spans {
     public readonly __astNode: AST.SpansExpression;
+
+    /**
+     * Returns the instantaneous start points of the these spans.
+     */
+    public starts(): Spans;
+
+    /**
+     * Returns the instantaneous end points of the these spans.
+     */
+    public ends(): Spans;
 
     /**
      * Splits each span into equal sized sub-spans.

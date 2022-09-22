@@ -288,6 +288,24 @@ public final class ConstraintParsers {
             $ -> tuple(Unit.UNIT, $.expression));
   }
 
+  static <I extends IntervalContainer<I>> JsonParser<Starts<I>> startsF(final JsonParser<Expression<I>> intervalExpressionP) {
+    return productP
+        .field("kind", literalP("IntervalsExpressionStarts"))
+        .field("expression", intervalExpressionP)
+        .map(
+            untuple((kind, expr) -> new Starts<I>(expr)),
+            $ -> tuple(Unit.UNIT, $.expression));
+  }
+
+  static <I extends IntervalContainer<I>> JsonParser<Ends<I>> endsF(final JsonParser<Expression<I>> intervalsExpressionP) {
+    return productP
+        .field("kind", literalP("IntervalsExpressionEnds"))
+        .field("expression", intervalsExpressionP)
+        .map(
+            untuple((kind, expr) -> new Ends<I>(expr)),
+            $ -> tuple(Unit.UNIT, $.expression));
+  }
+
   static <I extends IntervalContainer<I>> JsonParser<Split<I>> splitF(final JsonParser<Expression<I>> intervalExpressionP) {
     return productP
         .field("kind", literalP("SpansExpressionSplit"))
@@ -351,6 +369,8 @@ public final class ConstraintParsers {
         anyF(selfP),
         invertF(selfP),
         shiftByF(selfP),
+        startsF(selfP),
+        endsF(selfP),
         windowsFromSpansF(spansP)));
   }
 
@@ -365,6 +385,8 @@ public final class ConstraintParsers {
 
   private static JsonParser<Expression<Spans>> spansExpressionF(JsonParser<Expression<Windows>> windowsP) {
       return recursiveP(selfP -> chooseP(
+          startsF(selfP),
+          endsF(selfP),
           splitF(selfP),
           splitF(windowsP),
           spansFromWindowsF(windowsP)

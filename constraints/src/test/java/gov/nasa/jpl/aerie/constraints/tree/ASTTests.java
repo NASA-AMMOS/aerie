@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
+import gov.nasa.jpl.aerie.constraints.time.IntervalContainer;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -55,6 +56,110 @@ public class ASTTests {
         .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), false)
         .set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), true)
         .set(Interval.at(20, SECONDS), false);
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testWindowsStarts() {
+    final var simResults = new SimulationResults(
+        Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var windows = new Windows()
+        .set(Interval.between(Duration.MIN_VALUE, Duration.MIN_VALUE.plus(Duration.HOUR)), true)
+        .set(Interval.between(-10, 10, SECONDS), false)
+        .set(Interval.between(0, 1, SECONDS), true)
+        .set(Interval.between(2, Exclusive, 3, Inclusive, SECONDS), true)
+        .set(Interval.between(100, 101, SECONDS), true);
+
+    final var result = new Starts<>(Supplier.of(windows)).evaluate(simResults, Map.of());
+
+    final var expected = new Windows()
+        .set(Interval.between(Duration.MIN_VALUE, Inclusive, Duration.MIN_VALUE.plus(Duration.HOUR), Inclusive), false)
+        .set(Interval.between(-10, 10, SECONDS), false)
+        .set(Interval.at(0, SECONDS), true)
+        .set(Interval.at(2, SECONDS), true)
+        .set(Interval.between(100, Exclusive, 101, Inclusive, SECONDS), false);
+
+    assertIterableEquals(expected, result);
+  }
+
+  @Test
+  public void testWindowsEnds() {
+    final var simResults = new SimulationResults(
+        Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var windows = new Windows()
+        .set(Interval.between(Duration.MAX_VALUE.minus(Duration.HOUR), Duration.MAX_VALUE), true)
+        .set(Interval.between(-10, 10, SECONDS), false)
+        .set(Interval.between(0, 1, SECONDS), true)
+        .set(Interval.between(2, Inclusive, 3, Exclusive, SECONDS), true)
+        .set(Interval.between(100, 101, SECONDS), true);
+
+    final var result = new Ends<>(Supplier.of(windows)).evaluate(simResults, Map.of());
+
+    final var expected = new Windows()
+        .set(Interval.between(Duration.MAX_VALUE.minus(Duration.HOUR), Inclusive, Duration.MAX_VALUE, Inclusive), false)
+        .set(Interval.between(-10, 10, SECONDS), false)
+        .set(Interval.at(1, SECONDS), true)
+        .set(Interval.at(3, SECONDS), true)
+        .set(Interval.between(100, Inclusive, 101, Exclusive, SECONDS), false);
+
+    assertIterableEquals(expected, result);
+  }
+
+  @Test
+  public void testSpansStarts() {
+    final var simResults = new SimulationResults(
+        Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var spans = new Spans();
+    spans.add(Interval.between(0, Inclusive, 5, Exclusive, SECONDS));
+    spans.add(Interval.between(0, Exclusive, 5, Exclusive, SECONDS));
+    spans.add(Interval.at(20, SECONDS));
+
+    final var result = new Starts<>(Supplier.of(spans)).evaluate(simResults, Map.of());
+
+    final var expected = new Spans();
+    expected.add(Interval.at(0, SECONDS));
+    expected.add(Interval.at(0, SECONDS));
+    expected.add(Interval.at(20, SECONDS));
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testSpansEnds() {
+    final var simResults = new SimulationResults(
+        Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var spans = new Spans();
+    spans.add(Interval.between(0, Inclusive, 5, Exclusive, SECONDS));
+    spans.add(Interval.between(0, Exclusive, 5, Inclusive, SECONDS));
+    spans.add(Interval.at(20, SECONDS));
+
+    final var result = new Ends<>(Supplier.of(spans)).evaluate(simResults, Map.of());
+
+    final var expected = new Spans();
+    expected.add(Interval.at(5, SECONDS));
+    expected.add(Interval.at(5, SECONDS));
+    expected.add(Interval.at(20, SECONDS));
 
     assertEquivalent(expected, result);
   }

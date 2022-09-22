@@ -375,6 +375,88 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
     return this.intoSpans().split(numberOfSubWindows, internalStartInclusivity, internalEndInclusivity);
   }
 
+  /**
+   * Places an instantaneous true segment at the start of each true segment.
+   *
+   * Since gaps represent "unknown", true segments that come after a gap don't have a known start point.
+   * So instead their first known point is unset and the rest is set to false.
+   *
+   * True segments that explicitly come directly after false and include their start point have all except their
+   * start point set to false. If they don't include the start point, then the whole interval is set to false and the
+   * start point is set true.
+   *
+   * @return a new Windows
+   */
+  public Windows starts() {
+    var result = IntervalMap.<Boolean>builder().set(this.segments).build();
+    for (int i = 0; i < result.size(); i++) {
+      final var segment = result.get(i);
+      if (segment.value()) {
+        final boolean meetsFalse;
+        if (i == 0) {
+          meetsFalse = false;
+        } else {
+          meetsFalse = Interval.meets(this.segments.get(i - 1).interval(), segment.interval());
+        }
+        if (meetsFalse) {
+          result = result.set(Interval.at(segment.interval().start), true);
+          result = result.set(Interval.between(
+              segment.interval().start,
+              Inclusivity.Exclusive,
+              segment.interval().end,
+              segment.interval().endInclusivity), false);
+        } else {
+          result = result.set(segment.interval(), false);
+          if (!segment.interval().contains(Duration.MIN_VALUE)) {
+            result = result.unset(Interval.at(segment.interval().start));
+          }
+        }
+      }
+    }
+    return new Windows(result);
+  }
+
+  /**
+   * Places an instantaneous true segment at the end of each true segment.
+   *
+   * Since gaps represent "unknown", true segments that come before a gap don't have a known end point.
+   * So instead their last known point is unset and the rest is set to false.
+   *
+   * True segments that explicitly come directly before false and include their end point have all except their
+   * end point set to false. If they don't include the end point, then the whole interval is set to false and the
+   * end point is set true.
+   *
+   * @return a new Windows
+   */
+  @Override
+  public Windows ends() {
+    var result = IntervalMap.<Boolean>builder().set(this.segments).build();
+    for (int i = 0; i < this.segments.size(); i++) {
+      final var segment = this.segments.get(i);
+      if (segment.value()) {
+        final boolean meetsFalse;
+        if (i == this.segments.size()-1) {
+          meetsFalse = false;
+        } else {
+          meetsFalse = Interval.meets(segment.interval(), this.segments.get(i + 1).interval());
+        }
+        if (meetsFalse) {
+          result = result.set(Interval.between(
+              segment.interval().start,
+              segment.interval().startInclusivity,
+              segment.interval().end,
+              Inclusivity.Exclusive), false);
+          result = result.set(Interval.at(segment.interval().end), true);
+        } else {
+          result = result.set(segment.interval(), false);
+          if (!segment.interval().contains(Duration.MAX_VALUE)) {
+            result = result.unset(Interval.at(segment.interval().end));
+          }
+        }
+      }
+    }
+    return new Windows(result);
+  }
 
   /**
    * Converts this into a Spans object, where each true segment is a Span.
