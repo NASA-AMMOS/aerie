@@ -122,6 +122,16 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Interval> {
   }
 
   @Override
+  public Spans starts() {
+    return this.map($ -> Interval.at($.start));
+  }
+
+  @Override
+  public Spans ends() {
+    return this.map($ -> Interval.at($.end));
+  }
+
+  @Override
   public boolean equals(final Object obj) {
     if (!(obj instanceof final Spans spans)) return false;
 

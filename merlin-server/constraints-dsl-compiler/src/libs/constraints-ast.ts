@@ -29,6 +29,8 @@ export enum NodeKind {
   WindowsExpressionAll = 'WindowsExpressionAll',
   WindowsExpressionAny = 'WindowsExpressionAny',
   WindowsExpressionInvert = 'WindowsExpressionInvert',
+  IntervalsExpressionStarts = 'IntervalsExpressionStarts',
+  IntervalsExpressionEnds = 'IntervalsExpressionEnds',
   ForEachActivity = 'ForEachActivity',
   ProfileChanges = 'ProfileChanges',
   ViolationsOf = 'ViolationsOf',
@@ -69,9 +71,13 @@ export type WindowsExpression =
   | WindowsExpressionInvert
   | WindowsExpressionShiftBy
   | WindowsExpressionFromSpans
+  | IntervalsExpressionStarts
+  | IntervalsExpressionEnds;
 
 export type SpansExpression =
   | SpansExpressionSplit
+  | IntervalsExpressionStarts
+  | IntervalsExpressionEnds
   | SpansExpressionFromWindows;
 
 export type IntervalsExpression =
@@ -186,6 +192,16 @@ export interface WindowsExpressionFromSpans {
 export interface SpansExpressionFromWindows {
   kind: NodeKind.SpansExpressionFromWindows,
   windowsExpression: WindowsExpression
+}
+
+export interface IntervalsExpressionStarts {
+  kind: NodeKind.IntervalsExpressionStarts,
+  expression: IntervalsExpression
+}
+
+export interface IntervalsExpressionEnds {
+  kind: NodeKind.IntervalsExpressionEnds,
+  expression: IntervalsExpression
 }
 
 export interface DiscreteProfileTransition {
