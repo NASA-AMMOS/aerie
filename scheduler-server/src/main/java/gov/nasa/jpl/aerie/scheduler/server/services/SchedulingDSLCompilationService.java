@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
@@ -18,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.windowsExpressionP;
 
 public class SchedulingDSLCompilationService {
 
@@ -46,11 +50,26 @@ public class SchedulingDSLCompilationService {
     this.nodeProcess.destroy();
   }
 
+  public SchedulingDSLCompilationResult<Expression<Windows>> compileGlobalSchedulingCondition(final MissionModelService missionModelService, final PlanId planId, final String conditionTypescript) {
+    return compile(missionModelService, planId, conditionTypescript, windowsExpressionP, "Windows");
+  }
+
   /**
    * NOTE: This method is not re-entrant (assumes only one call to this method is running at any given time)
    */
-  public SchedulingDSLCompilationResult compileSchedulingGoalDSL(final MissionModelService missionModelService, final PlanId planId, final String goalTypescript)
+  public SchedulingDSLCompilationResult<SchedulingDSL.GoalSpecifier> compileSchedulingGoalDSL(final MissionModelService missionModelService, final PlanId planId, final String goalTypescript)
   {
+    return compile(missionModelService, planId, goalTypescript, SchedulingDSL.schedulingJsonP, "Goal");
+  }
+
+  private <T> SchedulingDSLCompilationResult<T> compile(
+      final MissionModelService missionModelService,
+      final PlanId planId,
+      final String goalTypescript,
+      final JsonParser<T> parser,
+      final String expectedReturnType)
+  {
+
     final MissionModelService.MissionModelTypes missionModelTypes;
     try {
       missionModelTypes = missionModelService.getMissionModelTypes(planId);
@@ -65,6 +84,7 @@ public class SchedulingDSLCompilationService {
         .add("goalCode", goalTypescript)
         .add("schedulerGeneratedCode", schedulerGeneratedCode)
         .add("constraintsGeneratedCode", constraintsGeneratedCode)
+        .add("expectedReturnType", expectedReturnType)
         .build();
 
     /*
@@ -86,7 +106,9 @@ public class SchedulingDSLCompilationService {
         case "error" -> {
           final var output = outputReader.readLine();
           try {
-            yield new SchedulingDSLCompilationResult.Error(parseJson(output, SchedulingCompilationError.schedulingErrorJsonP));
+            yield new SchedulingDSLCompilationResult.Error<>(parseJson(
+                output,
+                SchedulingCompilationError.schedulingErrorJsonP));
           } catch (InvalidJsonException e) {
             throw new Error("Could not parse JSON returned from typescript: ", e);
           } catch (InvalidEntityException e) {
@@ -96,7 +118,7 @@ public class SchedulingDSLCompilationService {
         case "success" -> {
           final var output = outputReader.readLine();
           try {
-            yield new SchedulingDSLCompilationResult.Success(parseJson(output, SchedulingDSL.schedulingJsonP));
+            yield new SchedulingDSLCompilationResult.Success<>(parseJson(output, parser));
           } catch (InvalidJsonException e) {
             throw new Error("Could not parse JSON returned from typescript: " + output, e);
           } catch (InvalidEntityException e) {
@@ -148,8 +170,8 @@ public class SchedulingDSLCompilationService {
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
-  public sealed interface SchedulingDSLCompilationResult {
-    record Success(SchedulingDSL.GoalSpecifier goalSpecifier) implements SchedulingDSLCompilationResult {}
-    record Error(List<SchedulingCompilationError.UserCodeError> errors) implements SchedulingDSLCompilationResult {}
+  public sealed interface SchedulingDSLCompilationResult<T> {
+    record Success<T>(T value) implements SchedulingDSLCompilationResult<T> {}
+    record Error<T>(List<SchedulingCompilationError.UserCodeError> errors) implements SchedulingDSLCompilationResult<T> {}
   }
 }

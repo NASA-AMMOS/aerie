@@ -56,6 +56,7 @@ public class ConstraintsDSLCompilationService {
     final JsonObject messageJson = Json.createObjectBuilder()
         .add("constraintCode", constraintTypescript)
         .add("missionModelGeneratedCode", missionModelGeneratedCode)
+        .add("expectedReturnType", "Constraint")
         .build();
     /*
      * PROTOCOL:

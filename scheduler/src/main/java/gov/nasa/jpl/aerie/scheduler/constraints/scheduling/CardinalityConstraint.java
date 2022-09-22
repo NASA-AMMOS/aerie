@@ -14,7 +14,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
+public class CardinalityConstraint implements GlobalConstraintWithIntrospection {
 
   private int max;
   private Interval interval;

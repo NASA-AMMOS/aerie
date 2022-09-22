@@ -4,22 +4,21 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
-import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
-import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
-import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.BinaryMutexConstraint;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
-import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.NAryMutexConstraint;
+import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraintWithIntrospection;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.goals.OptionGoal;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
+import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -688,10 +687,10 @@ public class PrioritySolver implements Solver {
     //make sure the simulation results cover the domain
     simulationFacade.computeSimulationResultsUntil(tmp.maxTrueTimePoint().get().getKey());
     for (GlobalConstraint gc : constraints) {
-      if (gc instanceof BinaryMutexConstraint) {
-        tmp = ((BinaryMutexConstraint) gc).findWindows(plan, tmp, mac, simulationFacade.getLatestConstraintSimulationResults());
-      } else if (gc instanceof NAryMutexConstraint){
-        tmp = ((NAryMutexConstraint) gc).findWindows(plan, tmp, mac, simulationFacade.getLatestConstraintSimulationResults());
+      if (gc instanceof GlobalConstraintWithIntrospection c) {
+        tmp = c.findWindows(plan, tmp, mac, simulationFacade.getLatestConstraintSimulationResults());
+      } else {
+        throw new Error("Unhandled variant of GlobalConstraint: %s".formatted(gc));
       }
     }
   return tmp;

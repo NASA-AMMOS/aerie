@@ -1,0 +1,10 @@
+table:
+  name: scheduling_specification_conditions
+  schema: public
+object_relationships:
+- name: condition
+  using:
+    foreign_key_constraint_on: condition_id
+- name: specification
+  using:
+    foreign_key_constraint_on: specification_id

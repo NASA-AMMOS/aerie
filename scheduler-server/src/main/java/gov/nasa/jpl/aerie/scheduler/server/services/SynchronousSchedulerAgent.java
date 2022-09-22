@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
@@ -13,6 +15,7 @@ import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingCondition;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
@@ -120,7 +123,28 @@ public record SynchronousSchedulerAgent(
       problem.setInitialPlan(loadedPlanComponents.schedulerPlan());
 
       //apply constraints/goals to the problem
-      loadConstraints(planMetadata, schedulerMissionModel.missionModel()).forEach(problem::add);
+      final var compiledGlobalSchedulingConditions = new ArrayList<SchedulingCondition>();
+      final var failedGlobalSchedulingConditions = new ArrayList<List<SchedulingCompilationError.UserCodeError>>();
+      specification.globalSchedulingConditions().forEach($ -> {
+        if (!$.enabled()) return;
+        final var result = schedulingDSLCompilationService.compileGlobalSchedulingCondition(
+            missionModelService,
+            planMetadata.planId(),
+            $.source().source());
+        if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<Expression<Windows>> r) {
+          compiledGlobalSchedulingConditions.add(new SchedulingCondition(r.value(), $.activityTypes()));
+        } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<Expression<Windows>> r) {
+          failedGlobalSchedulingConditions.add(r.errors());
+        } else {
+          throw new Error("Unhandled variant of %s: %s".formatted(SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(), result));
+        }
+      });
+
+      if (!failedGlobalSchedulingConditions.isEmpty()) {
+        writer.failWith(failedGlobalSchedulingConditions.toString());
+      }
+
+      compiledGlobalSchedulingConditions.forEach(problem::add);
 
       //TODO: workaround to get the Cardinality goal working. To remove once we have global constraints in the eDSL
       problem.getActivityTypes().forEach(at -> problem.add(BinaryMutexConstraint.buildMutexConstraint(at, at)));
@@ -136,9 +160,9 @@ public record SynchronousSchedulerAgent(
             planMetadata.planId(),
             goalRecord.definition(),
             schedulingDSLCompilationService);
-        if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
-          compiledGoals.add(Pair.of(goalRecord.id(), r.goalSpecifier()));
-        } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+        if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
+          compiledGoals.add(Pair.of(goalRecord.id(), r.value()));
+        } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
           failedGoals.add(Pair.of(goalRecord.id(), r.errors()));
         } else {
           throw new Error("Unhandled variant of %s: %s".formatted(SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(), result));
@@ -198,7 +222,7 @@ public record SynchronousSchedulerAgent(
     }
   }
 
-  private static SchedulingDSLCompilationService.SchedulingDSLCompilationResult compileGoalDefinition(
+  private static SchedulingDSLCompilationService.SchedulingDSLCompilationResult<SchedulingDSL.GoalSpecifier> compileGoalDefinition(
       final MissionModelService missionModelService,
       final PlanId planId,
       final GoalSource goalDefinition,

@@ -12,5 +12,6 @@ public record Specification(
     Timestamp horizonStartTimestamp,
     Timestamp horizonEndTimestamp,
     Map<String, SerializedValue> simulationArguments,
-    boolean analysisOnly
+    boolean analysisOnly,
+    List<GlobalSchedulingConditionRecord> globalSchedulingConditions
 ) {}
