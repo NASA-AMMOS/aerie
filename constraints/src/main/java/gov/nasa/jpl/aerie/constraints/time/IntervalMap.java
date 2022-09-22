@@ -450,6 +450,37 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
       return this;
     }
 
+    public Builder<V> unset(Interval interval) {
+      if (this.built) throw new IllegalStateException();
+
+      if (interval.isEmpty()) return this;
+
+      for (int i = 0; i < this.segments.size(); i++) {
+        final var existingInterval = this.segments.get(i).interval();
+
+        if (IntervalAlgebra.endsStrictlyBefore(existingInterval, interval)) continue;
+        else if (IntervalAlgebra.startsStrictlyAfter(existingInterval, interval)) break;
+
+        if (IntervalAlgebra.startsBefore(interval, existingInterval)) {
+          final var segment = this.segments.remove(i);
+          if (IntervalAlgebra.contains(interval, existingInterval)) {
+            i--;
+          } else {
+            this.segments.add(Segment.of(Interval.between(interval.end, interval.endInclusivity.opposite(), existingInterval.end, existingInterval.endInclusivity), segment.value()));
+          }
+        } else {
+          final var segment = this.segments.remove(i);
+          this.segments.add(Segment.of(Interval.between(existingInterval.start, existingInterval.startInclusivity, interval.start, interval.startInclusivity.opposite()), segment.value()));
+          if (IntervalAlgebra.endsAfter(existingInterval, interval)) {
+            this.segments.add(Segment.of(Interval.between(interval.end, Interval.FOREVER.endInclusivity.opposite(), existingInterval.end, existingInterval.endInclusivity), segment.value()));
+            i++;
+          }
+        }
+      }
+
+      return this;
+    }
+
     public IntervalMap<V> build() {
       if (this.built) throw new IllegalStateException();
       this.built = true;
