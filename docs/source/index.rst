@@ -76,5 +76,3 @@
   upgrade/index
   contribute/index
   aerie-glossary
-
-  examples/index
