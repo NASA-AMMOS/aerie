@@ -562,6 +562,56 @@ class ConstraintsDSLCompilationServiceTests {
   }
 
   @Test
+  void testStarts() {
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(0.3).starts()
+          }
+        """,
+        new ViolationsOf(
+            new Starts<>(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))
+        )
+    );
+
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(0.3).spans().starts().windows()
+          }
+        """,
+        new ViolationsOf(
+            new WindowsFromSpans(new Starts<>(new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))))
+        )
+    );
+  }
+
+  @Test
+  void testEnds() {
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(0.3).ends()
+          }
+        """,
+        new ViolationsOf(
+            new Ends<>(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))
+        )
+    );
+
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(0.3).spans().ends().windows()
+          }
+        """,
+        new ViolationsOf(
+            new WindowsFromSpans(new Ends<>(new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))))
+        )
+    );
+  }
+
+  @Test
   void testSplit() {
     checkSuccessfulCompilation(
         """

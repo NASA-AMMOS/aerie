@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
 import gov.nasa.jpl.aerie.constraints.tree.ActivityWindow;
 import gov.nasa.jpl.aerie.constraints.tree.EndOf;
+import gov.nasa.jpl.aerie.constraints.tree.Ends;
 import gov.nasa.jpl.aerie.constraints.tree.Equal;
 import gov.nasa.jpl.aerie.constraints.tree.ForEachActivity;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
@@ -26,6 +27,7 @@ import gov.nasa.jpl.aerie.constraints.tree.RealValue;
 import gov.nasa.jpl.aerie.constraints.tree.Split;
 import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.StartOf;
+import gov.nasa.jpl.aerie.constraints.tree.Starts;
 import gov.nasa.jpl.aerie.constraints.tree.Times;
 import gov.nasa.jpl.aerie.constraints.tree.Transition;
 import gov.nasa.jpl.aerie.constraints.tree.ViolationsOf;
@@ -489,6 +491,46 @@ public final class ConstraintParsersTest {
 
     final var expected =
         new Invert(
+            new ActivityWindow("A"));
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testParseStarts() {
+    final var json = Json
+        .createObjectBuilder()
+        .add("kind", "IntervalsExpressionStarts")
+        .add("expression", Json
+            .createObjectBuilder()
+            .add("kind", "WindowsExpressionActivityWindow")
+            .add("alias", "A"))
+        .build();
+
+    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+
+    final var expected =
+        new Starts<>(
+            new ActivityWindow("A"));
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testParseEnds() {
+    final var json = Json
+        .createObjectBuilder()
+        .add("kind", "IntervalsExpressionEnds")
+        .add("expression", Json
+            .createObjectBuilder()
+            .add("kind", "WindowsExpressionActivityWindow")
+            .add("alias", "A"))
+        .build();
+
+    final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
+
+    final var expected =
+        new Ends<>(
             new ActivityWindow("A"));
 
     assertEquivalent(expected, result);
