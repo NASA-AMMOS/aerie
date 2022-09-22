@@ -19,6 +19,10 @@ actions:
     definition:
       kind: synchronous
       handler: http://aerie_commanding:27184/expand-all-activity-instances
+  - name: getEdslForSeqJson
+    definition:
+      kind: synchronous
+      handler: http://aerie_commanding:27184/get-edsl-for-seqjson
   - name: getModelEffectiveArguments
     definition:
       kind: ""

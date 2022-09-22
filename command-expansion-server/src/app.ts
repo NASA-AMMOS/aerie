@@ -25,7 +25,7 @@ import { expansionBatchLoader } from './lib/batchLoaders/expansionBatchLoader.js
 import type { CacheItem, UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
 import { InheritedError } from './utils/InheritedError.js';
 import { defaultSeqBuilder } from './defaultSeqBuilder.js';
-import { Command, CommandSeqJson, Sequence } from './lib/codegen/CommandEDSLPreface.js';
+import { Command, CommandSeqJson, Sequence, SequenceSeqJson } from './lib/codegen/CommandEDSLPreface.js';
 import { assertOne } from './utils/assertions.js';
 import { Status } from './common.js';
 import { serializeWithTemporal } from './utils/temporalSerializers.js';
@@ -474,7 +474,7 @@ export interface SeqBuilder {
   ): Sequence;
 }
 
-//generate a sequence JSON from a sequence standalone file
+// Generate a sequence JSON from a sequence standalone file
 app.post('/get-seqjson-for-sequence-standalone', async (req, res, next) => {
   const commandDictionaryID = req.body.input.commandDictionaryID as number;
   const edslBody = req.body.input.edslBody as string;
@@ -613,6 +613,14 @@ app.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, res, next)
   const seqBuilder = defaultSeqBuilder;
 
   res.status(200).json(seqBuilder(sortedSimulatedActivitiesWithCommands, seqId, seqMetadata).toSeqJson());
+  return next();
+});
+
+// Generate Sequence EDSL from sequence JSON
+app.post('/get-edsl-for-seqjson', async (req, res, next) => {
+  const seqJson = req.body.input.seqJson as SequenceSeqJson;
+
+  res.json(Sequence.fromSeqJson(seqJson).toEDSLString());
   return next();
 });
 
