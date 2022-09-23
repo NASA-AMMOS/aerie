@@ -165,6 +165,11 @@ public final class LinearProfile implements Profile<LinearProfile>, Iterable<Seg
     return new LinearProfile(result.build());
   }
 
+  @Override
+  public Iterator<Segment<LinearEquation>> iterator() {
+    return this.profilePieces.iterator();
+  }
+
   public String toString() {
     return this.profilePieces.toString();
   }
