@@ -2,6 +2,9 @@ package gov.nasa.jpl.aerie.merlin.server;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 public final class ResultsProtocol {
   private ResultsProtocol() {}
 
@@ -35,6 +38,12 @@ public final class ResultsProtocol {
     //   of the underlying resource in order to deallocate it.
     void succeedWith(SimulationResults results);
     void failWith(String reason);
+
+    default void failWith(final Throwable throwable) {
+      final var stringWriter = new StringWriter();
+      throwable.printStackTrace(new PrintWriter(stringWriter));
+      this.failWith(stringWriter.toString());
+    }
   }
 
   public interface OwnerRole extends ReaderRole, WriterRole {}
