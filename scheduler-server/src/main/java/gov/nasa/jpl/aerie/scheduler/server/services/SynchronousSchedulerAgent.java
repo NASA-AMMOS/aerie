@@ -218,7 +218,7 @@ public record SynchronousSchedulerAgent(
         IOException |
         PlanServiceException e) {
       // unwrap failure message from any anticipated exceptions and forward to subscribers
-      writer.failWith(e.toString());
+      writer.failWith(e);
     }
   }
 

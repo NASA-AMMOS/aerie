@@ -66,7 +66,7 @@ public final class ThreadedSimulationAgent implements SimulationAgent {
               this.simulationAgent.simulate(req.planId(), req.revisionData(), req.writer());
             } catch (final Throwable ex) {
               ex.printStackTrace(System.err);
-              req.writer().failWith(ex.toString());
+              req.writer().failWith(ex);
             }
             // continue
           } else if (request instanceof SimulationRequest.Terminate) {
