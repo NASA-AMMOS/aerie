@@ -301,6 +301,28 @@ public class LinearProfileTest {
   }
 
   @Test
+  public void testSegmentPointOutsideInterval() {
+    final var left = new LinearProfile(
+        Segment.of(Interval.between(0, 2, SECONDS), new LinearEquation(Duration.of(4, SECONDS), 2, 1))
+    );
+
+    assertIterableEquals(
+        new LinearProfile(Segment.of(Interval.between(0, 2, SECONDS), new LinearEquation(Duration.ZERO, -2, 1))),
+        left
+    );
+
+    final var right = new LinearProfile(
+        Segment.of(Interval.between(0, 2, SECONDS), new LinearEquation(Duration.of(2, SECONDS), 2, 1))
+    );
+
+    final var sum = left.plus(right);
+    assertIterableEquals(
+        new LinearProfile(Segment.of(Interval.between(0, 2, SECONDS), new LinearEquation(Duration.of(4, SECONDS), 6, 2))),
+        sum
+    );
+  }
+
+  @Test
   public void testConvertFromExternalFormat() {
     final var externalProfile = List.of(
         Pair.of(Duration.of(1, SECOND), Optional.of(RealDynamics.linear(1, 1))),
