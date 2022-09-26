@@ -73,3 +73,15 @@ jobs:
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
+
+    - name: NASA Scrub
+      run: |
+        pip install nasa-scrub
+        python3 -m scrub.tools.parsers.translate_results /home/runner/work/aerie/results/*.sarif /home/runner/work/aerie/results/codeql.scrub ${{ github.workspace }} scrub
+        python3 -m scrub.tools.parsers.csv_parser /home/runner/work/aerie/results
+
+    - name: Upload CodeQL Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: codeql-artifacts
+        path: /home/runner/work/aerie/results/*
