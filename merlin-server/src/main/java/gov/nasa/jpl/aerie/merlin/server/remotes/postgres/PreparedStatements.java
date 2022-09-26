@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 
@@ -34,5 +35,10 @@ public final class PreparedStatements {
   public static void setRequiredParameters(final PreparedStatement statement, final int parameter, final List<String> requiredParameters)
   throws SQLException {
     statement.setString(parameter, ResponseSerializers.serializeStringList(requiredParameters).toString());
+  }
+
+  public static void setValidationNotices(final PreparedStatement statement, final int parameter, final List<ValidationNotice> notices)
+  throws SQLException {
+    statement.setString(parameter, ResponseSerializers.serializeValidationNotices(notices).toString());
   }
 }

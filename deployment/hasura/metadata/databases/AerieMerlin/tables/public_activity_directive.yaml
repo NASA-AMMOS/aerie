@@ -5,6 +5,13 @@ object_relationships:
 - name: plan
   using:
     foreign_key_constraint_on: plan_id
+- name: validations
+  using:
+    foreign_key_constraint_on:
+      column: directive_id
+      table:
+        name: activity_directive_validations
+        schema: public
 array_relationships:
 - name: simulated_activities
   using:
@@ -26,3 +33,18 @@ remote_relationships:
         name: scheduling_goal
       field_mapping:
         source_scheduling_goal_id: id
+event_triggers:
+- definition:
+    enable_manual: false
+    insert:
+      columns:
+      - arguments
+    update:
+      columns:
+      - arguments
+  name: refreshActivityValidations
+  retry_conf:
+    interval_sec: 10
+    num_retries: 0
+    timeout_sec: 60
+  webhook: http://aerie_merlin:27183/refreshActivityValidations

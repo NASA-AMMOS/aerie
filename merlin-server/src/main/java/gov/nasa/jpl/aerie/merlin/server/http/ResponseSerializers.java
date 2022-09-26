@@ -400,7 +400,6 @@ public final class ResponseSerializers {
                .build();
   }
 
-
   private static final class ValueSchemaSerializer implements ValueSchema.Visitor<JsonValue> {
     @Override
     public JsonValue onReal() {

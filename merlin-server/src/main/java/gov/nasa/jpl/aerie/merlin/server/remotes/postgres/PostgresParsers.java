@@ -3,17 +3,27 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 import com.impossibl.postgres.api.data.Interval;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.json.SchemaCache;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonValue;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.util.Map;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
@@ -22,12 +32,53 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
 
 public final class PostgresParsers {
+
+  public static final JsonParser<Timestamp> pgTimestampP = new JsonParser<>() {
+    private static final DateTimeFormatter format =
+        new DateTimeFormatterBuilder()
+            .append(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+            .appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true)
+            .toFormatter();
+
+    @Override
+    public JsonObject getSchema(final SchemaCache anchors) {
+      return Json
+          .createObjectBuilder(stringP.getSchema())
+          .add("format", "date-time")
+          .build();
+    }
+
+    @Override
+    public JsonParseResult<Timestamp> parse(final JsonValue json) {
+      final var result = stringP.parse(json);
+      if (result instanceof JsonParseResult.Success<String> s) {
+        try {
+          final var instant = LocalDateTime.parse(s.result(), format).atZone(ZoneOffset.UTC);
+          return JsonParseResult.success(new Timestamp(instant));
+        } catch (DateTimeParseException e) {
+          return JsonParseResult.failure("invalid timestamp format "+e);
+        }
+      } else if (result instanceof JsonParseResult.Failure<?> f) {
+        return f.cast();
+      } else {
+        throw new UnexpectedSubtypeError(JsonParseResult.class, result);
+      }
+    }
+
+    @Override
+    public JsonValue unparse(final Timestamp value) {
+      final var s = format.format(value.toInstant().atZone(ZoneOffset.UTC));
+      return stringP.unparse(s);
+    }
+  };
+
   public static final JsonParser<Pair<String, ValueSchema>> discreteProfileTypeP =
       productP
           .field("type", literalP("discrete"))

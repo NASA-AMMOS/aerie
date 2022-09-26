@@ -13,6 +13,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
@@ -254,6 +255,14 @@ public final class LocalMissionModelService implements MissionModelService {
     } catch (final MissionModelRepository.NoSuchMissionModelException ex) {
       throw new NoSuchMissionModelException(missionModelId, ex);
     }
+  }
+
+  @Override
+  public void refreshActivityValidations(final String missionModelId, final ActivityDirective directive)
+  throws NoSuchMissionModelException, InvalidArgumentsException
+  {
+    final var notices = validateActivityArguments(missionModelId, directive.activity());
+    this.missionModelRepository.updateActivityDirectiveValidations(directive.id(), directive.argumentsModifiedTime(), notices);
   }
 
   private MissionModelFactory<?, ?, ?> loadMissionModelFactory(final String missionModelId)

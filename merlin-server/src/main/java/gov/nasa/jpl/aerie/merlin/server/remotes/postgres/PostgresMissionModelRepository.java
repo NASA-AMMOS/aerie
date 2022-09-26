@@ -1,9 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
+import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 
 import javax.sql.DataSource;
@@ -107,7 +110,7 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   }
 
   @Override
-  public void updateActivityTypes( final String missionModelId, final Map<String, ActivityType> activityTypes)
+  public void updateActivityTypes(final String missionModelId, final Map<String, ActivityType> activityTypes)
   throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var createActivityTypeAction = new CreateActivityTypeAction(connection)) {
@@ -124,6 +127,23 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
     } catch (final SQLException ex) {
       throw new DatabaseException(
           "Failed to update derived data for mission model with id `%s`".formatted(missionModelId), ex);
+    }
+  }
+
+  @Override
+  public void updateActivityDirectiveValidations(
+      final ActivityDirectiveId directiveId,
+      final Timestamp argumentsModifiedTime,
+      final List<ValidationNotice> notices
+  )
+  {
+    try (final var connection = this.dataSource.getConnection()) {
+      try (final var updateActivityDirectiveValidationsAction = new UpdateActivityDirectiveValidationsAction(connection)) {
+        updateActivityDirectiveValidationsAction.apply(directiveId.id(), argumentsModifiedTime, notices);
+      }
+    } catch (final SQLException ex) {
+      throw new DatabaseException(
+          "Failed to update derived data for activity directive with id `%d`".formatted(directiveId.id()), ex);
     }
   }
 
