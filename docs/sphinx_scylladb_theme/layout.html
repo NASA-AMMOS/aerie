@@ -15,8 +15,6 @@
         {% endfor %}
     {% endmacro %}
     {% macro css() %}
-        <!-- increase expertrec loading priority-->
-        <link rel="dns-prefetch" href="https://cse.expertrec.com">
 
         <!-- increase font loading priority -->
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -70,8 +68,6 @@
         {% else %}
             <link rel="canonical" href="{{ html_baseurl }}/{{ canonical_page }}"/>
         {% endif %}
-
-<!--        <link rel="author" href="mailto:info@scylladb.com" />-->
 
         {% block css %}
             {{ css() }}
