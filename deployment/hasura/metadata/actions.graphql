@@ -139,6 +139,12 @@ type Query {
   ): SequenceSeqJson!
 }
 
+type Query {
+  getEdslForSeqJson(
+    seqJson: SequenceSeqJsonInput!
+  ): String!
+}
+
 enum MerlinSimulationStatus {
   complete
   failed
@@ -238,6 +244,11 @@ type SequenceSeqJson {
   steps: [CommandSeqJson!]!
 }
 
+input SequenceSeqJsonInput {
+  id: String!
+  metadata: Any!
+  steps: [CommandSeqJsonInput!]!
+}
 
 type CommandSeqJson {
   stem: String!,
@@ -247,7 +258,20 @@ type CommandSeqJson {
   args: [Any!]!
 }
 
+input CommandSeqJsonInput {
+  stem: String!,
+  time: CommandSeqJsonTimeInput!,
+  type: CommandSeqJsonType!,
+  metadata: Any!
+  args: [Any!]!
+}
+
 type CommandSeqJsonTime {
+  type: CommandSeqJsonTimeType!
+  tag: String
+}
+
+input CommandSeqJsonTimeInput {
   type: CommandSeqJsonTimeType!
   tag: String
 }

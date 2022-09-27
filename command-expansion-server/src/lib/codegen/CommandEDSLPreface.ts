@@ -1,6 +1,4 @@
 /** START Preface */
-export type DOY_STRING = string & { __brand: 'DOY_STRING' };
-export type HMS_STRING = string & { __brand: 'HMS_STRING' };
 
 export enum TimingTypes {
   ABSOLUTE = 'ABSOLUTE',
@@ -123,9 +121,6 @@ declare global {
   const C: typeof Commands;
 }
 
-const DOY_REGEX = /(\d{4})-(\d{3})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?/;
-const HMS_REGEX = /(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?/;
-
 export class Command<
   A extends ArgType[] | { [argName: string]: any } = [] | {},
   M extends Record<string, any> = Record<string, any>,
@@ -177,11 +172,11 @@ export class Command<
       stem: this.stem,
       time:
         this.absoluteTime !== null
-          ? { type: TimingTypes.ABSOLUTE, tag: Command.instantToDoy(this.absoluteTime) }
+          ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this.absoluteTime) }
           : this.epochTime !== null
-          ? { type: TimingTypes.EPOCH_RELATIVE, tag: Command.durationToHms(this.epochTime) }
+          ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this.epochTime) }
           : this.relativeTime !== null
-          ? { type: TimingTypes.COMMAND_RELATIVE, tag: Command.durationToHms(this.relativeTime) }
+          ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this.relativeTime) }
           : { type: TimingTypes.COMMAND_COMPLETE },
       type: 'command',
       metadata: this.metadata,
@@ -230,30 +225,43 @@ export class Command<
     });
   }
 
-  /** YYYY-DOYTHH:MM:SS.sss */
-  private static instantToDoy(time: Temporal.Instant): DOY_STRING {
-    const utcZonedDate = time.toZonedDateTimeISO('UTC');
-    const YYYY = this.formatNumber(utcZonedDate.year, 4);
-    const DOY = this.formatNumber(utcZonedDate.dayOfYear, 3);
-    const HH = this.formatNumber(utcZonedDate.hour, 2);
-    const MM = this.formatNumber(utcZonedDate.minute, 2);
-    const SS = this.formatNumber(utcZonedDate.second, 2);
-    const sss = this.formatNumber(utcZonedDate.millisecond, 3);
-    return `${YYYY}-${DOY}T${HH}:${MM}:${SS}.${sss}` as DOY_STRING;
+  public toEDSLString(): string {
+    const timeString = this.absoluteTime
+      ? `A\`${instantToDoy(this.absoluteTime)}\``
+      : this.epochTime
+      ? `E\`${durationToHms(this.epochTime)}\``
+      : this.relativeTime
+      ? `R\`${durationToHms(this.relativeTime)}\``
+      : 'C';
+
+    const argsString = Object.keys(this.arguments).length === 0 ? '' : `(${Command.argumentsToString(this.arguments)})`;
+
+    return `${timeString}.${this.stem}${argsString}`;
   }
 
-  /** HH:MM:SS.sss */
-  private static durationToHms(time: Temporal.Duration): HMS_STRING {
-    const HH = this.formatNumber(time.hours, 2);
-    const MM = this.formatNumber(time.minutes, 2);
-    const SS = this.formatNumber(time.seconds, 2);
-    const sss = this.formatNumber(time.milliseconds, 3);
+  private static argumentsToString<A extends ArgType[] | { [argName: string]: any } = [] | {}>(args: A): string {
+    if (Array.isArray(args)) {
+      const argStrings = args.map((arg) => {
+        if (typeof arg === 'string') {
+          return `'${arg}'`;
+        }
+        return arg.toString();
+      });
 
-    return `${HH}:${MM}:${SS}.${sss}` as HMS_STRING;
-  }
-
-  private static formatNumber(number: number, size: number): string {
-    return number.toString().padStart(size, '0');
+      return argStrings.join(', ');
+    }
+    else {
+      const argStrings = Object.keys(args).reduce((accum, key) => {
+        if (typeof args[key] === 'string') {
+          accum.push(`${key}: '${args[key]}'`);
+        }
+        else {
+          accum.push(`${key}: ${args[key]}`);
+        }
+        return accum;
+      }, [] as string[]);
+      return '{\n' + indent(argStrings.map(argString => argString + ',').join('\n')) + '\n}';
+    }
   }
 }
 
@@ -286,6 +294,23 @@ export class Sequence {
     };
   }
 
+  public toEDSLString(): string {
+
+    const commandsString = this.commands.length === 0
+        ? ''
+        : '\n' + indent(this.commands.map(c => c.toEDSLString() + ',').join('\n'), 3);
+
+  return (
+`export default () =>
+  Sequence.new({
+    seqId: '${this.seqId}',
+    metadata: ${JSON.stringify(this.metadata)},
+    commands: [${commandsString}
+    ],
+  });`
+  );
+  }
+
   public static fromSeqJson(json: SequenceSeqJson): Sequence {
     return Sequence.new({
       seqId: json.id,
@@ -295,9 +320,27 @@ export class Sequence {
   }
 }
 
-//helper functions
+/** Time utilities */
 
-function doyToInstant(doy: DOY_STRING): Temporal.Instant {
+export type DOY_STRING = string & { __brand: 'DOY_STRING' };
+export type HMS_STRING = string & { __brand: 'HMS_STRING' };
+
+const DOY_REGEX = /(\d{4})-(\d{3})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?/;
+const HMS_REGEX = /(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?/;
+
+/** YYYY-DOYTHH:MM:SS.sss */
+export function instantToDoy(time: Temporal.Instant): DOY_STRING {
+  const utcZonedDate = time.toZonedDateTimeISO('UTC');
+  const YYYY = formatNumber(utcZonedDate.year, 4);
+  const DOY = formatNumber(utcZonedDate.dayOfYear, 3);
+  const HH = formatNumber(utcZonedDate.hour, 2);
+  const MM = formatNumber(utcZonedDate.minute, 2);
+  const SS = formatNumber(utcZonedDate.second, 2);
+  const sss = formatNumber(utcZonedDate.millisecond, 3);
+  return `${YYYY}-${DOY}T${HH}:${MM}:${SS}.${sss}` as DOY_STRING;
+}
+
+export function doyToInstant(doy: DOY_STRING): Temporal.Instant {
   const match = doy.match(DOY_REGEX);
   if (match === null) {
     throw new Error(`Invalid DOY string: ${doy}`);
@@ -309,22 +352,22 @@ function doyToInstant(doy: DOY_STRING): Temporal.Instant {
     string,
     string,
     string,
-    string | undefined,
+        string | undefined,
   ];
 
   //use to convert doy to month and day
   const doyDate = new Date(parseInt(year, 10), 0, parseInt(doyStr, 10));
   // convert to UTC Date
   const utcDoyDate = new Date(
-    Date.UTC(
-      doyDate.getUTCFullYear(),
-      doyDate.getUTCMonth(),
-      doyDate.getUTCDate(),
-      doyDate.getUTCHours(),
-      doyDate.getUTCMinutes(),
-      doyDate.getUTCSeconds(),
-      doyDate.getUTCMilliseconds(),
-    ),
+      Date.UTC(
+          doyDate.getUTCFullYear(),
+          doyDate.getUTCMonth(),
+          doyDate.getUTCDate(),
+          doyDate.getUTCHours(),
+          doyDate.getUTCMinutes(),
+          doyDate.getUTCSeconds(),
+          doyDate.getUTCMilliseconds(),
+      ),
   );
 
   return Temporal.ZonedDateTime.from({
@@ -339,7 +382,17 @@ function doyToInstant(doy: DOY_STRING): Temporal.Instant {
   }).toInstant();
 }
 
-function hmsToDuration(hms: HMS_STRING): Temporal.Duration {
+/** HH:MM:SS.sss */
+export function durationToHms(time: Temporal.Duration): HMS_STRING {
+  const HH = formatNumber(time.hours, 2);
+  const MM = formatNumber(time.minutes, 2);
+  const SS = formatNumber(time.seconds, 2);
+  const sss = formatNumber(time.milliseconds, 3);
+
+  return `${HH}:${MM}:${SS}.${sss}` as HMS_STRING;
+}
+
+export function hmsToDuration(hms: HMS_STRING): Temporal.Duration {
   const match = hms.match(HMS_REGEX);
   if (match === null) {
     throw new Error(`Invalid HMS string: ${hms}`);
@@ -351,6 +404,10 @@ function hmsToDuration(hms: HMS_STRING): Temporal.Duration {
     seconds: parseInt(seconds, 10),
     milliseconds: parseInt(milliseconds ?? '0', 10),
   });
+}
+
+function formatNumber(number: number, size: number): string {
+  return number.toString().padStart(size, '0');
 }
 
 // @ts-ignore : Used in generated code
@@ -455,6 +512,13 @@ function findAndOrderCommandArguments(
     }
   }
   throw new Error(`Could not find correct argument order for command: ${commandName}`);
+}
+
+function indent(text: string, numTimes: number = 1, char: string = '  '): string {
+  return text
+    .split('\n')
+    .map(line => char.repeat(numTimes) + line)
+    .join('\n');
 }
 
 /** END Preface */
