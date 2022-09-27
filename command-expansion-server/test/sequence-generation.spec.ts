@@ -17,8 +17,9 @@ import {
 } from './testUtils/Expansion.js';
 import { insertCommandDictionary, removeCommandDictionary } from './testUtils/CommandDictionary.js';
 import type { SequenceSeqJson } from '../src/lib/codegen/CommandEDSLPreface.js';
-import { insertSequence, generateSequenceEDSL, linkActivityInstance, removeSequence } from './testUtils/Sequence.js';
 import { TimingTypes } from '../src/lib/codegen/CommandEDSLPreface.js';
+import { generateSequenceEDSL, insertSequence, linkActivityInstance, removeSequence } from './testUtils/Sequence.js';
+import { FallibleStatus } from '../src/types.js';
 
 let planId: number;
 let graphqlClient: GraphQLClient;
@@ -162,34 +163,15 @@ describe('sequence generation', () => {
       activityId4,
     );
 
-    const { getSequenceSeqJson } = await graphqlClient.request<{ getSequenceSeqJson: SequenceSeqJson }>(
-      gql`
-        query GetSeqJsonForSequence($seqId: String!, $simulationDatasetId: Int!) {
-          getSequenceSeqJson(seqId: $seqId, simulationDatasetId: $simulationDatasetId) {
-            id
-            metadata
-            steps {
-              type
-              stem
-              time {
-                type
-                tag
-              }
-              args
-              metadata
-            }
-          }
-        }
-      `,
-      {
-        seqId: 'test00000',
-        simulationDatasetId: simulationArtifactPk.simulationDatasetId,
-      },
-    );
+    const getSequenceSeqJsonResponse = await getSequenceSeqJson('test00000', simulationArtifactPk.simulationDatasetId);
 
-    expect(getSequenceSeqJson.id).toBe('test00000');
-    expect(getSequenceSeqJson.metadata).toEqual({});
-    expect(getSequenceSeqJson.steps).toEqual([
+    if (getSequenceSeqJsonResponse.status !== FallibleStatus.SUCCESS) {
+      throw getSequenceSeqJsonResponse.errors;
+    }
+
+    expect(getSequenceSeqJsonResponse.seqJson.id).toBe('test00000');
+    expect(getSequenceSeqJsonResponse.seqJson.metadata).toEqual({});
+    expect(getSequenceSeqJsonResponse.seqJson.steps).toEqual([
       {
         // expansion 1
         type: 'command',
@@ -371,34 +353,17 @@ describe('sequence generation', () => {
       activityId3,
     );
 
-    const { getSequenceSeqJson } = await graphqlClient.request<{ getSequenceSeqJson: SequenceSeqJson }>(
-      gql`
-        query GetSeqJsonForSequence($seqId: String!, $simulationDatasetId: Int!) {
-          getSequenceSeqJson(seqId: $seqId, simulationDatasetId: $simulationDatasetId) {
-            id
-            metadata
-            steps {
-              type
-              stem
-              time {
-                type
-                tag
-              }
-              args
-              metadata
-            }
-          }
-        }
-      `,
-      {
-        seqId: 'test00000',
-        simulationDatasetId: simulationArtifactPk.simulationDatasetId,
-      },
-    );
+    const getSequenceSeqJsonResponse = await getSequenceSeqJson('test00000', simulationArtifactPk.simulationDatasetId);
 
-    expect(getSequenceSeqJson.id).toBe('test00000');
-    expect(getSequenceSeqJson.metadata).toEqual({});
-    expect(getSequenceSeqJson.steps).toEqual([
+    expect(getSequenceSeqJsonResponse.status).toEqual(FallibleStatus.FAILURE)
+
+    expect(getSequenceSeqJsonResponse.errors).toIncludeAllMembers([
+      { message: 'Error: Unimplemented', stack: 'at SingleCommandExpansion(3:14)' },
+    ]);
+
+    expect(getSequenceSeqJsonResponse.seqJson?.id).toBe('test00000');
+    expect(getSequenceSeqJsonResponse.seqJson?.metadata).toEqual({});
+    expect(getSequenceSeqJsonResponse.seqJson?.steps).toEqual([
       {
         type: 'command',
         stem: 'PREHEAT_OVEN',
@@ -486,34 +451,15 @@ describe('sequence generation', () => {
       activityId2,
     );
 
-    const { getSequenceSeqJson } = await graphqlClient.request<{ getSequenceSeqJson: SequenceSeqJson }>(
-      gql`
-        query GetSeqJsonForSequence($seqId: String!, $simulationDatasetId: Int!) {
-          getSequenceSeqJson(seqId: $seqId, simulationDatasetId: $simulationDatasetId) {
-            id
-            metadata
-            steps {
-              type
-              stem
-              time {
-                type
-                tag
-              }
-              args
-              metadata
-            }
-          }
-        }
-      `,
-      {
-        seqId: 'test00000',
-        simulationDatasetId: simulationArtifactPk.simulationDatasetId,
-      },
-    );
+    const getSequenceSeqJsonResponse = await getSequenceSeqJson('test00000', simulationArtifactPk.simulationDatasetId);
 
-    expect(getSequenceSeqJson.id).toBe('test00000');
-    expect(getSequenceSeqJson.metadata).toEqual({});
-    expect(getSequenceSeqJson.steps).toEqual([
+    if (getSequenceSeqJsonResponse.status !== FallibleStatus.SUCCESS) {
+      throw getSequenceSeqJsonResponse.errors;
+    }
+
+    expect(getSequenceSeqJsonResponse.seqJson.id).toBe('test00000');
+    expect(getSequenceSeqJsonResponse.seqJson.metadata).toEqual({});
+    expect(getSequenceSeqJsonResponse.seqJson.steps).toEqual([
       {
         type: 'command',
         stem: 'PREHEAT_OVEN',
@@ -680,34 +626,15 @@ it('should provide start, end, and computed attributes on activities', async () 
     activityId,
   );
 
-  const { getSequenceSeqJson } = await graphqlClient.request<{ getSequenceSeqJson: SequenceSeqJson }>(
-    gql`
-      query GetSeqJsonForSequence($seqId: String!, $simulationDatasetId: Int!) {
-        getSequenceSeqJson(seqId: $seqId, simulationDatasetId: $simulationDatasetId) {
-          id
-          metadata
-          steps {
-            type
-            stem
-            time {
-              type
-              tag
-            }
-            args
-            metadata
-          }
-        }
-      }
-    `,
-    {
-      seqId: 'test00000',
-      simulationDatasetId: simulationArtifactPk.simulationDatasetId,
-    },
-  );
+  const getSequenceSeqJsonResponse = await getSequenceSeqJson('test00000', simulationArtifactPk.simulationDatasetId);
 
-  expect(getSequenceSeqJson.id).toBe('test00000');
-  expect(getSequenceSeqJson.metadata).toEqual({});
-  expect(getSequenceSeqJson.steps).toEqual([
+  if (getSequenceSeqJsonResponse.status !== FallibleStatus.SUCCESS) {
+    throw getSequenceSeqJsonResponse.errors;
+  }
+
+  expect(getSequenceSeqJsonResponse.seqJson.id).toBe('test00000');
+  expect(getSequenceSeqJsonResponse.seqJson.metadata).toEqual({});
+  expect(getSequenceSeqJsonResponse.seqJson.steps).toEqual([
     {
       type: 'command',
       stem: 'BAKE_BREAD',
@@ -793,3 +720,49 @@ it('generate sequence seqjson from static sequence', async () => {
     },
   ]);
 }, 30000);
+
+async function getSequenceSeqJson(seqId: string, simulationDatasetId: number) {
+  const { getSequenceSeqJson } = await graphqlClient.request<{
+    getSequenceSeqJson: {
+      status: FallibleStatus.FAILURE,
+      seqJson?: SequenceSeqJson,
+      errors: { message: string, stack: string}[]
+    } | {
+      status: FallibleStatus.SUCCESS,
+      seqJson: SequenceSeqJson,
+      errors: { message: string, stack: string}[]
+    }
+  }>(
+      gql`
+        query GetSeqJsonForSequence($seqId: String!, $simulationDatasetId: Int!) {
+          getSequenceSeqJson(seqId: $seqId, simulationDatasetId: $simulationDatasetId) {
+            status
+            errors {
+              message
+              stack
+            }
+            seqJson {
+              id
+              metadata
+              steps {
+                type
+                stem
+                time {
+                  type
+                  tag
+                }
+                args
+                metadata
+              }
+            }
+          }
+        }
+      `,
+      {
+        seqId,
+        simulationDatasetId,
+      },
+  );
+
+  return getSequenceSeqJson;
+}

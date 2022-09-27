@@ -1,3 +1,17 @@
+interface Error {
+  message: String!
+}
+
+enum FallibleStatus {
+  SUCCESS
+  FAILURE
+}
+
+interface Fallible {
+  status: FallibleStatus!
+  errors: [Error!]!
+}
+
 type Mutation {
   addExternalDataset(
     planId: Int!
@@ -129,14 +143,20 @@ type Query {
   getSequenceSeqJson(
     seqId: String!
     simulationDatasetId: Int!
-  ): SequenceSeqJson!
+  ): GetSeqJsonResponse!
 }
 
 type Query {
   getUserSequenceSeqJson(
     commandDictionaryID: Int!
     edslBody: String!
-  ): SequenceSeqJson!
+  ): GetSeqJsonResponse!
+}
+
+type GetSeqJsonResponse implements Fallible {
+  status: FallibleStatus!
+  errors: [UserCodeError!]!
+  seqJson: SequenceSeqJson
 }
 
 type Query {
@@ -287,7 +307,7 @@ enum CommandSeqJsonTimeType {
   COMMAND_COMPLETE
 }
 
-type UserCodeError {
+type UserCodeError implements Error {
   message: String!
   stack: String!
   location: CodeLocation

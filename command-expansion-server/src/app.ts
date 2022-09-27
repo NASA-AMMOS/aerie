@@ -13,8 +13,8 @@ import { InferredDataloader, objectCacheKeyFunction, unwrapPromiseSettledResults
 import { commandDictionaryTypescriptBatchLoader } from './lib/batchLoaders/commandDictionaryTypescriptBatchLoader.js';
 import { activitySchemaBatchLoader } from './lib/batchLoaders/activitySchemaBatchLoader.js';
 import {
-  simulatedActivitiesBatchLoader,
   SimulatedActivity,
+  simulatedActivitiesBatchLoader,
   simulatedActivityInstanceBySimulatedActivityIdBatchLoader,
 } from './lib/batchLoaders/simulatedActivityBatchLoader.js';
 import { expansionSetBatchLoader } from './lib/batchLoaders/expansionSetBatchLoader.js';
@@ -29,6 +29,7 @@ import { Command, CommandSeqJson, Sequence, SequenceSeqJson } from './lib/codege
 import { assertOne } from './utils/assertions.js';
 import { Status } from './common.js';
 import { serializeWithTemporal } from './utils/temporalSerializers.js';
+import { FallibleStatus } from './types.js';
 import { Result } from '@nasa-jpl/aerie-ts-user-code-runner/build/utils/monads.js';
 
 const logger = getLogger('app');
@@ -500,10 +501,18 @@ app.post('/get-seqjson-for-sequence-standalone', async (req, res, next) => {
   ) as ReturnType<typeof executeEDSL>));
 
   if (result.isErr()) {
-    throw result.unwrapErr();
+    res.json({
+      status: FallibleStatus.FAILURE,
+      seqJson: null,
+      errors: result.unwrapErr(),
+    });
   }
 
-  res.json(result.unwrap());
+  res.json({
+    status: FallibleStatus.SUCCESS,
+    seqJson: result.unwrap(),
+    errors: [],
+  });
 
   return next();
 });
@@ -608,11 +617,26 @@ app.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, res, next)
     };
   });
 
+  const errors = sortedSimulatedActivitiesWithCommands.flatMap(ai => ai.errors ?? []);
+
   // This is here to easily enable a future feature of allowing the mission to configure their own sequence
   // building. For now, we just use the 'defaultSeqBuilder' until such a feature request is made.
   const seqBuilder = defaultSeqBuilder;
+  const sequenceJson = seqBuilder(sortedSimulatedActivitiesWithCommands, seqId, seqMetadata).toSeqJson();
 
-  res.status(200).json(seqBuilder(sortedSimulatedActivitiesWithCommands, seqId, seqMetadata).toSeqJson());
+  if (errors.length > 0) {
+    res.json({
+      status: FallibleStatus.FAILURE,
+      seqJson: sequenceJson,
+      errors,
+    });
+  } else {
+    res.json({
+      status: FallibleStatus.SUCCESS,
+      seqJson: sequenceJson,
+      errors,
+    });
+  }
   return next();
 });
 
