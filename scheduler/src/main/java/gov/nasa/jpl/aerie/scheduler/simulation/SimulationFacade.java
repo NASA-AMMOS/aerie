@@ -285,7 +285,7 @@ public class SimulationFacade {
     if(endTime.noLongerThan(Duration.MAX_VALUE.minus(MARGIN))){
       endTimeWithMargin = endTime.plus(MARGIN);
     }
-    var results = driver.getSimulationResultsUpTo(endTimeWithMargin);
+    var results = driver.getSimulationResultsUpTo(endTimeWithMargin, planningHorizon.getStartInstant());
     //compare references
     if(results != lastSimDriverResults) {
       //simulation results from the last simulation, as converted for use by the constraint evaluation engine
