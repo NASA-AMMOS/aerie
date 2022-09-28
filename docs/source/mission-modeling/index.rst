@@ -35,30 +35,18 @@ support more in the future.
 A simulation over a mission model iteratively runs activities and queries resources for their updated dynamics,
 producing a composite profile of dynamics for each resource over the entire simulation duration.
 
-For docs maintainers
---------------------
-
-.. panel-box::
-  :id: "components"
-  :class: my-panel
-
-  * :doc:`Developing activities <activities>`
-
 .. toctree::
   :maxdepth: 2
   :hidden:
 
   foundations-of-simulation-and-modeling
+  developing-a-mission-model
   activities
   activity-parameters
   activity-mappers
-  developing-a-mission-model
+  value-schemas
   mission-model-configuration-parameters
   models-and-resources
-
-  Configuring-a-Mission-Model
-  Creating-A-Mission-Simulation-Overview
-  Creating-Plans
-  Merlin-Activity-Plans
-  Mission-Modeler-Guide
+  Configuring-A-Mission-Model
   _draft_Simulation-Engine
+  _draft_simulation-engine

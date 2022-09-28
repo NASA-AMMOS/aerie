@@ -6,7 +6,7 @@ The Aerie web application provides a graphical user interface to set and update 
 
 Navigate to the plans page. As seen in **Figure 1**, the plan creation form includes a "Simulation Configuration" section that accepts a user-provided file. Specifically, the user-provided file is expected to be a serialized (JSON) set of mission model arguments.
 
-![](images/sim-config-plans.png)
+![](../constraints/images/sim-config-plans.png)
 *Figure 1: Plan creation and selection view.*
 
 Conceptually, these uploaded simulation configuration arguments are stored within a plan-specific simulation **template**.
@@ -14,7 +14,7 @@ Within the GUI each plan may be associated with just one simulation template;
 individual simulations may set missing arguments or override existing arguments using the template's arguments as a base set of arguments.
 **Figure 2** shows the simulation configuration view where arguments for a specific simulation may be set/overridden.
 
-![](images/sim-config-args.png)
+![](../constraints/images/sim-config-args.png)
 *Figure 2: Simulation configuration view.*
 
 Formalized loosely, the sets of arguments at play here are:
