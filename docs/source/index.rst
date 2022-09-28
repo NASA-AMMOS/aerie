@@ -23,31 +23,40 @@
   <div class="grid-x grid-margin-x">
 
 .. topic-box::
-  :title: Deployment
-  :link: deployment
-  :icon: fa fa-github
-  :class: large-6
-  :anchor: Learn more
-
-  Deploy Aerie for individual users, small and large missions.
-
-.. topic-box::
   :title: Mission Modeling
   :link: mission-modeling
-  :icon: fa fa-github
+  :icon: scylla-icon scylla-icon--networking
   :class: large-6
   :anchor: Learn more
 
   Develop a mission model to support simulation and mission planning.
 
 .. topic-box::
-  :title: Demos and Tutorials
-  :link: examples
-  :icon: scylla-icon scylla-icon--tech-talks
+  :title: Creating & Simulating Activity Plans
+  :link: activity-plans
+  :icon: scylla-icon scylla-icon--benchmarks
   :class: large-6
   :anchor: Learn more
 
-  Explore examples and tutorials for how you can get the most from Aerie.
+  Create activity plans, configure simulations, and populate a plan with automated scheduling.
+
+.. topic-box::
+  :title: Activity To Command Expansion
+  :link: activity-command-expansion
+  :icon: scylla-icon scylla-icon--apps
+  :class: large-6
+  :anchor: Learn more
+
+  Author command expansion logic and link activities to their command expansions.
+
+.. topic-box::
+  :title: Deployment
+  :link: deployment
+  :icon: scylla-icon scylla-icon--cloud
+  :class: large-6
+  :anchor: Learn more
+
+  Deploy Aerie for individual users, small and large missions.
 
 .. topic-box::
   :title: Contribute
@@ -72,7 +81,10 @@
 
   deployment/index
   mission-modeling/index
-  simulation-and-analysis/index
+  activity-plans/index
+  constraints/index
+  activity-command-expansion/index
+  aerie-api/aerie-graphql-api
   upgrade/index
   contribute/index
   aerie-glossary

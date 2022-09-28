@@ -5,9 +5,11 @@ interface for the `ActivityType` being mapped. It is required that
 each Activity Type in an mission model have an associated Activity Mapper, to provide
 provide several capabilities surrounding serialization/deserialization of activity instances.
 
-The Merlin annotation processor can automatically [generate activity mappers](https://github.com/NASA-AMMOS/aerie/wiki/Activity-Mappers#generated-activity-mappers) for every activity type, even for those with custom-typed parameters, but if it is desirable to create a custom activity mapper the interface is described below. 
+The Merlin annotation processor can automatically be generated for every activity type, even for
+those with custom-typed parameters, but if it is desirable to create a custom activity mapper 
+the interface is described below. 
 
-## `ActivityMapper` Interface
+## ActivityMapper Interface
 
 The `ActivityMapper` interface is shown below:
 
@@ -24,21 +26,39 @@ public interface ActivityMapper<Instance> {
 }
 ```
 
-The first thing to notice is that the interface takes a type parameter (here called `Instance`). When implementing the `ActivityMapper` interface, an activity mapper must supply the `ActivityType` being mapped. With that in mind, each of the methods shown must be implemented as such:
+The first thing to notice is that the interface takes a type parameter (here called `Instance`). 
+When implementing the `ActivityMapper` interface, an activity mapper must supply the `ActivityType`
+being mapped. With that in mind, each of the methods shown must be implemented as such:
 
 - `getName()` returns the name of the activity type being mapped
-- `getParameters()` provides the named parameter fields of the activity along with their corresponding `ValueSchema`, that describes their structure
-- `getArguments(Instance activity)` provides the actual values for each parameter from a provided activity instance
-- `instantiateDefault()` creates a default instance of the activity type without any values provided externally
-- `instantiate(Map<String, SerializedValue> arguments)` constructs an instance of the activity type from a the provided arguments, if possible
-- `getValidationFailures(Instance activity)` provides a list of reasons a constructed activity is invalid, if any.
-Note that validation failures are different from instantiation errors. Validation failures occur when a constructed activity instance's parameters are outside acceptable range.
+- `getParameters()` provides the named parameter fields of the activity along with their corresponding 
+- `ValueSchema`, that describes their structure
+- `getArguments(Instance activity)` provides the actual values for each parameter from a provided 
+- activity instance
+- `instantiateDefault()` creates a default instance of the activity type without any values provided 
+- externally
+- `instantiate(Map<String, SerializedValue> arguments)` constructs an instance of the activity type 
+- from a the provided arguments, if possible
+- `getValidationFailures(Instance activity)` provides a list of reasons a constructed activity is 
+- invalid, if any.
+Note that validation failures are different from instantiation errors. Validation failures occur when
+- a constructed activity instance's parameters are outside acceptable range.
 
-The `getParameters()` method returns a `Map<String, ValueSchema>`. In this map should be a key for every parameter, with a `ValueSchema` describing the structure of that parameter. See our [Value Schema documentation](https://github.com/NASA-AMMOS/aerie/wiki/Value-Schemas#value-schemas-from-code) for more information on creating value schemas.
+The `getParameters()` method returns a `Map<String, ValueSchema>`. In this map should be a key for 
+every parameter, with a `ValueSchema` describing the structure of that parameter. 
+See our [Value Schema documentation](../value-schemas/#value-schemas-from-code) for more 
+information on creating value schemas.
 
 ## Generated Activity Mappers
 
-In most cases, you will likely want to let Merlin generate activity mappers for you. Thankfully, this is the done automatically when running the Merlin Annotation Processor. When compiling your code with the Merlin annotation processor, the processor will produce an activity mapper for each activity type. This is made possible by the use of the `@WithMappers()` annotations in your [package-info.java](https://github.com/NASA-AMMOS/aerie/wiki/Developing-a-Mission-Model#package-infojava). Each java-file specified by these annotations is parsed to determine what types of values can be mapped. As long as there is a mapper for each activity parameter type used in the model, the annotation processor should have no issues creating activity mappers.
+In most cases, you will likely want to let Merlin generate activity mappers for you. 
+Thankfully, this is the done automatically when running the Merlin Annotation Processor.
+When compiling your code with the Merlin annotation processor, the processor will produce an 
+activity mapper for each activity type. This is made possible by the use of the `@WithMappers()` 
+annotations in your [package-info.java](../developing-a-mission-model/#package-info-file). Each
+java-file specified by these annotations is parsed to determine what types of values can 
+be mapped. As long as there is a mapper for each activity parameter type used in the model, 
+the annotation processor should have no issues creating activity mappers.
 
 ## Value Mappers
 
@@ -111,16 +131,21 @@ public class Vector3DValueMapper implements ValueMapper<Vector3D> {
 
 Notice there are just 3 methods to implement for a `ValueMapper`.
 The first is `getValueSchema()`, which should return a `ValueSchema`
-describing the structure of the value being mapped (see [here](https://github.com/NASA-AMMOS/aerie/wiki/Value-Schemas) for more info)
+describing the structure of the value being mapped (see [value schemas](../activity-mappers/#value-schemas) for more 
+info)
 
-The next two methods are inverses of each other: `deserializeValue()` and `serializeValue()`. It is the job of `deserializeValue()` to take a `SerializedValue` and map it, if possible, into the mapper's supported value. Meanwhile, `serializeValue()` takes an instance of the mapper's supported value and turns it into a [`SerializedValue`](https://github.com/NASA-AMMOS/aerie/wiki/Activity-Mappers#what-is-a-serializedvalue).
+The next two methods are inverses of each other: `deserializeValue()` and `serializeValue()`. 
+It is the job of `deserializeValue()` to take a `SerializedValue` and map it, if possible, 
+into the mapper's supported value. Meanwhile, `serializeValue()` takes an instance of the 
+mapper's supported value and turns it into a [`SerializedValue`](../activity-mappers/#what-is-a-serializedvalue).
 
 There are plenty of examples of value mappers over in the [contrib module](https://github.com/NASA-AMMOS/aerie/tree/develop/contrib/src/main/java/gov/nasa/jpl/aerie/contrib/serialization/mappers).
 
 ### Registering Value Mappers
 
 As mentioned above, the `@WithMappers()` annotation is used to register value mappers for a mission model.
-Value mappers are expected to be defined with static constructor methods within classes listed in `@WithMappers()` annotations.
+Value mappers are expected to be defined with static constructor methods within classes listed 
+in `@WithMappers()` annotations.
 For example, if `package-info.java` contains:
 ```java
 @WithMappers(BananaValueMappers.class)
@@ -134,7 +159,8 @@ public final class BananaValueMappers {
 }
 ```
 
-Value mappers may be created for types that use parameterized types, but the parameterized types themselves must be either unbounded bounded or `Enum<>`.
+Value mappers may be created for types that use parameterized types, but the parameterized 
+types themselves must be either unbounded bounded or `Enum<>`.
 For example:
 ```java
 @Parameter
@@ -149,10 +175,20 @@ are not trivially resolved to a single value mapper due to the type constraints 
 
 ## What is a SerializedValue
 
-When working with a `ValueMapper` it is inevitable that you will come across the `SerializedValue` type. This is the type we use for serializing all values that need serialization, such as activity parameters and resource values. In crafting a value mapper, you will have to both create a `SerializedValue` and parse one.
+When working with a `ValueMapper` it is inevitable that you will come across the `SerializedValue`
+type. This is the type we use for serializing all values that need serialization, such as activity
+parameters and resource values. In crafting a value mapper, you will have to both create a
+`SerializedValue` and parse one.
 
-Constructing a `SerializedValue` tends to be more straightforward, because there are no questions about the structure of the value you are starting with. For basic types, you need only call `SerializedValue.of(value)`
-and the `SerializedValue` class will handle the rest. This can be done for values of the following types: `long`, `double`, `String`, `boolean`. Note that integers and floats can be represented by `long` and `double` respectively. For more complex types, you can also provide a `List<SerializedValue>` or `Map<String, SerializedValue>` to `SerializedValue.of()`. It is clear that these can be used to serialize lists and maps themselves, but arbitrarily complex structures can be serialized in this way. Consider the following examples:
+Constructing a `SerializedValue` tends to be more straightforward, because there are no questions 
+about the structure of the value you are starting with. For basic types, you need only call 
+`SerializedValue.of(value)`
+and the `SerializedValue` class will handle the rest. This can be done for values of the following
+types: `long`, `double`, `String`, `boolean`. Note that integers and floats can be represented 
+by `long` and `double` respectively. For more complex types, you can also provide a 
+`List<SerializedValue>` or `Map<String, SerializedValue>` to `SerializedValue.of()`. It is clear
+that these can be used to serialize lists and maps themselves, but arbitrarily complex structures
+can be serialized in this way. Consider the following examples:
 
 ```java
 int exInt = 5;
@@ -199,7 +235,14 @@ SerializedValue serializedVec2 = SerializedValue.of(
                                  );
 ```
 
-The first 3 examples here are straightforward mappings from their java type to their serialized form, however the vector example is more interesting. To highlight this, two forms of `SerializedValue` have been given for it. In the first case, we serialize the `Vector3D` as a list of three values. This will work fine as long as whoever deserializes it knows that the list contains each component in order of x, y and z. In the second example, however, the vector is serialized as a map. Either of these representations may fit better in different scenarios. Generally, the structure of a `SerializedValue` constructed by a `ValueMapper` should match the `ValueSchema` the `ValueMapper` provides.
+The first 3 examples here are straightforward mappings from their java type to their serialized 
+form, however the vector example is more interesting. To highlight this, two forms of 
+`SerializedValue` have been given for it. In the first case, we serialize the `Vector3D` 
+as a list of three values. This will work fine as long as whoever deserializes it knows that 
+the list contains each component in order of x, y and z. In the second example, however, the 
+vector is serialized as a map. Either of these representations may fit better in different 
+scenarios. Generally, the structure of a `SerializedValue` constructed by a `ValueMapper` 
+should match the `ValueSchema` the `ValueMapper` provides.
 
 ## Example Activity Mapper
 
