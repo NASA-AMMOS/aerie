@@ -34,7 +34,7 @@ lxml = ["lxml"]
 
 [[package]]
 name = "certifi"
-version = "2022.9.14"
+version = "2022.9.24"
 description = "Python package for providing Mozilla's CA Bundle."
 category = "main"
 optional = false
@@ -150,6 +150,20 @@ six = "*"
 tornado = {version = "*", markers = "python_version > \"2.7\""}
 
 [[package]]
+name = "Markdown"
+version = "3.4.1"
+description = "Python implementation of Markdown."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+importlib-metadata = {version = ">=4.4", markers = "python_version < \"3.10\""}
+
+[package.extras]
+testing = ["coverage", "pyyaml"]
+
+[[package]]
 name = "MarkupSafe"
 version = "2.1.1"
 description = "Safely add untrusted strings to HTML/XML markup."
@@ -251,7 +265,7 @@ use_chardet_on_py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "setuptools"
-version = "65.3.0"
+version = "65.4.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 category = "main"
 optional = false
@@ -363,6 +377,17 @@ sphinx = ">=1.8"
 [package.extras]
 code_style = ["pre-commit (==2.12.1)"]
 rtd = ["ipython", "myst-nb", "sphinx", "sphinx-book-theme"]
+
+[[package]]
+name = "sphinx-markdown-tables"
+version = "0.0.17"
+description = "A Sphinx extension for rendering tables written in markdown"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+markdown = ">=3.4"
 
 [[package]]
 name = "sphinx-multiversion-scylla"
@@ -585,7 +610,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "86f10b7db1db54506f26293dcb48a41666051645bd0d08e7c020859838604c7d"
+content-hash = "de2c6c7d5712c0ce6553d30000d036a8cb14954ac9c361614cc3a3e941d54461"
 
 [metadata.files]
 alabaster = [
@@ -601,8 +626,8 @@ beautifulsoup4 = [
     {file = "beautifulsoup4-4.11.1.tar.gz", hash = "sha256:ad9aa55b65ef2808eb405f46cf74df7fcb7044d5cbc26487f96eb2ef2e436693"},
 ]
 certifi = [
-    {file = "certifi-2022.9.14-py3-none-any.whl", hash = "sha256:e232343de1ab72c2aa521b625c80f699e356830fd0e2c620b465b304b17b0516"},
-    {file = "certifi-2022.9.14.tar.gz", hash = "sha256:36973885b9542e6bd01dea287b2b4b3b21236307c56324fcc3f1160f2d655ed5"},
+    {file = "certifi-2022.9.24-py3-none-any.whl", hash = "sha256:90c1a32f1d68f940488354e36370f6cca89f0f106db09518524c88d6ed83f382"},
+    {file = "certifi-2022.9.24.tar.gz", hash = "sha256:0d9c601124e5a6ba9712dbc60d9c53c21e34f5f641fe83002317394311bdce14"},
 ]
 charset-normalizer = [
     {file = "charset-normalizer-2.1.1.tar.gz", hash = "sha256:5a3d016c7c547f69d6f81fb0db9449ce888b418b5b9952cc5e6e66843e9dd845"},
@@ -642,6 +667,10 @@ Jinja2 = [
 ]
 livereload = [
     {file = "livereload-2.6.3.tar.gz", hash = "sha256:776f2f865e59fde56490a56bcc6773b6917366bce0c267c60ee8aaf1a0959869"},
+]
+Markdown = [
+    {file = "Markdown-3.4.1-py3-none-any.whl", hash = "sha256:08fb8465cffd03d10b9dd34a5c3fea908e20391a2a90b88d66362cb05beed186"},
+    {file = "Markdown-3.4.1.tar.gz", hash = "sha256:3b809086bb6efad416156e00a0da66fe47618a5d6918dd688f53f40c8e4cfeff"},
 ]
 MarkupSafe = [
     {file = "MarkupSafe-2.1.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:86b1f75c4e7c2ac2ccdaec2b9022845dbb81880ca318bb7a0a01fbf7813e3812"},
@@ -756,8 +785,8 @@ requests = [
     {file = "requests-2.28.1.tar.gz", hash = "sha256:7c5599b102feddaa661c826c56ab4fee28bfd17f5abca1ebbe3e7f19d7c97983"},
 ]
 setuptools = [
-    {file = "setuptools-65.3.0-py3-none-any.whl", hash = "sha256:2e24e0bec025f035a2e72cdd1961119f557d78ad331bb00ff82efb2ab8da8e82"},
-    {file = "setuptools-65.3.0.tar.gz", hash = "sha256:7732871f4f7fa58fb6bdcaeadb0161b2bd046c85905dbaa066bdcbcc81953b57"},
+    {file = "setuptools-65.4.0-py3-none-any.whl", hash = "sha256:c2d2709550f15aab6c9110196ea312f468f41cd546bceb24127a1be6fdcaeeb1"},
+    {file = "setuptools-65.4.0.tar.gz", hash = "sha256:a8f6e213b4b0661f590ccf40de95d28a177cd747d098624ad3f69c40287297e9"},
 ]
 six = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
@@ -786,6 +815,10 @@ sphinx_collapse = [
 sphinx-copybutton = [
     {file = "sphinx-copybutton-0.5.0.tar.gz", hash = "sha256:a0c059daadd03c27ba750da534a92a63e7a36a7736dcf684f26ee346199787f6"},
     {file = "sphinx_copybutton-0.5.0-py3-none-any.whl", hash = "sha256:9684dec7434bd73f0eea58dda93f9bb879d24bff2d8b187b1f2ec08dfe7b5f48"},
+]
+sphinx-markdown-tables = [
+    {file = "sphinx-markdown-tables-0.0.17.tar.gz", hash = "sha256:6bc6d3d400eaccfeebd288446bc08dd83083367c58b85d40fe6c12d77ef592f1"},
+    {file = "sphinx_markdown_tables-0.0.17-py3-none-any.whl", hash = "sha256:2bd0c30779653e4dd120300cbd9ca412c480738cc2241f6dea477a883f299e04"},
 ]
 sphinx-multiversion-scylla = [
     {file = "sphinx-multiversion-scylla-0.2.12.tar.gz", hash = "sha256:c61eb2de5a522c41d320325594d9789e220e9968f6201aaed464c35ed54dbcec"},

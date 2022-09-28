@@ -20,3 +20,4 @@ Creating and Simulating Activity Plans
   simulation-configuration
   simulation-results
   scheduling-guide
+  activity-directive-metadata
