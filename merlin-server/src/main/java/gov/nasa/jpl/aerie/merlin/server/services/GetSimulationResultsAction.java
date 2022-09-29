@@ -86,14 +86,14 @@ public final class GetSimulationResultsAction {
     final var plan = this.planService.getPlan(planId);
     final var revisionData = this.planService.getPlanRevisionData(planId);
 
-    final var constraintJsons = new HashMap<String, Constraint>();
+    final var constraintCode = new HashMap<String, Constraint>();
 
     try {
       this.missionModelService.getConstraints(plan.missionModelId).forEach(
-          (name, constraint) -> constraintJsons.put("model/" + name, constraint)
+          (name, constraint) -> constraintCode.put("model/" + name, constraint)
       );
       this.planService.getConstraintsForPlan(planId).forEach(
-          (name, constraint) -> constraintJsons.put("plan/" + name, constraint)
+          (name, constraint) -> constraintCode.put("plan/" + name, constraint)
       );
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       throw new RuntimeException("Assumption falsified -- mission model for existing plan does not exist");
@@ -174,7 +174,7 @@ public final class GetSimulationResultsAction {
         discreteProfiles);
 
     final var violations = new HashMap<String, List<Violation>>();
-    for (final var entry : constraintJsons.entrySet()) {
+    for (final var entry : constraintCode.entrySet()) {
 
       // Pipeline switch
       // To remove the old constraints pipeline, delete the `useNewConstraintPipeline` variable
