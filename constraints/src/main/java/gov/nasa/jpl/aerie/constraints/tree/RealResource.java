@@ -27,6 +27,10 @@ public final class RealResource implements Expression<LinearProfile> {
       return results.realProfiles.get(this.name);
     } else if (results.discreteProfiles.containsKey(this.name)) {
       return convertDiscreteProfile(results.discreteProfiles.get(this.name));
+    } else if (environment.realExternalProfiles().containsKey(this.name)) {
+      return environment.realExternalProfiles().get(this.name);
+    } else if (environment.discreteExternalProfiles().containsKey(this.name)) {
+      return convertDiscreteProfile(environment.discreteExternalProfiles().get(this.name));
     }
 
     throw new InputMismatchException(String.format("%s is not a valid resource", this.name));

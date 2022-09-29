@@ -22,7 +22,9 @@ public final class DiscreteResource implements Expression<DiscreteProfile> {
   public DiscreteProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     if (results.discreteProfiles.containsKey(this.name)) {
       return results.discreteProfiles.get(this.name);
-    } else if (results.realProfiles.containsKey(this.name)) {
+    } else if (environment.discreteExternalProfiles().containsKey(this.name)) {
+      return environment.discreteExternalProfiles().get(this.name);
+    } else if (results.realProfiles.containsKey(this.name) || environment.realExternalProfiles().containsKey(this.name)) {
       throw new InputMismatchException(String.format("%s is a real resource, cannot interpret as discrete", this.name));
     }
 
