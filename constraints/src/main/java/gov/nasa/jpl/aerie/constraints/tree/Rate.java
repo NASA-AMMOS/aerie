@@ -1,11 +1,10 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
-import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -18,7 +17,7 @@ public final class Rate implements Expression<LinearProfile> {
 
 
   @Override
-  public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
+  public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     return this.profile.evaluate(results, bounds, environment).rate();
   }
 

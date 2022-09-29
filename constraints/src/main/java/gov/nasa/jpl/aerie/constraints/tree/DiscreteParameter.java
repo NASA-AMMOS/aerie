@@ -1,13 +1,12 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
-import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -21,8 +20,8 @@ public final class DiscreteParameter implements Expression<DiscreteProfile> {
   }
 
   @Override
-  public DiscreteProfile evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
-    final var activity = environment.get(this.activityAlias);
+  public DiscreteProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+    final var activity = environment.activityInstances().get(this.activityAlias);
     return new DiscreteProfile(
         List.of(
             new DiscreteProfilePiece(bounds, activity.parameters.get(this.parameterName))));

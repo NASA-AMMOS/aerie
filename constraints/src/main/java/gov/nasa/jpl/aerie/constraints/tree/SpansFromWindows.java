@@ -1,19 +1,17 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
-import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
-import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 public record SpansFromWindows(Expression<Windows> expression) implements Expression<Spans> {
 
   @Override
-  public Spans evaluate(SimulationResults results, final Interval bounds, Map<String, ActivityInstance> environment) {
+  public Spans evaluate(SimulationResults results, final Interval bounds, EvaluationEnvironment environment) {
     final var windows = this.expression.evaluate(results, bounds, environment);
     return windows.intoSpans();
   }

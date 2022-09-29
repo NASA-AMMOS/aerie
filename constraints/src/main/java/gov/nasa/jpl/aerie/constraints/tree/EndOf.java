@@ -1,12 +1,11 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
-import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -18,8 +17,8 @@ public final class EndOf implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
-    final var activity = environment.get(this.activityAlias);
+  public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+    final var activity = environment.activityInstances().get(this.activityAlias);
     return new Windows(
         Segment.of(Interval.FOREVER, false),
         Segment.of(Interval.at(activity.interval.end), true)

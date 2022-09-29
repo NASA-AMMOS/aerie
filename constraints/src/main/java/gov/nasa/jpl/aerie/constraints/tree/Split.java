@@ -1,13 +1,12 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
-import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.time.IntervalContainer;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity;
+import gov.nasa.jpl.aerie.constraints.time.IntervalContainer;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -28,7 +27,7 @@ public final class Split<I extends IntervalContainer<?>> implements Expression<S
   }
 
   @Override
-  public Spans evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
+  public Spans evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     final var intervals = this.intervals.evaluate(results, bounds, environment);
     return intervals.split(this.numberOfSubIntervals, this.internalStartInclusivity, this.internalEndInclusivity);
   }
