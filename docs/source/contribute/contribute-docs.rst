@@ -113,6 +113,8 @@ To preview your changes while you are working, run ``make preview`` from the com
 
 When you are finished making changes, run ``make clean`` and then ``make dirhtml`` to ensure that the site will deploy. Once the site builds successfully without warnings, you may proceed to the next step.
 
+To check for broken links, run ``make dirhtml`` and then ``make linkcheck``.
+
 Submit a pull request (PR)
 ==========================
 
