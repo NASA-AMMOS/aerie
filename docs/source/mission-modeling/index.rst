@@ -48,4 +48,3 @@ producing a composite profile of dynamics for each resource over the entire simu
   mission-model-configuration-parameters
   models-and-resources
   configuring-a-mission-model
-  _draft_simulation-engine
