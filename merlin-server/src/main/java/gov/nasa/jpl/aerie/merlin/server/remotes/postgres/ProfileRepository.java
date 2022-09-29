@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
@@ -42,6 +43,26 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
     }
 
     return new ProfileSet(realProfiles, discreteProfiles);
+  }
+
+  static Map<String, ValueSchema> getProfileSchemas(
+      final Connection connection,
+      final long datasetId
+  ) throws SQLException {
+    final var results = new HashMap<String, ValueSchema>();
+
+    final var profileRecords = getProfileRecords(connection, datasetId);
+    for (final var record : profileRecords) {
+      results.put(record.name(), record.type().getRight());
+    }
+
+    return results;
+  }
+
+  static List<PlanDatasetRecord> getAllPlanDatasetsForPlan(final Connection connection, final PlanId planId, final Timestamp planStartTime) throws SQLException {
+    try (final var getPlanDatasetsAction = new GetPlanDatasetsAction(connection)) {
+      return getPlanDatasetsAction.get(planId, planStartTime);
+    }
   }
 
   static List<ProfileRecord> getProfileRecords(

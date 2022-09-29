@@ -6,7 +6,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class TypescriptCodeGenerationServiceAdapter implements ConstraintsCodeGenService {
@@ -25,7 +27,7 @@ public class TypescriptCodeGenerationServiceAdapter implements ConstraintsCodeGe
     return TypescriptCodeGenerationService
         .generateTypescriptTypes(
             activityTypes(missionModelService, missionModelId),
-            resourceTypes(missionModelService, missionModelId));
+            resourceSchemas(missionModelService, missionModelId, planService, planId));
   }
 
   static Map<String, TypescriptCodeGenerationService.ActivityType> activityTypes(final MissionModelService missionModelService, final String missionModelId)
@@ -46,10 +48,19 @@ public class TypescriptCodeGenerationServiceAdapter implements ConstraintsCodeGe
                     .toList())))
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
-  static Map<String, ValueSchema> resourceTypes(final MissionModelService missionModelService, final String modelId)
-  throws MissionModelService.NoSuchMissionModelException
-  {
-    return missionModelService.getResourceSchemas(modelId);
+  static Map<String, ValueSchema> resourceSchemas(
+      final MissionModelService missionModelService,
+      final String modelId,
+      final PlanService planService,
+      final Optional<PlanId> planId
+  ) throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException {
+    final var simulatedResourceSchemas = missionModelService.getResourceSchemas(modelId);
+    final var results = new HashMap<String, ValueSchema>(simulatedResourceSchemas);
+    if (planId.isPresent()) {
+        final var externalResourceSchemas = planService.getExternalResourceSchemas(planId.get());
+        results.putAll(externalResourceSchemas);
+    }
+    return results;
   }
 }
 

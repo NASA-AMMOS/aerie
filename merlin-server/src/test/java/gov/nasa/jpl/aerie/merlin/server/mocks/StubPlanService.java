@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
@@ -11,12 +12,14 @@ import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
+import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 public final class StubPlanService implements PlanService {
-  public static final String EXISTENT_PLAN_ID = "abc";
+  public static final PlanId EXISTENT_PLAN_ID = new PlanId(1L);
   public static final Plan EXISTENT_PLAN;
   public static final RevisionData REVISION_DATA =
       new RevisionData() {
@@ -40,6 +43,7 @@ public final class StubPlanService implements PlanService {
 
     EXISTENT_PLAN = new Plan();
     EXISTENT_PLAN.name = "existent";
+    EXISTENT_PLAN.missionModelId = "abc";
     EXISTENT_PLAN.activityInstances = Map.of(EXISTENT_ACTIVITY_ID, EXISTENT_ACTIVITY);
   }
 
@@ -72,6 +76,16 @@ public final class StubPlanService implements PlanService {
   throws NoSuchPlanException
   {
     return 0;
+  }
+
+  @Override
+  public List<Pair<Timestamp, ProfileSet>> getExternalDatasets(final PlanId planId) throws NoSuchPlanException {
+    return List.of();
+  }
+
+  @Override
+  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId) throws NoSuchPlanException {
+    return Map.of("external resource", ValueSchema.BOOLEAN);
   }
 
 }

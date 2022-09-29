@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.constraints.tree.*;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
+import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,13 +22,14 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ConstraintsDSLCompilationServiceTests {
+  private static final String MISSION_MODEL_ID = "abc";
   private static final PlanId PLAN_ID = new PlanId(1L);
   ConstraintsDSLCompilationService constraintsDSLCompilationService;
 
   @BeforeAll
   void setUp() throws IOException {
     constraintsDSLCompilationService = new ConstraintsDSLCompilationService(
-        new TypescriptCodeGenerationServiceAdapter(new StubMissionModelService())
+        new TypescriptCodeGenerationServiceAdapter(new StubMissionModelService(), new StubPlanService())
     );
   }
 
@@ -38,7 +41,7 @@ class ConstraintsDSLCompilationServiceTests {
   private <T> void checkSuccessfulCompilation(String constraint, Expression<T> expected)
   {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult result;
-    result = assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL("abc", constraint));
+    result = assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL(MISSION_MODEL_ID, Optional.of(PLAN_ID), constraint));
     if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Success r) {
       assertEquals(expected, r.constraintExpression());
     } else if (result instanceof ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error r) {
@@ -49,7 +52,7 @@ class ConstraintsDSLCompilationServiceTests {
   private void checkFailedCompilation(String constraint, String error) {
     final ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error actualErrors;
     actualErrors = (ConstraintsDSLCompilationService.ConstraintsDSLCompilationResult.Error) assertDoesNotThrow(() -> constraintsDSLCompilationService.compileConstraintsDSL(
-        "abc", constraint
+        MISSION_MODEL_ID, Optional.of(PLAN_ID), constraint
     ));
     if (actualErrors.errors()
                     .stream()
