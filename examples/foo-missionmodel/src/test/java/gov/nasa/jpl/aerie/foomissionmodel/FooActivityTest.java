@@ -1,11 +1,15 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
 import java.time.Instant;
+import java.util.Map;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.FooActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityTypes;
+import gov.nasa.jpl.aerie.foomissionmodel.generated.activities.FooActivityMapper;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinTestContext;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
@@ -13,8 +17,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityActions.spawn;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
+import static org.assertj.core.api.Assertions.*;
 
 @TestInstance(Lifecycle.PER_CLASS)
 public final class FooActivityTest {
@@ -50,5 +53,24 @@ public final class FooActivityTest {
     assertThat(model.simpleData.totalVolume.get()).isCloseTo(15.0, within(1e-9));
     delay(10, Duration.SECOND);
     assertThat(model.simpleData.totalVolume.get()).isCloseTo(147.558135, within(1e-9));
+  }
+
+  @Test
+  public void testActivityInstantiate() {
+
+    // Assert missing required argument throws exception
+    assertThatExceptionOfType(InvalidArgumentsException.class).isThrownBy(() ->
+    new FooActivityMapper().instantiate(Map.of(
+        "x", SerializedValue.of(42),
+        "y", SerializedValue.of("test")
+    )));
+
+    // Assert provided required argument throws no exception
+    assertThatNoException().isThrownBy(() ->
+        new FooActivityMapper().instantiate(Map.of(
+           "x", SerializedValue.of(42),
+           "y", SerializedValue.of("test"),
+           "z", SerializedValue.of(43)
+    )));
   }
 }

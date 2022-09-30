@@ -23,6 +23,9 @@ public final class FooActivity {
   public String y = "test";
 
   @Parameter
+  public Integer z; // No default value specified, therefore this parameter is required
+
+  @Parameter
   public List<Vector3D> vecs = List.of(new Vector3D(0.0, 0.0, 0.0));
 
   @Validation("x cannot be exactly 99")
