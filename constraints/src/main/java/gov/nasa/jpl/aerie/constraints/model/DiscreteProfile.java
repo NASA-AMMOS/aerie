@@ -2,11 +2,16 @@ package gov.nasa.jpl.aerie.constraints.model;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
 
 public final class DiscreteProfile implements Profile<DiscreteProfile> {
   public final List<DiscreteProfilePiece> profilePieces;
@@ -129,6 +134,23 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
     }
 
     return transitionPoints.select(bounds);
+  }
+
+  public static DiscreteProfile fromExternalProfile(final Duration offsetFromPlanStart, final List<Pair<Duration, SerializedValue>> externalProfile) {
+    final var result = new ArrayList<DiscreteProfilePiece>(externalProfile.size());
+    var cursor = offsetFromPlanStart;
+    for (final var pair: externalProfile) {
+      final var nextCursor = cursor.plus(pair.getKey());
+
+      result.add(new DiscreteProfilePiece(
+          Interval.between(cursor, Inclusive, nextCursor, Exclusive),
+          pair.getValue()
+      ));
+
+      cursor = nextCursor;
+    }
+
+    return new DiscreteProfile(result);
   }
 
   @Override

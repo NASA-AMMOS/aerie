@@ -414,7 +414,7 @@ public class ASTTests {
         Map.of(),
         Map.of()
     );
-    final var environment = new EvaluationEnvironment(Map.of("act", act));
+    final var environment = new EvaluationEnvironment(Map.of("act", act), Map.of(), Map.of());
 
     final var result = new RealParameter("act", "p1").evaluate(simResults, environment);
 
@@ -636,7 +636,9 @@ public class ASTTests {
                 "TypeA",
                 Map.of(),
                 Interval.between(4, 8, SECONDS))
-        )
+        ),
+        Map.of(),
+        Map.of()
     );
 
     final var result = new ActivityWindow("act").evaluate(simResults, environment);
@@ -666,7 +668,9 @@ public class ASTTests {
                 "TypeA",
                 Map.of(),
                 Interval.between(4, 8, SECONDS))
-        )
+        ),
+        Map.of(),
+        Map.of()
     );
 
     final var result = new StartOf("act").evaluate(simResults, environment);
@@ -696,7 +700,9 @@ public class ASTTests {
                 "TypeA",
                 Map.of(),
                 Interval.between(4, 8, SECONDS))
-        )
+        ),
+        Map.of(),
+        Map.of()
     );
 
     final var result = new EndOf("act").evaluate(simResults, environment);
@@ -771,6 +777,66 @@ public class ASTTests {
         .set(Interval.at(20, SECONDS), true)
         .set(interval(22, 23, SECONDS), false)
         .set(interval(24, 30, SECONDS), false);
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testExternalDiscreteResource() {
+    final var simResults = new SimulationResults(
+        Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var environment = new EvaluationEnvironment(
+        Map.of(),
+        Map.of(
+            "real1", new LinearProfile(new LinearProfilePiece(Interval.at(1, SECONDS), 0, 1)),
+            "real2", new LinearProfile(new LinearProfilePiece(Interval.at(2, SECONDS), 0, 1)),
+            "real3", new LinearProfile(new LinearProfilePiece(Interval.at(3, SECONDS), 0, 1))
+        ),
+        Map.of(
+            "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(4, SECONDS), SerializedValue.of("one"))),
+            "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(5, SECONDS), SerializedValue.of("two"))),
+            "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(6, SECONDS), SerializedValue.of("three")))
+        )
+    );
+
+    final var result = new DiscreteResource("discrete2").evaluate(simResults, environment);
+
+    final var expected = environment.discreteExternalProfiles().get("discrete2");
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testExternalRealResource() {
+    final var simResults = new SimulationResults(
+        Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var environment = new EvaluationEnvironment(
+        Map.of(),
+        Map.of(
+            "real1", new LinearProfile(new LinearProfilePiece(Interval.at(1, SECONDS), 0, 1)),
+            "real2", new LinearProfile(new LinearProfilePiece(Interval.at(2, SECONDS), 0, 1)),
+            "real3", new LinearProfile(new LinearProfilePiece(Interval.at(3, SECONDS), 0, 1))
+        ),
+        Map.of(
+            "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(4, SECONDS), SerializedValue.of("one"))),
+            "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(5, SECONDS), SerializedValue.of("two"))),
+            "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(6, SECONDS), SerializedValue.of("three")))
+        )
+    );
+
+    final var result = new RealResource("real2").evaluate(simResults, environment);
+
+    final var expected = environment.realExternalProfiles().get("real2");
 
     assertEquivalent(expected, result);
   }

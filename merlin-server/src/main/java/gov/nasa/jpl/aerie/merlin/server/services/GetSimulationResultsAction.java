@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
@@ -124,44 +125,33 @@ public final class GetSimulationResultsAction {
         .orElseGet(Collections::emptyMap);
     final var discreteProfiles = new HashMap<String, DiscreteProfile>(_discreteProfiles.size());
     for (final var entry : _discreteProfiles.entrySet()) {
-      final var pieces = new ArrayList<DiscreteProfilePiece>(entry.getValue().getRight().size());
-
-      var elapsed = Duration.ZERO;
-      for (final var piece : entry.getValue().getRight()) {
-        final var extent = piece.getLeft();
-        final var value = piece.getRight();
-
-        pieces.add(new DiscreteProfilePiece(
-            Interval.between(elapsed, elapsed.plus(extent)),
-            value));
-
-        elapsed = elapsed.plus(extent);
-      }
-
-      discreteProfiles.put(entry.getKey(), new DiscreteProfile(pieces));
+      discreteProfiles.put(entry.getKey(), DiscreteProfile.fromExternalProfile(Duration.ZERO, entry.getValue().getRight()));
     }
     final var _realProfiles = results$
         .map(r -> r.realProfiles)
         .orElseGet(Collections::emptyMap);
     final var realProfiles = new HashMap<String, LinearProfile>();
     for (final var entry : _realProfiles.entrySet()) {
-      final var pieces = new ArrayList<LinearProfilePiece>(entry.getValue().getRight().size());
-
-      var elapsed = Duration.ZERO;
-      for (final var piece : entry.getValue().getRight()) {
-        final var extent = piece.getLeft();
-        final var value = piece.getRight();
-
-        pieces.add(new LinearProfilePiece(
-            Interval.between(elapsed, elapsed.plus(extent)),
-            value.initial,
-            value.rate));
-
-        elapsed = elapsed.plus(extent);
-      }
-
-      realProfiles.put(entry.getKey(), new LinearProfile(pieces));
+      realProfiles.put(entry.getKey(), LinearProfile.fromExternalProfile(Duration.ZERO, entry.getValue().getRight()));
     }
+
+    final var externalDatasets = this.planService.getExternalDatasets(planId);
+    final var realExternalProfiles = new HashMap<String, LinearProfile>();
+    final var discreteExternalProfiles = new HashMap<String, DiscreteProfile>();
+
+    for (final var pair: externalDatasets) {
+      final var offsetFromPlanStart = pair.getLeft();
+      final var profileSet = pair.getRight();
+
+      for (final var profile: profileSet.discreteProfiles().entrySet()) {
+        discreteExternalProfiles.put(profile.getKey(), DiscreteProfile.fromExternalProfile(offsetFromPlanStart, profile.getValue().getRight()));
+      }
+      for (final var profile: profileSet.realProfiles().entrySet()) {
+        realExternalProfiles.put(profile.getKey(), LinearProfile.fromExternalProfile(offsetFromPlanStart, profile.getValue().getRight()));
+      }
+    }
+
+    final var environment = new EvaluationEnvironment(Map.of(), realExternalProfiles, discreteExternalProfiles);
 
     final var planDuration = Duration.of(
         plan.startTimestamp.toInstant().until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS),
@@ -199,7 +189,7 @@ public final class GetSimulationResultsAction {
 
       final var violationEvents = new ArrayList<Violation>();
       try {
-        violationEvents.addAll(expression.evaluate(preparedResults));
+        violationEvents.addAll(expression.evaluate(preparedResults, environment));
       } catch (final InputMismatchException ex) {
         // @TODO Need a better way to catch and propagate the exception to the
         // front end and to log the evaluation failure. This is captured in AERIE-1285.

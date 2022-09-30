@@ -31,7 +31,11 @@ public final class ForEachActivity implements Expression<List<Violation>> {
     final var violations = new ArrayList<Violation>();
     for (final var activity : results.activities) {
       if (activity.type.equals(this.activityType)) {
-        final var newEnvironment = new EvaluationEnvironment(new HashMap<>(environment.activityInstances()));
+        final var newEnvironment = new EvaluationEnvironment(
+            new HashMap<>(environment.activityInstances()),
+            environment.realExternalProfiles(),
+            environment.discreteExternalProfiles()
+        );
         newEnvironment.activityInstances().put(this.alias, activity);
 
         final var expressionViolations = this.expression.evaluate(results, bounds, newEnvironment);

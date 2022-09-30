@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
@@ -45,7 +46,7 @@ public final class LocalPlanService implements PlanService {
   }
 
   @Override
-  public List<Pair<Timestamp, ProfileSet>> getExternalDatasets(final PlanId planId) throws NoSuchPlanException {
+  public List<Pair<Duration, ProfileSet>> getExternalDatasets(final PlanId planId) throws NoSuchPlanException {
     return this.planRepository.getExternalDatasets(planId);
   }
 
