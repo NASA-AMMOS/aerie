@@ -106,6 +106,14 @@ public class IncrementalSimulationDriver<Model> {
   }
 
 
+  /**
+   * Simulate an activity
+   * @param activity the activity to simulate
+   * @param startTime the start time of the activity
+   * @param activityId the activity id for the activity to simulate
+   * @throws TaskSpecType.UnconstructableTaskSpecException
+   * @throws InvalidArgumentsException
+   */
   public void simulateActivity(SerializedActivity activity, Duration startTime, ActivityInstanceId activityId)
   throws TaskSpecType.UnconstructableTaskSpecException, InvalidArgumentsException
   {
@@ -130,11 +138,11 @@ public class IncrementalSimulationDriver<Model> {
 
   /**
    * Get the simulation results from the Duration.ZERO to the current simulation time point
-   * @param startTime the epoch start time for these results
+   * @param startTimestamp the timestamp for the start of the planning horizon. Used as epoch for computing SimulationResults.
    * @return the simulation results
    */
-  public SimulationResults getSimulationResults(Instant startTime){
-    return getSimulationResultsUpTo(curTime, startTime);
+  public SimulationResults getSimulationResults(Instant startTimestamp){
+    return getSimulationResultsUpTo(startTimestamp, curTime);
   }
 
   public Duration getCurrentSimulationEndTime(){
@@ -144,20 +152,20 @@ public class IncrementalSimulationDriver<Model> {
   /**
    * Get the simulation results from the Duration.ZERO to a specified end time point.
    * The provided simulation results might cover more than the required time period.
-   * @param endTime the duration onto which these results are computed
-   * @param startTime the epoch start time for these results
+   * @param startTimestamp the timestamp for the start of the planning horizon. Used as epoch for computing SimulationResults.
+   * @param endTime the end timepoint. The simulation results will be computed up to this point.
    * @return the simulation results
    */
-  public SimulationResults getSimulationResultsUpTo(Duration endTime, Instant startTime){
+  public SimulationResults getSimulationResultsUpTo(Instant startTimestamp, Duration endTime){
     //if previous results cover a bigger period, we return do not regenerate
     if(endTime.longerThan(curTime)){
       simulateUntil(endTime);
     }
 
-    if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd)) {
+    if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.startTime) != 0) {
       lastSimResults = SimulationEngine.computeResults(
           engine,
-          startTime,
+          startTimestamp,
           endTime,
           activityTopic,
           timeline,
