@@ -9,13 +9,13 @@ Aerie Docker images are available at [GitHub packages](https://github.com/orgs/N
 ## Known Issues
 
 1. Using a custom base URL path for Aerie UI 
-    * Follow the instructions linked at [Custom Base Path](https://github.com/NASA-AMMOS/aerie/wiki/UI-Custom-Base-Path-Docker-Image) to deploy Aerie UI at a custom base path.
+    * Follow the instructions linked at [Custom Base Path](ui-custom-base-path) to deploy Aerie UI at a custom base path.
 2. Annotations processing being used for Activity Mapping
     * When using the IntelliJ IDE, upon a source file change, only the affected source files will be recompiled. This causes conflicts with the annotations processing being used for Activity Mapping. For now manually rebuilding every time is the solution.
 
 ## Administration
 
-This product is using Docker containers to run the application. The Docker containers are internally bridged (connected) to run the application. Containers can be restarted in case of any issues using Docker CLI. See the [TCP Port Requirements](#TCP-Port-Requirements) for which containers should be exposed publicly/outside the Docker network.
+This product is using Docker containers to run the application. The Docker containers are internally bridged (connected) to run the application. Containers can be restarted in case of any issues using Docker CLI. See the [TCP Port Requirements](system-requirements.md#tcp-port-requirements) for which containers should be exposed publicly/outside the Docker network.
 
 ## Configuration
 

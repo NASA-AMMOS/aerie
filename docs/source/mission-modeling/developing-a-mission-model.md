@@ -40,7 +40,7 @@ parameters of various types; the [`BasicValueMappers`](https://github.com/NASA-A
 ruleset covers most primitive Java types. Mission modelers may also create their own rulesets, specifying 
 rules for mapping custom value types. If multiple mapper classes are included via the `@WithMappers` annotations,
 and multiple mappers declare a mapping rule to the same data type, the rule found in the earlier declared mapper 
-will take precedence. For more information on allowing custom values, see [value mappers](../activity-mappers/#value-mappers).
+will take precedence. For more information on allowing custom values, see [value mappers](activity-mappers.md#value-mappers).
 
 
 ## Mission Model Class
