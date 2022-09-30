@@ -2,12 +2,19 @@ package gov.nasa.jpl.aerie.constraints.model;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.interval;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
@@ -284,10 +291,29 @@ public class LinearProfileTest {
     final var result = profile.notEqualTo(other, Interval.between(0, 20, SECONDS));
 
     final var expected = new Windows(interval(0, 20, SECONDS), false)
-    		.set(Interval.between(2, Exclusive, 6, Exclusive, SECONDS), true)
-    		.set(Interval.between(8, Exclusive, 14, Exclusive, SECONDS), true)
-    		.set(Interval.between(14, Exclusive, 16, Exclusive, SECONDS), true);
+        .set(Interval.between(2, Exclusive, 6, Exclusive, SECONDS), true)
+        .set(Interval.between(8, Exclusive, 14, Exclusive, SECONDS), true)
+        .set(Interval.between(14, Exclusive, 16, Exclusive, SECONDS), true);
 
     assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testConvertFromExternalFormat() {
+    final var externalProfile = List.of(
+        Pair.of(Duration.of(1, SECOND), RealDynamics.linear(1, 1)),
+        Pair.of(Duration.of(1, SECOND), RealDynamics.linear(5, -1))
+    );
+
+    final var profile = LinearProfile.fromExternalProfile(Duration.of(1, SECOND), externalProfile);
+
+    final var expected = new LinearProfile(
+        new LinearProfilePiece(Interval.between(1, Inclusive, 2, Exclusive, SECONDS), 1, 1),
+        new LinearProfilePiece(Interval.between(2, Inclusive, 3, Exclusive, SECONDS), 5, -1)
+    );
+
+    assertIterableEquals(
+        expected.profilePieces, profile.profilePieces
+    );
   }
 }
