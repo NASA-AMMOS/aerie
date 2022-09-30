@@ -1,10 +1,14 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public record GenerateConstraintsLibAction(ConstraintsCodeGenService typescriptCodeGenerationService) {
   public GenerateConstraintsLibAction {
@@ -22,21 +26,20 @@ public record GenerateConstraintsLibAction(ConstraintsCodeGenService typescriptC
   /**
    * Generate the source files used for running constraint definitions.
    *
-   * @param missionModelId
    * @return a response object wrapping the results of generating the code (either successful or not)
    */
-  public Response run(final String missionModelId) {
+  public Response run(final String missionModelId, final Optional<PlanId> planId) {
 
     try {
       final var constraintsDslCompilerRoot = System.getenv("CONSTRAINTS_DSL_COMPILER_ROOT");
       final var constraintsApi = Files.readString(Paths.get(constraintsDslCompilerRoot, "src", "libs", "constraints-edsl-fluent-api.ts"));
       final var constraintsAst = Files.readString(Paths.get(constraintsDslCompilerRoot, "src", "libs", "constraints-ast.ts"));
-      final var generated = typescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelId);
+      final var generated = typescriptCodeGenerationService.generateTypescriptTypes(missionModelId, planId);
       return new Response.Success(
           Map.of("constraints-edsl-fluent-api.ts", constraintsApi,
                  "mission-model-generated-code.ts", generated,
                  "constraints-ast.ts", constraintsAst));
-    } catch (MissionModelService.NoSuchMissionModelException | IOException e) {
+    } catch (MissionModelService.NoSuchMissionModelException | NoSuchPlanException | IOException e) {
       return new Response.Failure(e.getMessage());
     }
   }

@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class GetSimulationResultsAction {
   public sealed interface Response {
@@ -184,6 +185,7 @@ public final class GetSimulationResultsAction {
       // TODO: cache these results
       final var constraintCompilationResult = constraintsDSLCompilationService.compileConstraintsDSL(
           plan.missionModelId,
+          Optional.of(planId),
           constraint.definition()
       );
 

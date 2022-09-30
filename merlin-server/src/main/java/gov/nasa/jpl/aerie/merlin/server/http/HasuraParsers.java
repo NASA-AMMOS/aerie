@@ -12,6 +12,7 @@ import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.nullableP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
@@ -52,6 +53,21 @@ public abstract class HasuraParsers {
       .map(
           untuple((name, planId, session, requestQuery) -> new HasuraAction<>(name, new HasuraAction.PlanInput(planId), session)),
           $ -> tuple($.name(), $.input().planId(), $.session(), ""));
+
+  public static final JsonParser<HasuraAction<HasuraAction.ConstraintsInput>> hasuraConstraintsCodeAction
+      = hasuraActionP(
+          productP
+              .field("missionModelId", stringP)
+              .optionalField("planId", nullableP(planIdP))
+              .map(
+                  untuple((modelId, planId) -> new HasuraAction.ConstraintsInput(modelId, planId.flatMap($ -> $))),
+                  $ -> tuple($.missionModelId(), Optional.of($.planId()))
+              )
+      )
+      .map(
+          untuple((name, input, session, requestQuery) -> new HasuraAction<>(name, input, session)),
+          $ -> tuple($.name(), $.input(), $.session(), "")
+      );
 
   public static final JsonParser<HasuraMissionModelEvent> hasuraMissionModelEventTriggerP
       = productP

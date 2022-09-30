@@ -1,15 +1,18 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
+import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TypescriptCodeGenerationServiceTest {
 
   @Test
-  void testCodeGen() throws MissionModelService.NoSuchMissionModelException {
-    final var codeGenService = new TypescriptCodeGenerationServiceAdapter(new StubMissionModelService());
+  void testCodeGen() throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException {
+    final var codeGenService = new TypescriptCodeGenerationServiceAdapter(new StubMissionModelService(), new StubPlanService());
 
     assertEquals(
         """
@@ -58,7 +61,7 @@ class TypescriptCodeGenerationServiceTest {
              ActivityType
            });
            /** End Codegen */""",
-        codeGenService.generateTypescriptTypesFromMissionModel("abc")
+        codeGenService.generateTypescriptTypes("abc", Optional.of(new PlanId(1L)))
     );
   }
 }

@@ -96,7 +96,8 @@ type Query {
 
 type Query {
   constraintsDslTypescript(
-    missionModelId: ID!
+    missionModelId: ID!,
+    planId: Int
   ): DslTypescriptResponse
 }
 
