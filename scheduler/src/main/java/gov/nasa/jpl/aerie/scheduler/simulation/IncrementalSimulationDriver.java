@@ -52,7 +52,6 @@ public class IncrementalSimulationDriver<Model> {
     this.missionModel = missionModel;
     plannedDirectiveToTask = new HashMap<>();
     initSimulation();
-    simulateUntil(Duration.ZERO);
   }
 
   /*package-private*/ void initSimulation(){
@@ -95,8 +94,8 @@ public class IncrementalSimulationDriver<Model> {
       if(batch.offsetFromStart().longerThan(endTime) || endTime.isEqualTo(Duration.MAX_VALUE)){
         break;
       }
-      curTime = batch.offsetFromStart();
       final var delta = batch.offsetFromStart().minus(curTime);
+      curTime = batch.offsetFromStart();
       timeline.add(delta);
       // Run the jobs in this batch.
       final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, missionModel);
