@@ -14,9 +14,9 @@ sys.path.insert(0, os.path.abspath(".."))
 TAGS = ["v0.13.1"]
 BRANCHES = ["develop"]
 # Set the latest version.
-LATEST_VERSION = "develop"
+LATEST_VERSION = "v0.13.1"
 # Set which versions are not released yet.
-UNSTABLE_VERSIONS = [""]
+UNSTABLE_VERSIONS = ["develop"]
 # Set which versions are deprecated
 DEPRECATED_VERSIONS = [""]
 
@@ -80,7 +80,7 @@ smv_latest_version = LATEST_VERSION
 smv_rename_latest_version = 'stable'  # Use the commit hash
 # Whitelist pattern for remotes (set to None to use local branches only)
 # smv_remote_whitelist = r"^origin$"
-smv_remote_whitelist = None
+smv_remote_whitelist = r'^.*$'
 # Pattern for released versions
 smv_released_pattern = r"v\d+\.\d+\.\d+$"
 # Format for versioned output directories inside the build directory
@@ -102,7 +102,7 @@ html_theme_options = {
     "github_issues_repository": "nasa-ammos/aerie",
     "github_repository": "nasa-ammos/aerie",
     "site_description": "Aerie documentation.",
-    "hide_version_dropdown": ["develop"],
+    "hide_version_dropdown": [],
     "versions_unstable": UNSTABLE_VERSIONS,
     "versions_deprecated": DEPRECATED_VERSIONS,
 }
