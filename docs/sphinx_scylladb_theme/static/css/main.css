@@ -8464,12 +8464,10 @@ code.download {
   font-weight: 500;
   line-height: 38px;
   margin-bottom: 14px;
-  max-width: 229px;
 }
 .hero__text {
   font-size: 16px;
   line-height: 26px;
-  max-width: 343px;
 }
 .hero__text a {
   border-bottom: 1px dotted #23263b;
@@ -8512,12 +8510,10 @@ code.download {
   .hero__title {
     font-size: 32px;
     line-height: 42px;
-    max-width: 482px;
   }
   .hero__text {
     font-size: 18px;
     line-height: 26px;
-    max-width: 482px;
   }
   .hero__img {
     display: block;
