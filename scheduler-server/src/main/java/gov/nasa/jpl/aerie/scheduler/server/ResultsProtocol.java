@@ -18,26 +18,32 @@ public final class ResultsProtocol {
    * common interface for different possible results of scheduling
    */
   //TODO: unify with ScheduleAction.Response which has overlapping options/data
-  public interface State {
+  public sealed interface State {
+
+    /**
+     * @return id associated with this run of the scheduler
+     */
+    long analysisId();
+
     /**
      * scheduling in progress, full results not yet available
      */
     //TODO: could probably provide some partial results
-    record Incomplete() implements State {}
+    record Incomplete(long analysisId) implements State {}
 
     /**
      * scheduling completed successfully, contains the full results
      *
      * @param results the results of the scheduling run
      */
-    record Success(ScheduleResults results) implements State {}
+    record Success(ScheduleResults results, long analysisId) implements State {}
 
     /**
      * scheduling failed; likely need to change inputs before re-running
      *
      * @param reason description of why the scheduling operation failed
      */
-    record Failed(String reason) implements State {}
+    record Failed(String reason, long analysisId) implements State {}
   }
 
   /**

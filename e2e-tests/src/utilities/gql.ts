@@ -23,6 +23,7 @@ const gql = {
       schedule(specificationId: $specificationId){
         reason
         status
+        analysisId
       }
     }
   `,
