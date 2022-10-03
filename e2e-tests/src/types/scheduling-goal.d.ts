@@ -34,6 +34,7 @@ type SchedulingResponseStatus = 'complete' | 'failed' | 'incomplete';
 type SchedulingResponse = {
   reason: string;
   status: SchedulingResponseStatus;
+  analysisId: number;
 };
 
 type SchedulingSpec = {

@@ -40,7 +40,7 @@ parameters of various types; the [`BasicValueMappers`](https://github.com/NASA-A
 ruleset covers most primitive Java types. Mission modelers may also create their own rulesets, specifying 
 rules for mapping custom value types. If multiple mapper classes are included via the `@WithMappers` annotations,
 and multiple mappers declare a mapping rule to the same data type, the rule found in the earlier declared mapper 
-will take precedence. For more information on allowing custom values, see [value mappers](../activity-mappers/#value-mappers).
+will take precedence. For more information on allowing custom values, see [value mappers](activity-mappers.md#value-mappers).
 
 
 ## Mission Model Class
@@ -64,12 +64,12 @@ public class Mission {
 }
 ```
 
-Mission resources are declared using [`Registrar#discrete`](https://github.jpl.nasa.gov/pages/Aerie/aerie/latest/javadoc/framework/gov/nasa/jpl/aerie/merlin/framework/Registrar.html#discrete(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.Resource,gov.nasa.jpl.aerie.merlin.protocol.ValueMapper)) or [`Registrar#real`](https://github.jpl.nasa.gov/pages/Aerie/aerie/latest/javadoc/framework/gov/nasa/jpl/aerie/merlin/framework/Registrar.html#real(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.Resource)).
+Mission resources are declared using `Registrar#discrete` or `Registrar#real`.
 
 A model may also express autonomous behaviors, where a discrete change occurs in the system outside of an 
 activity's effects. A **daemon task** can be used to model these behaviors. Daemons are spawned at the 
 beginning of any simulation, and may perform the same effects as an activity. Daemons are prepared using 
-the [`spawn`](https://github.jpl.nasa.gov/pages/Aerie/aerie/latest/javadoc/framework/gov/nasa/jpl/aerie/merlin/framework/ModelActions.html#spawn(java.lang.Runnable)) method.
+the `spawn` method.
 
 ## Activity types
 An **activity type** defines a simulated behavior that may be invoked by a planner, separate from the 
@@ -108,7 +108,5 @@ methods for spawning each type of activity as children from other activities.
 
 ## Uploading a Mission Model
 In order to use a mission model to simulate a plan on the Aerie platform, it must be packaged as a 
-JAR file with all of its non-Merlin dependencies bundled in. The [template mission model](https://github.com/NASA-AMMOS/mission-model-template) 
-provides this capability out of the box, so long as your dependencies are specified 
-with Gradle's `implementation` dependency class. The built mission model JAR can be uploaded to 
+JAR file with all of its non-Merlin dependencies bundled in. The built mission model JAR can be uploaded to 
 Aerie through the Aerie web UI.

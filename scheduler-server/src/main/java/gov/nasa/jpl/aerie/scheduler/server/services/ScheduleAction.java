@@ -32,17 +32,17 @@ public record ScheduleAction(SpecificationService specificationService, Schedule
     /**
      * scheduler has not completed running
      */
-    record Incomplete() implements Response {}
+    record Incomplete(long analysisId) implements Response {}
 
     /**
      * scheduler completed unsuccessfully, eg in an error or canceled
      */
-    record Failed(String reason) implements Response {}
+    record Failed(String reason, long analysisId) implements Response {}
 
     /**
      * scheduler completed successfully; contains the requested results
      */
-    record Complete(ScheduleResults results) implements Response {}
+    record Complete(ScheduleResults results, long analysisId) implements Response {}
   }
 
   /**
@@ -71,14 +71,14 @@ public record ScheduleAction(SpecificationService specificationService, Schedule
    */
   private Response repackResponse(ResultsProtocol.State response) {
     //the two responses are identical for now, but kept in order to remain parallel to merlin...GetSimulationResultsAction
-    if (response instanceof ResultsProtocol.State.Incomplete) {
-      return new Response.Incomplete();
+    if (response instanceof ResultsProtocol.State.Incomplete r) {
+      return new Response.Incomplete(r.analysisId());
     } else if (response instanceof ResultsProtocol.State.Failed r) {
-      return new Response.Failed(r.reason());
+      return new Response.Failed(r.reason(), r.analysisId());
     } else if (response instanceof ResultsProtocol.State.Success r) {
       final var results = r.results();
       //NB: could elaborate with more response content here, like merlin...SimResults adds in violation analytics
-      return new Response.Complete(results);
+      return new Response.Complete(results, r.analysisId());
     } else {
       throw new UnexpectedSubtypeError(ResultsProtocol.State.class, response);
     }

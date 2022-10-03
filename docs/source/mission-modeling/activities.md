@@ -55,14 +55,15 @@ decomposition into children activities and expansion into commands.
 The Merlin annotation processor is used to extract and generate serialization code for parameters of activity types.
 The annotation processor also allows authors of a mission model to create mission-specific parameter types, 
 ensuring that they will be recognized by the Merlin framework.
-See [Declaring Parameters](../activity-parameters/#declaration) for a thorough explanation 
+See [Activity Parameters](activity-parameters.rst) for a thorough explanation 
 of all possible styles of parameter declarations.
-For more information on mission-specific parameter types, see [Value Mappers](../activity-mappers/#value-mappers).
+For more information on mission-specific parameter types, see [Value Mappers](activity-mappers.md#value-mappers).
 
 ## Validations
 
-See [Declaring Parameters](../activity-parameters/#validation) for a thorough explanation
-of parameter validation.
+```{eval-rst}
+See :ref:`Activity Parameters <validation>` for a thorough explanation of parameter validation.
+```
 
 ## Activity Effect Model
 Every activity type has an associated "effect model" that describes how that activity impacts mission resources. 
@@ -85,7 +86,7 @@ model or situations that the mission model is not intended to simulate.
 **Actions:**
 An activity's effect model may wait for time to pass, spawn other activities, and affect spacecraft state. 
 Spacecraft state is affected via the `Mission` model parameter, which depends on the details of the modeled 
-mission systems. (See [Developing a Mission Model](../mission-modeling/developing-a-mission-model) 
+mission systems. (See [Developing a Mission Model](developing-a-mission-model) 
 for more on mission modeling.)
 
 Actions related to the passage of simulation time are provided as static methods on the `merlin.framework.ModelActions` class:
@@ -137,7 +138,7 @@ public final class RunHeater {
 
 This activity first spawns a `PowerOnHeater` activity, which then continues concurrently with the current `RunHeater` activity.
 Next, the total energy to be used by the heater is subtracted is subtracted from the remaining battery capacity 
-(see [Models and Resources](../mission-modeling/models-and-resources)). The energy used 
+(see [Models and Resources](models-and-resources)). The energy used 
 depends on the duration parameter of the activity, allowing the activity's effect to be tuned by the planner. 
 Next, the activity waits for the desired heater runtime to elapse, then spawns and waits for a `PowerOffHeater` 
 activity. The activity completes after both children have completed.
@@ -204,7 +205,7 @@ public String run(final Mission mission) {
 }
 ```
 Computed attributes are not limited to strings - they can be any type that merlin knows how to serialize. 
-See [ValueMappers](../activity-mappers/#value-mappers) to learn about what types are supported out of the 
+See [ValueMappers](activity-mappers.md#value-mappers) to learn about what types are supported out of the 
 box, and how to define custom serializers for your own types.
 
 Let's show how we can define computed attributes as a Map of Strings to Longs:
@@ -225,6 +226,7 @@ public Map<String, Long> run(final Mission mission) {
 }
 ```
 
+(duration-types)=
 ## Duration Types
 
 The scheduler (see [Scheduling Guide](../activity-plans/scheduling-guide) places 

@@ -11,6 +11,8 @@ Deployment
    system-requirements
    product-support
    ui-custom-base-path
+   building
+   building-windows
 
 .. panel-box::
   :title: Overview
@@ -21,3 +23,5 @@ Deployment
   * :doc:`Aerie can also be deployed to mission cloud infrastructure <aws-deployment>` - Example cloud configuration using AWS.
   * :doc:`Aerie System requirements <system-requirements>`
   * :doc:`Aerie product support <product-support>`
+  * :doc:`Building Aerie <building>`
+  * :doc:`Building Aerie on Windows <building-windows>`

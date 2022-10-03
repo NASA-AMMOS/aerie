@@ -1,9 +1,5 @@
 # Building Aerie
 
-- [Prerequisites](#prerequisites)
-- [Compile](#compile)
-- [Docker](#docker)
-
 ## Prerequisites
 
 ### Building

@@ -236,9 +236,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       try (final var connection = dataSource.getConnection()) {
         final var request = getRequest(connection, specId, specRevision);
         return switch(request.status()) {
-          case INCOMPLETE -> new ResultsProtocol.State.Incomplete();
-          case FAILED -> new ResultsProtocol.State.Failed(request.failureReason());
-          case SUCCESS -> new ResultsProtocol.State.Success(getResults(connection, request.analysisId()));
+          case INCOMPLETE -> new ResultsProtocol.State.Incomplete(this.analysisId);
+          case FAILED -> new ResultsProtocol.State.Failed(request.failureReason(), this.analysisId);
+          case SUCCESS -> new ResultsProtocol.State.Success(getResults(connection, request.analysisId()), this.analysisId);
         };
       } catch (final NoSuchRequestException ex) {
         throw new Error("Scheduling request no longer exists");

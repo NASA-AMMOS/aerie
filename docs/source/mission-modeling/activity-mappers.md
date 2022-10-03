@@ -46,7 +46,7 @@ Note that validation failures are different from instantiation errors. Validatio
 
 The `getParameters()` method returns a `Map<String, ValueSchema>`. In this map should be a key for 
 every parameter, with a `ValueSchema` describing the structure of that parameter. 
-See our [Value Schema documentation](../value-schemas/#value-schemas-from-code) for more 
+See our [Value Schema documentation](value-schemas.md#value-schemas-from-code) for more 
 information on creating value schemas.
 
 ## Generated Activity Mappers
@@ -55,7 +55,7 @@ In most cases, you will likely want to let Merlin generate activity mappers for 
 Thankfully, this is the done automatically when running the Merlin Annotation Processor.
 When compiling your code with the Merlin annotation processor, the processor will produce an 
 activity mapper for each activity type. This is made possible by the use of the `@WithMappers()` 
-annotations in your [package-info.java](../developing-a-mission-model/#package-info-file). Each
+annotations in your [package-info.java](developing-a-mission-model.md#package-info-file). Each
 java-file specified by these annotations is parsed to determine what types of values can 
 be mapped. As long as there is a mapper for each activity parameter type used in the model, 
 the annotation processor should have no issues creating activity mappers.
@@ -131,13 +131,13 @@ public class Vector3DValueMapper implements ValueMapper<Vector3D> {
 
 Notice there are just 3 methods to implement for a `ValueMapper`.
 The first is `getValueSchema()`, which should return a `ValueSchema`
-describing the structure of the value being mapped (see [value schemas](../activity-mappers/#value-schemas) for more 
+describing the structure of the value being mapped (see [value schemas](value-schemas) for more 
 info)
 
 The next two methods are inverses of each other: `deserializeValue()` and `serializeValue()`. 
 It is the job of `deserializeValue()` to take a `SerializedValue` and map it, if possible, 
 into the mapper's supported value. Meanwhile, `serializeValue()` takes an instance of the 
-mapper's supported value and turns it into a [`SerializedValue`](../activity-mappers/#what-is-a-serializedvalue).
+mapper's supported value and turns it into a [`SerializedValue`](#what-is-a-serializedvalue).
 
 There are plenty of examples of value mappers over in the [contrib module](https://github.com/NASA-AMMOS/aerie/tree/develop/contrib/src/main/java/gov/nasa/jpl/aerie/contrib/serialization/mappers).
 

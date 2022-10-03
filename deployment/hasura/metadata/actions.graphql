@@ -211,6 +211,7 @@ type AddExternalDatasetResponse {
 type SchedulingResponse {
   status: SchedulingStatus!
   reason: SchedulingFailureReason
+  analysisId: Int!
 }
 
 type DslTypescriptResponse {

@@ -4,7 +4,7 @@ The Aerie planning web application provides a graphical user interface to create
 
 ## Uploading Mission Models
 
-Mission models can be uploaded to Aerie via the UI. To navigate to the [mission model page](https://aerie-staging.jpl.nasa.gov/models), click  the `Mission Models` icon on the on the left navigation bar. Once an [mission model JAR](https://github.com/NASA-AMMOS/aerie/wiki/Developing-a-Mission-Model) is prepared, it can be uploaded to the mission model service with a name, version, mission and owner. The name and version must match (in case and form) the name and version specified in the mission model.
+Mission models can be uploaded to Aerie via the UI. To navigate to the mission model page, click  the `Mission Models` icon on the left navigation bar. Once a [mission model JAR](../mission-modeling/developing-a-mission-model.md) is prepared, it can be uploaded to the mission model service with a name, version, mission and owner. The name and version must match (in case and form) the name and version specified in the mission model.
 
 For example, if the mission model is defined in code as
 `@MissionModel(​​name=​"Banananation", v​ersion​="0.0.1")`, then the name field must be entered as `Banananation` and the version as `0.0.1`. Once the mission model is uploaded it will be listed in the table shown in Figure 1. Mission Models can be deleted from this table using the context menu by right clicking on the mission model.
@@ -14,14 +14,13 @@ For example, if the mission model is defined in code as
 
 ## Creating Plans
 
-To navigate to the [plans page](https://aerie-staging.jpl.nasa.gov/#/plans), click the `Plans` icon on the left navigation bar. Users can use the left panel to create new plans associated with any mission model. A `start` and `end` date has to be specified to create a plan.
+To navigate to the plans page, click the `Plans` icon on the left navigation bar. Users can use the left panel to create new plans associated with any mission model. A `start` and `end` date has to be specified to create a plan.
 Existing plans are listed in the table on the right. Use right click on the table to reveal a drop down menu to delete and view plans.
 
 ![](images/fig-3.png)
 *Figure 2: Create plans, and view existing plans.*
 
 Base simulation arguments may be supplied at plan creation time.
-For more information please refer to [Aerie Simulation Configuration UI](https://github.com/NASA-AMMOS/aerie/wiki/Aerie-Simulation-Configuration-UI) documentation.
 
 ## View and Edit Plans
 
@@ -59,4 +58,4 @@ Aerie UI provides a flexible arrangement where users can hide any of these panel
 ![](images/fig-6.png)
 *Figure 5: The bottom panels are dragged to the top edge completely leaving only one panels in view.*
 
-Note that all the default panels outlined here can be configured and changed based on the needs of a mission. You can read about how to do that in the [UI Configurability](https://github.com/NASA-AMMOS/aerie/wiki/UI-Configurability) documentation.
+Note that all the default panels outlined here can be configured and changed based on the needs of a mission.

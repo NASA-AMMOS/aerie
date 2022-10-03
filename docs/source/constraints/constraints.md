@@ -3,14 +3,13 @@
 ## Overview
 When analyzing a simulation's results, it may be useful to detect windows where certain conditions are met. Constraints are the Aerie tool for fulfilling that role. A constraint is a condition on activities and resources that must hold through an entire simulation. If a constraint does not hold true at any point in a simulation, this is considered a violation. The results yielded by a simulation run will include a list of violation windows for every constraint that has been violated.
 
-## Defining Constraints
-Constraints are defined in with a typescript API via the Aerie GraphQL API or in the Aerie UI. To define a constraint, a Constraint object must be constructed and returned from an `export default function` (see our [comprehensive documentation of the constraints API](Constraints#constraints-api)).
-
 ## Creating a Constraint in Aerie
-Constraints can be created via the Aerie GraphQL API. For an example of how to create a constraint for a mission model see the example, [Creating a constraint for a mission model](https://github.com/NASA-AMMOS/aerie/wiki/Aerie-GraphQL-API-Software-Interface-Specification#creating-a-constraints-for-a-mission-model) detailed in the [Aerie GraphQL API Software Interface Specification](https://github.com/NASA-AMMOS/aerie/wiki/Aerie-GraphQL-API-Software-Interface-Specification).
+
+Constraints can be created via the Aerie GraphQL API. 
 
 ## Constraint Examples
-To define a constraint, you will need to build it up by constructing and transforming objects in the [constraint API](https://github.com/NASA-AMMOS/aerie/wiki/Constraints#constraints-api). To help get you started, here are a few examples:
+
+To define a constraint, you will need to build it up by constructing and transforming objects in the [constraint API](#constraints-api). To help get you started, here are a few examples:
 
 #### Constraint Example 1
 Let's start off with a basic constraint that a resource, let's call it `BatteryTemperature`, doesn't exceed some threshold, say 340. We do so by using `Real.Resource(...)` to get the `BatteryTemperature` resource, and `Real.Value(...)` to get a real number we can compare a real resource profile to.
@@ -122,7 +121,7 @@ In reality, it returns a node of an Abstract Syntax Tree (AST) which represents 
 
 ### `Constraint`
 
-The `Constraint` class is what the constraint function returns, and can represent all possible constraints. In some use cases, the constraint author will directly create a `Constraint`, such as with the constructor functions below. In many other use cases, the author will return a `Windows` object instead, which will be automatically converted to a `Constraint` as if they had called [the `windows.violations()` method](https://github.com/NASA-AMMOS/aerie/wiki/Constraints#method-violations).
+The `Constraint` class is what the constraint function returns, and can represent all possible constraints. In some use cases, the constraint author will directly create a `Constraint`, such as with the constructor functions below. In many other use cases, the author will return a `Windows` object instead, which will be automatically converted to a `Constraint` as if they had called [the `windows.violations()` method](#method-violations).
 
 #### constructor `ForEachActivity`
 Evaluates a constraint on each instance of an activity type, and evaluates to the aggregated list of violations
@@ -168,6 +167,7 @@ Gets an object containing each of the activity parameters' referenced profile as
 
 ---
 
+(windows)=
 ### `Windows`
 
 Represents a set of time intervals (a.k.a. windows).
@@ -311,7 +311,7 @@ References the profile defined by a Discrete Resource. The string resource name 
 Creates a constant profile which is equal to the argument for all time.
 This function is optional when used on the right side of an operator. For example, `Discrete.Resource("res").equal(Discrete.Value("value"))` can be written as `Discrete.Resource("res").equal("value")`; but `Discrete.Value("value").equal(Discrete.Resource("res"))` *cannot* be written `"value".equal(Discrete.Resource("res"))`.
 - **Arguments:**
-    - `value`: any type, which determines `Schema`; Any value that can be [serialized](https://github.com/NASA-AMMOS/aerie/wiki/Activity-Mappers#what-is-a-serializedvalue)
+    - `value`: any type, which determines `Schema`; Any value that can be [serialized](../mission-modeling/activity-mappers.md#what-is-a-serializedvalue).
 - **Returns:** `Discrete<Schema>`
 
 #### method `transition`

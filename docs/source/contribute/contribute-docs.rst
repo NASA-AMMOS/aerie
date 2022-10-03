@@ -113,10 +113,12 @@ To preview your changes while you are working, run ``make preview`` from the com
 
 When you are finished making changes, run ``make clean`` and then ``make dirhtml`` to ensure that the site will deploy. Once the site builds successfully without warnings, you may proceed to the next step.
 
+To check for broken links, run ``make dirhtml`` and then ``make linkcheck``.
+
 Submit a pull request (PR)
 ==========================
 
-We expect that you are aware of how to submit a PR to GitHub. If you are not, please look at this `tutorial <https://guides.github.com/activities/hello-world/>`_.
+We expect that you are aware of how to submit a PR to GitHub. If you are not, please look at this `tutorial <https://docs.github.com/en/get-started/quickstart/hello-world>`_.
 Every repository handles PRs differently. Some require you to use a template for submissions and some do not.
 Make sure to speak with the project’s maintainer before submitting the PR to avoid any misunderstanding or issues.
 

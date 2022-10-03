@@ -118,14 +118,19 @@ test.describe('Scheduling', () => {
 
   test('Run scheduling', async ({ request }) => {
     let status_local: string;
-    const { reason, status } = await req.schedule(request, specification_id);
+    let analysisId_local: number;
+    const { reason, status, analysisId } = await req.schedule(request, specification_id);
     expect(status).not.toBeNull();
     expect(status).toBeDefined();
+    expect(analysisId).not.toBeNull();
+    expect(analysisId).toBeDefined();
+    expect(typeof analysisId).toEqual("number")
+    analysisId_local = analysisId;
     const max_it = 10;
     let it = 0;
     let reason_local: string;
     while (it++ <  max_it && status == "incomplete"){
-      const { reason, status } = await req.schedule(request, specification_id);
+      const { reason, status, analysisId } = await req.schedule(request, specification_id);
       status_local = status;
       reason_local = reason;
       expect(status).not.toBeNull();
@@ -136,6 +141,7 @@ test.describe('Scheduling', () => {
       throw new Error(reason_local);
     }
     expect(status_local).toEqual("complete")
+    expect(analysisId_local).toEqual(analysisId)
   });
 
   test('Get Plan', async ({ request }) => {

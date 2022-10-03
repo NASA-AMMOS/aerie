@@ -25,7 +25,7 @@ Formalized loosely, the sets of arguments at play here are:
 ## Using GraphQL API
 
 Using the GraphQL API it is possible to define simulations from as many simulation templates as desired.
-Please refer to the [Aerie GraphQL API SIS](https://github.com/NASA-AMMOS/aerie/wiki/Aerie-GraphQL-API-Software-Interface-Specification)
+Please refer to the [Aerie GraphQL API SIS](../aerie-api/aerie-graphql-api.md)
 to get up-and-running with a GraphQL client capable of communicating with the Aerie API.
 
 ### Create a Plan

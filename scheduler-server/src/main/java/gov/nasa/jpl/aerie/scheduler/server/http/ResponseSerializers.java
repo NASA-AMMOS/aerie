@@ -42,22 +42,25 @@ public class ResponseSerializers {
    * @return a json serialization of the scheduling run result
    */
   public static JsonValue serializeScheduleResultsResponse(final ScheduleAction.Response response) {
-    if (response instanceof ScheduleAction.Response.Incomplete) {
+    if (response instanceof ScheduleAction.Response.Incomplete r) {
       return Json
           .createObjectBuilder()
           .add("status", "incomplete")
+          .add("analysisId", r.analysisId())
           .build();
     } else if (response instanceof ScheduleAction.Response.Failed r) {
       return Json
           .createObjectBuilder()
           .add("status", "failed")
           .add("reason", r.reason())
+          .add("analysisId", r.analysisId())
           .build();
     } else if (response instanceof ScheduleAction.Response.Complete r) {
       return Json
           .createObjectBuilder()
           .add("status", "complete")
           .add("results", serializeScheduleResults(r.results()))
+          .add("analysisId", r.analysisId())
           .build();
     } else {
       throw new UnexpectedSubtypeError(ScheduleAction.Response.class, response);
