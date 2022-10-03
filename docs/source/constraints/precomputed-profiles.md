@@ -20,7 +20,7 @@ The `addExternalDataset` GraphQL mutation takes three parameters as specified be
     Type: Object
     Description: The set of precomputed profiles that make up the external dataset.
 
-The profile set to be uploaded should have one entry for each precomputed profile, indexed by a unique name mapping to an object specifiying the details of the profile. Each profile should have a `type` field, which specifies whether the profile is real- or discrete-valued. A discrete profile must also contain a `schema` field, which specifies the schema of the values it takes on. These are not limited to basic types, but can take on any complex structure made up using our `ValueSchema` construct (for more information, see our [ValueSchema documentation](https://github.com/NASA-AMMOS/aerie/wiki/Value-Schemas#value-schemas-from-code)).
+The profile set to be uploaded should have one entry for each precomputed profile, indexed by a unique name mapping to an object specifying the details of the profile. Each profile should have a `type` field, which specifies whether the profile is real- or discrete-valued. A discrete profile must also contain a `schema` field, which specifies the schema of the values it takes on. These are not limited to basic types, but can take on any complex structure made up using our `ValueSchema` construct (for more information, see our [ValueSchema documentation](../mission-modeling/value-schemas.md#value-schemas-from-code)).
 
 Finally, both profile types require a list of segments that describe the actual behavior of the profile. The `segments` field of each profile maps to a list of objects, each of which details a segment. Each segment should contain the following two fields:
 
@@ -31,7 +31,7 @@ Finally, both profile types require a list of segments that describe the actual 
     Type: Dependent on profile type.
     Description: The behavior of the profile over the lifetime of this segment.
 
-A discrete profile's dynamics should match the format specified by the `schema` field, while a real profile's dynamics should always contain an initial value and a rate of change. See our example external dataset mutations [below](https://github.com/NASA-AMMOS/aerie/wiki/Precomputed-Profiles#example-external-dataset-mutations) to see both profile specification types.
+A discrete profile's dynamics should match the format specified by the `schema` field, while a real profile's dynamics should always contain an initial value and a rate of change. See our example external dataset mutations [below](#example-external-dataset-mutations) to see both profile specification types.
 
 ## Deleting External Datasets
 There may be a time when you find an external dataset you've been using is no longer relevant, and must be removed. This is easily done by providing the ID of the dataset you wish to delete to the `delete_dataset_by_pk` mutation. For example, the following mutation will delete the dataset with id 5:

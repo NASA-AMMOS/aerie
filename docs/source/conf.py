@@ -32,8 +32,7 @@ extensions = [
     "sphinx_sitemap",
     "sphinx_scylladb_theme",
     "sphinx_multiversion",  # optional
-    "recommonmark",  # optional,
-    "sphinx_markdown_tables",
+    "myst_parser",  # for converting .md to .rst,
 ]
 
 # The suffix(es) of source filenames.
@@ -122,6 +121,10 @@ html_baseurl = "https://nasa-ammos.github.io/aerie"
 
 # Dictionary of values to pass into the template engine’s context for all pages
 html_context = {"html_baseurl": html_baseurl}
+
+# Ignore header warnings from MyST (Note: MyST will replace the headers)
+suppress_warnings = ["myst.header"]
+myst_heading_anchors = 6
 
 
 # -- Initialize Sphinx ----------------------------------------------

@@ -28,7 +28,7 @@ public Mission(final Registrar registrar, final Configuration config) {
 ### Configuration
 
 A configuration class should be defined with the same parameter annotations as activities.
-See [Declaring Parameters](https://github.com/NASA-AMMOS/aerie/wiki/Declaring-Parameters) for a thorough explanation of all possible styles of `@Export` parameter declaration and validation.
+See [Activity Parameters](activity-parameters.rst) for a thorough explanation of all possible styles of `@Export` parameter declaration and validation.
 
 Similarly to activities, the Merlin annotation processor will take care of all serialization/deserialization of the configuration object.
 The Merlin annotation processor will generate a configuration mapper for the configuration defined within `@WithConfiguration()`.

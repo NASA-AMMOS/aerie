@@ -122,7 +122,7 @@ GraphQL clients exist for the following programming languages:
 - Python
 - R
 
-A full description of these clients is found at [https://graphql.org/code/#graphql-clients](https://graphql.org/code/#graphql-clients)
+A full description of these clients is found at [https://graphql.org/code/#language-support](https://graphql.org/code/#language-support)
 
 ## Aerie GraphQL API
 

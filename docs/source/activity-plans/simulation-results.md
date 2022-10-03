@@ -36,11 +36,11 @@ There are currently two types of resource profiles, which each explain how to in
 
 ### Resource Samples
 
-See the [`resourceSamples` GraphQL query](https://github.com/NASA-AMMOS/aerie/wiki/Aerie-GraphQL-API-Software-Interface-Specification#query-for-all-resource-samples-in-simulated-plan) for details on how to query for resource samples.
+See the [`resourceSamples` GraphQL query](../aerie-api/aerie-graphql-api.md#query-for-all-resource-samples-in-simulated-plan) for details on how to query for resource samples.
 
 ### Simulated Activities
 
-These are records of completed activity instances. They include not only the activities that were part of the plan, but also their child activities (see [decomposition](https://github.com/NASA-AMMOS/aerie/wiki/Activities#a-note-about-decomposition)).
+These are records of completed activity instances. They include not only the activities that were part of the plan, but also their child activities (see [decomposition](../mission-modeling/activities.md#a-note-about-decomposition)).
 
 The **type** of a simulated activity is a string referring to the `ActivityType` of this activity instance.
 
