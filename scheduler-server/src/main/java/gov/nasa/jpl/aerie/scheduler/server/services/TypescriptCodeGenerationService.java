@@ -141,7 +141,7 @@ public class TypescriptCodeGenerationService {
       } else if (type instanceof TSInt) {
         return "Integer";
       } else if (type instanceof TSDuration) {
-        return "Duration";
+        return "Temporal.Duration";
       } else if (type instanceof TSArray t) {
         return "%s[]".formatted(toString(t.elementType()));
       } else if (type instanceof TSStruct t) {

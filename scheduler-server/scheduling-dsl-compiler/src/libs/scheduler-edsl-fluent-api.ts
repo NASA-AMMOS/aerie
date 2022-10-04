@@ -195,7 +195,7 @@ export class Goal {
    *
    * @param opts an object containing the activity template and the interval at which the activities must be placed
    */
-  public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): Goal {
+  public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Temporal.Duration }): Goal {
     return Goal.new({
       kind: AST.NodeKind.ActivityRecurrenceGoal,
       activityTemplate: opts.activityTemplate,
@@ -398,7 +398,7 @@ export class TimingConstraint {
    * @param operator either Operator.PLUS or Operator.MINUS
    * @param operand the duration offset
    */
-  public static range(windowProperty: WindowProperty, operator: TimingConstraintOperator, operand: Duration): RangeTimingConstraint {
+  public static range(windowProperty: WindowProperty, operator: TimingConstraintOperator, operand: Temporal.Duration): RangeTimingConstraint {
     return RangeTimingConstraint.new({
       windowProperty,
       operator,
@@ -423,7 +423,7 @@ export class SingletonTimingConstraintNoOperator {
     return new SingletonTimingConstraintNoOperator({
       windowProperty,
       operator: AST.TimingConstraintOperator.PLUS,
-      operand: 0,
+      operand: Temporal.Duration.from({ milliseconds: 0 }),
       singleton: true
     });
   }
@@ -432,7 +432,7 @@ export class SingletonTimingConstraintNoOperator {
    * Adds a duration to a timepoint
    * @param operand the duration to add
    */
-  public plus(operand: Duration): SingletonTimingConstraint {
+  public plus(operand: Temporal.Duration): SingletonTimingConstraint {
     return SingletonTimingConstraint.new({
       ...this.__astNode,
       operator: AST.TimingConstraintOperator.PLUS,
@@ -444,7 +444,7 @@ export class SingletonTimingConstraintNoOperator {
    * Subtract a duration from a timepoint
    * @param operand the duration to subtract
    */
-  public minus(operand: Duration): SingletonTimingConstraint {
+  public minus(operand: Temporal.Duration): SingletonTimingConstraint {
     return SingletonTimingConstraint.new({
       ...this.__astNode,
       operator: AST.TimingConstraintOperator.MINUS,
@@ -517,7 +517,7 @@ declare global {
      * Creates an ActivityRecurrenceGoal
      * @param opts an object containing the activity template and the interval at which the activities must be placed
      */
-    public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Duration }): Goal
+    public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Temporal.Duration }): Goal
 
     /**
      * The CoexistenceGoal places one activity (defined by activityTemplate) per window (defined by forEach).
@@ -559,7 +559,7 @@ declare global {
      * @param operator either Operator.PLUS or Operator.MINUS
      * @param operand the duration offset
      */
-    public static range(windowProperty: WindowProperty, operator: TimingConstraintOperator, operand: Duration): RangeTimingConstraint
+    public static range(windowProperty: WindowProperty, operator: TimingConstraintOperator, operand: Temporal.Duration): RangeTimingConstraint
   }
   var WindowProperty: typeof AST.WindowProperty
   var Operator: typeof AST.TimingConstraintOperator

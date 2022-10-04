@@ -1,6 +1,8 @@
+import './libs/polyfills.js'
 import fs from 'fs';
 import ts from 'typescript';
-import {UserCodeRunner} from '@nasa-jpl/aerie-ts-user-code-runner';
+import { UserCodeRunner } from '@nasa-jpl/aerie-ts-user-code-runner';
+import vm from "node:vm";
 import * as readline from 'readline';
 
 const codeRunner = new UserCodeRunner();
@@ -19,6 +21,10 @@ const windowsEDSL = fs.readFileSync(
 const windowsAST = fs.readFileSync(
   `${process.env["SCHEDULING_DSL_COMPILER_ROOT"]}/src/libs/constraints/constraints-ast.ts`,
   "utf8"
+);
+const temporalPolyfillTypes = fs.readFileSync(
+    `${process.env["SCHEDULING_DSL_COMPILER_ROOT"]}/src/libs/TemporalPolyfillTypes.ts`,
+    'utf8',
 );
 const tsConfig = JSON.parse(fs.readFileSync(new URL('../tsconfig.json', import.meta.url).pathname, 'utf-8'));
 const { options } = ts.parseJsonConfigFileContent(tsConfig, ts.sys, '');
@@ -63,6 +69,7 @@ async function handleRequest(data: Buffer) {
       { 'filename': 'scheduler-ast.ts', 'contents': schedulerAST},
       { 'filename': 'scheduler-edsl-fluent-api.ts', 'contents': schedulerEDSL},
       { 'filename': 'scheduler-mission-model-generated-code.ts', 'contents': schedulerGeneratedCode},
+      { 'filename': 'TemporalPolyfillTypes.ts', 'contents': temporalPolyfillTypes,}
     ];
 
     const result = await codeRunner.executeUserCode<[], AstNode>(
@@ -71,7 +78,10 @@ async function handleRequest(data: Buffer) {
         expectedReturnType,
         [],
         10000,
-        additionalSourceFiles.map(({filename, contents}) => ts.createSourceFile(filename, contents, compilerTarget))
+        additionalSourceFiles.map(({filename, contents}) => ts.createSourceFile(filename, contents, compilerTarget)),
+        vm.createContext({
+          Temporal,
+        }),
     );
 
     if (result.isErr()) {

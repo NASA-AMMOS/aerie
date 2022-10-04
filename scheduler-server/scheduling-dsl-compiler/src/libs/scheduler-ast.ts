@@ -1,3 +1,4 @@
+/// <reference path="./TemporalPolyfillTypes.ts"; />
 import type * as WindowsExpressions from "./constraints-ast.js";
 import "./constraints-edsl-fluent-api.js";
 
@@ -7,13 +8,13 @@ export interface ActivityTemplate {
 }
 
 export interface ClosedOpenInterval {
-  start: number
-  end: number
+  start: Temporal.Duration
+  end: Temporal.Duration
 }
 
 export type CardinalityGoalArguments =
-  |  { duration: number, occurrence: number }
-  |  { duration: number }
+  |  { duration: Temporal.Duration, occurrence: number }
+  |  { duration: Temporal.Duration }
   |  { occurrence: number }
 
 export enum NodeKind {
@@ -42,7 +43,7 @@ export type Goal =
 export interface ActivityRecurrenceGoal {
   kind: NodeKind.ActivityRecurrenceGoal,
   activityTemplate: ActivityTemplate,
-  interval: number,
+  interval: Temporal.Duration,
 }
 
 export interface ActivityCardinalityGoal {
@@ -82,7 +83,7 @@ export interface TimeExpressionRelativeFixed {
   fixed: boolean  // true means op(anchor, operand) is exactly the time, false means it's a range between op(anchor, operand) and anchor
   operation: {
     operator: TimeExpressionOperator,
-    operand: Duration
+    operand: Temporal.Duration
   }
 }
 
@@ -104,14 +105,14 @@ export enum TimingConstraintOperator {
 export interface ActivityTimingConstraintSingleton {
   windowProperty: WindowProperty;
   operator: TimingConstraintOperator;
-  operand: Duration
+  operand: Temporal.Duration
   singleton: true
 }
 
 export interface ActivityTimingConstraintRange {
   windowProperty: WindowProperty;
   operator: TimingConstraintOperator;
-  operand: Duration
+  operand: Temporal.Duration
   singleton: false
 }
 
