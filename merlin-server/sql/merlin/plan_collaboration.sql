@@ -1,6 +1,5 @@
 -- TODO list:
---   - duplicate function (done)
---        - duplicate temporal subset of plan
+--   - duplicate temporal subset of plan
 --   - merge request table
 --   - diff function
 --   - history tracking (tables and function)
@@ -111,11 +110,47 @@ $$;
   When duplicating a plan, a snapshot is created of the original plan.
   Additionally, that snapshot becomes the latest snapshot of the new plan.
 */
-  create or replace function duplicate_plan(plan_id integer, new_plan_name text)
+  create function duplicate_plan(plan_id integer, new_plan_name text)
   returns integer -- plan_id of the new plan
   security definer
   language plpgsql as $$
+  declare
+    validate_plan_id integer;
+    new_plan_id integer;
+    created_snapshot_id integer;
 begin
+  select id from plan where plan.id = duplicate_plan.plan_id into validate_plan_id;
+  if(validate_plan_id is null) then
+    raise exception 'Plan % does not exist.', plan_id;
+  end if;
 
+  select create_snapshot(plan_id) into created_snapshot_id;
+
+  insert into plan(revision, name, model_id, duration, start_time, parent_id)
+    select
+        0, new_plan_name, model_id, duration, start_time, plan_id
+    from plan where id = plan_id
+    returning id into new_plan_id;
+  insert into activity_directive(
+      id, plan_id, name, tags, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type, arguments,
+      last_modified_arguments_at, metadata
+    )
+    select
+      id, new_plan_id, name, tags, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type, arguments,
+      last_modified_arguments_at, metadata
+    from activity_directive where activity_directive.plan_id = duplicate_plan.plan_id;
+  insert into simulation (revision, simulation_template_id, plan_id, arguments)
+    select 0, simulation_template_id, new_plan_id, arguments
+    from simulation
+    where simulation.plan_id = duplicate_plan.plan_id;
+
+  insert into plan_latest_snapshot(plan_id, snapshot_id) values(new_plan_id, created_snapshot_id);
+  return new_plan_id;
 end;
 $$;
+
+comment on function duplicate_plan(plan_id integer, new_plan_name text) is e''
+  'Copies all of a given plan''s properties and activities into a new plan with the specified name.
+  When duplicating a plan, a snapshot is created of the original plan.
+  Additionally, that snapshot becomes the latest snapshot of the new plan.';
+

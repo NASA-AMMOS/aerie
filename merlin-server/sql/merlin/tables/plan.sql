@@ -1,5 +1,5 @@
 create table plan (
-  id integer generated always as identity,
+  id integer generated always as identity check ( id > 0 ),
   revision integer not null default 0,
 
   name text not null,
@@ -8,6 +8,9 @@ create table plan (
 
   -- TODO: Remove 'start_time'; its purpose will be served by a model-specific entry in 'simulation.arguments'.
   start_time timestamptz not null,
+  parent_id integer
+    references plan
+    on update cascade,
 
   constraint plan_synthetic_key
     primary key (id),
@@ -72,3 +75,21 @@ before insert or update on plan
 for each row
 when (new.duration < '0')
 execute function raise_duration_is_negative();
+
+create or replace function cleanup_on_delete()
+  returns trigger
+  language plpgsql as $$
+begin
+  -- have the children be 'adopted' on delete
+  update plan
+  set parent_id = old.parent_id
+  where
+    parent_id = old.id;
+  return old;
+end
+$$;
+
+create trigger cleanup_on_delete_trigger
+  before delete on plan
+  for each row
+execute function cleanup_on_delete();
