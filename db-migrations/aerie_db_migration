@@ -1,0 +1,142 @@
+#!/usr/bin/env python3
+'Migrate an AERIE Databse'
+
+import os
+import argparse
+import sys
+import shutil
+
+HASURA_PATH = "./deployment/hasura/"
+MIGRATION_PATH = HASURA_PATH+"migrations/"
+
+# Create a cli parser
+my_parser = argparse.ArgumentParser(description=__doc__)
+
+# Add arguments
+my_parser.add_argument(
+    '-a', '--apply',
+    help="apply all migration steps to all databases if one isn't provided",
+    action='store_true')
+
+my_parser.add_argument(
+    '-r', '--revert',
+    help="revert all migration steps to all databases if one isn't provided",
+    action='store_true')
+
+my_parser.add_argument(
+    '-db', '--db-name',
+    help="name of a specific DB to apply or revert all migration steps",
+    type=str)
+
+
+# Generate arguments
+args = my_parser.parse_args()
+
+# pre-check to you have hasura cli installed
+if not shutil.which('hasura'):
+  sys.exit(f'Hasura CLI is not installed. Exiting...')
+else:
+  os.system('hasura version')
+
+# Verify you use the command line options correctly
+if not args.apply and not args.revert and args.db_name:
+  sys.exit(f'Error specify [-a, -r] when using --db-name')
+
+# internal class
+class DB_Migration:
+    steps = []
+    db_name = ''
+    def __init__(self, db_name):
+        self.db_name = db_name
+
+    def add_migration_step(self,_migration_step):
+      self.steps = sorted(_migration_step)
+
+
+# find all migration folders for each Aerie database
+migration_db = []
+
+for db in os.listdir(MIGRATION_PATH):
+  #ignore hidden folders
+  if db.startswith('.'):
+    continue
+  migration = DB_Migration(db)
+  for root,dirs,files in os.walk(MIGRATION_PATH+db):
+    if dirs:
+      migration.add_migration_step(dirs)
+  migration_db.append(migration)
+
+# navigate to the hasura directory
+os.chdir(HASURA_PATH)
+
+# no cli arguments provided enter manual mode
+if not args.apply and not args.revert:
+
+  while True:
+    print(f'\n#########################\nManual DB Migration Mode\n#########################')
+    print(f'\n0) \n\nQUIT MANUAL MODE...')
+    for migration_number in range(0,len(migration_db)):
+      print(f'\n{migration_number+1})')
+
+      if len(migration_db[migration_number].steps) > 0:
+        os.system(f'hasura migrate status --database-name {migration_db[migration_number].db_name}')
+      else:
+        print(f'\nDatabase: {migration_db[migration_number].db_name}\nNo migration steps')
+
+    value = -1
+    while(value < 0 or value > len(migration_db)):
+      value = int(input(f"\nWhich DB would you like to apply migrations to (0-{len(migration_db)}): "))
+      if value == 0:
+        sys.exit()
+
+    #apply each migration step for the database selected
+    migration = migration_db[value-1]
+    for step in migration.steps:
+
+      value = 'z'
+      while value != "a" and value != "r":
+        value = input(f'Apply/Revert {step} (a/r): ')
+
+      timestamp = step.split("_")[0]
+      if value == "a":
+        print('Applying...')
+        os.system(f'hasura migrate apply --version {timestamp} --type up --database-name {migration.db_name}')
+      else:
+        print('Reverting...')
+        os.system(f'hasura migrate apply --version {timestamp} --type down --database-name {migration.db_name}')
+
+    os.system('hasura metadata reload')
+else:
+  #find user specified database and remove the rest from the list
+  if args.db_name:
+    migration_db= list(filter(lambda migration: migration.db_name == args.db_name,migration_db))
+    if len(migration_db) != 1:
+      sys.exit(f'Database "{args.db_name}" not found, exiting...')
+
+  #migrate each database
+  for migration in migration_db:
+    print(f'\n#################\n{migration.db_name}\n#################\n')
+    if len(migration.steps) > 0:
+      for step in migration.steps:
+        timestamp = step.split("_")[0]
+
+        if args.apply:
+          print(f'\nApplying {step}...')
+          os.system(f'hasura migrate apply --version {timestamp} --type up --database-name {migration.db_name}')
+        else:
+          print(f'\nReverting {step}...')
+          os.system(f'hasura migrate apply --version {timestamp} --type down --database-name {migration.db_name}')
+
+      os.system('hasura metadata reload')
+    else:
+      print(f'No migration steps present...')
+
+  # show the result after the migration
+  print(f'\n\n###################\nDatabase Status\n###################\n')
+  for migration in migration_db:
+    if len(migration.steps) > 0:
+      os.system(f'hasura migrate status --database-name {migration.db_name}')
+    else:
+      print(f'\nDatabase: {migration.db_name}\nNo migration steps')
+
+print('\n')
