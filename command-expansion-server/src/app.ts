@@ -1,4 +1,5 @@
 import './polyfills.js';
+import fs from 'node:fs';
 import express, { Application, NextFunction, Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import DataLoader from 'dataloader';
@@ -45,6 +46,7 @@ DbExpansion.init();
 const db = DbExpansion.getDb();
 
 const piscina = new Piscina({ filename: new URL('worker.js', import.meta.url).pathname });
+const temporalPolyfillTypes = fs.readFileSync(new URL('TemporalPolyfillTypes.ts', import.meta.url).pathname, 'utf-8');
 
 type Context = {
   commandTypescriptDataLoader: InferredDataloader<typeof commandDictionaryTypescriptBatchLoader>;
@@ -316,6 +318,10 @@ app.post('/get-activity-typescript', async (req, res, next) => {
       {
         filePath: 'activity-types.ts',
         content: activityTypescript,
+      },
+      {
+        filePath: 'TemporalPolyfillTypes.ts',
+        content: temporalPolyfillTypes,
       },
     ],
     reason: null,
