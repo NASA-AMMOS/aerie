@@ -43,6 +43,7 @@ create table plan_snapshot_activities(
   metadata merlin_activity_directive_metadata_set
 );
 
+-- Captures the state of a plan and all of its activities
 create or replace function create_snapshot(plan_id integer)
   returns integer -- snapshot id inserted into the table
   language plpgsql as $$
@@ -61,12 +62,22 @@ begin
     returning snapshot_id into inserted_snapshot_id;
   insert into plan_snapshot_activities(snapshot_id, id, name, tags, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type, arguments, last_modified_arguments_at, metadata)
     select
-      inserted_snapshot_id,                                           --this is the snapshot id
+      inserted_snapshot_id,                                   --this is the snapshot id
       id, name, tags,source_scheduling_goal_id, created_at,   -- these are the rest of the data for an activity row
       last_modified_at, start_offset, type, arguments, last_modified_arguments_at, metadata
     from activity_directive where activity_directive.plan_id = create_snapshot.plan_id;
+
+  --all snapshots in plan_latest_snapshot for plan plan_id become the parent of the current snapshot
+  insert into plan_snapshot_parent(snapshot_id, parent_snapshot_id)
+    select inserted_snapshot_id, snapshot_id
+    from plan_latest_snapshot where plan_latest_snapshot.plan_id = create_snapshot.plan_id;
+
+  --remove all of those entries from plan_latest_snapshot and add this new snapshot.
+  delete from plan_latest_snapshot where plan_latest_snapshot.plan_id = create_snapshot.plan_id;
+  insert into plan_latest_snapshot(plan_id, snapshot_id) values (create_snapshot.plan_id, inserted_snapshot_id);
+
   return inserted_snapshot_id;
-end;
+  end;
 $$;
 
 -- when you take a snapshot of a plan, all of that plan's latest snapshots become the parent snapshots of the new snapshot.
