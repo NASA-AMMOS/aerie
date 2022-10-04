@@ -1,11 +1,9 @@
 # This file configures the Hasura CLI, a local development (and deployment) tool.
 # It is required to run the Hasura CLI (even if empty).
 
+version: 3
+endpoint: http://localhost:8080/
+metadata_directory: metadata
 actions:
-  handler_webhook_baseurl:
-  kind:
-endpoint:
-metadata_directory:
-migrations_directory:
-seeds_directory:
-version:
+  kind: synchronous
+  handler_webhook_baseurl: http://localhost:3000
