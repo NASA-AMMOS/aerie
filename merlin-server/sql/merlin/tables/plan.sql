@@ -8,6 +8,7 @@ create table plan (
 
   -- TODO: Remove 'start_time'; its purpose will be served by a model-specific entry in 'simulation.arguments'.
   start_time timestamptz not null,
+  parent_id integer,
 
   constraint plan_synthetic_key
     primary key (id),
