@@ -10,7 +10,7 @@
 .. title:: Aerie Documentation
 
 .. hero-box::
-  :title: Welcome to Aerie Documentation
+  :title: Welcome to the Aerie Documentation
 
 .. raw:: html
 
@@ -41,13 +41,22 @@
   Create activity plans, configure simulations, and populate a plan with automated scheduling.
 
 .. topic-box::
-  :title: Activity To Command Expansion
-  :link: activity-command-expansion
+  :title: Command Expansion
+  :link: command-expansion
   :icon: scylla-icon scylla-icon--apps
   :class: large-6
   :anchor: Learn more
 
   Author command expansion logic and link activities to their command expansions.
+
+.. topic-box::
+  :title: User Interface
+  :link: user-interface
+  :icon: scylla-icon scylla-icon--architecture
+  :class: large-6
+  :anchor: Learn more
+
+  The client application and API guide.
 
 .. topic-box::
   :title: Deployment
@@ -79,12 +88,13 @@
   :hidden:
   :includehidden:
 
-  deployment/index
-  mission-modeling/index
   activity-plans/index
-  constraints/index
-  activity-command-expansion/index
-  aerie-api/aerie-graphql-api
-  upgrade/index
-  contribute/index
   aerie-glossary
+  command-expansion/index
+  constraints/index
+  contribute/index
+  deployment/index
+  graphql-api/index
+  mission-modeling/index
+  upgrade-guides/index
+  user-interface/index
