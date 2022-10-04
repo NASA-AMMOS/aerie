@@ -7,7 +7,7 @@ behave autonomously over time. Second, it defines how activities perturb these r
 causing them to change their behavior. This information enables Aerie to provide scheduling, constraint validation,
 and resource plotting capabilities on top of a mission model.
 
-The Merlin Framework empowers adaptation engineers to serve the needs of mission planners maintain as well as keep
+The Merlin Framework empowers mission modeling engineers to serve the needs of mission planners as well as keep
 their codebase maintainable and testable over the span of a mission. The Framework aims to make the experience of
 mission modeling similar to standard Java development, while still addressing the unique needs of the simulation domain.
 
@@ -27,7 +27,7 @@ as the entrypoint into the simulated system: when an activity of that type occur
 activity parameters and the top-level mission model. It may then interact freely with the rest of the system.
 
 Just as activity types define the entrypoints into a simulation, the mission model also defines _resources_,
-which allow information to be extracted from the simulation. A resource is assoociated with a method that returns a
+which allow information to be extracted from the simulation. A resource is associated with a method that returns a
 "dynamics" - a description of the current autonomous behavior of the resource. Merlin currently provides discrete
 dynamics (constants held over time) and linear dynamics (real values varying linearly with time), and is designed to
 support more in the future.
