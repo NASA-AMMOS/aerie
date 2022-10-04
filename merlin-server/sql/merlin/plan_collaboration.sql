@@ -5,7 +5,7 @@
 --   - merge request table
 --   - diff function
 --   - history tracking (tables and function) (done)
---   - merge base function
+--   - merge base function (done)
 
 create table plan_snapshot_parent(
   snapshot_id integer,
