@@ -9,6 +9,7 @@ There are two ways to query for simulation results: via the simulate action, and
 ### Querying for simulation results via the simulate action
 
 The `simulate` action always immediately returns a status. That status is one of the following:
+
 - pending
 - incomplete
 - complete
@@ -36,7 +37,7 @@ There are currently two types of resource profiles, which each explain how to in
 
 ### Resource Samples
 
-See the [`resourceSamples` GraphQL query](../aerie-api/aerie-graphql-api.md#query-for-all-resource-samples-in-simulated-plan) for details on how to query for resource samples.
+See the [`resourceSamples` GraphQL query](../graphql-api/examples.md#query-for-all-resource-samples-in-simulated-plan) for details on how to query for resource samples.
 
 ### Simulated Activities
 
@@ -60,7 +61,7 @@ The **directiveId** will be populated if this activity itself was placed by the 
 
 The **computedAttributes** of an activity is a piece of information logged by the effect model upon termination of the activity.
 
-The schema for the computed attributes can be found by querying the Activity Type, which is not included in simulation results. If the activity type does not define a computed attributes schema, the default value for computed attributes is `VOID`. 
+The schema for the computed attributes can be found by querying the Activity Type, which is not included in simulation results. If the activity type does not define a computed attributes schema, the default value for computed attributes is `VOID`.
 
 ### Unfinished Activities
 

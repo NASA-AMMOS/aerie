@@ -1,6 +1,6 @@
-=============================
-Activity To Command Expansion
-=============================
+===================
+Command Expansion
+===================
 
 Aerie command expansion allows planners to generate commands from activity information within an activity plan.
 A planner creates custom logic that can be assigned to an activity type. This custom logic is used by Aerie
