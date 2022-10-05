@@ -612,11 +612,12 @@ public class ASTTests {
 
     final var windows = new Windows()
         .set(Interval.between(1, 4, SECONDS), true)
+        .set(Interval.between(5, 6, SECONDS), false)
         .set(Interval.between(7,20, SECONDS), true);
 
     final var result = new ViolationsOf(new Supplier<>(windows)).evaluate(simResults, new EvaluationEnvironment());
 
-    final var expected = List.of(new Violation(windows.not().and(new Windows(simResults.bounds, true))));
+    final var expected = List.of(new Violation(windows.not().select(simResults.bounds)));
 
     assertEquivalent(expected, result);
   }
