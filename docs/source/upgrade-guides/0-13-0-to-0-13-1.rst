@@ -1,0 +1,36 @@
+================
+0.13.0 To 0.13.1
+================
+
+Migrating a mission model from 0.13.0 to 0.13.1 requires the below two modifications to the model's ``build.gradle``
+file.
+
+``Build.gradle`` Edits
+-------------------
+The runtime environment the model JAR will be deployed to doesn't know what this model depends on.
+So the generated JAR must include its dependencies. (Except ``merlin-sdk``, which is marked ``compileTimeApi`` by
+``merlin-framework``, so that the runtime system and model JAR can agree on the same interfaces.)
+
+Add the follow block to your mission model's ``build.gradle`` to ensure runtime dependencies are packaged with
+the built JAR.
+
+.. code-block:: groovy
+
+
+  jar {
+    from {
+      configurations.runtimeClasspath.filter{ it.exists() }.collect{ it.isDirectory() ? it : zipTree(it) }
+    } {
+      exclude 'META-INF/LICENSE.txt', 'META-INF/NOTICE.txt'
+    }
+  }
+
+Update Dependencies
+-------------------
+If your ``build.gradle`` lists ``contrib`` and ``merlin-framework`` libraries as ``compileOnly`` dependencies
+then update them to be ``implementation`` dependencies as shown below.
+
+.. code-block:: groovy
+
+  implementation 'gov.nasa.jpl.aerie:contrib:0.13.1'
+  implementation 'gov.nasa.jpl.aerie:merlin-framework:0.13.1'
