@@ -1,7 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
@@ -11,6 +13,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Map;
@@ -34,6 +37,8 @@ public interface PlanRepository {
   Map<String, Constraint> getAllConstraintsInPlan(PlanId planId) throws NoSuchPlanException;
 
   long addExternalDataset(PlanId planId, Timestamp datasetStart, ProfileSet profileSet) throws NoSuchPlanException;
+  List<Pair<Duration, ProfileSet>> getExternalDatasets(PlanId planId) throws NoSuchPlanException;
+  Map<String, ValueSchema> getExternalResourceSchemas(PlanId planId) throws NoSuchPlanException;
 
   record CreatedPlan(PlanId planId, List<ActivityInstanceId> activityIds) {}
 

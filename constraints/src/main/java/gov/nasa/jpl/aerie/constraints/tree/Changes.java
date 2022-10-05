@@ -1,12 +1,11 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
-import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -18,7 +17,7 @@ public final class Changes<P extends Profile<P>> implements Expression<Windows> 
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
+  public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     return this.expression.evaluate(results, bounds, environment).changePoints(bounds);
   }
 

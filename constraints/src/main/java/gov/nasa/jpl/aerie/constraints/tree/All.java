@@ -1,12 +1,11 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
-import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -23,7 +22,7 @@ public final class All implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
+  public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     Windows windows = new Windows(bounds, true);
     for (final var expression : this.expressions) {
       windows = windows.and(expression.evaluate(results, bounds, environment));

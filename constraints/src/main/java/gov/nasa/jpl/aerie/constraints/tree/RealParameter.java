@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
@@ -22,8 +23,8 @@ public final class RealParameter implements Expression<LinearProfile> {
   }
 
   @Override
-  public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
-    final var activity = environment.get(this.activityAlias);
+  public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+    final var activity = environment.activityInstances().get(this.activityAlias);
     final var parameter = activity.parameters.get(this.parameterName);
     final var value = parameter.asReal().orElseThrow(
         () -> new InputMismatchException(

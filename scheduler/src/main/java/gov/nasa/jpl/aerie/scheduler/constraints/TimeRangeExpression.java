@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
@@ -70,7 +71,7 @@ public class TimeRangeExpression {
 
     for (var expr : stateExpr) {
       final var domainOfInter = Interval.between(inter.minTrueTimePoint().get().getKey(), inter.maxTrueTimePoint().get().getKey());
-      Windows windowsState = expr.evaluate(simulationResults, domainOfInter, Map.of());
+      Windows windowsState = expr.evaluate(simulationResults, domainOfInter, new EvaluationEnvironment());
       inter = inter.and(windowsState);
       if(inter.stream().noneMatch(Segment::value)) return inter;
     }

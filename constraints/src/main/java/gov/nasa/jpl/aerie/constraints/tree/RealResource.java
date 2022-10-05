@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.constraints.tree;
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
@@ -21,11 +22,15 @@ public final class RealResource implements Expression<LinearProfile> {
   }
 
   @Override
-  public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
+  public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     if (results.realProfiles.containsKey(this.name)) {
       return results.realProfiles.get(this.name);
     } else if (results.discreteProfiles.containsKey(this.name)) {
       return convertDiscreteProfile(results.discreteProfiles.get(this.name));
+    } else if (environment.realExternalProfiles().containsKey(this.name)) {
+      return environment.realExternalProfiles().get(this.name);
+    } else if (environment.discreteExternalProfiles().containsKey(this.name)) {
+      return convertDiscreteProfile(environment.discreteExternalProfiles().get(this.name));
     }
 
     throw new InputMismatchException(String.format("%s is not a valid resource", this.name));

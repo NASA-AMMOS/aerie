@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityDirectiveEventTriggerP;
+import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraConstraintsCodeAction;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraExternalDatasetActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelArgumentsActionP;
@@ -383,10 +384,11 @@ public final class MerlinBindings implements Plugin {
    */
   private void getConstraintsDslTypescript(final Context ctx) {
     try {
-      final var body = parseJson(ctx.body(), hasuraMissionModelActionP);
+      final var body = parseJson(ctx.body(), hasuraConstraintsCodeAction);
       final var missionModelId = body.input().missionModelId();
+      final var planId = body.input().planId();
 
-      final var response = this.generateConstraintsLibAction.run(missionModelId);
+      final var response = this.generateConstraintsLibAction.run(missionModelId, planId);
       final String resultString;
       if (response instanceof GenerateConstraintsLibAction.Response.Success r) {
         var files = Json.createArrayBuilder();

@@ -28,7 +28,7 @@ public final class DevAppDriver {
     final var missionModelController = new LocalMissionModelService(Path.of("/dev/null"), new InMemoryMissionModelRepository(), Instant.EPOCH);
     final var planController = new LocalPlanService(fixtures.planRepository);
 
-    final var typescriptCodeGenerationService = new TypescriptCodeGenerationServiceAdapter(missionModelController);
+    final var typescriptCodeGenerationService = new TypescriptCodeGenerationServiceAdapter(missionModelController, planController);
 
     final ConstraintsDSLCompilationService constraintsDSLCompilationService;
     try {

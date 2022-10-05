@@ -1,11 +1,10 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
-import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
-import java.util.Map;
 import java.util.Set;
 
 public class WindowsWrapperExpression implements Expression<Windows> {
@@ -14,7 +13,7 @@ public class WindowsWrapperExpression implements Expression<Windows> {
   public WindowsWrapperExpression(final Windows windows) { this.windows = windows; }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Interval bounds, final Map<String, ActivityInstance> environment) {
+  public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     return windows;
   }
 

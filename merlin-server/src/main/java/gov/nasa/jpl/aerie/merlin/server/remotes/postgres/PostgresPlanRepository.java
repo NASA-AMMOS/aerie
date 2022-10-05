@@ -2,7 +2,9 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
@@ -14,6 +16,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.JsonReader;
@@ -22,6 +25,7 @@ import javax.sql.DataSource;
 import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -204,6 +208,43 @@ public final class PostgresPlanRepository implements PlanRepository {
     } catch (final SQLException ex) {
       throw new DatabaseException(
           "Failed to add external dataset to plan with id `%s`".formatted(planId), ex);
+    }
+  }
+
+  @Override
+  public List<Pair<Duration, ProfileSet>> getExternalDatasets(final PlanId planId) throws NoSuchPlanException {
+    try (final var connection = this.dataSource.getConnection()) {
+      final var plan = getPlanRecord(connection, planId);
+      final var planDatasets = ProfileRepository.getAllPlanDatasetsForPlan(connection, planId, plan.startTime());
+      final var result = new ArrayList<Pair<Duration, ProfileSet>>();
+      for (final var planDataset: planDatasets) {
+        result.add(Pair.of(
+            planDataset.offsetFromPlanStart(),
+            ProfileRepository.getProfiles(connection, planDataset.datasetId(), new Window(plan.startTime(), plan.endTime()))
+        ));
+      }
+      return result;
+    } catch (final SQLException ex) {
+      throw new DatabaseException(
+          "Failed to get external datasets for plan with id `%s`".formatted(planId), ex);
+    }
+  }
+
+  @Override
+  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId) throws NoSuchPlanException {
+    try (final var connection = this.dataSource.getConnection()) {
+      final var plan = getPlanRecord(connection, planId);
+      final var planDatasets = ProfileRepository.getAllPlanDatasetsForPlan(connection, planId, plan.startTime());
+      final var result = new HashMap<String, ValueSchema>();
+      for (final var planDataset: planDatasets) {
+        final var schemas = ProfileRepository.getProfileSchemas(connection, planDataset.datasetId());
+        result.putAll(schemas);
+      }
+      return result;
+    } catch (final SQLException ex) {
+      throw new DatabaseException(
+          "Failed to get external resource schemas for plan with id `%s`".formatted(planId), ex
+      );
     }
   }
 

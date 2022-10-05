@@ -53,8 +53,9 @@ public final class AerieAppDriver {
         configuration.merlinFileStore(),
         stores.missionModels(),
         configuration.untruePlanStart());
+    final var planController = new LocalPlanService(stores.plans());
 
-    final var typescriptCodeGenerationService = new TypescriptCodeGenerationServiceAdapter(missionModelController);
+    final var typescriptCodeGenerationService = new TypescriptCodeGenerationServiceAdapter(missionModelController, planController);
 
     final ConstraintsDSLCompilationService constraintsDSLCompilationService;
     try {
@@ -66,7 +67,6 @@ public final class AerieAppDriver {
     Runtime.getRuntime().addShutdownHook(new Thread(constraintsDSLCompilationService::close));
 
     // Assemble the core non-web object graph.
-    final var planController = new LocalPlanService(stores.plans());
     final var simulationAgent = ThreadedSimulationAgent.spawn(
         "simulation-agent",
         new SynchronousSimulationAgent(planController, missionModelController));

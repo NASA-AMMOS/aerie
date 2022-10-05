@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.filters;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
@@ -21,6 +22,6 @@ public class FilterEverViolated extends FilterFunctional {
 
   @Override
   public boolean shouldKeep(final SimulationResults simulationResults, final Plan plan, final Interval range) {
-    return !(expr.evaluate(simulationResults, range, Map.of()).equals(new Windows(range, true)));
+    return !(expr.evaluate(simulationResults, range, new EvaluationEnvironment()).equals(new Windows(range, true)));
   }
 }

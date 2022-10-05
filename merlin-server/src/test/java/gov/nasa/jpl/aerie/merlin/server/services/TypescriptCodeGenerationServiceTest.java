@@ -1,15 +1,20 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
+import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.junit.jupiter.api.Test;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TypescriptCodeGenerationServiceTest {
 
   @Test
-  void testCodeGen() throws MissionModelService.NoSuchMissionModelException {
-    final var codeGenService = new TypescriptCodeGenerationServiceAdapter(new StubMissionModelService());
+  void testCodeGen() throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException {
+    final var codeGenService = new TypescriptCodeGenerationServiceAdapter(new StubMissionModelService(), new StubPlanService());
 
     assertEquals(
         """
@@ -24,8 +29,9 @@ class TypescriptCodeGenerationServiceTest {
              "mode": ( | "Option1" | "Option2"),
              "state of charge": {initial: number, rate: number, },
              "an integer": number,
+             "external resource": boolean,
            };
-           export type ResourceName = "mode" | "state of charge" | "an integer";
+           export type ResourceName = "mode" | "state of charge" | "an integer" | "external resource";
            export type RealResourceName = "state of charge" | "an integer";
            export const ActivityTypeParameterMap = {
              [ActivityType.activity2]: (alias: string) => ({
@@ -58,7 +64,7 @@ class TypescriptCodeGenerationServiceTest {
              ActivityType
            });
            /** End Codegen */""",
-        codeGenService.generateTypescriptTypesFromMissionModel("abc")
+        codeGenService.generateTypescriptTypes("abc", Optional.of(new PlanId(1L)))
     );
   }
 }
