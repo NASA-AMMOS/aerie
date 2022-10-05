@@ -9,7 +9,8 @@ test.describe('Scheduling', () => {
   let jar_id: number;
   let mission_model_id: number;
   let plan_id: number;
-  let goal_id: number;
+  let first_goal_id: number;
+  let second_goal_id: number;
   let plan_revision: number;
   let specification_id: number;
 
@@ -74,10 +75,55 @@ test.describe('Scheduling', () => {
                 }`
         };
 
-    goal_id = await req.insertSchedulingGoal(request, schedulingGoal);
-    expect(goal_id).not.toBeNull();
-    expect(goal_id).toBeDefined();
-    expect(typeof goal_id).toEqual("number");
+    first_goal_id = await req.insertSchedulingGoal(request, schedulingGoal);
+    expect(first_goal_id).not.toBeNull();
+    expect(first_goal_id).toBeDefined();
+    expect(typeof first_goal_id).toEqual("number");
+  });
+
+  //we insert a GrowBanana activity which has a controllable duration but we do not
+  //specify its duration. The scheduler will pick the effective arguments and thus its default duration
+  test('Insert Activity', async ({ request }) =>{
+
+    const activityToInsert : ActivityInsertInput =
+        {
+          //no arguments to ensure that the scheduler is getting effective arguments
+          arguments : {},
+          plan_id: plan_id,
+          type : "GrowBanana",
+          start_offset : "1h"
+        };
+
+    let activity_id = await req.insertActivity(request, activityToInsert);
+    expect(activity_id).not.toBeNull();
+    expect(activity_id).toBeDefined();
+    expect(typeof activity_id).toEqual("number");
+  });
+
+  test('Create Second Scheduling goal', async ({ request }) =>{
+
+    const schedulingGoal : SchedulingGoalInsertInput =
+        {
+          last_modified_by : "test",
+          description: "Second test goal",
+          author: "Test",
+          model_id: mission_model_id,
+          name: "my second scheduling goal!"+rd,
+          definition: `export default function myGoal() {
+                  return Goal.CoexistenceGoal({
+                    forEach: ActivityExpression.ofType(ActivityType.GrowBanana),
+                    activityTemplate: ActivityTemplates.BiteBanana({
+                      biteSize: 1,
+                    }),
+                    startsAt:TimingConstraint.singleton(WindowProperty.END)
+                  })
+                }`
+        };
+
+    second_goal_id = await req.insertSchedulingGoal(request, schedulingGoal);
+    expect(second_goal_id).not.toBeNull();
+    expect(second_goal_id).toBeDefined();
+    expect(typeof second_goal_id).toEqual("number");
   });
 
   test('Get Plan Revision', async ({ request }) => {
@@ -106,7 +152,21 @@ test.describe('Scheduling', () => {
     const priority = 0;
     const specGoal: SchedulingSpecGoalInsertInput = {
       // @ts-ignore
-      goal_id: goal_id,
+      goal_id: first_goal_id,
+      priority: priority,
+      specification_id: specification_id,
+    };
+    const returned_spec_id = await req.createSchedulingSpecGoal(request, specGoal);
+    expect(returned_spec_id).not.toBeNull();
+    expect(returned_spec_id).toBeDefined();
+    expect(returned_spec_id).toEqual(specification_id);
+  });
+
+  test('Create Scheduling 2nd Specification Goal', async ({ request }) => {
+    const priority = 1;
+    const specGoal: SchedulingSpecGoalInsertInput = {
+      // @ts-ignore
+      goal_id: second_goal_id,
       priority: priority,
       specification_id: specification_id,
     };
@@ -150,7 +210,7 @@ test.describe('Scheduling', () => {
     expect(plan).not.toBeNull();
     expect(plan).toBeDefined();
     expect(plan.id).toEqual(plan_id);
-    expect(plan.activity_directives.length).toEqual(12);
+    expect(plan.activity_directives.length).toEqual(14);
   });
 
   test('Delete plan', async ({ request }) => {

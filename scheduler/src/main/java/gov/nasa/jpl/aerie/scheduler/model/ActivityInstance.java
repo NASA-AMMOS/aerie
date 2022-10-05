@@ -380,7 +380,8 @@ public class ActivityInstance {
    * @param arguments a name/value map of arguments
    */
   public void setArguments(Map<String, SerializedValue> arguments) {
-    this.arguments = arguments;
+    this.arguments.clear();
+    this.arguments.putAll(arguments);
   }
   /**
    * Sets all the variable arguments of the activity instance
@@ -388,7 +389,8 @@ public class ActivityInstance {
    * @param variableArguments a name/value map of arguments
    */
   public void setVariableArguments(Map<String, VariableArgumentComputer> variableArguments) {
-    this.variableArguments = variableArguments;
+    this.variableArguments.clear();
+    this.variableArguments.putAll(variableArguments);
   }
 
   /**

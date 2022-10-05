@@ -44,6 +44,14 @@ const gql = {
     }
   `,
 
+  CREATE_ACTIVITY_DIRECTIVE: `#graphql
+    mutation CreateActivityDirective($activityDirectiveInsertInput: activity_directive_insert_input!) {
+      createActivityDirective: insert_activity_directive_one(object: $activityDirectiveInsertInput) {
+        id
+      }
+    }
+  `,
+
   CREATE_SCHEDULING_GOAL: `#graphql
     mutation CreateSchedulingGoal($goal: scheduling_goal_insert_input!) {
       insert_scheduling_goal_one(object: $goal) {

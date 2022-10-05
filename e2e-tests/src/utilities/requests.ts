@@ -140,7 +140,6 @@ const req = {
     const { id: goal_id } = insert_scheduling_goal_one;
     return goal_id
   },
-
   async insertSchedulingSpecification(request: APIRequestContext, specificationInput: SchedulingSpecInsertInput) {
     const data = await req.hasura(request, gql.INSERT_SCHEDULING_SPECIFICATION, {scheduling_spec: specificationInput});
     const { insert_scheduling_specification_one } = data;
@@ -190,6 +189,13 @@ const req = {
       endTime: time.getDoyTimeFromDuration(startTime, plan.duration),
       startTime: time.getDoyTime(startTime),
     };
+  },
+
+  async insertActivity(request: APIRequestContext, activityInsertInput: ActivityInsertInput){
+    const data = await req.hasura(request, gql.CREATE_ACTIVITY_DIRECTIVE, { activityDirectiveInsertInput: activityInsertInput })
+    const { createActivityDirective } = data;
+    const {id : idCreatedActivity} = createActivityDirective;
+    return idCreatedActivity;
   },
 
 };

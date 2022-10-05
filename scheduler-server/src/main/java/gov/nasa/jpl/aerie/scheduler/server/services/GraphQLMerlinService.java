@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.json.BasicParsers;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
@@ -240,7 +241,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
    */
   @Override
   public MerlinPlan getPlanActivityDirectives(final PlanMetadata planMetadata, final Problem problem)
-  throws IOException, NoSuchPlanException, PlanServiceException, InvalidJsonException
+  throws IOException, NoSuchPlanException, PlanServiceException, InvalidJsonException, InvalidArgumentsException
   {
     final var merlinPlan = new MerlinPlan();
     final var request =
@@ -258,7 +259,14 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
           .mapP(new SerializedValueJsonParser())
           .parse(arguments)
           .getSuccessOrThrow((reason) -> new InvalidJsonException(new InvalidEntityException(List.of(reason))));
-      final var merlinActivity = new MerlinActivityInstance(type, Duration.of(parseGraphQLInterval(start).getDuration().toNanos() / 1000, Duration.MICROSECONDS), deserializedArguments);
+      final var effectiveArguments = problem
+          .getActivityType(type)
+          .getSpecType()
+          .getEffectiveArguments(deserializedArguments);
+      final var merlinActivity = new MerlinActivityInstance(
+          type,
+          Duration.of(parseGraphQLInterval(start).getDuration().toNanos() / 1000, Duration.MICROSECONDS),
+          effectiveArguments);
       final var actPK = new ActivityInstanceId(jsonActivity.getJsonNumber("id").longValue());
       merlinPlan.addActivity(actPK, merlinActivity);
     }
@@ -362,7 +370,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
       final Plan plan,
       final Map<ActivityInstance, GoalId> activityToGoalId
   )
-  throws IOException, NoSuchPlanException, NoSuchActivityInstanceException, PlanServiceException
+  throws IOException, NoSuchPlanException, PlanServiceException
   {
     final var ids = new HashMap<ActivityInstance, ActivityInstanceId>();
     //creation are done in batch as that's what the scheduler does the most
@@ -382,8 +390,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
         final var schedulerActIntoMerlinAct = new MerlinActivityInstance(activity.getType().getName(), activity.getStartTime(), activity.getArguments());
         final var activityInstanceId = idsFromInitialPlan.get(activity.getId());
         if (!schedulerActIntoMerlinAct.equals(actFromInitialPlan.get())) {
-          //update if it has changed
-          updateActivityDirective(planId, schedulerActIntoMerlinAct, activityInstanceId, activityToGoalId.get(activity));
+          throw new PlanServiceException("The scheduler should not be updating activity instances");
+          //updateActivityDirective(planId, schedulerActIntoMerlinAct, activityInstanceId, activityToGoalId.get(activity));
         }
         ids.put(activity, activityInstanceId);
       } else {
@@ -394,8 +402,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     final var actsFromNewPlan = plan.getActivitiesById();
     for (final var idActInInitialPlan : idsFromInitialPlan.entrySet()) {
       if (!actsFromNewPlan.containsKey(idActInInitialPlan.getKey())) {
-        //activity has been removed by the scheduler, delete it
-        deleteActivityDirective(idActInInitialPlan.getValue());
+        throw new PlanServiceException("The scheduler should not be deleting activity instances");
+        //deleteActivityDirective(idActInInitialPlan.getValue());
       }
     }
 
