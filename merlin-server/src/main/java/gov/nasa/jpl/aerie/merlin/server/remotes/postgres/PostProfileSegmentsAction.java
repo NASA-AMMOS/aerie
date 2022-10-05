@@ -60,6 +60,19 @@ public final class PostProfileSegmentsAction implements AutoCloseable {
       accumulatedOffset = Duration.add(accumulatedOffset, duration);
     }
 
+    // Profiles must explicitly end in a gap, because the last segment's duration data is lost when
+    // inserting into the database.
+    if (segments.get(segments.size()-1).getValue().isPresent()) {
+      this.statement.setLong(1, datasetId);
+      this.statement.setLong(2, profileRecord.id());
+      final var timestamp = simulationStart.plusMicros(accumulatedOffset.dividedBy(Duration.MICROSECOND));
+      setTimestamp(this.statement, 3, timestamp);
+      setTimestamp(this.statement, 4, simulationStart);
+      this.statement.setString(5, "null");
+      this.statement.setBoolean(6, true);
+      this.statement.addBatch();
+    }
+
     final var results = this.statement.executeBatch();
     for (final var result : results) {
       if (result == Statement.EXECUTE_FAILED) throw new FailedInsertException("profile_segment");

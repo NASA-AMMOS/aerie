@@ -81,6 +81,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       segments.add(Pair.of(duration, dynamics));
     }
 
+    segments.remove(segments.size()-1);
+
     return segments;
   }
 
