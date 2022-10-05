@@ -70,14 +70,13 @@ public class Problem {
       }
     }
     this.simulationFacade = simulationFacade;
+    if(this.simulationFacade != null) {
+      this.simulationFacade.setActivityTypes(this.getActivityTypes());
+    }
   }
 
   public Problem(PlanningHorizon planningHorizon){
     this(null, planningHorizon, null, null);
-  }
-
-  public Problem(@NotNull MissionModel<?> mission, @NotNull PlanningHorizon planningHorizon) {
-    this(mission,planningHorizon, new SimulationFacade(planningHorizon, mission), null);
   }
 
   public SimulationFacade getSimulationFacade(){

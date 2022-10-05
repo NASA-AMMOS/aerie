@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -52,6 +53,11 @@ public class ActivityInstance {
 
 
   private static final AtomicLong uniqueId = new AtomicLong();
+
+  /**
+   * ID of parent if any
+   */
+  private SchedulingActivityInstanceId topParent = null;
 
   /**
    * creates a new unscheduled activity instance of specified type
@@ -98,6 +104,11 @@ public class ActivityInstance {
     parameters.forEach(this::addArgument);
   }
 
+  public ActivityInstance(ActivityType type, Duration start, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityInstanceId topParent) {
+    this(type, start, duration, parameters);
+    this.topParent = topParent;
+  }
+
   /**
    * create an activity instance based on the provided one (but adifferent id)
    *
@@ -110,11 +121,18 @@ public class ActivityInstance {
     this.duration = o.duration;
     this.arguments = o.arguments;
     this.variableArguments = o.variableArguments;
+    this.topParent = o.topParent;
     if (hasDuration() && duration.isNegative()) {
       throw new RuntimeException("Negative duration");
     }
   }
 
+  /**
+   * Returns the id of parent activity if this activity is generated.
+   */
+  public Optional<SchedulingActivityInstanceId> getParentActivity(){
+    return Optional.ofNullable(topParent);
+  }
 
   /**
    * fetches the activity with the earliest end time in a list of activity instances

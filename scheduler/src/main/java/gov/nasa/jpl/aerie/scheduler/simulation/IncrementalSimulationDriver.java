@@ -131,18 +131,25 @@ public class IncrementalSimulationDriver<Model> {
 
   /**
    * Get the simulation results from the Duration.ZERO to the current simulation time point
+   * @param startTime the epoch start time for these results
    * @return the simulation results
    */
-  public SimulationResults getSimulationResults(){
-    return getSimulationResultsUpTo(curTime);
+  public SimulationResults getSimulationResults(Instant startTime){
+    return getSimulationResultsUpTo(curTime, startTime);
+  }
+
+  public Duration getCurrentSimulationEndTime(){
+    return curTime;
   }
 
   /**
    * Get the simulation results from the Duration.ZERO to a specified end time point.
    * The provided simulation results might cover more than the required time period.
+   * @param endTime the duration onto which these results are computed
+   * @param startTime the epoch start time for these results
    * @return the simulation results
    */
-  public SimulationResults getSimulationResultsUpTo(Duration endTime){
+  public SimulationResults getSimulationResultsUpTo(Duration endTime, Instant startTime){
     //if previous results cover a bigger period, we return do not regenerate
     if(endTime.longerThan(curTime)){
       simulateUntil(endTime);
@@ -151,7 +158,7 @@ public class IncrementalSimulationDriver<Model> {
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd)) {
       lastSimResults = SimulationEngine.computeResults(
           engine,
-          Instant.now(),
+          startTime,
           endTime,
           activityTopic,
           timeline,

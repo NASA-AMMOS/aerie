@@ -19,6 +19,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
 import org.apache.commons.lang3.tuple.Pair;
@@ -50,6 +51,7 @@ public class SimulationFacade {
 
   // planning horizon
   private final PlanningHorizon planningHorizon;
+  private Map<String, ActivityType> activityTypes;
   private IncrementalSimulationDriver<?> driver;
   private int itSimActivityId;
 
@@ -70,6 +72,12 @@ public class SimulationFacade {
     this.driver = new IncrementalSimulationDriver<>(missionModel);
     this.itSimActivityId = 0;
     this.insertedActivities = new HashMap<>();
+    this.activityTypes = new HashMap<>();
+  }
+
+  public void setActivityTypes(Collection<ActivityType> activityTypes){
+    this.activityTypes = new HashMap<>();
+    activityTypes.forEach(at -> this.activityTypes.put(at.getName(), at));
   }
 
   /**
@@ -88,6 +96,36 @@ public class SimulationFacade {
       logger.error("Incremental simulation is probably outdated, check that no activity is removed between simulation and querying");
     }
     return duration;
+  }
+
+  private ActivityInstanceId getIdOfRootParent(SimulationResults results, ActivityInstanceId instanceId){
+    final var act = results.simulatedActivities.get(instanceId);
+    if(act.parentId() == null){
+      return instanceId;
+    } else {
+      return getIdOfRootParent(results, act.parentId());
+    }
+  }
+
+  public Map<ActivityInstance, SchedulingActivityInstanceId> getAllGeneratedActivities(Duration endTime){
+    computeSimulationResultsUntil(endTime);
+    Map<ActivityInstance, SchedulingActivityInstanceId> generatedActivities = new HashMap<>();
+    this.lastSimDriverResults.simulatedActivities.forEach( (activityInstanceId, activity) -> {
+      final var rootParent = getIdOfRootParent(this.lastSimDriverResults, activityInstanceId);
+      if(!rootParent.equals(activityInstanceId)){
+        //generated activity
+        final var schedulingActId = planActInstanceIdToSimulationActInstanceId.entrySet().stream().filter(
+            entry -> entry.getValue().equals(rootParent)
+        ).findFirst().get().getKey();
+        final var activityInstance = new ActivityInstance(activityTypes.get(activity.type()),
+                                                          this.planningHorizon.toDur(activity.start()),
+                                                          activity.duration(),
+                                                          activity.arguments(),
+                                                          schedulingActId);
+        generatedActivities.put(activityInstance, schedulingActId);
+      }
+    });
+    return generatedActivities;
   }
 
   public void removeActivitiesFromSimulation(final Collection<ActivityInstance> activities) throws SimulationException {
@@ -131,7 +169,9 @@ public class SimulationFacade {
   }
 
   public void simulateActivity(final ActivityInstance activity) throws SimulationException {
-
+    if(activity.getParentActivity().isPresent()) {
+      throw new Error("This method should not be called with a generated activity but with its top-level parent.");
+    }
     final var arguments = new HashMap<>(activity.getArguments());
     if (activity.hasDuration()) {
       final var durationType = activity.getType().getDurationType();
@@ -245,12 +285,16 @@ public class SimulationFacade {
     if(endTime.noLongerThan(Duration.MAX_VALUE.minus(MARGIN))){
       endTimeWithMargin = endTime.plus(MARGIN);
     }
-    var results = driver.getSimulationResultsUpTo(endTimeWithMargin);
+    var results = driver.getSimulationResultsUpTo(endTimeWithMargin, planningHorizon.getStartInstant());
     //compare references
     if(results != lastSimDriverResults) {
       //simulation results from the last simulation, as converted for use by the constraint evaluation engine
       lastSimConstraintResults = convertToConstraintModelResults(results);
       lastSimDriverResults = results;
     }
+  }
+
+  public Duration getCurrentSimulationEndTime(){
+    return driver.getCurrentSimulationEndTime();
   }
 }

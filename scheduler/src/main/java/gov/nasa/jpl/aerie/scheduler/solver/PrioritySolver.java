@@ -19,7 +19,9 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -63,6 +66,8 @@ public class PrioritySolver implements Solver {
    * this object is null until first call to getNextSolution()
    */
   Plan plan;
+
+  List<Pair<ActivityInstance, ActivityInstance>> generatedActivityInstances = new ArrayList<>();
 
   /**
    * tracks how well this solver thinks it has satisfied goals
@@ -183,16 +188,16 @@ public class PrioritySolver implements Solver {
       for(var act: acts) {
         plan.add(act);
       }
+      final var allGeneratedActivities = simulationFacade.getAllGeneratedActivities(simulationFacade.getCurrentSimulationEndTime());
+      processNewGeneratedActivities(allGeneratedActivities);
     } else{
       //update simulation with regard to plan
-
       try {
         simulationFacade.removeActivitiesFromSimulation(acts);
       } catch (SimulationFacade.SimulationException e) {
         // We do not expect to get SimulationExceptions from re-simulating activities that have been simulated before
         throw new Error("Simulation failed after removing activities");
       }
-
     }
     return allGood;
   }
@@ -220,7 +225,43 @@ public class PrioritySolver implements Solver {
       simulationFacade.simulateActivities(plan.getActivities());
       plan.getActivities().forEach(activity -> simulationFacade.getActivityDuration(activity)
                                                        .ifPresent(activity::setDuration));
+      final var allGeneratedActivities = simulationFacade.getAllGeneratedActivities(problem.getPlanningHorizon().getEndAerie());
+      processNewGeneratedActivities(allGeneratedActivities);
     }
+  }
+
+  /**
+   * Filters generated activities and makes sure that simulations are only adding activities and not removing them
+   * @param allNewGeneratedActivities all the generated activities from the last simulation results.
+   */
+  private void processNewGeneratedActivities(Map<ActivityInstance, SchedulingActivityInstanceId> allNewGeneratedActivities) {
+    final var activitiesById = plan.getActivitiesById();
+    final var formattedNewGeneratedActivities = new ArrayList<Pair<ActivityInstance, ActivityInstance>>();
+    allNewGeneratedActivities.entrySet().forEach(entry -> formattedNewGeneratedActivities.add(Pair.of(entry.getKey(), activitiesById.get(entry.getValue()))));
+
+    final var copyOld = new ArrayList<>(this.generatedActivityInstances);
+    final var copyNew = new ArrayList<>(formattedNewGeneratedActivities);
+
+    for(final var pairOld: this.generatedActivityInstances){
+      for (final var pairNew : formattedNewGeneratedActivities){
+        if(pairOld.getLeft().equalsInProperties(pairNew.getLeft()) &&
+           pairNew.getRight().equals(pairOld.getRight())){
+          copyNew.remove(pairNew);
+          copyOld.remove(pairOld);
+          //break at first occurrence. there may be several activities equal in properties.
+          break;
+        }
+      }
+    }
+
+    //TODO: continuous goal satisfaction
+    //copyNew contains only things that are new
+    //copyOld contains only present in old but absent in new
+    //if(copyOld.size() != 0){
+      //throw new Error("Activities have disappeared from simulation, failing");
+    //}
+    this.generatedActivityInstances.addAll(copyNew);
+    this.plan.add(copyNew.stream().map(Pair::getLeft).toList());
   }
 
   /**

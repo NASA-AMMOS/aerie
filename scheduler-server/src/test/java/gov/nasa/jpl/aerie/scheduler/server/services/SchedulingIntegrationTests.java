@@ -1145,4 +1145,72 @@ public class SchedulingIntegrationTests {
     assertEquals(Duration.of(4, Duration.HOURS), growBanana.startTime());
   }
 
+  @Test
+  void testTreeActivities(){
+    final var goalDefinition = """
+        export default function myGoal() {
+                          return Goal.CoexistenceGoal({
+                            forEach: ActivityExpression.ofType(ActivityType.child),
+                            activityTemplate: ActivityTemplates.BiteBanana({
+                              biteSize: 1,
+                            }),
+                            startsAt:TimingConstraint.singleton(WindowProperty.START)
+                          })
+                        }
+        """;
+    final var planningHorizon = new PlanningHorizon(TimeUtility.fromDOY("2021-001T00:00:00"),
+                                                    TimeUtility.fromDOY("2021-200T01:00:00"));
+    final var results = runScheduler(BANANANATION,
+                 List.of(
+                     new MockMerlinService.PlannedActivityInstance(
+                         "parent",
+                         Map.of(),
+                         Duration.of(1, Duration.HOURS))),
+                 List.of(new SchedulingGoal(new GoalId(0L), goalDefinition, true)),
+                 planningHorizon);
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var biteBanana = planByActivityType.get("BiteBanana").stream().map((bb) -> bb.startTime()).toList();
+    final var childs = planByActivityType.get("child");
+    assertEquals(childs.size(), biteBanana.size());
+    assertEquals(childs.size(), 2);
+    for(final var childAct: childs){
+      assertTrue(biteBanana.contains(childAct.startTime()));
+    }
+  }
+
+  @Test
+  void testAutoSatisfaction(){
+    final var goalDefinition = """
+        export default function myGoal() {
+                          return Goal.CoexistenceGoal({
+                            forEach: ActivityExpression.ofType(ActivityType.parent),
+                            activityTemplate: ActivityTemplates.child({
+                              counter: 0,
+                            }),
+                            startsAt:TimingConstraint.singleton(WindowProperty.START)
+                          })
+                        }
+        """;
+    final var planningHorizon = new PlanningHorizon(TimeUtility.fromDOY("2021-001T00:00:00"),
+                                                    TimeUtility.fromDOY("2021-200T01:00:00"));
+    final var results = runScheduler(BANANANATION,
+                                     List.of(
+                                         new MockMerlinService.PlannedActivityInstance(
+                                             "parent",
+                                             Map.of(),
+                                             Duration.of(1, Duration.HOURS))),
+                                     List.of(new SchedulingGoal(new GoalId(0L), goalDefinition, true)),
+                                     planningHorizon);
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var parentActs = planByActivityType.get("parent");
+    final var childActs = planByActivityType.get("child").stream().map((bb) -> bb.startTime()).toList();
+    //ensure no new child activity has been inserted
+    assertEquals(childActs.size(), 2);
+    //ensure no new parent activity has been inserted
+    assertEquals(parentActs.size(), 1);
+    for(final var parentAct: parentActs){
+      assertTrue(childActs.contains(parentAct.startTime()));
+    }
+  }
+
 }
