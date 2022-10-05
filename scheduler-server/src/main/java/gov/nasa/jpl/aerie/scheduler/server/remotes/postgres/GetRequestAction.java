@@ -1,7 +1,12 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import javax.json.Json;
+import gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers;
+import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
 import org.intellij.lang.annotations.Language;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -49,7 +54,7 @@ import java.util.Optional;
     }
 
     final var analysisId = resultSet.getLong("analysis_id");
-    final var failureReason = resultSet.getString("failure_reason");
+    final var failureReason$ = PreparedStatements.getFailureReason(resultSet, "failure_reason");
     final var canceled = resultSet.getBoolean("canceled");
 
     return Optional.of(new RequestRecord(
@@ -57,7 +62,7 @@ import java.util.Optional;
         analysisId,
         specificationRevision,
         status,
-        failureReason,
+        failureReason$,
         canceled));
   }
 

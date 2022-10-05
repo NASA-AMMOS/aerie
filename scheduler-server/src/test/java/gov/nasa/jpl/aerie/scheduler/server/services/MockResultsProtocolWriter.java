@@ -14,7 +14,7 @@ class MockResultsProtocolWriter implements ResultsProtocol.WriterRole {
   sealed interface Result {
     record Success(ScheduleResults results) implements Result {}
 
-    record Failure(String reason) implements Result {}
+    record Failure(ScheduleFailure reason) implements Result {}
   }
 
   @Override
@@ -28,7 +28,7 @@ class MockResultsProtocolWriter implements ResultsProtocol.WriterRole {
   }
 
   @Override
-  public void failWith(final String reason) {
+  public void failWith(final ScheduleFailure reason) {
     this.results.add(new Result.Failure(reason));
   }
 }

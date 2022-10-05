@@ -1,10 +1,12 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Optional;
 
 /*package-local*/ final class CreateRequestAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
@@ -38,7 +40,7 @@ import java.sql.SQLException;
     }
 
     final var analysis_id = result.getLong("analysis_id");
-    final var failureReason = result.getString("failure_reason");
+    final var failureReason$ = PreparedStatements.getFailureReason(result, "failure_reason");
     final var canceled = result.getBoolean("canceled");
 
     return new RequestRecord(
@@ -46,7 +48,7 @@ import java.sql.SQLException;
         analysis_id,
         specification.revision(),
         status,
-        failureReason,
+        failureReason$,
         canceled
     );
   }

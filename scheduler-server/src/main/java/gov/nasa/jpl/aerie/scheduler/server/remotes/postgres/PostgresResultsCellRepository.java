@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationExcepti
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.ResultsCellRepository;
+import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults.GoalResult;
 
@@ -132,7 +133,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
        final Connection connection,
        final SpecificationId specId,
        final long specRevision,
-       final String reason
+       final ScheduleFailure reason
   ) throws SQLException {
     try (final var setRequestStateAction = new SetRequestStateAction(connection)) {
       setRequestStateAction.apply(
@@ -237,7 +238,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         final var request = getRequest(connection, specId, specRevision);
         return switch(request.status()) {
           case INCOMPLETE -> new ResultsProtocol.State.Incomplete(this.analysisId);
-          case FAILED -> new ResultsProtocol.State.Failed(request.failureReason(), this.analysisId);
+          case FAILED -> new ResultsProtocol.State.Failed(
+              request.failureReason()
+                  .orElseThrow(() -> new Error("Unexpected state: %s request state has no failure message".formatted(request.status()))),
+              this.analysisId);
           case SUCCESS -> new ResultsProtocol.State.Success(getResults(connection, request.analysisId()), this.analysisId);
         };
       } catch (final NoSuchRequestException ex) {
@@ -279,7 +283,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public void failWith(final String reason) {
+    public void failWith(final ScheduleFailure reason) {
       try (final var connection = dataSource.getConnection()) {
         failRequest(connection, specId, specRevision, reason);
       } catch (final SQLException ex) {

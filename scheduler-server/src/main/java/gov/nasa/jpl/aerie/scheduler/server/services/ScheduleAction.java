@@ -37,7 +37,7 @@ public record ScheduleAction(SpecificationService specificationService, Schedule
     /**
      * scheduler completed unsuccessfully, eg in an error or canceled
      */
-    record Failed(String reason, long analysisId) implements Response {}
+    record Failed(ScheduleFailure reason, long analysisId) implements Response {}
 
     /**
      * scheduler completed successfully; contains the requested results

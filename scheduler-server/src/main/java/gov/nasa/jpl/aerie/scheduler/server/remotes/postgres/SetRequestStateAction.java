@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -11,7 +12,7 @@ import java.sql.SQLException;
     update scheduling_request
       set
         status = ?,
-        failure_reason = ?
+        failure_reason = ?::json
       where
         specification_id = ? and
         specification_revision = ?
@@ -24,14 +25,14 @@ import java.sql.SQLException;
   }
 
   public void apply(
-      final long specificationid,
+      final long specificationId,
       final long specificationRevision,
       final RequestRecord.Status status,
-      final String failureReason
+      final ScheduleFailure failureReason
   ) throws SQLException {
     this.statement.setString(1, status.label);
-    this.statement.setString(2, failureReason);
-    this.statement.setLong(3, specificationid);
+    PreparedStatements.setFailureReason(this.statement, 2, failureReason);
+    this.statement.setLong(3, specificationId);
     this.statement.setLong(4, specificationRevision);
 
     final var count = this.statement.executeUpdate();

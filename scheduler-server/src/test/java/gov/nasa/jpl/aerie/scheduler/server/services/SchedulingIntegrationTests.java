@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityTypeList;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
+import gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers;
 import gov.nasa.jpl.aerie.scheduler.server.models.GlobalSchedulingConditionRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.GlobalSchedulingConditionSource;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
@@ -956,8 +957,9 @@ public class SchedulingIntegrationTests {
     assertEquals(1, writer.results.size());
     final var result = writer.results.get(0);
     if (result instanceof MockResultsProtocolWriter.Result.Failure e) {
-      System.err.println(e.reason());
-      fail(e.reason());
+      final var serializedReason = SchedulerParsers.scheduleFailureP.unparse(e.reason()).toString();
+      System.err.println(serializedReason);
+      fail(serializedReason);
     }
     return new SchedulingRunResults(((MockResultsProtocolWriter.Result.Success) result).results(), mockMerlinService.updatedPlan);
   }

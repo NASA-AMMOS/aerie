@@ -1,11 +1,14 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import java.util.Optional;
+import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
+
 public record RequestRecord(
     long specificationId,
     long analysisId,
     long specificationRevision,
     Status status,
-    String failureReason,
+    Optional<ScheduleFailure> failureReason,
     boolean canceled
 ) {
   public enum Status {
