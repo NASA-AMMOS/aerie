@@ -158,7 +158,7 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<ActivityInstanceId, String> validateActivityInstantiations(
+  public Map<ActivityInstanceId, ActivityInstantiationFailure> validateActivityInstantiations(
       final String missionModelId,
       final Map<ActivityInstanceId, SerializedActivity> activities)
   throws LocalMissionModelService.MissionModelLoadException
