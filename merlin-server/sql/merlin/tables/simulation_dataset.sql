@@ -18,7 +18,7 @@ create table simulation_dataset (
 
   -- Simulation state
   status status_t not null default 'pending',
-  reason text null,
+  reason jsonb null,
   canceled boolean not null default false,
 
   constraint simulation_dataset_synthetic_key

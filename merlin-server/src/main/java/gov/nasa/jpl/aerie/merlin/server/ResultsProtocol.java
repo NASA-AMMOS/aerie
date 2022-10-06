@@ -1,9 +1,11 @@
 package gov.nasa.jpl.aerie.merlin.server;
 
+import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.function.Consumer;
 
 public final class ResultsProtocol {
   private ResultsProtocol() {}
@@ -19,7 +21,7 @@ public final class ResultsProtocol {
     record Success(long simulationDatasetId, SimulationResults results) implements State {}
 
     /** Simulation failed -- don't try to re-run without changing some of the inputs. */
-    record Failed(long simulationDatasetId, String reason) implements State {}
+    record Failed(long simulationDatasetId, SimulationFailure reason) implements State {}
   }
 
   public interface ReaderRole {
@@ -37,12 +39,13 @@ public final class ResultsProtocol {
     //   Otherwise, the reader would not be able to reclaim unique ownership
     //   of the underlying resource in order to deallocate it.
     void succeedWith(SimulationResults results);
-    void failWith(String reason);
 
-    default void failWith(final Throwable throwable) {
-      final var stringWriter = new StringWriter();
-      throwable.printStackTrace(new PrintWriter(stringWriter));
-      this.failWith(stringWriter.toString());
+    void failWith(SimulationFailure reason);
+
+    default void failWith(final Consumer<SimulationFailure.Builder> builderConsumer) {
+      final var builder = new SimulationFailure.Builder();
+      builderConsumer.accept(builder);
+      failWith(builder.build());
     }
   }
 

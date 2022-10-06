@@ -246,7 +246,7 @@ public final class ResponseSerializers {
           .createObjectBuilder()
           .add("status", "failed")
           .add("simulationDatasetId", r.simulationDatasetId())
-          .add("reason", r.reason())
+          .add("reason", MerlinParsers.simulationFailureP.unparse(r.reason()))
           .build();
     } else if (response instanceof GetSimulationResultsAction.Response.Complete r) {
       return Json
@@ -387,17 +387,24 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeNoSuchPlanException(final NoSuchPlanException ex) {
-    // TODO: Improve diagnostic information
     return Json.createObjectBuilder()
         .add("message", "no such plan")
+        .add("plan_id", ex.id.id())
         .build();
   }
 
   public static JsonValue serializeNoSuchMissionModelException(final MissionModelService.NoSuchMissionModelException ex) {
-    // TODO: Improve diagnostic information
     return Json.createObjectBuilder()
-               .add("message", "no such mission model")
-               .build();
+        .add("message", "no such mission model")
+        .add("mission_model_id", ex.missionModelId)
+        .build();
+  }
+
+  public static JsonValue serializeNoSuchActivityTypeException(final MissionModelService.NoSuchActivityTypeException ex) {
+    return Json.createObjectBuilder()
+        .add("message", "no such activity type")
+        .add("activity_type", ex.activityTypeId)
+        .build();
   }
 
   private static final class ValueSchemaSerializer implements ValueSchema.Visitor<JsonValue> {

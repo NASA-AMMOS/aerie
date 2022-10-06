@@ -1,20 +1,23 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-public record SimulationStateRecord(Status status, String reason) {
+import java.util.Optional;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
+
+public record SimulationStateRecord(Status status, Optional<SimulationFailure> reason) {
   public static SimulationStateRecord pending() {
-    return new SimulationStateRecord(Status.PENDING, "");
+    return new SimulationStateRecord(Status.PENDING, Optional.empty());
   }
 
   public static SimulationStateRecord incomplete() {
-    return new SimulationStateRecord(Status.INCOMPLETE, "");
+    return new SimulationStateRecord(Status.INCOMPLETE, Optional.empty());
   }
 
-  public static SimulationStateRecord failed(final String reason) {
-    return new SimulationStateRecord(Status.FAILED, reason);
+  public static SimulationStateRecord failed(final SimulationFailure reason) {
+    return new SimulationStateRecord(Status.FAILED, Optional.of(reason));
   }
 
   public static SimulationStateRecord success() {
-    return new SimulationStateRecord(Status.SUCCESS, "");
+    return new SimulationStateRecord(Status.SUCCESS, Optional.empty());
   }
 
   public enum Status {

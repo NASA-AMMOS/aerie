@@ -73,13 +73,11 @@ import java.util.Optional;
       }
 
       final var datasetId = results.getLong(1);
-      final var reason = results.getString(3);
+      final var reason = PreparedStatements.getFailureReason(results, 3);
       final var canceled = results.getBoolean(4);
       final var offsetFromPlanStart = PostgresParsers.parseOffset(results, 5, planStart);
       final var simulationDatasetId = results.getLong(6);
-      final var state = new SimulationStateRecord(
-          status,
-          reason);
+      final var state = new SimulationStateRecord(status, reason);
 
       return Optional.of(
           new SimulationDatasetRecord(

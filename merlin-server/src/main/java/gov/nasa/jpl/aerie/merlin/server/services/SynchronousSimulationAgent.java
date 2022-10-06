@@ -36,11 +36,17 @@ public record SynchronousSimulationAgent (
       final var currentRevisionData = this.planService.getPlanRevisionData(planId);
       final var validationResult = currentRevisionData.matches(revisionData);
       if (validationResult instanceof RevisionData.MatchResult.Failure failure) {
-        writer.failWith("Simulation request no longer relevant: %s".formatted(failure.reason()));
+        writer.failWith(b -> b
+            .type("SIMULATION_REQUEST_NOT_RELEVANT")
+            .message("Simulation request no longer relevant: %s".formatted(failure.reason())));
         return;
       }
     } catch (final NoSuchPlanException ex) {
-      writer.failWith("no plan with id %s".formatted(planId));
+      writer.failWith(b -> b
+          .type("NO_SUCH_PLAN")
+          .message(ex.toString())
+          .data(ResponseSerializers.serializeNoSuchPlanException(ex))
+          .trace(ex));
       return;
     }
 
@@ -59,7 +65,10 @@ public record SynchronousSimulationAgent (
                 e -> new SerializedActivity(e.getValue().type, e.getValue().arguments))));
 
         if (!failures.isEmpty()) {
-          writer.failWith(ResponseSerializers.serializeUnconstructableActivityFailures(failures).toString());
+          writer.failWith(b -> b
+              .type("PLAN_CONTAINS_UNCONSTRUCTABLE_ACTIVITIES")
+              .message("Plan contains unconstructable activities")
+              .data(ResponseSerializers.serializeUnconstructableActivityFailures(failures)));
           return;
         }
       }
@@ -71,10 +80,18 @@ public record SynchronousSimulationAgent (
           serializeScheduledActivities(plan.startTimestamp.toInstant(), plan.activityInstances),
           plan.configuration));
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
-      writer.failWith("mission model for existing plan does not exist");
+      writer.failWith(b -> b
+          .type("NO_SUCH_MISSION_MODEL")
+          .message(ex.toString())
+          .data(ResponseSerializers.serializeNoSuchMissionModelException(ex))
+          .trace(ex));
       return;
     } catch (final MissionModelService.NoSuchActivityTypeException ex) {
-      writer.failWith("activity could not be instantiated");
+      writer.failWith(b -> b
+          .type("NO_SUCH_ACTIVITY_TYPE")
+          .message("Activity of type `%s` could not be instantiated".formatted(ex.activityTypeId))
+          .data(ResponseSerializers.serializeNoSuchActivityTypeException(ex))
+          .trace(ex));
       return;
     }
 

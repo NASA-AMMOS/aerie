@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
@@ -32,7 +33,7 @@ public final class GetSimulationResultsAction {
   public sealed interface Response {
     record Pending(long simulationDatasetId) implements Response {}
     record Incomplete(long simulationDatasetId) implements Response {}
-    record Failed(long simulationDatasetId, String reason) implements Response {}
+    record Failed(long simulationDatasetId, SimulationFailure reason) implements Response {}
     record Complete(long simulationDatasetId) implements Response {}
   }
 
