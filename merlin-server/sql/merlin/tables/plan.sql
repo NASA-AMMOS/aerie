@@ -10,6 +10,8 @@ create table plan (
   start_time timestamptz not null,
   parent_id integer,
 
+  is_locked boolean not null default false,
+
   constraint plan_synthetic_key
     primary key (id),
   constraint plan_natural_key
