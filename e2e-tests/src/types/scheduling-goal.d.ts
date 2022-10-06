@@ -32,7 +32,7 @@ type SchedulingGoalInsertInput = Omit<
 type SchedulingResponseStatus = 'complete' | 'failed' | 'incomplete';
 
 type SchedulingResponse = {
-  reason: string;
+  reason: any;
   status: SchedulingResponseStatus;
   analysisId: number;
 };
