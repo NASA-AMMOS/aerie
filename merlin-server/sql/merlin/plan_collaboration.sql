@@ -2,7 +2,7 @@
 --   - plan snapshot table (done)
 --   - duplicate function (done)
 --        - duplicate temporal subset of plan
---   - merge request table
+--   - merge request table (done)
 --   - diff function
 --   - history tracking (tables and function) (done)
 --   - merge base function (done)
