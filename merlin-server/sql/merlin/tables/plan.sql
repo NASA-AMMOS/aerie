@@ -12,6 +12,8 @@ create table plan (
     references plan
     on update cascade,
 
+  is_locked boolean not null default false,
+
   constraint plan_synthetic_key
     primary key (id),
   constraint plan_natural_key
