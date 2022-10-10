@@ -531,6 +531,18 @@ public final class SimulationEngine implements AutoCloseable {
             activityChildren.getOrDefault(activityId, Collections.emptyList()),
             (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(activityId)
         ));
+      } else if (state instanceof ExecutionState.AwaitingChildren<?> e){
+        final var inputAttributes = taskInfo.input().get(task.id());
+        unfinishedActivities.put(activityId, new UnfinishedActivity(
+            inputAttributes.getTypeName(),
+            inputAttributes.getArguments(),
+            startTime.plus(e.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
+            activityParents.get(activityId),
+            activityChildren.getOrDefault(activityId, Collections.emptyList()),
+            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(activityId)
+        ));
+      } else {
+        throw new Error("Unexpected subtype of %s: %s".formatted(ExecutionState.class, state.getClass()));
       }
     });
 
