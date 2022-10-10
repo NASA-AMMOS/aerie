@@ -11,7 +11,7 @@ import java.sql.SQLException;
         update simulation_dataset
           set
             status = ?,
-            reason = ?
+            reason = ?::json
           where dataset_id = ?
         """;
 
@@ -25,7 +25,7 @@ import java.sql.SQLException;
   throws SQLException, NoSuchSimulationDatasetException
   {
     this.statement.setString(1, state.status().label);
-    this.statement.setString(2, state.reason());
+    PreparedStatements.setFailureReason(this.statement, 2, state.reason().orElse(null));
     this.statement.setLong(3, datasetId);
 
     final var count = this.statement.executeUpdate();

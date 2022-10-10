@@ -185,14 +185,19 @@ public final class ResponseSerializers {
                 Collectors.toMap(e -> Long.toString(e.getKey().id()), Map.Entry::getValue)));
   }
 
-  private static JsonValue serializeUnconstructableActivityFailure(final String reason) {
-    return Json
-        .createObjectBuilder()
-        .add("reason", reason)
-        .build();
+  private static JsonValue serializeUnconstructableActivityFailure(final MissionModelService.ActivityInstantiationFailure reason) {
+    // TODO use pattern-matching switch expression here when available with LTS
+    final var builder = Json.createObjectBuilder();
+    if (reason instanceof final MissionModelService.ActivityInstantiationFailure.InvalidArguments r) {
+      return builder.add("reason", serializeInvalidArgumentsException(r.ex())).build();
+    }
+    else if (reason instanceof final MissionModelService.ActivityInstantiationFailure.NoSuchActivityType r) {
+      return builder.add("reason", serializeNoSuchActivityTypeException(r.ex())).build();
+    }
+    throw new UnexpectedSubtypeError(MissionModelService.ActivityInstantiationFailure.class, reason);
   }
 
-  public static JsonValue serializeUnconstructableActivityFailures(final Map<ActivityInstanceId, String> failures) {
+  public static JsonValue serializeUnconstructableActivityFailures(final Map<ActivityInstanceId, MissionModelService.ActivityInstantiationFailure> failures) {
     if (failures.isEmpty()) {
       return Json.createObjectBuilder()
         .add("success", JsonValue.TRUE)
@@ -246,7 +251,7 @@ public final class ResponseSerializers {
           .createObjectBuilder()
           .add("status", "failed")
           .add("simulationDatasetId", r.simulationDatasetId())
-          .add("reason", r.reason())
+          .add("reason", MerlinParsers.simulationFailureP.unparse(r.reason()))
           .build();
     } else if (response instanceof GetSimulationResultsAction.Response.Complete r) {
       return Json
@@ -387,17 +392,24 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeNoSuchPlanException(final NoSuchPlanException ex) {
-    // TODO: Improve diagnostic information
     return Json.createObjectBuilder()
         .add("message", "no such plan")
+        .add("plan_id", ex.id.id())
         .build();
   }
 
   public static JsonValue serializeNoSuchMissionModelException(final MissionModelService.NoSuchMissionModelException ex) {
-    // TODO: Improve diagnostic information
     return Json.createObjectBuilder()
-               .add("message", "no such mission model")
-               .build();
+        .add("message", "no such mission model")
+        .add("mission_model_id", ex.missionModelId)
+        .build();
+  }
+
+  public static JsonValue serializeNoSuchActivityTypeException(final MissionModelService.NoSuchActivityTypeException ex) {
+    return Json.createObjectBuilder()
+        .add("message", "no such activity type")
+        .add("activity_type", ex.activityTypeId)
+        .build();
   }
 
   private static final class ValueSchemaSerializer implements ValueSchema.Visitor<JsonValue> {

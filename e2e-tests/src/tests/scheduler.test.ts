@@ -189,7 +189,7 @@ test.describe('Scheduling', () => {
     const max_it = 10;
     let it = 0;
     let reason_local: string;
-    while (it++ <  max_it && status == "incomplete"){
+    while (it++ < max_it && status == "incomplete") {
       const { reason, status, analysisId } = await req.schedule(request, specification_id);
       status_local = status;
       reason_local = reason;
@@ -197,7 +197,7 @@ test.describe('Scheduling', () => {
       expect(status).toBeDefined();
       await delay(1000);
     }
-    if (status_local == "failed"){
+    if (status_local == "failed") {
       throw new Error(reason_local);
     }
     expect(status_local).toEqual("complete")

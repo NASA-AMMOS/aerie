@@ -1,9 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.server;
 
+import java.util.function.Consumer;
+import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 /**
  * interfaces used to coordinate parties interested in the scheduling results
@@ -43,7 +42,7 @@ public final class ResultsProtocol {
      *
      * @param reason description of why the scheduling operation failed
      */
-    record Failed(String reason, long analysisId) implements State {}
+    record Failed(ScheduleFailure reason, long analysisId) implements State {}
   }
 
   /**
@@ -96,17 +95,12 @@ public final class ResultsProtocol {
      *
      * @param reason the reason that the scheduling run failed
      */
-    void failWith(String reason);
+    void failWith(ScheduleFailure reason);
 
-    /**
-     * convenience method for reporting an unhandled exception
-     *
-     * @param throwable the exception that caused the scheduling run to fail
-     */
-    default void failWith(final Throwable throwable) {
-      final var stringWriter = new StringWriter();
-      throwable.printStackTrace(new PrintWriter(stringWriter));
-      this.failWith(stringWriter.toString());
+    default void failWith(final Consumer<ScheduleFailure.Builder> builderConsumer) {
+      final var builder = new ScheduleFailure.Builder();
+      builderConsumer.accept(builder);
+      failWith(builder.build());
     }
   }
 

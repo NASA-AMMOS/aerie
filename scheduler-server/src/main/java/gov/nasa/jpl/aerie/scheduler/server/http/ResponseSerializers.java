@@ -2,9 +2,14 @@ package gov.nasa.jpl.aerie.scheduler.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
+import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingCompilationError;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.JsonValue;
@@ -52,7 +57,7 @@ public class ResponseSerializers {
       return Json
           .createObjectBuilder()
           .add("status", "failed")
-          .add("reason", r.reason())
+          .add("reason", SchedulerParsers.scheduleFailureP.unparse(r.reason()))
           .add("analysisId", r.analysisId())
           .build();
     } else if (response instanceof ScheduleAction.Response.Complete r) {
@@ -95,6 +100,41 @@ public class ResponseSerializers {
             goalResult.satisfyingActivities()))
         .add("createdActivities", goalResult.satisfied())
         .build();
+  }
+
+  private static JsonValue serializeUserCodeError(final SchedulingCompilationError.UserCodeError error) {
+    return Json.createObjectBuilder()
+        .add("message", error.message())
+        .add("stack", error.stack())
+        .add("location", Json.createObjectBuilder()
+            .add("line", error.location().line())
+            .add("column", error.location().column()))
+        .build();
+  }
+
+  public static JsonValue serializeFailedGlobalSchedulingConditions(
+      final List<List<SchedulingCompilationError.UserCodeError>> failedGlobalSchedulingConditions)
+  {
+    return serializeIterable(
+        errors -> serializeIterable(ResponseSerializers::serializeUserCodeError, errors),
+        failedGlobalSchedulingConditions);
+  }
+
+  public static JsonValue serializeFailedGoals(final List<Pair<GoalId, List<SchedulingCompilationError.UserCodeError>>> failedGoals) {
+    return serializeIterable(
+        goalFailures -> Json.createObjectBuilder()
+            .add("goal_id", goalFailures.getKey().id())
+            .add("errors", serializeIterable(ResponseSerializers::serializeUserCodeError, goalFailures.getValue()))
+            .build(),
+        failedGoals);
+  }
+
+  public static JsonValue serializeNoSuchSpecificationException(final NoSuchSpecificationException e) {
+    return Json.createObjectBuilder().add("specification_id", e.specificationId.id()).build();
+  }
+
+  public static JsonValue serializeNoSuchPlanException(final NoSuchPlanException e) {
+    return Json.createObjectBuilder().add("specification_id", e.getInvalidPlanId().id()).build();
   }
 
   /**

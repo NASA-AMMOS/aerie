@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
@@ -267,7 +268,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static void failSimulation(
       final Connection connection,
       final long datasetId,
-      final String reason
+      final SimulationFailure reason
   ) throws SQLException, NoSuchSimulationDatasetException
   {
     try (final var setSimulationStateAction = new SetSimulationStateAction(connection)) {
@@ -292,7 +293,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         switch (record.state().status()) {
           case PENDING -> new ResultsProtocol.State.Pending(record.simulationDatasetId());
           case INCOMPLETE -> new ResultsProtocol.State.Incomplete(record.simulationDatasetId());
-          case FAILED -> new ResultsProtocol.State.Failed(record.simulationDatasetId(), record.state().reason());
+          case FAILED -> new ResultsProtocol.State.Failed(record.simulationDatasetId(), record.state().reason()
+              .orElseThrow(() -> new Error("Unexpected state: %s request state has no failure message".formatted(record.state().status()))));
           case SUCCESS -> new ResultsProtocol.State.Success(record.simulationDatasetId(), getSimulationResults(connection, record, planId));
         });
   }
@@ -624,7 +626,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public void failWith(final String reason) {
+    public void failWith(final SimulationFailure reason) {
       try (final var connection = dataSource.getConnection()) {
         failSimulation(connection, datasetId, reason);
       } catch (final SQLException ex) {

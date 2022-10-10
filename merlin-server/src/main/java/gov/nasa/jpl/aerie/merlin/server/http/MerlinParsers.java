@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.SchemaCache;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
@@ -13,9 +14,11 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.time.format.DateTimeParseException;
-
-import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
+import java.util.Optional;
+import static gov.nasa.jpl.aerie.json.BasicParsers.*;
+import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
+import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.pgTimestampP;
 
 public abstract class MerlinParsers {
   private MerlinParsers() {}
@@ -68,4 +71,15 @@ public abstract class MerlinParsers {
       . map(
           PlanId::new,
           PlanId::id);
+
+  public static final JsonParser<SimulationFailure> simulationFailureP = productP
+      .field("type", stringP)
+      .field("message", stringP)
+      .field("data", anyP)
+      .optionalField("trace", stringP)
+      .field("timestamp", pgTimestampP)
+      .map(
+          untuple((type, message, data, trace, timestamp) -> new SimulationFailure(type, message, data, trace.orElse(""), timestamp.toInstant())),
+          failure -> tuple(failure.type(), failure.message(), failure.data(), Optional.ofNullable(failure.trace()), new Timestamp(failure.timestamp()))
+      );
 }

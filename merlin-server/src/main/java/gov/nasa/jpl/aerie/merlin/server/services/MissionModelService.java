@@ -10,7 +10,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
@@ -40,8 +39,11 @@ public interface MissionModelService {
   List<ValidationNotice> validateActivityArguments(String missionModelId, SerializedActivity activity)
   throws NoSuchMissionModelException, InvalidArgumentsException;
 
-  Map<ActivityInstanceId, String> validateActivityInstantiations(String missionModelId, Map<ActivityInstanceId, SerializedActivity> activities)
-  throws NoSuchMissionModelException, LocalMissionModelService.MissionModelLoadException;
+  Map<ActivityInstanceId, ActivityInstantiationFailure> validateActivityInstantiations(
+      String missionModelId,
+      Map<ActivityInstanceId,
+      SerializedActivity> activities
+  ) throws NoSuchMissionModelException, LocalMissionModelService.MissionModelLoadException;
 
   Map<String, SerializedValue> getActivityEffectiveArguments(String missionModelId, SerializedActivity activity)
   throws NoSuchMissionModelException,
@@ -68,6 +70,11 @@ public interface MissionModelService {
   void refreshActivityTypes(String missionModelId) throws NoSuchMissionModelException;
   void refreshActivityValidations(String missionModelId, ActivityDirective directive)
   throws NoSuchMissionModelException, InvalidArgumentsException;
+
+  sealed interface ActivityInstantiationFailure {
+    record NoSuchActivityType(NoSuchActivityTypeException ex) implements ActivityInstantiationFailure { }
+    record InvalidArguments(InvalidArgumentsException ex) implements ActivityInstantiationFailure { }
+  }
 
   final class NoSuchMissionModelException extends Exception {
     public final String missionModelId;

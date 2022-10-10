@@ -83,7 +83,10 @@ public final class MerlinWorkerAppDriver {
         simulationAgent.simulate(planId, revisionData, writer);
       } catch (final Throwable ex) {
         ex.printStackTrace(System.err);
-        writer.failWith(ex);
+        writer.failWith(b -> b
+            .type("UNEXPECTED_SIMULATION_EXCEPTION")
+            .message("Something went wrong while simulating")
+            .trace(ex));
       }
     }
   }

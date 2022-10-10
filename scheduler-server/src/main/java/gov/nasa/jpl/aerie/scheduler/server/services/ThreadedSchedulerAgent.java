@@ -64,7 +64,10 @@ public final class ThreadedSchedulerAgent implements SchedulerAgent {
               this.schedulerAgent.schedule(req.request(), req.writer());
             } catch (final Throwable ex) {
               ex.printStackTrace(System.err);
-              req.writer().failWith(ex);
+              req.writer().failWith(b -> b
+                  .type("UNEXPECTED_SCHEDULER_EXCEPTION")
+                  .message("Something went wrong while scheduling")
+                  .trace(ex));
             }
             // continue
           } else if (request instanceof SchedulingRequest.Terminate) {

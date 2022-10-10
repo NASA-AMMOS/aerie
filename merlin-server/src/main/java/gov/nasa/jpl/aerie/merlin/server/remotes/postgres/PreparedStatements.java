@@ -1,16 +1,23 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import javax.json.Json;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
+import gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers;
 import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.util.List;
+import java.util.Optional;
 
 public final class PreparedStatements {
   private PreparedStatements() {}
@@ -40,5 +47,28 @@ public final class PreparedStatements {
   public static void setValidationNotices(final PreparedStatement statement, final int parameter, final List<ValidationNotice> notices)
   throws SQLException {
     statement.setString(parameter, ResponseSerializers.serializeValidationNotices(notices).toString());
+  }
+
+  public static void setFailureReason(final PreparedStatement statement, final int parameter, final SimulationFailure reason)
+  throws SQLException
+  {
+    statement.setString(parameter, reason == null ?
+        null :
+        MerlinParsers.simulationFailureP.unparse(reason).toString());
+  }
+
+  public static Optional<SimulationFailure> getFailureReason(final ResultSet results, final int column)
+  throws SQLException
+  {
+    final var failureJson = results.getString(column);
+    return failureJson == null || failureJson.isBlank() ?
+        Optional.empty() :
+        Optional.of(PreparedStatements.deserializeScheduleFailure(results.getString(column)));
+  }
+
+  private static SimulationFailure deserializeScheduleFailure(final String failureJson) {
+    try (final var reader = Json.createReader(new ByteArrayInputStream(failureJson.getBytes(StandardCharsets.UTF_8)))) {
+      return MerlinParsers.simulationFailureP.parse(reader.readValue()).getSuccessOrThrow();
+    }
   }
 }

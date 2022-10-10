@@ -1,11 +1,11 @@
 create type status_t as enum('incomplete', 'failed', 'success');
 
 create table scheduling_request (
-  specification_id     integer not null,
+  specification_id integer not null,
   analysis_id integer not null,
 
   status status_t not null default 'incomplete',
-  failure_reason text null,
+  reason jsonb null,
   canceled boolean not null default false,
 
   specification_revision integer not null,
@@ -34,7 +34,7 @@ comment on column scheduling_request.analysis_id is e''
   'The ID associated with the analysis of this scheduling run.';
 comment on column scheduling_request.status is e''
   'The state of the the scheduling request.';
-comment on column scheduling_request.failure_reason is e''
+comment on column scheduling_request.reason is e''
   'The reason for failure when a scheduling request fails.';
 comment on column scheduling_request.specification_revision is e''
   'The revision of the scheduling_specification associated with this request.';

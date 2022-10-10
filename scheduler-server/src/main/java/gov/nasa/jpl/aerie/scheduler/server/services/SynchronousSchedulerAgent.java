@@ -27,6 +27,7 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.ResultsProtocolFailure;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.SpecificationLoadException;
+import gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
@@ -141,7 +142,10 @@ public record SynchronousSchedulerAgent(
       });
 
       if (!failedGlobalSchedulingConditions.isEmpty()) {
-        writer.failWith(failedGlobalSchedulingConditions.toString());
+        writer.failWith(b -> b
+            .type("GLOBAL_SCHEDULING_CONDITIONS_FAILED")
+            .message("Global scheduling condition%s failed".formatted(failedGlobalSchedulingConditions.size() > 1 ? "s" : ""))
+            .data(ResponseSerializers.serializeFailedGlobalSchedulingConditions(failedGlobalSchedulingConditions)));
       }
 
       compiledGlobalSchedulingConditions.forEach(problem::add);
@@ -169,7 +173,10 @@ public record SynchronousSchedulerAgent(
         }
       }
       if (!failedGoals.isEmpty()) {
-        writer.failWith(failedGoals.toString());
+        writer.failWith(b -> b
+            .type("SCHEDULING_GOALS_FAILED")
+            .message("Scheduling goal%s failed".formatted(failedGoals.size() > 1 ? "s" : ""))
+            .data(ResponseSerializers.serializeFailedGoals(failedGoals)));
       }
       for (final var compiledGoal : compiledGoals) {
         final var goal = GoalBuilder
@@ -208,17 +215,38 @@ public record SynchronousSchedulerAgent(
       final var results = collectResults(solutionPlan, instancesToIds, goals);
       writer.succeedWith(results);
     } catch (final SpecificationLoadException e) {
-      //unwrap failure message from any anticipated exceptions and forward to subscribers
-      writer.failWith("%s\n%s".formatted(
-          e.toString(),
-          SchedulingCompilationError.schedulingErrorJsonP.unparse(e.errors).toString()));
-    } catch (final ResultsProtocolFailure |
-        NoSuchSpecificationException |
-        NoSuchPlanException |
-        IOException |
-        PlanServiceException e) {
-      // unwrap failure message from any anticipated exceptions and forward to subscribers
-      writer.failWith(e);
+      writer.failWith(b -> b
+          .type("SPECIFICATION_LOAD_EXCEPTION")
+          .message(e.toString())
+          .data(SchedulingCompilationError.schedulingErrorJsonP.unparse(e.errors))
+          .trace(e));
+    } catch (final ResultsProtocolFailure e) {
+      writer.failWith(b -> b
+          .type("RESULTS_PROTOCOL_FAILURE")
+          .message(e.toString())
+          .trace(e));
+    } catch (final NoSuchSpecificationException e) {
+      writer.failWith(b -> b
+          .type("NO_SUCH_SPECIFICATION")
+          .message(e.toString())
+          .data(ResponseSerializers.serializeNoSuchSpecificationException(e))
+          .trace(e));
+    } catch (final NoSuchPlanException e) {
+      writer.failWith(b -> b
+          .type("NO_SUCH_PLAN")
+          .message(e.toString())
+          .data(ResponseSerializers.serializeNoSuchPlanException(e))
+          .trace(e));
+    } catch (final PlanServiceException e) {
+      writer.failWith(b -> b
+          .type("PLAN_SERVICE_EXCEPTION")
+          .message(e.toString())
+          .trace(e));
+    } catch (final IOException e) {
+      writer.failWith(b -> b
+          .type("IO_EXCEPTION")
+          .message(e.toString())
+          .trace(e));
     }
   }
 
@@ -248,12 +276,10 @@ public record SynchronousSchedulerAgent(
    * @return the current revision number of the target plan according to a fresh query
    * @throws ResultsProtocolFailure when the requested plan cannot be found, or aerie could not be reached
    */
-  private long getMerlinPlanRev(final PlanId planId) {
-    try {
-      return planService.getPlanRevision(planId);
-    } catch (NoSuchPlanException | IOException | PlanServiceException e) {
-      throw new ResultsProtocolFailure(e);
-    }
+  private long getMerlinPlanRev(final PlanId planId)
+  throws PlanServiceException, NoSuchPlanException, IOException
+  {
+    return planService.getPlanRevision(planId);
   }
   /**
    * confirms that specification revision still matches that expected by the scheduling request
@@ -359,7 +385,7 @@ public record SynchronousSchedulerAgent(
    * creates an instance of the mission model referenced by the specified plan
    *
    * @param plan metadata of the target plan indicating which mission model to load and how to configure the mission
-   *     model for that plan context
+   *     model for that plan data
    * @return instance of the mission model to extract any activity types, constraints, and simulations from
    * @throws ResultsProtocolFailure when the mission model could not be loaded: eg jar file not found, declared
    *     version/name in jar does not match, or aerie filesystem could not be mounted

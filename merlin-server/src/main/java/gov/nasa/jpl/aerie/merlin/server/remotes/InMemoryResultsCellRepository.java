@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes;
 
+import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
@@ -114,7 +115,7 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public void failWith(final String reason) {
+    public void failWith(final SimulationFailure reason) {
       if (!(this.state instanceof ResultsProtocol.State.Incomplete)) {
         throw new IllegalStateException("Cannot transition to failed state from state %s".formatted(
             this.state.getClass().getCanonicalName()));
