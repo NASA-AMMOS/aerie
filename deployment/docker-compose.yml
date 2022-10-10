@@ -128,7 +128,7 @@ services:
       HASURA_GRAPHQL_LOG_LEVEL: warn
       HASURA_GRAPHQL_METADATA_DATABASE_URL: "postgres://${AERIE_USERNAME}:${AERIE_PASSWORD}@postgres:5432/aerie_hasura"
       HASURA_GRAPHQL_METADATA_DIR: /hasura-metadata
-    image: "hasura/graphql-engine:v2.8.4.cli-migrations-v3"
+    image: "hasura/graphql-engine:v2.12.0.cli-migrations-v3"
     ports: ["8080:8080"]
     restart: always
     volumes:
