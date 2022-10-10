@@ -10,8 +10,7 @@ import java.sql.SQLException;
   private static final @Language("SQL") String sql = """
     update simulation_dataset
       set
-        status = 'incomplete',
-	    reason = ''
+        status = 'incomplete'
       where (dataset_id = ? and status = 'pending');
   """;
 
