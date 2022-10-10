@@ -166,8 +166,7 @@ public final class MerlinBindings implements Plugin {
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
     } catch (final InvalidArgumentsException ex) {
-      ctx.status(400)
-          .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
+      ctx.status(400).result(ResponseSerializers.serializeInvalidArgumentsException(ex).toString());
     } catch (final NoSuchPlanException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
@@ -257,8 +256,7 @@ public final class MerlinBindings implements Plugin {
 
       ctx.result(ResponseSerializers.serializeValidationNotices(notices).toString());
     } catch (final InvalidArgumentsException ex) {
-      ctx.status(400)
-         .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
+      ctx.status(400).result(ResponseSerializers.serializeInvalidArgumentsException(ex).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
     } catch (final InvalidJsonException ex) {
@@ -280,8 +278,7 @@ public final class MerlinBindings implements Plugin {
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
     } catch (final InvalidArgumentsException ex) {
-      ctx.status(400)
-         .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
+      ctx.status(400).result(ResponseSerializers.serializeInvalidArgumentsException(ex).toString());
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
