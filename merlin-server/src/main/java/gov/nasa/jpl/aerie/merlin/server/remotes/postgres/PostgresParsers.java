@@ -25,7 +25,6 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
 import java.util.Map;
-import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.*;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
@@ -53,14 +52,14 @@ public final class PostgresParsers {
     @Override
     public JsonParseResult<Timestamp> parse(final JsonValue json) {
       final var result = stringP.parse(json);
-      if (result instanceof JsonParseResult.Success<String> s) {
+      if (result instanceof final JsonParseResult.Success<String> s) {
         try {
           final var instant = LocalDateTime.parse(s.result(), format).atZone(ZoneOffset.UTC);
           return JsonParseResult.success(new Timestamp(instant));
-        } catch (DateTimeParseException e) {
+        } catch (final DateTimeParseException e) {
           return JsonParseResult.failure("invalid timestamp format "+e);
         }
-      } else if (result instanceof JsonParseResult.Failure<?> f) {
+      } else if (result instanceof final JsonParseResult.Failure<?> f) {
         return f.cast();
       } else {
         throw new UnexpectedSubtypeError(JsonParseResult.class, result);

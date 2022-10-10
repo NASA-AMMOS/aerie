@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.scheduler.server.models.HasuraAction;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
+import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -12,6 +13,7 @@ import java.util.Optional;
 import static gov.nasa.jpl.aerie.json.BasicParsers.*;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
+import static gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PostgresParsers.pgTimestampP;
 
 /**
  * json parsers for data objects used in the scheduler service endpoints
@@ -38,9 +40,10 @@ public final class SchedulerParsers {
       .field("message", stringP)
       .field("data", anyP)
       .optionalField("trace", stringP)
+      .field("timestamp", pgTimestampP)
       .map(
-          untuple((type, message, data, trace) -> new ScheduleFailure(type, message, data, trace.orElse(""))),
-          failure -> tuple(failure.type(), failure.message(), failure.data(), Optional.ofNullable(failure.trace()))
+          untuple((type, message, data, trace, timestamp) -> new ScheduleFailure(type, message, data, trace.orElse(""), timestamp.toInstant())),
+          failure -> tuple(failure.type(), failure.message(), failure.data(), Optional.ofNullable(failure.trace()), new Timestamp(failure.timestamp()))
       );
 
   /**

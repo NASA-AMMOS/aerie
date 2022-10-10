@@ -18,6 +18,7 @@ import java.util.Optional;
 import static gov.nasa.jpl.aerie.json.BasicParsers.*;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.pgTimestampP;
 
 public abstract class MerlinParsers {
   private MerlinParsers() {}
@@ -76,8 +77,9 @@ public abstract class MerlinParsers {
       .field("message", stringP)
       .field("data", anyP)
       .optionalField("trace", stringP)
+      .field("timestamp", pgTimestampP)
       .map(
-          untuple((type, message, data, trace) -> new SimulationFailure(type, message, data, trace.orElse(""))),
-          failure -> tuple(failure.type(), failure.message(), failure.data(), Optional.ofNullable(failure.trace()))
+          untuple((type, message, data, trace, timestamp) -> new SimulationFailure(type, message, data, trace.orElse(""), timestamp.toInstant())),
+          failure -> tuple(failure.type(), failure.message(), failure.data(), Optional.ofNullable(failure.trace()), new Timestamp(failure.timestamp()))
       );
 }

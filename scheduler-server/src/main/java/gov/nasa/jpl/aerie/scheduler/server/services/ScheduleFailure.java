@@ -3,12 +3,14 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 import javax.json.JsonValue;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.time.Instant;
 
 public record ScheduleFailure(
     String type,
     String message,
     JsonValue data,
-    String trace
+    String trace,
+    Instant timestamp
 ) {
   public static final class Builder {
     private String type = "";
@@ -39,7 +41,7 @@ public record ScheduleFailure(
     }
 
     public ScheduleFailure build() {
-      return new ScheduleFailure(type, message, data, trace);
+      return new ScheduleFailure(type, message, data, trace, Instant.now());
     }
   }
 }
