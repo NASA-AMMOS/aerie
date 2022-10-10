@@ -15,6 +15,8 @@
 @WithActivityType(DecomposingActivity.ParentActivity.class)
 @WithActivityType(DecomposingActivity.ChildActivity.class)
 @WithActivityType(DecomposingActivity.GrandchildActivity.class)
+@WithActivityType(DecomposingSpawnActivity.DecomposingSpawnParentActivity.class)
+@WithActivityType(DecomposingSpawnActivity.DecomposingSpawnChildActivity.class)
 @WithActivityType(BakeBananaBreadActivity.class)
 @WithActivityType(BananaNapActivity.class)
 
@@ -25,6 +27,7 @@ import gov.nasa.jpl.aerie.banananation.activities.BananaNapActivity;
 import gov.nasa.jpl.aerie.banananation.activities.BiteBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.ChangeProducerActivity;
 import gov.nasa.jpl.aerie.banananation.activities.DecomposingActivity;
+import gov.nasa.jpl.aerie.banananation.activities.DecomposingSpawnActivity;
 import gov.nasa.jpl.aerie.banananation.activities.GrowBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.LineCountBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.ParameterTestActivity;
