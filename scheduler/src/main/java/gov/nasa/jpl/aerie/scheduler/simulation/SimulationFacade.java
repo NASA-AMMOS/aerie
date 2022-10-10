@@ -1,41 +1,26 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
-import com.google.common.collect.Maps;
-import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
-import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
-import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
-import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
-import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
-import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 
@@ -198,98 +183,16 @@ public class SimulationFacade {
     insertedActivities.put(activity, serializedActivity);
   }
 
-  /**
-   * convert a simulation driver SimulationResult to a constraint evaluation engine SimulationResult
-   *
-   * @param driverResults the recorded results of a simulation run from the simulation driver
-   * @return the same results rearranged to be suitable for use by the constraint evaluation engine
-   */
-  private gov.nasa.jpl.aerie.constraints.model.SimulationResults convertToConstraintModelResults(
-      SimulationResults driverResults)
-  {
-    final var planDuration = planningHorizon.getAerieHorizonDuration();
-
-    final var activities =  driverResults.simulatedActivities.entrySet().stream()
-                                                             .map(e -> convertToConstraintModelActivityInstance(e.getKey().id(), e.getValue(), driverResults.startTime))
-                                                             .collect(Collectors.toList());
-    return new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
-        Interval.between(Duration.ZERO, planDuration),
-        activities,
-        Maps.transformValues(driverResults.realProfiles, this::convertToConstraintModelLinearProfile),
-        Maps.transformValues(driverResults.discreteProfiles, this::convertToConstraintModelDiscreteProfile)
-    );
-  }
-
-  /**
-   * convert an activity entry output by the simulation driver to one suitable for the constraint evaluation engine
-   *
-   * @param id the name of the activity instance
-   * @param driverActivity the completed activity instance details from a driver SimulationResult
-   * @return an activity instance suitable for a constraint model SimulationResult
-   */
-  private gov.nasa.jpl.aerie.constraints.model.ActivityInstance convertToConstraintModelActivityInstance(
-      long id, SimulatedActivity driverActivity, final Instant startTime)
-  {
-    final var startT = Duration.of(startTime.until(driverActivity.start(), ChronoUnit.MICROS), MICROSECONDS);
-    final var endT = startT.plus(driverActivity.duration());
-    final var activityInterval = startT.isEqualTo(endT)
-        ? Interval.between(startT, endT)
-        : Interval.betweenClosedOpen(startT, endT);
-    return new gov.nasa.jpl.aerie.constraints.model.ActivityInstance(
-        id, driverActivity.type(), driverActivity.arguments(),
-        activityInterval);
-  }
-
-  /**
-   * convert a linear profile output from the simulation driver to one suitable for the constraint evaluation engine
-   *
-   * @param driverProfile the as-simulated real profile from a driver SimulationResult
-   * @return a real profile suitable for a constraint model SimulationResult, starting from the zero duration
-   */
-  private LinearProfile convertToConstraintModelLinearProfile(
-      Pair<ValueSchema, List<Pair<Duration, RealDynamics>>> driverProfile)
-  {
-    final var pieces = new ArrayList<LinearProfilePiece>(driverProfile.getRight().size());
-    var elapsed = Duration.ZERO;
-    for (final var piece : driverProfile.getRight()) {
-      final var extent = piece.getLeft();
-      final var value = piece.getRight();
-      pieces.add(new LinearProfilePiece(Interval.betweenClosedOpen(elapsed, elapsed.plus(extent)), value.initial, value.rate));
-      elapsed = elapsed.plus(extent);
-    }
-    return new LinearProfile(pieces);
-  }
-
-  /**
-   * convert a discrete profile output from the simulation driver to one suitable for the constraint evaluation engine
-   *
-   * @param driverProfile the as-simulated discrete profile from a driver SimulationResult
-   * @return a discrete profile suitable for a constraint model SimulationResult, starting from the zero duration
-   */
-  private DiscreteProfile convertToConstraintModelDiscreteProfile(
-      Pair<ValueSchema, List<Pair<Duration, SerializedValue>>> driverProfile)
-  {
-    final var pieces = new ArrayList<DiscreteProfilePiece>(driverProfile.getRight().size());
-    var elapsed = Duration.ZERO;
-    for (final var piece : driverProfile.getRight()) {
-      final var extent = piece.getLeft();
-      final var value = piece.getRight();
-      pieces.add(new DiscreteProfilePiece(Interval.betweenClosedOpen(elapsed, elapsed.plus(extent)), value));
-      elapsed = elapsed.plus(extent);
-    }
-    return new DiscreteProfile(pieces);
-  }
-
   public void computeSimulationResultsUntil(Duration endTime) {
     var endTimeWithMargin = endTime;
     if(endTime.noLongerThan(Duration.MAX_VALUE.minus(MARGIN))){
       endTimeWithMargin = endTime.plus(MARGIN);
     }
-    var results = driver.getSimulationResultsUpTo(endTimeWithMargin, planningHorizon.getStartInstant());
+    var results = driver.getSimulationResultsUpTo(this.planningHorizon.getStartInstant(), endTimeWithMargin);
     //compare references
     if(results != lastSimDriverResults) {
       //simulation results from the last simulation, as converted for use by the constraint evaluation engine
-      lastSimConstraintResults = convertToConstraintModelResults(results);
+      lastSimConstraintResults = SimulationResultsConverter.convertToConstraintModelResults(results, planningHorizon.getAerieHorizonDuration());
       lastSimDriverResults = results;
     }
   }

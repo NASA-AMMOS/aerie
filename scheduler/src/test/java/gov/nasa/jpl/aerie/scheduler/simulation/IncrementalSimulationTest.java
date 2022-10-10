@@ -16,6 +16,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class IncrementalSimulationTest {
@@ -36,13 +37,34 @@ public class IncrementalSimulationTest {
   }
   @Test
   public void simulationResultsTest(){
+    final var now = Instant.now();
     //ensures that simulation results are generated until the end of the last act;
+    var simResults = incrementalSimulationDriver.getSimulationResults(now);
+    assert(simResults.realProfiles.get("/utcClock").getRight().get(0).getLeft().isEqualTo(endOfLastAct));
+    /* ensures that when current simulation results cover more than the asked period and that nothing has happened
+    between two requests, the same results are returned */
+    var simResults2 = incrementalSimulationDriver.getSimulationResultsUpTo(now, Duration.of(7, SECONDS));
+    assertEquals(simResults, simResults2);
+  }
+
+  @Test
+  public void simulationResultsTest2(){
+    /* ensures that when the passed start epoch is not equal to the one used for previously computed results, the results are re-computed */
     var simResults = incrementalSimulationDriver.getSimulationResults(Instant.now());
     assert(simResults.realProfiles.get("/utcClock").getRight().get(0).getLeft().isEqualTo(endOfLastAct));
-    /*ensures that when current simulation results cover more than the asked period and that nothing has happened
-    between two requests, the same results are returned*/
-    var simResults2 = incrementalSimulationDriver.getSimulationResultsUpTo(Duration.of(7,SECONDS), Instant.now());
-    assertEquals(simResults, simResults2);
+    var simResults2 = incrementalSimulationDriver.getSimulationResultsUpTo(Instant.now(), Duration.of(7, SECONDS));
+    assertNotEquals(simResults, simResults2);
+  }
+
+  @Test
+  public void simulationResultsTest3(){
+     /* ensures that when current simulation results cover less than the asked period and that nothing has happened
+    between two requests, the results are re-computed */
+    final var now = Instant.now();
+    var simResults2 = incrementalSimulationDriver.getSimulationResultsUpTo(now, Duration.of(7, SECONDS));
+    var simResults = incrementalSimulationDriver.getSimulationResults(now);
+    assert(simResults.realProfiles.get("/utcClock").getRight().get(0).getLeft().isEqualTo(endOfLastAct));
+    assertNotEquals(simResults, simResults2);
   }
 
   @Test

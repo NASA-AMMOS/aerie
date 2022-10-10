@@ -70,7 +70,7 @@ public class PrioritySolverTest {
     return new Problem(fooMissionModel, h, new SimulationFacade(h, fooMissionModel), SimulationUtility.getFooSchedulerModel());
   }
 
-  private final static PlanningHorizon h = new PlanningHorizon(TimeUtility.fromDOY("2025-001T01:01:01.001"), TimeUtility.fromDOY("2030-001T01:01:01.001"));
+  private final static PlanningHorizon h = new PlanningHorizon(TimeUtility.fromDOY("2025-001T01:01:01.001"), TimeUtility.fromDOY("2025-005T01:01:01.001"));
   private final static Duration t0 = h.getStartAerie();
   private final static Duration d1min = Duration.of(1, Duration.MINUTE);
   private final static Duration d1hr = Duration.of(1, Duration.HOUR);
