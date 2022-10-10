@@ -4,7 +4,7 @@
 --        - duplicate temporal subset of plan
 --   - merge request table (done)
 --   - diff function (done)
---   - resolve merge
+--   - resolve merge (done)
 --   - history tracking (tables and function) (done)
 --   - merge base function (done)
 
