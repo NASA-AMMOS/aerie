@@ -19,7 +19,7 @@ include 'merlin-worker'
 
 // Command-line interface direct to services
 include 'constraints'
-include 'scheduler'
+include 'scheduler-driver'
 
 // Testing
 include 'db-tests'
