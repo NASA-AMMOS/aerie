@@ -8,7 +8,7 @@ public record RequestRecord(
     long analysisId,
     long specificationRevision,
     Status status,
-    Optional<ScheduleFailure> failureReason,
+    Optional<ScheduleFailure> reason,
     boolean canceled
 ) {
   public enum Status {

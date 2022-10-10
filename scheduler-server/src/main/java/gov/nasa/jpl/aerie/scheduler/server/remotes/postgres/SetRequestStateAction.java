@@ -12,7 +12,7 @@ import java.sql.SQLException;
     update scheduling_request
       set
         status = ?,
-        failure_reason = ?::json
+        reason = ?::json
       where
         specification_id = ? and
         specification_revision = ?

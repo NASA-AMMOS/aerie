@@ -15,7 +15,7 @@ import java.util.Optional;
       returning
         analysis_id,
         status,
-        failure_reason,
+        reason,
         canceled
     """;
 
@@ -40,7 +40,7 @@ import java.util.Optional;
     }
 
     final var analysis_id = result.getLong("analysis_id");
-    final var failureReason$ = PreparedStatements.getFailureReason(result, "failure_reason");
+    final var failureReason$ = PreparedStatements.getFailureReason(result, "reason");
     final var canceled = result.getBoolean("canceled");
 
     return new RequestRecord(

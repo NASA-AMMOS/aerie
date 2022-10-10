@@ -239,7 +239,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         return switch(request.status()) {
           case INCOMPLETE -> new ResultsProtocol.State.Incomplete(this.analysisId);
           case FAILED -> new ResultsProtocol.State.Failed(
-              request.failureReason()
+              request.reason()
                   .orElseThrow(() -> new Error("Unexpected state: %s request state has no failure message".formatted(request.status()))),
               this.analysisId);
           case SUCCESS -> new ResultsProtocol.State.Success(getResults(connection, request.analysisId()), this.analysisId);

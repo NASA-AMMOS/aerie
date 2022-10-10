@@ -17,7 +17,7 @@ import java.util.Optional;
     select
       r.analysis_id,
       r.status,
-      r.failure_reason,
+      r.reason,
       r.canceled
     from scheduling_request as r
     where
@@ -54,7 +54,7 @@ import java.util.Optional;
     }
 
     final var analysisId = resultSet.getLong("analysis_id");
-    final var failureReason$ = PreparedStatements.getFailureReason(resultSet, "failure_reason");
+    final var failureReason$ = PreparedStatements.getFailureReason(resultSet, "reason");
     final var canceled = resultSet.getBoolean("canceled");
 
     return Optional.of(new RequestRecord(
