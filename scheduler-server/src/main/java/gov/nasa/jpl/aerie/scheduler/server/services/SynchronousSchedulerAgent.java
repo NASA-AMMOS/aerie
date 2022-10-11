@@ -42,6 +42,7 @@ import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import gov.nasa.jpl.aerie.scheduler.solver.Solver;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.json.Json;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -177,14 +178,26 @@ public record SynchronousSchedulerAgent(
             .type("SCHEDULING_GOALS_FAILED")
             .message("Scheduling goal%s failed".formatted(failedGoals.size() > 1 ? "s" : ""))
             .data(ResponseSerializers.serializeFailedGoals(failedGoals)));
+        return;
       }
       for (final var compiledGoal : compiledGoals) {
-        final var goal = GoalBuilder
-            .goalOfGoalSpecifier(
-                compiledGoal.getValue(),
-                specification.horizonStartTimestamp(),
-                specification.horizonEndTimestamp(),
-                problem::getActivityType);
+        final Goal goal;
+        try {
+          goal = GoalBuilder
+              .goalOfGoalSpecifier(
+                  compiledGoal.getValue(),
+                  specification.horizonStartTimestamp(),
+                  specification.horizonEndTimestamp(),
+                  problem::getActivityType);
+        } catch (GoalBuilder.GoalBuilderFailure e) {
+          writer.failWith(b -> b
+              .type("SCHEDULING_GOAL_BUILDER_FAILED")
+              .message(e.getMessage())
+              .data(Json.createObjectBuilder()
+                        .add("goal_id", compiledGoal.getKey().id())
+                        .build()));
+          return;
+        }
         orderedGoals.add(goal);
         goals.put(goal, compiledGoal.getKey());
       }

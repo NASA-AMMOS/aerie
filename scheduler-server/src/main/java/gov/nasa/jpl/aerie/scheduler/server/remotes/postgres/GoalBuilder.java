@@ -1,10 +1,12 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.Range;
 import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
@@ -21,6 +23,9 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 public class GoalBuilder {
   private GoalBuilder() {}
@@ -28,7 +33,7 @@ public class GoalBuilder {
       final SchedulingDSL.GoalSpecifier goalSpecifier,
       final Timestamp horizonStartTimestamp,
       final Timestamp horizonEndTimestamp,
-      final Function<String, ActivityType> lookupActivityType) {
+      final Function<String, ActivityType> lookupActivityType) throws GoalBuilderFailure {
     final var hor = new PlanningHorizon(
         horizonStartTimestamp.toInstant(),
         horizonEndTimestamp.toInstant()).getHor();
@@ -127,7 +132,8 @@ public class GoalBuilder {
   }
   private static ActivityCreationTemplate makeActivityTemplate(
       final SchedulingDSL.ActivityTemplate activityTemplate,
-      final Function<String, ActivityType> lookupActivityType) {
+      final Function<String, ActivityType> lookupActivityType) throws GoalBuilderFailure
+  {
     var builder = new ActivityCreationTemplate.Builder();
     final var type = lookupActivityType.apply(activityTemplate.activityType());
     if(type.getDurationType() instanceof DurationType.Controllable durationType){
@@ -138,9 +144,49 @@ public class GoalBuilder {
       }
     }
     builder = builder.ofType(type);
-    for (final var argument : activityTemplate.arguments().entrySet()) {
+    for (final var argument : canonicalizeSerialization(type, activityTemplate.arguments()).entrySet()) {
       builder = builder.withArgument(argument.getKey(), argument.getValue());
     }
     return builder.build();
+  }
+
+  /**
+   * Take a set of arguments and run it through getEffectiveArguments to make sure that the SerializedValues
+   * are the correct type. E.g. Int -> Double.
+   *
+   * The set of keys returned will be the same set of keys passed in.
+   */
+  private static Map<String, SerializedValue> canonicalizeSerialization(
+      final ActivityType type,
+      final Map<String, SerializedValue> arguments
+  ) throws GoalBuilderFailure
+  {
+    final var res = new HashMap<String, SerializedValue>();
+    try {
+      final var effectiveArguments = type.getSpecType().getEffectiveArguments(arguments);
+      // If no exception was thrown, we can copy out the subset of the effective arguments that we're interested in.
+      for (final var argument : arguments.entrySet()) {
+        res.put(argument.getKey(), effectiveArguments.get(argument.getKey()));
+      }
+      return res;
+    } catch (InvalidArgumentsException e) {
+      // If an exception is thrown, we still want to extract the valid arguments. Extraneous arguments are left as they were.
+      for (final var argument : e.validArguments) {
+        // This fills in the "correct" serialization of the argument. E.g. Int -> Double
+        res.put(argument.parameterName(), argument.serializedValue());
+      }
+      if (!e.extraneousArguments.isEmpty()) {
+        // If we hit this case, that means the typescript static checking has failed to catch extraneous arguments.
+        throw new GoalBuilderFailure("Activity Template had extraneous arguments: %s".formatted(e.extraneousArguments));
+      }
+      // ignore missing arguments, since that is perfectly valid for a template.
+      return res;
+    }
+  }
+
+  public static class GoalBuilderFailure extends Exception {
+    public GoalBuilderFailure(final String message) {
+      super(message);
+    }
   }
 }
