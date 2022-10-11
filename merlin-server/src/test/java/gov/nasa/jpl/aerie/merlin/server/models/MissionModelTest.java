@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.models;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -116,7 +116,7 @@ public final class MissionModelTest {
 
   @Test
   public void shouldInstantiateActivityInstance()
-  throws MissionModelService.NoSuchActivityTypeException, InvalidArgumentsException
+  throws MissionModelService.NoSuchActivityTypeException, InstantiationException
   {
     // GIVEN
     final var typeName = "foo";
@@ -152,8 +152,8 @@ public final class MissionModelTest {
     });
 
     // THEN
-    assertThat(thrown).isInstanceOf(InvalidArgumentsException.class);
-    if (thrown instanceof final InvalidArgumentsException e) {
+    assertThat(thrown).isInstanceOf(InstantiationException.class);
+    if (thrown instanceof final InstantiationException e) {
       assertThat(e.extraneousArguments).isEmpty();
       assertThat(e.missingArguments).map(args -> args.parameterName()).isEqualTo(List.of("z"));
       assertThat(e.unconstructableArguments).map(args -> args.parameterName()).isEqualTo(List.of("y"));
@@ -177,8 +177,8 @@ public final class MissionModelTest {
     });
 
     // THEN
-    assertThat(thrown).isInstanceOf(InvalidArgumentsException.class);
-    if (thrown instanceof final InvalidArgumentsException e) {
+    assertThat(thrown).isInstanceOf(InstantiationException.class);
+    if (thrown instanceof final InstantiationException e) {
       assertThat(e.extraneousArguments).map(args -> args.parameterName()).isEqualTo(List.of("Nonexistent"));
       assertThat(e.missingArguments).map(args -> args.parameterName()).isEqualTo(List.of("z"));
       assertThat(e.unconstructableArguments).isEmpty();

@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
@@ -165,7 +165,7 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
-    } catch (final InvalidArgumentsException ex) {
+    } catch (final InstantiationException ex) {
       ctx.status(400)
           .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
     } catch (final NoSuchPlanException ex) {
@@ -256,7 +256,7 @@ public final class MerlinBindings implements Plugin {
       final var notices = this.missionModelService.validateActivityArguments(missionModelId, serializedActivity);
 
       ctx.result(ResponseSerializers.serializeValidationNotices(notices).toString());
-    } catch (final InvalidArgumentsException ex) {
+    } catch (final InstantiationException ex) {
       ctx.status(400)
          .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
@@ -279,7 +279,7 @@ public final class MerlinBindings implements Plugin {
       ctx.result(ResponseSerializers.serializeValidationNotices(notices).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
-    } catch (final InvalidArgumentsException ex) {
+    } catch (final InstantiationException ex) {
       ctx.status(400)
          .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
     } catch (final InvalidJsonException ex) {
@@ -319,8 +319,8 @@ public final class MerlinBindings implements Plugin {
       final var arguments = this.missionModelService.getModelEffectiveArguments(missionModelId, input.arguments());
 
       ctx.result(ResponseSerializers.serializeEffectiveArgumentMap(arguments).toString());
-    } catch (final InvalidArgumentsException ex) {
-      ctx.status(200).result(ResponseSerializers.serializeInvalidArgumentsException(ex).toString());
+    } catch (final InstantiationException ex) {
+      ctx.status(200).result(ResponseSerializers.serializeInstantiationException(ex).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
     } catch (final InvalidJsonException ex) {
@@ -343,8 +343,8 @@ public final class MerlinBindings implements Plugin {
       final var arguments = this.missionModelService.getActivityEffectiveArguments(missionModelId, serializedActivity);
 
       ctx.result(ResponseSerializers.serializeEffectiveArgumentMap(arguments).toString());
-    } catch (final InvalidArgumentsException ex) {
-      ctx.status(200).result(ResponseSerializers.serializeInvalidArgumentsException(ex).toString());
+    } catch (final InstantiationException ex) {
+      ctx.status(200).result(ResponseSerializers.serializeInstantiationException(ex).toString());
     } catch (final MissionModelService.NoSuchActivityTypeException ex) {
       ctx.status(400)
          .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());

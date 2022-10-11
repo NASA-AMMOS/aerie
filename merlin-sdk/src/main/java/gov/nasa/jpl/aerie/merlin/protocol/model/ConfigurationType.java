@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol.model;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
@@ -13,7 +13,7 @@ public interface ConfigurationType<Config> {
   List<String> getRequiredParameters();
 
   Config instantiate(Map<String, SerializedValue> arguments)
-  throws InvalidArgumentsException;
+  throws InstantiationException;
 
   Map<String, SerializedValue> getArguments(Config configuration);
   List<ValidationNotice> getValidationFailures(Config configuration);
@@ -35,7 +35,7 @@ public interface ConfigurationType<Config> {
    * }
    */
   default List<ValidationNotice> validateArguments(final Map<String, SerializedValue> arguments)
-  throws InvalidArgumentsException
+  throws InstantiationException
   {
     return this.getValidationFailures(this.instantiate(arguments));
   }
@@ -47,7 +47,7 @@ public interface ConfigurationType<Config> {
    * }
    */
   default Map<String, SerializedValue> getEffectiveArguments(final Map<String, SerializedValue> arguments)
-  throws InvalidArgumentsException
+  throws InstantiationException
   {
     return this.getArguments(this.instantiate(arguments));
   }

@@ -295,7 +295,7 @@ import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableArgumentException;
@@ -364,13 +364,13 @@ public final class FooActivityMapper implements ActivityMapper<RootModel<Activit
 
   @Override
   public FooActivity instantiate(final Map<String, SerializedValue> arguments) throws
-      InvalidArgumentsException {
+      InstantiationException {
     final var template = new FooActivity();
     Optional<Integer> x = Optional.ofNullable(template.x);
     Optional<String> y = Optional.ofNullable(template.y);
     Optional<List<Vector3D>> vecs = Optional.ofNullable(template.vecs);
 
-    final var invalidArgsExBuilder = new InvalidArgumentsException.Builder("activity", "foo");
+    final var instantiationExBuilder = new InstantiationException.Builder("activity", "foo");
 
     for (final var entry : arguments.entrySet()) {
       try {
@@ -388,24 +388,24 @@ public final class FooActivityMapper implements ActivityMapper<RootModel<Activit
                 .getSuccessOrThrow(failure -> new UnconstructableArgumentException("vecs", failure));
             break;
           default:
-            invalidArgsExBuilder.withExtraneousArgument(entry.getKey());
+            instantiationExBuilder.withExtraneousArgument(entry.getKey());
         }
       } catch (final UnconstructableArgumentException e) {
-        invalidArgsExBuilder.withUnconstructableArgument(e.parameterName, e.failure);
+        instantiationExBuilder.withUnconstructableArgument(e.parameterName, e.failure);
       }
     }
 
     x.ifPresentOrElse(
-        value -> invalidArgsExBuilder.withValidArgument("x", this.mapper_x.serializeValue(value)),
-        () -> invalidArgsExBuilder.withMissingArgument("x", this.mapper_x.getValueSchema()));
+        value -> instantiationExBuilder.withValidArgument("x", this.mapper_x.serializeValue(value)),
+        () -> instantiationExBuilder.withMissingArgument("x", this.mapper_x.getValueSchema()));
     y.ifPresentOrElse(
-        value -> invalidArgsExBuilder.withValidArgument("y", this.mapper_y.serializeValue(value)),
-        () -> invalidArgsExBuilder.withMissingArgument("y", this.mapper_y.getValueSchema()));
+        value -> instantiationExBuilder.withValidArgument("y", this.mapper_y.serializeValue(value)),
+        () -> instantiationExBuilder.withMissingArgument("y", this.mapper_y.getValueSchema()));
     vecs.ifPresentOrElse(
-        value -> invalidArgsExBuilder.withValidArgument("vecs", this.mapper_vecs.serializeValue(value)),
-        () -> invalidArgsExBuilder.withMissingArgument("vecs", this.mapper_vecs.getValueSchema()));
+        value -> instantiationExBuilder.withValidArgument("vecs", this.mapper_vecs.serializeValue(value)),
+        () -> instantiationExBuilder.withMissingArgument("vecs", this.mapper_vecs.getValueSchema()));
 
-    invalidArgsExBuilder.throwIfAny();
+    instantiationExBuilder.throwIfAny();
     return template;
   }
 

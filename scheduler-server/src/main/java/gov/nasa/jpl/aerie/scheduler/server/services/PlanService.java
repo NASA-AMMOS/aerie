@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
@@ -51,7 +51,7 @@ public interface PlanService {
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
     MerlinPlan getPlanActivityDirectives(final PlanMetadata planMetadata, final Problem mission)
-    throws IOException, NoSuchPlanException, PlanServiceException, InvalidJsonException, InvalidArgumentsException;
+    throws IOException, NoSuchPlanException, PlanServiceException, InvalidJsonException, InstantiationException;
 
     /**
      * confirms that the specified plan exists in the aerie database, throwing exception if not

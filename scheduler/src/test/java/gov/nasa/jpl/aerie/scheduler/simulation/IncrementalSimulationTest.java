@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.SimulationUtility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,8 @@ public class IncrementalSimulationTest {
   Duration endOfLastAct;
 
   @BeforeEach
-  public void init() throws TaskSpecType.UnconstructableTaskSpecException, InvalidArgumentsException {
+  public void init() throws TaskSpecType.UnconstructableTaskSpecException, InstantiationException
+  {
     final var acts = getActivities();
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     incrementalSimulationDriver = new IncrementalSimulationDriver<>(fooMissionModel);
@@ -78,7 +79,8 @@ public class IncrementalSimulationTest {
   }
 
   @Test
-  public void testThreadsReleased() throws TaskSpecType.UnconstructableTaskSpecException, InvalidArgumentsException {
+  public void testThreadsReleased() throws TaskSpecType.UnconstructableTaskSpecException, InstantiationException
+  {
     final var activity = new TestSimulatedActivity(
         Duration.of(0, SECONDS),
         new SerializedActivity("BasicActivity", Map.of()),

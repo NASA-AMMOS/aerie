@@ -7,7 +7,7 @@ import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableArgumentException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
@@ -199,8 +199,8 @@ public abstract sealed class MapperMethodMaker permits
     mb = mb
         .addStatement(
             "final var $L = new $T(\"$L\", \"$L\")",
-            "invalidArgsExBuilder",
-            InvalidArgumentsException.Builder.class,
+            "instantiationExBuilder",
+            InstantiationException.Builder.class,
             metaName,
             exportType.name())
         .addCode("\n")
@@ -235,7 +235,7 @@ public abstract sealed class MapperMethodMaker permits
                 .indent()
                 .addStatement(
                     "$L.withExtraneousArgument($L.getKey())",
-                    "invalidArgsExBuilder",
+                    "instantiationExBuilder",
                     "entry")
                 .unindent()
                 .build())
@@ -246,7 +246,7 @@ public abstract sealed class MapperMethodMaker permits
           .nextControlFlow("catch (final $T e)", UnconstructableArgumentException.class)
           .addStatement(
               "$L.withUnconstructableArgument(e.parameterName, e.failure)",
-              "invalidArgsExBuilder"
+              "instantiationExBuilder"
           )
           .endControlFlow();
     }
@@ -270,10 +270,10 @@ public abstract sealed class MapperMethodMaker permits
                         // Re-serialize value since provided `arguments` map may not contain the value (when using `@WithDefaults` templates)
                         "$L.ifPresentOrElse($Wvalue -> $L.withValidArgument(\"$L\", this.mapper_$L.serializeValue(value)),$W() -> $L.withMissingArgument(\"$L\", this.mapper_$L.getValueSchema()))",
                         parameter.name,
-                        "invalidArgsExBuilder",
+                        "instantiationExBuilder",
                         parameter.name,
                         parameter.name,
-                        "invalidArgsExBuilder",
+                        "instantiationExBuilder",
                         parameter.name,
                         parameter.name))
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -281,7 +281,7 @@ public abstract sealed class MapperMethodMaker permits
         .addCode("\n")
         .addStatement(
             "$L.throwIfAny()",
-            "invalidArgsExBuilder");
+            "instantiationExBuilder");
   }
 
   static MapperMethodMaker make(final ExportTypeRecord exportType) {

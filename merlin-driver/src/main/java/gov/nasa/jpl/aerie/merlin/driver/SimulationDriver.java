@@ -9,7 +9,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -59,7 +59,7 @@ public final class SimulationDriver {
         final Directive<Model, ?, ?> directive;
         try {
           directive = missionModel.instantiateDirective(serializedDirective);
-        } catch (final TaskSpecType.UnconstructableTaskSpecException | InvalidArgumentsException ex) {
+        } catch (final TaskSpecType.UnconstructableTaskSpecException | InstantiationException ex) {
           // All activity instantiations are assumed to be validated by this point
           throw new Error("Unexpected state: activity instantiation %s failed with: %s"
               .formatted(serializedDirective.getTypeName(), ex.toString()));

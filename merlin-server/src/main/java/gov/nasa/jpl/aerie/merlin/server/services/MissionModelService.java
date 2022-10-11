@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
@@ -37,7 +37,7 @@ public interface MissionModelService {
   throws NoSuchMissionModelException;
   // TODO: Provide a finer-scoped validation return type. Mere strings make all validations equally severe.
   List<ValidationNotice> validateActivityArguments(String missionModelId, SerializedActivity activity)
-  throws NoSuchMissionModelException, InvalidArgumentsException;
+  throws NoSuchMissionModelException, InstantiationException;
 
   Map<ActivityInstanceId, ActivityInstantiationFailure> validateActivityInstantiations(
       String missionModelId,
@@ -48,12 +48,12 @@ public interface MissionModelService {
   Map<String, SerializedValue> getActivityEffectiveArguments(String missionModelId, SerializedActivity activity)
   throws NoSuchMissionModelException,
          NoSuchActivityTypeException,
-         InvalidArgumentsException;
+         InstantiationException;
 
   List<ValidationNotice> validateModelArguments(String missionModelId, Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
          LocalMissionModelService.MissionModelLoadException,
-         InvalidArgumentsException;
+         InstantiationException;
 
   List<Parameter> getModelParameters(String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoader.MissionModelLoadException;
@@ -61,7 +61,7 @@ public interface MissionModelService {
   Map<String, SerializedValue> getModelEffectiveArguments(String missionModelId, Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
          LocalMissionModelService.MissionModelLoadException,
-         InvalidArgumentsException;
+         InstantiationException;
 
   SimulationResults runSimulation(CreateSimulationMessage message)
           throws NoSuchMissionModelException, MissionModelService.NoSuchActivityTypeException;
@@ -69,11 +69,11 @@ public interface MissionModelService {
   void refreshModelParameters(String missionModelId) throws NoSuchMissionModelException;
   void refreshActivityTypes(String missionModelId) throws NoSuchMissionModelException;
   void refreshActivityValidations(String missionModelId, ActivityDirective directive)
-  throws NoSuchMissionModelException, InvalidArgumentsException;
+  throws NoSuchMissionModelException, InstantiationException;
 
   sealed interface ActivityInstantiationFailure {
     record NoSuchActivityType(NoSuchActivityTypeException ex) implements ActivityInstantiationFailure { }
-    record InvalidArguments(InvalidArgumentsException ex) implements ActivityInstantiationFailure { }
+    record InstantiationFailure(InstantiationException ex) implements ActivityInstantiationFailure { }
   }
 
   final class NoSuchMissionModelException extends Exception {

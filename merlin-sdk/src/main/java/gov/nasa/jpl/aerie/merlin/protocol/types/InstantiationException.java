@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public final class InvalidArgumentsException extends Exception {
+public final class InstantiationException extends Exception {
 
   public final String metaName, containerName;
   public final List<ExtraneousArgument> extraneousArguments;
@@ -12,7 +12,7 @@ public final class InvalidArgumentsException extends Exception {
   public final List<MissingArgument> missingArguments;
   public final List<ValidArgument> validArguments;
 
-  public InvalidArgumentsException(
+  public InstantiationException(
       final String metaName,
       final String containerName,
       final List<ExtraneousArgument> extraneousArguments,
@@ -81,17 +81,18 @@ public final class InvalidArgumentsException extends Exception {
       return this;
     }
 
-    public void throwIfAny() throws InvalidArgumentsException {
+    public void throwIfAny() throws InstantiationException
+    {
       if (!(extraneousArguments.isEmpty() &&
             unconstructableArguments.isEmpty() &&
             missingArguments.isEmpty()))
       {
-        throw new InvalidArgumentsException(metaName,
-                                            containerName,
-                                            extraneousArguments,
-                                            unconstructableArguments,
-                                            missingArguments,
-                                            validArguments);
+        throw new InstantiationException(metaName,
+                                         containerName,
+                                         extraneousArguments,
+                                         unconstructableArguments,
+                                         missingArguments,
+                                         validArguments);
       }
     }
   }
