@@ -36,6 +36,6 @@ public final class BiteBananaActivity {
     return new ComputedAttributes(bigBiteSize, newFlag);
   }
 
-  @AutoValueMapper
+  @AutoValueMapper.Record
   public record ComputedAttributes(boolean biteSizeWasBig, Flag newFlag) {}
 }

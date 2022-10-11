@@ -7,4 +7,8 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
-public @interface AutoValueMapper {}
+public @interface AutoValueMapper {
+  @Retention(RetentionPolicy.CLASS)
+  @Target(ElementType.TYPE)
+  @interface Record {}
+}

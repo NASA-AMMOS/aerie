@@ -70,10 +70,13 @@ import java.util.stream.Collectors;
     for (final var activityType : activityTypes) {
       final var typeName = activityType.getOutputTypeName();
       final var typeElement = elementUtils.getTypeElement(typeName.toString());
-      final var annotation = typeElement.getAnnotation(AutoValueMapper.class);
+      final var annotation = typeElement.getAnnotation(AutoValueMapper.Record.class);
       if (annotation == null) continue;
       if (typeElement.getKind() != ElementKind.RECORD) {
-        throw new InvalidMissionModelException("@%s is only allowed on records, but was used on %s".formatted(AutoValueMapper.class.getSimpleName(), typeElement.getQualifiedName()));
+        throw new InvalidMissionModelException("@%s.%s is only allowed on records, but was used on %s".formatted(
+            AutoValueMapper.class.getSimpleName(),
+            AutoValueMapper.Record.class.getSimpleName(),
+            typeElement.getQualifiedName()));
       }
       autoValueMapperRequests.add(typeElement);
     }

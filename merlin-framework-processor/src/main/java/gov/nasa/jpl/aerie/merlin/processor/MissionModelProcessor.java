@@ -79,7 +79,16 @@ public final class MissionModelProcessor implements Processor {
   public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     // Accumulate any information added in this round.
     this.foundActivityTypes.addAll(roundEnv.getElementsAnnotatedWith(ActivityType.class));
-    this.foundAutoValueMapperRequests.addAll(roundEnv.getElementsAnnotatedWith(AutoValueMapper.class));
+    this.foundAutoValueMapperRequests.addAll(roundEnv.getElementsAnnotatedWith(AutoValueMapper.Record.class));
+
+    if (!roundEnv.getElementsAnnotatedWith(AutoValueMapper.class).isEmpty()) {
+      this.messager.printMessage(
+          Diagnostic.Kind.WARNING,
+          "@%s does nothing, perhaps you meant to use @%s.%s".formatted(
+              AutoValueMapper.class.getSimpleName(),
+              AutoValueMapper.class.getSimpleName(),
+              AutoValueMapper.Record.class.getSimpleName()));
+    }
 
     final var missionModelParser = new MissionModelParser(elementUtils, typeUtils);
     final var missionModelGen = new MissionModelGenerator(elementUtils, typeUtils, messager);
@@ -180,15 +189,17 @@ public final class MissionModelProcessor implements Processor {
 
         this.messager.printMessage(
             Diagnostic.Kind.WARNING,
-            "@%s-annotated class is not the return type from any effect model. No value mappper was generated"
-                .formatted(AutoValueMapper.class.getSimpleName()),
+            "@%s.%s-annotated class is not the return type from any effect model. No value mappper was generated"
+                .formatted(AutoValueMapper.class.getSimpleName(), AutoValueMapper.Record.class.getSimpleName()),
             foundAutoValueMapperRequest);
 
 
         if (foundAutoValueMapperRequest.getKind() != ElementKind.RECORD) {
           this.messager.printMessage(
               Diagnostic.Kind.WARNING,
-              "@%s is only allowed on records".formatted(AutoValueMapper.class.getSimpleName()),
+              "@%s.%s is only allowed on records".formatted(
+                  AutoValueMapper.class.getSimpleName(),
+                  AutoValueMapper.Record.class.getSimpleName()),
               foundAutoValueMapperRequest);
         }
       }
