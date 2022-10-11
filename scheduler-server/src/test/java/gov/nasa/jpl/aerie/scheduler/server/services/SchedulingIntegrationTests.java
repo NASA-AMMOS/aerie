@@ -1215,4 +1215,34 @@ public class SchedulingIntegrationTests {
     }
   }
 
+  /**
+   * Make sure that although typescript does not differentiate between Int and Double, the SerializedValue
+   * should correspond to the type declared by the activity type.
+   */
+  @Test
+  void testIntDoubleDeserialization() {
+    final var goalDefinition = """
+        export default function myGoal() {
+          return Goal.ActivityRecurrenceGoal({
+            activityTemplate: ActivityTemplates.BakeBananaBread({
+              glutenFree: true,
+              tbSugar: 1,
+              temperature: 325.0
+            }),
+            interval: Temporal.Duration.from({days: 1})
+          })
+        }
+        """;
+    final var planningHorizon = new PlanningHorizon(TimeUtility.fromDOY("2021-001T00:00:00"),
+                                                    TimeUtility.fromDOY("2021-003T01:00:00"));
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(),
+        List.of(new SchedulingGoal(new GoalId(0L), goalDefinition, true)),
+        planningHorizon);
+
+    assertEquals(
+        new SerializedValue.RealValue(325.0),
+        results.updatedPlan().stream().findFirst().get().args().get("temperature"));
+  }
 }
