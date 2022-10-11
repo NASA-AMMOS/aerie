@@ -199,10 +199,10 @@ public final class SimulationEngine implements AutoCloseable {
     // TODO: Report which cells this activity read from at this point in time. This is useful insight for any user.
 
     // Based on the task's return status, update its execution state and schedule its resumption.
-    if (status instanceof TaskStatus.Completed<Return> s) {
+    if (status instanceof TaskStatus.Completed<Return>) {
       final var children = new LinkedList<>(this.taskChildren.getOrDefault(task, Collections.emptySet()));
 
-      this.tasks.put(task, progress.completedAt(currentTime, s.returnValue(), children));
+      this.tasks.put(task, progress.completedAt(currentTime, children));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
     } else if (status instanceof TaskStatus.Delayed<Return> s) {
       this.tasks.put(task, progress.continueWith(s.continuation()));
@@ -707,7 +707,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public <Output> void spawn(final Task<Output> state) {
+    public void spawn(final Task<?> state) {
       final var task = TaskId.generate();
       SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state));
       SimulationEngine.this.taskParent.put(task, this.activeTask);
@@ -755,9 +755,8 @@ public final class SimulationEngine implements AutoCloseable {
     {
       public AwaitingChildren<Return> completedAt(
           final Duration endOffset,
-          final Return returnValue,
           final LinkedList<TaskId> remainingChildren) {
-        return new AwaitingChildren<>(this.startOffset, endOffset, returnValue, remainingChildren);
+        return new AwaitingChildren<>(this.startOffset, endOffset, remainingChildren);
       }
 
       public InProgress<Return> continueWith(final Task<Return> newState) {
@@ -769,12 +768,11 @@ public final class SimulationEngine implements AutoCloseable {
     record AwaitingChildren<Return>(
         Duration startOffset,
         Duration endOffset,
-        Return returnValue,
         LinkedList<TaskId> remainingChildren
     ) implements ExecutionState<Return>
     {
       public Terminated<Return> joinedAt(final Duration joinOffset) {
-        return new Terminated<>(this.startOffset, this.endOffset, joinOffset, this.returnValue);
+        return new Terminated<>(this.startOffset, this.endOffset, joinOffset);
       }
     }
 
@@ -782,8 +780,7 @@ public final class SimulationEngine implements AutoCloseable {
     record Terminated<Return>(
         Duration startOffset,
         Duration endOffset,
-        Duration joinOffset,
-        Return returnValue
+        Duration joinOffset
     ) implements ExecutionState<Return> {}
   }
 }

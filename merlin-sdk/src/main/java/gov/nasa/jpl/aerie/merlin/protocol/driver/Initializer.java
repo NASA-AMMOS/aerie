@@ -20,8 +20,7 @@ public interface Initializer {
       Function<Event, Effect> interpretation,
       Topic<Event> topic);
 
-  <Return>
-  void daemon(TaskFactory<Return> factory);
+  void daemon(TaskFactory<?> factory);
 
   void resource(
       String name,

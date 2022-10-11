@@ -13,8 +13,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,7 +56,7 @@ public final class MissionModelBuilder implements Initializer {
   }
 
   @Override
-  public <Return> void daemon(final TaskFactory<Return> task) {
+  public void daemon(final TaskFactory<?> task) {
     this.state.daemon(task);
   }
 
@@ -132,7 +130,7 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
-    public <Return> void daemon(final TaskFactory<Return> task) {
+    public void daemon(final TaskFactory<?> task) {
       this.daemons.add(task);
     }
 
@@ -187,7 +185,7 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
-    public <Return> void daemon(final TaskFactory<Return> task) {
+    public void daemon(final TaskFactory<?> task) {
       throw new IllegalStateException("Daemons cannot be added after the schema is built");
     }
 

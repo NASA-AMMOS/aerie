@@ -28,7 +28,7 @@ public final class ThreadedTaskTest {
       }
 
       @Override
-      public <Output> void spawn(final Task<Output> task) {
+      public void spawn(final Task<?> task) {
         throw new UnsupportedOperationException();
       }
     };

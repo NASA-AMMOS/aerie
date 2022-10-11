@@ -67,7 +67,7 @@ final class ReplayingReactionContext implements Context {
   }
 
   @Override
-  public <T> void spawn(final TaskFactory<T> task) {
+  public void spawn(final TaskFactory<?> task) {
     this.memory.doOnce(() -> {
       this.scheduler.spawn(task.create(this.executor));
     });

@@ -32,7 +32,7 @@ public interface Context {
 
   interface TaskFactory<Return> { Task<Return> create(ExecutorService executor); }
 
-  <Return> void spawn(TaskFactory<Return> task);
+  void spawn(TaskFactory<?> task);
   <Return> void call(TaskFactory<Return> task);
 
   void delay(Duration duration);
