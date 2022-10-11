@@ -45,11 +45,15 @@ it('should return activity types', async () => {
   );
 
   expect(getActivityTypeScript.status).toBe(Status.SUCCESS);
-  expect(getActivityTypeScript.typescriptFiles.length).toEqual(1);
+  expect(getActivityTypeScript.typescriptFiles.length).toEqual(2);
   expect(getActivityTypeScript.typescriptFiles).toEqual([
     {
       content: expect.any(String),
       filePath: 'activity-types.ts',
+    },
+    {
+      content: expect.any(String),
+      filePath: 'TemporalPolyfillTypes.ts',
     }
   ]);
   expect(getActivityTypeScript.reason).toBe(null);
