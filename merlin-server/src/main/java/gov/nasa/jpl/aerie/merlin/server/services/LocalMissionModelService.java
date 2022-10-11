@@ -141,7 +141,9 @@ public final class LocalMissionModelService implements MissionModelService {
    * @return A map of validation errors mapping activity instance ID to failure message. If validation succeeds the map is empty.
    */
   @Override
-  public Map<ActivityInstanceId, ActivityInstantiationFailure> validateActivityInstantiations(final String missionModelId, final Map<ActivityInstanceId, SerializedActivity> activities)
+  public Map<ActivityInstanceId, ActivityInstantiationFailure>
+  validateActivityInstantiations(final String missionModelId,
+                                 final Map<ActivityInstanceId, SerializedActivity> activities)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     final var factory = this.loadMissionModelFactory(missionModelId);
