@@ -147,6 +147,7 @@ public record SynchronousSchedulerAgent(
             .type("GLOBAL_SCHEDULING_CONDITIONS_FAILED")
             .message("Global scheduling condition%s failed".formatted(failedGlobalSchedulingConditions.size() > 1 ? "s" : ""))
             .data(ResponseSerializers.serializeFailedGlobalSchedulingConditions(failedGlobalSchedulingConditions)));
+        return;
       }
 
       compiledGlobalSchedulingConditions.forEach(problem::add);
