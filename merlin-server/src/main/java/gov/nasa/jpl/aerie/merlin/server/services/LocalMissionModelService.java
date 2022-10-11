@@ -141,20 +141,29 @@ public final class LocalMissionModelService implements MissionModelService {
    * @return A map of validation errors mapping activity instance ID to failure message. If validation succeeds the map is empty.
    */
   @Override
-  public Map<ActivityInstanceId, ActivityInstantiationFailure> validateActivityInstantiations(final String missionModelId, final Map<ActivityInstanceId, SerializedActivity> activities)
+  public Map<ActivityInstanceId, ActivityInstantiationFailure>
+  validateActivityInstantiations(final String missionModelId,
+                                 final Map<ActivityInstanceId, SerializedActivity> activities)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
+    final var factory = this.loadMissionModelFactory(missionModelId);
+    final var registry = DirectiveTypeRegistry.extract(factory);
+
     final var failures = new HashMap<ActivityInstanceId, ActivityInstantiationFailure>();
 
     for (final var entry : activities.entrySet()) {
       final var id = entry.getKey();
       final var act = entry.getValue();
       try {
-        this.getActivityEffectiveArguments(missionModelId, act); // The return value is intentionally ignored - we are only interested in failures
-      } catch (final MissionModelService.NoSuchActivityTypeException e) {
-        failures.put(id, new ActivityInstantiationFailure.NoSuchActivityType(e));
-      } catch (final InvalidArgumentsException e) {
-        failures.put(id, new ActivityInstantiationFailure.InvalidArguments(e));
+        // The return value is intentionally ignored - we are only interested in failures
+        final var specType = Optional
+        .ofNullable(registry.taskSpecTypes().get(act.getTypeName()))
+        .orElseThrow(() -> new MissionModelService.NoSuchActivityTypeException(act.getTypeName()));
+        specType.getEffectiveArguments(act.getArguments());
+      } catch (final NoSuchActivityTypeException ex) {
+        failures.put(id, new ActivityInstantiationFailure.NoSuchActivityType(ex));
+      } catch (final InvalidArgumentsException ex) {
+        failures.put(id, new ActivityInstantiationFailure.InvalidArguments(ex));
       }
     }
 
