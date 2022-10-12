@@ -278,7 +278,7 @@ public final class LocalMissionModelService implements MissionModelService {
   throws NoSuchMissionModelException, InstantiationException
   {
     final var notices = validateActivityArguments(missionModelId, directive.activity());
-    this.missionModelRepository.updateActivityDirectiveValidations(directive.id(), directive.argumentsModifiedTime(), notices);
+    this.missionModelRepository.updateActivityDirectiveValidations(directive.id(), directive.planId(), directive.argumentsModifiedTime(), notices);
   }
 
   private ModelType<?, ?> loadMissionModelType(final String missionModelId)

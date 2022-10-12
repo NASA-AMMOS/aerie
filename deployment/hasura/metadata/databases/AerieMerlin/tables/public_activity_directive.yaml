@@ -8,7 +8,9 @@ object_relationships:
 - name: validations
   using:
     foreign_key_constraint_on:
-      column: directive_id
+      columns:
+        - directive_id
+        - plan_id
       table:
         name: activity_directive_validations
         schema: public

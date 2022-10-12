@@ -124,7 +124,7 @@ describe('sequence generation', () => {
 
   afterEach(async () => {
     await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
-    await removeActivityDirective(graphqlClient, activityId1);
+    await removeActivityDirective(graphqlClient, activityId1, planId);
     await removeMissionModel(graphqlClient, missionModelId);
     await removeExpansionSet(graphqlClient, expansionSetId);
     await removeExpansion(graphqlClient, expansionId1);
@@ -581,7 +581,7 @@ describe('expansion regressions', () => {
     ]);
 
     // Cleanup
-    await removeActivityDirective(graphqlClient, activityId);
+    await removeActivityDirective(graphqlClient, activityId, planId);
     await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
     await removeExpansion(graphqlClient, expansionId);
     await removeExpansionSet(graphqlClient, expansionSetId);

@@ -156,7 +156,7 @@ public final class MerlinBindings implements Plugin {
       final var input = parseJson(ctx.body(), hasuraActivityDirectiveEventTriggerP);
       final var planId = input.planId();
       final var serializedActivity = new SerializedActivity(input.activityTypeName(), input.arguments());
-      final var activityDirective = new ActivityDirective(input.activityDirectiveId(), input.argumentsModifiedTime(), serializedActivity);
+      final var activityDirective = new ActivityDirective(input.activityDirectiveId(), input.planId(), input.argumentsModifiedTime(), serializedActivity);
 
       final var plan = this.planService.getPlan(planId);
       this.missionModelService.refreshActivityValidations(plan.missionModelId, activityDirective);

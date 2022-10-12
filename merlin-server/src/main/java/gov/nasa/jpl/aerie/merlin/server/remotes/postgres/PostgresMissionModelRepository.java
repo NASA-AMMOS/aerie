@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 
@@ -133,17 +134,18 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   @Override
   public void updateActivityDirectiveValidations(
       final ActivityDirectiveId directiveId,
+      final PlanId planId,
       final Timestamp argumentsModifiedTime,
       final List<ValidationNotice> notices
   )
   {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var updateActivityDirectiveValidationsAction = new UpdateActivityDirectiveValidationsAction(connection)) {
-        updateActivityDirectiveValidationsAction.apply(directiveId.id(), argumentsModifiedTime, notices);
+        updateActivityDirectiveValidationsAction.apply(directiveId.id(), planId.id(), argumentsModifiedTime, notices);
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(
-          "Failed to update derived data for activity directive with id `%d`".formatted(directiveId.id()), ex);
+          "Failed to update derived data for activity directive with id `%d` and plan id '%d'".formatted(directiveId.id(), planId.id()), ex);
     }
   }
 

@@ -33,17 +33,19 @@ export async function insertActivityDirective(
   return res.insert_activity_directive_one.id;
 }
 
-export async function removeActivityDirective(graphqlClient: GraphQLClient, activityId: number): Promise<void> {
+export async function removeActivityDirective(graphqlClient: GraphQLClient, activityId: number, planId: number): Promise<void> {
   return graphqlClient.request(
     gql`
-      mutation DeleteActivityDirectve($activityId: Int!) {
-        delete_activity_directive_by_pk(id: $activityId) {
+      mutation DeleteActivityDirective($activityId: Int!, $planId: Int!) {
+        delete_activity_directive_by_pk(id: $activityId, plan_id: $planId) {
           id
+          plan_id
         }
       }
     `,
     {
       activityId,
+      planId
     },
   );
 }
