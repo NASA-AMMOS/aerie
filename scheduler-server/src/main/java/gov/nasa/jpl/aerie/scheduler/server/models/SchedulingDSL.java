@@ -1,4 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler.server.models;
+
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.json.JsonObjectParser;
@@ -9,32 +10,27 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
+import gov.nasa.jpl.aerie.scheduler.server.http.ActivityTemplateJsonParser;
+import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
 import org.apache.commons.lang3.tuple.Pair;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.windowsExpressionP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.enumP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
-import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.windowsExpressionP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
-import static gov.nasa.jpl.aerie.scheduler.server.http.SerializedValueJsonParser.serializedValueP;
 public class SchedulingDSL {
-  private static final JsonParser<ActivityTemplate> activityTemplateP =
-      productP
-          .field("activityType", stringP)
-          .field("args", mapP(serializedValueP))
-          .map(
-              untuple(ActivityTemplate::new),
-              $ -> tuple($.activityType(), $.arguments()));
 
   private static final JsonParser<Duration> durationP =
       stringP
@@ -57,16 +53,18 @@ public class SchedulingDSL {
               untuple(CardinalitySpecification::new),
               $ -> tuple($.duration(), $.occurrence()));
 
-  private static final JsonObjectParser<GoalSpecifier.RecurrenceGoalDefinition> recurrenceGoalDefinitionP =
-      productP
-          .field("activityTemplate", activityTemplateP)
-          .field("interval", durationP)
-          .map(
-              untuple(GoalSpecifier.RecurrenceGoalDefinition::new),
-              goalDefinition -> tuple(
-                  goalDefinition.activityTemplate(),
-                  goalDefinition.interval()));
-
+  private static final JsonObjectParser<GoalSpecifier.RecurrenceGoalDefinition> recurrenceGoalDefinitionP(
+      MissionModelService.MissionModelTypes activityTypes)
+  {
+    return productP
+        .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
+        .field("interval", durationP)
+        .map(
+            untuple(GoalSpecifier.RecurrenceGoalDefinition::new),
+            goalDefinition -> tuple(
+                goalDefinition.activityTemplate(),
+                goalDefinition.interval()));
+  }
   private static final JsonObjectParser<ConstraintExpression.ActivityExpression> activityExpressionP =
       productP
           .field("kind", literalP("ActivityExpression"))
@@ -96,29 +94,35 @@ public class SchedulingDSL {
               untuple(ActivityTimingConstraint::new),
               $ -> tuple($.windowProperty(), $.operator(), $.operand(), $.singleton()));
 
-  private static final JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP =
-      productP
-          .field("activityTemplate", activityTemplateP)
-          .field("forEach", constraintExpressionP)
-          .optionalField("startConstraint", activityTimingConstraintP)
-          .optionalField("endConstraint", activityTimingConstraintP)
-          .map(
-              untuple(GoalSpecifier.CoexistenceGoalDefinition::new),
-              goalDefinition -> tuple(
-                  goalDefinition.activityTemplate(),
-                  goalDefinition.forEach(),
-                  goalDefinition.startConstraint(),
-                  goalDefinition.endConstraint()));
-
-  private static final JsonObjectParser<GoalSpecifier.CardinalityGoalDefinition> cardinalityGoalDefinitionP =
-      productP
-          .field("activityTemplate", activityTemplateP)
-          .field("specification", cardinalitySpecificationJsonParser)
-          .map(
-              untuple(GoalSpecifier.CardinalityGoalDefinition::new),
-              goalDefinition -> tuple(
-                  goalDefinition.activityTemplate(),
-                  goalDefinition.specification()));
+  private static final JsonObjectParser<GoalSpecifier.CoexistenceGoalDefinition> coexistenceGoalDefinitionP(
+  MissionModelService.MissionModelTypes activityTypes)
+  {
+    return
+        productP
+            .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
+            .field("forEach", constraintExpressionP)
+            .optionalField("startConstraint", activityTimingConstraintP)
+            .optionalField("endConstraint", activityTimingConstraintP)
+            .map(
+                untuple(GoalSpecifier.CoexistenceGoalDefinition::new),
+                goalDefinition -> tuple(
+                    goalDefinition.activityTemplate(),
+                    goalDefinition.forEach(),
+                    goalDefinition.startConstraint(),
+                    goalDefinition.endConstraint()));
+  }
+  private static final JsonObjectParser<GoalSpecifier.CardinalityGoalDefinition> cardinalityGoalDefinitionP(
+      MissionModelService.MissionModelTypes activityTypes) {
+    return
+        productP
+            .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
+            .field("specification", cardinalitySpecificationJsonParser)
+            .map(
+                untuple(GoalSpecifier.CardinalityGoalDefinition::new),
+                goalDefinition -> tuple(
+                    goalDefinition.activityTemplate(),
+                    goalDefinition.specification()));
+  }
 
   private static JsonObjectParser<GoalSpecifier.GoalAnd> goalAndF(final JsonParser<GoalSpecifier> goalSpecifierP) {
     return productP
@@ -145,18 +149,30 @@ public class SchedulingDSL {
   }
 
 
-  private static final JsonParser<GoalSpecifier> goalSpecifierP =
-      recursiveP(self -> SumParsers.sumP("kind", GoalSpecifier.class, List.of(
-          SumParsers.variant("ActivityRecurrenceGoal", GoalSpecifier.RecurrenceGoalDefinition.class, recurrenceGoalDefinitionP),
-          SumParsers.variant("ActivityCoexistenceGoal", GoalSpecifier.CoexistenceGoalDefinition.class, coexistenceGoalDefinitionP),
-          SumParsers.variant("ActivityCardinalityGoal", GoalSpecifier.CardinalityGoalDefinition.class, cardinalityGoalDefinitionP),
-          SumParsers.variant("GoalAnd", GoalSpecifier.GoalAnd.class, goalAndF(self)),
-          SumParsers.variant("GoalOr", GoalSpecifier.GoalOr.class, goalOrF(self)),
-          SumParsers.variant("ApplyWhen", GoalSpecifier.GoalApplyWhen.class, goalApplyWhenF(self))
-      )));
+  private static final JsonParser<GoalSpecifier> goalSpecifierP(MissionModelService.MissionModelTypes missionModelTypes) {
+    return recursiveP(self -> SumParsers.sumP("kind", GoalSpecifier.class, List.of(
+        SumParsers.variant(
+            "ActivityRecurrenceGoal",
+            GoalSpecifier.RecurrenceGoalDefinition.class,
+            recurrenceGoalDefinitionP(missionModelTypes)),
+        SumParsers.variant(
+            "ActivityCoexistenceGoal",
+            GoalSpecifier.CoexistenceGoalDefinition.class,
+            coexistenceGoalDefinitionP(missionModelTypes)),
+        SumParsers.variant(
+            "ActivityCardinalityGoal",
+            GoalSpecifier.CardinalityGoalDefinition.class,
+            cardinalityGoalDefinitionP(missionModelTypes)),
+        SumParsers.variant("GoalAnd", GoalSpecifier.GoalAnd.class, goalAndF(self)),
+        SumParsers.variant("GoalOr", GoalSpecifier.GoalOr.class, goalOrF(self)),
+        SumParsers.variant("ApplyWhen", GoalSpecifier.GoalApplyWhen.class, goalApplyWhenF(self))
+    )));
+  }
 
+  public static final JsonParser<GoalSpecifier> schedulingJsonP(MissionModelService.MissionModelTypes missionModelTypes){
+    return goalSpecifierP(missionModelTypes);
+  }
 
-  public static final JsonParser<GoalSpecifier> schedulingJsonP = goalSpecifierP;
   public sealed interface GoalSpecifier {
     record RecurrenceGoalDefinition(
         ActivityTemplate activityTemplate,
