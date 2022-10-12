@@ -79,7 +79,7 @@ class SchedulingDSLCompilationServiceTests {
                 Map.entry("variant", SerializedValue.of("option2")),
                 Map.entry("fancy", SerializedValue.of(Map.ofEntries(
                     Map.entry("subfield1", SerializedValue.of("value1")),
-                    Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
+                    Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
                 )))),
                 Map.entry("duration", SerializedValue.of("PT3600S"))
             )
@@ -120,7 +120,7 @@ class SchedulingDSLCompilationServiceTests {
                 Map.entry("variant", SerializedValue.of("option2")),
                 Map.entry("fancy", SerializedValue.of(Map.ofEntries(
                     Map.entry("subfield1", SerializedValue.of("value1")),
-                    Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
+                    Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
                     )))),
                 Map.entry("duration", SerializedValue.of("PT3600S"))
             )
@@ -190,7 +190,7 @@ class SchedulingDSLCompilationServiceTests {
                             "subfield2",
                             SerializedValue.of(List.of(SerializedValue.of(Map.of(
                                 "subsubfield1",
-                                SerializedValue.of(2)))))
+                                SerializedValue.of(2.0)))))
                         )))),
                     Map.entry("duration", SerializedValue.of("PT1H"))
                 )
@@ -249,7 +249,7 @@ class SchedulingDSLCompilationServiceTests {
                 Map.entry("variant", SerializedValue.of("option2")),
                 Map.entry("fancy", SerializedValue.of(Map.ofEntries(
                     Map.entry("subfield1", SerializedValue.of("value1")),
-                    Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
+                    Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
                     )))),
                 Map.entry("duration", SerializedValue.of("PT3600S"))
             )
@@ -288,7 +288,7 @@ class SchedulingDSLCompilationServiceTests {
                 Map.entry("variant", SerializedValue.of("option2")),
                 Map.entry("fancy", SerializedValue.of(Map.ofEntries(
                     Map.entry("subfield1", SerializedValue.of("value1")),
-                    Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
+                    Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
                     )))),
                 Map.entry("duration", SerializedValue.of("PT3600S"))
             )
@@ -328,7 +328,7 @@ class SchedulingDSLCompilationServiceTests {
                                                      Map.entry("variant", SerializedValue.of("option2")),
                                                      Map.entry("fancy", SerializedValue.of(Map.ofEntries(
                                                          Map.entry("subfield1", SerializedValue.of("value1")),
-                                                         Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
+                                                         Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
                                                          )))),
                                                      Map.entry("duration", SerializedValue.of("PT1H"))
                                                  )
@@ -494,7 +494,7 @@ class SchedulingDSLCompilationServiceTests {
                                                      Map.entry("variant", SerializedValue.of("option2")),
                                                      Map.entry("fancy", SerializedValue.of(Map.ofEntries(
                                                          Map.entry("subfield1", SerializedValue.of("value1")),
-                                                         Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2)))))
+                                                         Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
                                                          )))),
                                                      Map.entry("duration", SerializedValue.of("PT3600S"))
                                                  )
