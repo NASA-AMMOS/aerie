@@ -26,7 +26,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await removeSimulationArtifacts(graphqlClient, simulationArtifactIds);
-  await removeActivityDirective(graphqlClient, activityId);
+  await removeActivityDirective(graphqlClient, activityId, planId);
   await removePlan(graphqlClient, planId);
   await removeMissionModel(graphqlClient, missionModelId);
 });
