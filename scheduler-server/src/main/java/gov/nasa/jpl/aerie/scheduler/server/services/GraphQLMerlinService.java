@@ -443,6 +443,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
   {
     final var arguments = Json.createObjectBuilder();
     for (final var arg : activity.arguments().entrySet()) {
+      //serializedValueP is safe to use here because only unparsing. otherwise subject to int/double typing confusion
       arguments.add(arg.getKey(), serializedValueP.unparse(arg.getValue()));
     }
     final var query = """
@@ -577,6 +578,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
       }
 
       for (final var arg : act.getArguments().entrySet()) {
+        //serializedValueP is safe to use here because only unparsing. otherwise subject to int/double typing confusion
         insertionObjectArguments.add(arg.getKey(), serializedValueP.unparse(arg.getValue()));
       }
       insertionObject.add("arguments", insertionObjectArguments.build());
