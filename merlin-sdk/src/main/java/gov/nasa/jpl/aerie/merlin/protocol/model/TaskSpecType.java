@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol.model;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
@@ -14,7 +14,7 @@ public interface TaskSpecType<Model, Specification, Return> {
   List<String> getRequiredParameters();
 
   Specification instantiate(Map<String, SerializedValue> arguments)
-  throws InvalidArgumentsException;
+  throws InstantiationException;
 
   Map<String, SerializedValue> getArguments(Specification taskSpec);
   List<ValidationNotice> getValidationFailures(Specification taskSpec);
@@ -36,7 +36,8 @@ public interface TaskSpecType<Model, Specification, Return> {
    * }
    */
   default List<ValidationNotice> validateArguments(final Map<String, SerializedValue> arguments)
-  throws InvalidArgumentsException {
+  throws InstantiationException
+  {
     return this.getValidationFailures(this.instantiate(arguments));
   }
 
@@ -47,7 +48,7 @@ public interface TaskSpecType<Model, Specification, Return> {
    * }
    */
   default Map<String, SerializedValue> getEffectiveArguments(final Map<String, SerializedValue> arguments)
-  throws InvalidArgumentsException
+  throws InstantiationException
   {
     return this.getArguments(this.instantiate(arguments));
   }

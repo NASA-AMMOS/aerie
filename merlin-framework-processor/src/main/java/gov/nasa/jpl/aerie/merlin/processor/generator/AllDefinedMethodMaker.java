@@ -7,7 +7,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableArgumentException;
 
 import javax.lang.model.element.Modifier;
@@ -28,7 +28,7 @@ import java.util.Optional;
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
         .returns(TypeName.get(exportType.declaration().asType()))
-        .addException(InvalidArgumentsException.class)
+        .addException(InstantiationException.class)
         .addParameter(
             ParameterizedTypeName.get(
                 java.util.Map.class,

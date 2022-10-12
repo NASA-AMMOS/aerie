@@ -13,7 +13,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -112,10 +112,10 @@ public class IncrementalSimulationDriver<Model> {
    * @param startTime the start time of the activity
    * @param activityId the activity id for the activity to simulate
    * @throws TaskSpecType.UnconstructableTaskSpecException
-   * @throws InvalidArgumentsException
+   * @throws InstantiationException
    */
   public void simulateActivity(SerializedActivity activity, Duration startTime, ActivityInstanceId activityId)
-  throws TaskSpecType.UnconstructableTaskSpecException, InvalidArgumentsException
+  throws TaskSpecType.UnconstructableTaskSpecException, InstantiationException
   {
     final var activityToSimulate = new SimulatedActivity(startTime, activity, activityId);
     if(startTime.noLongerThan(curTime)){
@@ -177,7 +177,7 @@ public class IncrementalSimulationDriver<Model> {
   }
 
   private void simulateSchedule(final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule)
-  throws TaskSpecType.UnconstructableTaskSpecException, InvalidArgumentsException
+  throws TaskSpecType.UnconstructableTaskSpecException, InstantiationException
   {
 
     if(schedule.isEmpty()){

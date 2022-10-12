@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
@@ -188,8 +188,8 @@ public final class ResponseSerializers {
   private static JsonValue serializeUnconstructableActivityFailure(final MissionModelService.ActivityInstantiationFailure reason) {
     // TODO use pattern-matching switch expression here when available with LTS
     final var builder = Json.createObjectBuilder();
-    if (reason instanceof final MissionModelService.ActivityInstantiationFailure.InvalidArguments r) {
-      return builder.add("reason", serializeInvalidArgumentsException(r.ex())).build();
+    if (reason instanceof final MissionModelService.ActivityInstantiationFailure.InstantiationFailure r) {
+      return builder.add("reason", serializeInstantiationException(r.ex())).build();
     }
     else if (reason instanceof final MissionModelService.ActivityInstantiationFailure.NoSuchActivityType r) {
       return builder.add("reason", serializeNoSuchActivityTypeException(r.ex())).build();
@@ -310,7 +310,7 @@ public final class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeInvalidArgumentsException(final InvalidArgumentsException ex) {
+  public static JsonValue serializeInstantiationException(final InstantiationException ex) {
     return Json.createObjectBuilder()
         .add("success", JsonValue.FALSE)
         .add("errors", Json.createObjectBuilder()
@@ -319,13 +319,13 @@ public final class ResponseSerializers {
             .add("missingArguments", serializeStringList(ex.missingArguments.stream().map(a -> a.parameterName()).toList()))
             .build())
         .add("arguments", serializeMap(ResponseSerializers::serializeArgument, ex.validArguments.stream().collect(Collectors.toMap(
-             InvalidArgumentsException.ValidArgument::parameterName,
-             InvalidArgumentsException.ValidArgument::serializedValue))))
+             InstantiationException.ValidArgument::parameterName,
+             InstantiationException.ValidArgument::serializedValue))))
         .build();
   }
 
   private static JsonValue serializeUnconstructableArgument(
-      final InvalidArgumentsException.UnconstructableArgument argument)
+      final InstantiationException.UnconstructableArgument argument)
   {
     return Json.createObjectBuilder()
        .add("name", argument.parameterName())

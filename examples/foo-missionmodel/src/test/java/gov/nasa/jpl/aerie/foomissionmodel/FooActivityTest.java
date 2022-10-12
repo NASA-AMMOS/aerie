@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.foomissionmodel.generated.activities.FooActivityMapper
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinTestContext;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -59,7 +59,7 @@ public final class FooActivityTest {
   public void testActivityInstantiate() {
 
     // Assert missing required argument throws exception
-    assertThatExceptionOfType(InvalidArgumentsException.class).isThrownBy(() ->
+    assertThatExceptionOfType(InstantiationException.class).isThrownBy(() ->
     new FooActivityMapper().instantiate(Map.of(
         "x", SerializedValue.of(42),
         "y", SerializedValue.of("test")

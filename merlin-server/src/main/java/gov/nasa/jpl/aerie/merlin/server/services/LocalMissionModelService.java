@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
@@ -123,7 +123,7 @@ public final class LocalMissionModelService implements MissionModelService {
    */
   @Override
   public List<ValidationNotice> validateActivityArguments(final String missionModelId, final SerializedActivity activity)
-  throws NoSuchMissionModelException, MissionModelLoadException, InvalidArgumentsException
+  throws NoSuchMissionModelException, MissionModelLoadException, InstantiationException
   {
     // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
     final var factory = this.loadMissionModelFactory(missionModelId);
@@ -162,8 +162,8 @@ public final class LocalMissionModelService implements MissionModelService {
         specType.getEffectiveArguments(act.getArguments());
       } catch (final NoSuchActivityTypeException ex) {
         failures.put(id, new ActivityInstantiationFailure.NoSuchActivityType(ex));
-      } catch (final InvalidArgumentsException ex) {
-        failures.put(id, new ActivityInstantiationFailure.InvalidArguments(ex));
+      } catch (final InstantiationException ex) {
+        failures.put(id, new ActivityInstantiationFailure.InstantiationFailure(ex));
       }
     }
 
@@ -175,7 +175,7 @@ public final class LocalMissionModelService implements MissionModelService {
   throws NoSuchMissionModelException,
          NoSuchActivityTypeException,
          MissionModelLoadException,
-         InvalidArgumentsException
+         InstantiationException
   {
     final var factory = this.loadMissionModelFactory(missionModelId);
     final var registry = DirectiveTypeRegistry.extract(factory);
@@ -189,7 +189,7 @@ public final class LocalMissionModelService implements MissionModelService {
   public List<ValidationNotice> validateModelArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
          MissionModelLoadException,
-         InvalidArgumentsException
+         InstantiationException
   {
     return this.loadMissionModelFactory(missionModelId)
         .getConfigurationType()
@@ -207,7 +207,7 @@ public final class LocalMissionModelService implements MissionModelService {
   public Map<String, SerializedValue> getModelEffectiveArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
   throws NoSuchMissionModelException,
          MissionModelLoadException,
-         InvalidArgumentsException
+         InstantiationException
   {
     return this.loadMissionModelFactory(missionModelId)
         .getConfigurationType()
@@ -270,7 +270,7 @@ public final class LocalMissionModelService implements MissionModelService {
 
   @Override
   public void refreshActivityValidations(final String missionModelId, final ActivityDirective directive)
-  throws NoSuchMissionModelException, InvalidArgumentsException
+  throws NoSuchMissionModelException, InstantiationException
   {
     final var notices = validateActivityArguments(missionModelId, directive.activity());
     this.missionModelRepository.updateActivityDirectiveValidations(directive.id(), directive.argumentsModifiedTime(), notices);

@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.json.BasicParsers;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InvalidArgumentsException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
@@ -241,7 +241,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
    */
   @Override
   public MerlinPlan getPlanActivityDirectives(final PlanMetadata planMetadata, final Problem problem)
-  throws IOException, NoSuchPlanException, PlanServiceException, InvalidJsonException, InvalidArgumentsException
+  throws IOException, NoSuchPlanException, PlanServiceException, InvalidJsonException, InstantiationException
   {
     final var merlinPlan = new MerlinPlan();
     final var request =
