@@ -23,13 +23,13 @@ public final class Any implements Expression<Windows> {
 
   @Override
   public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    Windows windows = new Windows();
+    Windows windows = new Windows(false);
     for (final var expression : this.expressions) {
       windows = windows.or(
           expression.evaluate(results, bounds, environment)
       );
     }
-    return windows.and(new Windows(bounds, true));
+    return windows.select(bounds);
   }
 
   @Override
