@@ -1,19 +1,18 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
-import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
-import gov.nasa.jpl.aerie.constraints.time.UnsplittableSpanException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
-import gov.nasa.jpl.aerie.constraints.time.IntervalContainer;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
+import gov.nasa.jpl.aerie.constraints.time.UnsplittableSpanException;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -270,7 +269,7 @@ public class ASTTests {
   @Test
   public void testOr() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Interval.between(0, 26, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -281,13 +280,15 @@ public class ASTTests {
         .set(Interval.between(6, Inclusive, 7, Inclusive, SECONDS), true)
         .set(Interval.between(8, Exclusive, 9, Exclusive, SECONDS), true)
         .set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), true)
-        .set(Interval.at(20, SECONDS), true);
+        .set(Interval.at(20, SECONDS), true)
+        .set(Interval.between(25, Inclusive, 26, Exclusive, SECONDS), false);
 
     final var right = new Windows()
         .set(Interval.between(0, Inclusive, 5, Inclusive, SECONDS), true)
         .set(Interval.between(7, Inclusive, 8, Exclusive, SECONDS), true)
         .set(Interval.between(10, Inclusive, 12, Inclusive, SECONDS), true)
-        .set(Interval.between(15, Inclusive, 20, Exclusive, SECONDS), true);
+        .set(Interval.between(15, Inclusive, 20, Exclusive, SECONDS), true)
+        .set(Interval.between(25, Inclusive, 26, Exclusive, SECONDS), false);
 
     final var result = new Any(Supplier.of(left), Supplier.of(right)).evaluate(simResults, new EvaluationEnvironment());
 
@@ -295,7 +296,8 @@ public class ASTTests {
         .set(Interval.between(  0, Inclusive,   5, Inclusive, SECONDS), true)
         .set(Interval.between(  6, Inclusive,   8, Exclusive, SECONDS), true)
         .set(Interval.between(  8, Exclusive,   9, Exclusive, SECONDS), true)
-        .set(Interval.between( 10, Inclusive,  20, Inclusive, SECONDS), true);
+        .set(Interval.between( 10, Inclusive,  20, Inclusive, SECONDS), true)
+        .set(Interval.between(25, Inclusive, 26, Exclusive, SECONDS), false);
 
     assertEquivalent(expected, result);
   }
