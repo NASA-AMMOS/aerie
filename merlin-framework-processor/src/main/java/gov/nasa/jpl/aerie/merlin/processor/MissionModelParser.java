@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.processor;
 import com.squareup.javapoet.ClassName;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
@@ -64,13 +65,30 @@ import java.util.stream.Collectors;
       activityTypes.add(this.parseActivityType(missionModelElement, activityTypeElement));
     }
 
+    final var autoValueMapperRequests = new ArrayList<TypeElement>();
+
+    for (final var activityType : activityTypes) {
+      final var typeName = activityType.getOutputTypeName();
+      final var typeElement = elementUtils.getTypeElement(typeName.toString());
+      final var annotation = typeElement.getAnnotation(AutoValueMapper.Record.class);
+      if (annotation == null) continue;
+      if (typeElement.getKind() != ElementKind.RECORD) {
+        throw new InvalidMissionModelException("@%s.%s is only allowed on records, but was used on %s".formatted(
+            AutoValueMapper.class.getSimpleName(),
+            AutoValueMapper.Record.class.getSimpleName(),
+            typeElement.getQualifiedName()));
+      }
+      autoValueMapperRequests.add(typeElement);
+    }
+
     return new MissionModelRecord(
         missionModelElement,
         topLevelModel.type,
         topLevelModel.expectsPlanStart,
         topLevelModel.configurationType,
         typeRules,
-        activityTypes);
+        activityTypes,
+        autoValueMapperRequests);
   }
 
   private record MissionModelTypeRecord(

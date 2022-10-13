@@ -1,8 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.processor;
 
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.processor.generator.MissionModelGenerator;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 
 import javax.annotation.processing.Completion;
 import javax.annotation.processing.Filer;
@@ -13,6 +15,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -36,6 +39,9 @@ public final class MissionModelProcessor implements Processor {
   private final Set<Element> foundActivityTypes = new HashSet<>();
   private final Set<Element> ownedActivityTypes = new HashSet<>();
 
+  private final Set<Element> foundAutoValueMapperRequests = new HashSet<>();
+  private final Set<Element> ownedAutoValueMapperRequests = new HashSet<>();
+
   // Effectively final, late-initialized
   private Messager messager = null;
   private Filer filer = null;
@@ -52,7 +58,8 @@ public final class MissionModelProcessor implements Processor {
   public Set<String> getSupportedAnnotationTypes() {
     return Set.of(
         MissionModel.class.getCanonicalName(),
-        ActivityType.class.getCanonicalName());
+        ActivityType.class.getCanonicalName(),
+        AutoValueMapper.class.getCanonicalName());
   }
 
   @Override
@@ -72,6 +79,16 @@ public final class MissionModelProcessor implements Processor {
   public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     // Accumulate any information added in this round.
     this.foundActivityTypes.addAll(roundEnv.getElementsAnnotatedWith(ActivityType.class));
+    this.foundAutoValueMapperRequests.addAll(roundEnv.getElementsAnnotatedWith(AutoValueMapper.Record.class));
+
+    if (!roundEnv.getElementsAnnotatedWith(AutoValueMapper.class).isEmpty()) {
+      this.messager.printMessage(
+          Diagnostic.Kind.WARNING,
+          "@%s does nothing, perhaps you meant to use @%s.%s".formatted(
+              AutoValueMapper.class.getSimpleName(),
+              AutoValueMapper.class.getSimpleName(),
+              AutoValueMapper.Record.class.getSimpleName()));
+    }
 
     final var missionModelParser = new MissionModelParser(elementUtils, typeUtils);
     final var missionModelGen = new MissionModelGenerator(elementUtils, typeUtils, messager);
@@ -80,22 +97,42 @@ public final class MissionModelProcessor implements Processor {
     for (final var element : roundEnv.getElementsAnnotatedWith(MissionModel.class)) {
       final var packageElement = (PackageElement) element;
       try {
-        final var missionModelRecord = missionModelParser.parseMissionModel(packageElement);
+        final var missionModelRecord$ = missionModelParser.parseMissionModel(packageElement);
+        this.ownedAutoValueMapperRequests.addAll(missionModelRecord$.autoValueMapperRequests);
 
         final var generatedFiles = new ArrayList<>(List.of(
-            missionModelGen.generateMerlinPlugin(missionModelRecord),
-            missionModelGen.generateSchedulerPlugin(missionModelRecord)));
+            missionModelGen.generateMerlinPlugin(missionModelRecord$),
+            missionModelGen.generateSchedulerPlugin(missionModelRecord$)));
 
-        missionModelRecord.modelConfigurationType
-            .flatMap(configType -> missionModelGen.generateMissionModelConfigurationMapper(missionModelRecord, configType))
+        missionModelRecord$.modelConfigurationType
+            .flatMap(configType -> missionModelGen.generateMissionModelConfigurationMapper(missionModelRecord$, configType))
             .ifPresent(generatedFiles::add);
 
         generatedFiles.addAll(List.of(
-            missionModelGen.generateMissionModelFactory(missionModelRecord),
-            missionModelGen.generateSchedulerModel(missionModelRecord),
-            missionModelGen.generateActivityActions(missionModelRecord),
-            missionModelGen.generateActivityTypes(missionModelRecord)
+            missionModelGen.generateMissionModelFactory(missionModelRecord$),
+            missionModelGen.generateSchedulerModel(missionModelRecord$),
+            missionModelGen.generateActivityActions(missionModelRecord$),
+            missionModelGen.generateActivityTypes(missionModelRecord$)
         ));
+
+        final var autoValueMappers = missionModelGen.generateAutoValueMappers(
+            missionModelRecord$,
+            missionModelRecord$.autoValueMapperRequests);
+        generatedFiles.add(autoValueMappers.getLeft());
+
+        final var concatenatedTypeRules = new ArrayList<>(missionModelRecord$.typeRules);
+        concatenatedTypeRules.addAll(autoValueMappers.getRight());
+
+        final var missionModelRecord = new MissionModelRecord(
+            missionModelRecord$.$package,
+            missionModelRecord$.topLevelModel,
+            missionModelRecord$.expectsPlanStart,
+            missionModelRecord$.modelConfigurationType,
+            concatenatedTypeRules,
+            missionModelRecord$.activityTypes,
+            missionModelRecord$.autoValueMapperRequests
+        );
+
         for (final var activityRecord : missionModelRecord.activityTypes) {
           this.ownedActivityTypes.add(activityRecord.declaration());
           if (!activityRecord.mapper().isCustom) {
@@ -145,6 +182,26 @@ public final class MissionModelProcessor implements Processor {
             Diagnostic.Kind.WARNING,
             "@ActivityType-annotated class is not referenced by any @WithActivity",
             foundActivityType);
+      }
+
+      for (final var foundAutoValueMapperRequest : this.foundAutoValueMapperRequests) {
+        if (this.ownedAutoValueMapperRequests.contains(foundAutoValueMapperRequest)) continue;
+
+        this.messager.printMessage(
+            Diagnostic.Kind.WARNING,
+            "@%s.%s-annotated class is not the return type from any effect model. No value mappper was generated"
+                .formatted(AutoValueMapper.class.getSimpleName(), AutoValueMapper.Record.class.getSimpleName()),
+            foundAutoValueMapperRequest);
+
+
+        if (foundAutoValueMapperRequest.getKind() != ElementKind.RECORD) {
+          this.messager.printMessage(
+              Diagnostic.Kind.WARNING,
+              "@%s.%s is only allowed on records".formatted(
+                  AutoValueMapper.class.getSimpleName(),
+                  AutoValueMapper.Record.class.getSimpleName()),
+              foundAutoValueMapperRequest);
+        }
       }
     }
 

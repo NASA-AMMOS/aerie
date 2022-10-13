@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.banananation.Flag;
 import gov.nasa.jpl.aerie.banananation.Mission;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Parameter;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export.Validation;
 
@@ -27,8 +28,14 @@ public final class BiteBananaActivity {
   }
 
   @EffectModel
-  public void run(final Mission mission) {
-    mission.flag.set((biteSize > 1.0) ? Flag.B : Flag.A);
+  public ComputedAttributes run(final Mission mission) {
+    final var bigBiteSize = biteSize > 1.0;
+    final var newFlag = bigBiteSize ? Flag.B : Flag.A;
+    mission.flag.set(newFlag);
     mission.fruit.subtract(biteSize);
+    return new ComputedAttributes(bigBiteSize, newFlag);
   }
+
+  @AutoValueMapper.Record
+  public record ComputedAttributes(boolean biteSizeWasBig, Flag newFlag) {}
 }
