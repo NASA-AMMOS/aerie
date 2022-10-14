@@ -44,13 +44,18 @@ it('should return command types', async () => {
   );
 
   expect(getCommandTypeScript.status).toBe(Status.SUCCESS);
-  expect(getCommandTypeScript.typescriptFiles.length).toEqual(1);
+  expect(getCommandTypeScript.typescriptFiles.length).toEqual(2);
   expect(getCommandTypeScript.typescriptFiles).toEqual([
     {
       content: expect.any(String),
       filePath: 'command-types.ts',
+    },
+    {
+      content: expect.any(String),
+      filePath: 'TemporalPolyfillTypes.ts',
     }
   ]);
   expect(getCommandTypeScript.reason).toBe(null);
 
 }, 10000);
+

@@ -290,6 +290,10 @@ app.post('/get-command-typescript', async (req, res, next) => {
           filePath: 'command-types.ts',
           content: commandTypescript,
         },
+        {
+          filePath: 'TemporalPolyfillTypes.ts',
+          content: temporalPolyfillTypes,
+        },
       ],
       reason: null,
     });
