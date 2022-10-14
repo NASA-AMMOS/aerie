@@ -35,10 +35,32 @@ jobs:
         run: make -C docs multiversion
       - name: Build redirects
         run: make -C docs redirects
+
+      # Generate EDSL documentation
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "18"
+      - name: Set up Gradle Wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Set up Gradle
+        uses: gradle/gradle-build-action@v2
+      - name: Set up Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - name: Build Docs
+        run: ./gradlew publishDocs
+      - name: Copy Docs To Publish Dir
+        run: cp -r docs/_build/dirhtml publish-docs-tmp; cp -r docs/edsl-api-docs/. publish-docs-tmp
+      # Upload to GitHub Pages
       - name: Upload artifacts
         uses: actions/upload-pages-artifact@v1
         with:
-          path: "./docs/_build/dirhtml/"
+          path: "./publish-docs-tmp"
+      - name: Cleanup
+        run: rm -rf publish-docs-tmp
       - name: Deploy docs to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1

@@ -58,6 +58,21 @@ task generateDocumentation(type: NpmTask) {
   inputs.dir('src')
 }
 
+task cleanDocsFromDocsDir(type: Delete) {
+  delete rootDir.toPath().resolve('docs/edsl-api-docs/scheduling-edsl-api/develop')
+}
+
+task copyDocsToDocsDirectory(type: Copy) {
+  from rootDir.toPath().resolve('scheduler-server/scheduling-dsl-compiler/build/docs')
+  into rootDir.toPath().resolve('docs/edsl-api-docs/scheduling-edsl-api/develop')
+}
+
+task publishDocs {
+  dependsOn cleanDocsFromDocsDir
+  dependsOn generateDocumentation
+  dependsOn copyDocsToDocsDirectory
+}
+
 assemble {
   dependsOn assembleSchedulingDSLCompiler
   dependsOn generateASTJsonSchema
