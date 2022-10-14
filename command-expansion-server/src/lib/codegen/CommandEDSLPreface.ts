@@ -92,6 +92,7 @@ declare global {
   type I32 = I<32>;
   type I64 = I<64>;
   type VarString<PrefixBitLength extends number, MaxBitLength extends number> = string;
+  type FixedString = string;
   type F<BitLength extends 32 | 64> = number;
   type F32 = F<32>;
   type F64 = F<64>;
