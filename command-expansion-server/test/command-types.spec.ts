@@ -1,6 +1,6 @@
 import { gql, GraphQLClient } from 'graphql-request';
-import { insertCommandDictionary, removeCommandDictionary } from './testUtils/CommandDictionary.js';
 import { Status } from '../src/common.js';
+import { insertCommandDictionary, removeCommandDictionary } from './testUtils/CommandDictionary.js';
 
 let graphqlClient: GraphQLClient;
 let commandDictionaryId: number;
@@ -15,7 +15,6 @@ afterEach(async () => {
 });
 
 it('should return command types', async () => {
-
   const { getCommandTypeScript } = await graphqlClient.request<{
     getCommandTypeScript: {
       status: Status;
@@ -53,9 +52,8 @@ it('should return command types', async () => {
     {
       content: expect.any(String),
       filePath: 'TemporalPolyfillTypes.ts',
-    }
+    },
   ]);
+  expect(getCommandTypeScript.typescriptFiles[0]!.content).toMatchSnapshot();
   expect(getCommandTypeScript.reason).toBe(null);
-
 }, 10000);
-
