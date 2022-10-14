@@ -23,6 +23,7 @@ task deleteConstraintsTypescript(type: Delete) {
 
 task copyConstraintsTypescript(type: Copy) {
   dependsOn deleteConstraintsTypescript
+  dependsOn ':merlin-server:assembleConstraintsDSLCompiler'
   from rootDir.toPath().resolve('merlin-server/constraints-dsl-compiler/src/libs')
   into project.projectDir.toPath().resolve('scheduling-dsl-compiler/src/libs/constraints')
 }
