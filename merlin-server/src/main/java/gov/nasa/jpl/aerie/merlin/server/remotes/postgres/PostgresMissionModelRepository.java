@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
+import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
+import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;

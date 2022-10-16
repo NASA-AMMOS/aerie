@@ -18,9 +18,9 @@ public final class DecompositionTestActivities {
 
     @EffectModel
     public void run(final Mission mission) {
-      call(new ChildActivity(1));
+      call(mission, new ChildActivity(1));
       delay(1, SECOND);
-      call(new ChildActivity(2));
+      call(mission, new ChildActivity(2));
     }
   }
 

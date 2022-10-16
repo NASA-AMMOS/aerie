@@ -1,16 +1,14 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.InputType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 
 import java.util.List;
 import java.util.Map;
 
-public final class EmptyConfigurationType implements ConfigurationType<Unit> {
+public final class EmptyInputType implements InputType<Unit> {
   @Override
   public List<Parameter> getParameters() {
     return List.of();
@@ -25,9 +23,9 @@ public final class EmptyConfigurationType implements ConfigurationType<Unit> {
   public Unit instantiate(final Map<String, SerializedValue> arguments)
   throws InstantiationException
   {
-    final var instantiationExBuilder = new InstantiationException.Builder("configuration", getClass().getSimpleName());
-    arguments.forEach((k, v) -> instantiationExBuilder.withExtraneousArgument(k));
-    instantiationExBuilder.throwIfAny();
+    final var invalidArgsExBuilder = new InstantiationException.Builder(getClass().getSimpleName());
+    arguments.forEach((k, v) -> invalidArgsExBuilder.withExtraneousArgument(k));
+    invalidArgsExBuilder.throwIfAny();
 
     return Unit.UNIT;
   }

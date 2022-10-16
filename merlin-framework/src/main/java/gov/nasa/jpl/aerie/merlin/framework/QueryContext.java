@@ -1,12 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.function.Function;
@@ -24,16 +21,16 @@ public final class QueryContext implements Context {
   }
 
   @Override
-  public <CellType> CellType ask(final Query<CellType> query) {
-    return this.querier.getState(query);
+  public <State> State ask(final CellId<State> cellId) {
+    return this.querier.getState(cellId);
   }
 
   @Override
-  public <Event, Effect, CellType> Query<CellType> allocate(
-      final CellType initialState,
-      final Applicator<Effect, CellType> applicator,
-      final EffectTrait<Effect> trait,
-      final Function<Event, Effect> projection,
+  public <Event, Effect, State>
+  CellId<State> allocate(
+      final State initialState,
+      final CellType<Effect, State> cellType,
+      final Function<Event, Effect> interpretation,
       final Topic<Event> topic)
   {
     throw new IllegalStateException("Cannot allocate in a query-only context");
@@ -45,23 +42,17 @@ public final class QueryContext implements Context {
   }
 
   @Override
-  public <Return> String spawn(final TaskFactory<Return> task) {
+  public <Return> void spawn(final TaskFactory<Return> task) {
     throw new IllegalStateException("Cannot schedule tasks in a query-only context");
   }
 
   @Override
-  public <Input, Output>
-  String spawn(final DirectiveTypeId<Input, Output> id, final Input input, final Task<Output> task) {
-    throw new IllegalStateException("Cannot schedule activities in a query-only context");
+  public <Return> void call(final TaskFactory<Return> task) {
+    throw new IllegalStateException("Cannot schedule tasks in a query-only context");
   }
 
   @Override
   public void delay(final Duration duration) {
-    throw new IllegalStateException("Cannot yield in a query-only context");
-  }
-
-  @Override
-  public void waitFor(final String id) {
     throw new IllegalStateException("Cannot yield in a query-only context");
   }
 

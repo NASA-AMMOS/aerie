@@ -6,7 +6,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.InputTypeRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.UnconstructableArgumentException;
 
@@ -18,8 +18,8 @@ import java.util.stream.Collectors;
 /** Method maker for defaults style where no default arguments are provided (for example, a record class). */
 /*package-private*/ final class NoneDefinedMethodMaker extends MapperMethodMaker {
 
-  public NoneDefinedMethodMaker(final ExportTypeRecord exportType) {
-    super(exportType);
+  public NoneDefinedMethodMaker(final InputTypeRecord inputType) {
+    super(inputType);
   }
 
   @Override
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
     var methodBuilder = MethodSpec.methodBuilder("instantiate")
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
-        .returns(TypeName.get(exportType.declaration().asType()))
+        .returns(TypeName.get(inputType.declaration().asType()))
         .addException(InstantiationException.class)
         .addParameter(
             ParameterizedTypeName.get(
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
             Modifier.FINAL);
 
     methodBuilder = methodBuilder.addCode(
-        exportType.parameters()
+        inputType.parameters()
             .stream()
             .map(parameter -> CodeBlock
                 .builder()
@@ -67,8 +67,8 @@ import java.util.stream.Collectors;
     // Add return statement with instantiation of class with parameters
     methodBuilder = methodBuilder.addStatement(
         "return new $T($L)",
-        exportType.declaration(),
-        exportType.parameters().stream().map(
+        inputType.declaration(),
+        inputType.parameters().stream().map(
             parameter -> parameter.name + ".get()").collect(Collectors.joining(", ")));
 
     return methodBuilder.build();

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.banananation;
 
-import gov.nasa.jpl.aerie.banananation.generated.GeneratedMissionModelFactory;
+import gov.nasa.jpl.aerie.banananation.generated.GeneratedModelType;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
@@ -18,11 +18,11 @@ import java.util.Map;
 
 public final class SimulationUtility {
   private static MissionModel<?> makeMissionModel(final MissionModelBuilder builder, final Instant planStart, final Configuration config) {
-    final var factory = new GeneratedMissionModelFactory();
+    final var factory = new GeneratedModelType();
     final var registry = DirectiveTypeRegistry.extract(factory);
     // TODO: [AERIE-1516] Teardown the model to release any system resources (e.g. threads).
-    final var model = factory.instantiate(registry.registry(), planStart, config, builder);
-    return builder.build(model, factory.getConfigurationType(), registry);
+    final var model = factory.instantiate(planStart, config, builder);
+    return builder.build(model, registry);
   }
 
   public static SimulationResults

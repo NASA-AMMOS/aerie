@@ -54,8 +54,8 @@ public final class ReplayingTask<Return> implements Task<Return> {
     }
 
     @Override
-    public Scheduler await(final String id) {
-      return this.yield(TaskStatus.awaiting(id, ReplayingTask.this));
+    public Scheduler call(final Task<?> child) {
+      return this.yield(TaskStatus.calling(child, ReplayingTask.this));
     }
 
     @Override

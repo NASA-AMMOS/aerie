@@ -206,8 +206,8 @@ public final class ThreadedTask<Return> implements Task<Return> {
     }
 
     @Override
-    public Scheduler await(final String id) {
-      return this.yield(TaskStatus.awaiting(id, ThreadedTask.this));
+    public Scheduler call(final Task<?> child) {
+      return this.yield(TaskStatus.calling(child, ThreadedTask.this));
     }
 
     @Override

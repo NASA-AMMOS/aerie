@@ -262,6 +262,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
       final var effectiveArguments = problem
           .getActivityType(type)
           .getSpecType()
+          .getInputType()
           .getEffectiveArguments(deserializedArguments);
       final var merlinActivity = new MerlinActivityInstance(
           type,

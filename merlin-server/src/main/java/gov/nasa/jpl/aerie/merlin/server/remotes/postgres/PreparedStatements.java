@@ -1,13 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import javax.json.Json;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
+import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
+import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers;
 import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 
+import javax.json.Json;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;

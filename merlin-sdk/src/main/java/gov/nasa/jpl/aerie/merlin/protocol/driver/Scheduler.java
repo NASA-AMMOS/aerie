@@ -3,11 +3,9 @@ package gov.nasa.jpl.aerie.merlin.protocol.driver;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 
 public interface Scheduler {
-  <State> State get(Query<State> query);
+  <State> State get(CellId<State> cellId);
 
   <Event> void emit(Event event, Topic<Event> topic);
 
-  <Return> String spawn(Task<Return> task);
-
-  <Input, Output> String spawn(DirectiveTypeId<Input, Output> directiveType, Input input, Task<Output> task);
+  <Output> void spawn(Task<Output> task);
 }

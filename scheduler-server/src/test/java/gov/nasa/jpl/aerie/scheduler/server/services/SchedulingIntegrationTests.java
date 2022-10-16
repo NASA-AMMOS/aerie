@@ -1,9 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityTypeList;
@@ -977,7 +977,7 @@ public class SchedulingIntegrationTests {
         Path.of(jarPath),
         "",
         "");
-    final Map<String, ? extends TaskSpecType<?, ?, ?>> taskSpecTypes = missionModel.getDirectiveTypes().taskSpecTypes();
+    final Map<String, ? extends DirectiveType<?, ?, ?>> taskSpecTypes = missionModel.getDirectiveTypes().directiveTypes();
     final var activityTypes = new ArrayList<MissionModelService.ActivityType>();
     for (final var entry : taskSpecTypes.entrySet()) {
       final var activityTypeName = entry.getKey();
@@ -985,6 +985,7 @@ public class SchedulingIntegrationTests {
       activityTypes.add(new MissionModelService.ActivityType(
           activityTypeName,
           taskSpecType
+              .getInputType()
               .getParameters()
               .stream()
               .collect(Collectors.toMap(Parameter::name, Parameter::schema))));
@@ -994,7 +995,7 @@ public class SchedulingIntegrationTests {
     for (final var entry : missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
-      resourceTypes.add(new MissionModelService.ResourceType(name, resource.getSchema()));
+      resourceTypes.add(new MissionModelService.ResourceType(name, resource.getOutputType().getSchema()));
     }
 
     return new MissionModelService.MissionModelTypes(activityTypes, resourceTypes);

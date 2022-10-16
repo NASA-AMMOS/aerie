@@ -2,9 +2,9 @@ package gov.nasa.jpl.aerie.scheduler.model;
 
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 
 import java.util.List;
 import java.util.Objects;
@@ -38,7 +38,7 @@ public class ActivityType {
   /**
    * the information required to simulate this activity type
    */
-  private final TaskSpecType<?, ?, ?> specType;
+  private final DirectiveType<?, ?, ?> specType;
 
   /**
    * describes the level of control that the scheduler has over the duration of this activity
@@ -63,7 +63,7 @@ public class ActivityType {
    *
    * @param name IN the identifier of the activity type
    */
-  public ActivityType(final String name, final TaskSpecType<?, ?, ?> specType, final DurationType durationType) {
+  public ActivityType(final String name, final DirectiveType<?, ?, ?> specType, final DurationType durationType) {
     checkNotNull(name, "creating activity type with null name");
     this.name = name;
     this.activityConstraints = null;
@@ -120,7 +120,7 @@ public class ActivityType {
     return this.activityConstraints;
   }
 
-  public TaskSpecType<?, ?, ?> getSpecType(){
+  public DirectiveType<?, ?, ?> getSpecType(){
     return this.specType;
   }
 
@@ -130,7 +130,7 @@ public class ActivityType {
 
   public boolean isParamLegal(final String name){
     if(this.specType != null){
-      final var paramSpec = getParameterSpecification(this.specType.getParameters(), name);
+      final var paramSpec = getParameterSpecification(this.specType.getInputType().getParameters(), name);
       return paramSpec != null;
     }
     return true;

@@ -1,13 +1,11 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.driver.engine.Directive;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -25,8 +23,7 @@ public final class MissionModel<Model> {
   private final LiveCells initialCells;
   private final Map<String, Resource<?>> resources;
   private final List<SerializableTopic<?>> topics;
-  private final DirectiveTypeRegistry<?, Model> directiveTypes;
-  private final ConfigurationType<?> configurationType;
+  private final DirectiveTypeRegistry<Model> directiveTypes;
   private final List<Initializer.TaskFactory<?>> daemons;
 
   public MissionModel(
@@ -35,14 +32,12 @@ public final class MissionModel<Model> {
       final Map<String, Resource<?>> resources,
       final List<SerializableTopic<?>> topics,
       final List<Initializer.TaskFactory<?>> daemons,
-      final ConfigurationType<?> configurationType,
-      final DirectiveTypeRegistry<?, Model> directiveTypes)
+      final DirectiveTypeRegistry<Model> directiveTypes)
   {
     this.model = Objects.requireNonNull(model);
     this.initialCells = Objects.requireNonNull(initialCells);
     this.resources = Collections.unmodifiableMap(resources);
     this.topics = Collections.unmodifiableList(topics);
-    this.configurationType = Objects.requireNonNull(configurationType);
     this.directiveTypes = Objects.requireNonNull(directiveTypes);
     this.daemons = Collections.unmodifiableList(daemons);
   }
@@ -51,18 +46,15 @@ public final class MissionModel<Model> {
     return this.model;
   }
 
-  public ConfigurationType<?> getConfigurationType() {
-    return this.configurationType;
-  }
-
-  public DirectiveTypeRegistry<?, Model> getDirectiveTypes() {
+  public DirectiveTypeRegistry<Model> getDirectiveTypes() {
     return this.directiveTypes;
   }
 
-  public Directive<Model, ?, ?> instantiateDirective(final SerializedActivity specification)
-  throws TaskSpecType.UnconstructableTaskSpecException, InstantiationException
-  {
-    return Directive.instantiate(this.directiveTypes.taskSpecTypes().get(specification.getTypeName()), specification);
+  public Task<?> createTask(final SerializedActivity specification) throws InstantiationException {
+    return this.directiveTypes
+        .directiveTypes()
+        .get(specification.getTypeName())
+        .createTask(this.model, specification.getArguments());
   }
 
   public Task<Unit> getDaemon() {
@@ -87,7 +79,6 @@ public final class MissionModel<Model> {
   public record SerializableTopic<EventType> (
       String name,
       Topic<EventType> topic,
-      ValueSchema valueSchema,
-      Function<EventType, SerializedValue> serializer
+      OutputType<EventType> outputType
   ) {}
 }

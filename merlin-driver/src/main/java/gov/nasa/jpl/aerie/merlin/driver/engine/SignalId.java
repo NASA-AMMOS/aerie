@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
 /** A typed wrapper for signal IDs. */
-/*package-local*/ sealed interface SignalId {
+public sealed interface SignalId {
   /** A signal controlled by a task. */
   record TaskSignalId(TaskId id) implements SignalId {}
 

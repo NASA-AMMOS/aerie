@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
+import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
@@ -19,21 +19,20 @@ public final class Cell<State> {
   }
 
   public <Effect> Cell(
-      final Applicator<Effect, State> applicator,
-      final EffectTrait<Effect> algebra,
+      final CellType<Effect, State> cellType,
       final Selector<Effect> selector,
       final EventGraphEvaluator evaluator,
       final State state
   ) {
-    this(new GenericCell<>(applicator, algebra, selector, evaluator), state);
+    this(new GenericCell<>(cellType, cellType.getEffectType(), selector, evaluator), state);
   }
 
   public Cell<State> duplicate() {
-    return new Cell<>(this.inner, this.inner.applicator.duplicate(this.state));
+    return new Cell<>(this.inner, this.inner.cellType.duplicate(this.state));
   }
 
   public void step(final Duration delta) {
-    this.inner.applicator.step(this.state, delta);
+    this.inner.cellType.step(this.state, delta);
   }
 
   public void apply(final EventGraph<Event> events) {
@@ -49,11 +48,11 @@ public final class Cell<State> {
   }
 
   public Optional<Duration> getExpiry() {
-    return this.inner.applicator.getExpiry(this.state);
+    return this.inner.cellType.getExpiry(this.state);
   }
 
   public State getState() {
-    return this.inner.applicator.duplicate(this.state);
+    return this.inner.cellType.duplicate(this.state);
   }
 
   public boolean isInterestedIn(final Set<Topic<?>> topics) {
@@ -66,19 +65,19 @@ public final class Cell<State> {
   }
 
   private record GenericCell<Effect, State> (
-      Applicator<Effect, State> applicator,
+      CellType<Effect, State> cellType,
       EffectTrait<Effect> algebra,
       Selector<Effect> selector,
       EventGraphEvaluator evaluator
   ) {
     public void apply(final State state, final EventGraph<Event> events) {
       final var effect$ = this.evaluator.evaluate(this.algebra, this.selector, events);
-      if (effect$.isPresent()) this.applicator.apply(state, effect$.get());
+      if (effect$.isPresent()) this.cellType.apply(state, effect$.get());
     }
 
     public void apply(final State state, final Event event) {
       final var effect$ = this.selector.select(this.algebra, event);
-      if (effect$.isPresent()) this.applicator.apply(state, effect$.get());
+      if (effect$.isPresent()) this.cellType.apply(state, effect$.get());
     }
 
     public void apply(final State state, final Event[] events, int from, final int to) {

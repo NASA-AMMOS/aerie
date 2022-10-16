@@ -50,7 +50,7 @@ public final class FooActivity {
     if (y.equals("test")) {
       data.rate.add(x);
     } else if (y.equals("spawn")) {
-      call(new FooActivity());
+      call(mission, new FooActivity());
     }
 
     data.rate.add(1.0);

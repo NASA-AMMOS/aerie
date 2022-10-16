@@ -2,7 +2,8 @@ package gov.nasa.jpl.aerie.contrib.cells.durative;
 
 import gov.nasa.jpl.aerie.contrib.traits.CommutativeMonoid;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
+import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import org.apache.commons.lang3.tuple.Pair;
@@ -31,18 +32,7 @@ public final class DurativeRealCell {
 
   public static <Event>
   CellRef<Event, DurativeRealCell> allocate(final Function<Event, Collection<Pair<Duration, RealDynamics>>> interpreter) {
-    return CellRef.allocate(
-        new DurativeRealCell(),
-        new DurativeApplicator(),
-        new CommutativeMonoid<Collection<Pair<Duration, RealDynamics>>>(List.of(), ($1, $2) -> {
-          if ($1.isEmpty()) return $2;
-          if ($2.isEmpty()) return $1;
-          final var $ = new ArrayList<Pair<Duration, RealDynamics>>($1.size() + $2.size());
-          $.addAll($1);
-          $.addAll($2);
-          return $;
-        }),
-        interpreter);
+    return CellRef.allocate(new DurativeRealCell(), new DurativeCellType(), interpreter);
   }
 
   public RealDynamics getValue() {
@@ -55,9 +45,26 @@ public final class DurativeRealCell {
     return dynamics;
   }
 
-  public static final class DurativeApplicator
-      implements Applicator<Collection<Pair<Duration, RealDynamics>>, DurativeRealCell>
+  public static final class DurativeCellType
+      implements CellType<Collection<Pair<Duration, RealDynamics>>, DurativeRealCell>
   {
+    private static final EffectTrait<Collection<Pair<Duration, RealDynamics>>> monoid =
+        new CommutativeMonoid<>(List.of(), ($1, $2) -> {
+          if ($1.isEmpty()) return $2;
+          if ($2.isEmpty()) return $1;
+
+          final var $ = new ArrayList<Pair<Duration, RealDynamics>>($1.size() + $2.size());
+          $.addAll($1);
+          $.addAll($2);
+
+          return $;
+        });
+
+    @Override
+    public EffectTrait<Collection<Pair<Duration, RealDynamics>>> getEffectType() {
+      return monoid;
+    }
+
     @Override
     public DurativeRealCell duplicate(final DurativeRealCell cell) {
       return new DurativeRealCell(cell.activeEffects, cell.elapsedTime);

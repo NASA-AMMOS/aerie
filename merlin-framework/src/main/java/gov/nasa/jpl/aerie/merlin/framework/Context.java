@@ -1,10 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
@@ -18,16 +16,15 @@ public interface Context {
   ContextType getContextType();
 
   // Usable during both initialization & simulation
-  <CellType> CellType ask(Query<CellType> query);
+  <State> State ask(CellId<State> cellId);
 
   // Usable during initialization
-  <Event, Effect, CellType>
-  Query<CellType>
+  <Event, Effect, State>
+  CellId<State>
   allocate(
-      CellType initialState,
-      Applicator<Effect, CellType> applicator,
-      EffectTrait<Effect> trait,
-      Function<Event, Effect> projection,
+      State initialState,
+      CellType<Effect, State> cellType,
+      Function<Event, Effect> interpretation,
       Topic<Event> topic);
 
   // Usable during simulation
@@ -35,10 +32,9 @@ public interface Context {
 
   interface TaskFactory<Return> { Task<Return> create(ExecutorService executor); }
 
-  <Return> String spawn(TaskFactory<Return> task);
-  <Input, Output> String spawn(DirectiveTypeId<Input, Output> id, Input activity, Task<Output> task);
+  <Return> void spawn(TaskFactory<Return> task);
+  <Return> void call(TaskFactory<Return> task);
 
   void delay(Duration duration);
-  void waitFor(String id);
   void waitUntil(Condition condition);
 }

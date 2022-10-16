@@ -17,9 +17,9 @@ public final class DecomposingActivity {
 
     @EffectModel
     public void run(final Mission mission) {
-      call(new ChildActivity(1));
+      call(mission, new ChildActivity(1));
       delay(30*24, HOURS);
-      call(new ChildActivity(2));
+      call(mission, new ChildActivity(2));
     }
   }
 
@@ -36,9 +36,9 @@ public final class DecomposingActivity {
 
     @EffectModel
     public void run(final Mission mission) {
-      call(new GrandchildActivity(1));
+      call(mission, new GrandchildActivity(1));
       delay(15*24, HOURS);
-      call(new GrandchildActivity(2));
+      call(mission, new GrandchildActivity(2));
     }
   }
 

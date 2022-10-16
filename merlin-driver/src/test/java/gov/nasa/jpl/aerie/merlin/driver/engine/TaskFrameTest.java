@@ -10,7 +10,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.RecursiveEventGraphEvaluator;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Selector;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
+import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import net.jqwik.api.Arbitraries;
@@ -92,14 +92,13 @@ public final class TaskFrameTest {
     final var topic = new Topic<Integer>();
     final var query = new Query<MutableObject<EventGraph<Integer>>>();
 
-    final var applicator = new MutableGraphApplicator<Integer>();
-    final var algebra = new EventGraph.IdentityTrait<Integer>();
+    final var cellType = new MutableGraphCellType<Integer>();
     final var selector = new Selector<>(topic, EventGraph::atom);
     final var evaluator = new RecursiveEventGraphEvaluator();
 
     final var events = new CausalEventSource();
     final var cells = new LiveCells(events);
-    cells.put(query, new Cell<>(applicator, algebra, selector, evaluator, new MutableObject<>(EventGraph.empty())));
+    cells.put(query, new Cell<>(cellType, selector, evaluator, new MutableObject<>(EventGraph.empty())));
 
     final var root = HistoryDecoratedGraph.decorate(graph);
     TaskFrame.run(root, cells, (job, builder) -> checkHistory(topic, query, builder, job));
@@ -243,7 +242,12 @@ public final class TaskFrameTest {
   }
 
   /** A cell applicator that sequentially appends graphs to an accumulator graph. */
-  private static final class MutableGraphApplicator<T> implements Applicator<EventGraph<T>, MutableObject<EventGraph<T>>> {
+  private static final class MutableGraphCellType<T> implements CellType<EventGraph<T>, MutableObject<EventGraph<T>>> {
+    @Override
+    public EffectTrait<EventGraph<T>> getEffectType() {
+      return new EventGraph.IdentityTrait<T>();
+    }
+
     @Override
     public MutableObject<EventGraph<T>> duplicate(final MutableObject<EventGraph<T>> self) {
       return new MutableObject<>(self.getValue());

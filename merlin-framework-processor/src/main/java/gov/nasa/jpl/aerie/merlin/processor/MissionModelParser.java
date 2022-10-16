@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Export;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ConfigurationTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.InputTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ExportDefaultsStyle;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MapperRecord;
@@ -94,7 +94,7 @@ import java.util.stream.Collectors;
   private record MissionModelTypeRecord(
       TypeElement type,
       boolean expectsPlanStart,
-      Optional<ConfigurationTypeRecord> configurationType) { }
+      Optional<InputTypeRecord> configurationType) { }
 
   private MissionModelTypeRecord getMissionModel(final PackageElement missionModelElement)
   throws InvalidMissionModelException
@@ -175,7 +175,7 @@ import java.util.stream.Collectors;
     return (ExecutableElement) constructors.get(0);
   }
 
-  private Optional<ConfigurationTypeRecord> getMissionModelConfigurationType(final PackageElement missionModelElement)
+  private Optional<InputTypeRecord> getMissionModelConfigurationType(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
     final var annotationMirror =
@@ -197,7 +197,7 @@ import java.util.stream.Collectors;
     final var validations = this.getExportValidations(declaration, parameters);
     final var mapper = getExportMapper(missionModelElement, declaration);
     final var defaultsStyle = getExportDefaultsStyle(declaration);
-    return Optional.of(new ConfigurationTypeRecord(name, declaration, parameters, validations, mapper, defaultsStyle));
+    return Optional.of(new InputTypeRecord(name, declaration, parameters, validations, mapper, defaultsStyle));
   }
 
   private List<TypeElement> getMissionModelMapperClasses(final PackageElement missionModelElement)
@@ -344,7 +344,10 @@ import java.util.stream.Collectors;
      */
     final var defaultsStyle = this.getExportDefaultsStyle(activityTypeElement);
 
-    return new ActivityTypeRecord(name, activityTypeElement, parameters, validations, mapper, defaultsStyle, effectModel);
+    return new ActivityTypeRecord(
+        name,
+        new InputTypeRecord(name, activityTypeElement, parameters, validations, mapper, defaultsStyle),
+        effectModel);
   }
 
   private void validateControllableDurationParameter(

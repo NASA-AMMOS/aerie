@@ -1,38 +1,32 @@
 package gov.nasa.jpl.aerie.merlin.protocol.model;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.List;
 import java.util.Map;
 
-public interface TaskSpecType<Model, Specification, Return> {
+public interface InputType<T> {
   List<Parameter> getParameters();
+
   List<String> getRequiredParameters();
 
-  Specification instantiate(Map<String, SerializedValue> arguments)
-  throws InstantiationException;
+  T instantiate(Map<String, SerializedValue> arguments)
+      throws InstantiationException;
 
-  Map<String, SerializedValue> getArguments(Specification taskSpec);
-  List<ValidationNotice> getValidationFailures(Specification taskSpec);
+  Map<String, SerializedValue> getArguments(T value);
 
-  Task<Return> createTask(Model model, Specification taskSpec);
-  ValueSchema getReturnValueSchema();
-  SerializedValue serializeReturnValue(Return returnValue);
+  List<ValidationNotice> getValidationFailures(T value);
 
-  final class UnconstructableTaskSpecException extends Exception {
-    public UnconstructableTaskSpecException(final String message) {
-      super(message);
-    }
-  }
+  record Parameter(String name, ValueSchema schema) {}
+
+  record ValidationNotice(List<String> subjects, String message) { }
 
   /**
    * This method must behave as though implemented as:
    * {@snippet :
-   * return this.getValidationFailures(this.instantiate(activity));
+   * return this.getValidationFailures(this.instantiate(arguments));
    * }
    */
   default List<ValidationNotice> validateArguments(final Map<String, SerializedValue> arguments)

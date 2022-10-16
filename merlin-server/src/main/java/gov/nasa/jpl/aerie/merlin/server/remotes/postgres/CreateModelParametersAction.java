@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;

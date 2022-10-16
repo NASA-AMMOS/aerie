@@ -2,7 +2,8 @@ package gov.nasa.jpl.aerie.contrib.cells.counters;
 
 import gov.nasa.jpl.aerie.contrib.traits.CommutativeMonoid;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
+import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 
 import java.util.Objects;
 import java.util.function.BinaryOperator;
@@ -29,8 +30,7 @@ public final class CounterCell<T> {
       final Function<Event, T> interpreter) {
     return CellRef.allocate(
         new CounterCell<>(initialValue, adder, duplicator),
-        new CounterApplicator<>(),
-        new CommutativeMonoid<>(zero, adder),
+        new CounterCellType<>(zero, adder),
         interpreter);
   }
 
@@ -39,7 +39,18 @@ public final class CounterCell<T> {
     return this.duplicator.apply(this.value);
   }
 
-  public static final class CounterApplicator<T> implements Applicator<T, CounterCell<T>> {
+  public static final class CounterCellType<T> implements CellType<T, CounterCell<T>> {
+    private final EffectTrait<T> monoid;
+
+    public CounterCellType(final T zero, final BinaryOperator<T> adder) {
+      this.monoid = new CommutativeMonoid<>(zero, adder);
+    }
+
+    @Override
+    public EffectTrait<T> getEffectType() {
+      return this.monoid;
+    }
+
     @Override
     public CounterCell<T> duplicate(final CounterCell<T> cell) {
       return new CounterCell<>(cell.value, cell.adder, cell.duplicator);

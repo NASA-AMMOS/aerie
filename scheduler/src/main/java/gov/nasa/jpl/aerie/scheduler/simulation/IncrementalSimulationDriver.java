@@ -11,7 +11,6 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -80,7 +79,7 @@ public class IncrementalSimulationDriver<Model> {
       engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
 
       final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, missionModel);
+      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
       timeline.add(commit);
     }
   }
@@ -98,7 +97,7 @@ public class IncrementalSimulationDriver<Model> {
       curTime = batch.offsetFromStart();
       timeline.add(delta);
       // Run the jobs in this batch.
-      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, missionModel);
+      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
       timeline.add(commit);
 
     }
@@ -111,11 +110,10 @@ public class IncrementalSimulationDriver<Model> {
    * @param activity the activity to simulate
    * @param startTime the start time of the activity
    * @param activityId the activity id for the activity to simulate
-   * @throws TaskSpecType.UnconstructableTaskSpecException
    * @throws InstantiationException
    */
   public void simulateActivity(SerializedActivity activity, Duration startTime, ActivityInstanceId activityId)
-  throws TaskSpecType.UnconstructableTaskSpecException, InstantiationException
+  throws InstantiationException
   {
     final var activityToSimulate = new SimulatedActivity(startTime, activity, activityId);
     if(startTime.noLongerThan(curTime)){
@@ -169,7 +167,7 @@ public class IncrementalSimulationDriver<Model> {
           endTime,
           activityTopic,
           timeline,
-          missionModel);
+          missionModel.getTopics());
       lastSimResultsEnd = endTime;
       //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
     }
@@ -177,7 +175,7 @@ public class IncrementalSimulationDriver<Model> {
   }
 
   private void simulateSchedule(final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule)
-  throws TaskSpecType.UnconstructableTaskSpecException, InstantiationException
+  throws InstantiationException
   {
 
     if(schedule.isEmpty()){
@@ -189,8 +187,7 @@ public class IncrementalSimulationDriver<Model> {
       final var startOffset = entry.getValue().getLeft();
       final var serializedDirective = entry.getValue().getRight();
 
-      final var directive = missionModel.instantiateDirective(serializedDirective);
-      final var task = directive.createTask(missionModel.getModel());
+      final var task = missionModel.createTask(serializedDirective);
       final var taskId = engine.scheduleTask(startOffset, emitAndThen(directiveId, this.activityTopic, task));
 
       plannedDirectiveToTask.put(directiveId,taskId);
@@ -210,7 +207,7 @@ public class IncrementalSimulationDriver<Model> {
       //   even if they occur at the same real time.
 
       // Run the jobs in this batch.
-      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, missionModel);
+      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
       timeline.add(commit);
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time

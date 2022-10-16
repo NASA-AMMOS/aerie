@@ -9,13 +9,9 @@ import java.util.Optional;
 
 public record ActivityTypeRecord(
     String name,
-    TypeElement declaration,
-    List<ParameterRecord> parameters,
-    List<ParameterValidationRecord> validations,
-    MapperRecord mapper,
-    ExportDefaultsStyle defaultsStyle,
+    InputTypeRecord inputType,
     Optional<EffectModelRecord> effectModel
-  ) implements ExportTypeRecord {
+) {
   public TypeName getOutputTypeName() {
     return this.effectModel
         .flatMap(EffectModelRecord::returnType)

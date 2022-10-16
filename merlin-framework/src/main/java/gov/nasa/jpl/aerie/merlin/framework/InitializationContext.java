@@ -1,12 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.driver.DirectiveTypeId;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.Objects;
@@ -36,20 +33,19 @@ public final class InitializationContext implements Context {
   }
 
   @Override
-  public <CellType> CellType ask(final Query<CellType> query) {
-    return this.builder.getInitialState(query);
+  public <State> State ask(final CellId<State> cellId) {
+    return this.builder.getInitialState(cellId);
   }
 
   @Override
-  public <Event, Effect, CellType>
-  Query<CellType> allocate(
-      final CellType initialState,
-      final Applicator<Effect, CellType> applicator,
-      final EffectTrait<Effect> trait,
-      final Function<Event, Effect> projection,
+  public <Event, Effect, State>
+  CellId<State> allocate(
+      final State initialState,
+      final CellType<Effect, State> cellType,
+      final Function<Event, Effect> interpretation,
       final Topic<Event> topic
   ) {
-    return this.builder.allocate(initialState, applicator, trait, projection, topic);
+    return this.builder.allocate(initialState, cellType, interpretation, topic);
   }
 
   @Override
@@ -58,23 +54,17 @@ public final class InitializationContext implements Context {
   }
 
   @Override
-  public <Return> String spawn(final TaskFactory<Return> task) {
-    return this.builder.daemon(() -> task.create(InitializationContext.this.executor));
+  public <Return> void spawn(final TaskFactory<Return> task) {
+    this.builder.daemon(() -> task.create(InitializationContext.this.executor));
   }
 
   @Override
-  public <Input, Output>
-  String spawn(final DirectiveTypeId<Input, Output> id, final Input activity, final Task<Output> task) {
-    throw new IllegalStateException("Cannot schedule activities during initialization");
-  }
-
-  @Override
-  public void delay(final Duration duration) {
+  public <Return> void call(final TaskFactory<Return> task) {
     throw new IllegalStateException("Cannot yield during initialization");
   }
 
   @Override
-  public void waitFor(final String id) {
+  public void delay(final Duration duration) {
     throw new IllegalStateException("Cannot yield during initialization");
   }
 

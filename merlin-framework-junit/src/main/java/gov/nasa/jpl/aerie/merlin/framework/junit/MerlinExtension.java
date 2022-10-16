@@ -1,14 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.framework.junit;
 
+import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.aerie.merlin.framework.EmptyConfigurationType;
 import gov.nasa.jpl.aerie.merlin.framework.InitializationContext;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
-import gov.nasa.jpl.aerie.merlin.framework.Scoping;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.DynamicTestInvocationContext;
@@ -22,16 +21,17 @@ import org.junit.jupiter.api.extension.TestInstancePreDestroyCallback;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.Objects;
 
-public final class MerlinExtension<Registry extends Scoping<Registry, Model>, Model>
+public final class MerlinExtension<UNUSED, Model>
     implements BeforeAllCallback, ParameterResolver, InvocationInterceptor, TestInstancePreDestroyCallback
 {
-  private State<Registry, Model> getState(final ExtensionContext context) {
+  private State<UNUSED, Model> getState(final ExtensionContext context) {
     // SAFETY: This method is the only one where we store or retrieve a State,
     //   and it's always instantiated with <Model>.
     @SuppressWarnings("unchecked")
-    final var stateClass = (Class<State<Registry, Model>>) (Object) State.class;
+    final var stateClass = (Class<State<UNUSED, Model>>) (Object) State.class;
 
     return context
         .getStore(ExtensionContext.Namespace.create(context.getRequiredTestClass()))
@@ -54,7 +54,7 @@ public final class MerlinExtension<Registry extends Scoping<Registry, Model>, Mo
   }
 
   @Override
-  public MerlinTestContext<Registry, Model> resolveParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
+  public MerlinTestContext<UNUSED, Model> resolveParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
   throws ParameterResolutionException
   {
     final var state = this.getState(extensionContext);
@@ -112,12 +112,11 @@ public final class MerlinExtension<Registry extends Scoping<Registry, Model>, Mo
     state.missionModel = null;
   }
 
-  private static final class State<Registry extends Scoping<Registry, Model>, Model> {
+  private static final class State<UNUSED, Model> {
     public MissionModelBuilder builder;
-    public MerlinTestContext<Registry, Model> context;
+    public MerlinTestContext<UNUSED, Model> context;
 
-    public MissionModel<RootModel<Registry, Model>> missionModel = null;
-    public Scoping<Registry, Model> scoping = null;
+    public MissionModel<RootModel<Model>> missionModel = null;
 
     public State(final MissionModelBuilder builder) {
       this.builder = Objects.requireNonNull(builder);
@@ -142,15 +141,9 @@ public final class MerlinExtension<Registry extends Scoping<Registry, Model>, Mo
         throw ex.wrapped;
       }
 
-      final var registry = this.context.activityTypes();
-
-      this.scoping = (registry.registry() != null)
-          ? registry.registry()
-          : $ -> () -> {};
       this.missionModel = this.builder.build(
-          new RootModel<>(this.context.model(), registry.registry(), executor),
-          new EmptyConfigurationType(),
-          registry);
+          new RootModel<>(this.context.model(), executor),
+          new DirectiveTypeRegistry<>(Map.of()));
 
       // Clear the builder; it shouldn't be used from here on, and if it is, an error should be raised.
       this.builder = null;
@@ -165,7 +158,7 @@ public final class MerlinExtension<Registry extends Scoping<Registry, Model>, Mo
       final var model = this.missionModel.getModel();
       final var task = ModelActions
           .threaded(() -> {
-            try (final var token = this.scoping.contextualizeModel(model)) {
+            try {
               invocation.proceed();
             } catch (final Throwable ex) {
               throw new WrappedException(ex);

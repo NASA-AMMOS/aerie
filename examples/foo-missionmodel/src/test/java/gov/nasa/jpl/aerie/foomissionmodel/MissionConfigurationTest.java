@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
-import java.time.Instant;
 import gov.nasa.jpl.aerie.foomissionmodel.activities.FooActivity;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityTypes;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
@@ -12,8 +11,10 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import java.time.Instant;
+
 import static gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityActions.spawn;
-import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
@@ -28,13 +29,13 @@ public final class MissionConfigurationTest {
 
     public Test1(final MerlinTestContext<ActivityTypes, Mission> ctx) {
       this.model = new Mission(ctx.registrar(), Instant.EPOCH, new Configuration());
-      ctx.use(model, ActivityTypes::register);
+      ctx.use(model);
     }
 
     @Test
     public void test() {
       assertThat(model.startingAfterUnixEpoch.get()).isEqualTo(false);
-      spawn(new FooActivity());
+      spawn(model, new FooActivity());
       delay(1, Duration.SECOND);
       assertThat(model.sink.get()).isCloseTo(0.5, within(1e-9));
     }
@@ -50,13 +51,13 @@ public final class MissionConfigurationTest {
 
     public Test2(final MerlinTestContext<ActivityTypes, Mission> ctx) {
       this.model = new Mission(ctx.registrar(), Instant.EPOCH.plusSeconds(1), new Configuration(2.0));
-      ctx.use(model, ActivityTypes::register);
+      ctx.use(model);
     }
 
     @Test
     public void test() {
       assertThat(model.startingAfterUnixEpoch.get()).isEqualTo(true);
-      spawn(new FooActivity());
+      spawn(model, new FooActivity());
       delay(1, Duration.SECOND);
       assertThat(model.sink.get()).isCloseTo(2.0, within(1e-9));
     }

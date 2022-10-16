@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.banananation.Configuration;
 import gov.nasa.jpl.aerie.foomissionmodel.Mission;
-import gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityTypes;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
@@ -15,20 +14,20 @@ import java.time.Instant;
 public final class SimulationUtility {
 
   private static MissionModel<?> makeMissionModel(final MissionModelBuilder builder, final Configuration config) {
-    final var factory = new gov.nasa.jpl.aerie.banananation.generated.GeneratedMissionModelFactory();
+    final var factory = new gov.nasa.jpl.aerie.banananation.generated.GeneratedModelType();
     final var registry = DirectiveTypeRegistry.extract(factory);
-    final var model = factory.instantiate(registry.registry(), Instant.EPOCH, config, builder);
-    return builder.build(model, factory.getConfigurationType(), registry);
+    final var model = factory.instantiate(Instant.EPOCH, config, builder);
+    return builder.build(model, registry);
   }
 
-  public static MissionModel<RootModel<ActivityTypes, Mission>>
+  public static MissionModel<RootModel<Mission>>
   getFooMissionModel() {
     final var config = new gov.nasa.jpl.aerie.foomissionmodel.Configuration();
-    final var factory = new gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory();
+    final var factory = new gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedModelType();
     final var registry = DirectiveTypeRegistry.extract(factory);
     final var builder = new MissionModelBuilder();
-    final var model = factory.instantiate(registry.registry(), Instant.EPOCH, config, builder);
-    return builder.build(model, factory.getConfigurationType(), registry);
+    final var model = factory.instantiate(Instant.EPOCH, config, builder);
+    return builder.build(model, registry);
   }
 
   public static SchedulerModel getFooSchedulerModel(){
