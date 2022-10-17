@@ -101,10 +101,10 @@ public final class SchedulerAppDriver {
     //configure the http server (the consumer lambda overlays additional config on the input javalinConfig)
     final var javalin = Javalin.create(javalinConfig -> {
       javalinConfig.showJavalinBanner = false;
-      if (config.enableJavalinDevLogging()) javalinConfig.enableDevLogging();
-      javalinConfig.enableCorsForAllOrigins(); //TODO: probably don't want literally any cross-origin request...
-      javalinConfig.registerPlugin(bindings);
-      javalinConfig.server(() -> server);
+      if (config.enableJavalinDevLogging()) javalinConfig.plugins.enableDevLogging();
+      javalinConfig.plugins.enableCors(cors -> cors.add(it -> it.anyHost())); //TODO: probably don't want literally any cross-origin request...
+      javalinConfig.plugins.register(bindings);
+      javalinConfig.jetty.server(() -> server);
       //TODO: exception handling (shxould elevate/reuse from MerlinApp for consistency?)
     });
 

@@ -96,7 +96,7 @@ dependencies {
   implementation project(':scheduler')
 
   implementation 'org.apache.commons:commons-lang3:3.12.0'
-  implementation 'io.javalin:javalin:4.6.0'
+  implementation 'io.javalin:javalin:5.0.1'
   implementation 'org.eclipse:yasson:1.0.5'
   implementation 'org.apache.bcel:bcel:6.5.0'
 

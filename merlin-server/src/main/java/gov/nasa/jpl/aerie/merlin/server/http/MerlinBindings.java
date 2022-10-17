@@ -10,8 +10,8 @@ import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import io.javalin.Javalin;
-import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
+import io.javalin.plugin.Plugin;
 
 import javax.json.Json;
 import javax.json.stream.JsonParsingException;
