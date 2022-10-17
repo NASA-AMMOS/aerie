@@ -4,7 +4,7 @@ COPY build/distributions/*.tar /usr/src/app/server.tar
 RUN mkdir /usr/src/app/extracted
 RUN cd /usr/src/app && tar --strip-components 1 -xf server.tar -C extracted
 
-FROM eclipse-temurin:18-focal
+FROM eclipse-temurin:19-jre-alpine
 
 COPY --from=extractor /usr/src/app/extracted /usr/src/app
 
