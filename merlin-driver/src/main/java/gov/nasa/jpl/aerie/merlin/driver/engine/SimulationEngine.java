@@ -27,6 +27,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
+import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -73,16 +74,29 @@ public final class SimulationEngine implements AutoCloseable {
   private final Map<TaskId, Set<TaskId>> taskChildren = new HashMap<>();
 
   /** A thread pool that modeled tasks can use to keep track of their state between steps. */
-  private final ExecutorService executor = Executors.newCachedThreadPool($ -> {
-    final var t = new Thread($);
-    // TODO: Make threads non-daemons.
-    //  We're marking these as daemons right now solely to ensure that the JVM shuts down cleanly in lieu of
-    //  proper model lifecycle management.
-    //  In fact, daemon threads can mask bad memory leaks: a hanging thread is almost indistinguishable
-    //  from a dead thread.
-    t.setDaemon(true);
-    return t;
-  });
+  private final ExecutorService executor = getLoomOrFallback();
+
+  private static ExecutorService getLoomOrFallback() {
+    // Try to use Loom's lightweight virtual threads, if possible. Otherwise, just use a thread pool.
+    // This approach is inspired by that of Javalin 5.
+    // https://github.com/javalin/javalin/blob/97e9e23ebe8f57aa353bc7a45feb560ad61e50a0/javalin/src/main/java/io/javalin/util/ConcurrencyUtil.kt#L48-L51
+    try {
+      // Use reflection to avoid needing `--enable-preview` at compile-time.
+      // If the runtime JVM is run with `--enable-preview`, this should succeed.
+      return (ExecutorService) Executors.class.getMethod("newVirtualThreadPerTaskExecutor").invoke(null);
+    } catch (final ReflectiveOperationException ex) {
+      return Executors.newCachedThreadPool($ -> {
+        final var t = new Thread($);
+        // TODO: Make threads non-daemons.
+        //  We're marking these as daemons right now solely to ensure that the JVM shuts down cleanly in lieu of
+        //  proper model lifecycle management.
+        //  In fact, daemon threads can mask bad memory leaks: a hanging thread is almost indistinguishable
+        //  from a dead thread.
+        t.setDaemon(true);
+        return t;
+      });
+    }
+  }
 
   /** Schedule a new task to be performed at the given time. */
   public <Return> TaskId scheduleTask(final Duration startTime, final TaskFactory<Return> state) {
