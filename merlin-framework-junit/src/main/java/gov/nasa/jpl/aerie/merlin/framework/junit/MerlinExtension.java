@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.framework.InitializationContext;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
-import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.DynamicTestInvocationContext;
@@ -107,8 +106,6 @@ public final class MerlinExtension<UNUSED, Model>
   @Override
   public void preDestroyTestInstance(final ExtensionContext extensionContext) {
     final var state = this.getState(extensionContext);
-
-    state.missionModel.getModel().close();
     state.missionModel = null;
   }
 
@@ -116,7 +113,7 @@ public final class MerlinExtension<UNUSED, Model>
     public MissionModelBuilder builder;
     public MerlinTestContext<UNUSED, Model> context;
 
-    public MissionModel<RootModel<Model>> missionModel = null;
+    public MissionModel<Model> missionModel = null;
 
     public State(final MissionModelBuilder builder) {
       this.builder = Objects.requireNonNull(builder);
@@ -124,11 +121,9 @@ public final class MerlinExtension<UNUSED, Model>
     }
 
     public <T> T constructModel(final Invocation<T> invocation) throws Throwable {
-      final var executor = RootModel.makeExecutorService();
-
       final T value;
       try {
-        value = InitializationContext.initializing(executor, this.builder, () -> {
+        value = InitializationContext.initializing(this.builder, () -> {
           try {
             return invocation.proceed();
           } catch (final RuntimeException ex) {
@@ -142,7 +137,7 @@ public final class MerlinExtension<UNUSED, Model>
       }
 
       this.missionModel = this.builder.build(
-          new RootModel<>(this.context.model(), executor),
+          this.context.model(),
           new DirectiveTypeRegistry<>(Map.of()));
 
       // Clear the builder; it shouldn't be used from here on, and if it is, an error should be raised.
@@ -155,7 +150,6 @@ public final class MerlinExtension<UNUSED, Model>
     private void simulate(final Invocation<Void> invocation) throws Throwable {
       final var completed = new Object() { boolean value = false; };
 
-      final var model = this.missionModel.getModel();
       final var task = ModelActions
           .threaded(() -> {
             try {
@@ -165,8 +159,7 @@ public final class MerlinExtension<UNUSED, Model>
             } finally {
               completed.value = true;
             }
-          })
-          .create(model.executor());
+          });
 
       try {
         SimulationDriver.simulateTask(this.missionModel, task);

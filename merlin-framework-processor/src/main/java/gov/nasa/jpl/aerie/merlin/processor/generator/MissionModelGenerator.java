@@ -14,10 +14,8 @@ import com.squareup.javapoet.TypeVariableName;
 import com.squareup.javapoet.WildcardTypeName;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.RecordValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.ActivityMapper;
-import gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.framework.EmptyInputType;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
-import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.processor.MissionModelProcessor;
 import gov.nasa.jpl.aerie.merlin.processor.Resolver;
@@ -35,7 +33,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -159,9 +157,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     missionModel.modelConfigurationType
                         .map($ -> ClassName.get($.declaration()))
                         .orElse(ClassName.get(Unit.class)),
-                    ParameterizedTypeName.get(
-                        ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                        ClassName.get(missionModel.topLevelModel))))
+                    ClassName.get(missionModel.topLevelModel)))
             .addMethod(
                 MethodSpec
                     .methodBuilder("getDirectiveTypes")
@@ -215,10 +211,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer.class),
                         "builder",
                         Modifier.FINAL)
-                    .returns(
-                        ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                            ClassName.get(missionModel.topLevelModel)))
+                    .returns(ClassName.get(missionModel.topLevelModel))
                     .addStatement(
                         "$T.registerTopics($L)",
                         missionModel.getTypesName(),
@@ -229,23 +222,12 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         "registrar",
                         gov.nasa.jpl.aerie.merlin.framework.Registrar.class,
                         "builder")
-                    .addStatement(
-                        "final var $L = $T.makeExecutorService()",
-                        "executor",
-                        gov.nasa.jpl.aerie.merlin.framework.RootModel.class)
                     .addCode("\n")
                     .addStatement(
-                        "final var $L = $T.initializing($L, $L, () -> $L)",
-                        "model",
+                        "return $T.initializing($L, () -> $L)",
                         gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
-                        "executor",
                         "builder",
                         generateMissionModelInstantiation(missionModel))
-                    .addStatement(
-                        "return new $T<>($L, $L)",
-                        gov.nasa.jpl.aerie.merlin.framework.RootModel.class,
-                        "model",
-                        "executor")
                     .build())
             .build();
 
@@ -872,30 +854,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     ClassName.get(Topic.class),
                     activityType.getOutputTypeName()))
                 .addStatement("return this.$L", "outputTopic")
-                .build())
-        .addMethod(
-            MethodSpec
-                .methodBuilder("createTask")
-                .addModifiers(Modifier.PUBLIC)
-                .addAnnotation(Override.class)
-                .returns(ParameterizedTypeName.get(
-                    ClassName.get(Task.class),
-                    activityType.getOutputTypeName()))
-                .addParameter(
-                    ParameterizedTypeName.get(
-                        ClassName.get(RootModel.class),
-                        ClassName.get(missionModel.topLevelModel)),
-                    "model",
-                    Modifier.FINAL)
-                .addParameter(
-                    TypeName.get(activityType.inputType().declaration().asType()),
-                    "directive",
-                    Modifier.FINAL)
-                .addStatement(
-                    "return this.getTaskFactory($L.model(), $L).create($L.executor())",
-                    "model",
-                    "directive",
-                    "model")
                 .build())
         .addMethod(
             MethodSpec

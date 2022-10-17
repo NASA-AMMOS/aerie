@@ -3,12 +3,10 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
-import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -54,9 +52,9 @@ public final class SimulationDriver {
         final var startOffset = entry.getValue().getLeft();
         final var serializedDirective = entry.getValue().getRight();
 
-        final Task<?> task;
+        final TaskFactory<?> task;
         try {
-          task = missionModel.createTask(serializedDirective);
+          task = missionModel.getTaskFactory(serializedDirective);
         } catch (final InstantiationException ex) {
           // All activity instantiations are assumed to be validated by this point
           throw new Error("Unexpected state: activity instantiation %s failed with: %s"
@@ -93,7 +91,7 @@ public final class SimulationDriver {
   }
 
   public static <Model, Return>
-  void simulateTask(final MissionModel<Model> missionModel, final Task<Return> task) {
+  void simulateTask(final MissionModel<Model> missionModel, final TaskFactory<Return> task) {
     try (final var engine = new SimulationEngine()) {
       /* The top-level simulation timeline. */
       var timeline = new TemporalEventSource();
@@ -140,18 +138,10 @@ public final class SimulationDriver {
   }
 
   private static <E, T>
-  Task<T> emitAndThen(final E event, final Topic<E> topic, final Task<T> continuation) {
-    return new Task<>() {
-      @Override
-      public TaskStatus<T> step(final Scheduler scheduler) {
-        scheduler.emit(event, topic);
-        return continuation.step(scheduler);
-      }
-
-      @Override
-      public void release() {
-        continuation.release();
-      }
+  TaskFactory<T> emitAndThen(final E event, final Topic<E> topic, final TaskFactory<T> continuation) {
+    return executor -> scheduler -> {
+      scheduler.emit(event, topic);
+      return continuation.create(executor).step(scheduler);
     };
   }
 }

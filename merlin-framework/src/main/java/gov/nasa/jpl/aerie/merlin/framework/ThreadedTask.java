@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 
@@ -134,11 +135,7 @@ public final class ThreadedTask<Return> implements Task<Return> {
       if (request instanceof TaskRequest.Resume resume) {
         final var scheduler = resume.scheduler;
 
-        final var context = new ThreadedReactionContext(
-            ThreadedTask.this.executor,
-            ThreadedTask.this.rootContext,
-            scheduler,
-            this);
+        final var context = new ThreadedReactionContext(ThreadedTask.this.rootContext, scheduler, this);
 
         try (final var restore = ThreadedTask.this.rootContext.set(context)) {
           return new TaskResponse.Success<>(TaskStatus.completed(ThreadedTask.this.task.get()));
@@ -206,7 +203,7 @@ public final class ThreadedTask<Return> implements Task<Return> {
     }
 
     @Override
-    public Scheduler call(final Task<?> child) {
+    public Scheduler call(final TaskFactory<?> child) {
       return this.yield(TaskStatus.calling(child, ThreadedTask.this));
     }
 

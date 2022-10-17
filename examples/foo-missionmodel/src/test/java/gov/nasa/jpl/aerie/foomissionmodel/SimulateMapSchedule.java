@@ -8,7 +8,6 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
-import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
@@ -27,7 +26,7 @@ public class SimulateMapSchedule {
     simulateWithMapSchedule();
   }
 
-  private static MissionModel<RootModel<Mission>>
+  private static MissionModel<Mission>
   makeMissionModel(final MissionModelBuilder builder, final Instant planStart, final Configuration config) {
     final var factory = new GeneratedModelType();
     final var registry = DirectiveTypeRegistry.extract(factory);
@@ -42,13 +41,12 @@ public class SimulateMapSchedule {
     final var simulationDuration = duration(25, SECONDS);
     final var missionModel = makeMissionModel(new MissionModelBuilder(), Instant.EPOCH, config);
 
-    try {
-      final var schedule = loadSchedule();
-      final var simulationResults = SimulationDriver.simulate(
-          missionModel,
-          schedule,
-          startTime,
-          simulationDuration);
+    final var schedule = loadSchedule();
+    final var simulationResults = SimulationDriver.simulate(
+        missionModel,
+        schedule,
+        startTime,
+        simulationDuration);
 
       simulationResults.realProfiles.forEach((name, samples) -> {
         System.out.println(name + ":");
@@ -60,12 +58,9 @@ public class SimulateMapSchedule {
         samples.getRight().forEach(point -> System.out.format("\t%s\t%s\n", point.getKey(), point.getValue()));
       });
 
-      simulationResults.simulatedActivities.forEach((name, activity) -> {
-        System.out.println(name + ": " + activity.start() + " for " + activity.duration());
-      });
-    } finally {
-      missionModel.getModel().close();
-    }
+    simulationResults.simulatedActivities.forEach((name, activity) -> {
+      System.out.println(name + ": " + activity.start() + " for " + activity.duration());
+    });
   }
 
   private static Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> loadSchedule() {

@@ -4,26 +4,23 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
 /* package-local */
 final class ThreadedReactionContext implements Context {
-  private final ExecutorService executor;
   private final Scoped<Context> rootContext;
   private final TaskHandle handle;
   private Scheduler scheduler;
 
   public ThreadedReactionContext(
-      final ExecutorService executor,
       final Scoped<Context> rootContext,
       final Scheduler scheduler,
       final TaskHandle handle)
   {
-    this.executor = Objects.requireNonNull(executor);
     this.rootContext = Objects.requireNonNull(rootContext);
     this.scheduler = scheduler;
     this.handle = handle;
@@ -57,13 +54,13 @@ final class ThreadedReactionContext implements Context {
 
   @Override
   public void spawn(final TaskFactory<?> task) {
-    this.scheduler.spawn(task.create(this.executor));
+    this.scheduler.spawn(task);
   }
 
   @Override
   public <T> void call(final TaskFactory<T> task) {
     this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
-    this.scheduler = this.handle.call(task.create(this.executor));
+    this.scheduler = this.handle.call(task);
   }
 
   @Override

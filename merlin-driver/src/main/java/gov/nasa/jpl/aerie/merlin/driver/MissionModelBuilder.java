@@ -13,6 +13,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
