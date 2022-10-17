@@ -40,4 +40,7 @@ begin;
   -- Views
   \ir views/simulated_activity.sql
   \ir views/resource_profile.sql
+
+  -- Plan Collaboration
+  \ir plan_collaboration.sql
 end;
