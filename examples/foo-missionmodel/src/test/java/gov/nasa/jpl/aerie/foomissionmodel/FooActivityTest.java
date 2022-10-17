@@ -1,17 +1,16 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
 import gov.nasa.jpl.aerie.foomissionmodel.activities.FooActivity;
-import gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityTypes;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.activities.FooActivityMapper;
+import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
-import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinTestContext;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.time.Instant;
 import java.util.Map;
@@ -23,27 +22,21 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.within;
 
+// The `@ExtendWith` annotation injects the given extension into JUnit's testing apparatus.
+// Our `MerlinExtension` hooks test class construction and test method execution,
+//   executing each with the appropriate simulation context.
+@ExtendWith(MerlinExtension.class)
 @TestInstance(Lifecycle.PER_CLASS)
 public final class FooActivityTest {
-
-  // The `@RegisterExtension` annotation programmatically injects the given extension into JUnit's testing apparatus.
-  // Our `MerlinExtension` hooks test class construction and test method execution,
-  //   executing each with the appropriate simulation context.
-  @RegisterExtension
-  public static final MerlinExtension<ActivityTypes, Mission> ext = new MerlinExtension<>();
-
   private final Mission model;
 
   // Initializers and the test class constructor are executed in an "initialization" Merlin context.
   // This means that models can be created (and cell storage allocated, and daemons spawned),
   //   but simulation control actions like `waitFor`, `delay`, and `emit` cannot be performed.
-  // The `MerlinTestContext` does not need to be declared as a parameter, but will be injected if declared.
-  public FooActivityTest(final MerlinTestContext<ActivityTypes, Mission> ctx) {
+  // The `Registrar` does not need to be declared as a parameter, but will be injected if declared.
+  public FooActivityTest(final Registrar registrar) {
     // Model configuration can be provided directly, just as for a normal Java class constructor.
-    this.model = new Mission(ctx.registrar(), Instant.EPOCH, new Configuration());
-
-    // Before spawning activities, a model instance must be registered with the test harness.
-    ctx.use(model);
+    this.model = new Mission(registrar, Instant.EPOCH, new Configuration());
   }
 
   @Test

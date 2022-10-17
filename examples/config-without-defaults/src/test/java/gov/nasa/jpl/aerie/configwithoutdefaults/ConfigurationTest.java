@@ -1,33 +1,29 @@
 package gov.nasa.jpl.aerie.configwithoutdefaults;
 
-import gov.nasa.jpl.aerie.configwithoutdefaults.generated.ActivityTypes;
 import gov.nasa.jpl.aerie.configwithoutdefaults.generated.ConfigurationMapper;
+import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
-import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinTestContext;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @TestInstance(Lifecycle.PER_CLASS)
+@ExtendWith(MerlinExtension.class)
 public final class ConfigurationTest {
-
-  @RegisterExtension
-  public static final MerlinExtension<ActivityTypes, Mission> ext = new MerlinExtension<>();
-
   private static final Integer a = 42;
   private static final Double b = 3.14;
   private static final String c = "JPL";
 
   private final Mission model;
 
-  public ConfigurationTest(final MerlinTestContext<ActivityTypes, Mission> ctx)
+  public ConfigurationTest(final Registrar registrar)
   throws InstantiationException
   {
     final var config = new ConfigurationMapper().instantiate(Map.of(
@@ -36,8 +32,7 @@ public final class ConfigurationTest {
         "c", SerializedValue.of(c)
     ));
 
-    this.model = new Mission(ctx.registrar(), config);
-    ctx.use(model);
+    this.model = new Mission(registrar, config);
   }
 
   @Test
