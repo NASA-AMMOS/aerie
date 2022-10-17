@@ -63,5 +63,6 @@ public final class PostgresParsers {
     }
   };
 
+  //TODO: serializedValueP is NOT safe to use here because used for parsing: subject to int/double typing confusion
   public static final JsonParser<Map<String, SerializedValue>> simulationArgumentsP = mapP(serializedValueP);
 }

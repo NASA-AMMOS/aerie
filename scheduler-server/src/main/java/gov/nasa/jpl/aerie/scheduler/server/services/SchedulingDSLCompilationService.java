@@ -51,7 +51,12 @@ public class SchedulingDSLCompilationService {
   }
 
   public SchedulingDSLCompilationResult<Expression<Windows>> compileGlobalSchedulingCondition(final MissionModelService missionModelService, final PlanId planId, final String conditionTypescript) {
-    return compile(missionModelService, planId, conditionTypescript, windowsExpressionP, "Windows");
+    try{
+      final var missionModelTypes = missionModelService.getMissionModelTypes(planId);
+      return compile(missionModelTypes,  conditionTypescript, windowsExpressionP, "Windows");
+    } catch (IOException | MissionModelService.MissionModelServiceException e) {
+        throw new Error(e);
+    }
   }
 
   /**
@@ -59,23 +64,20 @@ public class SchedulingDSLCompilationService {
    */
   public SchedulingDSLCompilationResult<SchedulingDSL.GoalSpecifier> compileSchedulingGoalDSL(final MissionModelService missionModelService, final PlanId planId, final String goalTypescript)
   {
-    return compile(missionModelService, planId, goalTypescript, SchedulingDSL.schedulingJsonP, "Goal");
+    try {
+      final var missionModelTypes = missionModelService.getMissionModelTypes(planId);
+      return compile(missionModelTypes, goalTypescript, SchedulingDSL.schedulingJsonP(missionModelTypes), "Goal");
+    } catch (IOException | MissionModelService.MissionModelServiceException e) {
+      throw new Error(e);
+    }
   }
 
   private <T> SchedulingDSLCompilationResult<T> compile(
-      final MissionModelService missionModelService,
-      final PlanId planId,
+      final MissionModelService.MissionModelTypes missionModelTypes,
       final String goalTypescript,
       final JsonParser<T> parser,
       final String expectedReturnType)
   {
-
-    final MissionModelService.MissionModelTypes missionModelTypes;
-    try {
-      missionModelTypes = missionModelService.getMissionModelTypes(planId);
-    } catch (IOException | MissionModelService.MissionModelServiceException e) {
-      throw new Error(e);
-    }
     final var schedulerGeneratedCode = TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelTypes);
     final var constraintsGeneratedCode = gov.nasa.jpl.aerie.constraints.TypescriptCodeGenerationService.generateTypescriptTypes(
         activityTypes(missionModelTypes),
