@@ -618,5 +618,62 @@ public class PlanCollaborationTests {
 
   }
 
+  @Nested
+  class PlanHistoryTests {
+    @Test
+    void getPlanHistoryCapturesAllAncestors() throws SQLException {
+      final int[] plans = new int[10];
+      plans[0] = insertPlan(missionModelId);
+      for(int i = 1; i < plans.length; ++i){
+        plans[i] = duplicatePlan(plans[i-1], "Child of "+(i-1));
+      }
+
+      try (final var statement = connection.createStatement()) {
+        final var res = statement.executeQuery("""
+          SELECT get_plan_history(%d);
+          """.formatted(plans[9])
+        );
+        assertTrue(res.first());
+        assertEquals(plans[9], res.getInt(1));
+
+        for(int i = plans.length-2; i >= 0; --i){
+          assertTrue(res.next());
+          assertEquals(plans[i], res.getInt(1));
+        }
+      }
+    }
+
+    @Test
+    void getPlanHistoryNoAncestors() throws SQLException {
+      final int planId = insertPlan(missionModelId);
+
+      //The history of a plan with no ancestors is itself.
+      try (final var statement = connection.createStatement()) {
+        final var res = statement.executeQuery("""
+          SELECT get_plan_history(%d);
+          """.formatted(planId)
+        );
+        assertTrue(res.first());
+        assertTrue(res.isLast());
+        assertEquals(planId, res.getInt(1));
+      }
+    }
+
+    @Test
+    void getPlanHistoryInvalidId() throws SQLException {
+      try (final var statement = connection.createStatement()) {
+        statement.execute("""
+          SELECT get_plan_history(-1);
+          """
+        );
+        fail();
+      }
+      catch (SQLException sqlException) {
+        if (!sqlException.getMessage().contains("Plan ID -1 is not present in plan table."))
+          throw sqlException;
+      }
+    }
   }
+
+}
 
