@@ -20,6 +20,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -358,6 +359,16 @@ public class PlanCollaborationTests {
       statement.execute(
           """
           call begin_merge(%d)
+          """.formatted(mergeRequestId)
+      );
+    }
+  }
+
+  private void commitMerge(final int mergeRequestId) throws SQLException{
+    try(final var statement = connection.createStatement()){
+      statement.execute(
+          """
+          call commit_merge(%d)
           """.formatted(mergeRequestId)
       );
     }
@@ -1000,5 +1011,311 @@ public class PlanCollaborationTests {
 
     }
   }
-}
+
+  @Nested
+  class MergeBaseTests{
+    /**
+     * The MB between a plan and itself is its latest snapshot.
+     * Create additional snapshots between creation and MB to verify this.
+     */
+    @Test
+    void mergeBaseBetweenSelf() throws SQLException {
+      final int parentPlanId = insertPlan(missionModelId);
+      final int planId = duplicatePlan(parentPlanId, "New Plan");
+
+      createSnapshot(planId);
+      createSnapshot(planId);
+      final int mostRecentSnapshotId = createSnapshot(planId);
+
+      try(final var statement = connection.createStatement()){
+        final var results = statement.executeQuery(
+            """
+            SELECT snapshot_id
+            FROM plan_latest_snapshot
+            WHERE plan_id = %d;
+            """.formatted(planId)
+        );
+        assertTrue(results.first());
+        assertEquals(mostRecentSnapshotId, results.getInt(1));
+      }
+    }
+
+    /**
+     * The MB between a plan and its child (and a child and its parent) is the creation snapshot for the child.
+     * Create additional snapshots between creation and MB to verify this.
+     */
+    @Test
+    void mergeBaseParentChild() throws SQLException {
+      final int parentPlanId = insertPlan(missionModelId);
+      final int childPlanId = duplicatePlan(parentPlanId, "New Plan");
+      final int childCreationSnapshotId;
+
+      try(final var statement = connection.createStatement()){
+        final var results = statement.executeQuery(
+            """
+            SELECT snapshot_id
+            FROM plan_latest_snapshot
+            WHERE plan_id = %d;
+            """.formatted(childPlanId)
+        );
+        assertTrue(results.first());
+        childCreationSnapshotId = results.getInt(1);
+      }
+
+      createSnapshot(childPlanId);
+      createSnapshot(childPlanId);
+
+      final int mergeBaseParentChild = getMergeBaseFromPlanIds(parentPlanId, childPlanId);
+      final int mergeBaseChildParent = getMergeBaseFromPlanIds(childPlanId, parentPlanId);
+
+      assertEquals(mergeBaseParentChild, mergeBaseChildParent);
+      assertEquals(childCreationSnapshotId, mergeBaseParentChild);
+    }
+
+    /**
+     * The MB between two sibling plans is the creation snapshot for the older sibling
+     */
+    @Test
+    void mergeBaseSiblings() throws SQLException {
+      final int parentPlan = insertPlan(missionModelId);
+      final int olderSibling = duplicatePlan(parentPlan, "Older");
+      final int olderSibCreationId;
+
+      try(final var statement = connection.createStatement()){
+        final var results = statement.executeQuery(
+            """
+            SELECT snapshot_id
+            FROM plan_latest_snapshot
+            WHERE plan_id = %d;
+            """.formatted(olderSibling)
+        );
+        assertTrue(results.first());
+        olderSibCreationId = results.getInt(1);
+      }
+
+      final int youngerSibling = duplicatePlan(parentPlan, "Younger");
+
+      final int mbOlderYounger = getMergeBaseFromPlanIds(olderSibling,youngerSibling);
+      final int mbYoungerOlder = getMergeBaseFromPlanIds(youngerSibling, olderSibling);
+
+      assertEquals(mbOlderYounger, mbYoungerOlder);
+      assertEquals(olderSibCreationId, mbOlderYounger);
+    }
+
+
+    /**
+     * The MB between a plan and its nth child is the creation snapshot of the child plan's n-1's ancestor.
+     */
+    @Test
+    void mergeBase10thGrandchild() throws SQLException {
+      final int ancestor = insertPlan(missionModelId);
+      int priorAncestor = duplicatePlan(ancestor, "Child of " + ancestor);
+
+      final int ninthGrandparentCreation;
+      //get creation snapshot of the 9th grandparent
+      try (final var statement = connection.createStatement()) {
+        final var results = statement.executeQuery(
+            """
+                SELECT snapshot_id
+                FROM plan_latest_snapshot
+                WHERE plan_id = %d;
+                """.formatted(priorAncestor)
+        );
+        assertTrue(results.first());
+        ninthGrandparentCreation = results.getInt(1);
+      }
+
+      for (int i = 0; i < 8; ++i) {
+        priorAncestor = duplicatePlan(priorAncestor, "Child of " + priorAncestor);
+      }
+      final int tenthGrandchild = duplicatePlan(priorAncestor, "10th Grandchild");
+
+      final int mbAncestorGrandchild = getMergeBaseFromPlanIds(ancestor, tenthGrandchild);
+      final int mbGrandchildAncestor = getMergeBaseFromPlanIds(tenthGrandchild, ancestor);
+
+      assertEquals(mbGrandchildAncestor, mbAncestorGrandchild);
+      assertEquals(ninthGrandparentCreation, mbAncestorGrandchild);
+    }
+
+    /**
+     * The MB between nth-cousins is the creation snapshot of the eldest of the n-1 ancestors.
+     */
+    @Test
+    void mergeBase10thCousin() throws SQLException{
+      final int commonAncestor = insertPlan(missionModelId);
+      final int olderSibling = duplicatePlan(commonAncestor, "Older Sibling");
+
+      final int olderSiblingCreation;
+      try (final var statement = connection.createStatement()) {
+        final var results = statement.executeQuery(
+            """
+                SELECT snapshot_id
+                FROM plan_latest_snapshot
+                WHERE plan_id = %d;
+                """.formatted(olderSibling)
+        );
+        assertTrue(results.first());
+        olderSiblingCreation = results.getInt(1);
+      }
+
+      final int youngerSibling = duplicatePlan(commonAncestor, "Younger Sibling");
+
+      int olderDescendant = olderSibling;
+      int youngerDescendant = youngerSibling;
+
+      for (int i = 0; i < 9; ++i) {
+        olderDescendant = duplicatePlan(olderDescendant, "Child of " + olderDescendant);
+        youngerDescendant = duplicatePlan(youngerDescendant, "Child of " + youngerDescendant);
+      }
+
+      final int olderTenthCousin = duplicatePlan(olderDescendant, "Child of " + olderDescendant);
+      final int youngerTenthCousin = duplicatePlan(youngerDescendant, "Child of " + youngerDescendant);
+
+      final int mbOlderYounger = getMergeBaseFromPlanIds(olderTenthCousin, youngerTenthCousin);
+      final int mbYoungerOlder = getMergeBaseFromPlanIds(youngerTenthCousin, olderTenthCousin);
+      assertEquals(mbOlderYounger, mbYoungerOlder);
+      assertEquals(olderSiblingCreation, mbOlderYounger);
+    }
+
+    /**
+     * The MB between two plans that have been previously merged is the snapshot created during a merge
+     */
+    @Test
+    void mergeBasePreviouslyMerged() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int newPlan = duplicatePlan(basePlan, "New Plan");
+      final int creationSnapshot;
+      final int postMergeSnapshot;
+
+      try (final var statement = connection.createStatement()) {
+        final var results = statement.executeQuery(
+            """
+                SELECT snapshot_id
+                FROM plan_latest_snapshot
+                WHERE plan_id = %d;
+                """.formatted(newPlan)
+        );
+        assertTrue(results.first());
+        creationSnapshot = results.getInt(1);
+      }
+
+      insertActivity(newPlan);
+
+      final int mergeRequest = createMergeRequest(newPlan, basePlan);
+      beginMerge(mergeRequest);
+      commitMerge(mergeRequest);
+
+      try (final var statement = connection.createStatement()) {
+        final var results = statement.executeQuery(
+            """
+                SELECT snapshot_id_supplying_changes
+                FROM merge_request mr
+                WHERE mr.id = %d;
+                """.formatted(mergeRequest)
+        );
+        assertTrue(results.first());
+        postMergeSnapshot = results.getInt(1);
+      }
+
+      final int newMergeBase = getMergeBaseFromPlanIds(basePlan, newPlan);
+      assertNotEquals(creationSnapshot, newMergeBase);
+      assertEquals(postMergeSnapshot, newMergeBase);
+    }
+
+    /**
+     * First, check that find_MB throws an error if the first ID is invalid.
+     * Then, check that find_MB throws an error if the second ID is invalid.
+     * As a side effect validates invalid IDs for get_snapshot_history_from_plan and get_snapshot_history
+     */
+    @Test
+    void mergeBaseFailsForInvalidPlanIds() throws SQLException {
+      final int planId = insertPlan(missionModelId);
+      final int snapshotId = createSnapshot(planId);
+
+      try(final var statement = connection.createStatement()) {
+        statement.execute(
+            """
+            select get_merge_base(%d, -1);
+            """.formatted(planId)
+        );
+      }
+      catch (SQLException sqlEx){
+        if(!sqlEx.getMessage().contains("Snapshot ID "+-1 +" is not present in plan_snapshot table."))
+          throw sqlEx;
+      }
+
+      try(final var statement = connection.createStatement()) {
+        statement.execute(
+            """
+            select get_merge_base(-2, %d);
+            """.formatted(snapshotId)
+        );
+      }
+      catch (SQLException sqlEx){
+        if(!sqlEx.getMessage().contains("Snapshot ID "+-2 +" is not present in plan_snapshot table."))
+          throw sqlEx;
+      }
+    }
+
+    /**
+     * If there are multiple valid merge bases, get_merge_base only returns the one with the highest id.
+     */
+    @Test
+    void multipleValidMergeBases() throws SQLException {
+      final int plan1 = insertPlan(missionModelId);
+      final int plan2 = insertPlan(missionModelId);
+
+      final int plan1Snapshot = createSnapshot(plan1);
+      final int plan2Snapshot = createSnapshot(plan2);
+
+      //Create artificial Merge Bases
+      try(final var statement = connection.createStatement()){
+        statement.execute(
+            """
+            insert into plan_latest_snapshot(plan_id, snapshot_id) VALUES (%d, %d);
+            """.formatted(plan2, plan1Snapshot)
+        );
+        statement.execute(
+            """
+            insert into plan_latest_snapshot(plan_id, snapshot_id) VALUES (%d, %d);
+            """.formatted(plan1, plan2Snapshot)
+        );
+
+        //Plan2Snapshot is created after Plan1Snapshot, therefore it must have a higher id
+        assertEquals(plan2Snapshot, getMergeBaseFromPlanIds(plan1, plan2));
+
+        statement.execute(
+            """
+            delete from plan_latest_snapshot
+            where snapshot_id = %d;
+            """.formatted(plan2Snapshot)
+        );
+
+        assertEquals(plan1Snapshot, getMergeBaseFromPlanIds(plan1, plan2));
+      }
+    }
+
+    /**
+     * The MB between two plans that are unrelated is null.
+     */
+    @Test
+    void noValidMergeBases() throws SQLException{
+      final int plan1 = insertPlan(missionModelId);
+      final int plan2 = insertPlan(missionModelId);
+
+      createSnapshot(plan1);
+      final int plan2Snapshot = createSnapshot(plan2);
+
+      try(final var statement = connection.createStatement()){
+        final var res = statement.executeQuery(
+            """
+            select get_merge_base(%d, %d);
+            """.formatted(plan1, plan2Snapshot)
+        );
+        assertTrue(res.first());
+        assertNull(res.getObject(1));
+      }
+    }
+  }
+  }
 
