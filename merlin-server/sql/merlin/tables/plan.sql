@@ -75,3 +75,26 @@ before insert or update on plan
 for each row
 when (new.duration < '0')
 execute function raise_duration_is_negative();
+
+create or replace function handle_merge_rqs_on_delete()
+  returns trigger
+  language plpgsql as $$
+  begin
+    -- prevent deletion if the plan is locked
+    if old.is_locked then
+      raise exception 'Cannot delete locked plan.';
+    end if;
+
+    -- withdraw pending rqs
+    update merge_request
+    set status='withdrawn'
+    where plan_id_receiving_changes = old.id
+    and status = 'pending';
+    return old;
+  end
+  $$;
+
+create trigger handle_merge_rqs_on_delete_trigger
+  before delete on plan
+  for each row
+  execute function handle_merge_rqs_on_delete();
