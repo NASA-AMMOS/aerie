@@ -1216,4 +1216,22 @@ public class SchedulingIntegrationTests {
     }
   }
 
+  @Test
+  void testDurationParameter() {
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+        export default function myGoal() {
+          return Goal.ActivityRecurrenceGoal({
+            activityTemplate: ActivityTemplates.DurationParameterActivity({
+              duration: Temporal.Duration.from({seconds: 1}),
+            }),
+            interval: Temporal.Duration.from({hours: 1})
+          })
+        }
+          """, true)),
+        PLANNING_HORIZON);
+    assertEquals(96, results.updatedPlan().size());
+  }
 }

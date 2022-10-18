@@ -81,7 +81,7 @@ class SchedulingDSLCompilationServiceTests {
                     Map.entry("subfield1", SerializedValue.of("value1")),
                     Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
                 )))),
-                Map.entry("duration", SerializedValue.of("PT3600S"))
+                Map.entry("duration", SerializedValue.of(60 * 60 * 1000 * 1000.0))
             )
         ),
         Duration.HOUR
@@ -122,7 +122,7 @@ class SchedulingDSLCompilationServiceTests {
                     Map.entry("subfield1", SerializedValue.of("value1")),
                     Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
                     )))),
-                Map.entry("duration", SerializedValue.of("PT3600S"))
+                Map.entry("duration", SerializedValue.of(60 * 60 * 1000 * 1000.0))
             )
         ),
         Duration.HOUR);
@@ -192,7 +192,7 @@ class SchedulingDSLCompilationServiceTests {
                                 "subsubfield1",
                                 SerializedValue.of(2.0)))))
                         )))),
-                    Map.entry("duration", SerializedValue.of("PT1H"))
+                    Map.entry("duration", SerializedValue.of(60 * 60 * 1000 * 1000.0))
                 )
             ),
             Duration.HOUR
@@ -251,7 +251,7 @@ class SchedulingDSLCompilationServiceTests {
                     Map.entry("subfield1", SerializedValue.of("value1")),
                     Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
                     )))),
-                Map.entry("duration", SerializedValue.of("PT3600S"))
+                Map.entry("duration", SerializedValue.of(60 * 60 * 1000 * 1000.0))
             )
         ),
         Duration.HOURS.times(24)
@@ -290,7 +290,7 @@ class SchedulingDSLCompilationServiceTests {
                     Map.entry("subfield1", SerializedValue.of("value1")),
                     Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
                     )))),
-                Map.entry("duration", SerializedValue.of("PT3600S"))
+                Map.entry("duration", SerializedValue.of(60 * 60 * 1000 * 1000.0))
             )
         ),
         Duration.HOUR
@@ -330,7 +330,7 @@ class SchedulingDSLCompilationServiceTests {
                                                          Map.entry("subfield1", SerializedValue.of("value1")),
                                                          Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
                                                          )))),
-                                                     Map.entry("duration", SerializedValue.of("PT1H"))
+                                                     Map.entry("duration", SerializedValue.of(60 * 60 * 1000 * 1000.0))
                                                  )
               ),
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2"),
@@ -496,7 +496,7 @@ class SchedulingDSLCompilationServiceTests {
                                                          Map.entry("subfield1", SerializedValue.of("value1")),
                                                          Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
                                                          )))),
-                                                     Map.entry("duration", SerializedValue.of("PT3600S"))
+                                                     Map.entry("duration", SerializedValue.of(60 * 60 * 1000 * 1000.0))
                                                  )
               ),
               new SchedulingDSL.ConstraintExpression.WindowsExpression(new LongerThan(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)), Duration.of(10, Duration.MICROSECOND))),
