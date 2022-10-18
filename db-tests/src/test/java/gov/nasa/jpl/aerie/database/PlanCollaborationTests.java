@@ -11,6 +11,7 @@ import org.junit.jupiter.api.TestInstance;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -88,6 +89,7 @@ public class PlanCollaborationTests {
     helper = null;
   }
 
+  //region Helper Methods from MerlinDatabaseTests
   int insertFileUpload() throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
@@ -253,6 +255,19 @@ public class PlanCollaborationTests {
       statement.executeUpdate("TRUNCATE " + table + " CASCADE;");
     }
   }
+  //endregion
+
+  //region Helper Methods
+  private boolean updateActivityName(String newName, int activityId, int planId) throws SQLException {
+    try(final var statement = connection.createStatement()) {
+      return statement.execute(
+          """
+          update activity_directive
+          set name = '%s'
+          where id = %d and plan_id = %d;
+          """.formatted(newName, activityId, planId));
+    }
+  }
 
   int duplicatePlan(final int planId, final String newPlanName) throws SQLException {
     try (final var statement = connection.createStatement()) {
@@ -283,6 +298,82 @@ public class PlanCollaborationTests {
                                                    """.formatted(planId));
       res.next();
       return res.getInt("parent_id");
+    }
+  }
+
+  private void lockPlan(final int planId) throws SQLException{
+    try(final var statement = connection.createStatement()){
+      statement.execute("""
+          update plan
+          set is_locked = true
+          where id = %d;
+          """.formatted(planId));
+    }
+  }
+
+  private void unlockPlan(final int planId) throws SQLException{
+    //Unlock first to allow for after tasks
+    try(final var statement = connection.createStatement()){
+      statement.execute("""
+          update plan
+          set is_locked = false
+          where id = %d;
+          """.formatted(planId));
+    }
+  }
+
+  int getMergeBaseFromPlanIds(final int planIdReceivingChanges, final int planIdSupplyingChanges) throws SQLException{
+    try(final var statement = connection.createStatement()){
+      final var snapshotRes = statement.executeQuery(
+          """
+              select snapshot_id
+              from plan_latest_snapshot
+              where plan_id = %d
+              order by snapshot_id desc
+              limit 1;
+              """.formatted(planIdSupplyingChanges));
+      snapshotRes.first();
+      final int snapshotIdSupplyingChanges = snapshotRes.getInt(1);
+
+      final var res = statement.executeQuery(
+          """
+              select get_merge_base(%d, %d);
+              """.formatted(planIdReceivingChanges, snapshotIdSupplyingChanges));
+
+      res.first();
+
+      return res.getInt(1);
+    }
+
+  }
+
+  private int createMergeRequest(final int planId_receiving, final int planId_supplying) throws SQLException{
+    try(final var statement = connection.createStatement()){
+      final var res = statement.executeQuery(
+          """
+              select create_merge_request(%d, %d, 'PlanCollaborationTests Requester');
+              """.formatted(planId_supplying, planId_receiving)
+      );
+      res.first();
+      return res.getInt(1);
+    }
+  }
+
+  private void beginMerge(final int mergeRequestId) throws SQLException{
+    try(final var statement = connection.createStatement()){
+      statement.execute(
+          """
+          call begin_merge(%d, 'PlanCollaborationTests Reviewer')
+          """.formatted(mergeRequestId)
+      );
+    }
+  }
+
+  private void deleteActivityDirective(final int planId, final int activityId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement.executeUpdate("""
+        delete from activity_directive where id = %s and plan_id = %s
+      """.formatted(activityId, planId));
     }
   }
 
@@ -345,6 +436,7 @@ public class PlanCollaborationTests {
       return activities;
     }
   }
+  //endregion
 
   //region Records
   private record Activity(
@@ -723,5 +815,197 @@ public class PlanCollaborationTests {
     }
   }
 
+  @Nested
+  class LockedPlanTests {
+    @Test
+    void updateActivityShouldFailOnLockedPlan() throws SQLException {
+      final int planId = insertPlan(missionModelId);
+      final int activityId = insertActivity(planId);
+      final String newName = "Test :-)";
+      final String oldName = "oldName";
+
+      updateActivityName(oldName, activityId, planId);
+
+      try {
+        lockPlan(planId);
+        updateActivityName(newName, activityId, planId);
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Plan " + planId + " is locked."))
+          throw sqlEx;
+      } finally {
+        unlockPlan(planId);
+      }
+
+      //Assert that there is one activity and it is the one that was added earlier.
+      final var activitiesBefore = getActivities(planId);
+      assertEquals(1, activitiesBefore.size());
+      assertEquals(activityId, activitiesBefore.get(0).activityId);
+      assertEquals(oldName, activitiesBefore.get(0).name);
+
+      updateActivityName(newName, activityId, planId);
+      final var activitiesAfter = getActivities(planId);
+      assertEquals(1, activitiesAfter.size());
+      assertEquals(activityId, activitiesAfter.get(0).activityId);
+      assertEquals(newName, activitiesAfter.get(0).name);
+    }
+
+    @Test
+    void deleteActivityShouldFailOnLockedPlan() throws SQLException {
+      final var planId = insertPlan(missionModelId);
+      final var activityId = insertActivity(planId);
+
+      try {
+        lockPlan(planId);
+        deleteActivityDirective(planId, activityId);
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Plan " + planId + " is locked."))
+          throw sqlEx;
+      } finally {
+        unlockPlan(planId);
+      }
+
+      try (final var statement = connection.createStatement()) {
+        //Assert that there is one activity and it is the one that was added earlier.
+        final var activitiesBefore = getActivities(planId);
+        assertEquals(1, activitiesBefore.size());
+        assertEquals(activityId, activitiesBefore.get(0).activityId);
+
+        deleteActivityDirective(planId, activityId);
+        final var activitiesAfter = getActivities(planId);
+        assertTrue(activitiesAfter.isEmpty());
+      }
+    }
+
+    @Test
+    void insertActivityShouldFailOnLockedPlan() throws SQLException {
+      final var planId = insertPlan(missionModelId);
+
+      try {
+        lockPlan(planId);
+        insertActivity(planId);
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Plan " + planId + " is locked."))
+          throw sqlEx;
+      } finally {
+        unlockPlan(planId);
+      }
+
+      try (final var statement = connection.createStatement()) {
+        //Assert that there are no activities for this plan.
+        final var activitiesBefore = getActivities(planId);
+        assertTrue(activitiesBefore.isEmpty());
+
+        final int insertedId = insertActivity(planId);
+
+        final var activitiesAfter = getActivities(planId);
+        assertEquals(1, activitiesAfter.size());
+        assertEquals(insertedId, activitiesAfter.get(0).activityId);
+      }
+    }
+
+    @Test
+    void beginReviewFailsOnLockedPlan() throws SQLException {
+      final var planId = insertPlan(missionModelId);
+      insertActivity(planId);
+      final var childPlanId = duplicatePlan(planId, "Child Plan");
+
+      final int mergeRequest = createMergeRequest(planId, childPlanId);
+
+      try {
+        lockPlan(planId);
+        beginMerge(mergeRequest);
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot begin merge request. Plan to receive changes is locked."))
+          throw sqlEx;
+      } finally {
+        unlockPlan(planId);
+      }
+    }
+
+    @Test
+    void deletePlanFailsWhileLocked() throws SQLException {
+      final var planId = insertPlan(missionModelId);
+
+      try (final var statement = connection.createStatement()) {
+        lockPlan(planId);
+        statement.execute("""
+        delete from plan
+        where id = %d
+        """.formatted(planId));
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot delete locked plan."))
+          throw sqlEx;
+      } finally {
+        unlockPlan(planId);
+      }
+    }
+
+    /**
+     * Assert that locking one plan does not stop other plans from being updated
+     */
+    @Test
+    void lockingPlanDoesNotAffectOtherPlans() throws SQLException {
+      final int planId = insertPlan(missionModelId);
+      final int activityId = insertActivity(planId);
+      final int relatedPlanId = duplicatePlan(planId, "Child");
+
+      final int unrelatedPlanId = insertPlan(missionModelId);
+      final int unrelatedActivityId = insertActivity(unrelatedPlanId);
+
+
+      try (final var statementRelated = connection.createStatement();
+           final var statementUnrelated = connection.createStatement()
+      ) {
+        lockPlan(planId);
+
+        //Update the activity in the unlocked plans
+        final String newName = "Test";
+
+        updateActivityName(newName, activityId, relatedPlanId);
+        updateActivityName(newName, unrelatedActivityId, unrelatedPlanId);
+
+        var relatedActivities = getActivities(relatedPlanId);
+        var unrelatedActivities = getActivities(unrelatedPlanId);
+
+        assertEquals(1, relatedActivities.size());
+        assertEquals(1, unrelatedActivities.size());
+        assertEquals(activityId, relatedActivities.get(0).activityId);
+        assertEquals(unrelatedActivityId, unrelatedActivities.get(0).activityId);
+        assertEquals(newName, relatedActivities.get(0).name);
+        assertEquals(newName, unrelatedActivities.get(0).name);
+
+
+        //Insert a new activity into the unlocked plans
+        final int newActivityRelated = insertActivity(relatedPlanId);
+        final int newActivityUnrelated = insertActivity(unrelatedPlanId);
+
+        relatedActivities = getActivities(relatedPlanId);
+        unrelatedActivities = getActivities(unrelatedPlanId);
+
+        assertEquals(2, relatedActivities.size());
+        assertEquals(2, unrelatedActivities.size());
+        assertEquals(activityId, relatedActivities.get(0).activityId);
+        assertEquals(unrelatedActivityId, unrelatedActivities.get(0).activityId);
+        assertEquals(newActivityRelated, relatedActivities.get(1).activityId);
+        assertEquals(newActivityUnrelated, unrelatedActivities.get(1).activityId);
+
+        //Delete the first activity in the unlocked plans
+        deleteActivityDirective(relatedPlanId, activityId);
+        deleteActivityDirective(unrelatedPlanId, unrelatedActivityId);
+
+        relatedActivities = getActivities(relatedPlanId);
+        unrelatedActivities = getActivities(unrelatedPlanId);
+
+        assertEquals(1, relatedActivities.size());
+        assertEquals(1, unrelatedActivities.size());
+        assertEquals(newActivityRelated, relatedActivities.get(0).activityId);
+        assertEquals(newActivityUnrelated, unrelatedActivities.get(0).activityId);
+      } finally {
+        unlockPlan(planId);
+      }
+
+    }
+  }
 }
 
