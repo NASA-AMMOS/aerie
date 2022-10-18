@@ -6,8 +6,8 @@
 
 | Name    | Version          | Notes        | Download             |
 | ------- | ---------------- | ------------ | -------------------- |
-| OpenJDK | Temurin 17 (LTS) | HotSpot JVM  | https://adoptium.net |
-| Gradle  | 7.4              | Build system | https://gradle.org   |
+| OpenJDK | Temurin 19 (LTS) | HotSpot JVM  | https://adoptium.net |
+| Gradle  | 7.6              | Build system | https://gradle.org   |
 
 ### Testing
 
@@ -39,6 +39,7 @@ process. This is evidenced by the `build:` directive in the `merlin`
 section in docker-compose.yml.
 
 Prior to building docker-compose.yml, it is necessary to create a .env file using the template found in .env.template in the Aerie root directory.
+
 ### Docker Compose Build
 
 `docker compose build`
