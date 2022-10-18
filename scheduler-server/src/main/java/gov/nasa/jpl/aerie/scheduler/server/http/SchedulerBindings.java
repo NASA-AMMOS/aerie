@@ -6,8 +6,8 @@ import gov.nasa.jpl.aerie.scheduler.server.services.GenerateSchedulingLibAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulerService;
 import io.javalin.Javalin;
-import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
+import io.javalin.plugin.Plugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,9 +25,9 @@ import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.seria
 import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraMissionModelIdActionP;
 import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraSpecificationActionP;
 import static io.javalin.apibuilder.ApiBuilder.before;
+import static io.javalin.apibuilder.ApiBuilder.get;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
-import static io.javalin.apibuilder.ApiBuilder.get;
 
 /**
  * set up mapping between scheduler http endpoints and java method calls

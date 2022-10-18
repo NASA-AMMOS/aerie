@@ -50,11 +50,11 @@ public final class DevAppDriver {
 
     // Configure an HTTP server.
     final Javalin javalin = Javalin.create(config -> {
-        config.enableDevLogging();
-        config.enableCorsForAllOrigins();
-        config.registerPlugin(new MerlinBindings(missionModelController, planController, simulationAction, generateConstraintsLibAction));
-        config.registerPlugin(new LocalAppExceptionBindings());
-        config.registerPlugin(new MissionModelRepositoryExceptionBindings());
+      config.plugins.enableDevLogging();
+      config.plugins.enableCors(cors -> cors.add(it -> it.anyHost()));
+      config.plugins.register(new MerlinBindings(missionModelController, planController, simulationAction, generateConstraintsLibAction));
+      config.plugins.register(new LocalAppExceptionBindings());
+      config.plugins.register(new MissionModelRepositoryExceptionBindings());
     });
 
     // Start the HTTP server.

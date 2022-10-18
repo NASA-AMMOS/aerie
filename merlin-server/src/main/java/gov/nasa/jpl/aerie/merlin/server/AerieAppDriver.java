@@ -96,12 +96,12 @@ public final class AerieAppDriver {
     server.setConnectors(new Connector[]{connector});
     final var javalin = Javalin.create(config -> {
       config.showJavalinBanner = false;
-      if (configuration.enableJavalinDevLogging()) config.enableDevLogging();
-      config.enableCorsForAllOrigins();
-      config.registerPlugin(merlinBindings);
-      config.registerPlugin(new LocalAppExceptionBindings());
-      config.registerPlugin(new MissionModelRepositoryExceptionBindings());
-      config.server(() -> server);
+      if (configuration.enableJavalinDevLogging()) config.plugins.enableDevLogging();
+      config.plugins.enableCors(cors -> cors.add(it -> it.anyHost()));
+      config.plugins.register(merlinBindings);
+      config.plugins.register(new LocalAppExceptionBindings());
+      config.plugins.register(new MissionModelRepositoryExceptionBindings());
+      config.jetty.server(() -> server);
     });
 
     // Start the HTTP server.

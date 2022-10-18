@@ -44,7 +44,9 @@ public class DatabaseTestHelper {
 
       // Handle the case where we cannot connect to postgres by skipping the tests
       final var errors = new String(proc.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
-      Assumptions.assumeFalse(errors.contains("Connection refused"));
+      Assumptions.assumeFalse(
+          (  errors.contains("Connection refused")
+          || errors.contains("role \"postgres\" does not exist")));
       proc.waitFor();
       proc.destroy();
     }
