@@ -274,6 +274,18 @@ public class PlanCollaborationTests {
     }
   }
 
+  int getParentPlanId(final int planId) throws SQLException{
+    try (final var statement = connection.createStatement()) {
+      final var res = statement.executeQuery("""
+                                                   select parent_id
+                                                   from plan
+                                                   where plan.id = %d;
+                                                   """.formatted(planId));
+      res.next();
+      return res.getInt("parent_id");
+    }
+  }
+
   private ArrayList<Activity> getActivities(final int planId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery("""
@@ -618,5 +630,98 @@ public class PlanCollaborationTests {
 
   }
 
+  @Nested
+  class PlanHistoryTests {
+    @Test
+    void getPlanHistoryCapturesAllAncestors() throws SQLException {
+      final int[] plans = new int[10];
+      plans[0] = insertPlan(missionModelId);
+      for(int i = 1; i < plans.length; ++i){
+        plans[i] = duplicatePlan(plans[i-1], "Child of "+(i-1));
+      }
+
+      try (final var statement = connection.createStatement()) {
+        final var res = statement.executeQuery("""
+          SELECT get_plan_history(%d);
+          """.formatted(plans[9])
+        );
+        assertTrue(res.first());
+        assertEquals(plans[9], res.getInt(1));
+
+        for(int i = plans.length-2; i >= 0; --i){
+          assertTrue(res.next());
+          assertEquals(plans[i], res.getInt(1));
+        }
+      }
+    }
+
+    @Test
+    void getPlanHistoryNoAncestors() throws SQLException {
+      final int planId = insertPlan(missionModelId);
+
+      //The history of a plan with no ancestors is itself.
+      try (final var statement = connection.createStatement()) {
+        final var res = statement.executeQuery("""
+          SELECT get_plan_history(%d);
+          """.formatted(planId)
+        );
+        assertTrue(res.first());
+        assertTrue(res.isLast());
+        assertEquals(planId, res.getInt(1));
+      }
+    }
+
+    @Test
+    void getPlanHistoryInvalidId() throws SQLException {
+      try (final var statement = connection.createStatement()) {
+        statement.execute("""
+          SELECT get_plan_history(-1);
+          """
+        );
+        fail();
+      }
+      catch (SQLException sqlException) {
+        if (!sqlException.getMessage().contains("Plan ID -1 is not present in plan table."))
+          throw sqlException;
+      }
+    }
+
+    @Test
+    void grandparentAdoptsChildrenOnDelete() throws SQLException{
+      final int grandparentPlan = insertPlan(missionModelId);
+      final int parentPlan = duplicatePlan(grandparentPlan, "Parent Plan");
+      final int sibling1 = duplicatePlan(parentPlan, "Older Sibling");
+      final int sibling2 = duplicatePlan(parentPlan, "Younger Sibling");
+      final int childOfSibling1 = duplicatePlan(sibling1, "Child of Older Sibling");
+      final int unrelatedPlan = insertPlan(missionModelId);
+      final int childOfUnrelatedPlan = duplicatePlan(unrelatedPlan, "Child of Related Plan");
+
+      // Assert that parentage starts as expected
+      assertEquals(0, getParentPlanId(grandparentPlan)); // When the value is null, res.getInt returns 0
+      assertEquals(grandparentPlan, getParentPlanId(parentPlan));
+      assertEquals(parentPlan, getParentPlanId(sibling1));
+      assertEquals(parentPlan, getParentPlanId(sibling2));
+      assertEquals(sibling1, getParentPlanId(childOfSibling1));
+      assertEquals(0, getParentPlanId(unrelatedPlan));
+      assertEquals(unrelatedPlan, getParentPlanId(childOfUnrelatedPlan));
+
+      // Delete Parent Plan
+      try(final var statement = connection.createStatement()){
+        statement.execute("""
+          delete from plan
+          where id = %d;
+          """.formatted(parentPlan));
+      }
+
+      // Assert that sibling1 and sibling2 now have grandparentPlan set as their parent
+      assertEquals(0, getParentPlanId(grandparentPlan));
+      assertEquals(grandparentPlan, getParentPlanId(sibling1));
+      assertEquals(grandparentPlan, getParentPlanId(sibling2));
+      assertEquals(sibling1, getParentPlanId(childOfSibling1));
+      assertEquals(0, getParentPlanId(unrelatedPlan));
+      assertEquals(unrelatedPlan, getParentPlanId(childOfUnrelatedPlan));
+    }
   }
+
+}
 
