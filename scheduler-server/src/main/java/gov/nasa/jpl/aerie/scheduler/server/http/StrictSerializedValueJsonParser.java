@@ -82,8 +82,9 @@ public final class StrictSerializedValueJsonParser implements JsonParser<Seriali
       case STRING -> SerializedValue.of(((JsonString) value).getString());
       case NUMBER -> {
         final var isInt = schema.asInt().isPresent();
+        final var isDuration = schema.asDuration().isPresent();
         final var num = (JsonNumber) value;
-        yield (isInt)
+        yield (isInt || isDuration)
             ? SerializedValue.of(num.longValue())
             : SerializedValue.of(num.doubleValue());
       }
