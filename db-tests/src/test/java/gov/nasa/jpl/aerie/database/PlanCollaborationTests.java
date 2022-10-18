@@ -70,6 +70,7 @@ public class PlanCollaborationTests {
     clearTable("plan_latest_snapshot");
     clearTable("plan_snapshot_activities");
     clearTable("plan_snapshot_parent");
+    clearTable("merge_request");
   }
 
   @BeforeAll
@@ -365,6 +366,16 @@ public class PlanCollaborationTests {
       statement.execute(
           """
           call begin_merge(%d, 'PlanCollaborationTests Reviewer')
+          """.formatted(mergeRequestId)
+      );
+    }
+  }
+
+  private void withdrawMergeRequest(final int mergeRequestId) throws SQLException{
+    try(final var statement = connection.createStatement()){
+      statement.execute(
+          """
+          call withdraw_merge_request(%d)
           """.formatted(mergeRequestId)
       );
     }
@@ -1208,7 +1219,7 @@ public class PlanCollaborationTests {
 
       insertActivity(newPlan);
 
-      final int mergeRequest = createMergeRequest(newPlan, basePlan);
+      final int mergeRequest = createMergeRequest(basePlan, newPlan);
       beginMerge(mergeRequest);
       commitMerge(mergeRequest);
 
@@ -1324,5 +1335,78 @@ public class PlanCollaborationTests {
       }
     }
   }
+
+  @Nested
+  class MergeRequestTests{
+    /**
+     * First, check that it fails if plan_id_supplying is invalid and plan_id_receiving is valid
+     * Then, check that it fails if plan_id_supplying is valid and plan_id_receiving is invalid
+     */
+    @Test
+    void createRequestFailsForNonexistentPlans() throws SQLException {
+      final int planId = insertPlan(missionModelId);
+
+      try{
+        createMergeRequest(planId, -1);
+        fail();
+      }
+      catch (SQLException sqEx){
+        if(!sqEx.getMessage().contains("Plan supplying changes (Plan -1) does not exist."))
+          throw sqEx;
+      }
+
+      try{
+        createMergeRequest(-1, planId);
+        fail();
+      }
+      catch (SQLException sqEx){
+        if(!sqEx.getMessage().contains("Plan receiving changes (Plan -1) does not exist."))
+          throw sqEx;
+      }
+    }
+
+    @Test
+    void createRequestFailsForUnrelatedPlans() throws SQLException {
+      final int plan1 = insertPlan(missionModelId);
+      final int plan2 = insertPlan(missionModelId);
+
+      //Creating a snapshot so that the error comes from create_merge_request, not get_merge_base
+      createSnapshot(plan1);
+
+      try{
+        createMergeRequest(plan1, plan2);
+        fail();
+      }
+      catch (SQLException sqEx){
+        if(!sqEx.getMessage().contains("Cannot create merge request between unrelated plans."))
+          throw sqEx;
+      }
+    }
+
+    @Test
+    void createRequestFailsBetweenPlanAndSelf() throws SQLException {
+      final int plan = insertPlan(missionModelId);
+      try{
+        createMergeRequest(plan, plan);
+        fail();
+      } catch (SQLException sqEx){
+        if(!sqEx.getMessage().contains("Cannot create a merge request between a plan and itself."))
+          throw sqEx;
+      }
+
+    }
+
+    @Test
+    void withdrawFailsForNonexistentRequest() throws SQLException {
+      try{
+        withdrawMergeRequest(-1);
+        fail();
+      }
+      catch (SQLException sqEx){
+        if(!sqEx.getMessage().contains("Merge request -1 does not exist. Cannot withdraw request."))
+          throw sqEx;
+      }
+    }
   }
+}
 
