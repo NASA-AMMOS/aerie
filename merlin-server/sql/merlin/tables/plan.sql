@@ -78,11 +78,22 @@ for each row
 when (new.duration < '0')
 execute function raise_duration_is_negative();
 
-create or replace function cleanup_on_delete()
+create function cleanup_on_delete()
   returns trigger
   language plpgsql as $$
 begin
-  -- have the children be 'adopted' on delete
+  -- prevent deletion if the plan is locked
+  if old.is_locked then
+    raise exception 'Cannot delete locked plan.';
+  end if;
+
+  -- withdraw pending rqs
+  update merge_request
+  set status='withdrawn'
+  where plan_id_receiving_changes = old.id
+    and status = 'pending';
+
+  -- have the children be 'adopted' by this plan's parent
   update plan
   set parent_id = old.parent_id
   where
