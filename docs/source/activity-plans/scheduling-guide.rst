@@ -104,7 +104,7 @@ activity template and an interval. Let's add those:
   export default (): Goal => {
       return Goal.ActivityRecurrenceGoal({
           activityTemplate: null,
-          interval: 24 * 60 * 60 * 1000 * 1000 // 24 hours in microseconds
+          interval: Temporal.Duration.from({ hours: 24 })
       })
   }
 
@@ -179,9 +179,9 @@ and it will place an instance of that activity there.
     return Goal.ActivityRecurrenceGoal({
       activityTemplate: ActivityTemplates.GrowBanana({
         quantity: 1,
-        growingDuration: 1 * 60 * 60 * 1000 * 1000, //1 hour in microseconds
+        growingDuration: Temporal.Duration.from({ hours: 1 })
       }),
-      interval: 2 * 60 * 60 * 1000 * 1000 // 2 hours in microseconds
+      interval: Temporal.Duration.from({ hours: 2 })
     })
   }
 
@@ -217,7 +217,7 @@ instance using the given ``activityTemplate`` and temporal constraints.
   export default () => Goal.CoexistenceGoal({
     forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
     activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-    startsAt: TimingConstraint.singleton(WindowProperty.END).plus(5 * 60 * 1000 * 1000)
+    startsAt: TimingConstraint.singleton(WindowProperty.END).plus(Temporal.Duration.from({ minutes: 5 }))
   })
 
 Behavior: for each activity A of type ``GrowBanana`` present in the plan when the goal is evaluated, place an activity
@@ -228,34 +228,20 @@ of type ``PeelBanana`` starting exactly at the end of A + 5 minutes.
   export default () => Goal.CoexistenceGoal({
     forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
     activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-    startsWithin: TimingConstraint.range(WindowProperty.END, Operator.PLUS, 5 * 60 * 1000 * 1000),
-    endsWithin: TimingConstraint.range(WindowProperty.END, Operator.PLUS, 6 * 60 * 1000 * 1000)
+    startsWithin: TimingConstraint.range(WindowProperty.END, Operator.PLUS, Temporal.Duration.from({ minutes: 5 })),
+    endsWithin: TimingConstraint.range(WindowProperty.END, Operator.PLUS, Temporal.Duration.from({ minutes: 6 }))
   })
 
 Behavior: for each activity A of type ``GrowBanana`` present in the plan when the goal is evaluated, place an activity
 of type ``PeelBanana`` starting in the interval [end of A, end of A + 5 minutes] and ending in the interval [end of A,
 end of A + 6 minutes].
 
-The following diagram shows an example of how the temporal constraints defined in this example affects the placement
-of a ``PeelBanana`` activity with respect to an existing ``GrowBanana`` activity.
-
-.. code-block::
-
-  gantt
-    dateFormat HH:mm
-    axisFormat %H:%M
-    GrowBanana : 17:45, 10min
-    Start interval for PeelBanana : 17:55, 5min
-    End interval for PeelBanana : 17:55, 8min
-    Possible instanciation of PeelBanana : 17:56, 2min
-    Other possible instanciation of PeelBanana : 17:59, 3min
-
 .. code-block:: typescript
 
   export default () => Goal.CoexistenceGoal({
     forEach: Real.Resource("/fruit").equal(4.0),
     activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-    endsAt: TimingConstraint.singleton(WindowProperty.END).plus(5 * 60 * 1000 * 1000)
+    endsAt: TimingConstraint.singleton(WindowProperty.END).plus(Temporal.Duration.from({ minutes: 5 }))
   })
 
 Behavior: for each continuous period of time during which the ``/fruit`` resource is equal to 4, place an activity of
@@ -295,9 +281,9 @@ Setting a lower bound on the total duration:
       return Goal.CardinalityGoal({
           activityTemplate: ActivityTemplates.GrowBanana({
               quantity: 1,
-              growingDuration: 1000000,
+              growingDuration: Temporal.Duration.from({ seconds: 1 }),
           }),
-          specification: { duration: 10 * 1000000 }
+          specification: { duration: Temporal.Duration.from({ seconds: 10 }) }
       })
   }
 
@@ -309,7 +295,7 @@ Setting a lower bound on the number of occurrences:
       return Goal.CardinalityGoal({
           activityTemplate: ActivityTemplates.GrowBanana({
               quantity: 1,
-              growingDuration: 1000000,
+              growingDuration: Temporal.Duration.from({ seconds: 1 }),
           }),
           specification: { occurrence: 10 }
       })
@@ -323,9 +309,9 @@ Combining the two:
       return Goal.CardinalityGoal({
           activityTemplate: ActivityTemplates.GrowBanana({
               quantity: 1,
-              growingDuration: 1000000,
+              growingDuration: Temporal.Duration.from({ seconds: 1 }),
           }),
-          specification: { occurrence: 10, duration: 10 * 1000000 }
+          specification: { occurrence: 10, duration: Temporal.Duration.from({ seconds: 10 }) }
       })
   }
 
@@ -356,16 +342,16 @@ satisfied, the scheduler will not backtrack and will let the inserted activities
       return Goal.CardinalityGoal({
                activityTemplate: ActivityTemplates.GrowBanana({
                  quantity: 1,
-                 growingDuration: 1000 * 1000 * 60 * 60, //1 hour in microseconds
+                 growingDuration: Temporal.Duration.from({ hours: 1 }),
              }),
             specification: { occurrence : 10 }
             }).or(
              Goal.ActivityRecurrenceGoal({
               activityTemplate: ActivityTemplates.GrowBanana({
               quantity: 1,
-              growingDuration: 1 * 60 * 60 * 1000 * 1000, //1 hour in microseconds
+              growingDuration: Temporal.Duration.from({ hours: 1 }),
             }),
-            interval: 2 * 60 * 60 * 1000 * 1000 // 2 hours in microseconds
+            interval: Temporal.Duration.from({ hours: 2 })
           }))
   }
 
@@ -399,7 +385,7 @@ will appear satisfied. If one or several subgoals have not been satisfied, the A
       return Goal.CoexistenceGoal({
         forEach: Real.Resource("/fruit").equal(4.0),
         activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-        endsAt: TimingConstraint.singleton(WindowProperty.END).plus(5 * 60 * 1000 * 1000)
+        endsAt: TimingConstraint.singleton(WindowProperty.END).plus(Temporal.Duration.from({ minutes: 5 }))
       }).and(
         Goal.CardinalityGoal({
               activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
@@ -432,9 +418,9 @@ If the resource is less than two, then the goal is no longer applied.
       return Goal.ActivityRecurrenceGoal({
               activityTemplate: ActivityTemplates.GrowBanana({
               quantity: 1,
-              growingDuration: 1 * 60 * 60 * 1000 * 1000, //1 hour in microseconds
+              growingDuration: Temporal.Duration.from({ hours: 1 }), //1 hour in microseconds
             }),
-            interval: 2 * 60 * 60 * 1000 * 1000 // 2 hours in microseconds
+            interval: Temporal.Duration.from({ hours: 2 }) // 2 hours in microseconds
           }).applyWhen(Real.Resource("/fruit").greaterThan(2))
   }
 

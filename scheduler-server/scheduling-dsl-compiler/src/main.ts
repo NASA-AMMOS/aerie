@@ -91,7 +91,15 @@ async function handleRequest(data: Buffer) {
       return;
     }
 
-    const stringified = JSON.stringify(result.unwrap().__astNode);
+    const stringified = JSON.stringify(
+        result.unwrap().__astNode,
+        function replacer(key, value) {
+          if (this[key] instanceof Temporal.Duration) {
+            return this[key].total({ unit: "microseconds" });
+          }
+          return value;
+        }
+    );
     if (stringified === undefined) {
       throw Error(JSON.stringify(result.unwrap().__astNode) + ' was not JSON serializable');
     }

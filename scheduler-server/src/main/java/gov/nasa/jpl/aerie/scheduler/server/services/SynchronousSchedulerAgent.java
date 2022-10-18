@@ -146,6 +146,7 @@ public record SynchronousSchedulerAgent(
             .type("GLOBAL_SCHEDULING_CONDITIONS_FAILED")
             .message("Global scheduling condition%s failed".formatted(failedGlobalSchedulingConditions.size() > 1 ? "s" : ""))
             .data(ResponseSerializers.serializeFailedGlobalSchedulingConditions(failedGlobalSchedulingConditions)));
+        return;
       }
 
       compiledGlobalSchedulingConditions.forEach(problem::add);
@@ -177,6 +178,7 @@ public record SynchronousSchedulerAgent(
             .type("SCHEDULING_GOALS_FAILED")
             .message("Scheduling goal%s failed".formatted(failedGoals.size() > 1 ? "s" : ""))
             .data(ResponseSerializers.serializeFailedGoals(failedGoals)));
+        return;
       }
       for (final var compiledGoal : compiledGoals) {
         final var goal = GoalBuilder

@@ -25,6 +25,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.enumP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
@@ -33,9 +34,9 @@ import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 public class SchedulingDSL {
 
   private static final JsonParser<Duration> durationP =
-      stringP
-      . map(iso8601String -> Duration.fromISO8601String(iso8601String),
-          duration -> java.time.Duration.ofMillis(duration.in(Duration.MILLISECOND)).toString());
+      longP.map(
+          microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
+          duration -> duration.in(Duration.MICROSECONDS));
 
   private static final JsonParser<ClosedOpenInterval> intervalP =
       productP
