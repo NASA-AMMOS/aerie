@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
@@ -21,6 +21,7 @@ import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
+
 import java.util.function.Function;
 public class GoalBuilder {
   private GoalBuilder() {}
@@ -133,7 +134,8 @@ public class GoalBuilder {
     if(type.getDurationType() instanceof DurationType.Controllable durationType){
       //detect duration parameter
       if(activityTemplate.arguments().containsKey(durationType.parameterName())){
-        builder.duration(Duration.fromISO8601String(activityTemplate.arguments().get(durationType.parameterName()).asString().get()));
+        final var argument = activityTemplate.arguments().get(durationType.parameterName());
+        builder.duration(Duration.of(argument.asInt().get(), Duration.MICROSECONDS));
         activityTemplate.arguments().remove(durationType.parameterName());
       }
     }
