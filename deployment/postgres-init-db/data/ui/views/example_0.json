@@ -3,10 +3,16 @@
     "activityTables": [
       {
         "columnDefs": [
-          { "field": "id", "filter": "agTextColumnFilter", "headerName": "ID", "sortable": true, "resizable": true },
-          { "field": "type", "filter": "agTextColumnFilter", "headerName": "Type", "sortable": true, "resizable": true },
-          { "field": "start_time", "filter": "agTextColumnFilter", "headerName": "Start Time", "sortable": true, "resizable": true },
-          { "field": "duration", "filter": "agTextColumnFilter", "headerName": "Duration", "sortable": true, "resizable": true }
+          { "field": "id", "filter": "text", "headerName": "ID", "sortable": true, "resizable": true },
+          { "field": "type", "filter": "text", "headerName": "Type", "sortable": true, "resizable": true },
+          {
+            "field": "start_time_doy",
+            "filter": "text",
+            "headerName": "Start Time",
+            "sortable": true,
+            "resizable": true
+          },
+          { "field": "duration", "filter": "text", "headerName": "Duration", "sortable": true, "resizable": true }
         ],
         "columnStates": [],
         "id": 0
