@@ -76,6 +76,15 @@
 
   Get setup for development as a contributor to the Aerie project.
 
+.. topic-box::
+  :title: EDSL API Documentation
+  :link: edsl-api-documentation
+  :icon: scylla-icon scylla-icon--about-team
+  :class: large-8
+  :anchor: Learn more
+
+  Detailed API documentation for Aerie Constraint and Scheduling EDSLs.
+
 .. raw:: html
 
   </div></div>
@@ -98,3 +107,4 @@
   mission-modeling/index
   upgrade-guides/index
   user-interface/index
+  edsl-api-documentation/index

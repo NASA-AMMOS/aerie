@@ -1,13 +1,12 @@
 {
   "name": "scheduling-dsl-compiler",
-  "version": "1.0.0",
   "description": "Typescript compiler for the scheduling server DSL",
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf build; tsc",
     "test": "npm run build && node build/main.js",
     "generate-ast-schema": "npx typescript-json-schema src/libs/scheduler-ast.ts \"*\" --aliasRefs --out ./build/scheduler.schema.json",
-    "generate-doc": "npx typedoc src/libs/scheduler-edsl-fluent-api.ts src/libs/constraints-edsl-fluent-api.ts --excludePrivate --excludeInternal --out ./build/docs --name \"Scheduling eDSL documentation\""
+    "generate-doc": "rm -rf build/docs; npx typedoc --plugin typedoc-plugin-extras --customTitle \"AERIE DOCUMENTATION\" --customTitleLink ../index.html typedoc-plugin-extras src/libs/scheduler-edsl-fluent-api.ts src/libs/constraints-edsl-fluent-api.ts --excludePrivate --excludeInternal --out ./build/docs --name \"Scheduling eDSL documentation\""
   },
   "author": "",
   "dependencies": {
@@ -16,7 +15,8 @@
     "source-map": "^0.7.3",
     "typescript": "^4.5.5",
     "typescript-json-schema": "0.53.0",
-    "typedoc": "^0.23.10"
+    "typedoc": "^0.23.10",
+    "typedoc-plugin-extras": "^2.3.0"
   },
   "devDependencies": {
     "@tsconfig/node16-strictest-esm": "^1.0.2",
