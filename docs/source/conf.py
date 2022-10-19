@@ -7,7 +7,6 @@ from datetime import date
 from sphinx_scylladb_theme.utils import multiversion_regex_builder
 
 sys.path.insert(0, os.path.abspath(".."))
-sys.path.append(os.path.abspath("./_ext"))
 
 # -- Global variables
 
@@ -34,7 +33,6 @@ extensions = [
     "sphinx_scylladb_theme",
     "sphinx_multiversion",  # optional
     "myst_parser",  # for converting .md to .rst,
-    "rst_jinja"
 ]
 
 # The suffix(es) of source filenames.

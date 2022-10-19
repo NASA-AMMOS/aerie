@@ -126,7 +126,7 @@ a goal is enabled or disabled.
 
 Scheduling DSL Documentation
 ============================
-The full set of features can be found in the `Scheduling EDSL API Documentation <../../scheduling-edsl-api/{{current_version}}/index.html>`__.
+Here you will find the full set of features in the scheduling DSL.
 
 
 .. warning::

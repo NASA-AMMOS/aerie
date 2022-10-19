@@ -126,7 +126,7 @@ A constraint is violated from 2 to 4 and also from 5 to 8. No activities are inv
 
 ## Constraints API
 
-Below we list all classes, constructors, and methods in the <a href="../../constraints-edsl-api/{{current_version}}/index.html" target="_blank">Constraint EDSL API</a>, along with their arguments and return types. But before we do that, keep in mind that the entire API is a facade and does _none_ of the constraint evaluation itself. So for example, when we say that `.lessThan(...)` returns a "set of windows", this is merely a helpful lie.
+Below we list all classes, constructors, and methods in the Constraints API, along with their arguments and return types. But before we do that, keep in mind that the entire API is a facade and does _none_ of the constraint evaluation itself. So for example, when we say that `.lessThan(...)` returns a "set of windows", this is merely a helpful lie.
 
 In reality, it returns a node of an Abstract Syntax Tree (AST) which represents the `LessThan` operation, which is serialized and sent to Merlin's Java backend to be evaluated there. Before the constraints API was released, constraint authors had to write a highly verbose JSON AST representing these operations. The API builds that same AST. Due to this architecture, it is not possible to use the constraint to actually _observe_ the "set of windows" represented by `.lessThan(...)`, or the "discrete profile" represented by `Discrete.Resource(...)`, or any other value or object "returned" by the API.
 
