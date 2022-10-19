@@ -71,6 +71,8 @@ public class PlanCollaborationTests {
     clearTable("plan_snapshot_activities");
     clearTable("plan_snapshot_parent");
     clearTable("merge_request");
+    clearTable("merge_staging_area");
+    clearTable("conflicting_activities");
   }
 
   @BeforeAll
@@ -391,6 +393,45 @@ public class PlanCollaborationTests {
     }
   }
 
+  ArrayList<ConflictingActivity> getConflictingActivities(final int mergeRequestId) throws SQLException {
+    final var conflicts = new ArrayList<ConflictingActivity>();
+    try (final var statement = connection.createStatement()) {
+      final var res = statement.executeQuery("""
+                                                   select activity_id, change_type_supplying, change_type_receiving
+                                                   from conflicting_activities
+                                                   where merge_request_id = %s
+                                                   order by activity_id asc;
+                                                 """.formatted(mergeRequestId));
+      while (res.next()) {
+        conflicts.add(new ConflictingActivity(
+            res.getInt("activity_id"),
+            res.getString("change_type_supplying"),
+            res.getString("change_type_receiving")
+        ));
+      }
+    }
+    return conflicts;
+  }
+
+  ArrayList<StagingAreaActivity> getStagingAreaActivities(final int mergeRequestId) throws SQLException{
+    final var activities = new ArrayList<StagingAreaActivity>();
+    try (final var statement = connection.createStatement()) {
+      final var res = statement.executeQuery("""
+                                                   select activity_id, change_type
+                                                   from merge_staging_area
+                                                   where merge_request_id = %s
+                                                   order by activity_id asc;
+                                                 """.formatted(mergeRequestId));
+      while (res.next()) {
+        activities.add(new StagingAreaActivity(
+            res.getInt("activity_id"),
+            res.getString("change_type")
+        ));
+      }
+    }
+    return activities;
+  }
+
   private void deleteActivityDirective(final int planId, final int activityId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       statement.executeUpdate("""
@@ -423,7 +464,7 @@ public class PlanCollaborationTests {
             res.getString("arguments"),
             res.getString("last_modified_arguments_at"),
             res.getString("metadata")
-            ));
+        ));
       }
       return activities;
     }
@@ -489,6 +530,8 @@ public class PlanCollaborationTests {
       String lastModifiedArgumentsAt,
       String metadata
   ) {}
+  record ConflictingActivity(int activityId, String changeTypeSupplying, String changeTypeReceiving) {}
+  record StagingAreaActivity(int activityId, String changeType) {} //only relevant fields
   //endregion
 
   @Nested
@@ -1408,5 +1451,373 @@ public class PlanCollaborationTests {
       }
     }
   }
+
+  /**
+   * Note: Test names in this class are written as:
+   * [Difference between Receiving and MergeBase][Difference between Supplying and MergeBase]ResolvesAs[Resolution]
+   */
+  @Nested
+  class BeginMergeTests {
+    @Test
+    void beginMergeFailsOnInvalidRequestId() throws SQLException {
+      try{
+        beginMerge(-1);
+        fail();
+      }catch (SQLException sqlEx){
+        if(!sqlEx.getMessage().contains("Request ID -1 is not present in merge_request table."))
+          throw sqlEx;
+      }
+    }
+
+    @Test
+    void beginMergeUpdatesMergeBase() throws SQLException {
+      final int planId = insertPlan(missionModelId);
+      final int childId = duplicatePlan(planId, "Child Plan");
+      insertActivity(childId); // Insert to avoid the NO-OP case in begin_merge
+      final MergeRequest mergeRQ = getMergeRequest(createMergeRequest(planId, childId));
+      assertEquals(getMergeBaseFromPlanIds(planId, childId), mergeRQ.mergeBaseSnapshot);
+
+      // Artificially inject a new merge base.
+      final int newMB = createSnapshot(planId);
+      try(final var statement = connection.createStatement()){
+        statement.execute(
+            """
+            insert into plan_snapshot_parent(snapshot_id, parent_snapshot_id)
+                VALUES (%d, %d);
+            """.formatted(mergeRQ.supplyingSnapshot, newMB)
+        );
+      }
+      assertEquals(newMB, getMergeBaseFromPlanIds(planId, childId));
+
+      beginMerge(mergeRQ.requestId);
+      final MergeRequest updatedMergeRQ = getMergeRequest(mergeRQ.requestId);
+      assertEquals(newMB, updatedMergeRQ.mergeBaseSnapshot);
+
+      unlockPlan(planId);
+    }
+
+    @Test
+    void beginMergeNoChangesThrowsError() throws SQLException {
+      final int planId = insertPlan(missionModelId);
+      insertActivity(planId);
+      final int childPlan = duplicatePlan(planId, "Child");
+
+      try {
+        beginMerge(createMergeRequest(planId,childPlan));
+        fail();
+      } catch (SQLException sqlex) {
+          if(!sqlex.getMessage().contains("Cannot begin merge. The contents of the two plans are identical.")){
+            throw sqlex;
+          }
+      }
+      // Assert that the plan was not locked
+      try (final var statement = connection.createStatement()) {
+        final var res = statement.executeQuery(
+            """
+            select is_locked
+            from plan
+            where id = %d;
+            """.formatted(planId)
+        );
+        assertTrue(res.first());
+        assertFalse(res.getBoolean(1));
+      }
+    }
+
+    @Test
+    void addReceivingResolvesAsNone() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int childPlan = duplicatePlan(basePlan, "Child Plan");
+      final int activityId = insertActivity(basePlan);
+      // Insert to avoid NO-OP case in begin_merge
+      final int noopDodger = insertActivity(childPlan);
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+      final var stagedActs = getStagingAreaActivities(mergeRQ);
+      final var conflicts = getConflictingActivities(mergeRQ);
+
+      assertTrue(conflicts.isEmpty());
+      assertFalse(stagedActs.isEmpty());
+      assertEquals(2, stagedActs.size());
+      assertEquals(activityId, stagedActs.get(0).activityId);
+      assertEquals("none", stagedActs.get(0).changeType);
+      assertEquals(noopDodger, stagedActs.get(1).activityId);
+      assertEquals("add", stagedActs.get(1).changeType);
+
+      unlockPlan(basePlan);
+    }
+
+    @Test
+    void addSupplyingResolvesAsAdd() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int childPlan = duplicatePlan(basePlan, "Child Plan");
+      final int activityId = insertActivity(childPlan);
+
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+      final var stagedActs = getStagingAreaActivities(mergeRQ);
+      final var conflicts = getConflictingActivities(mergeRQ);
+
+      assertTrue(conflicts.isEmpty());
+      assertFalse(stagedActs.isEmpty());
+      assertEquals(1, stagedActs.size());
+      assertEquals(activityId, stagedActs.get(0).activityId);
+      assertEquals("add", stagedActs.get(0).changeType);
+
+      unlockPlan(basePlan);
+    }
+
+    @Test
+    void noneNoneResolvesAsNone() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int activityId = insertActivity(basePlan);
+      final int childPlan = duplicatePlan(basePlan, "Child Plan");
+      // Insert to avoid NO-OP case in begin_merge
+      final int noopDodger = insertActivity(childPlan);
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+      final var stagedActs = getStagingAreaActivities(mergeRQ);
+      final var conflicts = getConflictingActivities(mergeRQ);
+
+      assertTrue(conflicts.isEmpty());
+      assertFalse(stagedActs.isEmpty());
+      assertEquals(2, stagedActs.size());
+      assertEquals(activityId, stagedActs.get(0).activityId);
+      assertEquals("none", stagedActs.get(0).changeType);
+      assertEquals(noopDodger, stagedActs.get(1).activityId);
+      assertEquals("add", stagedActs.get(1).changeType);
+
+      unlockPlan(basePlan);
+    }
+
+    @Test
+    void noneModifyResolvesAsModify() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int activityId = insertActivity(basePlan);
+      final int childPlan = duplicatePlan(basePlan, "Child Plan");
+      final String newName = "Test";
+
+      updateActivityName(newName, activityId, childPlan);
+
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+      final var stagedActs = getStagingAreaActivities(mergeRQ);
+      final var conflicts = getConflictingActivities(mergeRQ);
+
+      assertTrue(conflicts.isEmpty());
+      assertFalse(stagedActs.isEmpty());
+      assertEquals(1, stagedActs.size());
+      assertEquals(activityId, stagedActs.get(0).activityId);
+      assertEquals("modify", stagedActs.get(0).changeType);
+
+      unlockPlan(basePlan);
+    }
+
+    @Test
+    void noneDeleteResolvesAsDelete() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int activityId = insertActivity(basePlan);
+      final int childPlan = duplicatePlan(basePlan, "Child Plan");
+
+      deleteActivityDirective(childPlan, activityId);
+
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+      final var stagedActs = getStagingAreaActivities(mergeRQ);
+      final var conflicts = getConflictingActivities(mergeRQ);
+
+      assertTrue(conflicts.isEmpty());
+      assertFalse(stagedActs.isEmpty());
+      assertEquals(1, stagedActs.size());
+      assertEquals(activityId, stagedActs.get(0).activityId);
+      assertEquals("delete", stagedActs.get(0).changeType);
+
+      unlockPlan(basePlan);
+    }
+
+    @Test
+    void modifyNoneResolvesAsNone() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int activityId = insertActivity(basePlan);
+      final int childPlan = duplicatePlan(basePlan, "Child Plan");
+      final String newName = "Test";
+
+      updateActivityName(newName, activityId, basePlan);
+
+      // Insert to avoid NO-OP case in begin_merge
+      final int noopDodger = insertActivity(childPlan);
+
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+      final var stagedActs = getStagingAreaActivities(mergeRQ);
+      final var conflicts = getConflictingActivities(mergeRQ);
+
+      assertTrue(conflicts.isEmpty());
+      assertFalse(stagedActs.isEmpty());
+      assertEquals(2, stagedActs.size());
+      assertEquals(activityId, stagedActs.get(0).activityId);
+      assertEquals("none", stagedActs.get(0).changeType);
+      assertEquals(noopDodger, stagedActs.get(1).activityId);
+      assertEquals("add", stagedActs.get(1).changeType);
+
+      unlockPlan(basePlan);
+    }
+
+    @Test
+    void identicalModifyModifyResolvesAsNone() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int activityId = insertActivity(basePlan);
+      final int childPlan = duplicatePlan(basePlan, "Child Plan");
+      final String newName = "Test";
+
+      updateActivityName(newName, activityId, basePlan);
+      updateActivityName("Different Revision Proof", activityId, childPlan);
+      updateActivityName(newName, activityId, childPlan);
+
+      // Insert to avoid NO-OP case in begin_merge
+      final int noopDodger = insertActivity(childPlan);
+
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+      final var stagedActs = getStagingAreaActivities(mergeRQ);
+      final var conflicts = getConflictingActivities(mergeRQ);
+
+      assertTrue(conflicts.isEmpty());
+      assertFalse(stagedActs.isEmpty());
+      assertEquals(2, stagedActs.size());
+      assertEquals(activityId, stagedActs.get(0).activityId);
+      assertEquals("none", stagedActs.get(0).changeType);
+      assertEquals(noopDodger, stagedActs.get(1).activityId);
+      assertEquals("add", stagedActs.get(1).changeType);
+
+      unlockPlan(basePlan);
+    }
+
+    @Test
+    void differentModifyModifyResolvesAsConflict() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int activityId = insertActivity(basePlan);
+      final int childPlan = duplicatePlan(basePlan, "Child Plan");
+      final String newName = "Test";
+
+      updateActivityName(newName, activityId, basePlan);
+      updateActivityName("Different", activityId, childPlan);
+
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+      final var stagedActs = getStagingAreaActivities(mergeRQ);
+      final var conflicts = getConflictingActivities(mergeRQ);
+
+      assertTrue(stagedActs.isEmpty());
+      assertFalse(conflicts.isEmpty());
+      assertEquals(1, conflicts.size());
+      assertEquals(activityId, conflicts.get(0).activityId);
+      assertEquals("modify", conflicts.get(0).changeTypeReceiving);
+      assertEquals("modify", conflicts.get(0).changeTypeSupplying);
+
+      unlockPlan(basePlan);
+    }
+
+    @Test
+    void modifyDeleteResolvesAsConflict() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int activityId = insertActivity(basePlan);
+      final int childPlan = duplicatePlan(basePlan, "Child Plan");
+      final String newName = "Test";
+
+      updateActivityName(newName, activityId, basePlan);
+      deleteActivityDirective(childPlan, activityId);
+
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+      final var stagedActs = getStagingAreaActivities(mergeRQ);
+      final var conflicts = getConflictingActivities(mergeRQ);
+
+      assertTrue(stagedActs.isEmpty());
+      assertFalse(conflicts.isEmpty());
+      assertEquals(1, conflicts.size());
+      assertEquals(activityId, conflicts.get(0).activityId);
+      assertEquals("modify", conflicts.get(0).changeTypeReceiving);
+      assertEquals("delete", conflicts.get(0).changeTypeSupplying);
+
+      unlockPlan(basePlan);
+    }
+
+    @Test
+    void deleteNoneIsExcludedFromStageAndConflict() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int activityId = insertActivity(basePlan);
+      final int childPlan = duplicatePlan(basePlan, "Child Plan");
+
+      deleteActivityDirective(basePlan, activityId);
+
+      // Insert to avoid NO-OP case in begin_merge
+      final int noopDodger = insertActivity(childPlan);
+
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+      final var stagedActs = getStagingAreaActivities(mergeRQ);
+      final var conflicts = getConflictingActivities(mergeRQ);
+
+      assertEquals(1, stagedActs.size());
+      assertEquals(noopDodger, stagedActs.get(0).activityId);
+      assertEquals("add", stagedActs.get(0).changeType);
+      assertTrue(conflicts.isEmpty());
+
+      unlockPlan(basePlan);
+    }
+
+    @Test
+    void deleteModifyIsAConflict() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int activityId = insertActivity(basePlan);
+      final int childPlan = duplicatePlan(basePlan, "Child Plan");
+      final String newName = "Test";
+
+      deleteActivityDirective(basePlan, activityId);
+      updateActivityName(newName, activityId, childPlan);
+
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+      final var stagedActs = getStagingAreaActivities(mergeRQ);
+      final var conflicts = getConflictingActivities(mergeRQ);
+
+      assertTrue(stagedActs.isEmpty());
+      assertFalse(conflicts.isEmpty());
+      assertEquals(1, conflicts.size());
+      assertEquals(activityId, conflicts.get(0).activityId);
+      assertEquals("delete", conflicts.get(0).changeTypeReceiving);
+      assertEquals("modify", conflicts.get(0).changeTypeSupplying);
+
+      unlockPlan(basePlan);
+    }
+
+    @Test
+    void deleteDeleteIsExcludedFromStageAndConflict() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int activityId = insertActivity(basePlan);
+      final int childPlan = duplicatePlan(basePlan, "Child Plan");
+
+      deleteActivityDirective(basePlan, activityId);
+      deleteActivityDirective(childPlan, activityId);
+
+      // Insert to avoid NO-OP case in begin_merge
+      final int noopDodger = insertActivity(childPlan);
+
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+      final var stagedActs = getStagingAreaActivities(mergeRQ);
+      final var conflicts = getConflictingActivities(mergeRQ);
+
+      assertEquals(1, stagedActs.size());
+      assertEquals(noopDodger, stagedActs.get(0).activityId);
+      assertEquals("add", stagedActs.get(0).changeType);
+      assertTrue(conflicts.isEmpty());
+
+      unlockPlan(basePlan);
+    }
+
+  }
+
 }
 
