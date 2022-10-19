@@ -6,6 +6,5 @@
 
     "noUnusedParameters": false,
     "noUnusedLocals": false
-  },
-  "exclude": ["node_modules", "build", "scripts"]
+  }
 }
