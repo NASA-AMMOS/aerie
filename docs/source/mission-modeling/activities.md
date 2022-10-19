@@ -92,12 +92,10 @@ for more on mission modeling.)
 Actions related to the passage of simulation time are provided as static methods on 
 the `merlin.framework.ModelActions` class:
 
-- `delay(duration)`: Delay the currently-running activity for the given duration. On resumption, it will observe
-- effects caused by other activities over the intervening timespan.
-- `waitFor(activityId)`: Delay the currently-running activity until the activity with specified ID has completed.
-- On resumption, it will observe effects caused by other activities over the intervening timespan.
+- `delay(duration)`: Delay the currently-running activity for the given duration. On resumption, it will observe 
+effects caused by other activities over the intervening timespan.
 - `waitUntil(condition)`: Delay the currently-running activity until the provided `Condition` becomes true.
-- On resumption, it will observe effects caused by other activities over the intervening timespan.
+On resumption, it will observe effects caused by other activities over the intervening timespan.
 <!-- - `waitForChildren()`: Delay the currently-running activity until all child activities have completed. 
 On resumption, it will observe effects caused by other activities over the intervening timespan. -->
 
