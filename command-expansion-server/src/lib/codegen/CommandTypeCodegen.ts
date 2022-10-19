@@ -105,22 +105,22 @@ ${doc}
     }
 
     repeatArgsDeclaration.forEach(repeat => {
-      const repeatArgNameAndType = `${repeat.map(arg => `\t${arg.name} : ${arg.type},`).join('')}`;
+      const repeatArgNameAndType = `${repeat.map(arg => `\t'${arg.name}': ${arg.type}`).join(', ')}`;
       const repeatOtherNameAndType = `${otherArgs
-        .map(arg => `\t${arg.name}: ${mapArgumentType(arg, enumMap)}`)
+        .map(arg => `\t'${arg.name}': ${mapArgumentType(arg, enumMap)}`)
         .join(',')}`;
-      const repeatArgType = `${repeat.map(arg => `\t${arg.type},`).join('')}`;
-      const repeatOtherType = `${otherArgs.map(arg => `\t${mapArgumentType(arg, enumMap)}`).join(',')}`;
+      const repeatArgType = `${repeat.map(arg => `${arg.type}`).join(', ')}`;
+      const repeatOtherType = `${otherArgs.map(arg => `${mapArgumentType(arg, enumMap)}`).join(', ')}`;
 
       methodParameters = methodParameters.concat(
-        `[${repeatArgNameAndType}${repeatOtherNameAndType}] \n|[args : {${repeatArgNameAndType}${repeatOtherNameAndType}}]\n`,
+        `[${repeatArgType}${repeatArgType !== '' ? ', ' : ''}${repeatOtherType}] \n|[{${repeatArgNameAndType}${repeatArgNameAndType !== '' ? ', ' : ''}${repeatOtherNameAndType}}]\n`,
       );
       interfaceParameters = interfaceParameters.concat(
-        `[${repeatArgType}${repeatOtherType}] \n|[args : {${repeatArgNameAndType}${repeatOtherNameAndType}}]\n`,
+        `[${repeatArgType}${repeatArgType !== '' ? ', ' : ''}${repeatOtherType}] \n|[{${repeatArgNameAndType}${repeatArgNameAndType !== '' ? ', ' : ''}${repeatOtherNameAndType}}]\n`,
       );
 
       argsOrder = argsOrder.concat(
-        `[${repeat.map(arg => `"${arg.name}"`).concat(otherArgs.map(arg => `"${arg.name}"`))}]`,
+        `[${repeat.map(arg => `'${arg.name}'`).concat(otherArgs.map(arg => `'${arg.name}'`))}]`,
       );
     });
 
@@ -147,11 +147,11 @@ const ${fswCommandName}_ARGS_ORDER = [${fswCommand.arguments.map(argument => `'$
 ${doc}
 function ${fswCommandName}(...args: [\n${fswCommand.arguments
     .map(argument =>
-      argument.arg_type === 'repeat' ? '' : `\t${argument.name} : ${mapArgumentType(argument, enumMap)},\n`,
+      argument.arg_type === 'repeat' ? '' : `\t${mapArgumentType(argument, enumMap)},\n`,
     )
-    .join('')}] | [args : {\n${fswCommand.arguments
+    .join('')}] | [{\n${fswCommand.arguments
     .map(argument =>
-      argument.arg_type === 'repeat' ? '' : `\t${argument.name}: ${mapArgumentType(argument, enumMap)},\n`,
+      argument.arg_type === 'repeat' ? '' : `\t'${argument.name}': ${mapArgumentType(argument, enumMap)},\n`,
     )
     .join('')}}]): ${fswCommandName} {
   return Command.new({
@@ -166,7 +166,7 @@ function ${fswCommandName}(...args: [\n${fswCommand.arguments
     .map(argument => (argument.arg_type === 'repeat' ? '' : `\t\t${mapArgumentType(argument, enumMap)},\n`))
     .join('')}\t] | {\n${fswCommand.arguments
     .map(argument =>
-      argument.arg_type === 'repeat' ? '' : `\t\t${argument.name}: ${mapArgumentType(argument, enumMap)},\n`,
+      argument.arg_type === 'repeat' ? '' : `\t\t'${argument.name}': ${mapArgumentType(argument, enumMap)},\n`,
     )
     .join('')}\t}> {}`;
 

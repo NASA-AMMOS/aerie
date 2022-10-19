@@ -1,4 +1,7 @@
-/** START Preface */
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should return command types 1`] = `
+"/** START Preface */
 
 export enum TimingTypes {
   ABSOLUTE = 'ABSOLUTE',
@@ -228,23 +231,23 @@ export class Command<
 
   public toEDSLString(): string {
     const timeString = this.absoluteTime
-      ? `A\`${instantToDoy(this.absoluteTime)}\``
+      ? \`A\\\\\`\${instantToDoy(this.absoluteTime)}\\\\\`\`
       : this.epochTime
-      ? `E\`${durationToHms(this.epochTime)}\``
+      ? \`E\\\\\`\${durationToHms(this.epochTime)}\\\\\`\`
       : this.relativeTime
-      ? `R\`${durationToHms(this.relativeTime)}\``
+      ? \`R\\\\\`\${durationToHms(this.relativeTime)}\\\\\`\`
       : 'C';
 
-    const argsString = Object.keys(this.arguments).length === 0 ? '' : `(${Command.argumentsToString(this.arguments)})`;
+    const argsString = Object.keys(this.arguments).length === 0 ? '' : \`(\${Command.argumentsToString(this.arguments)})\`;
 
-    return `${timeString}.${this.stem}${argsString}`;
+    return \`\${timeString}.\${this.stem}\${argsString}\`;
   }
 
   private static argumentsToString<A extends ArgType[] | { [argName: string]: any } = [] | {}>(args: A): string {
     if (Array.isArray(args)) {
       const argStrings = args.map((arg) => {
         if (typeof arg === 'string') {
-          return `'${arg}'`;
+          return \`'\${arg}'\`;
         }
         return arg.toString();
       });
@@ -254,14 +257,14 @@ export class Command<
     else {
       const argStrings = Object.keys(args).reduce((accum, key) => {
         if (typeof args[key] === 'string') {
-          accum.push(`${key}: '${args[key]}'`);
+          accum.push(\`\${key}: '\${args[key]}'\`);
         }
         else {
-          accum.push(`${key}: ${args[key]}`);
+          accum.push(\`\${key}: \${args[key]}\`);
         }
         return accum;
       }, [] as string[]);
-      return '{\n' + indent(argStrings.map(argString => argString + ',').join('\n')) + '\n}';
+      return '{\\\\n' + indent(argStrings.map(argString => argString + ',').join('\\\\n')) + '\\\\n}';
     }
   }
 }
@@ -299,16 +302,16 @@ export class Sequence {
 
     const commandsString = this.commands.length === 0
         ? ''
-        : '\n' + indent(this.commands.map(c => c.toEDSLString() + ',').join('\n'), 3);
+        : '\\\\n' + indent(this.commands.map(c => c.toEDSLString() + ',').join('\\\\n'), 3);
 
   return (
-`export default () =>
+\`export default () =>
   Sequence.new({
-    seqId: '${this.seqId}',
-    metadata: ${JSON.stringify(this.metadata)},
-    commands: [${commandsString}
+    seqId: '\${this.seqId}',
+    metadata: \${JSON.stringify(this.metadata)},
+    commands: [\${commandsString}
     ],
-  });`
+  });\`
   );
   }
 
@@ -326,8 +329,8 @@ export class Sequence {
 export type DOY_STRING = string & { __brand: 'DOY_STRING' };
 export type HMS_STRING = string & { __brand: 'HMS_STRING' };
 
-const DOY_REGEX = /(\d{4})-(\d{3})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?/;
-const HMS_REGEX = /(\d{2}):(\d{2}):(\d{2})(?:\.(\d{3}))?/;
+const DOY_REGEX = /(\\\\d{4})-(\\\\d{3})T(\\\\d{2}):(\\\\d{2}):(\\\\d{2})(?:\\\\.(\\\\d{3}))?/;
+const HMS_REGEX = /(\\\\d{2}):(\\\\d{2}):(\\\\d{2})(?:\\\\.(\\\\d{3}))?/;
 
 /** YYYY-DOYTHH:MM:SS.sss */
 export function instantToDoy(time: Temporal.Instant): DOY_STRING {
@@ -338,13 +341,13 @@ export function instantToDoy(time: Temporal.Instant): DOY_STRING {
   const MM = formatNumber(utcZonedDate.minute, 2);
   const SS = formatNumber(utcZonedDate.second, 2);
   const sss = formatNumber(utcZonedDate.millisecond, 3);
-  return `${YYYY}-${DOY}T${HH}:${MM}:${SS}.${sss}` as DOY_STRING;
+  return \`\${YYYY}-\${DOY}T\${HH}:\${MM}:\${SS}.\${sss}\` as DOY_STRING;
 }
 
 export function doyToInstant(doy: DOY_STRING): Temporal.Instant {
   const match = doy.match(DOY_REGEX);
   if (match === null) {
-    throw new Error(`Invalid DOY string: ${doy}`);
+    throw new Error(\`Invalid DOY string: \${doy}\`);
   }
   const [, year, doyStr, hour, minute, second, millisecond] = match as [
     unknown,
@@ -390,13 +393,13 @@ export function durationToHms(time: Temporal.Duration): HMS_STRING {
   const SS = formatNumber(time.seconds, 2);
   const sss = formatNumber(time.milliseconds, 3);
 
-  return `${HH}:${MM}:${SS}.${sss}` as HMS_STRING;
+  return \`\${HH}:\${MM}:\${SS}.\${sss}\` as HMS_STRING;
 }
 
 export function hmsToDuration(hms: HMS_STRING): Temporal.Duration {
   const match = hms.match(HMS_REGEX);
   if (match === null) {
-    throw new Error(`Invalid HMS string: ${hms}`);
+    throw new Error(\`Invalid HMS string: \${hms}\`);
   }
   const [, hours, minutes, seconds, milliseconds] = match as [unknown, string, string, string, string | undefined];
   return Temporal.Duration.from({
@@ -512,14 +515,276 @@ function findAndOrderCommandArguments(
       }
     }
   }
-  throw new Error(`Could not find correct argument order for command: ${commandName}`);
+  throw new Error(\`Could not find correct argument order for command: \${commandName}\`);
 }
 
 function indent(text: string, numTimes: number = 1, char: string = '  '): string {
   return text
-    .split('\n')
+    .split('\\\\n')
     .map(line => char.repeat(numTimes) + line)
-    .join('\n');
+    .join('\\\\n');
 }
 
 /** END Preface */
+
+declare global {
+
+  
+	/**This command will echo back a string*/
+	interface ECHO extends Command<[
+		VarString<8, 1024>,
+	] | {
+		'echo_string': VarString<8, 1024>,
+	}> {}
+
+  
+	/**This command will turn on the oven*/
+	interface PREHEAT_OVEN extends Command<[
+		U8,
+	] | {
+		'temperature': U8,
+	}> {}
+
+  
+	/**This command will throw a banana*/
+	interface THROW_BANANA extends Command<[
+		U8,
+	] | {
+		'distance': U8,
+	}> {}
+
+  
+	/**This command will grow bananas*/
+	interface GROW_BANANA extends Command<[
+		U8,
+		U8,
+	] | {
+		'quantity': U8,
+		'durationSecs': U8,
+	}> {}
+
+  
+	/**This command make the banana bread dough*/
+	interface PREPARE_LOAF extends Command<[
+		U8,
+		boolean,
+	] | {
+		'tb_sugar': U8,
+		'gluten_free': boolean,
+	}> {}
+
+  
+	/**This command peels a single banana*/
+	interface PEEL_BANANA extends Command<[
+		('fromStem' | 'fromTip'),
+	] | {
+		'peelDirection': ('fromStem' | 'fromTip'),
+	}> {}
+
+
+	/**This command bakes a banana bread*/
+	interface BAKE_BREAD extends Command<[]> {}
+
+
+
+	/**This command waters the banana tree*/
+	interface ADD_WATER extends Command<[]> {}
+
+
+	interface PACKAGE_BANANA extends Command<[
+[U16] 
+|[{	'lot_number': U16}]
+|[VarString<8, 1024>, U8, U16] 
+|[{	'bundle_name_1': VarString<8, 1024>, 	'number_of_bananas_1': U8, 	'lot_number': U16}]
+|[VarString<8, 1024>, U8, VarString<8, 1024>, U8, U16] 
+|[{	'bundle_name_1': VarString<8, 1024>, 	'number_of_bananas_1': U8, 	'bundle_name_2': VarString<8, 1024>, 	'number_of_bananas_2': U8, 	'lot_number': U16}]
+|[VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, U16] 
+|[{	'bundle_name_1': VarString<8, 1024>, 	'number_of_bananas_1': U8, 	'bundle_name_2': VarString<8, 1024>, 	'number_of_bananas_2': U8, 	'bundle_name_3': VarString<8, 1024>, 	'number_of_bananas_3': U8, 	'lot_number': U16}]
+|[VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, U16] 
+|[{	'bundle_name_1': VarString<8, 1024>, 	'number_of_bananas_1': U8, 	'bundle_name_2': VarString<8, 1024>, 	'number_of_bananas_2': U8, 	'bundle_name_3': VarString<8, 1024>, 	'number_of_bananas_3': U8, 	'bundle_name_4': VarString<8, 1024>, 	'number_of_bananas_4': U8, 	'lot_number': U16}]
+|[VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, U16] 
+|[{	'bundle_name_1': VarString<8, 1024>, 	'number_of_bananas_1': U8, 	'bundle_name_2': VarString<8, 1024>, 	'number_of_bananas_2': U8, 	'bundle_name_3': VarString<8, 1024>, 	'number_of_bananas_3': U8, 	'bundle_name_4': VarString<8, 1024>, 	'number_of_bananas_4': U8, 	'bundle_name_5': VarString<8, 1024>, 	'number_of_bananas_5': U8, 	'lot_number': U16}]
+|[VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, U16] 
+|[{	'bundle_name_1': VarString<8, 1024>, 	'number_of_bananas_1': U8, 	'bundle_name_2': VarString<8, 1024>, 	'number_of_bananas_2': U8, 	'bundle_name_3': VarString<8, 1024>, 	'number_of_bananas_3': U8, 	'bundle_name_4': VarString<8, 1024>, 	'number_of_bananas_4': U8, 	'bundle_name_5': VarString<8, 1024>, 	'number_of_bananas_5': U8, 	'bundle_name_6': VarString<8, 1024>, 	'number_of_bananas_6': U8, 	'lot_number': U16}]
+]> {}
+
+
+	/**Pick a banana*/
+	interface PICK_BANANA extends Command<[]> {}
+
+
+
+	/**Eat a banana*/
+	interface EAT_BANANA extends Command<[]> {}
+
+	const Commands: {
+		ECHO: typeof ECHO,
+		PREHEAT_OVEN: typeof PREHEAT_OVEN,
+		THROW_BANANA: typeof THROW_BANANA,
+		GROW_BANANA: typeof GROW_BANANA,
+		PREPARE_LOAF: typeof PREPARE_LOAF,
+		PEEL_BANANA: typeof PEEL_BANANA,
+		BAKE_BREAD: typeof BAKE_BREAD,
+		ADD_WATER: typeof ADD_WATER,
+		PACKAGE_BANANA: typeof PACKAGE_BANANA,
+		PICK_BANANA: typeof PICK_BANANA,
+		EAT_BANANA: typeof EAT_BANANA,
+	};
+}
+
+const ECHO_ARGS_ORDER = ['echo_string'];
+
+	/**This command will echo back a string*/
+function ECHO(...args: [
+	VarString<8, 1024>,
+] | [{
+	'echo_string': VarString<8, 1024>,
+}]): ECHO {
+  return Command.new({
+    stem: 'ECHO',
+    arguments: typeof args[0] === 'object' ? orderCommandArguments(args[0],ECHO_ARGS_ORDER) : args,
+  }) as ECHO;
+}
+
+const PREHEAT_OVEN_ARGS_ORDER = ['temperature'];
+
+	/**This command will turn on the oven*/
+function PREHEAT_OVEN(...args: [
+	U8,
+] | [{
+	'temperature': U8,
+}]): PREHEAT_OVEN {
+  return Command.new({
+    stem: 'PREHEAT_OVEN',
+    arguments: typeof args[0] === 'object' ? orderCommandArguments(args[0],PREHEAT_OVEN_ARGS_ORDER) : args,
+  }) as PREHEAT_OVEN;
+}
+
+const THROW_BANANA_ARGS_ORDER = ['distance'];
+
+	/**This command will throw a banana*/
+function THROW_BANANA(...args: [
+	U8,
+] | [{
+	'distance': U8,
+}]): THROW_BANANA {
+  return Command.new({
+    stem: 'THROW_BANANA',
+    arguments: typeof args[0] === 'object' ? orderCommandArguments(args[0],THROW_BANANA_ARGS_ORDER) : args,
+  }) as THROW_BANANA;
+}
+
+const GROW_BANANA_ARGS_ORDER = ['quantity', 'durationSecs'];
+
+	/**This command will grow bananas*/
+function GROW_BANANA(...args: [
+	U8,
+	U8,
+] | [{
+	'quantity': U8,
+	'durationSecs': U8,
+}]): GROW_BANANA {
+  return Command.new({
+    stem: 'GROW_BANANA',
+    arguments: typeof args[0] === 'object' ? orderCommandArguments(args[0],GROW_BANANA_ARGS_ORDER) : args,
+  }) as GROW_BANANA;
+}
+
+const PREPARE_LOAF_ARGS_ORDER = ['tb_sugar', 'gluten_free'];
+
+	/**This command make the banana bread dough*/
+function PREPARE_LOAF(...args: [
+	U8,
+	boolean,
+] | [{
+	'tb_sugar': U8,
+	'gluten_free': boolean,
+}]): PREPARE_LOAF {
+  return Command.new({
+    stem: 'PREPARE_LOAF',
+    arguments: typeof args[0] === 'object' ? orderCommandArguments(args[0],PREPARE_LOAF_ARGS_ORDER) : args,
+  }) as PREPARE_LOAF;
+}
+
+const PEEL_BANANA_ARGS_ORDER = ['peelDirection'];
+
+	/**This command peels a single banana*/
+function PEEL_BANANA(...args: [
+	('fromStem' | 'fromTip'),
+] | [{
+	'peelDirection': ('fromStem' | 'fromTip'),
+}]): PEEL_BANANA {
+  return Command.new({
+    stem: 'PEEL_BANANA',
+    arguments: typeof args[0] === 'object' ? orderCommandArguments(args[0],PEEL_BANANA_ARGS_ORDER) : args,
+  }) as PEEL_BANANA;
+}
+
+
+	/**This command bakes a banana bread*/
+const BAKE_BREAD: BAKE_BREAD = Command.new({
+	stem: 'BAKE_BREAD',
+	arguments: [],
+})
+
+
+	/**This command waters the banana tree*/
+const ADD_WATER: ADD_WATER = Command.new({
+	stem: 'ADD_WATER',
+	arguments: [],
+})
+
+const PACKAGE_BANANA_ARGS_ORDERS = [['lot_number'],['bundle_name_1','number_of_bananas_1','lot_number'],['bundle_name_1','number_of_bananas_1','bundle_name_2','number_of_bananas_2','lot_number'],['bundle_name_1','number_of_bananas_1','bundle_name_2','number_of_bananas_2','bundle_name_3','number_of_bananas_3','lot_number'],['bundle_name_1','number_of_bananas_1','bundle_name_2','number_of_bananas_2','bundle_name_3','number_of_bananas_3','bundle_name_4','number_of_bananas_4','lot_number'],['bundle_name_1','number_of_bananas_1','bundle_name_2','number_of_bananas_2','bundle_name_3','number_of_bananas_3','bundle_name_4','number_of_bananas_4','bundle_name_5','number_of_bananas_5','lot_number'],['bundle_name_1','number_of_bananas_1','bundle_name_2','number_of_bananas_2','bundle_name_3','number_of_bananas_3','bundle_name_4','number_of_bananas_4','bundle_name_5','number_of_bananas_5','bundle_name_6','number_of_bananas_6','lot_number']];
+
+	/**Dynamically bundle bananas into lots*/
+function PACKAGE_BANANA(...args:
+ [U16] 
+|[{	'lot_number': U16}]
+|[VarString<8, 1024>, U8, U16] 
+|[{	'bundle_name_1': VarString<8, 1024>, 	'number_of_bananas_1': U8, 	'lot_number': U16}]
+|[VarString<8, 1024>, U8, VarString<8, 1024>, U8, U16] 
+|[{	'bundle_name_1': VarString<8, 1024>, 	'number_of_bananas_1': U8, 	'bundle_name_2': VarString<8, 1024>, 	'number_of_bananas_2': U8, 	'lot_number': U16}]
+|[VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, U16] 
+|[{	'bundle_name_1': VarString<8, 1024>, 	'number_of_bananas_1': U8, 	'bundle_name_2': VarString<8, 1024>, 	'number_of_bananas_2': U8, 	'bundle_name_3': VarString<8, 1024>, 	'number_of_bananas_3': U8, 	'lot_number': U16}]
+|[VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, U16] 
+|[{	'bundle_name_1': VarString<8, 1024>, 	'number_of_bananas_1': U8, 	'bundle_name_2': VarString<8, 1024>, 	'number_of_bananas_2': U8, 	'bundle_name_3': VarString<8, 1024>, 	'number_of_bananas_3': U8, 	'bundle_name_4': VarString<8, 1024>, 	'number_of_bananas_4': U8, 	'lot_number': U16}]
+|[VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, U16] 
+|[{	'bundle_name_1': VarString<8, 1024>, 	'number_of_bananas_1': U8, 	'bundle_name_2': VarString<8, 1024>, 	'number_of_bananas_2': U8, 	'bundle_name_3': VarString<8, 1024>, 	'number_of_bananas_3': U8, 	'bundle_name_4': VarString<8, 1024>, 	'number_of_bananas_4': U8, 	'bundle_name_5': VarString<8, 1024>, 	'number_of_bananas_5': U8, 	'lot_number': U16}]
+|[VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, VarString<8, 1024>, U8, U16] 
+|[{	'bundle_name_1': VarString<8, 1024>, 	'number_of_bananas_1': U8, 	'bundle_name_2': VarString<8, 1024>, 	'number_of_bananas_2': U8, 	'bundle_name_3': VarString<8, 1024>, 	'number_of_bananas_3': U8, 	'bundle_name_4': VarString<8, 1024>, 	'number_of_bananas_4': U8, 	'bundle_name_5': VarString<8, 1024>, 	'number_of_bananas_5': U8, 	'bundle_name_6': VarString<8, 1024>, 	'number_of_bananas_6': U8, 	'lot_number': U16}]
+) {
+  return Command.new({
+    stem: 'PACKAGE_BANANA',
+    arguments: typeof args[0] === 'object' ? findAndOrderCommandArguments(\\"PACKAGE_BANANA\\",args[0],PACKAGE_BANANA_ARGS_ORDERS) : args,
+  }) as PACKAGE_BANANA;
+}
+
+
+	/**Pick a banana*/
+const PICK_BANANA: PICK_BANANA = Command.new({
+	stem: 'PICK_BANANA',
+	arguments: [],
+})
+
+
+	/**Eat a banana*/
+const EAT_BANANA: EAT_BANANA = Command.new({
+	stem: 'EAT_BANANA',
+	arguments: [],
+})
+export const Commands = {		ECHO: ECHO,
+		PREHEAT_OVEN: PREHEAT_OVEN,
+		THROW_BANANA: THROW_BANANA,
+		GROW_BANANA: GROW_BANANA,
+		PREPARE_LOAF: PREPARE_LOAF,
+		PEEL_BANANA: PEEL_BANANA,
+		BAKE_BREAD: BAKE_BREAD,
+		ADD_WATER: ADD_WATER,
+		PACKAGE_BANANA: PACKAGE_BANANA,
+		PICK_BANANA: PICK_BANANA,
+		EAT_BANANA: EAT_BANANA,
+};
+
+Object.assign(globalThis, { A:A, R:R, E:E, C:Commands, Sequence});
+"
+`;
