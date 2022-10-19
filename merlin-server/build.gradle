@@ -42,6 +42,21 @@ task generateDocumentation(type: NpmTask) {
   inputs.dir('src')
 }
 
+task cleanDocsFromDocsDir(type: Delete) {
+  delete rootDir.toPath().resolve('docs/edsl-api-docs/constraints-edsl-api/develop')
+}
+
+task copyDocsToDocsDirectory(type: Copy) {
+  from rootDir.toPath().resolve('merlin-server/constraints-dsl-compiler/build/docs')
+  into rootDir.toPath().resolve('docs/source/constraints-edsl-api')
+}
+
+task publishDocs {
+  dependsOn cleanDocsFromDocsDir
+  dependsOn generateDocumentation
+  dependsOn copyDocsToDocsDirectory
+}
+
 assemble {
   dependsOn assembleConstraintsDSLCompiler
   dependsOn generateASTJsonSchema

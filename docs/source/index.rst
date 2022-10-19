@@ -59,6 +59,24 @@
   The client application and API guide.
 
 .. topic-box::
+	:title: Constraints EDSL APIs
+	:link: constraints-edsl-api
+	:icon: scylla-icon scylla-icon--about-team
+	:class: large-6
+	:anchor: Learn more
+
+	Constraints EDSL APIs for defining constraints on activity plans.
+
+.. topic-box::
+	:title: Scheduling EDSL APIs
+	:link: scheduling-edsl-api
+	:icon: scylla-icon scylla-icon--about-team
+	:class: large-6
+	:anchor: Learn more
+
+	Scheduling EDSL APIs for defining scheduling rules.
+
+.. topic-box::
   :title: Deployment
   :link: deployment
   :icon: scylla-icon scylla-icon--cloud
@@ -98,3 +116,5 @@
   mission-modeling/index
   upgrade-guides/index
   user-interface/index
+  constraints-edsl-api/modules
+  scheduling-edsl-api/modules

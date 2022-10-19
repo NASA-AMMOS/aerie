@@ -7,12 +7,13 @@ from datetime import date
 from sphinx_scylladb_theme.utils import multiversion_regex_builder
 
 sys.path.insert(0, os.path.abspath(".."))
+sys.path.append(os.path.abspath("./_ext"))
 
 # -- Global variables
 
 # Build documentation for the following tags and branches
 TAGS = ["v0.13.1", "v0.13.2"]
-BRANCHES = ["develop"]
+BRANCHES = ["develop", "feat/AERIE-2146--include-edsl-api-docs-in-docs--redux"]
 # Set the latest version.
 LATEST_VERSION = "v0.13.2"
 # Set which versions are not released yet.
@@ -33,6 +34,7 @@ extensions = [
     "sphinx_scylladb_theme",
     "sphinx_multiversion",  # optional
     "myst_parser",  # for converting .md to .rst,
+    "rst_jinja"
 ]
 
 # The suffix(es) of source filenames.

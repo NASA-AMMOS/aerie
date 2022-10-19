@@ -23,6 +23,7 @@ task deleteConstraintsTypescript(type: Delete) {
 
 task copyConstraintsTypescript(type: Copy) {
   dependsOn deleteConstraintsTypescript
+  dependsOn ':merlin-server:assembleConstraintsDSLCompiler'
   from rootDir.toPath().resolve('merlin-server/constraints-dsl-compiler/src/libs')
   into project.projectDir.toPath().resolve('scheduling-dsl-compiler/src/libs/constraints')
 }
@@ -56,6 +57,21 @@ task generateDocumentation(type: NpmTask) {
   args = ['run', 'generate-doc']
   inputs.files('package.json', 'package-lock.json', 'tsconfig.json')
   inputs.dir('src')
+}
+
+task cleanDocsFromDocsDir(type: Delete) {
+  delete rootDir.toPath().resolve('docs/edsl-api-docs/scheduling-edsl-api/develop')
+}
+
+task copyDocsToDocsDirectory(type: Copy) {
+  from rootDir.toPath().resolve('scheduler-server/scheduling-dsl-compiler/build/docs')
+  into rootDir.toPath().resolve('docs/source/scheduling-edsl-api')
+}
+
+task publishDocs {
+  dependsOn cleanDocsFromDocsDir
+  dependsOn generateDocumentation
+  dependsOn copyDocsToDocsDirectory
 }
 
 assemble {
