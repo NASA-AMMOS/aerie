@@ -1,0 +1,21 @@
+================
+0.13.1 To 0.13.2
+================
+
+Migrating a mission model from 0.13.1 to 0.13.2 will require two modifications.
+
+1. The ``spawn()`` and ``defer()`` calls in an activity effect model now return ``void``, rather than ``String``.
+
+2. ``spawn()`` now takes the mission model as a parameter. For example ``spawn(mission, new PeelBananaActivity());``
+
+3. The ``waitFor(String id)`` has been replaced with ``call(final TaskFactory<T> task)``. There is
+no change in the semantics.
+
+For further information see the docs for `activity effect modeling <https://github.com/NASA-AMMOS/aerie/tree/develop/activities>`__
+
+Update Java Version 19
+----------------------
+Mission modelers will need to install a  `Java 19 JDK <https://adoptium.net/temurin/releases/?version=19>`_. in
+order to use builds of the Merlin libraries after this change, but existing built mission models should continue
+to work. Customer deployments which take Aerie Docker images should continue to do so; no additional effort should
+be required

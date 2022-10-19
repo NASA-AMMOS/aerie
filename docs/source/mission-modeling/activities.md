@@ -89,7 +89,8 @@ Spacecraft state is affected via the `Mission` model parameter, which depends on
 mission systems. (See [Developing a Mission Model](developing-a-mission-model) 
 for more on mission modeling.)
 
-Actions related to the passage of simulation time are provided as static methods on the `merlin.framework.ModelActions` class:
+Actions related to the passage of simulation time are provided as static methods on 
+the `merlin.framework.ModelActions` class:
 
 - `delay(duration)`: Delay the currently-running activity for the given duration. On resumption, it will observe
 - effects caused by other activities over the intervening timespan.
@@ -100,11 +101,15 @@ Actions related to the passage of simulation time are provided as static methods
 <!-- - `waitForChildren()`: Delay the currently-running activity until all child activities have completed. 
 On resumption, it will observe effects caused by other activities over the intervening timespan. -->
 
-Actions related to spawning other activities are provided by the generated `ActivityActions` class, usually found under the `generated` package within your codebase.
+Actions related to spawning other activities are provided by the generated `ActivityActions` class, 
+usually found under the `generated` package within your codebase.
 
-- `spawn(activity)`: Spawn a new activity as a child of the currently-running activity at the current point in time. The child will initially see any effects caused by its parent up to this point. The parent will continue execution uninterrupted, and will not initially see any effects caused by its child.
-<!-- - `spawnAfter(duration, activity)`: Asynchronously spawn a new activity as a child of the currently-running activity at the specified duration after the current point in time. The child will initially see any effects caused by its parent up to that point. The parent will continue execution from the current time point uninterrupted, and will not initially see any effects caused by its child. -->
-- `call(activity)`: Spawn a new activity as a child of the currently-running activity at the current point in time. The child will initially see any effects caused by its parent up to this point. The parent will halt execution until the child activity has completed. This is equivalent to calling `waitFor(spawn(activity))`.
+- `spawn(activity)`: Spawn a new activity as a child of the currently-running activity at the 
+current point in time. The child will initially see any effects caused by its parent up to this point. 
+The parent will continue execution uninterrupted, and will not initially see any effects caused by its child.
+- `call(activity)`: Spawn a new activity as a child of the currently-running activity at the current 
+point in time. The child will initially see any effects caused by its parent up to this point. The 
+parent will halt execution until the child activity has completed.
 
 
 For example, consider a simple activity for running the on-board heaters:
