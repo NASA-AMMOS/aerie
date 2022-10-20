@@ -231,11 +231,11 @@ export class Command<
 
   public toEDSLString(): string {
     const timeString = this.absoluteTime
-      ? \`A\\\\\`\${instantToDoy(this.absoluteTime)}\\\\\`\`
+      ? \`A\\\`\${instantToDoy(this.absoluteTime)}\\\`\`
       : this.epochTime
-      ? \`E\\\\\`\${durationToHms(this.epochTime)}\\\\\`\`
+      ? \`E\\\`\${durationToHms(this.epochTime)}\\\`\`
       : this.relativeTime
-      ? \`R\\\\\`\${durationToHms(this.relativeTime)}\\\\\`\`
+      ? \`R\\\`\${durationToHms(this.relativeTime)}\\\`\`
       : 'C';
 
     const argsString = Object.keys(this.arguments).length === 0 ? '' : \`(\${Command.argumentsToString(this.arguments)})\`;
@@ -264,7 +264,7 @@ export class Command<
         }
         return accum;
       }, [] as string[]);
-      return '{\\\\n' + indent(argStrings.map(argString => argString + ',').join('\\\\n')) + '\\\\n}';
+      return '{\\n' + indent(argStrings.map(argString => argString + ',').join('\\n')) + '\\n}';
     }
   }
 }
@@ -302,7 +302,7 @@ export class Sequence {
 
     const commandsString = this.commands.length === 0
         ? ''
-        : '\\\\n' + indent(this.commands.map(c => c.toEDSLString() + ',').join('\\\\n'), 3);
+        : '\\n' + indent(this.commands.map(c => c.toEDSLString() + ',').join('\\n'), 3);
 
   return (
 \`export default () =>
@@ -329,8 +329,8 @@ export class Sequence {
 export type DOY_STRING = string & { __brand: 'DOY_STRING' };
 export type HMS_STRING = string & { __brand: 'HMS_STRING' };
 
-const DOY_REGEX = /(\\\\d{4})-(\\\\d{3})T(\\\\d{2}):(\\\\d{2}):(\\\\d{2})(?:\\\\.(\\\\d{3}))?/;
-const HMS_REGEX = /(\\\\d{2}):(\\\\d{2}):(\\\\d{2})(?:\\\\.(\\\\d{3}))?/;
+const DOY_REGEX = /(\\d{4})-(\\d{3})T(\\d{2}):(\\d{2}):(\\d{2})(?:\\.(\\d{3}))?/;
+const HMS_REGEX = /(\\d{2}):(\\d{2}):(\\d{2})(?:\\.(\\d{3}))?/;
 
 /** YYYY-DOYTHH:MM:SS.sss */
 export function instantToDoy(time: Temporal.Instant): DOY_STRING {
@@ -520,9 +520,9 @@ function findAndOrderCommandArguments(
 
 function indent(text: string, numTimes: number = 1, char: string = '  '): string {
   return text
-    .split('\\\\n')
+    .split('\\n')
     .map(line => char.repeat(numTimes) + line)
-    .join('\\\\n');
+    .join('\\n');
 }
 
 /** END Preface */
@@ -755,7 +755,7 @@ function PACKAGE_BANANA(...args:
 ) {
   return Command.new({
     stem: 'PACKAGE_BANANA',
-    arguments: typeof args[0] === 'object' ? findAndOrderCommandArguments(\\"PACKAGE_BANANA\\",args[0],PACKAGE_BANANA_ARGS_ORDERS) : args,
+    arguments: typeof args[0] === 'object' ? findAndOrderCommandArguments("PACKAGE_BANANA",args[0],PACKAGE_BANANA_ARGS_ORDERS) : args,
   }) as PACKAGE_BANANA;
 }
 

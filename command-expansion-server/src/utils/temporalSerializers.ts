@@ -179,7 +179,7 @@ type SerializedTemporal<T> =
     : T extends Record<string, any> ? { [Property in keyof T]: SerializedTemporal<T[Property]> }
     : T;
 
-type DeserializedTemporal<T extends Record<string, any>> =
+type DeserializedTemporal<T> =
     T extends  { type: 'Temporal.Duration', value: ReturnType<Temporal.Duration['toString']> } ? Temporal.Duration
     : T extends { type: 'Temporal.Instant', value: ReturnType<Temporal.Instant['toString']> } ? Temporal.Instant
     : T extends { type: 'Temporal.ZonedDateTime', value: ReturnType<Temporal.ZonedDateTime['toString']> } ? Temporal.ZonedDateTime
