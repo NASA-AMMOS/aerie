@@ -1,6 +1,14 @@
 export default {
   transform: {
-    '^.+\\.tsx?$': 'ts-jest',
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        diagnostics: {
+          ignoreCodes: [],
+        },
+        useESM: true,
+      },
+    ],
   },
   testRunner: 'jest-circus/runner',
   // testRegex: "(/test/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
@@ -29,13 +37,5 @@ export default {
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
-  },
-  globals: {
-    'ts-jest': {
-      diagnostics: {
-        ignoreCodes: [],
-      },
-      useESM: true,
-    },
   },
 };
