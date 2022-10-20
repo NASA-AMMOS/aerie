@@ -377,6 +377,18 @@ public class PlanCollaborationTests {
     }
   }
 
+  private void setResolution(final int mergeRequestId, final int activityId, final String status) throws SQLException {
+    try(final var statement = connection.createStatement()){
+        statement.execute(
+            """
+            update conflicting_activities
+            set resolution = '%s'::conflict_resolution
+            where merge_request_id = %d and activity_id = %d;
+            """.formatted(status, mergeRequestId, activityId)
+        );
+    }
+  }
+
   ArrayList<ConflictingActivity> getConflictingActivities(final int mergeRequestId) throws SQLException {
     final var conflicts = new ArrayList<ConflictingActivity>();
     try (final var statement = connection.createStatement()) {
@@ -420,6 +432,32 @@ public class PlanCollaborationTests {
       statement.executeUpdate("""
         delete from activity_directive where id = %s and plan_id = %s
       """.formatted(activityId, planId));
+    }
+  }
+
+  private Activity getActivity(final int planId, final int activityId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var res = statement.executeQuery("""
+        SELECT *
+        FROM activity_directive
+        WHERE id = %d
+        AND plan_id = %d;
+      """.formatted(activityId, planId));
+      res.first();
+      return new Activity(
+          res.getInt("id"),
+          res.getInt("plan_id"),
+          res.getString("name"),
+          (String[]) res.getArray("tags").getArray(),
+          res.getInt("source_scheduling_goal_id"),
+          res.getString("created_at"),
+          res.getString("last_modified_at"),
+          res.getString("start_offset"),
+          res.getString("type"),
+          res.getString("arguments"),
+          res.getString("last_modified_arguments_at"),
+          res.getString("metadata")
+      );
     }
   }
 
@@ -1727,5 +1765,261 @@ public class PlanCollaborationTests {
 
   }
 
+  @Nested
+  class CommitMergeTests{
+    @Test
+    void commitMergeFailsForNonexistentId() throws SQLException {
+      try {
+        commitMerge(-1);
+        fail();
+      } catch (SQLException sqlex){
+        if(!sqlex.getMessage().contains("Invalid merge request id -1."))
+          throw sqlex;
+      }
+    }
+
+    @Test
+    void commitMergeFailsIfConflictsExist() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int activityId = insertActivity(basePlan);
+      final int childPlan = duplicatePlan(basePlan, "Child");
+
+      updateActivityName("BasePlan", activityId, basePlan);
+      updateActivityName("ChildPlan", activityId, childPlan);
+
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+      try{
+        commitMerge(mergeRQ);
+        fail();
+      } catch (SQLException sqlex){
+        if(!sqlex.getMessage().contains("There are unresolved conflicts in merge request "+mergeRQ+". Cannot commit merge."))
+          throw sqlex;
+      }
+    }
+
+    @Test
+    void commitMergeSucceedsIfAllConflictsAreResolved() throws SQLException{
+      final int basePlan = insertPlan(missionModelId);
+      final int modifyModifyActivityId = insertActivity(basePlan);
+      final int modifyDeleteActivityId = insertActivity(basePlan);
+      final int deleteModifyActivityId = insertActivity(basePlan);
+      final int childPlan = duplicatePlan(basePlan, "Child");
+
+      updateActivityName("BaseActivity1", modifyModifyActivityId, basePlan);
+      updateActivityName("ChildActivity1", modifyModifyActivityId, childPlan);
+
+      updateActivityName("BaseActivity2", modifyDeleteActivityId, basePlan);
+      deleteActivityDirective(childPlan, modifyDeleteActivityId);
+
+      deleteActivityDirective(basePlan, deleteModifyActivityId);
+      updateActivityName("ChildActivity2", deleteModifyActivityId, childPlan);
+
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+
+      final var conflicts = getConflictingActivities(mergeRQ);
+      final var stagingArea = getStagingAreaActivities(mergeRQ);
+      assertFalse(conflicts.isEmpty());
+      assertEquals(3, conflicts.size());
+      assertTrue(stagingArea.isEmpty());
+
+      for(final var conflict : conflicts){
+        setResolution(mergeRQ, conflict.activityId, "receiving");
+      }
+
+      commitMerge(mergeRQ);
+    }
+
+    /**
+     * This method tests the commit merge succeeds even if all non-conflicting changes are present.
+     * This is also the test that checks the complete workflow with the largest amount of activities (425)
+     */
+    @Test
+    void commitMergeSucceedsIfNoConflictsExist() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int[] baseActivities = new int[200];
+      for(int i = 0; i < baseActivities.length; ++i){
+        baseActivities[i] = insertActivity(basePlan, "00:00:"+(i%60));
+      }
+
+      final int childPlan = duplicatePlan(basePlan, "Child");
+      for(int i = 0; i < 200; ++i){
+        insertActivity(childPlan, "00:00:"+(i%60));
+      }
+
+      /*
+        Does the following non-conflicting updates:
+         -- leave the first 50 activities untouched
+         -- delete the next 25 from the parent
+         -- delete the next 25 from the child
+         -- modify the next 50 in the parent
+         -- modify the next 50 in the child
+         -- add 25 activities to the parent
+       */
+      for(int i = 50;  i < 75;  ++i) { deleteActivityDirective(basePlan, baseActivities[i]); }
+      for(int i = 75;  i < 100; ++i) { deleteActivityDirective(childPlan, baseActivities[i]); }
+      for(int i = 100; i < 150; ++i) { updateActivityName("Renamed Activity " + i, activityId, basePlan); }
+      for(int i = 150; i < 200; ++i) { updateActivityName("Renamed Activity " + i, activityId, childPlan); }
+      for(int i = 0;   i < 25;  ++i) { insertActivity(basePlan); }
+
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+      commitMerge(mergeRQ);
+      //assert that all activities are included now
+      assertEquals(375, getActivities(basePlan).size()); //425-50
+    }
+
+    @Test
+    void modifyAndDeletesApplyCorrectly() throws SQLException {
+      /*
+      Checks:
+      -- modify uncontested supplying applies
+      -- delete uncontested supplying applies
+      -- modify contested supplying applies
+      -- modify contested receiving does nothing
+      -- delete contested supplying applies
+      -- delete contested receiving applies
+       */
+
+      final int basePlan = insertPlan(missionModelId);
+      final int modifyUncontestedActId = insertActivity(basePlan);
+      final int deleteUncontestedActId = insertActivity(basePlan);
+      final int modifyContestedSupplyingActId = insertActivity(basePlan);
+      final int modifyContestedReceivingActId = insertActivity(basePlan);
+      final int deleteContestedSupplyingActId = insertActivity(basePlan);
+      final int deleteContestedReceivingActId = insertActivity(basePlan);
+      final int childPlan = duplicatePlan(basePlan, "Child");
+
+      assertEquals(6, getActivities(basePlan).size());
+      assertEquals(6, getActivities(childPlan).size());
+
+      updateActivityName("Test", modifyUncontestedActId, childPlan);
+
+      deleteActivityDirective(childPlan, deleteUncontestedActId);
+
+      updateActivityName("Modify Contested Supplying Parent", modifyContestedSupplyingActId, basePlan);
+      updateActivityName("Modify Contested Supplying Child", modifyContestedSupplyingActId, childPlan);
+
+      updateActivityName("Modify Contested Receiving Parent", modifyContestedReceivingActId, basePlan);
+      updateActivityName("Modify Contested Receiving Child", modifyContestedReceivingActId, childPlan);
+
+      updateActivityName("Delete Contested Supplying Parent", deleteContestedSupplyingActId, basePlan);
+      deleteActivityDirective(childPlan, deleteContestedSupplyingActId);
+
+      deleteActivityDirective(basePlan, deleteContestedReceivingActId);
+      updateActivityName("Delete Contested Receiving Child", deleteContestedReceivingActId, childPlan);
+
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+
+      assertEquals(4, getConflictingActivities(mergeRQ).size());
+      setResolution(mergeRQ, modifyContestedSupplyingActId, "supplying");
+      setResolution(mergeRQ, modifyContestedReceivingActId, "receiving");
+      setResolution(mergeRQ, deleteContestedSupplyingActId, "supplying");
+      setResolution(mergeRQ, deleteContestedReceivingActId, "receiving");
+
+      final Activity muActivityBefore = getActivity(basePlan, modifyUncontestedActId);
+      final Activity mcsActivityBefore = getActivity(basePlan, modifyContestedSupplyingActId);
+      final Activity mcrActivityBefore = getActivity(basePlan, modifyContestedReceivingActId);
+
+      commitMerge(mergeRQ);
+
+      final var postMergeActivities = getActivities(basePlan);
+
+      assertEquals(3, postMergeActivities.size());
+      assertEquals(4, getActivities(childPlan).size());
+
+      for (Activity activity : postMergeActivities) {
+        if (activity.activityId == muActivityBefore.activityId) {
+          final var muActivityChild = getActivity(childPlan, modifyUncontestedActId);
+          // validate all shared properties
+          assertEquals(muActivityChild.name, activity.name);
+          assertEquals(muActivityChild.sourceSchedulingGoalId, activity.sourceSchedulingGoalId);
+          assertEquals(muActivityChild.createdAt, activity.createdAt);
+          assertEquals(muActivityChild.startOffset, activity.startOffset);
+          assertEquals(muActivityChild.type, activity.type);
+          assertEquals(muActivityChild.arguments, activity.arguments);
+          assertEquals(muActivityChild.metadata, activity.metadata);
+          assertEquals(muActivityChild.tags.length, activity.tags.length);
+          for(int j = 0; j < muActivityChild.tags.length; ++j)
+          {
+            assertEquals(muActivityChild.tags[j], activity.tags[j]);
+          }
+        } else if (activity.activityId == mcsActivityBefore.activityId) {
+          final var mcsActivityChild = getActivity(childPlan, modifyContestedSupplyingActId);
+          // validate all shared properties
+          assertEquals(mcsActivityChild.name, activity.name);
+          assertEquals(mcsActivityChild.sourceSchedulingGoalId, activity.sourceSchedulingGoalId);
+          assertEquals(mcsActivityChild.createdAt, activity.createdAt);
+          assertEquals(mcsActivityChild.startOffset, activity.startOffset);
+          assertEquals(mcsActivityChild.type, activity.type);
+          assertEquals(mcsActivityChild.arguments, activity.arguments);
+          assertEquals(mcsActivityChild.metadata, activity.metadata);
+          assertEquals(mcsActivityChild.tags.length, activity.tags.length);
+          for(int j = 0; j < mcsActivityChild.tags.length; ++j)
+          {
+            assertEquals(mcsActivityChild.tags[j], activity.tags[j]);
+          }
+        } else if (activity.activityId == mcrActivityBefore.activityId) {
+          // validate all shared properties
+          assertEquals(mcrActivityBefore.name, activity.name);
+          assertEquals(mcrActivityBefore.sourceSchedulingGoalId, activity.sourceSchedulingGoalId);
+          assertEquals(mcrActivityBefore.createdAt, activity.createdAt);
+          assertEquals(mcrActivityBefore.startOffset, activity.startOffset);
+          assertEquals(mcrActivityBefore.type, activity.type);
+          assertEquals(mcrActivityBefore.arguments, activity.arguments);
+          assertEquals(mcrActivityBefore.metadata, activity.metadata);
+          assertEquals(mcrActivityBefore.tags.length, activity.tags.length);
+          for(int j = 0; j < mcrActivityBefore.tags.length; ++j)
+          {
+            assertEquals(mcrActivityBefore.tags[j], activity.tags[j]);
+          }
+        } else fail();
+      }
+    }
+
+    @Test
+    void commitMergeCleansUpSuccessfully() throws SQLException{
+      final int basePlan = insertPlan(missionModelId);
+      final int conflictActivityId = insertActivity(basePlan);
+      final int childPlan = duplicatePlan(basePlan, "Child");
+      for(int i = 0; i < 5; ++i){ insertActivity(basePlan, "00:00:"+(i%60)); }
+      for(int i = 0; i < 5; ++i){ insertActivity(basePlan, "00:00:"+(i%60)); }
+
+      updateActivityName("Conflict!", conflictActivityId, basePlan);
+      updateActivityName("Conflict >:-)", conflictActivityId, childPlan);
+
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+
+      final var conflicts = getConflictingActivities(mergeRQ);
+      final var stagingArea = getStagingAreaActivities(mergeRQ);
+      assertFalse(conflicts.isEmpty());
+      assertEquals(1, conflicts.size());
+      assertFalse(stagingArea.isEmpty());
+      assertEquals(10, stagingArea.size());
+
+      setResolution(mergeRQ, conflictActivityId, "receiving");
+      commitMerge(mergeRQ);
+
+      assertTrue(getConflictingActivities(mergeRQ).isEmpty());
+      assertTrue(getConflictingActivities(mergeRQ).isEmpty());
+      try(final var statement = connection.createStatement()){
+        final var res = statement.executeQuery("""
+             SELECT plan.id as plan_id, is_locked, status
+             FROM plan
+             JOIN merge_request
+             ON plan_id_receiving_changes = plan.id
+             WHERE plan.id = %d;
+             """.formatted(basePlan)
+        );
+        assertTrue(res.first());
+        assertEquals(basePlan, res.getInt("plan_id"));
+        assertFalse(res.getBoolean("is_locked"));
+        assertEquals("accepted", res.getString("status"));
+      }
+    }
+  }
 }
 
