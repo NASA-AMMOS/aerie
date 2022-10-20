@@ -29,12 +29,12 @@ They are, as follows:
 | `REPOSITORY_DOCKER_URL` | The URL used to fetch images of Aerie packages.                                                                              |
 | `DOCKER_TAG`            | The version of the Aerie images to fetch.                                                                                    |
 | `AERIE_USERNAME`        | The username used for Aerie services when they access the Postgres database.                                                 |
-| `AERIE_PASSWORD`        | The password used for Aerie services when they access the Postgres database.                                                 ||
-| `POSTGRES_USER`         | The username of the superuser for the Postgres database.                                                                     |
+| `AERIE_PASSWORD`        | The password used for Aerie services when they access the Postgres database.                                                 |
+| `POSTGRES_USER`         | The username of the superuser for the Postgres database. This cannot be the same as the `AERIE_USERNAME` value.              |
 | `POSTGRES_PASSWORD`     | The password of the superuser for the Postgres database.                                                                     |
 | `UNTRUE_PLAN_START`     | Temporary solution to provide plan start time to models, should be set to a time that models will not fail to initialize on. |
 
-### **At minimum, you _must_ assign values to the environment variables already present in [.env](./.env) in order to deploy Aerie**.
+### **At minimum, you _must_ assign values to the environment variables already present in [.env](./.env) in order to deploy Aerie. Additionally, the `POSTGRES_USER` value _cannot_ be the same as the `AERIE_USERNAME` value.**.
 
 ## Configuring Merlin Simulation Workers
 A Merlin simulation is executed by an aerie-merlin-worker. An Aerie deployment can configure one or 

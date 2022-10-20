@@ -3,7 +3,7 @@ services:
   aerie_commanding:
     build:
       context: ./command-expansion-server
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: aerie_commanding
     depends_on: ["postgres"]
     environment:
