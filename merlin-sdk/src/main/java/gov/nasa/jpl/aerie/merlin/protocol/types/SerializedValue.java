@@ -48,7 +48,7 @@ public sealed interface SerializedValue {
    * Most clients will prefer to inherit from {@link OptionalVisitor}, which returns `Optional.empty()`
    * for any unimplemented methods.
    *
-   * @param <T> The return type of the operation represented by this {@link Visitor }.
+   * @param <T> The return type of the operation represented by this {@link Visitor}.
    */
   interface Visitor<T> {
     T onNull();
@@ -121,7 +121,7 @@ public sealed interface SerializedValue {
   /**
    * Creates a {@link SerializedValue} containing a real number.
    *
-   * @param value Any {@link double} value.
+   * @param value Any double} value.
    * @return A new {@link SerializedValue} containing a real number.
    */
   static SerializedValue of(final double value) {
@@ -131,7 +131,7 @@ public sealed interface SerializedValue {
   /**
    * Creates a {@link SerializedValue} containing an integral number.
    *
-   * @param value Any {@link long} value.
+   * @param value Any long value.
    * @return A new {@link SerializedValue} containing an integral number.
    */
   static SerializedValue of(final long value) {
@@ -139,10 +139,10 @@ public sealed interface SerializedValue {
   }
 
   /**
-   * Creates a {@link SerializedValue} containing a {@link boolean}.
+   * Creates a {@link SerializedValue} containing a boolean.
    *
-   * @param value Any {@link boolean} value.
-   * @return A new {@link SerializedValue} containing a {@link boolean}.
+   * @param value Any boolean value.
+   * @return A new {@link SerializedValue} containing a boolean.
    */
   static SerializedValue of(final boolean value) {
     return new BooleanValue(value);
@@ -265,7 +265,7 @@ public sealed interface SerializedValue {
   /**
    * Attempts to access the data in this object as a real number.
    *
-   * @return An {@link Optional} containing a {@link double} if this object contains a real number.
+   * @return An {@link Optional} containing a double if this object contains a real number.
    *   Otherwise, returns an empty {@link Optional}.
    */
   default Optional<Double> asReal() {
@@ -285,7 +285,7 @@ public sealed interface SerializedValue {
   /**
    * Attempts to access the data in this object as an integral number.
    *
-   * @return An {@link Optional} containing a {@link long} if this object contains an integral number.
+   * @return An {@link Optional} containing a long if this object contains an integral number.
    *   Otherwise, returns an empty {@link Optional}.
    */
   default Optional<Long> asInt() {
@@ -305,9 +305,9 @@ public sealed interface SerializedValue {
   }
 
   /**
-   * Attempts to access the data in this object as a {@link boolean}.
+   * Attempts to access the data in this object as a boolean.
    *
-   * @return An {@link Optional} containing a {@link boolean} if this object contains a {@link boolean}.
+   * @return An {@link Optional} containing a boolean if this object contains a boolean.
    *   Otherwise, returns an empty {@link Optional}.
    */
   default Optional<Boolean> asBoolean() {
