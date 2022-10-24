@@ -10,3 +10,63 @@
   configuration:
     custom_root_fields:
       function: get_plan_history
+- function:
+    name: create_merge_request
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: create_merge_request
+- function:
+    name: begin_merge
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: begin_merge
+- function:
+    name: commit_merge
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: commit_merge
+- function:
+    name: deny_merge
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: deny_merge
+- function:
+    name: withdraw_merge_request
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: withdraw_merge_request
+- function:
+    name: cancel_merge
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: cancel_merge
+- function:
+    name: get_non_conflicting_activities
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: get_non_conflicting_activities
+- function:
+    name: get_conflicting_activities
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: get_conflicting_activities
+- function:
+    name: set_resolution
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: set_resolution
+- function:
+    name: set_resolution_bulk
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: set_resolution_bulk

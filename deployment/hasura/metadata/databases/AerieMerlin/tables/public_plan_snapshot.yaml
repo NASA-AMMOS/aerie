@@ -1,0 +1,21 @@
+table:
+  name: plan_snapshot
+  schema: public
+  object_relationships:
+    - name: plan
+      using:
+        manual_configuration:
+          remote_table:
+            schema: public
+            name: plan
+          column_mapping:
+            plan_id: id
+  array_relationships:
+    - name: activity_directives
+      using:
+        manual_configuration:
+          remote_table:
+            schema: public
+            name: plan_snapshot_activities
+          column_mapping:
+            snapshot_id: snapshot_id

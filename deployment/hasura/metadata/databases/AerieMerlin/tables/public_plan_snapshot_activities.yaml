@@ -1,0 +1,3 @@
+table:
+  name: plan_snapshot_activities
+  schema: public
