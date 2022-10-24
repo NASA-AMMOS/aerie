@@ -1,1 +1,6 @@
-# This file will contain hasura functions
+- function:
+    name: duplicate_plan
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: duplicate_plan
