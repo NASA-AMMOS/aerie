@@ -43,4 +43,5 @@ begin;
 
   -- Plan Collaboration
   \ir plan_collaboration.sql
+  \ir hasura_functions.sql
 end;
