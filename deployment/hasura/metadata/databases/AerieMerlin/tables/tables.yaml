@@ -22,3 +22,26 @@
 - "!include public_resource_profile_view.yaml"
 - "!include hasura_functions_duplicate_plan_return_value.yaml"
 - "!include hasura_functions_get_plan_history_return_value.yaml"
+- "!include public_merge_request.yaml"
+- "!include public_merge_staging_area.yaml"
+- "!include public_conflicting_activities.yaml"
+- "!include public_plan_snapshot.yaml"
+# Function return values:
+- table:
+    name: create_merge_request_return_value
+    schema: hasura_functions
+- table:
+    name: begin_merge_return_value
+    schema: hasura_functions
+- table:
+    name: commit_merge_return_value
+    schema: hasura_functions
+- table:
+    name: deny_merge_return_value
+    schema: hasura_functions
+- table:
+    name: withdraw_merge_request_return_value
+    schema: hasura_functions
+- table:
+    name: cancel_merge_return_value
+    schema: hasura_functions

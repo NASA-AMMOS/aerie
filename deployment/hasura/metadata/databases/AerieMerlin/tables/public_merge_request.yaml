@@ -1,0 +1,3 @@
+table:
+  name: merge_request
+  schema: public
