@@ -31,7 +31,6 @@ import static gov.nasa.jpl.aerie.constraints.time.Interval.at;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.interval;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -627,7 +626,7 @@ public class ASTTests {
             new Supplier<>(spans)
         )
     ).evaluate(simResults, new EvaluationEnvironment());
-    
+
     final var expected = new Spans(interval(4, 6, SECONDS), interval(4, 6, SECONDS));
 
     assertEquivalent(expected, result);
@@ -647,7 +646,7 @@ public class ASTTests {
         .set(Interval.between(5, 6, SECONDS), false)
         .set(Interval.between(7,20, SECONDS), true);
 
-    final var result = new ViolationsOf(new Supplier<>(windows)).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new ViolationsOfWindows(new Supplier<>(windows)).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = List.of(new Violation(windows.not().select(simResults.bounds)));
 

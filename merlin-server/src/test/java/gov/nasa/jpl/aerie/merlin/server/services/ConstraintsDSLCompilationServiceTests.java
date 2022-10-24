@@ -3,8 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
 import gov.nasa.jpl.aerie.constraints.tree.ActivityWindow;
-import gov.nasa.jpl.aerie.constraints.tree.All;
-import gov.nasa.jpl.aerie.constraints.tree.Any;
+import gov.nasa.jpl.aerie.constraints.tree.And;
 import gov.nasa.jpl.aerie.constraints.tree.Changes;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
@@ -16,11 +15,12 @@ import gov.nasa.jpl.aerie.constraints.tree.ForEachActivitySpans;
 import gov.nasa.jpl.aerie.constraints.tree.ForEachActivityViolations;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThanOrEqual;
-import gov.nasa.jpl.aerie.constraints.tree.Invert;
 import gov.nasa.jpl.aerie.constraints.tree.LessThan;
 import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.LongerThan;
+import gov.nasa.jpl.aerie.constraints.tree.Not;
 import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
+import gov.nasa.jpl.aerie.constraints.tree.Or;
 import gov.nasa.jpl.aerie.constraints.tree.Plus;
 import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
 import gov.nasa.jpl.aerie.constraints.tree.Rate;
@@ -868,7 +868,7 @@ class ConstraintsDSLCompilationServiceTests {
         }
         """,
         new ForEachActivityViolations("activity", "activity alias 0", new ForEachActivityViolations("activity", "activity alias 1", new ViolationsOfWindows(
-            new All(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))
+            new And(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))
         )))
     );
   }
@@ -904,7 +904,7 @@ class ConstraintsDSLCompilationServiceTests {
         }
         """,
         new ViolationsOfWindows(
-            new Any(
+            new Or(
               new WindowsFromSpans(
                   new ForEachActivitySpans(
                       "activity",

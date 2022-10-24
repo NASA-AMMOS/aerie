@@ -10,10 +10,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-public final class ViolationsOf implements Expression<List<Violation>> {
+public final class ViolationsOfWindows implements Expression<List<Violation>> {
   public final Expression<Windows> expression;
 
-  public ViolationsOf(Expression<Windows> expression) {
+  public ViolationsOfWindows(Expression<Windows> expression) {
     this.expression = expression;
   }
 
@@ -35,8 +35,8 @@ public final class ViolationsOf implements Expression<List<Violation>> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof ViolationsOf)) return false;
-    final var o = (ViolationsOf)obj;
+    if (!(obj instanceof ViolationsOfWindows)) return false;
+    final var o = (ViolationsOfWindows)obj;
 
     return Objects.equals(this.expression, o.expression);
   }
