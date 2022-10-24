@@ -88,7 +88,7 @@ multiversionpreview: multiversion
 
 # Test commands
 .PHONY: test
-test: setup
+test: build-ext
 	$(SPHINXBUILD) -b dirhtml $(TESTSPHINXOPTS) $(BUILDDIR)/dirhtml
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."
@@ -96,3 +96,28 @@ test: setup
 .PHONY: linkcheck
 linkcheck: setup
 	$(SPHINXBUILD) -b linkcheck $(SOURCEDIR) $(BUILDDIR)/linkcheck
+
+# EDSL-Included commands
+.PHONY: multiversion-ext
+multiversion-ext: setup
+	$(POETRY) run sphinx-multiversion source $(BUILDDIR)/dirhtml --pre-build 'touch buildExternalDocs.bash' --pre-build 'bash buildExternalDocs.bash'
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."
+
+.PHONY: multiversionpreview-ext
+multiversionpreview-ext: multiversion-ext
+	$(POETRY) run python -m http.server 5500 --directory $(BUILDDIR)/dirhtml
+
+.PHONY: preview-ext
+preview-ext: build-ext
+	$(POETRY) run sphinx-autobuild -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml --port 5500
+
+.PHONY: dirhtml-ext
+dirhtml-ext: build-ext
+	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
+	@echo
+	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."
+
+.PHONY: build-ext
+build-ext: setup
+	bash buildExternalDocs.bash
