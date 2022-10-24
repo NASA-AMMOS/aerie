@@ -1,0 +1,12 @@
+- function:
+    name: duplicate_plan
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: duplicate_plan
+- function:
+    name: get_plan_history
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: get_plan_history
