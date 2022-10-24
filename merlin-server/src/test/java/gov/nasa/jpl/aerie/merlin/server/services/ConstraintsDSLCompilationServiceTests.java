@@ -1,7 +1,41 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.constraints.tree.*;
+import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
+import gov.nasa.jpl.aerie.constraints.tree.ActivityWindow;
+import gov.nasa.jpl.aerie.constraints.tree.All;
+import gov.nasa.jpl.aerie.constraints.tree.Any;
+import gov.nasa.jpl.aerie.constraints.tree.Changes;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
+import gov.nasa.jpl.aerie.constraints.tree.Ends;
+import gov.nasa.jpl.aerie.constraints.tree.Equal;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
+import gov.nasa.jpl.aerie.constraints.tree.ForEachActivitySpans;
+import gov.nasa.jpl.aerie.constraints.tree.ForEachActivityViolations;
+import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
+import gov.nasa.jpl.aerie.constraints.tree.GreaterThanOrEqual;
+import gov.nasa.jpl.aerie.constraints.tree.Invert;
+import gov.nasa.jpl.aerie.constraints.tree.LessThan;
+import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
+import gov.nasa.jpl.aerie.constraints.tree.LongerThan;
+import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
+import gov.nasa.jpl.aerie.constraints.tree.Plus;
+import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
+import gov.nasa.jpl.aerie.constraints.tree.Rate;
+import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
+import gov.nasa.jpl.aerie.constraints.tree.RealResource;
+import gov.nasa.jpl.aerie.constraints.tree.RealValue;
+import gov.nasa.jpl.aerie.constraints.tree.ShiftBy;
+import gov.nasa.jpl.aerie.constraints.tree.ShorterThan;
+import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
+import gov.nasa.jpl.aerie.constraints.tree.Split;
+import gov.nasa.jpl.aerie.constraints.tree.Starts;
+import gov.nasa.jpl.aerie.constraints.tree.Times;
+import gov.nasa.jpl.aerie.constraints.tree.Transition;
+import gov.nasa.jpl.aerie.constraints.tree.ViolationsOfWindows;
+import gov.nasa.jpl.aerie.constraints.tree.WindowsFromSpans;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
@@ -72,9 +106,21 @@ class ConstraintsDSLCompilationServiceTests {
           return e.times(2)
         }
       """,
-      new ViolationsOf(
+      new ViolationsOfWindows(
           new Changes<>(new ProfileExpression<>(new Times(new RealResource("state of charge"), 2.0)))
       )
+    );
+  }
+
+  @Test
+  void testConstraintDSL_during(){
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+              return Windows.During(ActivityType.activity)
+          }
+        """,
+        new ViolationsOfWindows(new Or(new WindowsFromSpans(new ForEachActivitySpans("activity", "span activity alias 0", new ActivitySpan("span activity alias 0")))))
     );
   }
 
@@ -116,7 +162,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Resource("mode").changes();
             }
         """,
-        new ViolationsOf(new Changes<>(new ProfileExpression<>(new DiscreteResource("mode"))))
+        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteResource("mode"))))
     );
   }
 
@@ -128,7 +174,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Value(5).changes()
             }
         """,
-        new ViolationsOf(new Changes<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(5)))))
+        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(5)))))
     );
   }
 
@@ -141,10 +187,10 @@ class ConstraintsDSLCompilationServiceTests {
               (instance) => instance.parameters.Param.changes()
             )
         """,
-        new ForEachActivity(
+        new ForEachActivityViolations(
             "activity",
             "activity alias 0",
-            new ViolationsOf(new Changes<>(new ProfileExpression<>(new DiscreteParameter("activity alias 0", "Param"))))
+            new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteParameter("activity alias 0", "Param"))))
         )
     );
   }
@@ -157,7 +203,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Resource("mode").transition("Option1", "Option2");
             }
         """,
-        new ViolationsOf(
+        new ViolationsOfWindows(
             new Transition(
                 new DiscreteResource("mode"),
                 SerializedValue.of("Option1"),
@@ -187,7 +233,7 @@ class ConstraintsDSLCompilationServiceTests {
           return Discrete.Resource("mode").equal("Option2");
         }
         """,
-        new ViolationsOf(new Equal<>(new DiscreteResource("mode"), new DiscreteValue(SerializedValue.of("Option2"))))
+        new ViolationsOfWindows(new Equal<>(new DiscreteResource("mode"), new DiscreteValue(SerializedValue.of("Option2"))))
     );
   }
 
@@ -199,7 +245,7 @@ class ConstraintsDSLCompilationServiceTests {
           return Discrete.Resource("an integer").notEqual(4.0);
         }
         """,
-        new ViolationsOf(new NotEqual<>(new DiscreteResource("an integer"), new DiscreteValue(SerializedValue.of(4))))
+        new ViolationsOfWindows(new NotEqual<>(new DiscreteResource("an integer"), new DiscreteValue(SerializedValue.of(4))))
     );
   }
 
@@ -211,7 +257,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Value(4).changes()
             }
         """,
-        new ViolationsOf(new Changes<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(4)))))
+        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(4)))))
     );
   }
 
@@ -223,7 +269,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Discrete.Resource("mode").equal("Option1")
           }
         """,
-        new ViolationsOf(new Equal<>(new DiscreteResource("mode"), new DiscreteValue(SerializedValue.of("Option1"))))
+        new ViolationsOfWindows(new Equal<>(new DiscreteResource("mode"), new DiscreteValue(SerializedValue.of("Option1"))))
     );
   }
 
@@ -237,7 +283,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").changes();
             }
         """,
-        new ViolationsOf(new Changes<>(new ProfileExpression<>(new RealResource("state of charge"))))
+        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealResource("state of charge"))))
     );
   }
 
@@ -249,7 +295,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Value(5).changes()
             }
         """,
-        new ViolationsOf(new Changes<>(new ProfileExpression<>(new RealValue(5.0))))
+        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(5.0))))
     );
   }
 
@@ -262,10 +308,10 @@ class ConstraintsDSLCompilationServiceTests {
               (instance) => instance.parameters.AnotherParam.changes()
             )
         """,
-        new ForEachActivity(
+        new ForEachActivityViolations(
             "activity",
             "activity alias 0",
-            new ViolationsOf(new Changes<>(new ProfileExpression<>(new RealParameter("activity alias 0", "AnotherParam"))))
+            new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealParameter("activity alias 0", "AnotherParam"))))
         )
     );
   }
@@ -278,7 +324,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").rate().equal(Real.Value(4.0))
             }
         """,
-        new ViolationsOf(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)))
+        new ViolationsOfWindows(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)))
     );
   }
 
@@ -290,7 +336,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).longerThan(1000)
             }
         """,
-        new ViolationsOf(new LongerThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), Duration.of(1000, Duration.MICROSECOND)))
+        new ViolationsOfWindows(new LongerThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), Duration.of(1000, Duration.MICROSECOND)))
     );
   }
 
@@ -302,7 +348,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).shorterThan(1000)
             }
         """,
-        new ViolationsOf(new ShorterThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), Duration.of(1000, Duration.MICROSECOND)))
+        new ViolationsOfWindows(new ShorterThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), Duration.of(1000, Duration.MICROSECOND)))
     );
   }
 
@@ -314,7 +360,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).shiftBy(1000, -200)
             }
         """,
-        new ViolationsOf(new ShiftBy(
+        new ViolationsOfWindows(new ShiftBy(
             new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)),
             Duration.of(1000, Duration.MICROSECOND),
             Duration.of(-200, Duration.MICROSECOND)))
@@ -329,7 +375,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").times(2).equal(Real.Value(4.0))
             }
         """,
-        new ViolationsOf(new Equal<>(new Times(new RealResource("state of charge"), 2.0), new RealValue(4.0)))
+        new ViolationsOfWindows(new Equal<>(new Times(new RealResource("state of charge"), 2.0), new RealValue(4.0)))
     );
   }
 
@@ -341,7 +387,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").plus(Real.Value(2.0)).equal(Real.Value(4.0))
             }
         """,
-        new ViolationsOf(new Equal<>(new Plus(new RealResource("state of charge"), new RealValue(2.0)), new RealValue(4.0)))
+        new ViolationsOfWindows(new Equal<>(new Plus(new RealResource("state of charge"), new RealValue(2.0)), new RealValue(4.0)))
     );
   }
 
@@ -353,7 +399,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").lessThan(Real.Value(2.0))
             }
         """,
-        new ViolationsOf(new LessThan(new RealResource("state of charge"), new RealValue(2.0)))
+        new ViolationsOfWindows(new LessThan(new RealResource("state of charge"), new RealValue(2.0)))
     );
   }
 
@@ -365,7 +411,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").lessThanOrEqual(Real.Value(2.0))
             }
         """,
-        new ViolationsOf(new LessThanOrEqual(new RealResource("state of charge"), new RealValue(2.0)))
+        new ViolationsOfWindows(new LessThanOrEqual(new RealResource("state of charge"), new RealValue(2.0)))
     );
   }
 
@@ -377,7 +423,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").greaterThan(Real.Value(2.0))
             }
         """,
-        new ViolationsOf(new GreaterThan(new RealResource("state of charge"), new RealValue(2.0)))
+        new ViolationsOfWindows(new GreaterThan(new RealResource("state of charge"), new RealValue(2.0)))
     );
   }
 
@@ -389,7 +435,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").greaterThanOrEqual(Real.Value(2.0))
             }
         """,
-        new ViolationsOf(new GreaterThanOrEqual(new RealResource("state of charge"), new RealValue(2.0)))
+        new ViolationsOfWindows(new GreaterThanOrEqual(new RealResource("state of charge"), new RealValue(2.0)))
     );
   }
 
@@ -401,7 +447,7 @@ class ConstraintsDSLCompilationServiceTests {
           return Real.Resource("state of charge").equal(Real.Value(-1));
         }
         """,
-        new ViolationsOf(new Equal<>(new RealResource("state of charge"), new RealValue(-1.0)))
+        new ViolationsOfWindows(new Equal<>(new RealResource("state of charge"), new RealValue(-1.0)))
     );
   }
 
@@ -413,7 +459,7 @@ class ConstraintsDSLCompilationServiceTests {
           return Real.Resource("an integer").notEqual(Real.Value(-1));
         }
         """,
-        new ViolationsOf(new NotEqual<>(new RealResource("an integer"), new RealValue(-1.0)))
+        new ViolationsOfWindows(new NotEqual<>(new RealResource("an integer"), new RealValue(-1.0)))
     );
   }
 
@@ -425,7 +471,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Value(4).changes()
             }
         """,
-        new ViolationsOf(new Changes<>(new ProfileExpression<>(new RealValue(4.0))))
+        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(4.0))))
     );
   }
 
@@ -437,7 +483,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Value(2.2).plus(-3).lessThan(5);
           }
         """,
-        new ViolationsOf(new LessThan(new Plus(new RealValue(2.2), new RealValue(-3.0)), new RealValue(5.0)))
+        new ViolationsOfWindows(new LessThan(new Plus(new RealValue(2.2), new RealValue(-3.0)), new RealValue(5.0)))
     );
   }
 
@@ -451,7 +497,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.window());
           }
         """,
-        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new ActivityWindow("activity alias 0")))
+        new ForEachActivityViolations("activity", "activity alias 0", new ViolationsOfWindows(new ActivityWindow("activity alias 0")))
     );
   }
 
@@ -460,10 +506,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.start());
+            return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.start().windows());
           }
         """,
-        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new StartOf("activity alias 0")))
+        new ForEachActivityViolations("activity", "activity alias 0", new ViolationsOfWindows(new WindowsFromSpans(new Starts<>(new ActivitySpan("activity alias 0")))))
     );
   }
 
@@ -472,10 +518,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.end());
+            return Constraint.ForEachActivity(ActivityType.activity, (alias) => alias.end().windows());
           }
         """,
-        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new EndOf("activity alias 0")))
+        new ForEachActivityViolations("activity", "activity alias 0", new ViolationsOfWindows(new WindowsFromSpans(new Ends<>(new ActivitySpan("activity alias 0")))))
     );
   }
 
@@ -488,7 +534,7 @@ class ConstraintsDSLCompilationServiceTests {
               .if(Discrete.Resource("mode").changes());
           }
         """,
-        new ViolationsOf(
+        new ViolationsOfWindows(
             new Or(
                 new Not(new Changes<>(
                     new ProfileExpression<>(new DiscreteResource("mode"))
@@ -501,16 +547,6 @@ class ConstraintsDSLCompilationServiceTests {
 
   @Test
   void testAnd() {
-    final var expected = new ViolationsOf(
-        new And(
-            java.util.List.of(
-                new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
-                new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
-                new Changes<>(new ProfileExpression<>(new RealValue(5.0)))
-            )
-        )
-    );
-
     checkSuccessfulCompilation(
         """
           export default () => {
@@ -521,35 +557,20 @@ class ConstraintsDSLCompilationServiceTests {
             );
           }
         """,
-        expected
-    );
-
-    checkSuccessfulCompilation(
-        """
-          export default () => {
-            return Real.Resource("state of charge").lessThan(2)
-              .and(
-                Discrete.Value("hello there").notEqual(Discrete.Value("hello there")),
-                Real.Value(5).changes()
-              );
-          }
-        """,
-        expected
+        new ViolationsOfWindows(
+            new And(
+                java.util.List.of(
+                    new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
+                    new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
+                    new Changes<>(new ProfileExpression<>(new RealValue(5.0)))
+                )
+            )
+        )
     );
   }
 
   @Test
   void testOr() {
-    final var expected = new ViolationsOf(
-        new Or(
-            java.util.List.of(
-                new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
-                new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
-                new Changes<>(new ProfileExpression<>(new RealValue(5.0)))
-            )
-        )
-    );
-
     checkSuccessfulCompilation(
         """
           export default () => {
@@ -560,20 +581,15 @@ class ConstraintsDSLCompilationServiceTests {
             );
           }
         """,
-        expected
-    );
-
-    checkSuccessfulCompilation(
-        """
-          export default () => {
-            return Real.Resource("state of charge").lessThan(2)
-              .or(
-                Discrete.Value("hello there").notEqual(Discrete.Value("hello there")),
-                Real.Value(5).changes()
-              );
-          }
-        """,
-        expected
+        new ViolationsOfWindows(
+            new Or(
+                java.util.List.of(
+                    new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
+                    new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
+                    new Changes<>(new ProfileExpression<>(new RealValue(5.0)))
+                )
+            )
+        )
     );
   }
 
@@ -585,7 +601,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Discrete.Resource("mode").changes().not()
           }
         """,
-        new ViolationsOf(
+        new ViolationsOfWindows(
             new Not(
                 new Changes<>(new ProfileExpression<>(new DiscreteResource("mode")))
             )
@@ -601,7 +617,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).starts()
           }
         """,
-        new ViolationsOf(
+        new ViolationsOfWindows(
             new Starts<>(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))
         )
     );
@@ -612,7 +628,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).spans().starts().windows()
           }
         """,
-        new ViolationsOf(
+        new ViolationsOfWindows(
             new WindowsFromSpans(new Starts<>(new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))))
         )
     );
@@ -626,7 +642,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).ends()
           }
         """,
-        new ViolationsOf(
+        new ViolationsOfWindows(
             new Ends<>(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))
         )
     );
@@ -637,7 +653,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).spans().ends().windows()
           }
         """,
-        new ViolationsOf(
+        new ViolationsOfWindows(
             new WindowsFromSpans(new Ends<>(new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3)))))
         )
     );
@@ -651,7 +667,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).split(4).windows()
           }
         """,
-        new ViolationsOf(
+        new ViolationsOfWindows(
             new WindowsFromSpans(
               new Split<>(
                   new LessThan(new RealResource("state of charge"), new RealValue(0.3)),
@@ -669,7 +685,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).spans().split(4).windows()
           }
         """,
-        new ViolationsOf(
+        new ViolationsOfWindows(
             new WindowsFromSpans(
               new Split<>(
                   new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3))),
@@ -687,7 +703,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).split(4, Inclusivity.Exclusive, Inclusivity.Inclusive).windows()
           }
         """,
-        new ViolationsOf(
+        new ViolationsOfWindows(
             new WindowsFromSpans(
                 new Split<>(
                     new LessThan(new RealResource("state of charge"), new RealValue(0.3)),
@@ -705,7 +721,7 @@ class ConstraintsDSLCompilationServiceTests {
             return Real.Resource("state of charge").lessThan(0.3).spans().split(4, Inclusivity.Exclusive, Inclusivity.Exclusive).windows()
           }
         """,
-        new ViolationsOf(
+        new ViolationsOfWindows(
             new WindowsFromSpans(
                 new Split<>(
                     new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3))),
@@ -765,7 +781,7 @@ class ConstraintsDSLCompilationServiceTests {
           return Real.Resource("state of charge").equal(Real.Value(-1)).violations();
         }
         """,
-        new ViolationsOf(new Equal<>(new RealResource("state of charge"), new RealValue(-1.0)))
+        new ViolationsOfWindows(new Equal<>(new RealResource("state of charge"), new RealValue(-1.0)))
     );
   }
 
@@ -779,7 +795,7 @@ class ConstraintsDSLCompilationServiceTests {
                 return Real.Resource("state of charge").equal(0.3).spans().windows();
             }
         """,
-        new ViolationsOf(new WindowsFromSpans(new SpansFromWindows(new Equal<>(new RealResource("state of charge"), new RealValue(0.3)))))
+        new ViolationsOfWindows(new WindowsFromSpans(new SpansFromWindows(new Equal<>(new RealResource("state of charge"), new RealValue(0.3)))))
     );
   }
 
@@ -793,13 +809,13 @@ class ConstraintsDSLCompilationServiceTests {
           return Constraint.ForbiddenActivityOverlap(ActivityType.activity, ActivityType.activity)
         }
         """,
-        new ForEachActivity(
+        new ForEachActivityViolations(
             "activity",
             "activity alias 0",
-            new ForEachActivity(
+            new ForEachActivityViolations(
                 "activity",
                 "activity alias 1",
-                new ViolationsOf(new Not(new And(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))))
+                new ViolationsOfWindows(new Not(new And(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))))
             )
         )
     );
@@ -816,7 +832,7 @@ class ConstraintsDSLCompilationServiceTests {
           )
         }
         """,
-        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new ActivityWindow("activity alias 0")))
+        new ForEachActivityViolations("activity", "activity alias 0", new ViolationsOfWindows(new ActivityWindow("activity alias 0")))
     );
 
     checkSuccessfulCompilation(
@@ -833,7 +849,7 @@ class ConstraintsDSLCompilationServiceTests {
           return instance.window();
         }
         """,
-        new ForEachActivity("activity", "activity alias 0", new ViolationsOf(new ActivityWindow("activity alias 0")))
+        new ForEachActivityViolations("activity", "activity alias 0", new ViolationsOfWindows(new ActivityWindow("activity alias 0")))
     );
   }
 
@@ -851,9 +867,58 @@ class ConstraintsDSLCompilationServiceTests {
           )
         }
         """,
-        new ForEachActivity("activity", "activity alias 0", new ForEachActivity("activity", "activity alias 1", new ViolationsOf(
-            new And(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))
+        new ForEachActivityViolations("activity", "activity alias 0", new ForEachActivityViolations("activity", "activity alias 1", new ViolationsOfWindows(
+            new All(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))
         )))
+    );
+  }
+
+  @Test
+  void testDuringedsl() {
+    checkSuccessfulCompilation(
+        """
+        export default () => {
+          return Windows.During(ActivityType.activity)
+        }
+        """,
+        new ViolationsOfWindows(
+            new Or(
+              new WindowsFromSpans(
+                      new ForEachActivitySpans(
+                          "activity",
+                          "span activity alias 0",
+                          new ActivitySpan("span activity alias 0")
+                      )
+              )
+            )
+        )
+    );
+  }
+
+  @Test
+  void testDuringAlledsl() {
+    checkSuccessfulCompilation(
+        """
+        export default () => {
+          return Windows.During(ActivityType.activity, ActivityType.activity2)
+        }
+        """,
+        new ViolationsOfWindows(
+            new Any(
+              new WindowsFromSpans(
+                  new ForEachActivitySpans(
+                      "activity",
+                      "span activity alias 0",
+                      new ActivitySpan("span activity alias 0"))
+              ),
+              new WindowsFromSpans(
+                  new ForEachActivitySpans(
+                      "activity2",
+                      "span activity alias 1",
+                      new ActivitySpan("span activity alias 1"))
+              )
+            )
+        )
     );
   }
 

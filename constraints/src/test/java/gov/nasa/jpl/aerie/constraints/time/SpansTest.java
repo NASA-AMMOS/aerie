@@ -1,10 +1,10 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
@@ -16,7 +16,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MILLISECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
 public class SpansTest {
   @Test
@@ -46,8 +46,8 @@ public class SpansTest {
     spans.add(interval(1, Inclusive, 2, Inclusive, MICROSECONDS));
 
     final var expected = List.of(
-        interval(0, Inclusive, 1, Exclusive, MICROSECONDS),
-        interval(1, Inclusive, 2, Inclusive, MICROSECONDS)
+        Segment.of(interval(0, Inclusive, 1, Exclusive, MICROSECONDS), Optional.empty()),
+        Segment.of(interval(1, Inclusive, 2, Inclusive, MICROSECONDS), Optional.empty())
     );
 
     assertIterableEquals(expected, spans);
@@ -61,8 +61,8 @@ public class SpansTest {
     );
 
     final var expected = List.of(
-        interval(0, Inclusive, 1, Inclusive, SECONDS),
-        interval(500, Inclusive, 2000, Inclusive, MILLISECONDS)
+        Segment.of(interval(0, Inclusive, 1, Inclusive, SECONDS), Optional.empty()),
+        Segment.of(interval(500, Inclusive, 2000, Inclusive, MILLISECONDS), Optional.empty())
     );
 
     assertIterableEquals(expected, spans);
@@ -77,8 +77,8 @@ public class SpansTest {
     ).filter($ -> $.duration().shorterThan(Duration.of(2, SECONDS)) || $.duration().longerThan(Duration.of(2, SECONDS)));
 
     final var expected = List.of(
-        interval(0, 1, SECONDS),
-        interval(0, 3, SECONDS)
+        Segment.of(interval(0, 1, SECONDS), Optional.empty()),
+        Segment.of(interval(0, 3, SECONDS), Optional.empty())
     );
 
     assertIterableEquals(expected, spans);
@@ -92,8 +92,8 @@ public class SpansTest {
     ).map($ -> interval($.start, $.start.plus(SECOND)));
 
     final var expected = List.of(
-        interval(0, 1, SECOND),
-        interval(0, 1, SECOND)
+        Segment.of(interval(0, 1, SECOND), Optional.empty()),
+        Segment.of(interval(0, 1, SECOND), Optional.empty())
     );
 
     assertIterableEquals(expected, spans);
@@ -107,7 +107,7 @@ public class SpansTest {
     ).map($ -> interval($.start, $.startInclusivity, $.end.minus(SECOND), $.endInclusivity));
 
     final var expected = List.of(
-        interval(0, 2, SECOND)
+        Segment.of(interval(0, 2, SECOND), Optional.empty())
     );
 
     assertIterableEquals(expected, spans);
@@ -130,8 +130,8 @@ public class SpansTest {
     });
 
     final var expected = List.of(
-        interval(3, 3, SECONDS),
-        interval(3, 4, SECONDS)
+        Segment.of(interval(3, 3, SECONDS), Optional.empty()),
+        Segment.of(interval(3, 4, SECONDS), Optional.empty())
     );
 
     assertIterableEquals(expected, spans);
@@ -145,7 +145,7 @@ public class SpansTest {
     ).flatMap($ -> Stream.of(interval($.start, $.startInclusivity, $.end.minus(SECOND), $.endInclusivity)));
 
     final var expected = List.of(
-        interval(0, 2, SECOND)
+        Segment.of(interval(0, 2, SECOND), Optional.empty())
     );
 
     assertIterableEquals(expected, spans);

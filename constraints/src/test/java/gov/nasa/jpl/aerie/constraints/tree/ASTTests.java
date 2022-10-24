@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
@@ -30,6 +31,7 @@ import static gov.nasa.jpl.aerie.constraints.time.Interval.at;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.interval;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -554,22 +556,23 @@ public class ASTTests {
         Map.of()
     );
 
-    final var violation = new Violation(List.of(), List.of(), new Windows(interval(4, 6, SECONDS), true));
-    final var result = new ForEachActivity(
+    final var spansSupplied = new Windows(Segment.of(Interval.FOREVER, false),
+                                              Segment.of(interval(4, 6, SECONDS), true)).intoSpans();
+    final var result = new ForEachActivitySpans(
         "TypeA",
         "act",
-        new Supplier<>(List.of(violation))
+        new Supplier<>(spansSupplied)
     ).evaluate(simResults, new EvaluationEnvironment());
 
-    final var expected = List.of(
-        new Violation(List.of(1L), List.of(), new Windows(interval(4, 6, SECONDS), true)),
-        new Violation(List.of(3L), List.of(), new Windows(interval(4, 6, SECONDS), true)));
+    final var expected = new Spans();
+    expected.add(interval(4,6, SECONDS));
+    expected.add(interval(4,6, SECONDS));
 
     assertIterableEquals(expected, result);
   }
 
   @Test
-  public void testNestedForEachActivity() {
+  public void testNestedForEachActivityViolations() {
     final var simResults = new SimulationResults(
         Interval.between(0, 20, SECONDS),
         List.of(
@@ -582,10 +585,10 @@ public class ASTTests {
     );
 
     final var violation = new Violation(List.of(), List.of(), new Windows(interval(4, 6, SECONDS), true));
-    final var result = new ForEachActivity(
+    final var result = new ForEachActivityViolations(
         "TypeA",
         "act",
-        new ForEachActivity(
+        new ForEachActivityViolations(
             "TypeB",
             "act",
             new Supplier<>(List.of(violation))
@@ -597,6 +600,35 @@ public class ASTTests {
     final var expected = List.of(
         new Violation(List.of(1L, 2L), List.of(), new Windows(interval(4, 6, SECONDS), true)),
         new Violation(List.of(3L, 2L), List.of(), new Windows(interval(4, 6, SECONDS), true)));
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testNestedForEachActivitySpans() {
+    final var simResults = new SimulationResults(
+        Interval.between(0, 20, SECONDS),
+        List.of(
+            new ActivityInstance(1, "TypeA", Map.of(), Interval.between(4, 6, SECONDS)),
+            new ActivityInstance(2, "TypeB", Map.of(), Interval.between(5, 7, SECONDS)),
+            new  ActivityInstance(3, "TypeA", Map.of(), Interval.between(9, 10, SECONDS))
+        ),
+        Map.of(),
+        Map.of()
+    );
+
+    final var spans = new Spans(interval(4, 6, SECONDS));
+    final var result = new ForEachActivitySpans(
+        "TypeA",
+        "act",
+        new ForEachActivitySpans(
+            "TypeB",
+            "act",
+            new Supplier<>(spans)
+        )
+    ).evaluate(simResults, new EvaluationEnvironment());
+    
+    final var expected = new Spans(interval(4, 6, SECONDS), interval(4, 6, SECONDS));
 
     assertEquivalent(expected, result);
   }
@@ -644,11 +676,10 @@ public class ASTTests {
         Map.of()
     );
 
-    final var result = new ActivityWindow("act").evaluate(simResults, environment);
+    final var result = new ActivitySpan("act").evaluate(simResults, environment);
 
-    final var expected = new Windows(
-        Segment.of(FOREVER, false),
-        Segment.of(interval(4, 8, SECONDS), true)
+    final var expected = new Spans(
+        List.of(Segment.of(interval(4, 8, SECONDS), Optional.of(new Spans.Metadata(1))))
     );
 
     assertEquivalent(expected, result);

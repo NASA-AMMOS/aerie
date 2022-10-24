@@ -1,18 +1,22 @@
 package gov.nasa.jpl.aerie.constraints.json;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
+import gov.nasa.jpl.aerie.constraints.tree.ActivityWindow;
+import gov.nasa.jpl.aerie.constraints.tree.All;
+import gov.nasa.jpl.aerie.constraints.tree.Any;
 import gov.nasa.jpl.aerie.constraints.tree.And;
 import gov.nasa.jpl.aerie.constraints.tree.Changes;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
-import gov.nasa.jpl.aerie.constraints.tree.ActivityWindow;
 import gov.nasa.jpl.aerie.constraints.tree.EndOf;
 import gov.nasa.jpl.aerie.constraints.tree.Ends;
 import gov.nasa.jpl.aerie.constraints.tree.Equal;
-import gov.nasa.jpl.aerie.constraints.tree.ForEachActivity;
+import gov.nasa.jpl.aerie.constraints.tree.ForEachActivityViolations;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThanOrEqual;
+import gov.nasa.jpl.aerie.constraints.tree.Invert;
 import gov.nasa.jpl.aerie.constraints.tree.LessThan;
 import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.Not;
@@ -24,13 +28,13 @@ import gov.nasa.jpl.aerie.constraints.tree.Rate;
 import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
-import gov.nasa.jpl.aerie.constraints.tree.Split;
 import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
+import gov.nasa.jpl.aerie.constraints.tree.Split;
 import gov.nasa.jpl.aerie.constraints.tree.StartOf;
 import gov.nasa.jpl.aerie.constraints.tree.Starts;
 import gov.nasa.jpl.aerie.constraints.tree.Times;
 import gov.nasa.jpl.aerie.constraints.tree.Transition;
-import gov.nasa.jpl.aerie.constraints.tree.ViolationsOf;
+import gov.nasa.jpl.aerie.constraints.tree.ViolationsOfWindows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsFromSpans;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Test;
@@ -38,7 +42,12 @@ import org.junit.jupiter.api.Test;
 import javax.json.Json;
 
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
-import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.*;
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.constraintP;
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.discreteProfileExprP;
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.discreteResourceP;
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.linearProfileExprP;
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.spansExpressionP;
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.windowsExpressionP;
 
 public final class ConstraintParsersTest {
   @Test
@@ -222,7 +231,7 @@ public final class ConstraintParsersTest {
   }
 
   @Test
-  public void testParseDuring() {
+  public void testParseDuringWindow() {
     final var json = Json
         .createObjectBuilder()
         .add("kind", "WindowsExpressionActivityWindow")
@@ -234,6 +243,21 @@ public final class ConstraintParsersTest {
 
     assertEquivalent(expected, result);
   }
+
+  @Test
+  public void testParseDuringSpan() {
+    final var json = Json
+        .createObjectBuilder()
+        .add("kind", "SpansExpressionActivitySpan")
+        .add("alias", "TEST")
+        .build();
+    final var result = spansExpressionP.parse(json).getSuccessOrThrow();
+
+    final var expected = new ActivitySpan("TEST");
+
+    assertEquivalent(expected, result);
+  }
+
 
   @Test
   public void testParseStartOf() {
@@ -431,23 +455,33 @@ public final class ConstraintParsersTest {
             .createArrayBuilder()
             .add(Json
                      .createObjectBuilder()
-                     .add("kind", "WindowsExpressionActivityWindow")
-                     .add("alias", "A"))
+                     .add("kind", "WindowsExpressionFromSpans")
+                     .add("spansExpression", Json
+                         .createObjectBuilder()
+                         .add("kind", "SpansExpressionActivitySpan")
+                         .add("alias", "A"))
+            )
             .add(Json
                      .createObjectBuilder()
-                     .add("kind", "WindowsExpressionActivityWindow")
-                     .add("alias", "B")))
+                     .add("kind", "WindowsExpressionFromSpans")
+                     .add("spansExpression", Json
+                         .createObjectBuilder()
+                         .add("kind", "SpansExpressionActivitySpan")
+                         .add("alias", "B"))
+            )
+        )
         .build();
 
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
 
     final var expected =
         new And(
-            new ActivityWindow("A"),
-            new ActivityWindow("B"));
+            new WindowsFromSpans(new ActivitySpan("A")),
+            new WindowsFromSpans(new ActivitySpan("B")));
 
     assertEquivalent(expected, result);
   }
+
 
   @Test
   public void testParseOr() {
@@ -472,7 +506,6 @@ public final class ConstraintParsersTest {
         new Or(
             new ActivityWindow("A"),
             new ActivityWindow("B"));
-
     assertEquivalent(expected, result);
   }
 
@@ -543,7 +576,7 @@ public final class ConstraintParsersTest {
         .add("kind", "SpansExpressionSplit")
         .add("intervals", Json
             .createObjectBuilder()
-            .add("kind", "WindowsExpressionActivityWindow")
+            .add("kind", "SpansExpressionActivitySpan")
             .add("alias", "A"))
         .add("numberOfSubIntervals", 3)
         .add("internalStartInclusivity", "Exclusive")
@@ -554,7 +587,7 @@ public final class ConstraintParsersTest {
 
     final var expected =
         new Split<>(
-            new ActivityWindow("A"),
+            new ActivitySpan("A"),
             3,
             Interval.Inclusivity.Exclusive,
             Interval.Inclusivity.Exclusive
@@ -568,12 +601,10 @@ public final class ConstraintParsersTest {
     final var json = Json
         .createObjectBuilder()
         .add("kind", "SpansExpressionSplit")
-        .add("intervals", Json.createObjectBuilder()
-            .add("kind", "SpansExpressionFromWindows")
-            .add("windowsExpression", Json
-              .createObjectBuilder()
-              .add("kind", "WindowsExpressionActivityWindow")
-              .add("alias", "A"))
+        .add("intervals", Json
+            .createObjectBuilder()
+            .add("kind", "WindowsExpressionActivityWindow")
+            .add("alias", "A")
         )
         .add("numberOfSubIntervals", 3)
         .add("internalStartInclusivity", "Inclusive")
@@ -584,9 +615,7 @@ public final class ConstraintParsersTest {
 
     final var expected =
         new Split<>(
-            new SpansFromWindows(
-                new ActivityWindow("A")
-            ),
+            new ActivityWindow("A"),
             3,
             Interval.Inclusivity.Inclusive,
             Interval.Inclusivity.Exclusive
@@ -599,7 +628,7 @@ public final class ConstraintParsersTest {
   public void testForEachActivity() {
     final var json = Json
         .createObjectBuilder()
-        .add("kind", "ForEachActivity")
+        .add("kind", "ForEachActivityViolations")
         .add("activityType", "TypeA")
         .add("alias", "A")
         .add("expression", Json
@@ -610,10 +639,10 @@ public final class ConstraintParsersTest {
     final var result = constraintP.parse(json).getSuccessOrThrow();
 
     final var expected =
-        new ForEachActivity(
+        new ForEachActivityViolations(
             "TypeA",
             "A",
-            new ViolationsOf(
+            new ViolationsOfWindows(
                 new ActivityWindow("A")));
 
     assertEquivalent(expected, result);
@@ -623,12 +652,12 @@ public final class ConstraintParsersTest {
   public void testParseMassiveExpression() {
     var json = Json
         .createObjectBuilder()
-        .add("kind", "ForEachActivity")
+        .add("kind", "ForEachActivityViolations")
         .add("activityType", "TypeA")
         .add("alias", "A")
         .add("expression", Json
             .createObjectBuilder()
-            .add("kind", "ForEachActivity")
+            .add("kind", "ForEachActivityViolations")
             .add("activityType", "TypeB")
             .add("alias", "B")
             .add("expression", Json
@@ -689,13 +718,13 @@ public final class ConstraintParsersTest {
         .build();
     final var result = constraintP.parse(json).getSuccessOrThrow();
 
-    final var expected = new ForEachActivity(
+    final var expected = new ForEachActivityViolations(
         "TypeA",
         "A",
-        new ForEachActivity(
+        new ForEachActivityViolations(
             "TypeB",
             "B",
-            new ViolationsOf(
+            new ViolationsOfWindows(
                 new Or(
                     new Or(
                         new Not(

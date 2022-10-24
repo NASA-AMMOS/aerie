@@ -12,6 +12,7 @@ export enum NodeKind {
   RealProfileRate = 'RealProfileRate',
   DiscreteProfileTransition = 'DiscreteProfileTransition',
   WindowsExpressionActivityWindow = 'WindowsExpressionActivityWindow',
+  SpansExpressionActivitySpan = 'SpansExpressionActivitySpan',
   WindowsExpressionStartOf = 'WindowsExpressionStartOf',
   WindowsExpressionEndOf = 'WindowsExpressionEndOf',
   WindowsExpressionLongerThan = 'WindowsExpressionLongerThan',
@@ -31,23 +32,31 @@ export enum NodeKind {
   WindowsExpressionNot = 'WindowsExpressionNot',
   IntervalsExpressionStarts = 'IntervalsExpressionStarts',
   IntervalsExpressionEnds = 'IntervalsExpressionEnds',
-  ForEachActivity = 'ForEachActivity',
+  ForEachActivitySpans = 'ForEachActivitySpans',
+  ForEachActivityViolations = 'ForEachActivityViolations',
   ProfileChanges = 'ProfileChanges',
   ViolationsOf = 'ViolationsOf',
 }
 
-export type Constraint = ViolationsOf | ForEachActivity | WindowsExpression;
+export type Constraint = ViolationsOf | WindowsExpression | SpansExpression | ForEachActivityConstraints;
 
 export interface ViolationsOf {
   kind: NodeKind.ViolationsOf;
   expression: WindowsExpression;
 }
 
-export interface ForEachActivity {
-  kind: NodeKind.ForEachActivity;
+export interface ForEachActivityConstraints {
+  kind: NodeKind.ForEachActivityViolations;
   activityType: string;
   alias: string;
   expression: Constraint;
+}
+
+export interface ForEachActivitySpans {
+  kind: NodeKind.ForEachActivitySpans;
+  activityType: string;
+  alias: string;
+  expression: SpansExpression;
 }
 
 export type WindowsExpression =
@@ -75,10 +84,12 @@ export type WindowsExpression =
   | IntervalsExpressionEnds;
 
 export type SpansExpression =
+  | SpansExpressionActivitySpan
   | SpansExpressionSplit
   | IntervalsExpressionStarts
   | IntervalsExpressionEnds
-  | SpansExpressionFromWindows;
+  | SpansExpressionFromWindows
+  | ForEachActivitySpans;
 
 export type IntervalsExpression =
   | WindowsExpression
@@ -161,6 +172,11 @@ export interface WindowsExpressionStartOf {
 
 export interface WindowsExpressionActivityWindow {
   kind: NodeKind.WindowsExpressionActivityWindow;
+  alias: string;
+}
+
+export interface SpansExpressionActivitySpan {
+  kind: NodeKind.SpansExpressionActivitySpan;
   alias: string;
 }
 

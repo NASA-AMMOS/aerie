@@ -55,13 +55,13 @@ export class Constraint {
    * @constructor
    */
   public static ForEachActivity<A extends Gen.ActivityType>(
-    activityType: A,
-    expression: (instance: ActivityInstance<A>) => Constraint,
+      activityType: A,
+      expression: (instance: ActivityInstance<A>) => Constraint,
   ): Constraint {
     let alias = 'activity alias ' + Constraint.__numGeneratedAliases;
     Constraint.__numGeneratedAliases += 1;
     return new Constraint({
-      kind: AST.NodeKind.ForEachActivity,
+      kind: AST.NodeKind.ForEachActivityViolations,
       activityType,
       alias,
       expression: expression(new ActivityInstance(activityType, alias)).__astNode,
@@ -78,6 +78,18 @@ export class Windows {
   /** @internal **/
   public constructor(expression: AST.WindowsExpression) {
     this.__astNode = expression;
+  }
+
+    /**
+   * Produces windows for each activity present in the plan and belonging to one of the activity types passed
+   *
+   * @param activityTypes the activity types
+   */
+  public static During(...activityTypes: Gen.ActivityType[]) : Windows {
+    return Windows.Or(
+        ...activityTypes.map<Windows>((activityType) =>
+            Spans.ForEachActivity(activityType, (activity) => activity.span()).windows())
+    );
   }
 
   /**
@@ -289,6 +301,8 @@ export class Windows {
 export class Spans {
   /** @internal **/
   public readonly __astNode: AST.SpansExpression;
+  /** @internal **/
+  private static __numGeneratedAliases: number = 0;
 
   /** @internal **/
   public constructor(expression: AST.SpansExpression) {
@@ -353,6 +367,28 @@ export class Spans {
       kind: AST.NodeKind.WindowsExpressionFromSpans,
       spansExpression: this.__astNode
     })
+  }
+
+
+  /**
+   * Check a constraint for each instance of an activity type.
+   *
+   * @param activityType activity type to check
+   * @param expression function of an activity instance that returns a Constraint
+   * @constructor
+   */
+  public static ForEachActivity<A extends Gen.ActivityType>(
+      activityType: A,
+      expression: (instance: ActivityInstance<A>) => Spans,
+  ): Spans {
+    let alias = 'span activity alias ' + Spans.__numGeneratedAliases;
+    Spans.__numGeneratedAliases += 1;
+    return new Spans({
+      kind: AST.NodeKind.ForEachActivitySpans,
+      activityType: activityType,
+      alias: alias,
+      expression: expression(new ActivityInstance(activityType, alias)).__astNode,
+    });
   }
 }
 
@@ -642,6 +678,16 @@ export class ActivityInstance<A extends ActivityType> {
   }
 
   /**
+   * Produces a span for the duration of the activity.
+   */
+  public span(): Spans {
+    return new Spans({
+      kind: AST.NodeKind.SpansExpressionActivitySpan,
+      alias: this.__alias
+    });
+  }
+
+  /**
    * Produces a window for the duration of the activity.
    */
   public window(): Windows {
@@ -654,21 +700,15 @@ export class ActivityInstance<A extends ActivityType> {
   /**
    * Produces an instantaneous window at the start of the activity.
    */
-  public start(): Windows {
-    return new Windows({
-      kind: AST.NodeKind.WindowsExpressionStartOf,
-      alias: this.__alias
-    });
+  public start(): Spans {
+    return this.span().starts();
   }
 
   /**
    * Produces an instantaneous window at the end of the activity.
    */
-  public end(): Windows {
-    return new Windows({
-      kind: AST.NodeKind.WindowsExpressionEndOf,
-      alias: this.__alias
-    });
+  public end(): Spans {
+    return this.span().ends();
   }
 }
 
@@ -701,15 +741,15 @@ declare global {
     ): Constraint;
 
     /**
-     * Check a constraint for each instance of an activity type.
+     * Applies an expression producing spans for each instance of an activity type and returns the aggregated set of spans.
      *
      * @param activityType activity type to check
-     * @param expression function of an activity instance that returns a Constraint
+     * @param expression function of an activity instance that returns a Spans
      * @constructor
      */
     public static ForEachActivity<A extends Gen.ActivityType>(
-      activityType: A,
-      expression: (instance: ActivityInstance<A>) => Constraint,
+        activityType: A,
+        expression: (instance: ActivityInstance<A>) => Constraint,
     ): Constraint;
   }
 
@@ -833,6 +873,13 @@ declare global {
      * @throws InvalidGapsException if this contains any gaps.
      */
     public spans(): Spans;
+
+    /**
+     * Produces windows for each activity present in the plan and belonging to one of the activity types passed
+     *
+     * @param activityTypes the activity types
+     */
+     public static During<A extends Gen.ActivityType>(...activityTypes: Gen.ActivityType[]) : Windows;
   }
 
   /**
@@ -870,6 +917,20 @@ declare global {
      * If any spans overlap or touch, they will be coalesced into a single window.
      */
     public windows(): Windows;
+
+
+    /**
+     * Applies an expression producing spans for each instance of an activity type and returns the aggregated set of spans.
+     *
+     * @param activityType activity type to check
+     * @param expression function of an activity instance that returns a Spans
+     * @constructor
+     */
+    public static ForEachActivity<A extends Gen.ActivityType>(
+        activityType: A,
+        expression: (instance: ActivityInstance<A>) => Spans,
+    ): Spans;
+
   }
 
   /**

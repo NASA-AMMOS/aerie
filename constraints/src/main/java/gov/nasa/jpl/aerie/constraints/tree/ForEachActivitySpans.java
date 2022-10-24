@@ -2,24 +2,22 @@ package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Spans;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-public final class ForEachActivity implements Expression<List<Violation>> {
+public final class ForEachActivitySpans implements Expression<Spans> {
   public final String activityType;
   public final String alias;
-  public final Expression<List<Violation>> expression;
+  public final Expression<Spans> expression;
 
-  public ForEachActivity(
+  public ForEachActivitySpans(
       final String activityType,
       final String alias,
-      final Expression<List<Violation>> expression
+      final Expression<Spans> expression
   ) {
     this.activityType = activityType;
     this.alias = alias;
@@ -27,8 +25,8 @@ public final class ForEachActivity implements Expression<List<Violation>> {
   }
 
   @Override
-  public List<Violation> evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    final var violations = new ArrayList<Violation>();
+  public Spans evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+    final var spans = new Spans();
     for (final var activity : results.activities) {
       if (activity.type.equals(this.activityType)) {
         final var newEnvironment = new EvaluationEnvironment(
@@ -38,17 +36,11 @@ public final class ForEachActivity implements Expression<List<Violation>> {
         );
         newEnvironment.activityInstances().put(this.alias, activity);
 
-        final var expressionViolations = this.expression.evaluate(results, bounds, newEnvironment);
-        for (final var violation : expressionViolations) {
-          if (!violation.violationWindows.isEmpty()) {
-            final var newViolation = new Violation(violation);
-            newViolation.addActivityId(activity.id);
-            violations.add(newViolation);
-          }
-        }
+        final var expressionSpans = this.expression.evaluate(results, bounds, newEnvironment);
+        spans.addAll(expressionSpans);
       }
     }
-    return violations;
+    return spans;
   }
 
   @Override
@@ -69,8 +61,8 @@ public final class ForEachActivity implements Expression<List<Violation>> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof ForEachActivity)) return false;
-    final var o = (ForEachActivity)obj;
+    if (!(obj instanceof ForEachActivitySpans)) return false;
+    final var o = (ForEachActivitySpans)obj;
 
     return Objects.equals(this.activityType, o.activityType) &&
            Objects.equals(this.alias, o.alias) &&
