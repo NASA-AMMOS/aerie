@@ -557,3 +557,36 @@ begin
     where plan.id = (select plan_id_receiving_changes from merge_request where id = request_id);
 end
 $$;
+
+create view merge_review_activity as
+select merge_request_id,
+       activity_id,
+       change_type_supplying as change_type_source,
+       change_type_receiving as change_type_target,
+       case resolution
+         when 'supplying'
+           then 'source'
+         when 'receiving'
+           then 'target'
+         end as resolution,
+       snap_act as source,
+       act as target,
+       'true'::boolean as is_conflict
+from conflicting_activities c
+       join merge_request m on c.merge_request_id = m.id
+       left join plan_snapshot_activities snap_act on m.snapshot_id_supplying_changes = snap_act.snapshot_id and c.activity_id = snap_act.id
+       left join activity_directive act on m.plan_id_receiving_changes = act.plan_id and c.activity_id = act.id
+union all
+select request_id as merge_request_id,
+       activity_id,
+       change_type as change_type_source,
+       'none' as change_type_target,
+       'source' as resolution,
+       snap_act as source,
+       act as target,
+       'false'::boolean as is_conflict
+from merge_staging_area msa
+       join merge_request m on msa.request_id = m.id
+       left join plan_snapshot_activities snap_act on m.snapshot_id_supplying_changes = snap_act.snapshot_id and msa.activity_id = snap_act.id
+       left join activity_directive act on m.plan_id_receiving_changes = act.plan_id and msa.activity_id = act.id
+where not (change_type = 'none');

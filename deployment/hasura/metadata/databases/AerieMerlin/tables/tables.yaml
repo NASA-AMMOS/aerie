@@ -26,6 +26,7 @@
 - "!include public_merge_staging_area.yaml"
 - "!include public_conflicting_activities.yaml"
 - "!include public_plan_snapshot.yaml"
+- "!include public_merge_review_activity_view.yaml"
 # Function return values:
 - table:
     name: create_merge_request_return_value
