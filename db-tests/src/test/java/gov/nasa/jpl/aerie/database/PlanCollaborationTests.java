@@ -1155,6 +1155,17 @@ public class PlanCollaborationTests {
 
   @Nested
   class MergeBaseTests{
+
+    //TODO: make a test that validates that begin_merge updates the mb if it's old
+    /*
+    create plan
+create child
+create the request
+  assert request mb = manually calling mb
+  manually make the an old value outdated
+  begin
+     */
+
     /**
      * The MB between a plan and itself is its latest snapshot.
      * Create additional snapshots between creation and MB to verify this.
@@ -2588,4 +2599,3 @@ public class PlanCollaborationTests {
     }
   }
 }
-
