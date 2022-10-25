@@ -130,13 +130,16 @@ begin
     set is_locked = true
     where plan.id = plan_id_receiving;
 
-  -- update the status to "in progress"
-  update merge_request
-    set status = 'in-progress'
-    where id = merge_request_id;
   -- get merge base (mb)
   select get_merge_base(plan_id_receiving, snapshot_id_supplying)
-    into merge_base_id;
+  into merge_base_id;
+
+  -- update the status to "in progress"
+  update merge_request
+    set status = 'in-progress',
+    merge_base_snapshot_id = merge_base_id
+    where id = merge_request_id;
+
 
   -- perform diff between mb and s_sc (s_diff)
     -- delete is B minus A on key

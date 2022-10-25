@@ -4,6 +4,7 @@ create table merge_request(
       id integer generated always as identity,
       plan_id_receiving_changes integer,
       snapshot_id_supplying_changes integer,
+      merge_base_snapshot_id integer not null,
       status merge_request_status default 'pending',
       constraint request_artificial_key
         primary key (id)
@@ -13,7 +14,7 @@ create or replace function create_merge_request(plan_id_supplying integer, plan_
   returns integer
   language plpgsql as $$
 declare
-  validate_related integer;
+  merge_base_snapshot_id integer;
   validate_planIds integer;
   supplying_snapshot_id integer;
   merge_request_id integer;
@@ -29,14 +30,14 @@ begin
 
   select create_snapshot(plan_id_supplying) into supplying_snapshot_id;
 
-  select get_merge_base(plan_id_receiving, supplying_snapshot_id) into validate_related;
-  if validate_related is null then
+  select get_merge_base(plan_id_receiving, supplying_snapshot_id) into merge_base_snapshot_id;
+  if merge_base_snapshot_id is null then
     raise exception 'Cannot create merge request between unrelated plans.';
   end if;
 
 
-  insert into merge_request(plan_id_receiving_changes, snapshot_id_supplying_changes)
-    values(plan_id_receiving, supplying_snapshot_id)
+  insert into merge_request(plan_id_receiving_changes, snapshot_id_supplying_changes, merge_base_snapshot_id)
+    values(plan_id_receiving, supplying_snapshot_id, merge_base_snapshot_id)
     returning id into merge_request_id;
   return merge_request_id;
 end
