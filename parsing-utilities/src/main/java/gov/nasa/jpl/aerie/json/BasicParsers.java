@@ -190,17 +190,29 @@ public abstract class BasicParsers {
     }
   };
 
-  public static <T> JsonParser<Optional<T>> nullableP(JsonParser<T> parser) {
-    return chooseP(
-        parser.map(
-            Optional::of,
-            Optional::get
-        ),
-        nullP.map(
-            $ -> Optional.empty(),
-            $ -> Unit.UNIT
-        )
-    );
+  public static <T> JsonParser<Optional<T>> nullableP(final JsonParser<T> parser) {
+    return new JsonParser<>() {
+      @Override
+      public JsonObject getSchema(final SchemaCache anchors) {
+        return Json.createObjectBuilder()
+                   .add("oneOf", Json.createArrayBuilder()
+                                   .add(JsonValue.NULL)
+                                   .add(parser.getSchema()))
+                   .build();
+      }
+
+      @Override
+      public JsonParseResult<Optional<T>> parse(final JsonValue json) {
+        if (json.getValueType() == JsonValue.ValueType.NULL) return JsonParseResult.success(Optional.empty());
+
+        return parser.parse(json).mapSuccess(Optional::of);
+      }
+
+      @Override
+      public JsonValue unparse(final Optional<T> value) {
+        return value.map(parser::unparse).orElse(JsonValue.NULL);
+      }
+    };
   }
 
   public static final JsonParser<Unit> nullP = new JsonParser<>() {

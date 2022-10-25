@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static gov.nasa.jpl.aerie.json.BasicParsers.nullableP;
 import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.realDynamicsP;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 
