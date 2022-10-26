@@ -119,7 +119,7 @@ export class Goal {
    * Restricts the windows on which a goal is applied
    *
    *
-   * By default, a goal applies on the whole planning horizon. The Aerie scheduler provides support for restricting _when_ a goal applies with the `.applyWhen()` method in the `Goal` class. This node allows users to provide a set of windows (`Windows`, see [documentation](https://github.com/NASA-AMMOS/aerie/wiki/Constraints#windows)) which could be a time or a resource-based window.
+   * By default, a goal applies on the whole planning horizon. The Aerie scheduler provides support for restricting _when_ a goal applies with the `.applyWhen()` method in the `Goal` class. This node allows users to provide a set of windows (`Windows`, see [documentation](../../constraints-edsl-api/classes/Windows)) which could be a time or a resource-based window.
    *
    * The `.applyWhen()` method, takes one argument: the windows (in the form of an expression) that the goal should apply over. What follows is an example that applies a daily recurrence goal only when a given resource is greater than 2. If the resource is less than two, then the goal is no longer applied.
    *
@@ -149,7 +149,7 @@ export class Goal {
    * GOAL WINDOW:         [+++++--+++--]
    * RESULT:              [++-----++---] //(the second one is applied independently of the first!)
    * ```
-   * * When mapping out a temporal window to apply a goal over, keep in mind that the ending boundary of the goal is _exclusive_, i.e. if I want to apply a goal in the window of 10-12 seconds, it will apply only on seconds 10 and 11. This is in line with the [fencepost problem](https://icarus.cs.weber.edu/~dab/cs1410/textbook/3.Control/fencepost.html).
+   * * When mapping out a temporal window to apply a goal over, keep in mind that the ending boundary of the goal is _exclusive_, i.e. if I want to apply a goal in the window of 10-12 seconds, it will apply only on seconds 10 and 11. This is in line with the [fencepost problem](https://en.wikipedia.org/wiki/Off-by-one_error#Fencepost_error).
    *
    * @param windows the windows on which this goal applies
    * @returns a new goal applying on a restricted horizon
@@ -210,7 +210,7 @@ export class Goal {
    * The Coexistence Goal specifies that a certain activity should occur once **for each** occurrence of some condition.
    *
    * #### Inputs
-   * - **forEach**: a set of time windows (`Windows`, see [documentation](https://github.com/NASA-AMMOS/aerie/wiki/Constraints#windows) on how to produce such an expression) or a set of activities (`ActivityExpression`)
+   * - **forEach**: a set of time windows (`Windows`, see [documentation](../../constraints-edsl-api/classes/Windows) on how to produce such an expression) or a set of activities (`ActivityExpression`)
    * - **activityTemplate**: the description of the activity to insert after each activity identified by `forEach`
    * - **startsAt**: optionally specify a specific time when the activity should start relative to the window
    * - **startsWithin**: optionally specify a range when the activity should start relative to the window
@@ -257,7 +257,7 @@ export class Goal {
    *
    * KNOWN ISSUE: If the end is unconstrained while the activity has an uncontrollable duration, the scheduler may fail to place the activity. To work around this, add an `endsWithin` constraint that encompasses your expectation for the duration of the activity - this will help the scheduler narrow the search space.
    *
-   * @param opts an object containing the activity template, a set of windows, and optionnally temporal constraints.
+   * @param opts an object containing the activity template, a set of windows, and optionally temporal constraints.
    */
   public static CoexistenceGoal(opts: {
     activityTemplate: ActivityTemplate,

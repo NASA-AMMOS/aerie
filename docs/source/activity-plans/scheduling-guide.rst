@@ -126,7 +126,7 @@ a goal is enabled or disabled.
 
 Scheduling DSL Documentation
 ============================
-Here you will find the full set of features in the scheduling DSL.
+The full set of features can be found in the :doc:`Scheduling EDSL API Documentation <../scheduling-edsl-api/index>`
 
 
 .. warning::
@@ -450,7 +450,7 @@ have:
 
 When mapping out a temporal window to apply a goal over, keep in mind that the ending boundary of the goal is
 *exclusive*, i.e. if I want to apply a goal in the window of 10-12 seconds, it will apply only on seconds 10 and 11.
-This is in line with the `fencepost problem <https://icarus.cs.weber.edu/~dab/cs1410/textbook/3.Control/fencepost.html>`__.
+This is in line with the `fencepost problem <https://en.wikipedia.org/wiki/Off-by-one_error#Fencepost_error>`__.
 
 Global Scheduling Conditions
 ============================
