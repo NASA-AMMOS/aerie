@@ -12,6 +12,12 @@ import * as AST from './constraints-ast.js';
 import type * as Gen from './mission-model-generated-code.js';
 import {ActivityType, ActivityTypeParameterMap} from "./mission-model-generated-code.js";
 
+/**
+ * An expression that discriminates between valid and invalid states.
+ *
+ * Constraints can be based off of activity parameters and placement, resource profiles, or
+ * some combination of those.
+ */
 export class Constraint {
   /** Internal AST node */
   /** @internal **/
@@ -63,6 +69,7 @@ export class Constraint {
   }
 }
 
+/** A boolean profile; a function from time to truth values. */
 export class Windows {
   /** Internal AST node */
   /** @internal **/
@@ -74,9 +81,7 @@ export class Windows {
   }
 
   /**
-   * Produce a window when all arguments produce a window.
-   *
-   * Performs the intersection of the argument windows.
+   * Performs the boolean And operation on any number of Windows.
    *
    * @param windows any number of windows expressions
    */
@@ -88,11 +93,9 @@ export class Windows {
   }
 
   /**
-   * Produce a window when any argument produces a window.
+   * Performs the boolean Or operation on any number of Windows.
    *
-   * Performs the union of the argument windows.
-   *
-   * @param windows one or more windows expressions
+   * @param windows any number of windows expressions
    */
   public static Or(...windows: Windows[]): Windows {
     return new Windows({
@@ -102,7 +105,8 @@ export class Windows {
   }
 
   /**
-   * Only check this expression of the condition argument produces a window.
+   * Only check this expression when the condition argument is true;
+   * otherwise the result is vacuously true.
    *
    * @param condition
    */
@@ -120,15 +124,21 @@ export class Windows {
   }
 
   /**
-   * Invert all the windows produced this.
+   * Performs the boolean And operation on this and any number of additional Windows.
    */
   public and(...windows: Windows[]): Windows {
     return Windows.And(this, ...windows);
   }
 
+  /**
+   * Performs the boolean Or operation on this and any number of additional Windows.
+   */
   public or(...windows: Windows[]): Windows {
     return Windows.Or(this, ...windows);
   }
+
+  /**
+   * Performs the boolean Not operation on this windows object.
    */
   public not(): Windows {
     return new Windows({
@@ -138,7 +148,7 @@ export class Windows {
   }
 
   /**
-   * Produce a constraint violation whenever this does NOT produce a window.
+   * Produces a constraint violation whenever this is false.
    *
    * Essentially, express the condition you want to be satisfied, then use
    * this method to produce a violation whenever it is NOT satisfied.
@@ -151,7 +161,9 @@ export class Windows {
   }
 
   /**
-   *  Return all windows with a duration longer than the argument
+   * Returns a new windows object, with all true segments shorter than or equal to the given
+   * duration set to false.
+   *
    * @param duration the duration
    */
   public longerThan(duration: Duration) : Windows {
@@ -163,7 +175,9 @@ export class Windows {
   }
 
   /**
-   * Returns all windows with a duration shorter than the argument
+   * Returns a new windows object, with all true segments longer than or equal to the given
+   * duration set to false.
+   *
    * @param duration the duration
    */
   public shorterThan(duration: Duration) : Windows {
@@ -175,9 +189,13 @@ export class Windows {
   }
 
   /**
-   * Shift start and end of all windows by a duration
-   * @param fromStart duration to add from the start of the window
-   * @param fromEnd duration to add from the end of the window
+   * Shifts the start and end of all true segments by a duration.
+   *
+   * Shifts the start and end of all false segment by the opposite directions (i.e. the start of each false segment
+   * is shifted by `fromEnd`).
+   *
+   * @param fromStart duration to add from the start of each true segment
+   * @param fromEnd duration to add from the end of each true segment
    */
   public shiftBy(fromStart: Duration, fromEnd: Duration) : Windows {
     return new Windows({
@@ -189,7 +207,7 @@ export class Windows {
   }
 
   /**
-   * Splits each window into equal sized sub-intervals. Returns a Spans object.
+   * Splits each true segment into equal sized sub-intervals. Returns a Spans object.
    *
    * For `.split(N)`, N sub-windows will be created by removing N-1 points in the middle.
    *
@@ -219,7 +237,7 @@ export class Windows {
   }
 
   /**
-   * Replaces each window with its start point.
+   * Replaces each true segment with its start point.
    *
    * Since gaps represent "unknown", true segments that come after a gap don't have a known start point.
    * So instead their first known point is unset and the rest is set to false.
@@ -236,7 +254,7 @@ export class Windows {
   }
 
   /**
-   * Replaces each window with its end point.
+   * Replaces each true segment with its end point.
    *
    * Since gaps represent "unknown", true segments that come before a gap don't have a known end point.
    * So instead their last known point is unset and the rest is set to false.
@@ -265,6 +283,9 @@ export class Windows {
   }
 }
 
+/**
+ * A set of intervals that can overlap without being coaleseced together.
+ */
 export class Spans {
   /** @internal **/
   public readonly __astNode: AST.SpansExpression;
@@ -322,7 +343,7 @@ export class Spans {
   }
 
   /**
-   * Convert this into a set of Windows.
+   * Convert this into a set of Windows. Each span is a true segment, and everything else is false.
    *
    * This is a lossy operation.
    * If any spans overlap or touch, they will be coalesced into a single window.
@@ -335,6 +356,12 @@ export class Spans {
   }
 }
 
+/**
+ * A real number profile; a function from time to real numbers.
+ *
+ * Most real profiles are piecewise-linear, but some can be piecewise-constant if the
+ * underlying datatype is an integer. More general function types are currently unsupported.
+ */
 export class Real {
   /** @internal **/
   public readonly __astNode: AST.RealProfileExpression;
@@ -506,6 +533,12 @@ export class Real {
   }
 }
 
+/**
+ * A profile of any type; a function from time to any value representable by JSON.
+ *
+ * All profiles can be represented as Discrete, even Real profiles. Keep in mind that treating real profiles as
+ * discrete will lose access to the ordering operators (>, <, >=, <=). In most cases it is better not to do this.
+ */
 export class Discrete<Schema> {
   /** @internal **/
   public readonly __astNode: AST.DiscreteProfileExpression;
@@ -595,6 +628,7 @@ export class Discrete<Schema> {
   }
 }
 
+/** Represents an instance of an activity in the plan. */
 export class ActivityInstance<A extends ActivityType> {
 
   private readonly __activityType: A;
@@ -616,6 +650,7 @@ export class ActivityInstance<A extends ActivityType> {
       alias: this.__alias
     });
   }
+
   /**
    * Produces an instantaneous window at the start of the activity.
    */
@@ -625,6 +660,7 @@ export class ActivityInstance<A extends ActivityType> {
       alias: this.__alias
     });
   }
+
   /**
    * Produces an instantaneous window at the end of the activity.
    */
@@ -636,12 +672,19 @@ export class ActivityInstance<A extends ActivityType> {
   }
 }
 
+/** An enum for whether an interval includes its bounds. */
 export enum Inclusivity {
   Inclusive = "Inclusive",
   Exclusive = "Exclusive"
 }
 
 declare global {
+  /**
+   * An expression that discriminates between valid and invalid states.
+   *
+   * Constraints can be based off of activity parameters and placement, resource profiles, or
+   * some combination of those.
+   */
   export class Constraint {
     /** Internal AST Node */
     public readonly __astNode: AST.Constraint;
@@ -670,49 +713,48 @@ declare global {
     ): Constraint;
   }
 
-  /**
-   * A set of intervals that coalesces overlapping intervals.
-   */
+  /** A boolean profile; a function from time to truth values. */
   export class Windows {
     /** Internal AST Node */
     public readonly __astNode: AST.WindowsExpression;
 
     /**
-     * Produce a window when all arguments produce a window.
-     *
-     * Performs the intersection of the argument windows.
+     * Performs the boolean And operation on any number of Windows.
      *
      * @param windows any number of windows expressions
      */
     public static And(...windows: Windows[]): Windows;
 
     /**
-     * Produce a window when any argument produces a window.
+     * Performs the boolean Or operation on any number of windows.
      *
-     * Performs the union of the argument windows.
-     *
-     * @param windows one or more windows expressions
+     * @param windows any number of windows expressions
      */
     public static Or(...windows: Windows[]): Windows;
 
     /**
-     * Only check this expression of the condition argument produces a window.
+     * Only check this expression when the condition argument is true;
+     * otherwise the result is vacuously true.
      *
      * @param condition
      */
     public if(condition: Windows): Windows;
 
     /**
-     * Invert all the windows produced this.
+     * Performs the boolean And operation on this and any number of additional windows.
      */
     public and(...windows: Windows[]): Windows;
 
+    /**
+     * Performs the boolean Or operation on this and any number of additional windows.
+     */
     public or(...windows: Windows[]): Windows;
 
+    /** Perform the boolean Not operation on this windows object. */
     public not(): Windows;
 
     /**
-     * Produce a constraint violation whenever this does NOT produce a window.
+     * Produces a constraint violation whenever this is false.
      *
      * Essentially, express the condition you want to be satisfied, then use
      * this method to produce a violation whenever it is NOT satisfied.
@@ -720,20 +762,28 @@ declare global {
     public violations(): Constraint;
 
     /**
-     * Shift start and end of all windows by a duration
-     * @param fromStart duration to add from the start of the window
-     * @param fromEnd duration to add from the end of the window
+     * Shifts the start and end of all true segments by a duration.
+     *
+     * Shifts the start and end of all false segment by the opposite directions (i.e. the start of each false segment
+     * is shifted by `fromEnd`).
+     *
+     * @param fromStart duration to add from the start of each true segment
+     * @param fromEnd duration to add from the end of each true segment
      */
     public shiftBy(fromStart: number, fromEnd: number): Windows;
 
     /**
-     * Return all windows with a duration longer than the argument
+     * Returns a new windows object, with all true segments shorter than or equal to the given
+     * duration set to false.
+     *
      * @param duration the duration
      */
     public longerThan(duration: Duration): Windows;
 
     /**
-     * Returns all windows with a duration shorter than the argument
+     * Returns a new windows object, with all true segments longer than or equal to the given
+     * duration set to false.
+     *
      * @param duration the duration
      */
     public shorterThan(duration: Duration): Windows;
@@ -754,7 +804,7 @@ declare global {
     public split(numberOfSubSpans: number, internalStartInclusivity?: Inclusivity, internalEndInclusivity?: Inclusivity): Spans;
 
     /**
-     * Replaces each window with its start point.
+     * Replaces each true segment with its start point.
      *
      * Since gaps represent "unknown", true segments that come after a gap don't have a known start point.
      * So instead their first known point is unset and the rest is set to false.
@@ -766,7 +816,7 @@ declare global {
     public starts(): Windows;
 
     /**
-     * Replaces each window with its end point.
+     * Replaces each true segment with its end point.
      *
      * Since gaps represent "unknown", true segments that come before a gap don't have a known end point.
      * So instead their last known point is unset and the rest is set to false.
@@ -822,6 +872,12 @@ declare global {
     public windows(): Windows;
   }
 
+  /**
+   * A real number profile; a function from time to real numbers.
+   *
+   * Most real profiles are piecewise-linear, but some can be piecewise-constant if the
+   * underlying datatype is an integer. More general function types are currently unsupported.
+   */
   export class Real {
     /** Internal AST Node */
     public readonly __astNode: AST.RealProfileExpression;
@@ -899,6 +955,12 @@ declare global {
     public changes(): Windows;
   }
 
+  /**
+   * A profile of any type; a function from time to any value representable by JSON.
+   *
+   * All profiles can be represented as Discrete, even Real profiles. Keep in mind that treating real profiles as
+   * discrete will lose access to the ordering operators (>, <, >=, <=). In most cases it is better not to do this.
+   */
   export class Discrete<Schema> {
     /** Internal AST Node */
     public readonly __astNode: AST.DiscreteProfileExpression;
@@ -908,8 +970,7 @@ declare global {
      *
      * It is never assigned or accessed, and is discarded by the end.
      * This field should remain `undefined` for the full runtime.
-     * It does not even exist in the above implementation class
-     * for Discrete.
+     * It does not even exist in this class' implementation.
      *
      * Don't remove it though, it'll break the tests.
      * @private
@@ -958,6 +1019,7 @@ declare global {
 
   type Duration = number;
 
+  /** An enum for whether an interval includes its bounds. */
   enum Inclusivity {
     Inclusive = "Inclusive",
     Exclusive = "Exclusive"
