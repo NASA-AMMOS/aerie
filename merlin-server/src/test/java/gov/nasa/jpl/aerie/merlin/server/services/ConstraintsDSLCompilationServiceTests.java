@@ -501,6 +501,16 @@ class ConstraintsDSLCompilationServiceTests {
 
   @Test
   void testAnd() {
+    final var expected = new ViolationsOf(
+        new And(
+            java.util.List.of(
+                new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
+                new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
+                new Changes<>(new ProfileExpression<>(new RealValue(5.0)))
+            )
+        )
+    );
+
     checkSuccessfulCompilation(
         """
           export default () => {
@@ -511,20 +521,35 @@ class ConstraintsDSLCompilationServiceTests {
             );
           }
         """,
-        new ViolationsOf(
-            new And(
-                java.util.List.of(
-                    new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
-                    new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
-                    new Changes<>(new ProfileExpression<>(new RealValue(5.0)))
-                )
-            )
-        )
+        expected
+    );
+
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(2)
+              .and(
+                Discrete.Value("hello there").notEqual(Discrete.Value("hello there")),
+                Real.Value(5).changes()
+              );
+          }
+        """,
+        expected
     );
   }
 
   @Test
   void testOr() {
+    final var expected = new ViolationsOf(
+        new Or(
+            java.util.List.of(
+                new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
+                new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
+                new Changes<>(new ProfileExpression<>(new RealValue(5.0)))
+            )
+        )
+    );
+
     checkSuccessfulCompilation(
         """
           export default () => {
@@ -535,15 +560,20 @@ class ConstraintsDSLCompilationServiceTests {
             );
           }
         """,
-        new ViolationsOf(
-            new Or(
-                java.util.List.of(
-                    new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
-                    new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
-                    new Changes<>(new ProfileExpression<>(new RealValue(5.0)))
-                )
-            )
-        )
+        expected
+    );
+
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").lessThan(2)
+              .or(
+                Discrete.Value("hello there").notEqual(Discrete.Value("hello there")),
+                Real.Value(5).changes()
+              );
+          }
+        """,
+        expected
     );
   }
 

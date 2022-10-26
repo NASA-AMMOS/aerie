@@ -122,6 +122,14 @@ export class Windows {
   /**
    * Invert all the windows produced this.
    */
+  public and(...windows: Windows[]): Windows {
+    return Windows.And(this, ...windows);
+  }
+
+  public or(...windows: Windows[]): Windows {
+    return Windows.Or(this, ...windows);
+  }
+   */
   public not(): Windows {
     return new Windows({
       kind: AST.NodeKind.WindowsExpressionNot,
@@ -697,6 +705,10 @@ declare global {
     /**
      * Invert all the windows produced this.
      */
+    public and(...windows: Windows[]): Windows;
+
+    public or(...windows: Windows[]): Windows;
+
     public not(): Windows;
 
     /**
