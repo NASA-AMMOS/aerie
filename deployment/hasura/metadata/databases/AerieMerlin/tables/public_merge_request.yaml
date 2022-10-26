@@ -1,3 +1,22 @@
 table:
   name: merge_request
   schema: public
+object_relationships:
+- name: plan_receiving_changes
+  using:
+    manual_configuration:
+      column_mapping:
+        plan_id_receiving_changes: id
+      insertion_order: null
+      remote_table:
+        name: plan
+        schema: public
+- name: plan_snapshot_supplying_changes
+  using:
+    manual_configuration:
+      column_mapping:
+        snapshot_id_supplying_changes: snapshot_id
+      insertion_order: null
+      remote_table:
+        name: plan_snapshot
+        schema: public
