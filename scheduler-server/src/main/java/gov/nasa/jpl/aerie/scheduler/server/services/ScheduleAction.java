@@ -1,11 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import java.io.IOException;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
-
-import java.io.IOException;
-import java.util.Objects;
 
 /**
  * represents the query for the results of a scheduling run
@@ -19,16 +17,15 @@ import java.util.Objects;
 //TODO: how to handle successive scheduling requests (probably synchronous per-plan, but not service-wide)
 //TODO: how to fetch in-progress status without risking mutating the plan again (since scheduling is NOT idempotent)
 public record ScheduleAction(SpecificationService specificationService, SchedulerService schedulerService) {
-  public ScheduleAction {
-    Objects.requireNonNull(specificationService);
-    Objects.requireNonNull(schedulerService);
-  }
 
   /**
    * common interface for different possible results of the query
    */
   //tempting to unify with the overlapping ResultProtocol.State, but kept to parallel merlin...GetSimulationResultsAction
-  public interface Response {
+  public sealed interface Response {
+    /** Scheduler has enqueued this request. */
+    record Pending(long analysisId) implements Response {}
+
     /**
      * scheduler has not completed running
      */
@@ -52,13 +49,15 @@ public record ScheduleAction(SpecificationService specificationService, Schedule
    * @return a response object wrapping summary results of the run (either successful or not)
    * @throws NoSuchSpecificationException if the target specification could not be found
    */
-  public Response run(final SpecificationId specificationId) throws NoSuchSpecificationException, IOException {
+  public Response run(final SpecificationId specificationId)
+  throws NoSuchSpecificationException, IOException
+  {
     //record the plan revision as of the scheduling request time (in case work commences much later eg in worker thread)
     //TODO may also need to verify the model revision / other volatile metadata matches one from request
     final var specificationRev = this.specificationService.getSpecificationRevisionData(specificationId);
 
     //submit request to run scheduler (possibly asynchronously or even cached depending on service)
-    final var response = this.schedulerService.scheduleActivities(new ScheduleRequest(specificationId, specificationRev));
+    final var response = this.schedulerService.getScheduleResults(new ScheduleRequest(specificationId, specificationRev));
 
     return repackResponse(response);
   }
@@ -69,9 +68,11 @@ public record ScheduleAction(SpecificationService specificationService, Schedule
    * @param response the bare scheduling result contents
    * @return scheduling results augmented with any extra post-analysis
    */
-  private Response repackResponse(ResultsProtocol.State response) {
+  private Response repackResponse(final ResultsProtocol.State response) {
     //the two responses are identical for now, but kept in order to remain parallel to merlin...GetSimulationResultsAction
-    if (response instanceof ResultsProtocol.State.Incomplete r) {
+    if (response instanceof ResultsProtocol.State.Pending r) {
+      return new Response.Pending(r.analysisId());
+    } else if (response instanceof ResultsProtocol.State.Incomplete r) {
       return new Response.Incomplete(r.analysisId());
     } else if (response instanceof ResultsProtocol.State.Failed r) {
       return new Response.Failed(r.reason(), r.analysisId());

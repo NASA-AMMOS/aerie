@@ -1,13 +1,12 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
-import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Objects;
+import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
+import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 
 public record GenerateSchedulingLibAction(
     MissionModelService missionModelService
@@ -31,7 +30,6 @@ public record GenerateSchedulingLibAction(
    * @return a response object wrapping the results of generating the code (either successful or not)
    */
   public Response run(final MissionModelId missionModelId) {
-
     try {
       final var schedulingDslCompilerRoot = System.getenv("SCHEDULING_DSL_COMPILER_ROOT");
       final var schedulingDsl = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "scheduler-edsl-fluent-api.ts"));
@@ -45,8 +43,8 @@ public record GenerateSchedulingLibAction(
       final var generatedSchedulerCode = TypescriptCodeGenerationService.generateTypescriptTypesFromMissionModel(missionModelTypes);
       final var generatedConstraintsCode = gov.nasa.jpl.aerie.constraints.TypescriptCodeGenerationService
           .generateTypescriptTypes(
-              SchedulingDSLCompilationService.activityTypes(missionModelTypes),
-              SchedulingDSLCompilationService.resources(missionModelTypes));
+              ConstraintsTypescriptCodeGenerationHelper.activityTypes(missionModelTypes),
+              ConstraintsTypescriptCodeGenerationHelper.resources(missionModelTypes));
       return new Response.Success(
           Map.of("file:///scheduler-edsl-fluent-api.ts", schedulingDsl,
                  "file:///scheduler-mission-model-generated-code.ts", generatedSchedulerCode,

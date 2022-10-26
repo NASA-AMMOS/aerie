@@ -1,15 +1,20 @@
 package gov.nasa.jpl.aerie.scheduler.server.mocks;
 
+import java.util.Optional;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.ResultsCellRepository;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.SpecificationRepository;
 
-import java.util.Optional;
-
 public record InMemoryResultsCellRepository(SpecificationRepository specificationRepository) implements ResultsCellRepository {
   @Override
   public ResultsProtocol.OwnerRole allocate(final SpecificationId specificationId)
+  {
+    throw new UnsupportedOperationException(); // TODO stubbed method must be implemented
+  }
+
+  @Override
+  public Optional<ResultsProtocol.OwnerRole> claim(SpecificationId specificationId)
   {
     throw new UnsupportedOperationException(); // TODO stubbed method must be implemented
   }

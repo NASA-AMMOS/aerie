@@ -1,10 +1,10 @@
-create type status_t as enum('incomplete', 'failed', 'success');
+create type status_t as enum('pending', 'incomplete', 'failed', 'success');
 
 create table scheduling_request (
   specification_id integer not null,
   analysis_id integer not null,
 
-  status status_t not null default 'incomplete',
+  status status_t not null default 'pending',
   reason jsonb null,
   canceled boolean not null default false,
 
@@ -56,4 +56,34 @@ create trigger create_scheduling_analysis_trigger
   execute function create_scheduling_analysis();
 exception
   when duplicate_object then null;
+end $$;
+
+-- Scheduling request NOTIFY triggers
+-- These triggers NOTIFY LISTEN(ing) scheduler worker clients of pending scheduling requests
+
+create or replace function notify_scheduler_workers ()
+returns trigger
+security definer
+language plpgsql as $$
+begin
+  perform (
+    with payload(specification_revision,
+                 specification_id,
+                 analysis_id) as
+    (
+      select NEW.specification_revision,
+             NEW.specification_id,
+             NEW.analysis_id
+    )
+    select pg_notify('scheduling_request_notification', json_strip_nulls(row_to_json(payload))::text)
+    from payload
+  );
+  return null;
+end$$;
+
+do $$ begin
+create trigger notify_scheduler_workers
+  after insert on scheduling_request
+  for each row
+  execute function notify_scheduler_workers();
 end $$;

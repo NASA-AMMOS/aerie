@@ -1,5 +1,15 @@
 package gov.nasa.jpl.aerie.scheduler.server.http;
 
+import javax.json.Json;
+import javax.json.stream.JsonParsingException;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.List;
+import java.util.Objects;
+import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.*;
+import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraMissionModelIdActionP;
+import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraSpecificationActionP;
+import static io.javalin.apibuilder.ApiBuilder.*;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.services.GenerateSchedulingLibAction;
@@ -10,24 +20,6 @@ import io.javalin.http.Context;
 import io.javalin.plugin.Plugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.json.Json;
-import javax.json.stream.JsonParsingException;
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.List;
-import java.util.Objects;
-
-import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeException;
-import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeInvalidEntityException;
-import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeInvalidJsonException;
-import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeScheduleResultsResponse;
-import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraMissionModelIdActionP;
-import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraSpecificationActionP;
-import static io.javalin.apibuilder.ApiBuilder.before;
-import static io.javalin.apibuilder.ApiBuilder.get;
-import static io.javalin.apibuilder.ApiBuilder.path;
-import static io.javalin.apibuilder.ApiBuilder.post;
 
 /**
  * set up mapping between scheduler http endpoints and java method calls
@@ -41,8 +33,9 @@ public record SchedulerBindings(
     GenerateSchedulingLibAction generateSchedulingLibAction
 ) implements Plugin {
   public SchedulerBindings {
-    Objects.requireNonNull(schedulerService, "schedulerService must be non-null");
-    Objects.requireNonNull(scheduleAction, "scheduleAction must be non-null");
+    Objects.requireNonNull(schedulerService);
+    Objects.requireNonNull(scheduleAction);
+    Objects.requireNonNull(generateSchedulingLibAction);
   }
 
   private static final Logger log = LoggerFactory.getLogger(SchedulerBindings.class);

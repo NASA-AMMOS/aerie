@@ -1,5 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.server.http;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonValue;
+import java.util.HashMap;
+import java.util.Map;
 import gov.nasa.jpl.aerie.json.Breadcrumb;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
@@ -7,12 +12,6 @@ import gov.nasa.jpl.aerie.json.SchemaCache;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonValue;
-import java.util.HashMap;
-import java.util.Map;
 
 public class ActivityTemplateJsonParser implements JsonParser<SchedulingDSL.ActivityTemplate> {
 
