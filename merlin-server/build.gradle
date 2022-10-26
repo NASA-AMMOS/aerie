@@ -42,6 +42,15 @@ task generateDocumentation(type: NpmTask) {
   inputs.dir('src')
 }
 
+task cleanDocsFromDocsDir(type: Delete) {
+  delete rootDir.toPath().resolve('docs/edsl-api-docs/constraints-edsl-api/develop')
+}
+
+task publishDocs {
+  dependsOn cleanDocsFromDocsDir
+  dependsOn generateDocumentation
+}
+
 assemble {
   dependsOn assembleConstraintsDSLCompiler
   dependsOn generateASTJsonSchema
