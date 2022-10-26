@@ -31,8 +31,8 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinx_sitemap",
     "sphinx_scylladb_theme",
-    "sphinx_multiversion",  # optional
-    "myst_parser",  # for converting .md to .rst,
+    "sphinx_multiversion",
+    "myst_parser"  # for converting .md to .rst,
 ]
 
 # The suffix(es) of source filenames.
