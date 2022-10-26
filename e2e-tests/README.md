@@ -9,7 +9,7 @@ A Docker stack with authorization disabled is available within this directory.
 To spin up this stack run:
 
 ```sh
-docker compose -f docker-compose-test.yml up
+docker compose -f docker-compose-test.yml up --build
 ```
 
 After starting the development Docker compose stack the following commands can be issued to run these tests:
