@@ -21,7 +21,6 @@ import io.javalin.Javalin;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public final class MerlinWorkerAppDriver {
@@ -57,8 +56,7 @@ public final class MerlinWorkerAppDriver {
     final var planController = new LocalPlanService(stores.plans());
     final var simulationAgent = new SynchronousSimulationAgent(planController, missionModelController);
 
-    final BlockingQueue<PostgresSimulationNotificationPayload> notificationQueue =
-        new LinkedBlockingQueue<>();
+    final var notificationQueue = new LinkedBlockingQueue<PostgresSimulationNotificationPayload>();
     final var listenAction = new ListenSimulationCapability(hikariDataSource, notificationQueue);
     listenAction.registerListener();
 

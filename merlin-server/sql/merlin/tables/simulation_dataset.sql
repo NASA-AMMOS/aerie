@@ -246,7 +246,7 @@ begin
              NEW.simulation_id,
              simulation_ref.plan_id
     )
-    select pg_notify('simulation_notification',  json_strip_nulls(row_to_json(payload))::text)
+    select pg_notify('simulation_notification', json_strip_nulls(row_to_json(payload))::text)
     from payload
   );
   return null;
