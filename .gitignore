@@ -61,5 +61,7 @@ test-report.html
 # Ignore docs-related build files
 docs/_build
 docs/**/__pycache__
+docs/source/constraints-edsl-api/
+docs/source/scheduling-edsl-api/
 .doctrees
 *.log
