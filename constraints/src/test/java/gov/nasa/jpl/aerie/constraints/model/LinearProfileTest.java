@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
@@ -24,25 +25,25 @@ public class LinearProfileTest {
   @Test
   public void testBasicAddition() {
     final var profile = new LinearProfile(
-        new LinearProfilePiece(Interval.between(0, Inclusive,10, Exclusive, SECONDS), 0, 1),
-        new LinearProfilePiece(Interval.between(10, Inclusive,20, Inclusive, SECONDS), 10, -2)
+        Segment.of(Interval.between(0, Inclusive,10, Exclusive, SECONDS), new LinearEquation(Duration.of(0, SECONDS), 0, 1)),
+        Segment.of(Interval.between(10, Inclusive,20, Inclusive, SECONDS), new LinearEquation(Duration.of(10, SECONDS), 10, -2))
     );
 
     final var other = new LinearProfile(
-      new LinearProfilePiece(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), 1, 2),
-      new LinearProfilePiece(Interval.between(5, Inclusive, 10, Inclusive, SECONDS), 11, -1),
-      new LinearProfilePiece(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), 6, 3),
-      new LinearProfilePiece(Interval.between(15, Inclusive, 20, Inclusive, SECONDS), 21, -2)
+      Segment.of(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), new LinearEquation(Duration.of(0, SECONDS), 1, 2)),
+      Segment.of(Interval.between(5, Inclusive, 10, Inclusive, SECONDS), new LinearEquation(Duration.of(5, SECONDS), 11, -1)),
+      Segment.of(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), new LinearEquation(Duration.of(10, SECONDS), 6, 3)),
+      Segment.of(Interval.between(15, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(15, SECONDS), 21, -2))
     );
 
-    final var result = (LinearProfile)(profile.plus(other));
+    final var result = profile.plus(other);
 
     final var expected = new LinearProfile(
-        new LinearProfilePiece(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), 1, 3),
-        new LinearProfilePiece(Interval.between(5, Inclusive, 10, Exclusive, SECONDS), 16, 0),
-        new LinearProfilePiece(Interval.between(10, Inclusive, 10, Inclusive, SECONDS), 16, -3),
-        new LinearProfilePiece(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), 16, 1),
-        new LinearProfilePiece(Interval.between(15, Inclusive, 20, Inclusive, SECONDS), 21, -4)
+        Segment.of(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), new LinearEquation(Duration.of(0, SECONDS), 1, 3)),
+        Segment.of(Interval.between(5, Inclusive, 10, Exclusive, SECONDS), new LinearEquation(Duration.of(5, SECONDS), 16, 0)),
+        Segment.of(Interval.between(10, Inclusive, 10, Inclusive, SECONDS), new LinearEquation(Duration.of(10, SECONDS), 16, -3)),
+        Segment.of(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), new LinearEquation(Duration.of(10, SECONDS), 16, 1)),
+        Segment.of(Interval.between(15, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(15, SECONDS), 21, -4))
     );
 
     assertEquivalent(expected, result);
@@ -51,21 +52,21 @@ public class LinearProfileTest {
   @Test
   public void testAdditionWithDifferingBounds() {
     final var profile = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 5, Exclusive,10, Inclusive, SECONDS), 2, 2),
-        new LinearProfilePiece(Interval.between(10, Exclusive,20, Inclusive, SECONDS), 12, -1)
+        Segment.of(Interval.between( 5, Exclusive,10, Inclusive, SECONDS), new LinearEquation(Duration.of( 5, SECONDS), 2, 2)),
+        Segment.of(Interval.between(10, Exclusive,20, Inclusive, SECONDS), new LinearEquation(Duration.of(10, SECONDS), 12, -1))
     );
 
     final var other = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive,  8, Inclusive, SECONDS), 2, 3),
-        new LinearProfilePiece(Interval.between( 8, Exclusive, 15, Inclusive, SECONDS), 26, -3)
+        Segment.of(Interval.between( 0, Inclusive,  8, Inclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS), 2, 3)),
+        Segment.of(Interval.between( 8, Exclusive, 15, Inclusive, SECONDS), new LinearEquation(Duration.of( 8, SECONDS), 26, -3))
     );
 
-    final var result = (LinearProfile)(profile.plus(other));
+    final var result = profile.plus(other);
 
     final var expected = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 5, Exclusive,  8, Inclusive, SECONDS), 19, 5),
-        new LinearProfilePiece(Interval.between( 8, Exclusive, 10, Inclusive, SECONDS), 34, -1),
-        new LinearProfilePiece(Interval.between(10, Exclusive, 15, Inclusive, SECONDS), 32, -4)
+        Segment.of(Interval.between( 5, Exclusive,  8, Inclusive, SECONDS), new LinearEquation(Duration.of( 5, SECONDS), 19, 5)),
+        Segment.of(Interval.between( 8, Exclusive, 10, Inclusive, SECONDS), new LinearEquation(Duration.of( 8, SECONDS), 34, -1)),
+        Segment.of(Interval.between(10, Exclusive, 15, Inclusive, SECONDS), new LinearEquation(Duration.of(10, SECONDS), 32, -4))
     );
 
     assertEquivalent(expected, result);
@@ -74,17 +75,17 @@ public class LinearProfileTest {
   @Test
   public void testMultiplication() {
     final var profile = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive, 10, Exclusive, SECONDS), 2, 3),
-        new LinearProfilePiece(Interval.between(10, Inclusive, 20, Exclusive, SECONDS), 3, -5),
-        new LinearProfilePiece(Interval.between(20, Inclusive, 20, Inclusive, SECONDS), -2, 0)
+        Segment.of(Interval.between( 0, Inclusive, 10, Exclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS), 2, 3)),
+        Segment.of(Interval.between(10, Inclusive, 20, Exclusive, SECONDS), new LinearEquation(Duration.of(10, SECONDS), 3, -5)),
+        Segment.of(Interval.between(20, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(20, SECONDS), -2, 0))
     );
 
     final var result = (LinearProfile)(profile.times(2));
 
     final var expected = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive, 10, Exclusive, SECONDS), 4, 6),
-        new LinearProfilePiece(Interval.between(10, Inclusive, 20, Exclusive, SECONDS), 6, -10),
-        new LinearProfilePiece(Interval.between(20, Inclusive, 20, Inclusive, SECONDS), -4, 0)
+        Segment.of(Interval.between( 0, Inclusive, 10, Exclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS), 4, 6)),
+        Segment.of(Interval.between(10, Inclusive, 20, Exclusive, SECONDS), new LinearEquation(Duration.of(10, SECONDS), 6, -10)),
+        Segment.of(Interval.between(20, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(20, SECONDS), -4, 0))
     );
 
     assertEquivalent(expected, result);
@@ -93,17 +94,17 @@ public class LinearProfileTest {
   @Test
   public void testRate() {
     final var profile = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive, 10, Exclusive, SECONDS), 2, 3),
-        new LinearProfilePiece(Interval.between(10, Inclusive, 20, Exclusive, SECONDS), 3, -5),
-        new LinearProfilePiece(Interval.between(20, Inclusive, 20, Inclusive, SECONDS), -2, 0)
+        Segment.of(Interval.between( 0, Inclusive, 10, Exclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS), 2, 3)),
+        Segment.of(Interval.between(10, Inclusive, 20, Exclusive, SECONDS), new LinearEquation(Duration.of(10, SECONDS), 3, -5)),
+        Segment.of(Interval.between(20, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(20, SECONDS), -2, 0))
     );
 
     final var result = (LinearProfile)(profile.rate());
 
     final var expected = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive, 10, Exclusive, SECONDS), 3, 0),
-        new LinearProfilePiece(Interval.between(10, Inclusive, 20, Exclusive, SECONDS), -5, 0),
-        new LinearProfilePiece(Interval.between(20, Inclusive, 20, Inclusive, SECONDS), 0, 0)
+        Segment.of(Interval.between( 0, Inclusive, 10, Exclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS), 3, 0)),
+        Segment.of(Interval.between(10, Inclusive, 20, Exclusive, SECONDS), new LinearEquation(Duration.of(10, SECONDS), -5, 0)),
+        Segment.of(Interval.between(20, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(20, SECONDS), 0, 0))
     );
 
     assertEquivalent(expected, result);
@@ -112,16 +113,16 @@ public class LinearProfileTest {
   @Test
   public void testChangePoints() {
     final var profile = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive,  5, Exclusive, SECONDS), 2, 0),
-        new LinearProfilePiece(Interval.between( 5, Inclusive,  8, Exclusive, SECONDS), 2, 0),
-        new LinearProfilePiece(Interval.between( 8, Inclusive, 10, Inclusive, SECONDS), 3, 0),
-        new LinearProfilePiece(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), 3, 1),
-        new LinearProfilePiece(Interval.between(15, Inclusive, 20, Inclusive, SECONDS), -2, 0)
+        Segment.of(Interval.between( 0, Inclusive,  5, Exclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS), 2, 0)),
+        Segment.of(Interval.between( 5, Inclusive,  8, Exclusive, SECONDS), new LinearEquation(Duration.of( 5, SECONDS), 2, 0)),
+        Segment.of(Interval.between( 8, Inclusive, 10, Inclusive, SECONDS), new LinearEquation(Duration.of( 8, SECONDS), 3, 0)),
+        Segment.of(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), new LinearEquation(Duration.of(10, SECONDS), 3, 1)),
+        Segment.of(Interval.between(15, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(15, SECONDS), -2, 0))
     );
 
-    final var result = profile.changePoints(interval(0, 20, SECONDS));
+    final var result = profile.changePoints();
 
-    final var expected = new Windows(interval(0, 20, SECONDS), false)
+    final var expected = new Windows(interval(0, Exclusive, 20, Inclusive, SECONDS), false)
     		.set(Interval.at(8, SECONDS), true)
     		.set(Interval.between(10, Exclusive, 15, Inclusive, SECONDS), true);
 
@@ -131,135 +132,135 @@ public class LinearProfileTest {
   @Test
   public void testLessThan() {
     final var profile = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive,  4, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between( 4, Inclusive,  8, Exclusive, SECONDS),  4,  0),
-        new LinearProfilePiece(Interval.between( 8, Inclusive, 12, Exclusive, SECONDS),  4, -1),
-        new LinearProfilePiece(Interval.between(12, Inclusive, 16, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
+        Segment.of(Interval.between( 0, Inclusive,  4, Exclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS),  0,  1)),
+        Segment.of(Interval.between( 4, Inclusive,  8, Exclusive, SECONDS), new LinearEquation(Duration.of( 4, SECONDS),  4,  0)),
+        Segment.of(Interval.between( 8, Inclusive, 12, Exclusive, SECONDS), new LinearEquation(Duration.of( 8, SECONDS),  4, -1)),
+        Segment.of(Interval.between(12, Inclusive, 16, Exclusive, SECONDS), new LinearEquation(Duration.of(12, SECONDS),  0,  1)),
+        Segment.of(Interval.between(16, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(16, SECONDS),  0,  0))
     );
 
     final var other = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive,  2, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between( 2, Inclusive,  4, Exclusive, SECONDS),  2,  0),
-        new LinearProfilePiece(Interval.between( 4, Inclusive,  6, Exclusive, SECONDS),  2,  1),
-        new LinearProfilePiece(Interval.between( 6, Inclusive, 12, Exclusive, SECONDS),  4,  0),
-        new LinearProfilePiece(Interval.between(12, Inclusive, 16, Exclusive, SECONDS),  4, -1),
-        new LinearProfilePiece(Interval.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
+        Segment.of(Interval.between( 0, Inclusive,  2, Exclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS),  0,  1)),
+        Segment.of(Interval.between( 2, Inclusive,  4, Exclusive, SECONDS), new LinearEquation(Duration.of( 2, SECONDS),  2,  0)),
+        Segment.of(Interval.between( 4, Inclusive,  6, Exclusive, SECONDS), new LinearEquation(Duration.of( 4, SECONDS),  2,  1)),
+        Segment.of(Interval.between( 6, Inclusive, 12, Exclusive, SECONDS), new LinearEquation(Duration.of( 6, SECONDS),  4,  0)),
+        Segment.of(Interval.between(12, Inclusive, 16, Exclusive, SECONDS), new LinearEquation(Duration.of(12, SECONDS),  4, -1)),
+        Segment.of(Interval.between(16, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(16, SECONDS),  0,  0))
     );
 
-    final var result = profile.lessThan(other, Interval.between(0, 20, SECONDS));
+    final var result = profile.lessThan(other);
 
     final var expected = new Windows(interval(0, 20, SECONDS), false)
     		.set(Interval.between(8, Exclusive, 14, Exclusive, SECONDS), true);
 
-    assertEquivalent(expected, result);
+    assertIterableEquals(expected, result);
   }
 
   @Test
   public void testLessThanOrEqualTo() {
     final var profile = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive,  4, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between( 4, Inclusive,  8, Exclusive, SECONDS),  4,  0),
-        new LinearProfilePiece(Interval.between( 8, Inclusive, 12, Exclusive, SECONDS),  4, -1),
-        new LinearProfilePiece(Interval.between(12, Inclusive, 16, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
+        Segment.of(Interval.between( 0, Inclusive,  4, Exclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS),  0,  1)),
+        Segment.of(Interval.between( 4, Inclusive,  8, Exclusive, SECONDS), new LinearEquation(Duration.of( 4, SECONDS),  4,  0)),
+        Segment.of(Interval.between( 8, Inclusive, 12, Exclusive, SECONDS), new LinearEquation(Duration.of( 8, SECONDS),  4, -1)),
+        Segment.of(Interval.between(12, Inclusive, 16, Exclusive, SECONDS), new LinearEquation(Duration.of(12, SECONDS),  0,  1)),
+        Segment.of(Interval.between(16, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(16, SECONDS),  0,  0))
     );
 
     final var other = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive,  2, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between( 2, Inclusive,  4, Exclusive, SECONDS),  2,  0),
-        new LinearProfilePiece(Interval.between( 4, Inclusive,  6, Exclusive, SECONDS),  2,  1),
-        new LinearProfilePiece(Interval.between( 6, Inclusive, 12, Exclusive, SECONDS),  4,  0),
-        new LinearProfilePiece(Interval.between(12, Inclusive, 16, Exclusive, SECONDS),  4, -1),
-        new LinearProfilePiece(Interval.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
+        Segment.of(Interval.between( 0, Inclusive,  2, Exclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS),  0,  1)),
+        Segment.of(Interval.between( 2, Inclusive,  4, Exclusive, SECONDS), new LinearEquation(Duration.of( 2, SECONDS),  2,  0)),
+        Segment.of(Interval.between( 4, Inclusive,  6, Exclusive, SECONDS), new LinearEquation(Duration.of( 4, SECONDS),  2,  1)),
+        Segment.of(Interval.between( 6, Inclusive, 12, Exclusive, SECONDS), new LinearEquation(Duration.of( 6, SECONDS),  4,  0)),
+        Segment.of(Interval.between(12, Inclusive, 16, Exclusive, SECONDS), new LinearEquation(Duration.of(12, SECONDS),  4, -1)),
+        Segment.of(Interval.between(16, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(16, SECONDS),  0,  0))
     );
 
-    final var result = profile.lessThanOrEqualTo(other, Interval.between(0, 20, SECONDS));
+    final var result = profile.lessThanOrEqualTo(other);
 
     final var expected = new Windows(interval(0, 20, SECONDS), false)
     		.set(Interval.between( 0, Inclusive,  2, Inclusive, SECONDS), true)
     		.set(Interval.between( 6, Inclusive, 14, Inclusive, SECONDS), true)
     		.set(Interval.between(16, Inclusive, 20, Inclusive, SECONDS), true);
 
-    assertEquivalent(expected, result);
+    assertIterableEquals(expected, result);
   }
 
   @Test
   public void testGreaterThan() {
     final var profile = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive,  4, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between( 4, Inclusive,  8, Exclusive, SECONDS),  4,  0),
-        new LinearProfilePiece(Interval.between( 8, Inclusive, 12, Exclusive, SECONDS),  4, -1),
-        new LinearProfilePiece(Interval.between(12, Inclusive, 16, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
+        Segment.of(Interval.between( 0, Inclusive,  4, Exclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS),  0,  1)),
+        Segment.of(Interval.between( 4, Inclusive,  8, Exclusive, SECONDS), new LinearEquation(Duration.of( 4, SECONDS),  4,  0)),
+        Segment.of(Interval.between( 8, Inclusive, 12, Exclusive, SECONDS), new LinearEquation(Duration.of( 8, SECONDS),  4, -1)),
+        Segment.of(Interval.between(12, Inclusive, 16, Exclusive, SECONDS), new LinearEquation(Duration.of(12, SECONDS),  0,  1)),
+        Segment.of(Interval.between(16, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(16, SECONDS),  0,  0))
     );
 
     final var other = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive,  2, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between( 2, Inclusive,  4, Exclusive, SECONDS),  2,  0),
-        new LinearProfilePiece(Interval.between( 4, Inclusive,  6, Exclusive, SECONDS),  2,  1),
-        new LinearProfilePiece(Interval.between( 6, Inclusive, 12, Exclusive, SECONDS),  4,  0),
-        new LinearProfilePiece(Interval.between(12, Inclusive, 16, Exclusive, SECONDS),  4, -1),
-        new LinearProfilePiece(Interval.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
+        Segment.of(Interval.between( 0, Inclusive,  2, Exclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS),  0,  1)),
+        Segment.of(Interval.between( 2, Inclusive,  4, Exclusive, SECONDS), new LinearEquation(Duration.of( 2, SECONDS),  2,  0)),
+        Segment.of(Interval.between( 4, Inclusive,  6, Exclusive, SECONDS), new LinearEquation(Duration.of( 4, SECONDS),  2,  1)),
+        Segment.of(Interval.between( 6, Inclusive, 12, Exclusive, SECONDS), new LinearEquation(Duration.of( 6, SECONDS),  4,  0)),
+        Segment.of(Interval.between(12, Inclusive, 16, Exclusive, SECONDS), new LinearEquation(Duration.of(12, SECONDS),  4, -1)),
+        Segment.of(Interval.between(16, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(16, SECONDS),  0,  0))
     );
 
-    final var result = profile.greaterThan(other, Interval.between(0, 20, SECONDS));
+    final var result = profile.greaterThan(other);
 
     final var expected = new Windows(interval(0, 20, SECONDS), false)
     		.set(Interval.between( 2, Exclusive,  6, Exclusive, SECONDS), true)
     		.set(Interval.between(14, Exclusive, 16, Exclusive, SECONDS), true);
 
-    assertEquivalent(expected, result);
+    assertIterableEquals(expected, result);
   }
 
   @Test
   public void testGreaterThanOrEqualTo() {
     final var profile = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive,  4, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between( 4, Inclusive,  8, Exclusive, SECONDS),  4,  0),
-        new LinearProfilePiece(Interval.between( 8, Inclusive, 12, Exclusive, SECONDS),  4, -1),
-        new LinearProfilePiece(Interval.between(12, Inclusive, 16, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
+        Segment.of(Interval.between( 0, Inclusive,  4, Exclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS),  0,  1)),
+        Segment.of(Interval.between( 4, Inclusive,  8, Exclusive, SECONDS), new LinearEquation(Duration.of( 4, SECONDS),  4,  0)),
+        Segment.of(Interval.between( 8, Inclusive, 12, Exclusive, SECONDS), new LinearEquation(Duration.of( 8, SECONDS),  4, -1)),
+        Segment.of(Interval.between(12, Inclusive, 16, Exclusive, SECONDS), new LinearEquation(Duration.of(12, SECONDS),  0,  1)),
+        Segment.of(Interval.between(16, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(16, SECONDS),  0,  0))
     );
 
     final var other = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive,  2, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between( 2, Inclusive,  4, Exclusive, SECONDS),  2,  0),
-        new LinearProfilePiece(Interval.between( 4, Inclusive,  6, Exclusive, SECONDS),  2,  1),
-        new LinearProfilePiece(Interval.between( 6, Inclusive, 12, Exclusive, SECONDS),  4,  0),
-        new LinearProfilePiece(Interval.between(12, Inclusive, 16, Exclusive, SECONDS),  4, -1),
-        new LinearProfilePiece(Interval.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
+        Segment.of(Interval.between( 0, Inclusive,  2, Exclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS),  0,  1)),
+        Segment.of(Interval.between( 2, Inclusive,  4, Exclusive, SECONDS), new LinearEquation(Duration.of( 2, SECONDS),  2,  0)),
+        Segment.of(Interval.between( 4, Inclusive,  6, Exclusive, SECONDS), new LinearEquation(Duration.of( 4, SECONDS),  2,  1)),
+        Segment.of(Interval.between( 6, Inclusive, 12, Exclusive, SECONDS), new LinearEquation(Duration.of( 6, SECONDS),  4,  0)),
+        Segment.of(Interval.between(12, Inclusive, 16, Exclusive, SECONDS), new LinearEquation(Duration.of(12, SECONDS),  4, -1)),
+        Segment.of(Interval.between(16, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(16, SECONDS),  0,  0))
     );
 
-    final var result = profile.greaterThanOrEqualTo(other, Interval.between(0, 20, SECONDS));
+    final var result = profile.greaterThanOrEqualTo(other);
 
     final var expected = new Windows(interval(0, 20, SECONDS), false)
     		.set(Interval.between( 0, Inclusive,  8, Inclusive, SECONDS), true)
     		.set(Interval.between(14, Inclusive, 20, Inclusive, SECONDS), true);
 
-    assertEquivalent(expected, result);
+    assertIterableEquals(expected, result);
   }
 
   @Test
   public void testEqualTo() {
     final var profile = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive,  4, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between( 4, Inclusive,  8, Exclusive, SECONDS),  4,  0),
-        new LinearProfilePiece(Interval.between( 8, Inclusive, 12, Exclusive, SECONDS),  4, -1),
-        new LinearProfilePiece(Interval.between(12, Inclusive, 16, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
+        Segment.of(Interval.between( 0, Inclusive,  4, Exclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS),  0,  1)),
+        Segment.of(Interval.between( 4, Inclusive,  8, Exclusive, SECONDS), new LinearEquation(Duration.of( 4, SECONDS),  4,  0)),
+        Segment.of(Interval.between( 8, Inclusive, 12, Exclusive, SECONDS), new LinearEquation(Duration.of( 8, SECONDS),  4, -1)),
+        Segment.of(Interval.between(12, Inclusive, 16, Exclusive, SECONDS), new LinearEquation(Duration.of(12, SECONDS),  0,  1)),
+        Segment.of(Interval.between(16, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(16, SECONDS),  0,  0))
     );
 
     final var other = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive,  2, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between( 2, Inclusive,  4, Exclusive, SECONDS),  2,  0),
-        new LinearProfilePiece(Interval.between( 4, Inclusive,  6, Exclusive, SECONDS),  2,  1),
-        new LinearProfilePiece(Interval.between( 6, Inclusive, 12, Exclusive, SECONDS),  4,  0),
-        new LinearProfilePiece(Interval.between(12, Inclusive, 16, Exclusive, SECONDS),  4, -1),
-        new LinearProfilePiece(Interval.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
+        Segment.of(Interval.between( 0, Inclusive,  2, Exclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS),  0,  1)),
+        Segment.of(Interval.between( 2, Inclusive,  4, Exclusive, SECONDS), new LinearEquation(Duration.of( 2, SECONDS),  2,  0)),
+        Segment.of(Interval.between( 4, Inclusive,  6, Exclusive, SECONDS), new LinearEquation(Duration.of( 4, SECONDS),  2,  1)),
+        Segment.of(Interval.between( 6, Inclusive, 12, Exclusive, SECONDS), new LinearEquation(Duration.of( 6, SECONDS),  4,  0)),
+        Segment.of(Interval.between(12, Inclusive, 16, Exclusive, SECONDS), new LinearEquation(Duration.of(12, SECONDS),  4, -1)),
+        Segment.of(Interval.between(16, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(16, SECONDS),  0,  0))
     );
 
-    final var result = profile.equalTo(other, Interval.between(0, 20, SECONDS));
+    final var result = profile.equalTo(other);
 
     final var expected = new Windows(interval(0, 20, SECONDS), false)
     		.set(Interval.between( 0, Inclusive,  2, Inclusive, SECONDS), true)
@@ -267,36 +268,36 @@ public class LinearProfileTest {
     		.set(Interval.at(14, SECONDS), true)
     		.set(Interval.between( 16, Inclusive,  20, Inclusive, SECONDS), true);
 
-    assertEquivalent(expected, result);
+    assertIterableEquals(expected, result);
   }
 
   @Test
   public void testNotEqualTo() {
     final var profile = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive,  4, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between( 4, Inclusive,  8, Exclusive, SECONDS),  4,  0),
-        new LinearProfilePiece(Interval.between( 8, Inclusive, 12, Exclusive, SECONDS),  4, -1),
-        new LinearProfilePiece(Interval.between(12, Inclusive, 16, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
+        Segment.of(Interval.between( 0, Inclusive,  4, Exclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS),  0,  1)),
+        Segment.of(Interval.between( 4, Inclusive,  8, Exclusive, SECONDS), new LinearEquation(Duration.of( 4, SECONDS),  4,  0)),
+        Segment.of(Interval.between( 8, Inclusive, 12, Exclusive, SECONDS), new LinearEquation(Duration.of( 8, SECONDS),  4, -1)),
+        Segment.of(Interval.between(12, Inclusive, 16, Exclusive, SECONDS), new LinearEquation(Duration.of(12, SECONDS),  0,  1)),
+        Segment.of(Interval.between(16, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(16, SECONDS),  0,  0))
     );
 
     final var other = new LinearProfile(
-        new LinearProfilePiece(Interval.between( 0, Inclusive,  2, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between( 2, Inclusive,  4, Exclusive, SECONDS),  2,  0),
-        new LinearProfilePiece(Interval.between( 4, Inclusive,  6, Exclusive, SECONDS),  2,  1),
-        new LinearProfilePiece(Interval.between( 6, Inclusive, 12, Exclusive, SECONDS),  4,  0),
-        new LinearProfilePiece(Interval.between(12, Inclusive, 16, Exclusive, SECONDS),  4, -1),
-        new LinearProfilePiece(Interval.between(16, Inclusive, 20, Inclusive, SECONDS),  0,  0)
+        Segment.of(Interval.between( 0, Inclusive,  2, Exclusive, SECONDS), new LinearEquation(Duration.of( 0, SECONDS),  0,  1)),
+        Segment.of(Interval.between( 2, Inclusive,  4, Exclusive, SECONDS), new LinearEquation(Duration.of( 2, SECONDS),  2,  0)),
+        Segment.of(Interval.between( 4, Inclusive,  6, Exclusive, SECONDS), new LinearEquation(Duration.of( 4, SECONDS),  2,  1)),
+        Segment.of(Interval.between( 6, Inclusive, 12, Exclusive, SECONDS), new LinearEquation(Duration.of( 6, SECONDS),  4,  0)),
+        Segment.of(Interval.between(12, Inclusive, 16, Exclusive, SECONDS), new LinearEquation(Duration.of(12, SECONDS),  4, -1)),
+        Segment.of(Interval.between(16, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(16, SECONDS),  0,  0))
     );
 
-    final var result = profile.notEqualTo(other, Interval.between(0, 20, SECONDS));
+    final var result = profile.notEqualTo(other);
 
     final var expected = new Windows(interval(0, 20, SECONDS), false)
         .set(Interval.between(2, Exclusive, 6, Exclusive, SECONDS), true)
         .set(Interval.between(8, Exclusive, 14, Exclusive, SECONDS), true)
         .set(Interval.between(14, Exclusive, 16, Exclusive, SECONDS), true);
 
-    assertEquivalent(expected, result);
+    assertIterableEquals(expected, result);
   }
 
   @Test
@@ -310,8 +311,8 @@ public class LinearProfileTest {
     final var profile = LinearProfile.fromExternalProfile(Duration.of(1, SECOND), externalProfile);
 
     final var expected = new LinearProfile(
-        new LinearProfilePiece(Interval.between(1, Inclusive, 2, Exclusive, SECONDS), 1, 1),
-        new LinearProfilePiece(Interval.between(3, Inclusive, 4, Exclusive, SECONDS), 5, -1)
+        Segment.of(Interval.between(1, Inclusive, 2, Exclusive, SECONDS), new LinearEquation(Duration.of(1, SECONDS), 1, 1)),
+        Segment.of(Interval.between(3, Inclusive, 4, Exclusive, SECONDS), new LinearEquation(Duration.of(3, SECONDS), 5, -1))
     );
 
     assertIterableEquals(
