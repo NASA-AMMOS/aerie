@@ -373,6 +373,16 @@ public class PlanCollaborationTests {
     }
   }
 
+  private void commitMerge(final int mergeRequestId) throws SQLException{
+    try(final var statement = connection.createStatement()){
+      statement.execute(
+          """
+          call commit_merge(%d)
+          """.formatted(mergeRequestId)
+      );
+    }
+  }
+
   private void withdrawMergeRequest(final int mergeRequestId) throws SQLException{
     try(final var statement = connection.createStatement()){
       statement.execute(
@@ -383,11 +393,21 @@ public class PlanCollaborationTests {
     }
   }
 
-  private void commitMerge(final int mergeRequestId) throws SQLException{
+  private void denyMerge(final int mergeRequestId) throws SQLException{
     try(final var statement = connection.createStatement()){
       statement.execute(
           """
-          call commit_merge(%d)
+          call deny_merge(%d)
+          """.formatted(mergeRequestId)
+      );
+    }
+  }
+
+  private void cancelMerge(final int mergeRequestId) throws SQLException{
+    try(final var statement = connection.createStatement()){
+      statement.execute(
+          """
+          call cancel_merge(%d)
           """.formatted(mergeRequestId)
       );
     }
@@ -537,6 +557,36 @@ public class PlanCollaborationTests {
       return activities;
     }
   }
+
+  private MergeRequest getMergeRequest(final int requestId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var res = statement.executeQuery("""
+        SELECT *
+        FROM merge_request
+        WHERE id = %d;
+      """.formatted(requestId));
+      res.first();
+      return new MergeRequest(
+          res.getInt("id"),
+          res.getInt("plan_id_receiving_changes"),
+          res.getInt("snapshot_id_supplying_changes"),
+          res.getInt("merge_base_snapshot_id"),
+          res.getString("status")
+      );
+    }
+  }
+
+  private void setMergeRequestStatus(final int requestId, final String newStatus) throws SQLException {
+    try(final var statement = connection.createStatement()) {
+      statement.execute(
+          """
+          UPDATE merge_request
+          SET status = '%s'
+          WHERE id = %d;
+          """.formatted(newStatus, requestId)
+      );
+    }
+  }
   //endregion
 
   //region Records
@@ -570,6 +620,7 @@ public class PlanCollaborationTests {
   ) {}
   record ConflictingActivity(int activityId, String changeTypeSupplying, String changeTypeReceiving) {}
   record StagingAreaActivity(int activityId, String changeType) {} //only relevant fields
+  private record MergeRequest(int requestId, int receivingPlan, int supplyingSnapshot, int mergeBaseSnapshot, String status) {}
   //endregion
 
   @Nested
@@ -2113,5 +2164,510 @@ public class PlanCollaborationTests {
       }
     }
   }
-}
 
+  @Nested
+  class MergeStateMachineTests{
+    @Test
+    void cancelFailsForInvalidId() throws SQLException{
+      try{
+        cancelMerge(-1);
+        fail();
+      } catch (SQLException sqlException) {
+        if(!sqlException.getMessage().contains("Invalid merge request id -1."))
+          throw sqlException;
+      }
+    }
+
+    @Test
+    void denyFailsForInvalidId() throws SQLException {
+      try{
+        denyMerge(-1);
+        fail();
+      } catch (SQLException sqlException) {
+        if(!sqlException.getMessage().contains("Invalid merge request id -1."))
+          throw sqlException;
+      }
+    }
+
+    @Test
+    void withdrawFailsForInvalidId() throws SQLException {
+      try{
+        withdrawMergeRequest(-1);
+        fail();
+      } catch (SQLException sqlException){
+        if(!sqlException.getMessage().contains("Merge request -1 does not exist. Cannot withdraw request."))
+          throw sqlException;
+      }
+    }
+
+    @Test
+    void defaultStateOfMergeRequestIsPendingStatus() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int childPlan = duplicatePlan(basePlan, "Child");
+      final MergeRequest mergeRequest = getMergeRequest(createMergeRequest(basePlan, childPlan));
+      assertEquals("pending", mergeRequest.status);
+    }
+
+    @Test
+    void beginMergeOnlySucceedsOnPendingStatus() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int childPlan = duplicatePlan(basePlan, "Child");
+      insertActivity(childPlan);
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+
+      setMergeRequestStatus(mergeRQ, "withdrawn");
+      try {
+        beginMerge(mergeRQ);
+      } catch (SQLException sqlEx){
+        if (!sqlEx.getMessage().contains("Cannot begin request. Merge request "+mergeRQ+" is not in pending state."))
+          throw sqlEx;
+      }
+
+      setMergeRequestStatus(mergeRQ, "accepted");
+      try {
+        beginMerge(mergeRQ);
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot begin request. Merge request "+mergeRQ+" is not in pending state."))
+          throw sqlEx;
+      }
+
+      setMergeRequestStatus(mergeRQ, "rejected");
+      try {
+        beginMerge(mergeRQ);
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot begin request. Merge request "+mergeRQ+" is not in pending state."))
+          throw sqlEx;
+      }
+
+      setMergeRequestStatus(mergeRQ, "in-progress");
+      try {
+        beginMerge(mergeRQ);
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot begin request. Merge request "+mergeRQ+" is not in pending state."))
+          throw sqlEx;
+      }
+
+      setMergeRequestStatus(mergeRQ, "pending");
+      beginMerge(mergeRQ);
+    }
+
+    @Test
+    void withdrawOnlySucceedsOnPendingOrWithdrawnStatus() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int childPlan = duplicatePlan(basePlan, "Child");
+      insertActivity(childPlan);
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+
+      setMergeRequestStatus(mergeRQ, "pending");
+      withdrawMergeRequest(mergeRQ);
+
+      setMergeRequestStatus(mergeRQ, "withdrawn");
+      withdrawMergeRequest(mergeRQ);
+
+      setMergeRequestStatus(mergeRQ, "accepted");
+      try {
+        withdrawMergeRequest(mergeRQ);
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot withdraw request."))
+          throw sqlEx;
+      }
+
+      setMergeRequestStatus(mergeRQ, "rejected");
+      try {
+        withdrawMergeRequest(mergeRQ);
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot withdraw request."))
+          throw sqlEx;
+      }
+
+      setMergeRequestStatus(mergeRQ, "in-progress");
+      try {
+        withdrawMergeRequest(mergeRQ);
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot withdraw request."))
+          throw sqlEx;
+      }
+    }
+
+    @Test
+    void cancelOnlySucceedsOnInProgressOrPendingStatus() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int childPlan = duplicatePlan(basePlan, "Child");
+      insertActivity(childPlan);
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+
+      setMergeRequestStatus(mergeRQ, "pending");
+      cancelMerge(mergeRQ);
+
+      setMergeRequestStatus(mergeRQ, "withdrawn");
+      try {
+        cancelMerge(mergeRQ);
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot cancel merge."))
+          throw sqlEx;
+      }
+
+      setMergeRequestStatus(mergeRQ, "accepted");
+      try {
+        cancelMerge(mergeRQ);
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot cancel merge."))
+          throw sqlEx;
+      }
+
+      setMergeRequestStatus(mergeRQ, "rejected");
+      try {
+        cancelMerge(mergeRQ);
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot cancel merge."))
+          throw sqlEx;
+      }
+
+      setMergeRequestStatus(mergeRQ, "in-progress");
+      cancelMerge(mergeRQ);
+    }
+
+    @Test
+    void denyOnlySucceedsOnInProgressStatus() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int childPlan = duplicatePlan(basePlan, "Child");
+      insertActivity(childPlan);
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+
+      setMergeRequestStatus(mergeRQ, "pending");
+      try {
+        denyMerge(mergeRQ);
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot reject merge not in progress."))
+          throw sqlEx;
+      }
+
+      setMergeRequestStatus(mergeRQ, "withdrawn");
+      try {
+        denyMerge(mergeRQ);
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot reject merge not in progress."))
+          throw sqlEx;
+      }
+
+      setMergeRequestStatus(mergeRQ, "accepted");
+      try {
+        denyMerge(mergeRQ);
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot reject merge not in progress."))
+          throw sqlEx;
+      }
+
+      setMergeRequestStatus(mergeRQ, "rejected");
+      try {
+        denyMerge(mergeRQ);
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot reject merge not in progress."))
+          throw sqlEx;
+      }
+
+      setMergeRequestStatus(mergeRQ, "in-progress");
+      denyMerge(mergeRQ);
+    }
+
+    @Test
+    void commitOnlySucceedsOnInProgressStatus() throws SQLException {
+      final int basePlan = insertPlan(missionModelId);
+      final int childPlan = duplicatePlan(basePlan, "Child");
+      insertActivity(childPlan);
+      final int mergeRQ = createMergeRequest(basePlan, childPlan);
+      beginMerge(mergeRQ);
+
+      setMergeRequestStatus(mergeRQ, "pending");
+      try {
+        commitMerge(mergeRQ);
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot commit a merge request that is not in-progress."))
+          throw sqlEx;
+      }
+
+      setMergeRequestStatus(mergeRQ, "withdrawn");
+      try {
+        commitMerge(mergeRQ);
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot commit a merge request that is not in-progress."))
+          throw sqlEx;
+      }
+
+      setMergeRequestStatus(mergeRQ, "accepted");
+      try {
+        commitMerge(mergeRQ);
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot commit a merge request that is not in-progress."))
+          throw sqlEx;
+      }
+
+      setMergeRequestStatus(mergeRQ, "rejected");
+      try {
+        commitMerge(mergeRQ);
+        fail();
+      } catch (SQLException sqlEx) {
+        if (!sqlEx.getMessage().contains("Cannot commit a merge request that is not in-progress."))
+          throw sqlEx;
+      }
+
+      setMergeRequestStatus(mergeRQ, "in-progress");
+      commitMerge(mergeRQ);
+    }
+
+    /**
+     * Validates that the status of only the withdrawn request is set to "withdrawn"
+     */
+    @Test
+    void withdrawCleansUpSuccessfully() throws SQLException {
+      final int basePlan1 = insertPlan(missionModelId);
+      final int basePlan2 = insertPlan(missionModelId);
+      final int childPlan1 = duplicatePlan(basePlan1, "Child of Base Plan 1");
+      final int childPlan2 = duplicatePlan(basePlan2, "Child of Base Plan 2");
+      final int mergeRQ1 = createMergeRequest(basePlan1, childPlan1);
+      final int mergeRQ2 = createMergeRequest(basePlan2, childPlan2);
+
+      assertEquals("pending", getMergeRequest(mergeRQ1).status);
+      assertEquals("pending", getMergeRequest(mergeRQ2).status);
+
+      withdrawMergeRequest(mergeRQ1);
+
+      assertEquals("withdrawn", getMergeRequest(mergeRQ1).status);
+      assertEquals("pending", getMergeRequest(mergeRQ2).status);
+    }
+
+    /**
+     * Validates that the status of only the denied request is set to "rejected"
+     * And that the plan receiving changes is unlocked
+     * And that the Merge Staging Area and Conflicting Activities no longer contains data relevant for the denied merge.
+     */
+    @Test
+    void denyCleansUpSuccessfully() throws SQLException {
+      final int basePlan1 = insertPlan(missionModelId);
+      final int basePlan2 = insertPlan(missionModelId);
+      final int baseActivity1 = insertActivity(basePlan1);
+      final int baseActivity2 = insertActivity(basePlan2);
+
+      final int childPlan1 = duplicatePlan(basePlan1, "Child of Base Plan 1");
+      final int childPlan2 = duplicatePlan(basePlan2, "Child of Base Plan 2");
+      final int childActivity1 = insertActivity(childPlan1);
+      final int childActivity2 = insertActivity(childPlan2);
+
+      updateActivityName("Conflict 1 Base", baseActivity1, basePlan1);
+      updateActivityName("Conflict 2 Base", baseActivity2, basePlan2);
+
+      updateActivityName("Conflict 1 Child", baseActivity1, childPlan1);
+      updateActivityName("Conflict 2 Child", baseActivity2, childPlan2);
+
+      final int mergeRQ1 = createMergeRequest(basePlan1, childPlan1);
+      final int mergeRQ2 = createMergeRequest(basePlan2, childPlan2);
+
+      beginMerge(mergeRQ1);
+      beginMerge(mergeRQ2);
+
+      //Assert the request status
+      assertEquals("in-progress", getMergeRequest(mergeRQ1).status);
+      assertEquals("in-progress", getMergeRequest(mergeRQ2).status);
+
+      //Assert the staging area
+      assertEquals(1, getStagingAreaActivities(mergeRQ1).size());
+      assertEquals(childActivity1, getStagingAreaActivities(mergeRQ1).get(0).activityId);
+      assertEquals(1, getStagingAreaActivities(mergeRQ2).size());
+      assertEquals(childActivity2, getStagingAreaActivities(mergeRQ2).get(0).activityId);
+
+      //Assert the conflict
+      assertEquals(1, getConflictingActivities(mergeRQ1).size());
+      assertEquals(baseActivity1, getConflictingActivities(mergeRQ1).get(0).activityId);
+      assertEquals(1, getConflictingActivities(mergeRQ2).size());
+      assertEquals(baseActivity2, getConflictingActivities(mergeRQ2).get(0).activityId);
+
+      //Assert both plans are locked
+      try(final var statement = connection.createStatement()){
+        var res = statement.executeQuery(
+              """
+              SELECT is_locked
+              FROM plan
+              WHERE id = %d;
+              """.formatted(basePlan1)
+        );
+        assertTrue(res.first());
+        assertTrue(res.getBoolean(1));
+
+        res = statement.executeQuery(
+            """
+            SELECT is_locked
+            FROM plan
+            WHERE id = %d;
+            """.formatted(basePlan2)
+        );
+        assertTrue(res.first());
+        assertTrue(res.getBoolean(1));
+      }
+
+      denyMerge(mergeRQ1);
+
+      //Assert the request status
+      assertEquals("rejected", getMergeRequest(mergeRQ1).status);
+      assertEquals("in-progress", getMergeRequest(mergeRQ2).status);
+
+      //Assert the staging area
+      assertTrue(getStagingAreaActivities(mergeRQ1).isEmpty());
+      assertEquals(1, getStagingAreaActivities(mergeRQ2).size());
+      assertEquals(childActivity2, getStagingAreaActivities(mergeRQ2).get(0).activityId);
+
+      //Assert the conflict
+      assertTrue(getConflictingActivities(mergeRQ1).isEmpty());
+      assertEquals(1, getConflictingActivities(mergeRQ2).size());
+      assertEquals(baseActivity2, getConflictingActivities(mergeRQ2).get(0).activityId);
+
+      //Assert only the in-progress merge is now locked
+      try(final var statement = connection.createStatement()){
+        var res = statement.executeQuery(
+            """
+            SELECT is_locked
+            FROM plan
+            WHERE id = %d;
+            """.formatted(basePlan1)
+        );
+        assertTrue(res.first());
+        assertFalse(res.getBoolean(1));
+
+        res = statement.executeQuery(
+            """
+            SELECT is_locked
+            FROM plan
+            WHERE id = %d;
+            """.formatted(basePlan2)
+        );
+        assertTrue(res.first());
+        assertTrue(res.getBoolean(1));
+      }
+    }
+
+    /**
+     * Validates that the status of only the denied request is set to "pending"
+     * And that the plan receiving changes is unlocked
+     * And that the Merge Staging Area and Conflicting Activities no longer contains data relevant for the canceled merge.
+     */
+    @Test
+    void cancelCleansUpSuccessfully() throws SQLException {
+      final int basePlan1 = insertPlan(missionModelId);
+      final int basePlan2 = insertPlan(missionModelId);
+      final int baseActivity1 = insertActivity(basePlan1);
+      final int baseActivity2 = insertActivity(basePlan2);
+
+      final int childPlan1 = duplicatePlan(basePlan1, "Child of Base Plan 1");
+      final int childPlan2 = duplicatePlan(basePlan2, "Child of Base Plan 2");
+      final int childActivity1 = insertActivity(childPlan1);
+      final int childActivity2 = insertActivity(childPlan2);
+
+      updateActivityName("Conflict 1 Base", baseActivity1, basePlan1);
+      updateActivityName("Conflict 2 Base", baseActivity2, basePlan2);
+
+      updateActivityName("Conflict 1 Child", baseActivity1, childPlan1);
+      updateActivityName("Conflict 2 Child", baseActivity2, childPlan2);
+
+      final int mergeRQ1 = createMergeRequest(basePlan1, childPlan1);
+      final int mergeRQ2 = createMergeRequest(basePlan2, childPlan2);
+
+      beginMerge(mergeRQ1);
+      beginMerge(mergeRQ2);
+
+      //Assert the request status
+      assertEquals("in-progress", getMergeRequest(mergeRQ1).status);
+      assertEquals("in-progress", getMergeRequest(mergeRQ2).status);
+
+      //Assert the staging area
+      assertEquals(1, getStagingAreaActivities(mergeRQ1).size());
+      assertEquals(childActivity1, getStagingAreaActivities(mergeRQ1).get(0).activityId);
+      assertEquals(1, getStagingAreaActivities(mergeRQ2).size());
+      assertEquals(childActivity2, getStagingAreaActivities(mergeRQ2).get(0).activityId);
+
+      //Assert the conflict
+      assertEquals(1, getConflictingActivities(mergeRQ1).size());
+      assertEquals(baseActivity1, getConflictingActivities(mergeRQ1).get(0).activityId);
+      assertEquals(1, getConflictingActivities(mergeRQ2).size());
+      assertEquals(baseActivity2, getConflictingActivities(mergeRQ2).get(0).activityId);
+
+      //Assert both plans are locked
+      try(final var statement = connection.createStatement()){
+        var res = statement.executeQuery(
+            """
+            SELECT is_locked
+            FROM plan
+            WHERE id = %d;
+            """.formatted(basePlan1)
+        );
+        assertTrue(res.first());
+        assertTrue(res.getBoolean(1));
+
+        res = statement.executeQuery(
+            """
+            SELECT is_locked
+            FROM plan
+            WHERE id = %d;
+            """.formatted(basePlan2)
+        );
+        assertTrue(res.first());
+        assertTrue(res.getBoolean(1));
+      }
+
+      cancelMerge(mergeRQ1);
+
+      //Assert the request status
+      assertEquals("pending", getMergeRequest(mergeRQ1).status);
+      assertEquals("in-progress", getMergeRequest(mergeRQ2).status);
+
+      //Assert the staging area
+      assertTrue(getStagingAreaActivities(mergeRQ1).isEmpty());
+      assertEquals(1, getStagingAreaActivities(mergeRQ2).size());
+      assertEquals(childActivity2, getStagingAreaActivities(mergeRQ2).get(0).activityId);
+
+      //Assert the conflict
+      assertTrue(getConflictingActivities(mergeRQ1).isEmpty());
+      assertEquals(1, getConflictingActivities(mergeRQ2).size());
+      assertEquals(baseActivity2, getConflictingActivities(mergeRQ2).get(0).activityId);
+
+      //Assert only the in-progress merge is now locked
+      try(final var statement = connection.createStatement()){
+        var res = statement.executeQuery(
+            """
+            SELECT is_locked
+            FROM plan
+            WHERE id = %d;
+            """.formatted(basePlan1)
+        );
+        assertTrue(res.first());
+        assertFalse(res.getBoolean(1));
+
+        res = statement.executeQuery(
+            """
+            SELECT is_locked
+            FROM plan
+            WHERE id = %d;
+            """.formatted(basePlan2)
+        );
+        assertTrue(res.first());
+        assertTrue(res.getBoolean(1));
+      }
+    }
+  }
+}
