@@ -79,6 +79,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
       final var duration = simulationDuration.minus(offset);
       segments.add(Pair.of(duration, dynamics));
+    } else {
+      throw new Error("No profile segments found for `dataset_id` (%d) and `profile_id` (%d)".formatted(datasetId, profileId));
     }
 
     segments.remove(segments.size()-1);
