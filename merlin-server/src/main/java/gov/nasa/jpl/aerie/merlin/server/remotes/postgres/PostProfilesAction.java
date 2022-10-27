@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.discreteProfileTypeP;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.realProfileTypeP;
@@ -31,8 +32,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
   public Map<String, ProfileRecord> apply(
       final long datasetId,
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>> realProfiles,
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles
+      final Map<String, Pair<ValueSchema, List<Pair<Duration, Optional<RealDynamics>>>>> realProfiles,
+      final Map<String, Pair<ValueSchema, List<Pair<Duration, Optional<SerializedValue>>>>> discreteProfiles
   ) throws SQLException {
     final var resourceNames = new ArrayList<String>();
     final var resourceTypes = new ArrayList<Pair<String, ValueSchema>>();

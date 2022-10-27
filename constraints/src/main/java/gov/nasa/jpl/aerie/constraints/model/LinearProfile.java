@@ -11,6 +11,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -206,17 +208,33 @@ public final class LinearProfile implements Profile<LinearProfile> {
     return new LinearProfile(profilePieces);
   }
 
-  public static LinearProfile fromExternalProfile(final Duration offsetFromPlanStart, final List<Pair<Duration, RealDynamics>> externalProfile) {
-    final var result = new ArrayList<LinearProfilePiece>(externalProfile.size());
+  public static LinearProfile fromSimulatedProfile(final Duration offsetFromPlanStart, final List<Pair<Duration, RealDynamics>> simulatedProfile) {
+    return fromProfileHelper(offsetFromPlanStart, simulatedProfile, Optional::of);
+  }
+
+  public static LinearProfile fromExternalProfile(final Duration offsetFromPlanStart, final List<Pair<Duration, Optional<RealDynamics>>> externalProfile) {
+    return fromProfileHelper(offsetFromPlanStart, externalProfile, $ -> $);
+  }
+
+  private static <T> LinearProfile fromProfileHelper(
+      final Duration offsetFromPlanStart,
+      final List<Pair<Duration, T>> profile,
+      final Function<T, Optional<RealDynamics>> transform
+  ) {
+    final var result = new ArrayList<LinearProfilePiece>(profile.size());
     var cursor = offsetFromPlanStart;
-    for (final var pair: externalProfile) {
+    for (final var pair: profile) {
       final var nextCursor = cursor.plus(pair.getKey());
 
-      result.add(new LinearProfilePiece(
-          Interval.between(cursor, Inclusive, nextCursor, Exclusive),
-          pair.getValue().initial,
-          pair.getValue().rate
-      ));
+      final var value = transform.apply(pair.getValue());
+      final Duration finalCursor = cursor;
+      value.ifPresent(
+          $ -> result.add(new LinearProfilePiece(
+              Interval.between(finalCursor, Inclusive, nextCursor, Exclusive),
+              $.initial,
+              $.rate
+          ))
+      );
 
       cursor = nextCursor;
     }

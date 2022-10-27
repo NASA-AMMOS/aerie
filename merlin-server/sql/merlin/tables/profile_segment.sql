@@ -4,6 +4,7 @@ create table profile_segment (
 
   start_offset interval not null,
   dynamics jsonb null,
+  is_gap bool not null default false,
 
   constraint profile_segment_natural_key
     unique (dataset_id, profile_id, start_offset),
@@ -39,3 +40,5 @@ comment on column profile_segment.dynamics is e''
   'A formal description of the behavior of the resource between this segment and the next.'
 '\n'
   'May be NULL if no behavior is known, thereby canceling any prior behavior.';
+comment on column profile_segment.is_gap is e''
+  'Whether this segment has a value. If not, the value is not used, and is treated as unknown.';

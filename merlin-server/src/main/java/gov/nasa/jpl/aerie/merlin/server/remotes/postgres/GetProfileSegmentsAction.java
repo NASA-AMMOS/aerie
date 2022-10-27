@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.parseOffset;
@@ -20,7 +21,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
   private final @Language("SQL") String sql = """
       select
         seg.start_offset,
-        seg.dynamics
+        seg.dynamics,
+        seg.is_gap
       from profile_segment as seg
       where
         seg.dataset_id = ? and
@@ -33,13 +35,13 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement = connection.prepareStatement(sql);
   }
 
-  public <Dynamics> List<Pair<Duration, Dynamics>> get(
+  public <Dynamics> List<Pair<Duration, Optional<Dynamics>>> get(
       final long datasetId,
       final long profileId,
       final Window simulationWindow,
       final JsonParser<Dynamics> dynamicsP
   ) throws SQLException {
-    final var segments = new ArrayList<Pair<Duration, Dynamics>>();
+    final var segments = new ArrayList<Pair<Duration, Optional<Dynamics>>>();
     this.statement.setLong(1, datasetId);
     this.statement.setLong(2, profileId);
     final var resultSet = statement.executeQuery();
@@ -50,17 +52,29 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     final var simulationDuration = simulationWindow.duration();
     if (resultSet.next()) {
       var offset = parseOffset(resultSet, 1, simulationStart);
-      var dynamics = getJsonColumn(resultSet, "dynamics", dynamicsP)
-          .getSuccessOrThrow(failureReason -> new Error("Corrupt profile dynamics: " + failureReason.reason()));
+      Optional<Dynamics> dynamics;
+      var isGap = resultSet.getBoolean("is_gap");
+      if (!isGap) {
+        dynamics = Optional.of(getJsonColumn(resultSet, "dynamics", dynamicsP)
+            .getSuccessOrThrow(failureReason -> new Error("Corrupt profile dynamics: " + failureReason.reason())));
+      } else {
+        dynamics = Optional.empty();
+      }
 
       while (resultSet.next()) {
         final var nextOffset = parseOffset(resultSet, 1, simulationStart);
         final var duration = nextOffset.minus(offset);
         segments.add(Pair.of(duration, dynamics));
         offset = nextOffset;
-        dynamics = getJsonColumn(resultSet, "dynamics", dynamicsP)
-            .getSuccessOrThrow(
-                failureReason -> new Error("Corrupt profile dynamics: " + failureReason.reason()));
+
+        isGap = resultSet.getBoolean("is_gap");
+        if (!isGap) {
+          dynamics = Optional.of(getJsonColumn(resultSet, "dynamics", dynamicsP)
+              .getSuccessOrThrow(
+                  failureReason -> new Error("Corrupt profile dynamics: " + failureReason.reason())));
+        } else {
+          dynamics = Optional.empty();
+        }
       }
 
       final var duration = simulationDuration.minus(offset);

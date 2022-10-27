@@ -14,7 +14,9 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import static gov.nasa.jpl.aerie.json.BasicParsers.nullableP;
 import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.realDynamicsP;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 
@@ -24,20 +26,26 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
       final long datasetId,
       final Window simulationWindow
   ) throws SQLException {
-    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>>();
-    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
+    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, Optional<RealDynamics>>>>>();
+    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, Optional<SerializedValue>>>>>();
 
     final var profileRecords = getProfileRecords(connection, datasetId);
     for (final var record : profileRecords) {
       switch (record.type().getLeft()) {
-        case "real" -> realProfiles.put(record.name(),
-                                        Pair.of(
-                                            record.type().getRight(),
-                                            getRealProfileSegments(connection, record.datasetId(), record.id(), simulationWindow)));
-        case "discrete" -> discreteProfiles.put(record.name(),
-                                                Pair.of(
-                                                    record.type().getRight(),
-                                                    getDiscreteProfileSegments(connection, record.datasetId(), record.id(), simulationWindow)));
+        case "real" -> realProfiles.put(
+          record.name(),
+          Pair.of(
+              record.type().getRight(),
+              getRealProfileSegments(connection, record.datasetId(), record.id(), simulationWindow)
+          )
+        );
+        case "discrete" -> discreteProfiles.put(
+            record.name(),
+            Pair.of(
+                record.type().getRight(),
+                getDiscreteProfileSegments(connection, record.datasetId(), record.id(), simulationWindow)
+            )
+        );
         default -> throw new Error("Unrecognized profile type");
       }
     }
@@ -74,7 +82,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
     }
   }
 
-  static List<Pair<Duration, RealDynamics>> getRealProfileSegments(
+  static List<Pair<Duration, Optional<RealDynamics>>> getRealProfileSegments(
       final Connection connection,
       final long datasetId,
       final long profileId,
@@ -85,7 +93,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
     }
   }
 
-  static List<Pair<Duration, SerializedValue>> getDiscreteProfileSegments(
+  static List<Pair<Duration, Optional<SerializedValue>>> getDiscreteProfileSegments(
       final Connection connection,
       final long datasetId,
       final long profileId,
@@ -151,7 +159,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
       final Connection connection,
       final long datasetId,
       final ProfileRecord profileRecord,
-      final List<Pair<Duration, RealDynamics>> segments,
+      final List<Pair<Duration, Optional<RealDynamics>>> segments,
       final Timestamp simulationStart
   ) throws SQLException {
     try (final var postProfileSegmentsAction = new PostProfileSegmentsAction(connection)) {
@@ -163,7 +171,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
       final Connection connection,
       final long datasetId,
       final ProfileRecord profileRecord,
-      final List<Pair<Duration, SerializedValue>> segments,
+      final List<Pair<Duration, Optional<SerializedValue>>> segments,
       final Timestamp simulationStart
   ) throws SQLException {
     try (final var postProfileSegmentsAction = new PostProfileSegmentsAction(connection)) {

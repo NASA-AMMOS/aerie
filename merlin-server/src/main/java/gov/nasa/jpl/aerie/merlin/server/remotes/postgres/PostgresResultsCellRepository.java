@@ -314,8 +314,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     final var events = getSimulationEvents(connection, simulationDatasetRecord.datasetId(), startTimestamp);
 
     return new SimulationResults(
-        profiles.realProfiles(),
-        profiles.discreteProfiles(),
+        ProfileSet.unwrapOptional(profiles.realProfiles()),
+        ProfileSet.unwrapOptional(profiles.discreteProfiles()),
         activities.getLeft(),
         activities.getRight(),
         simulationStart,
