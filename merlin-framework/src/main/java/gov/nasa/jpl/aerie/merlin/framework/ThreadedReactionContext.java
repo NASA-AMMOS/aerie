@@ -56,7 +56,7 @@ final class ThreadedReactionContext implements Context {
   }
 
   @Override
-  public <T> void spawn(final TaskFactory<T> task) {
+  public void spawn(final TaskFactory<?> task) {
     this.scheduler.spawn(task.create(this.executor));
   }
 

@@ -7,5 +7,5 @@ public interface Scheduler {
 
   <Event> void emit(Event event, Topic<Event> topic);
 
-  <Output> void spawn(Task<Output> task);
+  void spawn(Task<?> task);
 }

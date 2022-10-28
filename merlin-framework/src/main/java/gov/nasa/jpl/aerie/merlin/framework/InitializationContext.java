@@ -54,8 +54,14 @@ public final class InitializationContext implements Context {
   }
 
   @Override
-  public <Return> void spawn(final TaskFactory<Return> task) {
-    this.builder.daemon(() -> task.create(InitializationContext.this.executor));
+  public void spawn(final TaskFactory<?> task) {
+    this.builder.daemon(wrap(task));
+  }
+
+  // It looks stupid, but this method is actually necessary to bind the type parameter T.
+  // Inlining this method at its call site induces a compiler error.
+  private <T> Initializer.TaskFactory<T> wrap(final TaskFactory<T> task) {
+    return () -> task.create(this.executor);
   }
 
   @Override
