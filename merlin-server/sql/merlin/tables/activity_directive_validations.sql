@@ -1,13 +1,14 @@
 create table activity_directive_validations (
   directive_id integer not null,
+  plan_id integer not null,
 
   last_modified_at timestamptz not null default now(),
   validations jsonb default '{}'::jsonb,
 
   constraint activity_directive_validations_natural_key
-    primary key (directive_id),
+    primary key (directive_id, plan_id),
   constraint activity_directive_validations_owned_by_activity_directive
-    foreign key (directive_id)
+    foreign key (directive_id, plan_id)
     references activity_directive
     on update cascade
     on delete cascade

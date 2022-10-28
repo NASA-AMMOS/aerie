@@ -72,7 +72,6 @@ public class DatabaseTestHelper {
     pgDataSource.setServerName("localhost");
     pgDataSource.setPortNumber(5432);
     pgDataSource.setDatabaseName(dbName);
-    pgDataSource.setApplicationName("Merlin Database Tests");
     pgDataSource.setApplicationName(appName);
 
     final var hikariConfig = new HikariConfig();

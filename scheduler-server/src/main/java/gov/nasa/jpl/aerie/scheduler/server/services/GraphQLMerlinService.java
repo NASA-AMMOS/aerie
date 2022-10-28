@@ -414,62 +414,6 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     return ids;
   }
 
-  public void deleteActivityDirective(final ActivityInstanceId id)
-  throws PlanServiceException, IOException, NoSuchActivityInstanceException
-  {
-    final var query = """
-        mutation DeleteActivity($id: Int!) {
-          delete_activity_by_pk(id: $id) {
-            id
-          }
-        }
-        """;
-    final var variables = Json.createObjectBuilder().add("id", id.id()).build();
-    final var response = postRequest(query, variables).orElseThrow(() -> new NoSuchActivityInstanceException(id));
-    try {
-      response.getJsonObject("data").getJsonObject("delete_activity_by_pk").getJsonNumber("id").longValueExact();
-    } catch (ClassCastException | ArithmeticException e) {
-      throw new NoSuchActivityInstanceException(id);
-    }
-  }
-
-  public void updateActivityDirective(
-      final PlanId planId,
-      final MerlinActivityInstance activity,
-      final ActivityInstanceId instanceId,
-      final GoalId goalId
-  )
-  throws PlanServiceException, NoSuchPlanException, IOException
-  {
-    final var arguments = Json.createObjectBuilder();
-    for (final var arg : activity.arguments().entrySet()) {
-      //serializedValueP is safe to use here because only unparsing. otherwise subject to int/double typing confusion
-      arguments.add(arg.getKey(), serializedValueP.unparse(arg.getValue()));
-    }
-    final var query = """
-        mutation UpdateActivity($id: Int!, $planId: Int!, $arguments: String!, $startOffset: Int!, $goalId: Int) {
-          update_activity_directive_by_pk(pk_columns: {id: $id, plan_id: $planId}, _set: {arguments: $arguments, start_offset: $startOffset, source_scheduling_goal_id: $goalId}) {
-            affected_rows
-          }
-        }
-        """;
-
-    final var variables = Json.createObjectBuilder()
-        .add("id", instanceId.id())
-        .add("planId", planId.id())
-        .add("arguments", arguments.build())
-        .add("startOffset", activity.startTimestamp().toString())
-        .add("goalId", goalId.id())
-        .build();
-
-    final var response = postRequest(query, variables).orElseThrow(() -> new NoSuchPlanException(planId));
-    try {
-      response.getJsonObject("data").getJsonObject("update_activity_directive_by_pk").getJsonNumber("id").longValueExact();
-    } catch (ClassCastException | ArithmeticException e) {
-      throw new NoSuchPlanException(planId);
-    }
-  }
-
   /**
    * {@inheritDoc}
    */
