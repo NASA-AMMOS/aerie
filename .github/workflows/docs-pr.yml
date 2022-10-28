@@ -8,6 +8,8 @@ on:
       - develop
     paths:
       - "docs/**"
+      - "merlin-server/constraints-dsl-compiler/src/**"
+      - "scheduler-server/scheduling-dsl-compiler/src/**"
 
 jobs:
   build:
@@ -22,7 +24,14 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: 3.7
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "19"
       - name: Set up env
         run: make -C docs setupenv
       - name: Build docs
-        run: make -C docs test
+        working-directory: ./docs
+        shell: bash
+        run: make test

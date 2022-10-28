@@ -7,8 +7,7 @@ If you are reading this guide because you have decided to contribute to Aerie's 
 The purpose of this handbook is to explain how to contribute new content to Aerie's documentation either as a new
 topic or by editing an existing topic.
 
-If you feel something is missing from this document, do not hesitate to let us know. You can use the Feedback
-button at the bottom to open an issue.
+If you feel something is missing from this document, use the Feedback button at the bottom to open an issue.
 
 About Aerie Docs
 -----------------
@@ -51,10 +50,9 @@ Also, if there is an issue with any guide and the issue does not exist, please c
 Guidelines for branch names
 ===========================
 
-Ask the Maintainer of the project if he/she has any preference for naming branches before you contribute to the repo
-to avoid any collisions or confusion.
-If you are providing both documentation and code, it is recommended to name all of your documentation branches
-with a `doc/` prefix.
+If you are providing documentation alongside new code, prefix the name of your branch with `feature/`.
+
+If you are only providing documentation, prefix the name of your branch with `docs/`.
 
 Write content
 =============
@@ -113,14 +111,13 @@ To preview your changes while you are working, run ``make preview`` from the com
 
 When you are finished making changes, run ``make clean`` and then ``make dirhtml`` to ensure that the site will deploy. Once the site builds successfully without warnings, you may proceed to the next step.
 
-To check for broken links, run ``make dirhtml`` and then ``make linkcheck``.
+To check for broken links, run ``make clean && make dirhtml-ext`` then ``make linkcheck``.
 
 Submit a pull request (PR)
 ==========================
 
 We expect that you are aware of how to submit a PR to GitHub. If you are not, please look at this `tutorial <https://docs.github.com/en/get-started/quickstart/hello-world>`_.
-Every repository handles PRs differently. Some require you to use a template for submissions and some do not.
-Make sure to speak with the project’s maintainer before submitting the PR to avoid any misunderstanding or issues.
+When creating a PR, fill out the provided template.
 
 If you are writing new content it is **highly recommended** to set your PR to a draft state.
 For Documentation PRs, the following guidelines should be applicable to all Aerie projects:
