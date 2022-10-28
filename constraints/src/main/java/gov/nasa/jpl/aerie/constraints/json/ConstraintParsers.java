@@ -261,30 +261,30 @@ public final class ConstraintParsers {
               untuple((kind, left, right) -> new GreaterThanOrEqual(left, right)),
               $ -> tuple(Unit.UNIT, $.left, $.right));
 
-  static JsonParser<All> allF(final JsonParser<Expression<Windows>> windowsExpressionP) {
+  static JsonParser<And> andF(final JsonParser<Expression<Windows>> windowsExpressionP) {
     return productP
-        .field("kind", literalP("WindowsExpressionAll"))
+        .field("kind", literalP("WindowsExpressionAnd"))
         .field("expressions", listP(windowsExpressionP))
         .map(
-            untuple((kind, expressions) -> new All(expressions)),
+            untuple((kind, expressions) -> new And(expressions)),
             $ -> tuple(Unit.UNIT, $.expressions));
   }
 
-  static JsonParser<Any> anyF(final JsonParser<Expression<Windows>> windowsExpressionP) {
+  static JsonParser<Or> orF(final JsonParser<Expression<Windows>> windowsExpressionP) {
     return productP
-        .field("kind", literalP("WindowsExpressionAny"))
+        .field("kind", literalP("WindowsExpressionOr"))
         .field("expressions", listP(windowsExpressionP))
         .map(
-            untuple((kind, expressions) -> new Any(expressions)),
+            untuple((kind, expressions) -> new Or(expressions)),
             $ -> tuple(Unit.UNIT, $.expressions));
   }
 
-  static JsonParser<Invert> invertF(final JsonParser<Expression<Windows>> windowsExpressionP) {
+  static JsonParser<Not> notF(final JsonParser<Expression<Windows>> windowsExpressionP) {
     return productP
-        .field("kind", literalP("WindowsExpressionInvert"))
+        .field("kind", literalP("WindowsExpressionNot"))
         .field("expression", windowsExpressionP)
         .map(
-            untuple((kind, expr) -> new Invert(expr)),
+            untuple((kind, expr) -> new Not(expr)),
             $ -> tuple(Unit.UNIT, $.expression));
   }
 
@@ -365,9 +365,9 @@ public final class ConstraintParsers {
         equalF(discreteProfileExprP),
         notEqualF(linearProfileExprP),
         notEqualF(discreteProfileExprP),
-        allF(selfP),
-        anyF(selfP),
-        invertF(selfP),
+        andF(selfP),
+        orF(selfP),
+        notF(selfP),
         shiftByF(selfP),
         startsF(selfP),
         endsF(selfP),

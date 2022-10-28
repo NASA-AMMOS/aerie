@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.constraints.tree.All;
+import gov.nasa.jpl.aerie.constraints.tree.And;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
@@ -1266,7 +1266,7 @@ public class TestApplyWhen {
 
 
     // "Make an expression that depends on a resource (the resource here is mission.activitiesExecuted).
-    Expression<Windows> gte = new All(
+    Expression<Windows> gte = new And(
         new LinkedList<>(Arrays.asList(
             new GreaterThanOrEqual(
                 new RealResource("/activitiesExecuted"),

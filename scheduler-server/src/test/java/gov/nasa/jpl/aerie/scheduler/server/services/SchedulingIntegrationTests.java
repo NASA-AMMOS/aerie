@@ -436,7 +436,7 @@ public class SchedulingIntegrationTests {
          export default (): Goal => {
           return Goal.CoexistenceGoal({
             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-            forEach: Windows.All(
+            forEach: Windows.And(
               Real.Resource("/fruit").lessThan(4.0),
               Real.Resource("/fruit").greaterThan(2.0)
             ),
@@ -471,7 +471,7 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromTip"}),
-                   forEach: Windows.All(
+                   forEach: Windows.And(
                      Real.Resource("/fruit").greaterThan(5.0),
                      Real.Resource("/fruit").lessThan(6.0),
                    ),
@@ -611,7 +611,7 @@ public class SchedulingIntegrationTests {
   }
 
   @Test
-  void testBetweenInTermsOfAll() {
+  void testBetweenInTermsOfAnd() {
     // Initial plant count is 200 in default configuration
     // PickBanana removes 100
     // GrowBanana adds 100
@@ -634,7 +634,7 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: Windows.All(
+                   forEach: Windows.And(
                      Real.Resource("/plant").greaterThan(50.0),
                      Real.Resource("/plant").lessThan(150.0),
                    ),
@@ -655,7 +655,7 @@ public class SchedulingIntegrationTests {
   }
 
   @Test
-  void testWindowsAny() {
+  void testWindowsOr() {
     // Initial plant count is 200 in default configuration
     // PickBanana removes 100
     // GrowBanana adds 100
@@ -678,7 +678,7 @@ public class SchedulingIntegrationTests {
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
                    activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-                   forEach: Windows.Any(
+                   forEach: Windows.Or(
                      Real.Resource("/plant").equal(999.0),
                      Real.Resource("/plant").equal(100.0),
                    ),

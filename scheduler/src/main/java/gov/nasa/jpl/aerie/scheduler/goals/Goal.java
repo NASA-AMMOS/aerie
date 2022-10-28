@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.scheduler.goals;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.constraints.tree.All;
+import gov.nasa.jpl.aerie.constraints.tree.And;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -173,7 +173,7 @@ public class Goal {
       goal.resourceConstraints = null;
       if (this.resourceConstraints.size() > 0) {
         if (this.resourceConstraints.size() > 1) {
-          goal.resourceConstraints = new All(resourceConstraints);
+          goal.resourceConstraints = new And(resourceConstraints);
         } else {
           goal.resourceConstraints = resourceConstraints.get(0);
         }

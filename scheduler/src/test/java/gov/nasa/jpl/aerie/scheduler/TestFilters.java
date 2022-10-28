@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.constraints.tree.All;
+import gov.nasa.jpl.aerie.constraints.tree.And;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
 import gov.nasa.jpl.aerie.constraints.tree.Equal;
@@ -18,7 +18,6 @@ import gov.nasa.jpl.aerie.scheduler.constraints.filters.Filters;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +44,7 @@ public class TestFilters {
     );
 
     final var ste = new Equal<>(new DiscreteResource("smallState1"), new DiscreteValue(SerializedValue.of(true)));
-    final var ste2 = new All(
+    final var ste2 = new And(
         new Equal<>(new DiscreteResource("smallState1"), new DiscreteValue(SerializedValue.of(true))),
         new Equal<>(new DiscreteResource("smallState2"), new DiscreteValue(SerializedValue.of(true)))
     );
