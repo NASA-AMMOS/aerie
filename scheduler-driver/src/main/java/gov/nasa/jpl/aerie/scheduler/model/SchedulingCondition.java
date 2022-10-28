@@ -13,7 +13,7 @@ import java.util.List;
 
 public record SchedulingCondition(
     Expression<Windows> expression,
-    ActivityTypeList activityTypes
+    List<ActivityType> activityTypes
 ) implements GlobalConstraintWithIntrospection
 {
   @Override
@@ -31,18 +31,11 @@ public record SchedulingCondition(
     } else {
       throw new Error("Unsupported conflict %s".formatted(conflict));
     }
-    if (this.activityTypes instanceof ActivityTypeList.Whitelist a) {
-      if (!anyMatch(a.activityExpressions(), type)) {
-        return new Windows();
-      }
-    } else if (this.activityTypes instanceof ActivityTypeList.Blacklist a) {
-      if (anyMatch(a.activityExpressions(), type)) {
-        return new Windows();
-      }
+    if(anyMatch(this.activityTypes, type)){
+      return this.expression.evaluate(simulationResults).and(windows);
     } else {
-      throw new Error("Unhandled subtype of ActivityExpressionList %s".formatted(this.activityTypes));
+      return windows;
     }
-    return this.expression.evaluate(simulationResults);
   }
 
   @Override

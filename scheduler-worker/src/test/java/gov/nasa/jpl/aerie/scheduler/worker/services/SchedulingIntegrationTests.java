@@ -23,7 +23,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityTypeList;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
 import gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers;
@@ -133,7 +132,7 @@ public class SchedulingIntegrationTests {
                             specification : {duration: Temporal.Duration.from({seconds: 10})}
                           })
         }
-          """, true)), PLANNING_HORIZON);
+          """, true)),List.of(createAutoMutex("GrowBanana")), PLANNING_HORIZON);
     assertEquals(1, results.scheduleResults.goalResults().size());
     final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
 
@@ -174,7 +173,7 @@ public class SchedulingIntegrationTests {
                                       specification : {occurrence: 10}
                                     })
                   }
-                    """, true)), PLANNING_HORIZON);
+                    """, true)),List.of(createAutoMutex("GrowBanana")),PLANNING_HORIZON);
 
     assertEquals(1, results.scheduleResults.goalResults().size());
     final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
@@ -815,10 +814,12 @@ public class SchedulingIntegrationTests {
         ),
         List.of(
             new GlobalSchedulingConditionRecord(
-                new GlobalSchedulingConditionSource("export default () => Real.Resource(\"/fruit\").greaterThan(5.0)"),
-                ActivityTypeList.matchAny(),
+                new GlobalSchedulingConditionSource("""
+                export default () => GlobalSchedulingCondition.scheduleActivitiesOnlyWhen(Real.Resource(\"/fruit\").greaterThan(5.0))
+                """),
                 true
-            )
+            ),
+            createAutoMutex("ChangeProducer")
         ),
         PLANNING_HORIZON);
     assertEquals(0, results.updatedPlan().size());
@@ -838,8 +839,7 @@ public class SchedulingIntegrationTests {
         ),
         List.of(
             new GlobalSchedulingConditionRecord(
-                new GlobalSchedulingConditionSource("export default () => Real.Resource(\"/fruit\").lessThan(5.0)"),
-                ActivityTypeList.matchAny(),
+                new GlobalSchedulingConditionSource("export default () => GlobalSchedulingCondition.scheduleActivitiesOnlyWhen(Real.Resource(\"/fruit\").lessThan(5.0))"),
                 true
             )
         ),
@@ -866,8 +866,7 @@ public class SchedulingIntegrationTests {
         ),
         List.of(
             new GlobalSchedulingConditionRecord(
-                new GlobalSchedulingConditionSource("export default () => Real.Resource(\"/fruit\").greaterThan(3.5)"),
-                ActivityTypeList.matchAny(),
+                new GlobalSchedulingConditionSource("export default () => GlobalSchedulingCondition.scheduleActivitiesOnlyWhen(Real.Resource(\"/fruit\").greaterThan(3.5))"),
                 true
             )
         ),
@@ -905,6 +904,17 @@ public class SchedulingIntegrationTests {
     final var files = libPath.toFile().listFiles(pathname -> pathname.getName().endsWith(".jar"));
     Arrays.sort(files, Comparator.comparingLong(File::lastModified).reversed());
     return files[0];
+  }
+
+  public static GlobalSchedulingConditionRecord createAutoMutex(String activityType){
+    return new GlobalSchedulingConditionRecord(
+        new GlobalSchedulingConditionSource("""
+                    export default function myCondition() {
+                      return GlobalSchedulingCondition.mutex([ActivityTypes.%s], [ActivityTypes.%s])
+                    }
+                    """.formatted(activityType, activityType)),
+        true
+    );
   }
 
   private SchedulingRunResults runScheduler(
@@ -1038,6 +1048,10 @@ public class SchedulingIntegrationTests {
                            })
                         )
                }""", true)),
+        List.of(
+            createAutoMutex("GrowBanana"),
+            createAutoMutex("PeelBanana")
+        ),
         planningHorizon);
 
     assertEquals(1, results.scheduleResults.goalResults().size());
@@ -1094,6 +1108,10 @@ public class SchedulingIntegrationTests {
                                       })
                         )
                }""", true)),
+        List.of(
+            createAutoMutex("GrowBanana"),
+            createAutoMutex("PeelBanana")
+        ),
         planningHorizon);
     assertEquals(1, results.scheduleResults.goalResults().size());
     //as goal is partially satisfiable, it does not remove activities from the plan
@@ -1134,6 +1152,10 @@ public class SchedulingIntegrationTests {
                            })
                         )
                }""", true)),
+        List.of(
+            createAutoMutex("GrowBanana"),
+            createAutoMutex("PeelBanana")
+        ),
         PLANNING_HORIZON);
 
     assertEquals(1, results.scheduleResults.goalResults().size());
@@ -1203,6 +1225,7 @@ public class SchedulingIntegrationTests {
                                              Map.of(),
                                              Duration.of(1, HOURS))),
                                      List.of(new SchedulingGoal(new GoalId(0L), goalDefinition, true)),
+                                     List.of(createAutoMutex("child")),
                                      planningHorizon);
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var parentActs = planByActivityType.get("parent");

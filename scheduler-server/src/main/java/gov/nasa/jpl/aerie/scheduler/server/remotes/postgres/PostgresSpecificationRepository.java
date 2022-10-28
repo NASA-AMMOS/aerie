@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.scheduler.model.ActivityTypeList;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.models.GlobalSchedulingConditionRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.GlobalSchedulingConditionSource;
@@ -60,7 +59,6 @@ public final class PostgresSpecificationRepository implements SpecificationRepos
         .stream()
         .map((PostgresSchedulingConditionRecord pgCondition) -> new GlobalSchedulingConditionRecord(
             new GlobalSchedulingConditionSource(pgCondition.definition()),
-            ActivityTypeList.matchAny(), // TODO when global scheduling conditions can be limited to certain activity types, this will need to be updated.
             pgCondition.enabled()
         ))
         .toList();
