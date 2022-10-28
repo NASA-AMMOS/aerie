@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.*;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -490,8 +489,8 @@ class ConstraintsDSLCompilationServiceTests {
           }
         """,
         new ViolationsOf(
-            new Any(
-                new Invert(new Changes<>(
+            new Or(
+                new Not(new Changes<>(
                     new ProfileExpression<>(new DiscreteResource("mode"))
                 )),
                 new LessThan(new RealResource("state of charge"), new RealValue(2.0))
@@ -501,11 +500,11 @@ class ConstraintsDSLCompilationServiceTests {
   }
 
   @Test
-  void testAll() {
+  void testAnd() {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Windows.All(
+            return Windows.And(
               Real.Resource("state of charge").lessThan(2),
               Discrete.Value("hello there").notEqual(Discrete.Value("hello there")),
               Real.Value(5).changes()
@@ -513,7 +512,7 @@ class ConstraintsDSLCompilationServiceTests {
           }
         """,
         new ViolationsOf(
-            new All(
+            new And(
                 java.util.List.of(
                     new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
                     new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
@@ -525,11 +524,11 @@ class ConstraintsDSLCompilationServiceTests {
   }
 
   @Test
-  void testAny() {
+  void testOr() {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Windows.Any(
+            return Windows.Or(
               Real.Resource("state of charge").lessThan(2),
               Discrete.Value("hello there").notEqual(Discrete.Value("hello there")),
               Real.Value(5).changes()
@@ -537,7 +536,7 @@ class ConstraintsDSLCompilationServiceTests {
           }
         """,
         new ViolationsOf(
-            new Any(
+            new Or(
                 java.util.List.of(
                     new LessThan(new RealResource("state of charge"), new RealValue(2.0)),
                     new NotEqual<>(new DiscreteValue(SerializedValue.of("hello there")), new DiscreteValue(SerializedValue.of("hello there"))),
@@ -549,15 +548,15 @@ class ConstraintsDSLCompilationServiceTests {
   }
 
   @Test
-  void testInvert() {
+  void testNot() {
     checkSuccessfulCompilation(
         """
           export default () => {
-            return Discrete.Resource("mode").changes().invert()
+            return Discrete.Resource("mode").changes().not()
           }
         """,
         new ViolationsOf(
-            new Invert(
+            new Not(
                 new Changes<>(new ProfileExpression<>(new DiscreteResource("mode")))
             )
         )
@@ -770,7 +769,7 @@ class ConstraintsDSLCompilationServiceTests {
             new ForEachActivity(
                 "activity",
                 "activity alias 1",
-                new ViolationsOf(new Invert(new All(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))))
+                new ViolationsOf(new Not(new And(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))))
             )
         )
     );
@@ -817,13 +816,13 @@ class ConstraintsDSLCompilationServiceTests {
             ActivityType.activity,
             (alias1) => Constraint.ForEachActivity(
               ActivityType.activity,
-              (alias2) => Windows.All(alias1.window(), alias2.window())
+              (alias2) => Windows.And(alias1.window(), alias2.window())
             )
           )
         }
         """,
         new ForEachActivity("activity", "activity alias 0", new ForEachActivity("activity", "activity alias 1", new ViolationsOf(
-            new All(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))
+            new And(new ActivityWindow("activity alias 0"), new ActivityWindow("activity alias 1"))
         )))
     );
   }

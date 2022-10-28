@@ -36,7 +36,7 @@ export class Constraint {
         activityType1,
         activity1 => Constraint.ForEachActivity(
             activityType2,
-            activity2 => Windows.All(activity1.window(), activity2.window()).invert()
+            activity2 => Windows.And(activity1.window(), activity2.window()).not()
         )
     )
   }
@@ -80,9 +80,9 @@ export class Windows {
    *
    * @param windows any number of windows expressions
    */
-  public static All(...windows: Windows[]): Windows {
+  public static And(...windows: Windows[]): Windows {
     return new Windows({
-      kind: AST.NodeKind.WindowsExpressionAll,
+      kind: AST.NodeKind.WindowsExpressionAnd,
       expressions: [...windows.map(other => other.__astNode)],
     });
   }
@@ -94,9 +94,9 @@ export class Windows {
    *
    * @param windows one or more windows expressions
    */
-  public static Any(...windows: Windows[]): Windows {
+  public static Or(...windows: Windows[]): Windows {
     return new Windows({
-      kind: AST.NodeKind.WindowsExpressionAny,
+      kind: AST.NodeKind.WindowsExpressionOr,
       expressions: [...windows.map(other => other.__astNode)],
     });
   }
@@ -108,10 +108,10 @@ export class Windows {
    */
   public if(condition: Windows): Windows {
     return new Windows({
-      kind: AST.NodeKind.WindowsExpressionAny,
+      kind: AST.NodeKind.WindowsExpressionOr,
       expressions: [
         {
-          kind: AST.NodeKind.WindowsExpressionInvert,
+          kind: AST.NodeKind.WindowsExpressionNot,
           expression: condition.__astNode,
         },
         this.__astNode,
@@ -122,9 +122,9 @@ export class Windows {
   /**
    * Invert all the windows produced this.
    */
-  public invert(): Windows {
+  public not(): Windows {
     return new Windows({
-      kind: AST.NodeKind.WindowsExpressionInvert,
+      kind: AST.NodeKind.WindowsExpressionNot,
       expression: this.__astNode,
     });
   }
@@ -676,7 +676,7 @@ declare global {
      *
      * @param windows any number of windows expressions
      */
-    public static All(...windows: Windows[]): Windows;
+    public static And(...windows: Windows[]): Windows;
 
     /**
      * Produce a window when any argument produces a window.
@@ -685,7 +685,7 @@ declare global {
      *
      * @param windows one or more windows expressions
      */
-    public static Any(...windows: Windows[]): Windows;
+    public static Or(...windows: Windows[]): Windows;
 
     /**
      * Only check this expression of the condition argument produces a window.
@@ -697,7 +697,7 @@ declare global {
     /**
      * Invert all the windows produced this.
      */
-    public invert(): Windows;
+    public not(): Windows;
 
     /**
      * Produce a constraint violation whenever this does NOT produce a window.

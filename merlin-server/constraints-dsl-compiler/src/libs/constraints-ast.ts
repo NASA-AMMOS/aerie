@@ -26,9 +26,9 @@ export enum NodeKind {
   RealProfileLessThanOrEqual = 'RealProfileLessThanOrEqual',
   RealProfileGreaterThan = 'RealProfileGreaterThan',
   RealProfileGreaterThanOrEqual = 'RealProfileGreaterThanOrEqual',
-  WindowsExpressionAll = 'WindowsExpressionAll',
-  WindowsExpressionAny = 'WindowsExpressionAny',
-  WindowsExpressionInvert = 'WindowsExpressionInvert',
+  WindowsExpressionAnd = 'WindowsExpressionAnd',
+  WindowsExpressionOr = 'WindowsExpressionOr',
+  WindowsExpressionNot = 'WindowsExpressionNot',
   IntervalsExpressionStarts = 'IntervalsExpressionStarts',
   IntervalsExpressionEnds = 'IntervalsExpressionEnds',
   ForEachActivity = 'ForEachActivity',
@@ -64,11 +64,11 @@ export type WindowsExpression =
   | ExpressionEqual<DiscreteProfileExpression>
   | ExpressionNotEqual<RealProfileExpression>
   | ExpressionNotEqual<DiscreteProfileExpression>
-  | WindowsExpressionAll
-  | WindowsExpressionAny
+  | WindowsExpressionAnd
+  | WindowsExpressionOr
   | WindowsExpressionLongerThan
   | WindowsExpressionShorterThan
-  | WindowsExpressionInvert
+  | WindowsExpressionNot
   | WindowsExpressionShiftBy
   | WindowsExpressionFromSpans
   | IntervalsExpressionStarts
@@ -89,8 +89,8 @@ export interface ProfileChanges {
   expression: ProfileExpression;
 }
 
-export interface WindowsExpressionInvert {
-  kind: NodeKind.WindowsExpressionInvert;
+export interface WindowsExpressionNot {
+  kind: NodeKind.WindowsExpressionNot;
   expression: WindowsExpression;
 }
 
@@ -103,13 +103,13 @@ export interface WindowsExpressionShiftBy {
   fromEnd: Duration,
 }
 
-export interface WindowsExpressionAny {
-  kind: NodeKind.WindowsExpressionAny;
+export interface WindowsExpressionOr {
+  kind: NodeKind.WindowsExpressionOr;
   expressions: WindowsExpression[];
 }
 
-export interface WindowsExpressionAll {
-  kind: NodeKind.WindowsExpressionAll;
+export interface WindowsExpressionAnd {
+  kind: NodeKind.WindowsExpressionAnd;
   expressions: WindowsExpression[];
 }
 

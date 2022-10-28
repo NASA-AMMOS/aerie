@@ -50,7 +50,7 @@ public class ASTTests {
         .set(Interval.between(10, Exclusive, 15, Exclusive, SECONDS), false)
         .set(Interval.at(20, SECONDS), true);
 
-    final var result = new Invert(Supplier.of(windows)).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new Not(Supplier.of(windows)).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new Windows()
         .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), false)
@@ -256,7 +256,7 @@ public class ASTTests {
         .set(Interval.between(10, Inclusive, 12, Inclusive, SECONDS), true)
         .set(Interval.between(15, Inclusive, 20, Exclusive, SECONDS), true);
 
-    final var result = new All(Supplier.of(left), Supplier.of(right)).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new And(Supplier.of(left), Supplier.of(right)).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new Windows()
         .set(Interval.between( 0, Inclusive,  5, Exclusive, SECONDS), true)
@@ -290,7 +290,7 @@ public class ASTTests {
         .set(Interval.between(15, Inclusive, 20, Exclusive, SECONDS), true)
         .set(Interval.between(25, Inclusive, 26, Exclusive, SECONDS), false);
 
-    final var result = new Any(Supplier.of(left), Supplier.of(right)).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new Or(Supplier.of(left), Supplier.of(right)).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new Windows()
         .set(Interval.between(  0, Inclusive,   5, Inclusive, SECONDS), true)
