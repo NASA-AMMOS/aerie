@@ -39,6 +39,7 @@ For the Aerie Commanding container a low cost / higher vCPU count instance for t
 | Aerie Merlin | 27183 | No |
 | Aerie Merlin Worker | 27187 | No |
 | Aerie Scheduler | 27185 | No |
+| Aerie Scheduler Worker | 27189 | No |
 | Aerie UI | 80 | Yes |
 | Hasura | 8080 | Yes |
 | Postgres | 5432 | No |

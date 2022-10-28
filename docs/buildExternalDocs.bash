@@ -12,7 +12,7 @@ cp -a ../merlin-server/constraints-dsl-compiler/build/docs/. ./source/constraint
 rm -f ./source/constraints-edsl-api/.nojekyll
 
 mkdir -p ./source/scheduling-edsl-api
-cp -a ../scheduler-server/scheduling-dsl-compiler/build/docs/. ./source/scheduling-edsl-api
+cp -a ../scheduler-worker/scheduling-dsl-compiler/build/docs/. ./source/scheduling-edsl-api
 rm -f ./source/scheduling-edsl-api/.nojekyll
 rm -f ./source/scheduling-edsl-api/README.md
 rm -rf ./source/scheduling-edsl-api/*/Constraint_eDSL.*
