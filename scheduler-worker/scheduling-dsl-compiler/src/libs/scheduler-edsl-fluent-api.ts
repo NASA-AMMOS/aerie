@@ -6,13 +6,82 @@
  */
 
 import * as AST from "./scheduler-ast.js";
-import type * as WindowsEDSL from "./constraints-edsl-fluent-api.js";
+import  * as WindowsEDSL from "./constraints-edsl-fluent-api.js";
 import type {ActivityType} from "./scheduler-mission-model-generated-code.js";
 
 type WindowProperty = AST.WindowProperty
 type TimingConstraintOperator = AST.TimingConstraintOperator
 
 export type { CardinalityGoalArguments, WindowProperty, TimingConstraintOperator} from "./scheduler-ast.js";
+
+export class GlobalSchedulingCondition {
+
+  public readonly __astNode: AST.GlobalSchedulingConditionSpecifier
+
+  /** @internal **/
+  private constructor(__astNode: AST.GlobalSchedulingConditionSpecifier) {
+    this.__astNode = __astNode;
+  }
+
+  /** @internal **/
+  private static new(__astNode: AST.GlobalSchedulingConditionSpecifier): GlobalSchedulingCondition {
+    return new GlobalSchedulingCondition(__astNode);
+  }
+
+  /**
+   * Allows scheduling of any activity type only when passed expression evaluates to true
+   * @param expression the expression
+   */
+  public static scheduleActivitiesOnlyWhen(expression: WindowsEDSL.Windows): GlobalSchedulingCondition {
+    return GlobalSchedulingCondition.new({
+          kind: AST.NodeKind.GlobalSchedulingCondition,
+          expression: expression.__astNode,
+          activityTypes: Object.values(WindowsEDSL.Gen.ActivityType)
+        }
+    )
+  }
+
+  /**
+   * Allows scheduling of argument activity types only when passed expression evaluates to true
+   * @param activityTypes the activity types
+   * @param expression the expression
+   */
+  public static scheduleOnlyWhen(activityTypes: WindowsEDSL.Gen.ActivityType[], expression: WindowsEDSL.Windows): GlobalSchedulingCondition {
+    return GlobalSchedulingCondition.new({
+          kind: AST.NodeKind.GlobalSchedulingCondition,
+          expression: expression.__astNode,
+          activityTypes: activityTypes
+        }
+    )
+  }
+
+  /**
+   * Creates a mutual exclusion global condition preventing instantiation of activity types from the first list from
+   * overlapping instantiations of activity types from the second list. Relation is reflexive: mutex(A,B) = mutex(B,A).
+   *
+   * @param activityTypes1 a list of activity types
+   * @param activityTypes2 a list of activity types
+   */
+  public static mutex(activityTypes1: WindowsEDSL.Gen.ActivityType[],
+                      activityTypes2: WindowsEDSL.Gen.ActivityType[]): GlobalSchedulingCondition {
+    return GlobalSchedulingCondition.new({
+      kind: AST.NodeKind.GlobalSchedulingConditionAnd,
+      conditions: [
+        GlobalSchedulingCondition.new({
+          kind: AST.NodeKind.GlobalSchedulingCondition,
+          expression: WindowsEDSL.Windows.During(...activityTypes2).not().__astNode,
+          activityTypes: activityTypes1
+        }).__astNode,
+        GlobalSchedulingCondition.new({
+              kind: AST.NodeKind.GlobalSchedulingCondition,
+              expression: WindowsEDSL.Windows.During(...activityTypes1).not().__astNode,
+              activityTypes: activityTypes2
+            }
+        ).__astNode
+      ]
+    })
+  }
+}
 
 /**
  * This class represents allows to represent and specify goals.
@@ -485,6 +554,34 @@ export class RangeTimingConstraint {
 }
 
 declare global {
+  class GlobalSchedulingCondition {
+
+    public readonly __astNode: AST.GlobalSchedulingCondition;
+
+    /**
+     * Allows scheduling of any activity type only when passed expression evaluates to true
+     * @param expression the expression
+     */
+    public static scheduleActivitiesOnlyWhen(expression : WindowsEDSL.Windows) : GlobalSchedulingCondition;
+
+    /**
+     * Allows scheduling of argument activity types only when passed expression evaluates to true
+     * @param activityTypes the activity types
+     * @param expression the expression
+     */
+    public static scheduleOnlyWhen(activityTypes: WindowsEDSL.Gen.ActivityType[], expression: WindowsEDSL.Windows): GlobalSchedulingCondition;
+
+    /**
+     * Creates a mutual exclusion global condition preventing instantiation of activity types from the first list from
+     * overlapping instantiations of activity types from the second list. Relation is reflexive: mutex(A,B) = mutex(B,A).
+     *
+     * @param activityTypes1 a list of activity types
+     * @param activityTypes2 a list of activity types
+     */
+    public static mutex(activityTypes1: WindowsEDSL.Gen.ActivityType[],
+                        activityTypes2: WindowsEDSL.Gen.ActivityType[]): GlobalSchedulingCondition;
+  }
+
   class Goal {
     public readonly __astNode: AST.GoalSpecifier;
 
@@ -582,4 +679,4 @@ export interface ClosedOpenInterval extends AST.ClosedOpenInterval {}
 export interface ActivityTemplate extends AST.ActivityTemplate {}
 
 // Make Goal available on the global object
-Object.assign(globalThis, { Goal, ActivityExpression, TimingConstraint: TimingConstraint, WindowProperty: AST.WindowProperty, Operator: AST.TimingConstraintOperator });
+Object.assign(globalThis, { GlobalSchedulingCondition, Goal, ActivityExpression, TimingConstraint: TimingConstraint, WindowProperty: AST.WindowProperty, Operator: AST.TimingConstraintOperator });
