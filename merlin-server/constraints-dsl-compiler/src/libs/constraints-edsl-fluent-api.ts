@@ -9,8 +9,10 @@
  */
 
 import * as AST from './constraints-ast.js';
-import type * as Gen from './mission-model-generated-code.js';
+import * as Gen from './mission-model-generated-code.js';
 import {ActivityType, ActivityTypeParameterMap} from "./mission-model-generated-code.js";
+
+export { Gen };
 
 /**
  * An expression that discriminates between valid and invalid states.
