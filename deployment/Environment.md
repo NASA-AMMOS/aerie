@@ -70,6 +70,19 @@ This document provides detailed information about environment variables for each
 
 ## Aerie Scheduler
 
+| Name                    | Description                                                           | Type     | Default                         |
+| ----------------------- | --------------------------------------------------------------------- | -------- | ------------------------------- |
+| `JAVA_OPTS`             | Configuration for the scheduler's logging level and output file       | `string` | log level: warn. output: stderr |
+| `MERLIN_GRAPHQL_URL`    | URI of the Merlin graphql interface to call                           | `string` | http://hasura:8080/v1/graphql   |
+| `SCHEDULER_DB`          | The DB for scheduler                                                  | `string` | aerie_scheduler                 |
+| `SCHEDULER_DB_PASSWORD` | Password of the DB instance                                           | `string` |                                 |
+| `SCHEDULER_DB_PORT`     | The DB instance port number that scheduler will connect with          | `number` | 5432                            |
+| `SCHEDULER_DB_SERVER`   | The DB instance that scheduler will connect with                      | `string` |                                 |
+| `SCHEDULER_DB_USER`     | Username of the DB instance                                           | `string` |                                 |
+| `SCHEDULER_PORT`        | Port number for the scheduler server                                  | `number` | 27185                           |
+
+## Aerie Scheduler Worker
+
 | Name                    | Description                                                           | Type     | Default                                            |
 | ----------------------- | --------------------------------------------------------------------- | -------- | -------------------------------------------------- |
 | `JAVA_OPTS`             | Configuration for the scheduler's logging level and output file       | `string` | log level: warn. output: stderr                    |
@@ -80,10 +93,7 @@ This document provides detailed information about environment variables for each
 | `SCHEDULER_DB_PORT`     | The DB instance port number that scheduler will connect with          | `number` | 5432                                               |
 | `SCHEDULER_DB_SERVER`   | The DB instance that scheduler will connect with                      | `string` |                                                    |
 | `SCHEDULER_DB_USER`     | Username of the DB instance                                           | `string` |                                                    |
-| `SCHEDULER_LOCAL_STORE` | Local storage for scheduler in the container                          | `string` | /usr/src/app/scheduler_file_store                  |
-| `SCHEDULER_LOGGING`     | Whether or not you want Javalin to log server information             | `string` | true                                               |
 | `SCHEDULER_OUTPUT_MODE` | how scheduler output is sent back to aerie                            | `string` | UpdateInputPlanWithNewActivities                   |
-| `SCHEDULER_PORT`        | Port number for the scheduler server                                  | `number` | 27185                                              |
 | `SCHEDULER_RULES_JAR`   | Jar file to load scheduling rules from (until user input to database) | `string` | /usr/src/app/merlin_file_store/scheduler_rules.jar |
 
 ## Aerie UI
