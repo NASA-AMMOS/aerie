@@ -4,14 +4,13 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel.SerializableTopic;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
@@ -22,9 +21,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -39,7 +36,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -61,7 +57,7 @@ public final class SimulationEngine implements AutoCloseable {
   /** The getter for each tracked condition. */
   private final Map<ConditionId, Condition> conditions = new HashMap<>();
   /** The profiling state for each tracked resource. */
-  private final Map<ResourceId, ProfilingState<?>> resources = new HashMap<>();
+  private final Map<ResourceId, ResourceAndListener<?>> resources = new HashMap<>();
 
   /** The task that spawned a given task (if any). */
   private final Map<TaskId, TaskId> taskParent = new HashMap<>();
@@ -77,12 +73,21 @@ public final class SimulationEngine implements AutoCloseable {
     return task;
   }
 
+  public interface ResourceListener<Dynamics> {
+    void update(Duration currentTime, Dynamics dynamics);
+  }
+
+  record ResourceAndListener<Dynamics>(
+      Resource<Dynamics> resource,
+      ResourceListener<Dynamics> listener
+  ) {}
+
   /** Register a resource whose profile should be accumulated over time. */
   public <Dynamics>
-  void trackResource(final String name, final Resource<Dynamics> resource, final Duration nextQueryTime) {
+  void trackResource(final String name, Resource<Dynamics> resource, final Duration nextQueryTime, final ResourceListener<Dynamics> listener) {
     final var id = new ResourceId(name);
 
-    this.resources.put(id, ProfilingState.create(resource));
+    this.resources.put(id, new ResourceAndListener<>(resource, listener));
     this.scheduledJobs.schedule(JobId.forResource(id), SubInstant.Resources.at(nextQueryTime));
   }
 
@@ -303,7 +308,7 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration currentTime
   ) {
     final var querier = new EngineQuerier(frame);
-    this.resources.get(resource).append(currentTime, querier);
+    helper(currentTime, querier, this.resources.get(resource));
 
     this.waitingResources.subscribeQuery(resource, querier.referencedTopics);
 
@@ -311,6 +316,10 @@ public final class SimulationEngine implements AutoCloseable {
     if (expiry.isPresent()) {
       this.scheduledJobs.schedule(JobId.forResource(resource), SubInstant.Resources.at(expiry.get()));
     }
+  }
+
+  private <Dynamics> void helper(Duration currentTime, EngineQuerier querier, ResourceAndListener<Dynamics> resourceAndListener) {
+    resourceAndListener.listener.update(currentTime, resourceAndListener.resource.getDynamics(querier));
   }
 
   /** Resets all tasks (freeing any held resources). The engine should not be used after being closed. */
@@ -400,6 +409,24 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
+  public static class ResourceProfilePair<Dynamics> {
+    public final Resource<Dynamics> resource;
+    private Profile<Dynamics> profile;
+
+    public ResourceProfilePair(final Resource<Dynamics> resource) {
+      this.resource = resource;
+      this.profile = new Profile<>();
+    }
+
+    public Profile<Dynamics> profile() {
+      return this.profile;
+    }
+
+    public void clear() {
+      this.profile = new Profile<>();
+    }
+  }
+
   /** Compute a set of results from the current state of simulation. */
   // TODO: Move result extraction out of the SimulationEngine.
   //   The Engine should only need to stream events of interest to a downstream consumer.
@@ -407,10 +434,9 @@ public final class SimulationEngine implements AutoCloseable {
   // TODO: Whatever mechanism replaces `computeResults` also ought to replace `isTaskComplete`.
   // TODO: Produce results for all tasks, not just those that have completed.
   //   Planners need to be aware of failed or unfinished tasks.
-  public static SimulationResults computeResults(
+  public static Pair<HashMap<ActivityInstanceId, SimulatedActivity>, HashMap<ActivityInstanceId, UnfinishedActivity>> extractActivityInfo(
       final SimulationEngine engine,
       final Instant startTime,
-      final Duration elapsedTime,
       final Topic<ActivityInstanceId> activityTopic,
       final TemporalEventSource timeline,
       final Iterable<SerializableTopic<?>> serializableTopics
@@ -424,37 +450,6 @@ public final class SimulationEngine implements AutoCloseable {
       final var trait = new TaskInfo.Trait(serializableTopics, activityTopic);
       p.events().evaluate(trait, trait::atom).accept(taskInfo);
     }
-
-    // Extract profiles for every resource.
-    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>>();
-    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
-
-    for (final var entry : engine.resources.entrySet()) {
-      final var id = entry.getKey();
-      final var state = entry.getValue();
-
-      final var name = id.id();
-      final var resource = state.resource();
-
-      switch (resource.getType()) {
-        case "real" -> realProfiles.put(
-            name,
-            Pair.of(
-                resource.getOutputType().getSchema(),
-                serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics)));
-
-        case "discrete" -> discreteProfiles.put(
-            name,
-            Pair.of(
-                resource.getOutputType().getSchema(),
-                serializeProfile(elapsedTime, state, SimulationEngine::extractDiscreteDynamics)));
-
-        default ->
-            throw new IllegalArgumentException(
-                "Resource `%s` has unknown type `%s`".formatted(name, resource.getType()));
-      }
-    }
-
 
     // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
     final var taskToPlannedDirective = new HashMap<>(taskInfo.taskToPlannedDirective);
@@ -539,46 +534,7 @@ public final class SimulationEngine implements AutoCloseable {
       }
     });
 
-    final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
-    final var serializableTopicToId = new HashMap<SerializableTopic<?>, Integer>();
-    for (final var serializableTopic : serializableTopics) {
-      serializableTopicToId.put(serializableTopic, topics.size());
-      topics.add(Triple.of(topics.size(), serializableTopic.name(), serializableTopic.outputType().getSchema()));
-    }
-
-    final var serializedTimeline = new TreeMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
-    var time = Duration.ZERO;
-    for (var point : timeline.points()) {
-      if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
-        time = time.plus(delta.delta());
-      } else if (point instanceof TemporalEventSource.TimePoint.Commit commit) {
-        final var serializedEventGraph = commit.events().substitute(
-            event -> {
-              EventGraph<Pair<Integer, SerializedValue>> output = EventGraph.empty();
-              for (final var serializableTopic : serializableTopics) {
-                Optional<SerializedValue> serializedEvent = trySerializeEvent(event, serializableTopic);
-                if (serializedEvent.isPresent()) {
-                  output = EventGraph.concurrently(output, EventGraph.atom(Pair.of(serializableTopicToId.get(serializableTopic), serializedEvent.get())));
-                }
-              }
-              return output;
-            }
-        ).evaluate(new EventGraph.IdentityTrait<>(), EventGraph::atom);
-        if (!(serializedEventGraph instanceof EventGraph.Empty)) {
-          serializedTimeline
-              .computeIfAbsent(time, x -> new ArrayList<>())
-              .add(serializedEventGraph);
-        }
-      }
-    }
-
-    return new SimulationResults(realProfiles,
-                                 discreteProfiles,
-                                 simulatedActivities,
-                                 unfinishedActivities,
-                                 startTime,
-                                 topics,
-                                 serializedTimeline);
+    return Pair.of(simulatedActivities, unfinishedActivities);
   }
 
   public Optional<Duration> getTaskDuration(TaskId taskId){
@@ -601,12 +557,12 @@ public final class SimulationEngine implements AutoCloseable {
   private static <Target, Dynamics>
   List<Pair<Duration, Target>> serializeProfile(
       final Duration elapsedTime,
-      final ProfilingState<Dynamics> state,
+      final ResourceProfilePair<Dynamics> pair,
       final Translator<Target> translator
   ) {
-    final var profile = new ArrayList<Pair<Duration, Target>>(state.profile().segments().size());
+    final var profile = new ArrayList<Pair<Duration, Target>>(pair.profile().segments().size());
 
-    final var iter = state.profile().segments().iterator();
+    final var iter = pair.profile().segments().iterator();
     if (iter.hasNext()) {
       var segment = iter.next();
       while (iter.hasNext()) {
@@ -614,13 +570,13 @@ public final class SimulationEngine implements AutoCloseable {
 
         profile.add(Pair.of(
             nextSegment.startOffset().minus(segment.startOffset()),
-            translator.apply(state.resource(), segment.dynamics())));
+            translator.apply(pair.resource, segment.dynamics())));
         segment = nextSegment;
       }
 
       profile.add(Pair.of(
           elapsedTime.minus(segment.startOffset()),
-          translator.apply(state.resource(), segment.dynamics())));
+          translator.apply(pair.resource, segment.dynamics())));
     }
 
     return profile;

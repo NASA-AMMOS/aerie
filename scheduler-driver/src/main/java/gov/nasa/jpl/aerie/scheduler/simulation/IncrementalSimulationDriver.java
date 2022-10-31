@@ -161,7 +161,7 @@ public class IncrementalSimulationDriver<Model> {
     }
 
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.startTime) != 0) {
-      lastSimResults = SimulationEngine.computeResults(
+      lastSimResults = SimulationEngine.extractActivityInfo(
           engine,
           startTimestamp,
           endTime,
