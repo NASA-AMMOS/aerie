@@ -23,7 +23,7 @@ public final class SimulationResults {
   public final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities;
   public final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities;
   public final List<Triple<Integer, String, ValueSchema>> topics;
-  public final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events;
+  public final SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events;
 
     public SimulationResults(
         final Map<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>> realProfiles,

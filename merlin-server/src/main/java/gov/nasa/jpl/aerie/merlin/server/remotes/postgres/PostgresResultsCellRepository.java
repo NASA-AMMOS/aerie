@@ -235,12 +235,16 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         claimSimulationAction.apply(datasetId);
     }
 
+    makePartitions(connection, datasetId);
+  }
+
+  public static void makePartitions(Connection connection, long datasetId) {
     try (final var transactionContext = new TransactionContext(connection)) {
       final var createSimulationDatasetPartitionsAction = new CreateProfileSegmentPartitionAction(connection);
       final var createSpanPartitionAction = new CreateSpanPartitionAction(connection);
       final var createEventPartitionAction = new CreateEventPartitionAction(connection);
 
-      createSimulationDatasetPartitionsAction.apply(datasetId);
+//      createSimulationDatasetPartitionsAction.apply(datasetId);
       createSpanPartitionAction.apply(datasetId);
       createEventPartitionAction.apply(datasetId);
       transactionContext.commit();
@@ -449,21 +453,23 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   }
 
   private static void postSimulationResults(
-      final Connection connection,
+      final ParallelInserter parallelInserter,
       final long datasetId,
       final SimulationResults results
   ) throws SQLException, NoSuchSimulationDatasetException
   {
     final var simulationStart = new Timestamp(results.startTime);
     final var profileSet = ProfileSet.of(results.realProfiles, results.discreteProfiles);
-    ProfileRepository.postResourceProfiles(connection, datasetId, profileSet, simulationStart);
-    postActivities(connection, datasetId, results.simulatedActivities, results.unfinishedActivities, simulationStart);
-    insertSimulationTopics(connection, datasetId, results.topics);
-    insertSimulationEvents(connection, datasetId, results.events, simulationStart);
+    ProfileRepository.postResourceProfiles(parallelInserter, datasetId, profileSet, simulationStart);
 
-    try (final var setSimulationStateAction = new SetSimulationStateAction(connection)) {
-      setSimulationStateAction.apply(datasetId, SimulationStateRecord.success());
-    }
+    parallelInserter.declareAction(connection -> {
+      postActivities(connection, datasetId, results.simulatedActivities, results.unfinishedActivities, simulationStart);
+      insertSimulationTopics(connection, datasetId, results.topics);
+      insertSimulationEvents(connection, datasetId, results.events, simulationStart);
+      try (final var setSimulationStateAction = new SetSimulationStateAction(connection)) {
+  //      setSimulationStateAction.apply(datasetId, SimulationStateRecord.success());
+      }
+    });
   }
 
   private static void insertSimulationTopics(
@@ -616,7 +622,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     public void succeedWith(final SimulationResults results) {
       try (final var connection = dataSource.getConnection();
            final var transactionContext = new TransactionContext(connection)) {
+
+        final var parallelInserter = new ParallelInserter();
         postSimulationResults(connection, datasetId, results);
+        parallelInserter.execute(dataSource);
         transactionContext.commit();
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to store simulation results", ex);

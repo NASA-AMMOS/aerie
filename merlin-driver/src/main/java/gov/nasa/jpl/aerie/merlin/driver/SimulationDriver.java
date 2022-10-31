@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
@@ -8,19 +9,144 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public final class SimulationDriver {
+
+  public static <Model>
+  void simulate(
+      final MissionModel<Model> missionModel,
+      final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule,
+      final Instant startTime,
+      final Duration simulationDuration,
+      final Consumer<SimulationResults> writer
+  ) {
+    writer.accept(simulate(missionModel, schedule, startTime, simulationDuration));
+  }
+
+  record SimulationMetadata(
+      Instant startTime,
+      List<Triple<Integer, String, ValueSchema>> topics,
+      Map<String, ValueSchema> realProfiles,
+      Map<String, ValueSchema> discreteProfiles
+  ) {}
+
+  record SimulationSegment(
+      Duration elapsedTime,
+      Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
+      Map<String, List<Pair<Duration, SerializedValue>>> discreteProfiles,
+      SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events
+      // TODO activity info
+  ) {}
+
+  interface SimulationResultsWriter {
+    void writeMetadata(SimulationMetadata metadata);
+    void writeSegment(SimulationSegment segment);
+    void writeActivityInfo(
+        Map<ActivityInstanceId, SimulatedActivity> simulatedActivities,
+        Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities);
+  }
+
   public static <Model>
   SimulationResults simulate(
       final MissionModel<Model> missionModel,
       final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule,
       final Instant startTime,
       final Duration simulationDuration
+  ) {
+    final List<SimulationMetadata> metadataList = new ArrayList<>();
+    final List<SimulationSegment> segments = new ArrayList<>();
+    final List<Pair<Map<ActivityInstanceId, SimulatedActivity>, Map<ActivityInstanceId, UnfinishedActivity>>> activities = new ArrayList<>();
+    simulate(missionModel, schedule, startTime, simulationDuration, new SimulationResultsWriter() {
+      @Override
+      public void writeMetadata(final SimulationMetadata metadata$) {
+        metadataList.add(metadata$);
+      }
+
+      @Override
+      public void writeSegment(final SimulationSegment segment) {
+        segments.add(segment);
+      }
+
+      @Override
+      public void writeActivityInfo(
+          final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities,
+          final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities)
+      {
+        activities.add(Pair.of(simulatedActivities, unfinishedActivities));
+      }
+    });
+    if (metadataList.size() != 1) {
+      throw new Error("Should call writeMetadata exactly once, called it " + metadataList.size() + " times.");
+    }
+    if (activities.size() != 1) {
+      throw new Error("Should call writeActivityInfo exactly once, called it " + activities.size() + " times.");
+    }
+
+    final var metadata = metadataList.get(0);
+
+    final Map<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>> realProfiles = new HashMap<>();
+    final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles = new HashMap<>();
+    final SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events = new TreeMap<>();
+
+    for (final var profile : metadata.realProfiles().entrySet()) {
+      realProfiles.put(profile.getKey(), Pair.of(profile.getValue(), new ArrayList<>()));
+    }
+
+    for (final var profile : metadata.discreteProfiles().entrySet()) {
+      discreteProfiles.put(profile.getKey(), Pair.of(profile.getValue(), new ArrayList<>()));
+    }
+
+    for (final SimulationSegment segment : segments) {
+      for (final var profile : segment.realProfiles.entrySet()) {
+        realProfiles
+            .get(profile.getKey())
+            .getRight()
+            .addAll(profile.getValue());
+      }
+      for (final var profile : segment.discreteProfiles.entrySet()) {
+        discreteProfiles
+            .get(profile.getKey())
+            .getRight()
+            .addAll(profile.getValue());
+      }
+      events.putAll(segment.events);
+    }
+
+
+    return new SimulationResults(
+        realProfiles,
+        discreteProfiles,
+        activities.get(0).getLeft(),
+        activities.get(0).getRight(),
+        startTime,
+        metadata.topics(),
+        events
+    );
+  }
+
+  public static <Model>
+  void simulate(
+      final MissionModel<Model> missionModel,
+      final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule,
+      final Instant startTime,
+      final Duration simulationDuration,
+      final SimulationResultsWriter writer
   ) {
     try (final var engine = new SimulationEngine()) {
       /* The top-level simulation timeline. */
@@ -88,7 +214,46 @@ public final class SimulationDriver {
       }
 
       final var topics = missionModel.getTopics();
-      return SimulationEngine.computeResults(engine, startTime, elapsedTime, activityTopic, timeline, topics);
+      final var results = SimulationEngine.computeResults(
+          engine,
+          startTime,
+          elapsedTime,
+          activityTopic,
+          timeline,
+          topics);
+      writer.writeMetadata(new SimulationMetadata(
+          startTime,
+          results.topics,
+          results
+              .realProfiles
+              .entrySet()
+              .stream()
+              .map(entry -> Pair.of(entry.getKey(), entry.getValue().getLeft()))
+              .collect(Collectors.toMap(Pair::getKey, Pair::getValue)),
+          results
+              .discreteProfiles
+              .entrySet()
+              .stream()
+              .map(entry -> Pair.of(entry.getKey(), entry.getValue().getLeft()))
+              .collect(Collectors.toMap(Pair::getKey, Pair::getValue))
+      ));
+      writer.writeSegment(new SimulationSegment(
+          elapsedTime,
+          results
+              .realProfiles
+              .entrySet()
+              .stream()
+              .map($ -> Pair.of($.getKey(), $.getValue().getRight()))
+              .collect(Collectors.toMap(Pair::getKey, Pair::getValue)),
+          results
+              .discreteProfiles
+              .entrySet()
+              .stream()
+              .map($ -> Pair.of($.getKey(), $.getValue().getRight()))
+              .collect(Collectors.toMap(Pair::getKey, Pair::getValue)),
+          results.events
+      ));
+      writer.writeActivityInfo(results.simulatedActivities, results.unfinishedActivities);
     }
   }
 

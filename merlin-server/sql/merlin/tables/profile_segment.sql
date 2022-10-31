@@ -1,19 +1,22 @@
+-- alter table profile_segment drop constraint profile_segment_owned_by_profile;
+-- drop table profile_segment cascade;
+
 create table profile_segment (
   dataset_id integer not null,
   profile_id integer not null,
 
-  start_offset interval not null,
-  dynamics jsonb null,
+  start_offset timestamptz not null,
+  dynamics jsonb null
 
-  constraint profile_segment_natural_key
-    unique (dataset_id, profile_id, start_offset),
-  constraint profile_segment_owned_by_profile
-    foreign key (profile_id)
-    references profile
-    on update cascade
-    on delete cascade
-)
-partition by list (dataset_id);
+--   constraint profile_segment_natural_key
+--     unique (dataset_id, profile_id, start_offset),
+--   constraint profile_segment_owned_by_profile
+--     foreign key (profile_id)
+--     references profile
+--     on update cascade
+--     on delete cascade
+);
+-- partition by list (dataset_id);
 
 -- TODO: Add a range index for start_offset.
 

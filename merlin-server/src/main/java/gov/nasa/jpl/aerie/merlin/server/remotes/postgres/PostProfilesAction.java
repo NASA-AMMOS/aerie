@@ -18,7 +18,7 @@ import java.util.Map;
 
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.discreteProfileTypeP;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.realProfileTypeP;
-/*package-local*/ final class PostProfilesAction implements AutoCloseable {
+/*package-local*/ public final class PostProfilesAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
       insert into profile (dataset_id, name, type)
       values (?, ?, ?)

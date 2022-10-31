@@ -197,12 +197,14 @@ public final class PostgresPlanRepository implements PlanRepository {
     try (final var connection = this.dataSource.getConnection()) {
       final var plan = getPlanRecord(connection, planId);
       final var planDataset = createPlanDataset(connection, planId, plan.startTime(), datasetStart);
+      final var parallelInserter = new ParallelInserter();
       ProfileRepository.postResourceProfiles(
-          connection,
+          parallelInserter,
           planDataset.datasetId(),
           profileSet,
           datasetStart
       );
+      parallelInserter.execute(this.dataSource);
 
       return planDataset.datasetId();
     } catch (final SQLException ex) {

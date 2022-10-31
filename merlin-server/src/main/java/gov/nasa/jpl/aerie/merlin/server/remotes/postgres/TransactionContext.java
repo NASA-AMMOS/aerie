@@ -12,8 +12,8 @@ import java.sql.SQLException;
  * </p>
  */
 /*package-local*/ final class TransactionContext implements AutoCloseable {
-  private final Connection connection;
-  private final boolean oldAutoCommit;
+  public final Connection connection;
+  public final boolean oldAutoCommit;
 
   TransactionContext(final Connection connection) throws SQLException {
     this.connection = connection;

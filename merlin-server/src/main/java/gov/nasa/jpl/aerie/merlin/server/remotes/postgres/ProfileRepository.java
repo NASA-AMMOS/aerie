@@ -97,28 +97,30 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
   }
 
   static void postResourceProfiles(
-      final Connection connection,
+      final ParallelInserter parallelInserter,
       final long datasetId,
       final ProfileSet profileSet,
       final Timestamp simulationStart
   ) throws SQLException
   {
-    try (final var postProfilesAction = new PostProfilesAction(connection)) {
-      final var profileRecords = postProfilesAction.apply(
-          datasetId,
-          profileSet.realProfiles(),
-          profileSet.discreteProfiles());
-      postProfileSegments(
-          connection,
-          datasetId,
-          profileRecords,
-          profileSet,
-          simulationStart);
-    }
+    parallelInserter.declareAction(connection -> {
+      try (final var postProfilesAction = new PostProfilesAction(connection)) {
+        final var profileRecords = postProfilesAction.apply(
+            datasetId,
+            profileSet.realProfiles(),
+            profileSet.discreteProfiles());
+        postProfileSegments(
+            parallelInserter,
+            datasetId,
+            profileRecords,
+            profileSet,
+            simulationStart);
+      }
+    });
   }
 
-  private static void postProfileSegments(
-      final Connection connection,
+  public static void postProfileSegments(
+      final ParallelInserter parallelInserter,
       final long datasetId,
       final Map<String, ProfileRecord> records,
       final ProfileSet profileSet,
@@ -131,13 +133,13 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
       final var resource =  entry.getKey();
       switch (record.type().getLeft()) {
         case "real" -> postRealProfileSegments(
-            connection,
+            parallelInserter,
             datasetId,
             record,
             realProfiles.get(resource).getRight(),
             simulationStart);
         case "discrete" -> postDiscreteProfileSegments(
-            connection,
+            parallelInserter,
             datasetId,
             record,
             discreteProfiles.get(resource).getRight(),
@@ -148,26 +150,26 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
   }
 
   private static void postRealProfileSegments(
-      final Connection connection,
+      final ParallelInserter parallelInserter,
       final long datasetId,
       final ProfileRecord profileRecord,
       final List<Pair<Duration, RealDynamics>> segments,
       final Timestamp simulationStart
   ) throws SQLException {
-    try (final var postProfileSegmentsAction = new PostProfileSegmentsAction(connection)) {
-      postProfileSegmentsAction.apply(datasetId, profileRecord, segments, simulationStart, realDynamicsP);
+    try (final var postProfileSegmentsAction = new PostProfileSegmentsAction()) {
+      postProfileSegmentsAction.apply(parallelInserter, datasetId, profileRecord, segments, simulationStart, realDynamicsP);
     }
   }
 
   private static void postDiscreteProfileSegments(
-      final Connection connection,
+      final ParallelInserter parallelInserter,
       final long datasetId,
       final ProfileRecord profileRecord,
       final List<Pair<Duration, SerializedValue>> segments,
       final Timestamp simulationStart
   ) throws SQLException {
-    try (final var postProfileSegmentsAction = new PostProfileSegmentsAction(connection)) {
-      postProfileSegmentsAction.apply(datasetId, profileRecord, segments, simulationStart, serializedValueP);
+    try (final var postProfileSegmentsAction = new PostProfileSegmentsAction()) {
+      postProfileSegmentsAction.apply(parallelInserter, datasetId, profileRecord, segments, simulationStart, serializedValueP);
     }
   }
 }
