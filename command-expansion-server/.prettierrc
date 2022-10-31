@@ -1,10 +1,9 @@
 {
-  "trailingComma": "all",
-  "singleQuote": true,
   "arrowParens": "avoid",
-  "semi": true,
+  "parser": "typescript",
   "printWidth": 120,
+  "semi": true,
   "tabWidth": 2,
-  "parser": "typescript"
+  "singleQuote": true,
+  "trailingComma": "all"
 }
-

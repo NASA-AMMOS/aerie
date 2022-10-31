@@ -4,7 +4,7 @@ import { GraphQLActivitySchema, Schema, SchemaTypes } from '../batchLoaders/acti
 const commonProperties = `readonly duration: Temporal.Duration;
 readonly startOffset: Temporal.Duration;
 readonly startTime: Temporal.Instant;
-readonly endTime: Temporal.Instant;`
+readonly endTime: Temporal.Instant;`;
 
 export function generateTypescriptForGraphQLActivitySchema(activitySchema: GraphQLActivitySchema): string {
   const activityTypeAlias = `type ActivityType = ${activitySchema.name};`;

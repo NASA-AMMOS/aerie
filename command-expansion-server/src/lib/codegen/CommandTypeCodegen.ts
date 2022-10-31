@@ -113,10 +113,14 @@ ${doc}
       const repeatOtherType = `${otherArgs.map(arg => `${mapArgumentType(arg, enumMap)}`).join(', ')}`;
 
       methodParameters = methodParameters.concat(
-        `[${repeatArgType}${repeatArgType !== '' ? ', ' : ''}${repeatOtherType}] \n|[{${repeatArgNameAndType}${repeatArgNameAndType !== '' ? ', ' : ''}${repeatOtherNameAndType}}]\n`,
+        `[${repeatArgType}${repeatArgType !== '' ? ', ' : ''}${repeatOtherType}] \n|[{${repeatArgNameAndType}${
+          repeatArgNameAndType !== '' ? ', ' : ''
+        }${repeatOtherNameAndType}}]\n`,
       );
       interfaceParameters = interfaceParameters.concat(
-        `[${repeatArgType}${repeatArgType !== '' ? ', ' : ''}${repeatOtherType}] \n|[{${repeatArgNameAndType}${repeatArgNameAndType !== '' ? ', ' : ''}${repeatOtherNameAndType}}]\n`,
+        `[${repeatArgType}${repeatArgType !== '' ? ', ' : ''}${repeatOtherType}] \n|[{${repeatArgNameAndType}${
+          repeatArgNameAndType !== '' ? ', ' : ''
+        }${repeatOtherNameAndType}}]\n`,
       );
 
       argsOrder = argsOrder.concat(
@@ -146,9 +150,7 @@ function ${fswCommandName}(...args:\n ${methodParameters.join('|')}) {
 const ${fswCommandName}_ARGS_ORDER = [${fswCommand.arguments.map(argument => `'${argument.name}'`).join(', ')}];
 ${doc}
 function ${fswCommandName}(...args: [\n${fswCommand.arguments
-    .map(argument =>
-      argument.arg_type === 'repeat' ? '' : `\t${mapArgumentType(argument, enumMap)},\n`,
-    )
+    .map(argument => (argument.arg_type === 'repeat' ? '' : `\t${mapArgumentType(argument, enumMap)},\n`))
     .join('')}] | [{\n${fswCommand.arguments
     .map(argument =>
       argument.arg_type === 'repeat' ? '' : `\t'${argument.name}': ${mapArgumentType(argument, enumMap)},\n`,

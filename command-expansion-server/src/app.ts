@@ -178,14 +178,16 @@ app.post('/put-expansion', async (req, res, next) => {
   });
   const activityTypescript = generateTypescriptForGraphQLActivitySchema(activitySchema);
 
-  const result = Result.fromJSON(await (piscina.run(
-    {
-      expansionLogic,
-      commandTypes: commandTypes,
-      activityTypes: activityTypescript,
-    },
-    { name: 'typecheckExpansion' },
-  ) as ReturnType<typeof typecheckExpansion>));
+  const result = Result.fromJSON(
+    await (piscina.run(
+      {
+        expansionLogic,
+        commandTypes: commandTypes,
+        activityTypes: activityTypescript,
+      },
+      { name: 'typecheckExpansion' },
+    ) as ReturnType<typeof typecheckExpansion>),
+  );
 
   res.status(200).json({ id, errors: result.isErr() ? result.unwrapErr() : [] });
   return next();
@@ -213,24 +215,25 @@ app.post('/put-expansion-set', async (req, res, next) => {
         activityTypeName: expansion.activityType,
       });
       const activityTypescript = generateTypescriptForGraphQLActivitySchema(activitySchema);
-      const result = Result.fromJSON(await (piscina.run(
-        {
-          expansionLogic: expansion.expansionLogic,
-          commandTypes: commandTypes,
-          activityTypes: activityTypescript,
-        },
-        { name: 'typecheckExpansion' },
-      ) as ReturnType<typeof typecheckExpansion>));
+      const result = Result.fromJSON(
+        await (piscina.run(
+          {
+            expansionLogic: expansion.expansionLogic,
+            commandTypes: commandTypes,
+            activityTypes: activityTypescript,
+          },
+          { name: 'typecheckExpansion' },
+        ) as ReturnType<typeof typecheckExpansion>),
+      );
 
-      return result
+      return result;
     }),
   );
 
   const errors = unwrapPromiseSettledResults(typecheckErrorPromises).reduce((accum, item) => {
     if (item instanceof Error) {
       accum.push(item);
-    }
-    else if (item.isErr()) {
+    } else if (item.isErr()) {
       accum.push(...item.unwrapErr());
     }
     return accum;
@@ -347,7 +350,10 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
 
   // Note: We are keeping the Promise in the cache so that we don't have to wait for resolution to insert into
   // the cache and consequently end up doing the compilation multiple times because of a cache miss.
-  const expansionBuildArtifactsCache = new Map<number, Promise<Result<CacheItem, ReturnType<UserCodeError["toJSON"]>[]>>>();
+  const expansionBuildArtifactsCache = new Map<
+    number,
+    Promise<Result<CacheItem, ReturnType<UserCodeError['toJSON']>[]>>
+  >();
 
   const settledExpansionResults = await Promise.allSettled(
     simulatedActivities.map(async simulatedActivity => {
@@ -369,14 +375,16 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
       const activityTypes = generateTypescriptForGraphQLActivitySchema(activitySchema);
 
       if (!expansionBuildArtifactsCache.has(expansion.id)) {
-        const typecheckResult = (piscina.run(
+        const typecheckResult = (
+          piscina.run(
             {
               expansionLogic: expansion.expansionLogic,
               commandTypes: commandTypes,
               activityTypes,
             },
             { name: 'typecheckExpansion' },
-        ) as ReturnType<typeof typecheckExpansion>).then(Result.fromJSON);
+          ) as ReturnType<typeof typecheckExpansion>
+        ).then(Result.fromJSON);
         expansionBuildArtifactsCache.set(expansion.id, typecheckResult);
       }
 
@@ -387,18 +395,20 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
           activityInstance: simulatedActivity,
           commands: null,
           errors: expansionBuildArtifacts.unwrapErr(),
-        }
+        };
       }
 
       const buildArtifacts = expansionBuildArtifacts.unwrap();
 
-      const executionResult = Result.fromJSON(await (piscina.run(
-        {
-          serializedActivityInstance: serializeWithTemporal(simulatedActivity),
-          buildArtifacts,
-        },
-        { name: 'executeExpansionFromBuildArtifacts' },
-      ) as ReturnType<typeof executeExpansionFromBuildArtifacts>));
+      const executionResult = Result.fromJSON(
+        await (piscina.run(
+          {
+            serializedActivityInstance: serializeWithTemporal(simulatedActivity),
+            buildArtifacts,
+          },
+          { name: 'executeExpansionFromBuildArtifacts' },
+        ) as ReturnType<typeof executeExpansionFromBuildArtifacts>),
+      );
 
       if (executionResult.isErr()) {
         return {
@@ -412,7 +422,7 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
         activityInstance: simulatedActivity,
         commands: executionResult.unwrap(),
         errors: [],
-      }
+      };
     }),
   );
 
@@ -502,13 +512,15 @@ app.post('/get-seqjson-for-sequence-standalone', async (req, res, next) => {
     return next();
   }
 
-  const result = Result.fromJSON(await (piscina.run(
-    {
-      edslBody,
-      commandTypes,
-    },
-    { name: 'executeEDSL' },
-  ) as ReturnType<typeof executeEDSL>));
+  const result = Result.fromJSON(
+    await (piscina.run(
+      {
+        edslBody,
+        commandTypes,
+      },
+      { name: 'executeEDSL' },
+    ) as ReturnType<typeof executeEDSL>),
+  );
 
   if (result.isErr()) {
     res.json({

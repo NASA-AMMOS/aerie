@@ -38,8 +38,7 @@ export class DbExpansion {
          database: ${config.database},
          host: ${config.host},
          port: ${config.port}
-      }`
-      );
+      }`);
 
       DbExpansion.pool = new DbPool(config);
     } catch (error) {

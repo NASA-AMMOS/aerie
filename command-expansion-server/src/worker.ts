@@ -26,10 +26,7 @@ export async function typecheckExpansion(opts: {
   expansionLogic: string;
   commandTypes: string;
   activityTypes: string;
-}): Promise<SerializedResult<
-    CacheItem,
-    ReturnType<UserCodeError['toJSON']>[]
->> {
+}): Promise<SerializedResult<CacheItem, ReturnType<UserCodeError['toJSON']>[]>> {
   const result = await codeRunner.preProcess(
     opts.expansionLogic,
     'ExpansionReturn',
@@ -42,19 +39,15 @@ export async function typecheckExpansion(opts: {
   );
   if (result.isOk()) {
     return Result.Ok(result.unwrap()).toJSON();
-  }
-  else {
+  } else {
     return Result.Err(result.unwrapErr().map(err => err.toJSON())).toJSON();
   }
 }
 
 export async function executeEDSL(opts: {
   edslBody: string;
-  commandTypes: string,
-}): Promise<SerializedResult<
-  SequenceSeqJson,
-  ReturnType<UserCodeError['toJSON']>[]
->> {
+  commandTypes: string;
+}): Promise<SerializedResult<SequenceSeqJson, ReturnType<UserCodeError['toJSON']>[]>> {
   const result = await codeRunner.executeUserCode(
     opts.edslBody,
     [],
@@ -73,8 +66,7 @@ export async function executeEDSL(opts: {
   if (result.isOk()) {
     let sequence = result.unwrap() as Sequence;
     return Result.Ok(sequence.toSeqJson()).toJSON();
-  }
-  else {
+  } else {
     return Result.Err(result.unwrapErr().map(err => err.toJSON())).toJSON();
   }
 }
@@ -82,29 +74,28 @@ export async function executeEDSL(opts: {
 export async function executeExpansionFromBuildArtifacts(opts: {
   buildArtifacts: CacheItem;
   serializedActivityInstance: SimulatedActivity;
-}): Promise<SerializedResult<
-    ReturnType<Command['toSeqJson']>[],
-    ReturnType<UserCodeError['toJSON']>[]
-    >> {
+}): Promise<SerializedResult<ReturnType<Command['toSeqJson']>[], ReturnType<UserCodeError['toJSON']>[]>> {
   const activityInstance = deserializeWithTemporal(opts.serializedActivityInstance) as SimulatedActivity;
   const result = await codeRunner.executeUserCodeFromArtifacts<
-      [{
+    [
+      {
         activityInstance: SimulatedActivity;
-      }],
-      ExpansionReturn
-      >(
-      opts.buildArtifacts.jsFileMap,
-      opts.buildArtifacts.userCodeSourceMap,
-      [
-        {
-          activityInstance,
-        },
-      ],
-      3000,
-      vm.createContext({
-        Temporal,
-      }),
-  )
+      },
+    ],
+    ExpansionReturn
+  >(
+    opts.buildArtifacts.jsFileMap,
+    opts.buildArtifacts.userCodeSourceMap,
+    [
+      {
+        activityInstance,
+      },
+    ],
+    3000,
+    vm.createContext({
+      Temporal,
+    }),
+  );
 
   if (result.isOk()) {
     let commands = result.unwrap();
@@ -119,8 +110,7 @@ export async function executeExpansionFromBuildArtifacts(opts: {
       };
     }
     return Result.Ok(commandsFlat.map(c => c.toSeqJson())).toJSON();
-  }
-  else {
+  } else {
     return Result.Err(result.unwrapErr().map(err => err.toJSON())).toJSON();
   }
 }

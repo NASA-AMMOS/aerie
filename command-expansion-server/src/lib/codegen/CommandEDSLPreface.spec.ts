@@ -1,10 +1,10 @@
 import {
   Command,
-  Sequence,
-  DOY_STRING,
   doyToInstant,
-  HMS_STRING,
+  DOY_STRING,
   hmsToDuration,
+  HMS_STRING,
+  Sequence,
   TimingTypes,
 } from './CommandEDSLPreface';
 
@@ -16,7 +16,7 @@ describe('Command', () => {
         stem: 'test',
         metadata: {},
         args: [],
-        time: { type: TimingTypes.COMMAND_COMPLETE }
+        time: { type: TimingTypes.COMMAND_COMPLETE },
       });
 
       expect(command).toBeInstanceOf(Command);
@@ -72,14 +72,14 @@ describe('Command', () => {
         arguments: [],
       });
 
-      expect(command.toEDSLString()).toEqual("C.TEST");
+      expect(command.toEDSLString()).toEqual('C.TEST');
 
       const command2 = Command.new({
         stem: 'TEST',
         arguments: {},
       });
 
-      expect(command2.toEDSLString()).toEqual("C.TEST");
+      expect(command2.toEDSLString()).toEqual('C.TEST');
     });
 
     it('should convert to EDSL string with array arguments', () => {
@@ -103,7 +103,9 @@ describe('Command', () => {
         absoluteTime: doyToInstant('2020-001T00:00:00.000' as DOY_STRING),
       });
 
-      expect(command.toEDSLString()).toEqual("A`2020-001T00:00:00.000`.TEST({\n  string: 'string',\n  number: 0,\n  boolean: true,\n})");
+      expect(command.toEDSLString()).toEqual(
+        "A`2020-001T00:00:00.000`.TEST({\n  string: 'string',\n  number: 0,\n  boolean: true,\n})",
+      );
     });
   });
 });
@@ -120,15 +122,15 @@ describe('Sequence', () => {
             stem: 'test',
             metadata: {},
             args: [],
-            time: { type: TimingTypes.COMMAND_COMPLETE }
+            time: { type: TimingTypes.COMMAND_COMPLETE },
           },
           {
             type: 'command',
             stem: 'test2',
             metadata: {},
             args: ['string', 0, true],
-            time: { type: TimingTypes.ABSOLUTE, tag: '2020-001T00:00:00.000' as DOY_STRING }
-          }
+            time: { type: TimingTypes.ABSOLUTE, tag: '2020-001T00:00:00.000' as DOY_STRING },
+          },
         ],
       });
 
@@ -157,8 +159,7 @@ describe('Sequence', () => {
         commands: [],
       });
 
-      expect(sequence.toEDSLString()).toEqual(
-`export default () =>
+      expect(sequence.toEDSLString()).toEqual(`export default () =>
   Sequence.new({
     seqId: 'test',
     metadata: {},
@@ -189,8 +190,7 @@ describe('Sequence', () => {
         ],
       });
 
-      expect(sequence.toEDSLString()).toEqual(
-          `export default () =>
+      expect(sequence.toEDSLString()).toEqual(`export default () =>
   Sequence.new({
     seqId: 'test',
     metadata: {},
