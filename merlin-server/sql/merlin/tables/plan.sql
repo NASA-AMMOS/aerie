@@ -6,7 +6,6 @@ create table plan (
   model_id integer null,
   duration interval not null,
 
-  -- TODO: Remove 'start_time'; its purpose will be served by a model-specific entry in 'simulation.arguments'.
   start_time timestamptz not null,
   parent_id integer
     references plan
@@ -44,7 +43,11 @@ comment on column plan.model_id is e''
 comment on column plan.duration is e''
   'The duration over which this plan extends.';
 comment on column plan.start_time is e''
-  'DEPRECATED. The time at which the plan''s effective span begins.';
+  'The time at which the plan''s effective span begins.';
+comment on column plan.parent_id is e''
+  'The plan id of the parent of this plan. May be NULL if this plan does not have a parent.';
+comment on column plan.is_locked is e''
+  'A boolean representing whether this plan can be deleted and if changes can happen to the activities of this plan.';
 
 
 create function increment_revision_on_update_plan()

@@ -31,7 +31,8 @@ comment on table activity_directive is e''
   'A single activity_directive within a plan.';
 
 comment on column activity_directive.id is e''
-  'The synthetic identifier for this activity_directive.';
+  'The synthetic identifier for this activity_directive.\n'
+  'Unique within a given plan.';
 comment on column activity_directive.plan_id is e''
   'The plan within which this activity_directive is located.';
 comment on column activity_directive.name is e''

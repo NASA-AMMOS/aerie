@@ -19,6 +19,8 @@ comment on table activity_directive_validations is e''
 
 comment on column activity_directive_validations.directive_id is e''
   'The activity directive these validations are extracted from.';
+comment on column activity_directive_validations.plan_id is ''
+  'The plan associated with the activity directive these validations are extracted from.';
 comment on column activity_directive_validations.last_modified_at is e''
   'The time at which these argument validations were last modified.';
 comment on column activity_directive_validations.validations is e''

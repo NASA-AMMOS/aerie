@@ -37,6 +37,35 @@ create table merge_staging_area(
       check (start_offset >= '0')
 );
 
+comment on table merge_staging_area is e''
+  'The staged version of an activity directive in an in-progress merge to be committed onto the plan receiving changes.';
+comment on column merge_staging_area.merge_request_id is e''
+  'The merge request associated with this staged activity.\n'
+  'Half of the natural key associated with this table, alongside activity_id.';
+comment on column merge_staging_area.activity_id is e''
+  'The identifier of the staged activity directive.\n'
+  'Half of the natural key associated with this table, alongside merge_request_id.';
+comment on column merge_staging_area.name is e''
+  'The name of this activity directive to be committed.';
+comment on column merge_staging_area.tags is e''
+  'The tags of this activity directive to be committed.';
+comment on column merge_staging_area.source_scheduling_goal_id is e''
+  'The id of the scheduling goal that generated this activity directive to be committed.';
+comment on column merge_staging_area.created_at is e''
+  'The creation time of this activity directive to be committed.';
+comment on column merge_staging_area.start_offset is e''
+  'The start offset of this activity directive to be committed.';
+comment on column merge_staging_area.type is e''
+  'The type of this activity directive to be committed.';
+comment on column merge_staging_area.arguments is e''
+  'The set of arguments to this activity directive to be committed.';
+comment on column merge_staging_area.metadata is e''
+  'The metadata of this activity directive to be committed.';
+comment on column merge_staging_area.change_type is e''
+  'The type of change that has occurred between the version of this activity in the supplying plan'
+  ' and the version in the receiving plan, from the perspective of the receiving plan.\n'
+  'Can be either "none", "add", "delete", or "modify".';
+
 -- Stores a list of all activities in conflict in a merge
 create table conflicting_activities(
       merge_request_id integer
@@ -54,6 +83,27 @@ create table conflicting_activities(
         check ( change_type_receiving = 'delete' or change_type_receiving = 'modify' ),
       resolution conflict_resolution default 'none'
 );
+
+comment on table conflicting_activities is e''
+  'An activity directive in an in-progress merge '
+  'where the supplying, receiving, and merge base versions of this activity directive are all different.';
+comment on column conflicting_activities.merge_request_id is e''
+  'The merge request associated with this conflicting activity.\n'
+  'Half of the natural key associated with this table, alongside activity_id.';
+comment on column conflicting_activities.activity_id is e''
+  'The activity directive that is in conflict.\n'
+  'Half of the natural key associated with this table, alongside merge_request_id.';
+comment on column conflicting_activities.change_type_supplying is e''
+  'The type of change that has occurred between the merge base and the version of this activity'
+  ' in the supplying plan.\n'
+  'Must be either "delete" or "modify".';
+comment on column conflicting_activities.change_type_receiving is e''
+  'The type of change that has occurred between the merge base and the version of this activity'
+  ' in the receiving plan.\n'
+  'Must be either "delete" or "modify".';
+comment on column conflicting_activities.resolution is e''
+  'The version of this activity to be used when committing this merge.\n'
+  'Can be either "none", "receiving" or "supplying".';
 
 create function get_merge_base(plan_id_receiving_changes integer, snapshot_id_supplying_changes integer)
   returns integer
