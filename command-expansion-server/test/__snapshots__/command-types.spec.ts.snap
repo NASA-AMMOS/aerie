@@ -245,7 +245,7 @@ export class Command<
 
   private static argumentsToString<A extends ArgType[] | { [argName: string]: any } = [] | {}>(args: A): string {
     if (Array.isArray(args)) {
-      const argStrings = args.map((arg) => {
+      const argStrings = args.map(arg => {
         if (typeof arg === 'string') {
           return \`'\${arg}'\`;
         }
@@ -253,13 +253,11 @@ export class Command<
       });
 
       return argStrings.join(', ');
-    }
-    else {
+    } else {
       const argStrings = Object.keys(args).reduce((accum, key) => {
         if (typeof args[key] === 'string') {
           accum.push(\`\${key}: '\${args[key]}'\`);
-        }
-        else {
+        } else {
           accum.push(\`\${key}: \${args[key]}\`);
         }
         return accum;
@@ -299,20 +297,16 @@ export class Sequence {
   }
 
   public toEDSLString(): string {
+    const commandsString =
+      this.commands.length === 0 ? '' : '\\n' + indent(this.commands.map(c => c.toEDSLString() + ',').join('\\n'), 3);
 
-    const commandsString = this.commands.length === 0
-        ? ''
-        : '\\n' + indent(this.commands.map(c => c.toEDSLString() + ',').join('\\n'), 3);
-
-  return (
-\`export default () =>
+    return \`export default () =>
   Sequence.new({
     seqId: '\${this.seqId}',
     metadata: \${JSON.stringify(this.metadata)},
     commands: [\${commandsString}
     ],
-  });\`
-  );
+  });\`;
   }
 
   public static fromSeqJson(json: SequenceSeqJson): Sequence {
@@ -356,22 +350,22 @@ export function doyToInstant(doy: DOY_STRING): Temporal.Instant {
     string,
     string,
     string,
-        string | undefined,
+    string | undefined,
   ];
 
   //use to convert doy to month and day
   const doyDate = new Date(parseInt(year, 10), 0, parseInt(doyStr, 10));
   // convert to UTC Date
   const utcDoyDate = new Date(
-      Date.UTC(
-          doyDate.getUTCFullYear(),
-          doyDate.getUTCMonth(),
-          doyDate.getUTCDate(),
-          doyDate.getUTCHours(),
-          doyDate.getUTCMinutes(),
-          doyDate.getUTCSeconds(),
-          doyDate.getUTCMilliseconds(),
-      ),
+    Date.UTC(
+      doyDate.getUTCFullYear(),
+      doyDate.getUTCMonth(),
+      doyDate.getUTCDate(),
+      doyDate.getUTCHours(),
+      doyDate.getUTCMinutes(),
+      doyDate.getUTCSeconds(),
+      doyDate.getUTCMilliseconds(),
+    ),
   );
 
   return Temporal.ZonedDateTime.from({

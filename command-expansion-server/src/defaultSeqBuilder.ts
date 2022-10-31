@@ -9,13 +9,15 @@ export const defaultSeqBuilder: SeqBuilder = (sortedActivityInstancesWithCommand
     }
 
     if (ai.errors.length > 0) {
-      return ai.errors.map(e => Command.new({
-        stem: '$$ERROR$$',
-        arguments: [e.message],
-        metadata: {
-          simulatedActivityId: ai.id
-        },
-      }));
+      return ai.errors.map(e =>
+        Command.new({
+          stem: '$$ERROR$$',
+          arguments: [e.message],
+          metadata: {
+            simulatedActivityId: ai.id,
+          },
+        }),
+      );
     }
     // Typeguard only
     if (ai.commands === null) {

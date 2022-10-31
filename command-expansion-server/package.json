@@ -13,7 +13,7 @@
     "debug": "node --inspect=0.0.0.0:9229 --experimental-vm-modules ./build/app.js",
     "dev": "npm run build && concurrently -n \"tsc,node\" -c \"blue,red\" \"npm run ts-watch\" \"npm run dev-server\"",
     "dev-server": "supervisor -- --inspect=0.0.0.0 --experimental-vm-modules ./build/app.js",
-    "reformat": "npx prettier --config ./.prettierrc -w ./src",
+    "format": "npx prettier --config ./.prettierrc -w ./src",
     "start": "node --experimental-vm-modules ./build/app.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest",
     "ts-watch": "npm run copy-preface; npm run copy-temporal-polyfill; tsc -p tsconfig.build.json --watch"
