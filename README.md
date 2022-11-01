@@ -1,19 +1,61 @@
-![publish](https://github.com/NASA-AMMOS/aerie/actions/workflows/publish.yml/badge.svg)
-[![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/NASA-AMMOS/aerie.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/NASA-AMMOS/aerie/context:java)
+<br>
+<div align="center">
+  <img src="docs/sphinx_scylladb_theme/static/img/logos/aerie-wordmark-light.svg" height="50">
+</div>
+<br>
 
-# Aerie
+Aerie is a software framework for modeling spacecraft. Its main features include:
 
-A suite of software tools and services created to support activity planning and sequencing needs of missions with modeling, simulation, scheduling, and validation capabilities.
+- A Java-based mission modeling library
+- A discrete-event simulator
+- An embedded TypeScript DSL for defining and executing scheduling goals
+- An embedded TypeScript DSL for defining and executing constraints
+- An embedded TypeScript DSL for defining and executing activity command expansions
+- A sequence definition editor
+- A GraphQL API
+- A web-based [client application][ui-repo]
 
 ## Getting Started
 
-- To deploy Aerie see the documentation in the [deployment directory](./deployment).
-- To run Aerie locally for development purposes see [building documentation](./docs/source/deployment/building.md).
+To get started with a first Aerie deployment head over to the [deployment directory][deployment]. Please visit our [documentation website][documentation] for complete instructions on how to use Aerie.
 
-## Contributing
+## Directory Structure
 
-Please read the [CONTRIBUTING.md](./CONTRIBUTING.md) guidelines for branch naming and pull request conventions.
+```sh
+.
+├── .github                     # GitHub metadata
+├── command-expansion-server    # Service for sequence generation and management
+├── constraints                 # Java library for constraint checking
+├── contrib                     # Java convenience classes for mission models
+├── db-tests                    # Database unit tests
+├── deployment                  # Deployment artifacts and documentation
+├── docs                        # Documentation
+├── e2e-tests                   # End-to-end tests
+├── examples                    # Example mission models
+├── gradle                      # Gradle Wrapper
+├── merlin-driver               # Simulation engine and driver
+├── merlin-framework            # Java library for mission modeling
+├── merlin-framework-junit      # Extension of JUnit to unit test mission models
+├── merlin-framework-processor  # Java annotation processor for mission models
+├── merlin-sdk                  # Java interface between mission models and the merlin-driver
+├── merlin-server               # Service for planning and simulation
+├── merlin-worker               # Worker for executing simulations
+├── parsing-utilities           # Java classes for JSON serialization and deserialization
+├── scheduler                   # Java library for goal-oriented scheduling
+├── scheduler-server            # Service for scheduling
+└── third-party                 # Third party JAR files
+```
 
-## Documentaion
+## Want to help?
 
-For information on how to use Aerie, see the documentation [on our website](https://nasa-ammos.github.io/aerie).
+Want to file a bug, contribute some code, or improve documentation? Excellent! Read up on our guidelines for [contributing][contributing]. If you are a developer you can get started quickly by reading the [developer documentation][dev].
+
+## License
+
+The scripts and documentation in this project are released under the [MIT License](LICENSE).
+
+[contributing]: ./CONTRIBUTING.md
+[deployment]: ./deployment
+[dev]: ./docs/source/deployment/building.md
+[documentation]: https://nasa-ammos.github.io/aerie
+[ui-repo]: https://github.com/NASA-AMMOS/aerie-ui
