@@ -6,11 +6,12 @@ create table plan (
   model_id integer null,
   duration interval not null,
 
-  -- TODO: Remove 'start_time'; its purpose will be served by a model-specific entry in 'simulation.arguments'.
   start_time timestamptz not null,
   parent_id integer
     references plan
     on update cascade,
+
+  is_locked boolean not null default false,
 
   constraint plan_synthetic_key
     primary key (id),
@@ -42,7 +43,11 @@ comment on column plan.model_id is e''
 comment on column plan.duration is e''
   'The duration over which this plan extends.';
 comment on column plan.start_time is e''
-  'DEPRECATED. The time at which the plan''s effective span begins.';
+  'The time at which the plan''s effective span begins.';
+comment on column plan.parent_id is e''
+  'The plan id of the parent of this plan. May be NULL if this plan does not have a parent.';
+comment on column plan.is_locked is e''
+  'A boolean representing whether this plan can be deleted and if changes can happen to the activities of this plan.';
 
 
 create function increment_revision_on_update_plan()
@@ -76,11 +81,22 @@ for each row
 when (new.duration < '0')
 execute function raise_duration_is_negative();
 
-create or replace function cleanup_on_delete()
+create function cleanup_on_delete()
   returns trigger
   language plpgsql as $$
 begin
-  -- have the children be 'adopted' on delete
+  -- prevent deletion if the plan is locked
+  if old.is_locked then
+    raise exception 'Cannot delete locked plan.';
+  end if;
+
+  -- withdraw pending rqs
+  update merge_request
+  set status='withdrawn'
+  where plan_id_receiving_changes = old.id
+    and status = 'pending';
+
+  -- have the children be 'adopted' by this plan's parent
   update plan
   set parent_id = old.parent_id
   where

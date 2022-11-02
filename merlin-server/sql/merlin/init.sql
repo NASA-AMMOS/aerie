@@ -43,5 +43,8 @@ begin;
 
   -- Plan Collaboration
   \ir plan_collaboration.sql
+  \ir merge_request.sql
+  \ir merge_comments.sql
+  \ir plan_merge.sql
   \ir hasura_functions.sql
 end;

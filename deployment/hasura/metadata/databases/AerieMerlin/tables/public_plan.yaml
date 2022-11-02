@@ -5,6 +5,15 @@ object_relationships:
 - name: mission_model
   using:
     foreign_key_constraint_on: model_id
+- name: parent_plan
+  using:
+    manual_configuration:
+      column_mapping:
+        parent_id: id
+      insertion_order: null
+      remote_table:
+        name: plan
+        schema: public
 array_relationships:
 - name: activity_directives
   using:
@@ -33,6 +42,15 @@ array_relationships:
       column: plan_id
       table:
         name: simulation
+        schema: public
+- name: child_plans
+  using:
+    manual_configuration:
+      column_mapping:
+        id: parent_id
+      insertion_order: null
+      remote_table:
+        name: plan
         schema: public
 remote_relationships:
 - name: scheduling_specifications

@@ -1,0 +1,3 @@
+table:
+  name: merge_request_comment
+  schema: public

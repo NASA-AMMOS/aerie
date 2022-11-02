@@ -31,7 +31,8 @@ comment on table activity_directive is e''
   'A single activity_directive within a plan.';
 
 comment on column activity_directive.id is e''
-  'The synthetic identifier for this activity_directive.';
+  'The synthetic identifier for this activity_directive.\n'
+  'Unique within a given plan.';
 comment on column activity_directive.plan_id is e''
   'The plan within which this activity_directive is located.';
 comment on column activity_directive.name is e''
@@ -55,6 +56,17 @@ comment on column activity_directive.arguments is e''
 comment on column activity_directive.metadata is e''
   'The metadata associated with this activity_directive.';
 
+create procedure plan_locked_exception(plan_id integer)
+language plpgsql as $$
+  begin
+    if(select is_locked from plan where plan.id = plan_id limit 1) then
+      raise exception 'Plan % is locked.', plan_id;
+    end if;
+  end
+$$;
+
+comment on procedure plan_locked_exception(plan_id integer) is e''
+  'Verify that the plan corresponding to the activity being updated is unlocked, throwing an exception if not.';
 
 create function increment_revision_on_insert_activity_directive()
 returns trigger
@@ -105,10 +117,11 @@ after delete on activity_directive
 for each row
 execute function increment_revision_on_delete_activity_directive();
 
-create or replace function generate_activity_directive_name()
+create function generate_activity_directive_name()
 returns trigger
 security definer
 language plpgsql as $$begin
+  call plan_locked_exception(new.plan_id);
   new.name = new.type || ' ' || new.id;
   return new;
 end$$;
@@ -123,11 +136,12 @@ for each row execute function generate_activity_directive_name();
 comment on trigger generate_name_trigger on activity_directive is e''
   'Generates a name for an activity_directive as the activity type + activity id.';
 
-create or replace function activity_directive_set_updated_at()
+create function activity_directive_set_updated_at()
   returns trigger
   security definer
   language plpgsql as $$begin
-  new.last_modified_at = now();
+    call plan_locked_exception(new.plan_id);
+    new.last_modified_at = now();
   return new;
 end$$;
 
@@ -142,11 +156,12 @@ execute function activity_directive_set_updated_at();
 comment on trigger set_timestamp on activity_directive is e''
   'Sets the last_modified_at field of an activity_directive to the current time.';
 
-create or replace function activity_directive_set_arguments_updated_at()
+create function activity_directive_set_arguments_updated_at()
   returns trigger
   security definer
   language plpgsql as $$begin
-  new.last_modified_arguments_at = now();
+    call plan_locked_exception(new.plan_id);
+    new.last_modified_arguments_at = now();
   return new;
 end$$;
 
@@ -172,6 +187,7 @@ language plpgsql as $$
     _type text;
     _subValue jsonb;
   begin
+  call plan_locked_exception(new.plan_id);
   for _key, _value in
     select * from jsonb_each(new.metadata::jsonb)
   loop
@@ -216,3 +232,17 @@ create trigger check_activity_directive_metadata_trigger
 before insert or update on activity_directive
 for each row
 execute function check_activity_directive_metadata();
+
+create function check_locked_on_delete()
+  returns trigger
+  security definer
+  language plpgsql as $$
+  begin
+    call plan_locked_exception(old.plan_id);
+    return old;
+  end $$;
+
+create trigger check_locked_on_delete_trigger
+before delete on activity_directive
+for each row
+execute procedure check_locked_on_delete();
