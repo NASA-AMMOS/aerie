@@ -55,7 +55,7 @@ pygments_style = "sphinx"
 
 # List of substitutions
 rst_prolog = """
-.. |rst| replace:: restructuredText
+.. |rst| replace:: reStructuredText
 """
 # -- Options for not found extension ---------------------------------------
 
