@@ -614,8 +614,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
     @Override
     public void succeedWith(final SimulationResults results) {
-      try (final var connection = dataSource.getConnection()) {
+      try (final var connection = dataSource.getConnection();
+           final var transactionContext = new TransactionContext(connection)) {
         postSimulationResults(connection, datasetId, results);
+        transactionContext.commit();
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to store simulation results", ex);
       } catch (final NoSuchSimulationDatasetException ex) {
