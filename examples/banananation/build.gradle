@@ -42,6 +42,7 @@ javadoc.options.tags = [ "contact", "subsystem" ]
 publishing {
   publications {
     library(MavenPublication) {
+      version = rootProject.ext.versionForPublishing
       from components.java
     }
   }
