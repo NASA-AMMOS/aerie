@@ -9,6 +9,18 @@ task archiveDeployment(type: Tar) {
   from 'deployment'
 }
 
+// Set publishing version property globally for this project
+configure(subprojects) {
+    setProperty('publishing.version', {
+      if (findProperty("version.isRelease").toBoolean()) {
+        return "${findProperty("version.number")}"
+      } else {
+        def hash = 'git rev-parse --short HEAD'.execute().text.trim()
+        return "${findProperty("version.number")}-SNAPSHOT-$hash"
+      }
+    }())
+}
+
 // Add `distributeSql` task to all subprojects with `sql/` child directory
 configure(subprojects.findAll { it.projectDir.toPath().resolve('sql').toFile().exists() }) { sp ->
 
@@ -48,16 +60,6 @@ configure(subprojects.findAll { it.projectDir.toPath().resolve('sql').toFile().e
   // Distribute SQL prior to creating deployment archive
   archiveDeployment.dependsOn distributeSql
 }
-
-// Set publishing version property globally for this project
-setProperty('publishing.version', {
-  if (findProperty("version.isRelease").toBoolean()) {
-    return "${findProperty("version.number")}"
-  } else {
-    def hash = 'git rev-parse --short HEAD'.execute().text.trim()
-    return "${findProperty("version.number")}-SNAPSHOT-$hash"
-  }
-}())
 
 subprojects {
   apply plugin: 'com.github.ben-manes.versions'
