@@ -49,14 +49,15 @@ configure(subprojects.findAll { it.projectDir.toPath().resolve('sql').toFile().e
   archiveDeployment.dependsOn distributeSql
 }
 
-project.ext.versionForPublishing = {
+// Set publishing version property globally for this project
+setProperty('publishing.version', {
   if (findProperty("version.isRelease").toBoolean()) {
     return "${findProperty("version.number")}"
   } else {
     def hash = 'git rev-parse --short HEAD'.execute().text.trim()
     return "${findProperty("version.number")}-SNAPSHOT-$hash"
   }
-}()
+}())
 
 subprojects {
   apply plugin: 'com.github.ben-manes.versions'

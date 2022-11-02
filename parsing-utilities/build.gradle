@@ -23,7 +23,7 @@ dependencies {
 publishing {
   publications {
     library(MavenPublication) {
-      version = rootProject.ext.versionForPublishing
+      version = findProperty('publishing.version')
       from components.java
     }
   }
