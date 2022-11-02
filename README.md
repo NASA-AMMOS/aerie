@@ -1,6 +1,6 @@
 <br>
 <div align="center">
-  <img src="docs/sphinx_scylladb_theme/static/img/logos/aerie-wordmark-light.svg" height="50">
+  <img alt="Aerie" height="50" src="docs/sphinx_scylladb_theme/static/img/logos/aerie-wordmark-light.svg">
 </div>
 <br>
 
@@ -11,7 +11,7 @@ Aerie is a software framework for modeling spacecraft. Its main features include
 - An embedded TypeScript DSL for defining and executing scheduling goals
 - An embedded TypeScript DSL for defining and executing constraints
 - An embedded TypeScript DSL for defining and executing activity command expansions
-- A sequence definition editor
+- An embedded TypeScript DSL for defining sequences
 - A GraphQL API
 - A web-based [client application][ui-repo]
 
@@ -33,7 +33,7 @@ To get started with a first Aerie deployment head over to the [deployment direct
 ├── e2e-tests                   # End-to-end tests
 ├── examples                    # Example mission models
 ├── gradle                      # Gradle Wrapper
-├── merlin-driver               # Simulation engine and driver
+├── merlin-driver               # Java library for discrete-event simulation
 ├── merlin-framework            # Java library for mission modeling
 ├── merlin-framework-junit      # Extension of JUnit to unit test mission models
 ├── merlin-framework-processor  # Java annotation processor for mission models
@@ -41,9 +41,10 @@ To get started with a first Aerie deployment head over to the [deployment direct
 ├── merlin-server               # Service for planning and simulation
 ├── merlin-worker               # Worker for executing simulations
 ├── parsing-utilities           # Java classes for JSON serialization and deserialization
-├── scheduler                   # Java library for goal-oriented scheduling
+├── scheduler-driver            # Java library for goal-oriented scheduling
 ├── scheduler-server            # Service for scheduling
-└── third-party                 # Third party JAR files
+├── scheduler-worker            # Worker for executing scheduling goals
+└── third-party                 # External Java dependencies that are not obtained from Maven
 ```
 
 ## Want to help?
