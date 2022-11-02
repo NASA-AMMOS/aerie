@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
+import gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.ArrayList;
@@ -7,65 +8,100 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity;
-
 /**
  * A collection of intervals that can overlap.
  */
-public class Spans implements IntervalContainer<Spans>, Iterable<Interval> {
-  private final List<Interval> intervals;
+public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optional<Spans.Metadata>>> {
+  private final List<Segment<Optional<Metadata>>> intervals;
+
+  public record Metadata(long id){}
 
   public Spans() {
     this.intervals = new ArrayList<>();
   }
 
-  public Spans(final ArrayList<Interval> intervals) {
-    intervals.removeIf(Interval::isEmpty);
-    this.intervals = intervals;
+  public Spans(final List<Segment<Optional<Metadata>>> intervals) {
+    this.intervals = new ArrayList<>(intervals);
+  }
+
+  public Spans(final Spans spans){
+    this.intervals = new ArrayList<>(spans.intervals);
   }
 
   public Spans(final Iterable<Interval> iter) {
-    this.intervals = StreamSupport.stream(iter.spliterator(), false).filter($ -> !$.isEmpty()).toList();
+    this.intervals = new ArrayList<>();
+    StreamSupport.stream(iter.spliterator(), false).filter($ -> !$.isEmpty())
+                 .forEach(itv -> this.intervals.add(Segment.of(itv, Optional.empty())));
   }
 
   public Spans(final Interval... intervals) {
-    this.intervals = Arrays.stream(intervals).filter($ -> !$.isEmpty()).toList();
+    this.intervals = new ArrayList<>();
+    Arrays.stream(intervals).filter($ -> !$.isEmpty()).forEach(itv -> this.intervals.add(Segment.of(itv, Optional.empty())));
+  }
+
+  @SafeVarargs
+  public Spans(final Segment<Optional<Metadata>>... intervals) {
+    this.intervals = new ArrayList<>();
+    Arrays.stream(intervals).filter($ -> !$.interval().isEmpty()).forEach(this.intervals::add);
   }
 
   public Windows intoWindows() {
-    return new Windows(false).set(this.intervals, true);
+    return new Windows(false).set(this.intervals.stream().map(Segment::interval).toList(), true);
   }
 
   public void add(final Interval window) {
     if (!window.isEmpty()) {
-      this.intervals.add(window);
+      this.intervals.add(Segment.of(window, Optional.empty()));
     }
   }
 
-  public void addAll(final Iterable<Interval> iter) {
-    this.intervals.addAll(
-        StreamSupport
-            .stream(iter.spliterator(), false)
-            .filter($ -> !$.isEmpty())
-            .toList()
-    );
+  public void add(final Interval window, Optional<Metadata> metadata) {
+    if (!window.isEmpty()) {
+      this.intervals.add(Segment.of(window, metadata));
+    }
+  }
+  public void addAll(final Spans iter) {
+    this.intervals.addAll(iter.intervals);
+  }
+
+  public void addAll(final Iterable<Segment<Optional<Metadata>>> iter) {
+    StreamSupport
+        .stream(iter.spliterator(), false)
+        .filter($ -> !$.interval().isEmpty())
+        .forEach(this.intervals::add);
   }
 
   public Spans map(final Function<Interval, Interval> mapper) {
-    return new Spans(this.intervals.stream().map(mapper).filter($ -> !$.isEmpty()).toList());
+    final var ret = new Spans();
+    this.intervals.forEach(interval -> {
+        final var newInterval = mapper.apply(interval.interval());
+        if(!newInterval.isEmpty())
+          ret.add(newInterval, interval.value());
+    });
+    return ret;
   }
 
   public Spans flatMap(final Function<Interval, ? extends Stream<Interval>> mapper) {
-    return new Spans(this.intervals.stream().flatMap(mapper).filter($ -> !$.isEmpty()).toList());
+    final var ret = new Spans();
+    this.intervals.forEach(interval -> mapper.apply(interval.interval()).filter(x -> !x.isEmpty()).forEach(
+        newInterval -> ret.add(newInterval, interval.value())));
+    return ret;
   }
 
   public Spans filter(final Predicate<Interval> filter) {
-    return new Spans(this.intervals.stream().filter(filter).toList());
+    final var pred = new Predicate<Segment<Optional<Metadata>>>() {
+      @Override
+      public boolean test(final Segment<Optional<Metadata>> intervalOptionalPair) {
+        return filter.test(intervalOptionalPair.interval());
+      }
+    };
+    return new Spans(this.intervals.stream().filter(pred).toList());
   }
 
   /**
@@ -149,7 +185,7 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Interval> {
   }
 
   @Override
-  public Iterator<Interval> iterator() {
+  public Iterator<Segment<Optional<Metadata>>> iterator() {
     return this.intervals.iterator();
   }
 }

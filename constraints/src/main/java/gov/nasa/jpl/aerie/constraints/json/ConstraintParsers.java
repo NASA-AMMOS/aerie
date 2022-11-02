@@ -153,6 +153,13 @@ public final class ConstraintParsers {
               untuple((kind, alias) -> new ActivityWindow(alias)),
               $ -> tuple(Unit.UNIT, $.activityAlias));
 
+  static final JsonParser<ActivitySpan> activitySpanP =
+      productP
+          .field("kind", literalP("SpansExpressionActivitySpan"))
+          .field("alias", stringP)
+          .map(
+              untuple((kind, alias) -> new ActivitySpan(alias)),
+              $ -> tuple(Unit.UNIT, $.activityAlias));
   static final JsonParser<StartOf> startOfP =
       productP
           .field("kind", literalP("WindowsExpressionStartOf"))
@@ -329,14 +336,25 @@ public final class ConstraintParsers {
             $ -> tuple(Unit.UNIT, $.expression()));
   }
 
-  static JsonParser<ForEachActivity> forEachActivityF(final JsonParser<Expression<List<Violation>>> violationListExpressionP) {
+  static JsonParser<ForEachActivitySpans> forEachActivitySpansF(final JsonParser<Expression<Spans>> spansExpressionP) {
     return productP
-        .field("kind", literalP("ForEachActivity"))
+        .field("kind", literalP("ForEachActivitySpans"))
+        .field("activityType", stringP)
+        .field("alias", stringP)
+        .field("expression", spansExpressionP)
+        .map(
+            untuple((kind, actType, alias, expression) -> new ForEachActivitySpans(actType, alias, expression)),
+            $ -> tuple(Unit.UNIT, $.activityType, $.alias, $.expression));
+  }
+
+  static JsonParser<ForEachActivityViolations> forEachActivityViolationsF(final JsonParser<Expression<List<Violation>>> violationListExpressionP) {
+    return productP
+        .field("kind", literalP("ForEachActivityViolations"))
         .field("activityType", stringP)
         .field("alias", stringP)
         .field("expression", violationListExpressionP)
         .map(
-            untuple((kind, actType, alias, expression) -> new ForEachActivity(actType, alias, expression)),
+            untuple((kind, actType, alias, expression) -> new ForEachActivityViolations(actType, alias, expression)),
             $ -> tuple(Unit.UNIT, $.activityType, $.alias, $.expression));
   }
 
@@ -350,7 +368,6 @@ public final class ConstraintParsers {
 
   private static JsonParser<Expression<Windows>> windowsExpressionF(JsonParser<Expression<Spans>> spansP) {
     return recursiveP(selfP -> chooseP(
-        activityWindowP,
         startOfP,
         endOfP,
         changesP,
@@ -371,7 +388,8 @@ public final class ConstraintParsers {
         shiftByF(selfP),
         startsF(selfP),
         endsF(selfP),
-        windowsFromSpansF(spansP)));
+        windowsFromSpansF(spansP),
+        activityWindowP));
   }
 
   static JsonParser<SpansFromWindows> spansFromWindowsF(JsonParser<Expression<Windows>> windowsExpressionP) {
@@ -389,26 +407,28 @@ public final class ConstraintParsers {
           endsF(selfP),
           splitF(selfP),
           splitF(windowsP),
-          spansFromWindowsF(windowsP)
-      ));
+          spansFromWindowsF(windowsP),
+          forEachActivitySpansF(selfP),
+          activitySpanP
+          ));
   }
 
   public static final JsonParser<Expression<Windows>> windowsExpressionP = recursiveP(selfP -> windowsExpressionF(spansExpressionF(selfP)));
 
   public static final JsonParser<Expression<Spans>> spansExpressionP = recursiveP(selfP -> spansExpressionF(windowsExpressionF(selfP)));
 
-  static final JsonParser<ViolationsOf> violationsOfP =
+  static final JsonParser<ViolationsOfWindows> violationsOfP =
       productP
           .field("kind", literalP("ViolationsOf"))
           .field("expression", windowsExpressionP)
           .map(
-              untuple((kind, expression) -> new ViolationsOf(expression)),
+              untuple((kind, expression) -> new ViolationsOfWindows(expression)),
               $ -> tuple(Unit.UNIT, $.expression));
 
 
   public static final JsonParser<Expression<List<Violation>>> constraintP =
       recursiveP(selfP -> chooseP(
-          forEachActivityF(selfP),
-          windowsExpressionP.map(ViolationsOf::new, $ -> $.expression),
+          forEachActivityViolationsF(selfP),
+          windowsExpressionP.map(ViolationsOfWindows::new, $ -> $.expression),
           violationsOfP));
 }
