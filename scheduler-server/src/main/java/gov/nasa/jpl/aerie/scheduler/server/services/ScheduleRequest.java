@@ -1,8 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
-
 import java.util.Objects;
+import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 
 /**
  * details of a scheduling request, including the target schedule specification version and goals to operate on
@@ -12,7 +11,7 @@ import java.util.Objects;
  */
 public record ScheduleRequest(SpecificationId specificationId, RevisionData specificationRev) {
   public ScheduleRequest {
-    Objects.requireNonNull(specificationId, "specificationId must not be null");
-    Objects.requireNonNull(specificationRev, "specificationRev must not be null");
+    Objects.requireNonNull(specificationId);
+    Objects.requireNonNull(specificationRev);
   }
 }

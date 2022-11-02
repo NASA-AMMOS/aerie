@@ -9,7 +9,7 @@ on:
     paths:
       - "docs/**"
       - "merlin-server/constraints-dsl-compiler/src/**"
-      - "scheduler-server/scheduling-dsl-compiler/src/**"
+      - "scheduler-worker/scheduling-dsl-compiler/src/**"
 
 jobs:
   build:

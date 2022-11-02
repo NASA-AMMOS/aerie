@@ -12,6 +12,7 @@ public record RequestRecord(
     boolean canceled
 ) {
   public enum Status {
+    PENDING("pending"),
     INCOMPLETE("incomplete"),
     FAILED("failed"),
     SUCCESS("success");
@@ -22,7 +23,8 @@ public record RequestRecord(
     }
 
     public static Status fromString(final String label) throws InvalidRequestStatusException {
-      return switch(label) {
+      return switch (label) {
+        case "pending" -> PENDING;
         case "incomplete" -> INCOMPLETE;
         case "failed" -> FAILED;
         case "success" -> SUCCESS;

@@ -1,5 +1,11 @@
 package gov.nasa.jpl.aerie.scheduler.server.http;
 
+import javax.json.Json;
+import javax.json.JsonValue;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
@@ -10,13 +16,6 @@ import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.tuple.Pair;
-
-import javax.json.Json;
-import javax.json.JsonValue;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * json serialization methods for data entities used in the scheduler response bodies
@@ -47,7 +46,13 @@ public class ResponseSerializers {
    * @return a json serialization of the scheduling run result
    */
   public static JsonValue serializeScheduleResultsResponse(final ScheduleAction.Response response) {
-    if (response instanceof ScheduleAction.Response.Incomplete r) {
+    if (response instanceof final ScheduleAction.Response.Pending r) {
+      return Json
+          .createObjectBuilder()
+          .add("status", "pending")
+          .add("analysisId", r.analysisId())
+          .build();
+    } else if (response instanceof ScheduleAction.Response.Incomplete r) {
       return Json
           .createObjectBuilder()
           .add("status", "incomplete")

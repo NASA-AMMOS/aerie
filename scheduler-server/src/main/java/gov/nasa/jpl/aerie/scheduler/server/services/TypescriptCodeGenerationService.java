@@ -1,14 +1,15 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import org.apache.commons.lang3.tuple.Pair;
 
-public class TypescriptCodeGenerationService {
+public final class TypescriptCodeGenerationService {
+  private TypescriptCodeGenerationService() { }
+
   public static String generateTypescriptTypesFromMissionModel(final MissionModelService.MissionModelTypes missionModelTypes) {
     final var activityTypeCodes = new ArrayList<ActivityTypeCode>();
     for (final var activityType : missionModelTypes.activityTypes()) {
@@ -51,7 +52,7 @@ public class TypescriptCodeGenerationService {
     return joinLines(result);
   }
 
-  private static String generateActivityTypeEnum(ArrayList<ActivityTypeCode> activityTypeCodes) {
+  private static String generateActivityTypeEnum(final ArrayList<ActivityTypeCode> activityTypeCodes) {
     final var result = new ArrayList<String>();
     result.add("export enum ActivityType {");
     for (final var activityTypeCode : activityTypeCodes) {
@@ -117,7 +118,9 @@ public class TypescriptCodeGenerationService {
   }
 
   private record ActivityTypeCode(String activityTypeName, List<ActivityParameter> parameterTypes) {}
+
   private record ActivityParameter(String name, TypescriptType type) {}
+
   private sealed interface TypescriptType {
     record TSString() implements TypescriptType {}
     record TSDouble() implements TypescriptType {}

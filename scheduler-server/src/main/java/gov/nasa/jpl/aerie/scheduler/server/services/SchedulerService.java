@@ -10,13 +10,11 @@ import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
  */
 //TODO: add separate scheduling goal and prioritization management service
 public interface SchedulerService {
-
   /**
    * schedules activity instances into the target plan in order to further satisfy the associated scheduling goals
    *
    * @param request details of the scheduling request, including the target plan and goals to operate on
    * @return summary of the scheduling run, including goal satisfaction metrics and changes made
    */
-  ResultsProtocol.State scheduleActivities(final ScheduleRequest request);
-
+  ResultsProtocol.State getScheduleResults(final ScheduleRequest request);
 }

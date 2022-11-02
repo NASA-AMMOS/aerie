@@ -99,6 +99,33 @@ jobs:
           push: true
           tags: ${{ steps.aerieMerlinWorker.outputs.tags }}
           labels: ${{ steps.aerieMerlinWorker.outputs.labels }}
+      # Build, scan, and push aerie-scheduler-worker Docker artifacts.
+      - name: Extract metadata (tags, labels) for aerie-scheduler-worker Docker image
+        id: aerieSchedulerWorker
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/nasa-ammos/aerie-scheduler-worker
+      - name: Build aerie-scheduler-worker Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./scheduler-worker
+          load: true
+          tags: ${{ env.REGISTRY }}/nasa-ammos/aerie-scheduler-worker:${{ github.sha }}
+      - name: Scan aerie-scheduler-worker Docker image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-scheduler-worker:${{ github.sha }}
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: 'CRITICAL'
+      - name: Push aerie-scheduler-worker Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./scheduler-worker
+          push: true
+          tags: ${{ steps.aerieSchedulerWorker.outputs.tags }}
+          labels: ${{ steps.aerieSchedulerWorker.outputs.labels }}
       # Build, scan, and push aerie-scheduler Docker artifacts.
       - name: Extract metadata (tags, labels) for aerie-scheduler Docker image
         id: aerieScheduler

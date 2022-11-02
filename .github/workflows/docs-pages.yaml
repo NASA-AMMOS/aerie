@@ -7,7 +7,7 @@ on:
     paths:
       - "docs/**"
       - "merlin-server/constraints-dsl-compiler/src/**"
-      - "scheduler-server/scheduling-dsl-compiler/src/**"
+      - "scheduler-worker/scheduling-dsl-compiler/src/**"
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages

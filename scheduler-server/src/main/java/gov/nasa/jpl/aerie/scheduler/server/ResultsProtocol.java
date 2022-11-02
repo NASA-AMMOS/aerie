@@ -24,6 +24,9 @@ public final class ResultsProtocol {
      */
     long analysisId();
 
+    /** Scheduling in enqueued. */
+    record Pending(long analysisId) implements State {}
+
     /**
      * scheduling in progress, full results not yet available
      */

@@ -1,5 +1,11 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Optional;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchRequestException;
@@ -10,15 +16,12 @@ import gov.nasa.jpl.aerie.scheduler.server.remotes.ResultsCellRepository;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults.GoalResult;
-
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class PostgresResultsCellRepository implements ResultsCellRepository {
+  private static final Logger logger = LoggerFactory.getLogger(PostgresResultsCellRepository.class);
+
   private final DataSource dataSource;
 
   public PostgresResultsCellRepository(final DataSource dataSource) {
@@ -45,11 +48,42 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   }
 
   @Override
+  public Optional<ResultsProtocol.OwnerRole> claim(final SpecificationId specificationId)
+  {
+    try (
+        final var connection = this.dataSource.getConnection();
+        final var claimSimulationAction = new ClaimRequestAction(connection)
+    ) {
+      claimSimulationAction.apply(specificationId.id());
+
+      final var spec = getSpecification(connection, specificationId);
+      final var request$ = getRequest(connection, specificationId, spec.revision());
+      if (request$.isEmpty()) return Optional.empty();
+      final var request = request$.get();
+
+      logger.info("Claimed scheduling request with specification id {}", specificationId);
+      return Optional.of(new PostgresResultsCell(
+          this.dataSource,
+          new SpecificationId(request.specificationId()),
+          request.specificationRevision(),
+          request.analysisId()));
+    } catch(UnclaimableRequestException ex) {
+      return Optional.empty();
+    } catch (final NoSuchSpecificationException ex) {
+      throw new Error(String.format("Cannot process scheduling request for nonexistent specification %s%n", specificationId), ex);
+    } catch (final SQLException | DatabaseException ex) {
+      throw new Error(ex.getMessage());
+    }
+  }
+
+  @Override
   public Optional<ResultsProtocol.ReaderRole> lookup(final SpecificationId specificationId)
   {
     try (final var connection = this.dataSource.getConnection()) {
       final var spec = getSpecification(connection, specificationId);
-      final var request = getRequest(connection, specificationId, spec.revision());
+      final var request$ = getRequest(connection, specificationId, spec.revision());
+      if (request$.isEmpty()) return Optional.empty();
+      final var request = request$.get();
 
       return Optional.of(new PostgresResultsCell(
           this.dataSource,
@@ -58,7 +92,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           request.analysisId()));
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get schedule specification", ex);
-    } catch (final NoSuchSpecificationException | NoSuchRequestException ex) {
+    } catch (final NoSuchSpecificationException ex) {
       return Optional.empty();
     }
   }
@@ -85,15 +119,14 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static RequestRecord getRequest(
+  private static Optional<RequestRecord> getRequest(
       final Connection connection,
       final SpecificationId specificationId,
       final long specificationRevision
-  ) throws SQLException, NoSuchRequestException {
+  ) throws SQLException {
     try (final var getRequestAction = new GetRequestAction(connection)) {
       return getRequestAction
-          .get(specificationId.id(), specificationRevision)
-          .orElseThrow(() -> new NoSuchRequestException(specificationId, specificationRevision));
+          .get(specificationId.id(), specificationRevision);
     }
   }
 
@@ -214,6 +247,28 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
+  private static Optional<ResultsProtocol.State> getRequestState(
+      final Connection connection,
+      final SpecificationId specId,
+    final long specRevision
+  ) throws SQLException {
+    final var request$ = getRequest(connection, specId, specRevision);
+    if (request$.isEmpty()) return Optional.empty();
+    final var request = request$.get();
+
+    return Optional.of(
+        switch (request.status()) {
+          case PENDING -> new ResultsProtocol.State.Pending(request.analysisId());
+          case INCOMPLETE -> new ResultsProtocol.State.Incomplete(request.analysisId());
+          case FAILED -> new ResultsProtocol.State.Failed(
+              request.reason()
+                  .orElseThrow(() -> new Error("Unexpected state: %s request state has no failure message".formatted(request.status()))),
+              request.analysisId());
+          case SUCCESS -> new ResultsProtocol.State.Success(getResults(connection, request.analysisId()), request.analysisId());
+        }
+    );
+  }
+
   public static final class PostgresResultsCell implements ResultsProtocol.OwnerRole {
     private final DataSource dataSource;
     private final SpecificationId specId;
@@ -235,17 +290,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     @Override
     public ResultsProtocol.State get() {
       try (final var connection = dataSource.getConnection()) {
-        final var request = getRequest(connection, specId, specRevision);
-        return switch(request.status()) {
-          case INCOMPLETE -> new ResultsProtocol.State.Incomplete(this.analysisId);
-          case FAILED -> new ResultsProtocol.State.Failed(
-              request.reason()
-                  .orElseThrow(() -> new Error("Unexpected state: %s request state has no failure message".formatted(request.status()))),
-              this.analysisId);
-          case SUCCESS -> new ResultsProtocol.State.Success(getResults(connection, request.analysisId()), this.analysisId);
-        };
-      } catch (final NoSuchRequestException ex) {
-        throw new Error("Scheduling request no longer exists");
+        return getRequestState(
+            connection,
+            specId,
+            specRevision)
+            .orElseThrow(() -> new Error("Scheduling request no longer exists"));
       } catch(final SQLException ex) {
         throw new DatabaseException("Failed to get scheduling request status", ex);
       }
@@ -265,9 +314,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     @Override
     public boolean isCanceled() {
       try (final var connection = dataSource.getConnection()) {
-        return getRequest(connection, specId, specRevision).canceled();
-      } catch (final NoSuchRequestException ex) {
-        throw new Error("Scheduling request no longer exists");
+        return getRequest(connection, specId, specRevision)
+            .map(RequestRecord::canceled)
+            .orElseThrow(() -> new Error("Scheduling request no longer exists"));
       } catch(final SQLException ex) {
         throw new DatabaseException("Failed to determine if scheduling request is canceled", ex);
       }

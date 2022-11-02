@@ -29,8 +29,8 @@ dependencies {
   implementation project(':constraints')
 
   implementation 'org.apache.commons:commons-lang3:3.12.0'
-  implementation 'io.javalin:javalin:5.0.1'
-  implementation 'org.slf4j:slf4j-simple:1.7.26'
+  implementation 'io.javalin:javalin:5.1.2'
+  implementation 'org.slf4j:slf4j-simple:2.0.3'
   implementation 'org.eclipse:yasson:1.0.5'
   implementation 'org.apache.bcel:bcel:6.5.0'
   implementation 'com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9'

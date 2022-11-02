@@ -16,10 +16,11 @@ include 'merlin-server'
 include 'scheduler-server'
 include 'command-expansion-server'
 include 'merlin-worker'
+include 'scheduler-worker'
 
 // Command-line interface direct to services
 include 'constraints'
-include 'scheduler'
+include 'scheduler-driver'
 
 // Testing
 include 'db-tests'

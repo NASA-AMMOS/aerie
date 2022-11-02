@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server;
 
+import java.net.URI;
+import java.nio.file.Path;
 import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -20,9 +22,6 @@ import gov.nasa.jpl.aerie.scheduler.server.services.GenerateSchedulingLibAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
 import gov.nasa.jpl.aerie.scheduler.server.services.LocalSpecificationService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
-import gov.nasa.jpl.aerie.scheduler.server.services.SchedulingDSLCompilationService;
-import gov.nasa.jpl.aerie.scheduler.server.services.SynchronousSchedulerAgent;
-import gov.nasa.jpl.aerie.scheduler.server.services.ThreadedSchedulerAgent;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
 import org.eclipse.jetty.server.Connector;
@@ -32,10 +31,6 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.StatisticsHandler;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Path;
 
 /**
  * scheduler service entry point class; services pending scheduler requests until terminated
@@ -59,29 +54,11 @@ public final class SchedulerAppDriver {
 
     final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI());
 
-    final SchedulingDSLCompilationService schedulingDSLCompilationService;
-    try {
-      schedulingDSLCompilationService = new SchedulingDSLCompilationService();
-    } catch (IOException e) {
-      throw new Error("Failed to start SchedulingDSLCompilationService", e);
-    }
-
-    Runtime.getRuntime().addShutdownHook(new Thread(schedulingDSLCompilationService::close));
-
     final var stores = loadStores(config);
 
     //create objects in each service abstraction layer (mirroring MerlinApp)
     final var specificationService = new LocalSpecificationService(stores.specifications());
-    final var scheduleAgent = ThreadedSchedulerAgent.spawn(
-        "scheduler-agent",
-        new SynchronousSchedulerAgent(specificationService,
-                                      merlinService,
-                                      merlinService,
-                                      config.merlinFileStore(),
-                                      config.missionRuleJarPath(),
-                                      config.outputMode(),
-                                      schedulingDSLCompilationService));
-    final var schedulerService = new CachedSchedulerService(stores.results(), scheduleAgent);
+    final var schedulerService = new CachedSchedulerService(stores.results());
     final var scheduleAction = new ScheduleAction(specificationService, schedulerService);
 
     final var generateSchedulingLibAction = new GenerateSchedulingLibAction(merlinService);
@@ -170,16 +147,12 @@ public final class SchedulerAppDriver {
     return new AppConfiguration(
         Integer.parseInt(getEnv("SCHEDULER_PORT", "27185")),
         logger.isDebugEnabled(),
-        Path.of(getEnv("SCHEDULER_LOCAL_STORE", "/usr/src/app/scheduler_file_store")),
         new PostgresStore(getEnv("SCHEDULER_DB_SERVER", "postgres"),
                           getEnv("SCHEDULER_DB_USER", ""),
                           Integer.parseInt(getEnv("SCHEDULER_DB_PORT", "5432")),
                           getEnv("SCHEDULER_DB_PASSWORD", ""),
                           getEnv("SCHEDULER_DB", "aerie_scheduler")),
-        URI.create(getEnv("MERLIN_GRAPHQL_URL", "http://localhost:8080/v1/graphql")),
-        Path.of(getEnv("MERLIN_LOCAL_STORE", "/usr/src/app/merlin_file_store")),
-        Path.of(getEnv("SCHEDULER_RULES_JAR", "/usr/src/app/merlin_file_store/scheduler_rules.jar")),
-        PlanOutputMode.valueOf((getEnv("SCHEDULER_OUTPUT_MODE", "CreateNewOutputPlan")))
+        URI.create(getEnv("MERLIN_GRAPHQL_URL", "http://localhost:8080/v1/graphql"))
     );
   }
 }

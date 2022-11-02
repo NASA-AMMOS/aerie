@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.scheduler.server.services.RevisionData;
 
-public final record SpecificationRevisionData(long specificationRevision) implements RevisionData {
+public record SpecificationRevisionData(long specificationRevision) implements RevisionData {
   @Override
   public MatchResult matches(final RevisionData other) {
     if (!(other instanceof SpecificationRevisionData o)) return MatchResult.failure("");

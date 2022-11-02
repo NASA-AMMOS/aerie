@@ -1,5 +1,14 @@
-package gov.nasa.jpl.aerie.scheduler.server.services;
+package gov.nasa.jpl.aerie.scheduler.worker.services;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
@@ -19,17 +28,10 @@ import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
+import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
+import gov.nasa.jpl.aerie.scheduler.server.services.PlanService;
+import gov.nasa.jpl.aerie.scheduler.server.services.PlanServiceException;
 import org.apache.commons.lang3.tuple.Pair;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
 

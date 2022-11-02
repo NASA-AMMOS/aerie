@@ -21,7 +21,7 @@ This product is using Docker containers to run the application. The Docker conta
 
 Each Aerie service is configured with environment variables. A description of those variables is found in the [Environment Variable Documentation](https://github.com/NASA-AMMOS/aerie/blob/develop/deployment/Environment.md)
 
-Of note, the aerie-merlin, aerie-scheduler, and aerie_merlin_worker(s) can be provided additional JVM arguments as environment variables. For example one may choose to configure the JVM allocated heap size. On must provide any desired JVM flags to the `JAVA_OPTS` environment variable for the container being configured.
+Of note, the aerie-merlin, aerie-scheduler, aerie_merlin_worker(s), and aerie_scheduler_worker(s) can be provided additional JVM arguments as environment variables. For example one may choose to configure the JVM allocated heap size. On must provide any desired JVM flags to the `JAVA_OPTS` environment variable for the container being configured.
 
 ## Network Communications
 
@@ -35,6 +35,7 @@ Aerie employs an orchestrated containerized architecture. Each of the software c
 - aerie-merlin: Handles all the logic and functionality for activity planning.
 - aerie-merlin-worker: Runs simulation jobs requested of the aerie-merlin service.
 - aerie-scheduler: Provides automated activity plan scheduling. 
+- aerie-scheduler-worker: Runs scheduling request jobs requested of the aerie-scheduler service.
 - aerie-ui: Hosts the web application and communicates with Aerie via the GraphQL Apollo Server.
 - postgres: Holds the data for the Merlin server container. This container is optional and included in many of the aerie docker compose files for convenience. Long term deployments will want to integrate a Postgres database not running within a container. 
 - hasura: Serves the Aerie GraphQL API.
