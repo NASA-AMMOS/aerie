@@ -36,7 +36,7 @@
 
 **Cell**: allows a mission model to express **time-dependent state** in a way that can be tracked and managed by the host system.
 
-**Constraint**: an expression built up with the [Aerie constraints eDSL](./constraints/overview.md), which evaluates to a set of windows during which the condition(s) defined by the expression is true or false.
+**Constraint**: an expression built up with the [Aerie constraints eDSL](./user-guide/ui-api-guide/constraints/index.rst), which evaluates to a set of windows during which the condition(s) defined by the expression is true or false.
 
 **Decomposition**:
 A method for modeling the behavior of an activity (root activity) by composing a set of activities. Each composed activity describes some smaller aspect of behavior. The root activity orchestrates the execution of each child activity by interleaving function calls to `spawn()`, `delay()`, and `call()`. The goal of decomposition is to allow mission modelers to modularize their activity modeling code and to provide greater visibility into the simulated behavior of an activity. For example, consider an activity which models taking an observation with a particular spacecraft instrument. The process of taking an observation may include the distinct phases of instrument startup, take observation, and instrument shutdown. The mission modeler can decide to modularize their modeling and use decomposition to model each of the three phases separately and then compose them with a root activity called "observation" which orchestrates the execution of each of the three activities.

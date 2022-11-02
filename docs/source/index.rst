@@ -27,77 +27,53 @@
   :link: user-guide
   :icon: scylla-icon scylla-icon--architecture
   :class: large-6
-  :anchor: Learn more
 
-  [TODO]
+  Get started as a user of the Aerie project.
 
 .. topic-box::
   :title: Contribute
   :link: contribute
   :icon: scylla-icon scylla-icon--about-team
   :class: large-6
-  :anchor: Learn more
 
   Get setup for development as a contributor to the Aerie project.
 
 .. topic-box::
-  :title: Upgrade Guides
-  :link: upgrade-guides
-  :icon: scylla-icon scylla-icon--apps
-  :class: large-6
-  :anchor: Learn more
+  :title: Constraints EDSL APIs
+  :link: constraints-edsl-api
+  :icon: scylla-icon scylla-icon--about-team
+  :class: large-4
 
-  [TODO]
-
-.. topic-box::
-	:title: Constraints EDSL APIs
-	:link: constraints-edsl-api
-	:icon: scylla-icon scylla-icon--about-team
-	:class: large-6
-	:anchor: Learn more
-
-	Constraints EDSL APIs for defining constraints on activity plans.
+  Constraints EDSL APIs for defining constraints on activity plans.
 
 .. topic-box::
-	:title: Scheduling EDSL APIs
-	:link: scheduling-edsl-api
-	:icon: scylla-icon scylla-icon--about-team
-	:class: large-6
-	:anchor: Learn more
+  :title: Scheduling EDSL APIs
+  :link: scheduling-edsl-api
+  :icon: scylla-icon scylla-icon--about-team
+  :class: large-4
 
-	Scheduling EDSL APIs for defining scheduling rules.
+  Scheduling EDSL APIs for defining scheduling rules.
 
-.. .. topic-box::
-  :title: Deployment
-  :link: deployment
-  :icon: scylla-icon scylla-icon--cloud
-  :class: large-6
-  :anchor: Learn more
+.. topic-box::
+  :title: Aerie Glossary
+  :link: aerie-glossary
+  :icon: scylla-icon scylla-icon--glossary
+  :class: large-4
 
-..  Deploy Aerie for individual users, small and large missions.
+  Glossary of terms and technologies used in Aerie.
 
 
 .. raw:: html
 
   </div></div>
-
-.. raw:: html
-
   </div>
 
 .. toctree::
   :hidden:
   :includehidden:
 
-  activity-plans/index
-  aerie-glossary
-  command-expansion/index
-  constraints/index
+  user-guide/index
   contribute/index
-  deployment/index
-  graphql-api/index
-  mission-modeling/index
-  upgrade-guides/index
-  user-interface/index
   constraints-edsl-api/index
   scheduling-edsl-api/index
+  aerie-glossary
