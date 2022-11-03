@@ -8,6 +8,7 @@ Prerequisite Software
 
 .. toctree::
   :includehidden:
+
   install
   environment
   deploy

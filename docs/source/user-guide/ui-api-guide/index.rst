@@ -1,6 +1,6 @@
-========
-UI Guide
-========
+============================
+User Interface and API Guide
+============================
 
 
 .. toctree::
@@ -14,3 +14,4 @@ UI Guide
   plan-collaboration/index
   command-expansion/index
   sequence-editor/index
+  api-examples

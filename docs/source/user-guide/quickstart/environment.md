@@ -1,4 +1,4 @@
-# Environment
+# Environment Files
 
 This document provides detailed information about environment variables for each service in Aerie.
 
@@ -117,8 +117,8 @@ This document provides detailed information about environment variables for each
 
 Additionally, Hasura provides documentation on it's own environment variables you can use to fine-tune your deployment:
 
-1. [graphql-engine](https://hasura.io/docs/latest/graphql/core/deployment/graphql-engine-flags/reference.html#server-flag-reference)
-1. [metadata and migrations](https://hasura.io/docs/latest/graphql/core/migrations/advanced/auto-apply-migrations.html#applying-migrations)
+1. [graphql-engine](https://hasura.io/docs/latest/deployment/graphql-engine-flags/reference/)
+1. [metadata and migrations](https://hasura.io/docs/latest/migrations-metadata-seeds/auto-apply-migrations/#applying-migrations)
 
 ## Postgres
 
