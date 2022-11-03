@@ -308,7 +308,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     final var startTimestamp = simulationWindow.start();
     final var simulationStart = startTimestamp.toInstant();
 
-    final var profiles = ProfileRepository.getProfiles(connection, simulationDatasetRecord.datasetId(), simulationWindow);
+    final var profiles = ProfileRepository.getProfiles(connection, simulationDatasetRecord.datasetId());
     final var activities = getActivities(connection, simulationDatasetRecord.datasetId(), startTimestamp);
     final var topics = getSimulationTopics(connection, simulationDatasetRecord.datasetId());
     final var events = getSimulationEvents(connection, simulationDatasetRecord.datasetId(), startTimestamp);
@@ -456,7 +456,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   {
     final var simulationStart = new Timestamp(results.startTime);
     final var profileSet = ProfileSet.of(results.realProfiles, results.discreteProfiles);
-    ProfileRepository.postResourceProfiles(connection, datasetId, profileSet, simulationStart);
+    ProfileRepository.postResourceProfiles(connection, datasetId, profileSet);
     postActivities(connection, datasetId, results.simulatedActivities, results.unfinishedActivities, simulationStart);
     insertSimulationTopics(connection, datasetId, results.topics);
     insertSimulationEvents(connection, datasetId, results.events, simulationStart);

@@ -11,6 +11,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +23,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
 /*package-local*/ final class ProfileRepository {
   static ProfileSet getProfiles(
       final Connection connection,
-      final long datasetId,
-      final Window simulationWindow
+      final long datasetId
   ) throws SQLException {
     final var realProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, Optional<RealDynamics>>>>>();
     final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, Optional<SerializedValue>>>>>();
@@ -35,14 +35,14 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
           record.name(),
           Pair.of(
               record.type().getRight(),
-              getRealProfileSegments(connection, record.datasetId(), record.id(), simulationWindow)
+              getRealProfileSegments(connection, record.datasetId(), record.id(), record.duration())
           )
         );
         case "discrete" -> discreteProfiles.put(
             record.name(),
             Pair.of(
                 record.type().getRight(),
-                getDiscreteProfileSegments(connection, record.datasetId(), record.id(), simulationWindow)
+                getDiscreteProfileSegments(connection, record.datasetId(), record.id(), record.duration())
             )
         );
         default -> throw new Error("Unrecognized profile type");
@@ -85,10 +85,10 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
       final Connection connection,
       final long datasetId,
       final long profileId,
-      final Window simulationWindow
+      final Duration profileDuration
   ) throws SQLException {
     try (final var getProfileSegmentsAction = new GetProfileSegmentsAction(connection)) {
-      return getProfileSegmentsAction.get(datasetId, profileId, simulationWindow, realDynamicsP);
+      return getProfileSegmentsAction.get(datasetId, profileId, profileDuration, realDynamicsP);
     }
   }
 
@@ -96,18 +96,17 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
       final Connection connection,
       final long datasetId,
       final long profileId,
-      final Window simulationWindow
+      final Duration profileDuration
   ) throws SQLException {
     try (final var getProfileSegmentsAction = new GetProfileSegmentsAction(connection)) {
-      return getProfileSegmentsAction.get(datasetId, profileId, simulationWindow, serializedValueP);
+      return getProfileSegmentsAction.get(datasetId, profileId, profileDuration, serializedValueP);
     }
   }
 
   static void postResourceProfiles(
       final Connection connection,
       final long datasetId,
-      final ProfileSet profileSet,
-      final Timestamp simulationStart
+      final ProfileSet profileSet
   ) throws SQLException
   {
     try (final var postProfilesAction = new PostProfilesAction(connection)) {
@@ -119,8 +118,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
           connection,
           datasetId,
           profileRecords,
-          profileSet,
-          simulationStart);
+          profileSet);
     }
   }
 
@@ -128,8 +126,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
       final Connection connection,
       final long datasetId,
       final Map<String, ProfileRecord> records,
-      final ProfileSet profileSet,
-      final Timestamp simulationStart
+      final ProfileSet profileSet
   ) throws SQLException {
     final var realProfiles = profileSet.realProfiles();
     final var discreteProfiles = profileSet.discreteProfiles();
@@ -141,14 +138,12 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
             connection,
             datasetId,
             record,
-            realProfiles.get(resource).getRight(),
-            simulationStart);
+            realProfiles.get(resource).getRight());
         case "discrete" -> postDiscreteProfileSegments(
             connection,
             datasetId,
             record,
-            discreteProfiles.get(resource).getRight(),
-            simulationStart);
+            discreteProfiles.get(resource).getRight());
         default -> throw new Error("Unrecognized profile type " + record.type().getLeft());
       }
     }
@@ -158,11 +153,10 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
       final Connection connection,
       final long datasetId,
       final ProfileRecord profileRecord,
-      final List<Pair<Duration, Optional<RealDynamics>>> segments,
-      final Timestamp simulationStart
+      final List<Pair<Duration, Optional<RealDynamics>>> segments
   ) throws SQLException {
     try (final var postProfileSegmentsAction = new PostProfileSegmentsAction(connection)) {
-      postProfileSegmentsAction.apply(datasetId, profileRecord, segments, simulationStart, realDynamicsP);
+      postProfileSegmentsAction.apply(datasetId, profileRecord, segments, realDynamicsP);
     }
   }
 
@@ -170,11 +164,10 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
       final Connection connection,
       final long datasetId,
       final ProfileRecord profileRecord,
-      final List<Pair<Duration, Optional<SerializedValue>>> segments,
-      final Timestamp simulationStart
+      final List<Pair<Duration, Optional<SerializedValue>>> segments
   ) throws SQLException {
     try (final var postProfileSegmentsAction = new PostProfileSegmentsAction(connection)) {
-      postProfileSegmentsAction.apply(datasetId, profileRecord, segments, simulationStart, serializedValueP);
+      postProfileSegmentsAction.apply(datasetId, profileRecord, segments, serializedValueP);
     }
   }
 }

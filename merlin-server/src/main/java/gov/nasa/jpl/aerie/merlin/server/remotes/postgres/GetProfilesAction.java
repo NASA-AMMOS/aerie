@@ -1,11 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import org.apache.commons.lang3.tuple.Pair;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.intellij.lang.annotations.Language;
 
-import javax.json.Json;
-import java.io.Reader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -20,7 +17,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       select
         p.id,
         p.name,
-        p.type
+        p.type,
+        p.duration
       from profile as p
       where
         p.dataset_id = ?
@@ -34,6 +32,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
   public List<ProfileRecord> get(final long datasetId) throws SQLException {
     final var records = new ArrayList<ProfileRecord>();
+    PreparedStatements.setIntervalStyle(statement.getConnection(), PreparedStatements.PGIntervalStyle.ISO8601);
     this.statement.setLong(1, datasetId);
     final var resultSet = statement.executeQuery();
     while (resultSet.next()) {
@@ -42,7 +41,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       final var type = getJsonColumn(resultSet, "type", profileTypeP).getSuccessOrThrow(
               failureReason -> new Error(
                   "Corrupt profile type: " + failureReason.reason()));
-      records.add(new ProfileRecord(profileId, datasetId, resourceName, type));
+      final var duration = Duration.fromISO8601String(resultSet.getString(4));
+      records.add(new ProfileRecord(profileId, datasetId, resourceName, type, duration));
     }
 
     return records;

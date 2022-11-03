@@ -18,7 +18,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
 public final class PostProfileSegmentsAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
       insert into profile_segment (dataset_id, profile_id, start_offset, dynamics, is_gap)
-      values (?, ?, ?::timestamptz - ?::timestamptz, ?::json, ?)
+      values (?, ?, ?::interval, ?::json, ?)
     """;
   private final PreparedStatement statement;
 
@@ -30,7 +30,6 @@ public final class PostProfileSegmentsAction implements AutoCloseable {
       final long datasetId,
       final ProfileRecord profileRecord,
       final List<Pair<Duration, Optional<Dynamics>>> segments,
-      final Timestamp simulationStart,
       final JsonParser<Dynamics> dynamicsP
       ) throws SQLException {
 
@@ -41,36 +40,21 @@ public final class PostProfileSegmentsAction implements AutoCloseable {
     for (final var pair : segments) {
       final var duration = pair.getLeft();
       final var dynamics = pair.getRight();
-      final var timestamp = simulationStart.plusMicros(accumulatedOffset.dividedBy(Duration.MICROSECOND));
 
       this.statement.setLong(1, datasetId);
       this.statement.setLong(2, profileRecord.id());
-      setTimestamp(this.statement, 3, timestamp);
-      setTimestamp(this.statement, 4, simulationStart);
+      this.statement.setString(3, accumulatedOffset.toISO8601String());
       if (dynamics.isPresent()) {
-        this.statement.setString(5, serializeDynamics(dynamics.get(), dynamicsP));
-        this.statement.setBoolean(6, false);
+        this.statement.setString(4, serializeDynamics(dynamics.get(), dynamicsP));
+        this.statement.setBoolean(5, false);
       } else {
-        this.statement.setString(5, "null");
-        this.statement.setBoolean(6, true);
+        this.statement.setString(4, "null");
+        this.statement.setBoolean(5, true);
       }
 
       this.statement.addBatch();
 
       accumulatedOffset = Duration.add(accumulatedOffset, duration);
-    }
-
-    // Profiles must explicitly end in a gap, because the last segment's duration data is lost when
-    // inserting into the database.
-    if (segments.get(segments.size()-1).getValue().isPresent()) {
-      this.statement.setLong(1, datasetId);
-      this.statement.setLong(2, profileRecord.id());
-      final var timestamp = simulationStart.plusMicros(accumulatedOffset.dividedBy(Duration.MICROSECOND));
-      setTimestamp(this.statement, 3, timestamp);
-      setTimestamp(this.statement, 4, simulationStart);
-      this.statement.setString(5, "null");
-      this.statement.setBoolean(6, true);
-      this.statement.addBatch();
     }
 
     final var results = this.statement.executeBatch();

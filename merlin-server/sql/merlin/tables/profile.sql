@@ -4,6 +4,7 @@ create table profile (
 
   name text not null,
   type jsonb null,
+  duration interval not null,
 
   constraint profile_synthetic_key
     primary key (id),
@@ -24,3 +25,5 @@ comment on column profile.name is e''
   'A human-readable name for this profile, unique within its containing dataset.';
 comment on column profile.type is e''
   'The type of behavior this profile expresses. The segments of this profile must abide by this type.';
+comment on column profile.duration is e''
+  'The duration of the profile after the start time stored in the dataset.';
