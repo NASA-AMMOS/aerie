@@ -54,6 +54,6 @@ In general, the main components to the markup of any document include:
   * :doc:`Tables <tables>`
   * :doc:`Tabs <tabs>`
   * :doc:`Text <text>`
-  * :doc:`Toc <toc>`
+  * :doc:`Table of Contents (TOC) <toc>`
   * :doc:`Topic box <topic-box>`
   * :doc:`Versions <versions>`

@@ -5,21 +5,7 @@ An include directive allows you to include the entire contents of one restructur
 This is the easiest way to control content re-use.
 
 When given an absolute path, the directive takes it as relative to the root of the source directory.
-It is Scylla practice to place global include files in the *rst_include* directory.
-
-For example, here are some very commonly used include statements:
-
-.. code-block:: none
-
-   .. include:: /rst_include/scylla-commands-stop-index.rst
-
-.. code-block:: none
-
-   .. include:: /rst_include/scylla-commands-start-index.rst
-
-.. code-block:: none
-
-   .. include:: /rst_include/scylla-commands-restart-index.rst
+It is Aerie practice to place global include files in the *rst_include* directory.
 
 Literal include
 ---------------
@@ -35,5 +21,5 @@ For example:
 
 Gets the ``conf.py`` file from the parent directory and displays the first 10 lines.
 
-.. literalinclude:: ../conf.py
+.. literalinclude:: ../../../conf.py
       :lines: 1-10

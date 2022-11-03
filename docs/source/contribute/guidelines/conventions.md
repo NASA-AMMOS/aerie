@@ -1,3 +1,6 @@
+---
+orphan: true
+---
 # Brand Types
 
 In brief, a brand is a type-level witness for a single value.

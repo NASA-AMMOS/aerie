@@ -15,10 +15,11 @@ This is an inline directive which should be used when introducing or deprecating
 
    .. deprecated:: version
 
-When using, these directives a blank line must follow. Until we have separated the content, please use the product name with the version number.
+When using, these directives a blank line must follow.
 
-.. versionadded:: 1.1 Scylla Manager
+.. versionadded:: 1.1
 
-.. versionchanged:: 2018.1 Scylla Enterprise
+.. versionchanged:: 2018.1
 
-.. deprecated:: 2.0 Scylla Open Source
+.. deprecated:: 2.0
+

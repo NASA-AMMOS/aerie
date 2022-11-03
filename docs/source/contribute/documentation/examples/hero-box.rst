@@ -57,8 +57,8 @@ The ``hero-box`` directive supports the following options:
   * - ``image``
     - string
     -
-    - /_static/img/mascots/scylla-enterprise.svg
-    - Path to the image. The image should be located in the project's ``_static`` folder.
+    - /_static/img/logos/aerie-logo-light.svg
+    - Path to the image.
   * - ``search_box``
     - flag
     -
@@ -96,7 +96,7 @@ Using:
 
     .. hero-box::
         :title: Lorem Ipsum
-        :image: /_static/img/mascots/scylla-enterprise.svg
+        :image: /_static/img/logos/aerie-logo-light.svg
 
         Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 
@@ -104,7 +104,7 @@ Results in:
 
 .. hero-box::
     :title: Lorem Ipsum
-    :image: /_static/img/mascots/scylla-enterprise.svg
+    :image: /_static/img/logos/aerie-logo-light.svg
 
     Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 
@@ -138,7 +138,7 @@ Using:
 
     .. hero-box::
         :title: Lorem Ipsum
-        :image: /_static/img/mascots/scylla-enterprise.svg
+        :image: /_static/img/logos/aerie-logo-light.svg
         :button_icon: fa fa-github
         :button_url: #
         :button_text: Project Name
@@ -149,7 +149,7 @@ Results in:
 
 .. hero-box::
     :title: Lorem Ipsum
-    :image: /_static/img/mascots/scylla-enterprise.svg
+    :image: /_static/img/logos/aerie-logo-light.svg
     :button_icon: fa fa-github
     :button_url: #
     :button_text: Project Name

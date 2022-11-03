@@ -1,7 +1,7 @@
 Headings
 ========
 
-While Sphinx supports many layers of headings, at Scylla we try to keep the hierarchy limited to 4, excluding the title.
+While Sphinx supports many layers of headings, we try to keep the hierarchy limited to 4, excluding the title.
 If you have the need for a H4, chances are that you need to re-arrange the content.
 Watch the length of your text vs the markup. It must be at least as long as the text.
 It can be longer, but shorter will produce an error.
