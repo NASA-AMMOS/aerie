@@ -2,7 +2,7 @@
 - "!include public_activity_directive_validations.yaml"
 - "!include public_activity_type.yaml"
 - "!include public_activity_directive_metadata_schema.yaml"
-- "!include public_condition.yaml"
+- "!include public_constraint.yaml"
 - "!include public_dataset.yaml"
 - "!include public_mission_model.yaml"
 - "!include public_mission_model_parameters.yaml"

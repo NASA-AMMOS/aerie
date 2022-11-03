@@ -30,7 +30,7 @@ begin;
   \ir tables/event.sql
 
   -- Analysis intents
-  \ir tables/condition.sql
+  \ir tables/constraint.sql
   \ir tables/profile_request.sql
 
   \ir tables/mission_model_parameters.sql

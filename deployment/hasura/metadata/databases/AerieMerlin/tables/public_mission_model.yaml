@@ -20,12 +20,12 @@ array_relationships:
       table:
         name: activity_type
         schema: public
-- name: conditions
+- name: constraints
   using:
     foreign_key_constraint_on:
       column: model_id
       table:
-        name: condition
+        name: constraint
         schema: public
 - name: plans
   using:
