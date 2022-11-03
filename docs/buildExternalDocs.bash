@@ -3,7 +3,6 @@
 # Build the EDSL documentation and insert it into the current build directory
 ../gradlew publishDocs -p ../
 
-
 mkdir -p ./source/constraints-edsl-api
 cp -a ../merlin-server/constraints-dsl-compiler/build/docs/. ./source/constraints-edsl-api
 rm -f ./source/constraints-edsl-api/.nojekyll
@@ -27,6 +26,12 @@ do
   sed -i -e 's/README/index/g' $file #StreamEDitor -in-place 'backupExtension' 'Substitution/matchString/replaceString/Global'
 done
 for file in ./source/constraints-edsl-api/enums/*.md
+do
+  [ -e "$file" ] || continue
+  tail -n +3 "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+  sed -i -e 's/README/index/g' $file
+done
+for file in ./source/constraints-edsl-api/modules/*.md
 do
   [ -e "$file" ] || continue
   tail -n +3 "$file" > "$file.tmp" && mv "$file.tmp" "$file"
@@ -90,6 +95,7 @@ echo '
 
    classes/*
    enums/*
+   modules/*
 ```' | cat ./source/constraints-edsl-api/README.md - > ./source/constraints-edsl-api/index.md
 
 # Generate an index.md for scheduling-dsl-api
