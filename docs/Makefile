@@ -26,9 +26,14 @@ all: dirhtml
 setupenv:
 	pip install -q poetry
 
+# Install poetry packages
 .PHONY: setup
 setup:
 	$(POETRY) install
+
+# Update poetry packages
+.PHONY: update
+update:
 	$(POETRY) update
 
 # Clean commands
