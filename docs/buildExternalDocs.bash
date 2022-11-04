@@ -17,8 +17,8 @@ rm -rf ./source/scheduling-edsl-api/*/Constraint_eDSL.*
 # Remove the extra navigation bar from the generated Constraints EDSL files
 tail -n +3 "./source/constraints-edsl-api/README.md" > "./source/constraints-edsl-api/README.tmp" && mv "./source/constraints-edsl-api/README.tmp" "./source/constraints-edsl-api/README.md"
 sed -i -e 's/README/index/g' ./source/constraints-edsl-api/README.md
-# Remove the word 'Documentation' in the title
-sed -i -e 's/Documentation//' ./source/constraints-edsl-api/README.md
+# Remove the word 'Documentation' from Constraints EDSL title
+sed -i -e 's/Constraints eDSL Documentation/Constraints eDSL/' ./source/constraints-edsl-api/README.md
 
 for file in ./source/constraints-edsl-api/classes/*.md
 do
