@@ -3,9 +3,6 @@
 # Build the EDSL documentation and insert it into the current build directory
 ../gradlew publishDocs -p ../
 
-ls -1 ../merlin-server/constraints-dsl-compiler/build/
-pwd
-ls -1 ./source
 
 mkdir -p ./source/constraints-edsl-api
 cp -a ../merlin-server/constraints-dsl-compiler/build/docs/. ./source/constraints-edsl-api
@@ -20,6 +17,8 @@ rm -rf ./source/scheduling-edsl-api/*/Constraint_eDSL.*
 # Remove the extra navigation bar from the generated Constraints EDSL files
 tail -n +3 "./source/constraints-edsl-api/README.md" > "./source/constraints-edsl-api/README.tmp" && mv "./source/constraints-edsl-api/README.tmp" "./source/constraints-edsl-api/README.md"
 sed -i -e 's/README/index/g' ./source/constraints-edsl-api/README.md
+# Remove the word 'Documentation' in the title
+sed -i -e 's/Documentation//' ./source/constraints-edsl-api/README.md
 
 for file in ./source/constraints-edsl-api/classes/*.md
 do

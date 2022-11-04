@@ -11,7 +11,7 @@ Migrating a mission model from 0.13.1 to 0.13.2 will require two modifications.
 3. The ``waitFor(String id)`` has been replaced with ``call(final TaskFactory<T> task)``. There is
 no change in the semantics.
 
-For further information see the docs for :doc:`activity effect modeling <../mission-modeling/activities>`
+For further information see the docs for :doc:`activity effect modeling <../ui-api-guide/create-simulate-plans/add-edit-activities>`
 
 Update Java Version 19
 ----------------------
