@@ -244,7 +244,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final var createSpanPartitionAction = new CreateSpanPartitionAction(connection);
       final var createEventPartitionAction = new CreateEventPartitionAction(connection);
 
-//      createSimulationDatasetPartitionsAction.apply(datasetId);
+      createSimulationDatasetPartitionsAction.apply(datasetId);
       createSpanPartitionAction.apply(datasetId);
       createEventPartitionAction.apply(datasetId);
       transactionContext.commit();
@@ -622,9 +622,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     public void succeedWith(final SimulationResults results) {
       try (final var connection = dataSource.getConnection();
            final var transactionContext = new TransactionContext(connection)) {
-
         final var parallelInserter = new ParallelInserter();
-        postSimulationResults(connection, datasetId, results);
+        postSimulationResults(parallelInserter, datasetId, results);
         parallelInserter.execute(dataSource);
         transactionContext.commit();
       } catch (final SQLException ex) {

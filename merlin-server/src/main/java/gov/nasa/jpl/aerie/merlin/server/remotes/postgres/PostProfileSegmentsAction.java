@@ -14,7 +14,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
 public final class PostProfileSegmentsAction implements AutoCloseable {
   public static final @Language("SQL") String sql = """
       insert into profile_segment (dataset_id, profile_id, start_offset, dynamics)
-      values (?, ?, ?::timestamptz, ?)
+      values (?, ?, ?::timestamptz - ?::timestamptz, ?)
     """;
 //  private final PreparedStatement statement;
   public PostProfileSegmentsAction() {
@@ -47,8 +47,8 @@ public final class PostProfileSegmentsAction implements AutoCloseable {
         statement.setLong(1, datasetId);
         statement.setLong(2, profileRecord.id());
         setTimestamp(statement, 3, timestamp);
-//        setTimestamp(statement, 4, simulationStart);
-        statement.setString(4, serializeDynamics(dynamics, dynamicsP));
+        setTimestamp(statement, 4, simulationStart);
+        statement.setString(5, serializeDynamics(dynamics, dynamicsP));
       });
 
       accumulatedOffset = Duration.add(accumulatedOffset, duration);

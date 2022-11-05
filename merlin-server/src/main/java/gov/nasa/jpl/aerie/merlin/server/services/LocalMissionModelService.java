@@ -13,6 +13,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
@@ -218,11 +219,13 @@ public final class LocalMissionModelService implements MissionModelService {
    * Validate that a set of activity parameters conforms to the expectations of a named mission model.
    *
    * @param message The parameters defining the simulation to perform.
+   * @param writer
    * @return A set of samples over the course of the simulation.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
   @Override
-  public SimulationResults runSimulation(final CreateSimulationMessage message)
+  public SimulationResults runSimulation(final CreateSimulationMessage message,
+                            final ResultsProtocol.WriterRole writer)
   throws NoSuchMissionModelException
   {
     final var config = message.configuration();
@@ -232,11 +235,12 @@ public final class LocalMissionModelService implements MissionModelService {
     }
 
     // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
-    return SimulationDriver.simulate(
+    SimulationDriver.simulate(
         loadAndInstantiateMissionModel(message.missionModelId(), message.startTime(), SerializedValue.of(config)),
         message.activityInstances(),
         message.startTime(),
-        message.samplingDuration());
+        message.samplingDuration(),
+        writer);
   }
 
   @Override

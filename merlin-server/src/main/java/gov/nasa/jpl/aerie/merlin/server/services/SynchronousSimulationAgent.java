@@ -73,12 +73,12 @@ public record SynchronousSimulationAgent (
         }
       }
 
-      results = this.missionModelService.runSimulation(new CreateSimulationMessage(
+      this.missionModelService.runSimulation(new CreateSimulationMessage(
           plan.missionModelId,
           plan.startTimestamp.toInstant(),
           planDuration,
           serializeScheduledActivities(plan.startTimestamp.toInstant(), plan.activityInstances),
-          plan.configuration));
+          plan.configuration), writer);
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       writer.failWith(b -> b
           .type("NO_SUCH_MISSION_MODEL")

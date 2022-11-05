@@ -1,10 +1,22 @@
 package gov.nasa.jpl.aerie.merlin.server;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
 import java.util.function.Consumer;
 
 public final class ResultsProtocol {
@@ -40,6 +52,15 @@ public final class ResultsProtocol {
     //   of the underlying resource in order to deallocate it.
     void succeedWith(SimulationResults results);
 
+    void succeed();
+
+    void writeMetadata(SimulationMetadata metadata);
+
+    void writeSegment(SimulationSegment segment);
+    void writeActivityInfo(
+        Map<ActivityInstanceId, SimulatedActivity> simulatedActivities,
+        Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities);
+
     void failWith(SimulationFailure reason);
 
     default void failWith(final Consumer<SimulationFailure.Builder> builderConsumer) {
@@ -50,4 +71,17 @@ public final class ResultsProtocol {
   }
 
   public interface OwnerRole extends ReaderRole, WriterRole {}
+
+  record SimulationMetadata(
+      Instant startTime,
+      List<Triple<Integer, String, ValueSchema>> topics,
+      Map<String, ValueSchema> realProfiles) {}
+
+  record SimulationSegment(
+      Duration elapsedTime,
+      Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
+      Map<String, List<Pair<Duration, SerializedValue>>> discreteProfiles,
+      SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events
+      // TODO activity info
+  ) {}
 }

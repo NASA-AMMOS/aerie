@@ -26,21 +26,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public final class SimulationDriver {
-
-  public static <Model>
-  void simulate(
-      final MissionModel<Model> missionModel,
-      final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule,
-      final Instant startTime,
-      final Duration simulationDuration,
-      final Consumer<SimulationResults> writer
-  ) {
-    writer.accept(simulate(missionModel, schedule, startTime, simulationDuration));
-  }
 
   record SimulationMetadata(
       Instant startTime,
@@ -61,8 +49,10 @@ public final class SimulationDriver {
    * Expectation: metadata and activity info are to be written once (metadata at beginning and activityinfo at end)
    * writeSegment may be called many times. The promise there is that no information should be written twice.
    */
-  interface SimulationResultsWriter {
-    void writeMetadata(SimulationMetadata metadata);
+  public interface SimulationResultsWriter {
+    SimulationResultsStreamer writeMetadata(SimulationMetadata metadata);
+  }
+  public interface SimulationResultsStreamer {
     void writeSegment(SimulationSegment segment);
     void writeActivityInfo(
         Map<ActivityInstanceId, SimulatedActivity> simulatedActivities,
@@ -79,24 +69,22 @@ public final class SimulationDriver {
     final List<SimulationMetadata> metadataList = new ArrayList<>();
     final List<SimulationSegment> segments = new ArrayList<>();
     final List<Pair<Map<ActivityInstanceId, SimulatedActivity>, Map<ActivityInstanceId, UnfinishedActivity>>> activities = new ArrayList<>();
-    simulate(missionModel, schedule, startTime, simulationDuration, new SimulationResultsWriter() {
-      @Override
-      public void writeMetadata(final SimulationMetadata metadata$) {
-        metadataList.add(metadata$);
-      }
+    simulate(missionModel, schedule, startTime, simulationDuration, metadata$ -> {
+      metadataList.add(metadata$);
+      return new SimulationResultsStreamer() {
+        @Override
+        public void writeSegment(final SimulationSegment segment) {
+          segments.add(segment);
+        }
 
-      @Override
-      public void writeSegment(final SimulationSegment segment) {
-        segments.add(segment);
-      }
-
-      @Override
-      public void writeActivityInfo(
-          final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities,
-          final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities)
-      {
-        activities.add(Pair.of(simulatedActivities, unfinishedActivities));
-      }
+        @Override
+        public void writeActivityInfo(
+            final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities,
+            final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities)
+        {
+          activities.add(Pair.of(simulatedActivities, unfinishedActivities));
+        }
+      };
     });
     if (metadataList.size() != 1) {
       throw new Error("Should call writeMetadata exactly once, called it " + metadataList.size() + " times.");
@@ -153,7 +141,7 @@ public final class SimulationDriver {
       final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule,
       final Instant startTime,
       final Duration simulationDuration,
-      final SimulationResultsWriter writer
+      final WriterRole
   ) {
     try (final var engine = new SimulationEngine()) {
       /* The top-level simulation timeline. */
@@ -172,6 +160,7 @@ public final class SimulationDriver {
 
       final var topics = missionModel.getTopics();
       final Map<MissionModel.SerializableTopic<?>, Integer> serializableTopicToId;
+      final SimulationResultsStreamer streamer;
       {
         final List<Triple<Integer, String, ValueSchema>> serializedTopics = new ArrayList<>();
         serializableTopicToId = new HashMap<>();
@@ -195,7 +184,7 @@ public final class SimulationDriver {
             .filter($ -> $.getValue().resource.getType().equals("discrete"))
             .map($ -> Pair.of($.getKey(), $.getValue().resource.getOutputType().getSchema()))
             .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
-        writer.writeMetadata(new SimulationMetadata(
+        streamer = metadataWriter.writeMetadata(new SimulationMetadata(
             startTime,
             serializedTopics,
             realProfileSchemas,
@@ -245,7 +234,7 @@ public final class SimulationDriver {
         timelineSegment.add(delta);
 
         if (delta.isPositive()) {
-          writeSegment(writer, timelineSegment, elapsedTime, resourceProfiles, topics, serializableTopicToId);
+          writeSegment(streamer, timelineSegment, elapsedTime, resourceProfiles, topics, serializableTopicToId);
           timelineSegment = new TemporalEventSource();
           for (final var profile : resourceProfiles.entrySet()) {
             profile.getValue().clear();
@@ -271,12 +260,12 @@ public final class SimulationDriver {
           timeline,
           topics
       );
-      writer.writeActivityInfo(results.getLeft(), results.getRight());
+      streamer.writeActivityInfo(results.getLeft(), results.getRight());
     }
   }
 
   private static void writeSegment(
-      SimulationResultsWriter writer,
+      SimulationResultsStreamer streamer,
       TemporalEventSource timeline,
       Duration elapsedTime,
       HashMap<String, SimulationEngine.ResourceProfilePair<?>> resourceProfiles,
@@ -337,7 +326,7 @@ public final class SimulationDriver {
             "Resource `%s` has unknown type `%s`".formatted(name, resource.getType()));
       }
     }
-    writer.writeSegment(new SimulationSegment(
+    streamer.writeSegment(new SimulationSegment(
         elapsedTime,
         realProfiles
             .entrySet()
