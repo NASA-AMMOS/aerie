@@ -8,13 +8,13 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
 public final class ThreadedTask<Return> implements Task<Return> {
   private final Scoped<Context> rootContext;
   private final Supplier<Return> task;
-  private final ExecutorService executor;
+  private final Executor executor;
 
   private final ArrayBlockingQueue<TaskRequest> hostToTask = new ArrayBlockingQueue<>(1);
   private final ArrayBlockingQueue<TaskResponse<Return>> taskToHost = new ArrayBlockingQueue<>(1);
@@ -22,7 +22,7 @@ public final class ThreadedTask<Return> implements Task<Return> {
   private Lifecycle lifecycle = Lifecycle.Inactive;
   private Return returnValue;
 
-  public ThreadedTask(final ExecutorService executor, final Scoped<Context> rootContext, final Supplier<Return> task) {
+  public ThreadedTask(final Executor executor, final Scoped<Context> rootContext, final Supplier<Return> task) {
     this.rootContext = Objects.requireNonNull(rootContext);
     this.task = Objects.requireNonNull(task);
     this.executor = Objects.requireNonNull(executor);
