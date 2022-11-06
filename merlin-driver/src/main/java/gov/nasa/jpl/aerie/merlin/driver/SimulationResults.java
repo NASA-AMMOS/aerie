@@ -19,7 +19,6 @@ public final class SimulationResults {
   public final Instant startTime;
   public final Map<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>> realProfiles;
   public final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles;
-  public final Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples;
   public final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities;
   public final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities;
   public final List<Triple<Integer, String, ValueSchema>> topics;
@@ -38,10 +37,13 @@ public final class SimulationResults {
     this.realProfiles = realProfiles;
     this.discreteProfiles = discreteProfiles;
     this.topics = topics;
-    this.resourceSamples = takeSamples(realProfiles, discreteProfiles);
     this.simulatedActivities = simulatedActivities;
     this.unfinishedActivities = unfinishedActivities;
     this.events = events;
+  }
+
+  public static Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples(final SimulationResults results) {
+      return takeSamples(results.realProfiles, results.discreteProfiles);
   }
 
   private static Map<String, List<Pair<Duration, SerializedValue>>>

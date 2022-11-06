@@ -3,14 +3,13 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
-import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
-import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
@@ -78,7 +77,7 @@ public final class GetSimulationResultsAction {
     final var revisionData = this.planService.getPlanRevisionData(planId);
     return this.simulationService
         .get(planId, revisionData)
-        .map(r -> r.resourceSamples)
+        .map(SimulationResults::resourceSamples)
         .orElseGet(Collections::emptyMap);
   }
 

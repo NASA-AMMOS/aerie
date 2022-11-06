@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.banananation;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -38,6 +39,6 @@ public final class Main {
 
     final var simulationResults = SimulationUtility.simulate(schedule, simulationDuration);
 
-    System.out.println(simulationResults.resourceSamples);
+    System.out.println(SimulationResults.resourceSamples(simulationResults));
   }
 }
