@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -10,7 +11,6 @@ import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.RealProfile;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.io.Serial;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -24,9 +24,9 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
+import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.durationP;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
-import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
 
 public final class ProfileParsers {
   public static final JsonParser<RealDynamics> realDynamicsP
@@ -37,21 +37,21 @@ public final class ProfileParsers {
           untuple(RealDynamics::linear),
           $ -> tuple($.initial, $.rate));
 
-  public static final JsonParser<Pair<Duration, Optional<RealDynamics>>> realProfileSegmentP
+  public static final JsonParser<ProfileSegment<Optional<RealDynamics>>> realProfileSegmentP
       = productP
       . field("duration", durationP)
       . optionalField("dynamics", realDynamicsP)
       . map(
-          untuple((BiFunction<Duration, Optional<RealDynamics>, Pair<Duration, Optional<RealDynamics>>>) Pair::of),
-          $ -> tuple($.getLeft(), $.getRight()));
+          untuple((BiFunction<Duration, Optional<RealDynamics>, ProfileSegment<Optional<RealDynamics>>>) ProfileSegment::new),
+          $ -> tuple($.extent(), $.dynamics()));
 
-  public static final JsonParser<Pair<Duration, Optional<SerializedValue>>> discreteProfileSegmentP
+  public static final JsonParser<ProfileSegment<Optional<SerializedValue>>> discreteProfileSegmentP
       = productP
       . field("duration", durationP)
       . optionalField("dynamics", serializedValueP)
       . map(
-          untuple((BiFunction<Duration, Optional<SerializedValue>, Pair<Duration, Optional<SerializedValue>>>) Pair::of),
-          $ -> tuple($.getLeft(), $.getRight()));
+          untuple((BiFunction<Duration, Optional<SerializedValue>, ProfileSegment<Optional<SerializedValue>>>) ProfileSegment::new),
+          $ -> tuple($.extent(), $.dynamics()));
 
   public static final JsonParser<RealProfile> realProfileP
       = productP
@@ -75,8 +75,8 @@ public final class ProfileParsers {
       = mapP(chooseP(realProfileP, discreteProfileP))
       . map(
           profiles -> {
-            final var realProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, Optional<RealDynamics>>>>>();
-            final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, Optional<SerializedValue>>>>>();
+            final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<Optional<RealDynamics>>>>>();
+            final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<Optional<SerializedValue>>>>>();
             for (final var entry : profiles.entrySet()) {
               final var name = entry.getKey();
               final var profile = entry.getValue();

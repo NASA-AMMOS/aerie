@@ -4,9 +4,9 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.IntervalMap;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Iterator;
 import java.util.List;
@@ -139,25 +139,25 @@ public final class LinearProfile implements Profile<LinearProfile>, Iterable<Seg
     );
   }
 
-  public static LinearProfile fromSimulatedProfile(final List<Pair<Duration, RealDynamics>> simulatedProfile) {
+  public static LinearProfile fromSimulatedProfile(final List<ProfileSegment<RealDynamics>> simulatedProfile) {
     return fromProfileHelper(Duration.ZERO, simulatedProfile, Optional::of);
   }
 
-  public static LinearProfile fromExternalProfile(final Duration offsetFromPlanStart, final List<Pair<Duration, Optional<RealDynamics>>> externalProfile) {
+  public static LinearProfile fromExternalProfile(final Duration offsetFromPlanStart, final List<ProfileSegment<Optional<RealDynamics>>> externalProfile) {
     return fromProfileHelper(offsetFromPlanStart, externalProfile, $ -> $);
   }
 
   private static <T> LinearProfile fromProfileHelper(
       final Duration offsetFromPlanStart,
-      final List<Pair<Duration, T>> profile,
+      final List<ProfileSegment<T>> profile,
       final Function<T, Optional<RealDynamics>> transform
   ) {
     final var result = new IntervalMap.Builder<LinearEquation>();
     var cursor = offsetFromPlanStart;
     for (final var pair: profile) {
-      final var nextCursor = cursor.plus(pair.getKey());
+      final var nextCursor = cursor.plus(pair.extent());
 
-      final var value = transform.apply(pair.getValue());
+      final var value = transform.apply(pair.dynamics());
       final Duration finalCursor = cursor;
       value.ifPresent(
           $ -> result.set(

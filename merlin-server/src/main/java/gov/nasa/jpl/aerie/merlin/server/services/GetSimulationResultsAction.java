@@ -86,8 +86,8 @@ public final class GetSimulationResultsAction {
 
       final var timeline = new ArrayList<Pair<Duration, SerializedValue>>();
       for (final var piece : profile) {
-        final var extent = piece.getLeft();
-        final var dynamics = piece.getRight();
+        final var extent = piece.extent();
+        final var dynamics = piece.dynamics();
 
         timeline.add(Pair.of(elapsed, SerializedValue.of(
             dynamics.initial)));
@@ -104,8 +104,8 @@ public final class GetSimulationResultsAction {
 
       final var timeline = new ArrayList<Pair<Duration, SerializedValue>>();
       for (final var piece : profile) {
-        final var extent = piece.getLeft();
-        final var value = piece.getRight();
+        final var extent = piece.extent();
+        final var value = piece.dynamics();
 
         timeline.add(Pair.of(elapsed, value));
         elapsed = elapsed.plus(extent);

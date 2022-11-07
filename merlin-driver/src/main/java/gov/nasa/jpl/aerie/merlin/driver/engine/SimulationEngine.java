@@ -457,8 +457,8 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     // Extract profiles for every resource.
-    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>>();
-    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
+    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
+    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
 
     for (final var entry : engine.resources.entrySet()) {
       final var id = entry.getKey();
@@ -630,12 +630,12 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   private static <Target, Dynamics>
-  List<Pair<Duration, Target>> serializeProfile(
+  List<ProfileSegment<Target>> serializeProfile(
       final Duration elapsedTime,
       final ProfilingState<Dynamics> state,
       final Translator<Target> translator
   ) {
-    final var profile = new ArrayList<Pair<Duration, Target>>(state.profile().segments().size());
+    final var profile = new ArrayList<ProfileSegment<Target>>(state.profile().segments().size());
 
     final var iter = state.profile().segments().iterator();
     if (iter.hasNext()) {
@@ -643,13 +643,13 @@ public final class SimulationEngine implements AutoCloseable {
       while (iter.hasNext()) {
         final var nextSegment = iter.next();
 
-        profile.add(Pair.of(
+        profile.add(new ProfileSegment<>(
             nextSegment.startOffset().minus(segment.startOffset()),
             translator.apply(state.resource(), segment.dynamics())));
         segment = nextSegment;
       }
 
-      profile.add(Pair.of(
+      profile.add(new ProfileSegment<>(
           elapsedTime.minus(segment.startOffset()),
           translator.apply(state.resource(), segment.dynamics())));
     }

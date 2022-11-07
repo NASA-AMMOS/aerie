@@ -3,20 +3,18 @@ package gov.nasa.jpl.aerie.constraints.model;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Optional;
 
-import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
 public class DiscreteProfileTest {
@@ -110,9 +108,9 @@ public class DiscreteProfileTest {
   @Test
   public void testConvertFromExternalFormat() {
     final var externalProfile = List.of(
-        Pair.of(Duration.of(1, SECOND), Optional.of(SerializedValue.of(true))),
-        Pair.of(Duration.of(1, SECOND), Optional.<SerializedValue>empty()),
-        Pair.of(Duration.of(1, SECOND), Optional.of(SerializedValue.of(false)))
+        new ProfileSegment<>(Duration.of(1, SECOND), Optional.of(SerializedValue.of(true))),
+        new ProfileSegment<>(Duration.of(1, SECOND), Optional.<SerializedValue>empty()),
+        new ProfileSegment<>(Duration.of(1, SECOND), Optional.of(SerializedValue.of(false)))
     );
 
     final var profile = DiscreteProfile.fromExternalProfile(Duration.of(1, SECOND), externalProfile);

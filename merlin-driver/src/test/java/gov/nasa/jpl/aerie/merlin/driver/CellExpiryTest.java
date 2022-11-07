@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
+import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
@@ -9,7 +10,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -33,22 +33,22 @@ public final class CellExpiryTest {
     final var actual = results.discreteProfiles.get("/key").getRight();
 
     final var expected = List.of(
-        Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
-        Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
+        new ProfileSegment<>(duration(500, MILLISECONDS), SerializedValue.of("value")),
+        new ProfileSegment<>(duration(500, MILLISECONDS), SerializedValue.of("value")),
 
-        Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
-        Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
+        new ProfileSegment<>(duration(500, MILLISECONDS), SerializedValue.of("value")),
+        new ProfileSegment<>(duration(500, MILLISECONDS), SerializedValue.of("value")),
 
-        Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
-        Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
+        new ProfileSegment<>(duration(500, MILLISECONDS), SerializedValue.of("value")),
+        new ProfileSegment<>(duration(500, MILLISECONDS), SerializedValue.of("value")),
 
-        Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
-        Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
+        new ProfileSegment<>(duration(500, MILLISECONDS), SerializedValue.of("value")),
+        new ProfileSegment<>(duration(500, MILLISECONDS), SerializedValue.of("value")),
 
-        Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
-        Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
+        new ProfileSegment<>(duration(500, MILLISECONDS), SerializedValue.of("value")),
+        new ProfileSegment<>(duration(500, MILLISECONDS), SerializedValue.of("value")),
 
-        Pair.of(Duration.ZERO, SerializedValue.of("value")));
+        new ProfileSegment<>(Duration.ZERO, SerializedValue.of("value")));
 
     assertEquals(expected, actual);
   }
