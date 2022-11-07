@@ -1,10 +1,11 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.InputStreamReader;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 
@@ -31,12 +32,11 @@ public record GenerateSchedulingLibAction(
    */
   public Response run(final MissionModelId missionModelId) {
     try {
-      final var schedulingDslCompilerRoot = System.getenv("SCHEDULING_DSL_COMPILER_ROOT");
-      final var schedulingDsl = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "scheduler-edsl-fluent-api.ts"));
-      final var schedulerAst = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "scheduler-ast.ts"));
-      final var windowsDsl = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "constraints", "constraints-edsl-fluent-api.ts"));
-      final var windowsAst = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "constraints", "constraints-ast.ts"));
-      final var temporalPolyfillTypes = Files.readString(Paths.get(schedulingDslCompilerRoot, "src", "libs", "TemporalPolyfillTypes.ts"));
+      final var schedulingDsl         = getTypescriptResource("scheduler-edsl-fluent-api.ts");
+      final var schedulerAst          = getTypescriptResource("scheduler-ast.ts");
+      final var windowsDsl            = getTypescriptResource("constraints-edsl-fluent-api.ts");
+      final var windowsAst            = getTypescriptResource("constraints-ast.ts");
+      final var temporalPolyfillTypes = getTypescriptResource("TemporalPolyfillTypes.ts");
 
       final var missionModelTypes = missionModelService.getMissionModelTypes(missionModelId);
 
@@ -46,17 +46,27 @@ public record GenerateSchedulingLibAction(
               ConstraintsTypescriptCodeGenerationHelper.activityTypes(missionModelTypes),
               ConstraintsTypescriptCodeGenerationHelper.resources(missionModelTypes));
       return new Response.Success(
-          Map.of("file:///scheduler-edsl-fluent-api.ts", schedulingDsl,
+          Map.of("file:///%s".formatted(schedulingDsl.basename), schedulingDsl.source,
                  "file:///scheduler-mission-model-generated-code.ts", generatedSchedulerCode,
-                 "file:///scheduler-ast.ts", schedulerAst,
-                 "file:///constraints-edsl-fluent-api.ts", windowsDsl,
-                 "file:///constraints-ast.ts", windowsAst,
+                 "file:///%s".formatted(schedulerAst.basename), schedulerAst.source,
+                 "file:///%s".formatted(windowsDsl.basename), windowsDsl.source,
+                 "file:///%s".formatted(windowsAst.basename), windowsAst.source,
                  "file:///mission-model-generated-code.ts", generatedConstraintsCode,
-                 "file:///TemporalPolyfillTypes.ts", temporalPolyfillTypes
+                 "file:///%s".formatted(temporalPolyfillTypes.basename), temporalPolyfillTypes.source
                  ));
-    } catch (NoSuchMissionModelException | IOException | MissionModelService.MissionModelServiceException e) {
+    } catch (final NoSuchMissionModelException | IOException | MissionModelService.MissionModelServiceException e) {
       return new Response.Failure(e.getMessage());
     }
   }
 
+  /*package-private*/ record TypescriptResource(String basename, String source) { }
+
+  /** Retrieve a static Typescript library as a resource by the file's basename. */
+  /*package-private*/ static TypescriptResource getTypescriptResource(final String basename) {
+    final var stream = GenerateSchedulingLibAction.class.getResourceAsStream("/"+basename);
+    if (stream == null)
+      throw new Error("Resource path does not exist: `/%s`".formatted(basename));
+    final var source = new BufferedReader(new InputStreamReader(stream)).lines().collect(Collectors.joining("\n"));
+    return new TypescriptResource(basename, source);
+  }
 }
