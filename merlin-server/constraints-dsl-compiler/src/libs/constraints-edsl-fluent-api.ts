@@ -307,6 +307,22 @@ export class Windows {
       windowsExpression: this.__astNode
     })
   }
+
+  /**
+   * Replaces all gaps in this profile with default segments taken from the argument
+   *
+   * @param defaultProfile boolean or windows to take default values from.
+   */
+  public assignGaps(defaultProfile: Windows | boolean): Windows {
+    if (!(defaultProfile instanceof Windows)) {
+      defaultProfile = Windows.Value(defaultProfile);
+    }
+    return new Windows({
+      kind: AST.NodeKind.AssignGapsExpression,
+      originalProfile: this.__astNode,
+      defaultProfile: defaultProfile.__astNode
+    });
+  }
 }
 
 /**
@@ -581,6 +597,22 @@ export class Real {
       expression: this.__astNode,
     });
   }
+
+  /**
+   * Replaces all gaps in this profile with default segments taken from the argument
+   *
+   * @param defaultProfile number or real profile to take default values from.
+   */
+  public assignGaps(defaultProfile: Real | number): Real {
+    if (!(defaultProfile instanceof Real)) {
+      defaultProfile = Real.Value(defaultProfile);
+    }
+    return new Real({
+      kind: AST.NodeKind.AssignGapsExpression,
+      originalProfile: this.__astNode,
+      defaultProfile: defaultProfile.__astNode
+    });
+  }
 }
 
 /**
@@ -674,6 +706,22 @@ export class Discrete<Schema> {
     return new Windows({
       kind: AST.NodeKind.ProfileChanges,
       expression: this.__astNode,
+    });
+  }
+
+  /**
+   * Replaces all gaps in this profile with default segments taken from the argument
+   *
+   * @param defaultProfile value or discrete profile to take default values from.
+   */
+  public assignGaps(defaultProfile: Schema | Discrete<Schema>): Discrete<Schema> {
+    if (!(defaultProfile instanceof Discrete)) {
+      defaultProfile = Discrete.Value(defaultProfile);
+    }
+    return new Discrete({
+      kind: AST.NodeKind.AssignGapsExpression,
+      originalProfile: this.__astNode,
+      defaultProfile: defaultProfile.__astNode
     });
   }
 }
@@ -900,7 +948,14 @@ declare global {
      *
      * @param activityTypes the activity types
      */
-     public static During<A extends Gen.ActivityType>(...activityTypes: Gen.ActivityType[]) : Windows;
+    public static During<A extends Gen.ActivityType>(...activityTypes: Gen.ActivityType[]): Windows;
+
+    /**
+     * Replaces all gaps in this profile with default segments taken from the argument.
+     *
+     * @param defaultProfile boolean or windows to take default values from
+     */
+    public assignGaps(defaultProfile: Windows | boolean): Windows;
   }
 
   /**
@@ -1035,6 +1090,13 @@ declare global {
      * Produce an instantaneous window whenever this profile changes.
      */
     public changes(): Windows;
+
+    /**
+     * Replaces all gaps in this profile with default segments taken from the argument.
+     *
+     * @param defaultProfile number or real profile to take default values from
+     */
+    public assignGaps(defaultProfile: Real | number): Real;
   }
 
   /**
@@ -1097,6 +1159,13 @@ declare global {
      * Produce an instantaneous window whenever this profile changes.
      */
     public changes(): Windows;
+
+    /**
+     * Replaces all gaps in this profile with default segments taken from the argument.
+     *
+     * @param defaultProfile value or discrete profile to take default values from
+     */
+    public assignGaps(defaultProfile: Discrete<Schema> | Schema): Discrete<Schema>;
   }
 
   type Duration = number;
