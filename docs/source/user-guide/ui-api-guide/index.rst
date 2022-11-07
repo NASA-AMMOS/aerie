@@ -10,7 +10,7 @@ User Interface and API Guide
   ui-layouts/index
   scheduling/index
   constraints/index
-  external-resource-profiles/index
+  external-datasets/index
   plan-collaboration/index
   command-expansion/index
   sequence-editor/index
