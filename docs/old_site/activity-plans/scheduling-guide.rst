@@ -194,7 +194,7 @@ The Coexistence Goal specifies that a certain activity should occur once **for e
 
 **Inputs**
 
-* **forEach**: a set of time windows (``Windows``, see [documentation](../constraints) on how to produce such an expression) or a set of activities (``ActivityExpression``)
+* **forEach**: a set of time windows (`see constraints documentation <../../constraints/writing-constraints>`_) on how to produce such an expression) or a set of activities (``ActivityExpression``)
 * **activityTemplate**: the description of the activity to insert after each activity identified by ``forEach``
 * **startsAt**: optionally specify a specific time when the activity should start relative to the window
 * **startsWithin**: optionally specify a range when the activity should start relative to the window
@@ -405,7 +405,7 @@ Restricting when a goal is applied
 
 By default, a goal applies on the whole planning horizon. The Aerie scheduler provides support for restricting *when*
 a goal applies with the ``.applyWhen()`` method in the ``Goal`` class. This node allows users to provide a set of windows
-(``Windows``, see :ref:`documentation <windows>`) which could be a time
+(`see constraints documentation <../../constraints/writing-constraints>`_) which could be a time
 or a resource-based window.
 
 The ``.applyWhen()`` method, takes one argument: the windows (in the form of an expression) that the goal should apply
@@ -465,7 +465,7 @@ the return type is expected to be of type ``Windows``.
     return Real.Resource("/plant").greaterThan(10.0)
   }
 
-The ``Windows`` type is described in the :ref:`Constraints DSL documentation <windows>`.
+The ``Windows`` type is described in the `Constraints DSL documentation <../../constraints/writing-constraints>`_.
 
 Interactions with Global Scheduling Conditions are only possible via the API.
 

@@ -1,6 +1,0 @@
-===========
-Constraints
-===========
-
-.. toctree::
-  overview
