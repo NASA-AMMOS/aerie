@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
+import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity;
 import org.apache.commons.lang3.tuple.Pair;
@@ -16,7 +17,7 @@ import java.util.stream.StreamSupport;
  * Backed by an {@link IntervalMap} of type {@link Boolean}. This class provides additional operations
  * which are only valid on bools.
  */
-public final class Windows implements Iterable<Segment<Boolean>>, IntervalContainer<Windows> {
+public final class Windows implements Iterable<Segment<Boolean>>, IntervalContainer<Windows>, Profile<Windows> {
   private final IntervalMap<Boolean> segments;
 
   /** Creates an empty Windows */
@@ -484,6 +485,47 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
         .filter(Segment::value)
         .map(Segment::interval)
         .toList());
+  }
+
+  @Override
+  public Windows equalTo(final Windows other) {
+    return new Windows(
+        IntervalMap.map2(
+            this.segments, other.segments,
+            (left, right) -> left.isPresent() && right.isPresent()
+                ? Optional.of(left.get() == right.get())
+                : Optional.empty()
+        )
+    );
+  }
+
+  @Override
+  public Windows notEqualTo(final Windows other) {
+    return equalTo(other).not();
+  }
+
+  @Override
+  public Windows changePoints() {
+    final var result = IntervalMap.<Boolean>builder().set(this.segments.map($ -> false));
+    for (int i = 0; i < this.segments.size(); i++) {
+      final var segment = this.segments.get(i);
+      if (i == 0) {
+        if (!segment.interval().contains(Duration.MIN_VALUE)) {
+          result.unset(Interval.at(segment.interval().start));
+        }
+      } else {
+        final var previousSegment = this.segments.get(i-1);
+        if (Interval.meets(previousSegment.interval(), segment.interval())) {
+          if (!previousSegment.value().equals(segment.value())) {
+            result.set(Interval.at(segment.interval().start), true);
+          }
+        } else {
+          result.unset(Interval.at(segment.interval().start));
+        }
+      }
+    }
+
+    return new Windows(result.build());
   }
 
   ////// DELEGATED METHODS
