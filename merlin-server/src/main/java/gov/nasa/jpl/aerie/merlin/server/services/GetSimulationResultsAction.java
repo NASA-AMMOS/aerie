@@ -126,14 +126,14 @@ public final class GetSimulationResultsAction {
         .orElseGet(Collections::emptyMap);
     final var discreteProfiles = new HashMap<String, DiscreteProfile>(_discreteProfiles.size());
     for (final var entry : _discreteProfiles.entrySet()) {
-      discreteProfiles.put(entry.getKey(), DiscreteProfile.fromExternalProfile(Duration.ZERO, entry.getValue().getRight()));
+      discreteProfiles.put(entry.getKey(), DiscreteProfile.fromSimulatedProfile(Duration.ZERO, entry.getValue().getRight()));
     }
     final var _realProfiles = results$
         .map(r -> r.realProfiles)
         .orElseGet(Collections::emptyMap);
     final var realProfiles = new HashMap<String, LinearProfile>();
     for (final var entry : _realProfiles.entrySet()) {
-      realProfiles.put(entry.getKey(), LinearProfile.fromExternalProfile(Duration.ZERO, entry.getValue().getRight()));
+      realProfiles.put(entry.getKey(), LinearProfile.fromSimulatedProfile(Duration.ZERO, entry.getValue().getRight()));
     }
 
     final var externalDatasets = this.planService.getExternalDatasets(planId);

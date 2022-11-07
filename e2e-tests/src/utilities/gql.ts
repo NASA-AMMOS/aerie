@@ -178,6 +178,41 @@ const gql = {
     }
   `,
 
+  ADD_EXTERNAL_DATASET: `#graphql
+    mutation addExternalDataset($plan_id: Int!, $dataset_start: String!, $profile_set: ProfileSet!) {
+      addExternalDataset(
+        planId: $plan_id
+        datasetStart: $dataset_start
+        profileSet: $profile_set
+      ) {
+        datasetId
+      }
+    }
+  `,
+
+  GET_EXTERNAL_DATASET: `#graphql
+    query getExtProfile($plan_id: Int!, $dataset_id: Int!) {
+      plan_dataset_by_pk(plan_id:$plan_id, dataset_id:$dataset_id) {
+        offset_from_plan_start
+        dataset {
+          profiles(distinct_on:[]) {
+            profile_segments(distinct_on: []) {
+              start_offset
+              dynamics
+            }
+          }
+        }
+      }
+    }
+  `,
+
+  DELETE_EXTERNAL_DATASET: `#graphql
+  mutation deleteExtProfile($plan_id: Int!, $dataset_id: Int!) {
+    delete_plan_dataset_by_pk(plan_id:$plan_id, dataset_id:$dataset_id) {
+      dataset_id
+    }
+  }
+  `
 };
 
 export default gql;

@@ -10,8 +10,10 @@ import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.RealProfile;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.io.Serial;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
@@ -35,20 +37,20 @@ public final class ProfileParsers {
           untuple(RealDynamics::linear),
           $ -> tuple($.initial, $.rate));
 
-  public static final JsonParser<Pair<Duration, RealDynamics>> realProfileSegmentP
+  public static final JsonParser<Pair<Duration, Optional<RealDynamics>>> realProfileSegmentP
       = productP
       . field("duration", durationP)
-      . field("dynamics", realDynamicsP)
+      . optionalField("dynamics", realDynamicsP)
       . map(
-          untuple((BiFunction<Duration, RealDynamics, Pair<Duration, RealDynamics>>) Pair::of),
+          untuple((BiFunction<Duration, Optional<RealDynamics>, Pair<Duration, Optional<RealDynamics>>>) Pair::of),
           $ -> tuple($.getLeft(), $.getRight()));
 
-  public static final JsonParser<Pair<Duration, SerializedValue>> discreteProfileSegmentP
+  public static final JsonParser<Pair<Duration, Optional<SerializedValue>>> discreteProfileSegmentP
       = productP
       . field("duration", durationP)
-      . field("dynamics", serializedValueP)
+      . optionalField("dynamics", serializedValueP)
       . map(
-          untuple((BiFunction<Duration, SerializedValue, Pair<Duration, SerializedValue>>) Pair::of),
+          untuple((BiFunction<Duration, Optional<SerializedValue>, Pair<Duration, Optional<SerializedValue>>>) Pair::of),
           $ -> tuple($.getLeft(), $.getRight()));
 
   public static final JsonParser<RealProfile> realProfileP
@@ -73,8 +75,8 @@ public final class ProfileParsers {
       = mapP(chooseP(realProfileP, discreteProfileP))
       . map(
           profiles -> {
-            final var realProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>>();
-            final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
+            final var realProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, Optional<RealDynamics>>>>>();
+            final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, Optional<SerializedValue>>>>>();
             for (final var entry : profiles.entrySet()) {
               final var name = entry.getKey();
               final var profile = entry.getValue();

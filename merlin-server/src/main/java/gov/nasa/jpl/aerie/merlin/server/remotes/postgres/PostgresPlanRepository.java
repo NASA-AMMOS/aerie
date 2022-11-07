@@ -200,8 +200,7 @@ public final class PostgresPlanRepository implements PlanRepository {
       ProfileRepository.postResourceProfiles(
           connection,
           planDataset.datasetId(),
-          profileSet,
-          datasetStart
+          profileSet
       );
 
       return planDataset.datasetId();
@@ -220,7 +219,7 @@ public final class PostgresPlanRepository implements PlanRepository {
       for (final var planDataset: planDatasets) {
         result.add(Pair.of(
             planDataset.offsetFromPlanStart(),
-            ProfileRepository.getProfiles(connection, planDataset.datasetId(), new Window(plan.startTime(), plan.endTime()))
+            ProfileRepository.getProfiles(connection, planDataset.datasetId())
         ));
       }
       return result;

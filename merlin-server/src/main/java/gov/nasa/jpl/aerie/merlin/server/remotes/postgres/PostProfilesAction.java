@@ -15,13 +15,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.discreteProfileTypeP;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.realProfileTypeP;
 /*package-local*/ final class PostProfilesAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-      insert into profile (dataset_id, name, type)
-      values (?, ?, ?)
+      insert into profile (dataset_id, name, type, duration)
+      values (?, ?, ?, ?::interval)
     """;
   private final PreparedStatement statement;
 
@@ -31,20 +32,25 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
   public Map<String, ProfileRecord> apply(
       final long datasetId,
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>> realProfiles,
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles
+      final Map<String, Pair<ValueSchema, List<Pair<Duration, Optional<RealDynamics>>>>> realProfiles,
+      final Map<String, Pair<ValueSchema, List<Pair<Duration, Optional<SerializedValue>>>>> discreteProfiles
   ) throws SQLException {
     final var resourceNames = new ArrayList<String>();
     final var resourceTypes = new ArrayList<Pair<String, ValueSchema>>();
+    final var durations = new ArrayList<Duration>();
     for (final var entry : realProfiles.entrySet()) {
       final var resource = entry.getKey();
       final var schema = entry.getValue().getLeft();
       final var realResourceType = Pair.of("real", schema);
+      final var segments = entry.getValue().getRight();
+      final var duration = sumDurations(segments);
       resourceNames.add(resource);
       resourceTypes.add(realResourceType);
+      durations.add(duration);
       this.statement.setLong(1, datasetId);
       this.statement.setString(2, resource);
       this.statement.setString(3, realProfileTypeP.unparse(realResourceType).toString());
+      this.statement.setString(4, duration.toISO8601String());
       this.statement.addBatch();
     }
 
@@ -52,11 +58,15 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       final var resource = entry.getKey();
       final var schema = entry.getValue().getLeft();
       final var resourceType = Pair.of("discrete", schema);
+      final var segments = entry.getValue().getRight();
+      final var duration = sumDurations(segments);
       resourceNames.add(resource);
       resourceTypes.add(resourceType);
+      durations.add(duration);
       this.statement.setLong(1, datasetId);
       this.statement.setString(2, resource);
       this.statement.setString(3, discreteProfileTypeP.unparse(resourceType).toString());
+      this.statement.setString(4, duration.toISO8601String());
       this.statement.addBatch();
     }
 
@@ -67,17 +77,27 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     for (int i = 0; i < resourceNames.size(); i++) {
       final var resource = resourceNames.get(i);
       final var type = resourceTypes.get(i);
+      final var duration = durations.get(i);
       if (!resultSet.next()) throw new Error("Not enough generated IDs returned from batch insertion.");
       final long id = resultSet.getLong(1);
       profileRecords.put(resource, new ProfileRecord(
           id,
           datasetId,
           resource,
-          type
+          type,
+          duration
       ));
     }
 
     return profileRecords;
+  }
+
+  private static <T> Duration sumDurations(final List<Pair<Duration, Optional<T>>> segments) {
+    return segments.stream().reduce(
+        Duration.ZERO,
+        (acc, pair) -> acc.plus(pair.getLeft()),
+        Duration::plus
+    );
   }
 
   @Override

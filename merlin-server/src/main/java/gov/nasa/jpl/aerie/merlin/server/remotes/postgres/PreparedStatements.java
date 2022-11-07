@@ -6,10 +6,12 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers;
 import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import org.intellij.lang.annotations.Language;
 
 import javax.json.Json;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,6 +30,37 @@ public final class PreparedStatements {
           .appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true)
           .appendOffset("+HH:mm:ss", "+00")
           .toFormatter();
+
+  private static final @Language("SQL") String intervalStylePrefix = "set intervalstyle = ";
+
+  /** Serialization format for postgres intervals (what we call Durations) */
+  public enum PGIntervalStyle {
+    ISO8601("iso_8601"),
+    Postgres("postgres"),
+    PostgresVerbose("postgres_verbose"),
+    SqlStandard("sql_standard");
+
+    private final String sqlName;
+
+    PGIntervalStyle(final String sqlName) {
+      this.sqlName = sqlName;
+    }
+
+    @Override
+    public String toString() {
+      return sqlName;
+    }
+  }
+
+  /**
+   * Sets the serialization format for postgres intervals.
+   *
+   * Call this before any statement that requires intervals to be serialized.
+   */
+  public static void setIntervalStyle(final Connection connection, final PGIntervalStyle style) throws SQLException {
+    final var prepared = connection.prepareStatement(intervalStylePrefix + "'" + style + "';");
+    prepared.execute();
+  }
 
   public static void setTimestamp(final PreparedStatement statement, final int parameter, final Timestamp argument)
   throws SQLException {

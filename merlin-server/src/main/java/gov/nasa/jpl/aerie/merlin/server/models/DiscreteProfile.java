@@ -6,7 +6,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
+import java.util.Optional;
 
-public final record DiscreteProfile(
+public record DiscreteProfile(
     ValueSchema schema,
-    List<Pair<Duration, SerializedValue>> segments) {}
+    List<Pair<Duration, Optional<SerializedValue>>> segments) {}

@@ -9,6 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
@@ -301,15 +302,16 @@ public class LinearProfileTest {
   @Test
   public void testConvertFromExternalFormat() {
     final var externalProfile = List.of(
-        Pair.of(Duration.of(1, SECOND), RealDynamics.linear(1, 1)),
-        Pair.of(Duration.of(1, SECOND), RealDynamics.linear(5, -1))
+        Pair.of(Duration.of(1, SECOND), Optional.of(RealDynamics.linear(1, 1))),
+        Pair.of(Duration.of(1, SECOND), Optional.<RealDynamics>empty()),
+        Pair.of(Duration.of(1, SECOND), Optional.of(RealDynamics.linear(5, -1)))
     );
 
     final var profile = LinearProfile.fromExternalProfile(Duration.of(1, SECOND), externalProfile);
 
     final var expected = new LinearProfile(
         new LinearProfilePiece(Interval.between(1, Inclusive, 2, Exclusive, SECONDS), 1, 1),
-        new LinearProfilePiece(Interval.between(2, Inclusive, 3, Exclusive, SECONDS), 5, -1)
+        new LinearProfilePiece(Interval.between(3, Inclusive, 4, Exclusive, SECONDS), 5, -1)
     );
 
     assertIterableEquals(

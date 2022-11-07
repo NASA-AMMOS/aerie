@@ -11,13 +11,14 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatements.setTimestamp;
 
 public final class PostProfileSegmentsAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-      insert into profile_segment (dataset_id, profile_id, start_offset, dynamics)
-      values (?, ?, ?::timestamptz - ?::timestamptz, ?)
+      insert into profile_segment (dataset_id, profile_id, start_offset, dynamics, is_gap)
+      values (?, ?, ?::interval, ?::json, ?)
     """;
   private final PreparedStatement statement;
 
@@ -28,8 +29,7 @@ public final class PostProfileSegmentsAction implements AutoCloseable {
   public <Dynamics> void apply(
       final long datasetId,
       final ProfileRecord profileRecord,
-      final List<Pair<Duration, Dynamics>> segments,
-      final Timestamp simulationStart,
+      final List<Pair<Duration, Optional<Dynamics>>> segments,
       final JsonParser<Dynamics> dynamicsP
       ) throws SQLException {
 
@@ -40,13 +40,17 @@ public final class PostProfileSegmentsAction implements AutoCloseable {
     for (final var pair : segments) {
       final var duration = pair.getLeft();
       final var dynamics = pair.getRight();
-      final var timestamp = simulationStart.plusMicros(accumulatedOffset.dividedBy(Duration.MICROSECOND));
 
       this.statement.setLong(1, datasetId);
       this.statement.setLong(2, profileRecord.id());
-      setTimestamp(this.statement, 3, timestamp);
-      setTimestamp(this.statement, 4, simulationStart);
-      this.statement.setString(5, serializeDynamics(dynamics, dynamicsP));
+      this.statement.setString(3, accumulatedOffset.toISO8601String());
+      if (dynamics.isPresent()) {
+        this.statement.setString(4, serializeDynamics(dynamics.get(), dynamicsP));
+        this.statement.setBoolean(5, false);
+      } else {
+        this.statement.setString(4, "null");
+        this.statement.setBoolean(5, true);
+      }
 
       this.statement.addBatch();
 

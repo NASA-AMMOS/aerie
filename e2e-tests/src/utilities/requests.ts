@@ -1,7 +1,7 @@
-import type { APIRequestContext } from '@playwright/test';
+import type {APIRequestContext} from '@playwright/test';
 import FastGlob from "fast-glob";
-import { createReadStream } from 'fs';
-import { basename, resolve } from 'path';
+import {createReadStream} from 'fs';
+import {basename, resolve} from 'path';
 import * as urls from '../utilities/urls.js';
 import gql from './gql.js';
 import time from "./time.js";
@@ -198,6 +198,24 @@ const req = {
     return idCreatedActivity;
   },
 
+  async insertExternalDataset(request: APIRequestContext, input: ExternalDatasetInsertInput): Promise<number> {
+    const data = await req.hasura(request, gql.ADD_EXTERNAL_DATASET, input);
+    const { addExternalDataset } = data;
+    const { datasetId } = addExternalDataset;
+
+    return datasetId;
+  },
+
+  async getExternalDataset(request: APIRequestContext, input: ExternalDatasetQueryInput) {
+    return await req.hasura(request, gql.GET_EXTERNAL_DATASET, input);
+  },
+
+  async deleteExternalDataset(request: APIRequestContext, input: ExternalDatasetQueryInput) {
+    const data = await req.hasura(request, gql.DELETE_EXTERNAL_DATASET, input);
+    const { delete_plan_dataset_by_pk } = data;
+    const { dataset_id } = delete_plan_dataset_by_pk;
+    return dataset_id;
+  }
 };
 /**
  * Converts any activity to an Activity.
