@@ -102,6 +102,19 @@ const gql = {
     }
   `,
 
+  GET_SCHEDULING_DSL_TYPESCRIPT: `#graphql
+    query GetSchedulingDslTypeScript($missionModelId: Int!) {
+      schedulingDslTypescript(missionModelId: $missionModelId) {
+        reason
+        status
+        typescriptFiles {
+          filePath
+          content
+        }
+      }
+    }
+  `,
+
   DELETE_PLAN: `#graphql
     mutation DeletePlan($id: Int!) {
       deletePlan: delete_plan_by_pk(id: $id) {

@@ -172,6 +172,12 @@ const req = {
     return specification_id;
   },
 
+  async getSchedulingDslTypeScript(request: APIRequestContext, missionModelId: number): Promise<SchedulingDslTypesResponse> {
+    const data = await req.hasura(request, gql.GET_SCHEDULING_DSL_TYPESCRIPT, { missionModelId: missionModelId });
+    const { schedulingDslTypescript } = data;
+    return schedulingDslTypescript;
+  },
+
   async deletePlan(request: APIRequestContext, id: number){
     const data = await req.hasura(request, gql.DELETE_PLAN, { id: id })
     const { deletePlan } = data;
