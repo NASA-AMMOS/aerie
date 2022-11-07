@@ -1,8 +1,9 @@
+import java.nio.file.Path
+
 plugins {
   id 'java'
   id 'java-test-fixtures'
   id 'application'
-  id 'com.github.node-gradle.node' version '3.5.0'
 }
 
 java {
@@ -40,6 +41,11 @@ dependencies {
   testImplementation 'org.glassfish:javax.json:1.1.4'
 
   testFixturesImplementation project(':merlin-driver')
+}
+
+processResources {
+  // Copy in scheduling DSL compiler static libraries when processing resources
+  from project(':scheduler-worker').projectDir.toPath().resolve(Path.of('scheduling-dsl-compiler', 'src', 'libs'))
 }
 
 test {
