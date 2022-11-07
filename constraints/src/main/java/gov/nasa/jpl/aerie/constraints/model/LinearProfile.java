@@ -128,6 +128,17 @@ public final class LinearProfile implements Profile<LinearProfile>, Iterable<Seg
       return new Windows(result.build());
     }
 
+  /** Assigns a default value to all gaps in the profile. */
+  @Override
+  public LinearProfile assignGaps(final LinearProfile def) {
+    return new LinearProfile(
+        IntervalMap.map2(
+            this.profilePieces, def.profilePieces,
+            (original, defaultSegment) -> original.isPresent() ? original : defaultSegment
+        )
+    );
+  }
+
   public static LinearProfile fromSimulatedProfile(final List<Pair<Duration, RealDynamics>> simulatedProfile) {
     return fromProfileHelper(Duration.ZERO, simulatedProfile, Optional::of);
   }

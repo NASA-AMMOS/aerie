@@ -106,6 +106,17 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
     return new Windows(result.build());
   }
 
+  /** Assigns a default value to all gaps in the profile. */
+  @Override
+  public DiscreteProfile assignGaps(final DiscreteProfile def) {
+    return new DiscreteProfile(
+        IntervalMap.map2(
+            this.profilePieces, def.profilePieces,
+            (original, defaultSegment) -> original.isPresent() ? original : defaultSegment
+        )
+    );
+  }
+
   public static DiscreteProfile fromSimulatedProfile(final List<Pair<Duration, SerializedValue>> simulatedProfile) {
     return fromProfileHelper(Duration.ZERO, simulatedProfile, Optional::of);
   }

@@ -487,6 +487,17 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
         .toList());
   }
 
+  /** Assigns a default value to all gaps in the profile. */
+  @Override
+  public Windows assignGaps(final Windows def) {
+    return new Windows(
+        IntervalMap.map2(
+            this.segments, def.segments,
+            (original, defaultSegment) -> original.isPresent() ? original : defaultSegment
+        )
+    );
+  }
+
   @Override
   public Windows equalTo(final Windows other) {
     return new Windows(
