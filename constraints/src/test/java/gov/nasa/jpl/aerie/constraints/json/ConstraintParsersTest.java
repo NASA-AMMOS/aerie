@@ -1,9 +1,11 @@
 package gov.nasa.jpl.aerie.constraints.json;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
 import gov.nasa.jpl.aerie.constraints.tree.ActivityWindow;
 import gov.nasa.jpl.aerie.constraints.tree.And;
+import gov.nasa.jpl.aerie.constraints.tree.AssignGaps;
 import gov.nasa.jpl.aerie.constraints.tree.Changes;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
@@ -33,6 +35,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Times;
 import gov.nasa.jpl.aerie.constraints.tree.Transition;
 import gov.nasa.jpl.aerie.constraints.tree.ViolationsOfWindows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsFromSpans;
+import gov.nasa.jpl.aerie.constraints.tree.WindowsValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Test;
 
@@ -45,6 +48,7 @@ import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.discreteReso
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.linearProfileExprP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.spansExpressionP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.windowsExpressionP;
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.windowsValueP;
 
 public final class ConstraintParsersTest {
   @Test
@@ -295,6 +299,20 @@ public final class ConstraintParsersTest {
     final var result = discreteProfileExprP.parse(json).getSuccessOrThrow();
 
     final var expected = new DiscreteParameter("TEST", "paramesan");
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testParseWindowsValue() {
+    final var json = Json
+        .createObjectBuilder()
+        .add("kind", "WindowsExpressionValue")
+        .add("value", true)
+        .build();
+    final var result = windowsValueP.parse(json).getSuccessOrThrow();
+
+    final var expected = new WindowsValue(true);
 
     assertEquivalent(expected, result);
   }
@@ -643,6 +661,53 @@ public final class ConstraintParsersTest {
                 new ActivityWindow("A")));
 
     assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testAssignGaps() {
+    var json = Json
+        .createObjectBuilder()
+        .add("kind", "AssignGapsExpression")
+        .add("originalProfile", Json
+            .createObjectBuilder()
+            .add("kind", "WindowsExpressionValue")
+            .add("value", true))
+        .add("defaultProfile", Json
+            .createObjectBuilder()
+            .add("kind", "WindowsExpressionValue")
+            .add("value", false))
+        .build();
+
+    final var resultWindows = windowsExpressionP.parse(json).getSuccessOrThrow();
+
+    final var expectedWindows = new AssignGaps<>(
+        new WindowsValue(true),
+        new WindowsValue(false)
+    );
+
+    assertEquivalent(expectedWindows, resultWindows);
+
+    json = Json
+        .createObjectBuilder()
+        .add("kind", "AssignGapsExpression")
+        .add("originalProfile", Json
+            .createObjectBuilder()
+            .add("kind", "DiscreteProfileResource")
+            .add("name", "ResA"))
+        .add("defaultProfile", Json
+            .createObjectBuilder()
+            .add("kind", "DiscreteProfileResource")
+            .add("name", "ResB"))
+        .build();
+
+    final var resultProfile = discreteProfileExprP.parse(json).getSuccessOrThrow();
+
+    final var expectedProfile = new AssignGaps<>(
+        new DiscreteResource("ResA"),
+        new DiscreteResource("ResB")
+    );
+
+    assertEquivalent(expectedProfile, resultProfile);
   }
 
   @Test

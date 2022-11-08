@@ -192,7 +192,7 @@ public final class ConstraintParsers {
 
   static final JsonParser<WindowsValue> windowsValueP =
       productP
-          .field("kind", literalP("WindowsValueExpression"))
+          .field("kind", literalP("WindowsExpressionValue"))
           .field("value", boolP)
           .map(
               untuple((kind, value) -> new WindowsValue(value)),
