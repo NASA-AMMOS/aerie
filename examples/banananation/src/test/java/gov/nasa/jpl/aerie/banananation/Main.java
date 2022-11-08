@@ -38,6 +38,7 @@ public final class Main {
 
     final var simulationResults = SimulationUtility.simulate(schedule, simulationDuration);
 
-    System.out.println(simulationResults.resourceSamples);
+    System.out.println(simulationResults.discreteProfiles);
+    System.out.println(simulationResults.realProfiles);
   }
 }

@@ -2,24 +2,29 @@
     "type": "foo",
     "arguments":
       { "x": 1,
-        "y": "test_1" } },
+        "y": "test_1",
+        "z": 4 } },
   { "defer": 50000,
     "type": "foo",
     "arguments":
       { "x": 2,
-        "y": "spawn" } },
+        "y": "spawn",
+        "z": 4 } },
   { "defer": 50000,
     "type": "foo",
     "arguments":
       { "x": 2,
-        "y": "test" } },
+        "y": "test",
+        "z": 4 } },
   { "defer": 100000,
     "type": "foo",
     "arguments":
       { "x": 2,
-        "y": "test_2" } },
+        "y": "test_2",
+        "z": 4 } },
   { "defer": 150000,
     "type": "foo",
     "arguments":
       { "x": 3,
-        "y": "test_3" } } ]
+        "y": "test_3",
+        "z": 4 } } ]
