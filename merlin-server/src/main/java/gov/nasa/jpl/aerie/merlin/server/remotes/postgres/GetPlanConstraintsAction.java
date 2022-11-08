@@ -17,7 +17,7 @@ import java.util.Optional;
   private static final @Language("SQL") String sql = """
     select c.id, c.name, c.summary, c.description, c.definition
     from plan AS p
-    left join condition AS c
+    left join "constraint" AS c
       on p.id = c.plan_id
     where p.id = ?
     """;

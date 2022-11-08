@@ -1,3 +1,3 @@
 table:
-  name: condition
+  name: constraint
   schema: public

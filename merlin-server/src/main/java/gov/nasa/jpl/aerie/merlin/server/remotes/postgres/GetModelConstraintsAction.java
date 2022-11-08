@@ -17,7 +17,7 @@ import java.util.Optional;
   private static final @Language("SQL") String sql = """
     select c.id, c.name, c.summary, c.description, c.definition
     from mission_model AS m
-    left join condition AS c
+    left join "constraint" AS c
       on m.id = c.model_id
     where m.id = ?
     """;

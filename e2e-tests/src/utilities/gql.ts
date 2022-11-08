@@ -142,7 +142,7 @@ const gql = {
           startOffset: start_offset
           type
         }
-        constraints: conditions {
+        constraints {
           definition
           description
           id
@@ -158,7 +158,7 @@ const gql = {
             name
             parameters
           }
-          constraints: conditions {
+          constraints {
             definition
             description
             id
