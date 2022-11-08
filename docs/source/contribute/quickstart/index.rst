@@ -16,7 +16,6 @@ Prerequisite Software
   :includehidden:
 
   build
-  environment
+  Environment Variables <https://github.com/NASA-AMMOS/aerie/blob/develop/deployment/Environment.md>
   test
   troubleshoot
-
