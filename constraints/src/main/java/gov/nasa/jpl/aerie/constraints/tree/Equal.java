@@ -23,7 +23,7 @@ public final class Equal<P extends Profile<P>> implements Expression<Windows> {
     final var leftProfile = this.left.evaluate(results, bounds, environment);
     final var rightProfile = this.right.evaluate(results, bounds, environment);
 
-    return leftProfile.equalTo(rightProfile, bounds);
+    return leftProfile.equalTo(rightProfile).select(bounds);
   }
 
   @Override

@@ -3,10 +3,9 @@ package gov.nasa.jpl.aerie.constraints.tree;
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
-import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
-import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
+import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
@@ -379,7 +378,8 @@ public class ASTTests {
     final var result = new RealValue(7).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new LinearProfile(
-        new LinearProfilePiece(simResults.bounds, 7, 0));
+        Segment.of(simResults.bounds, new LinearEquation(Duration.ZERO, 7, 0))
+    );
 
     assertEquivalent(expected, result);
   }
@@ -396,9 +396,8 @@ public class ASTTests {
     final var result = new DiscreteValue(SerializedValue.of("IDLE")).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new DiscreteProfile(
-        List.of(
-            new DiscreteProfilePiece(simResults.bounds, SerializedValue.of("IDLE"))
-        ));
+        Segment.of(simResults.bounds, SerializedValue.of("IDLE"))
+    );
 
     assertEquivalent(expected, result);
   }
@@ -422,7 +421,7 @@ public class ASTTests {
     final var result = new RealParameter("act", "p1").evaluate(simResults, environment);
 
     final var expected = new LinearProfile(
-        new LinearProfilePiece(Interval.between(0, Inclusive, 20, Inclusive, SECONDS), 2, 0)
+        Segment.of(Interval.between(0, Inclusive, 10, Inclusive, SECONDS), new LinearEquation(Duration.ZERO, 2, 0))
     );
 
     assertEquivalent(expected, result);
@@ -434,14 +433,14 @@ public class ASTTests {
         Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(
-            "real1", new LinearProfile(new LinearProfilePiece(Interval.at(1, SECONDS), 0, 1)),
-            "real2", new LinearProfile(new LinearProfilePiece(Interval.at(2, SECONDS), 0, 1)),
-            "real3", new LinearProfile(new LinearProfilePiece(Interval.at(3, SECONDS), 0, 1))
+            "real1", new LinearProfile(Segment.of(Interval.at(1, SECONDS), new LinearEquation(Duration.of(1, SECONDS), 0, 1))),
+            "real2", new LinearProfile(Segment.of(Interval.at(2, SECONDS), new LinearEquation(Duration.of(2, SECONDS), 0, 1))),
+            "real3", new LinearProfile(Segment.of(Interval.at(3, SECONDS), new LinearEquation(Duration.of(3, SECONDS), 0, 1)))
         ),
         Map.of(
-            "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(4, SECONDS), SerializedValue.of("one"))),
-            "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(5, SECONDS), SerializedValue.of("two"))),
-            "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(6, SECONDS), SerializedValue.of("three")))
+            "discrete1", new DiscreteProfile(Segment.of(Interval.at(4, SECONDS), SerializedValue.of("one"))),
+            "discrete2", new DiscreteProfile(Segment.of(Interval.at(5, SECONDS), SerializedValue.of("two"))),
+            "discrete3", new DiscreteProfile(Segment.of(Interval.at(6, SECONDS), SerializedValue.of("three")))
         )
     );
 
@@ -458,14 +457,14 @@ public class ASTTests {
         Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(
-            "real1", new LinearProfile(new LinearProfilePiece(Interval.at(1, SECONDS), 0, 1)),
-            "real2", new LinearProfile(new LinearProfilePiece(Interval.at(2, SECONDS), 0, 1)),
-            "real3", new LinearProfile(new LinearProfilePiece(Interval.at(3, SECONDS), 0, 1))
+            "real1", new LinearProfile(Segment.of(Interval.at(1, SECONDS), new LinearEquation(Duration.of(1, SECONDS), 0, 1))),
+            "real2", new LinearProfile(Segment.of(Interval.at(2, SECONDS), new LinearEquation(Duration.of(2, SECONDS), 0, 1))),
+            "real3", new LinearProfile(Segment.of(Interval.at(3, SECONDS), new LinearEquation(Duration.of(3, SECONDS), 0, 1)))
         ),
         Map.of(
-            "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(4, SECONDS), SerializedValue.of("one"))),
-            "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(5, SECONDS), SerializedValue.of(2))),
-            "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(6, SECONDS), SerializedValue.of("three")))
+            "discrete1", new DiscreteProfile(Segment.of(Interval.at(4, SECONDS), SerializedValue.of("one"))),
+            "discrete2", new DiscreteProfile(Segment.of(Interval.at(5, SECONDS), SerializedValue.of(2))),
+            "discrete3", new DiscreteProfile(Segment.of(Interval.at(6, SECONDS), SerializedValue.of("three")))
         )
     );
 
@@ -482,20 +481,20 @@ public class ASTTests {
         Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(
-            "real1", new LinearProfile(new LinearProfilePiece(Interval.at(1, SECONDS), 0, 1)),
-            "real2", new LinearProfile(new LinearProfilePiece(Interval.at(2, SECONDS), 0, 1)),
-            "real3", new LinearProfile(new LinearProfilePiece(Interval.at(3, SECONDS), 0, 1))
+            "real1", new LinearProfile(Segment.of(Interval.at(1, SECONDS), new LinearEquation(Duration.of(1, SECONDS), 0, 1))),
+            "real2", new LinearProfile(Segment.of(Interval.at(2, SECONDS), new LinearEquation(Duration.of(2, SECONDS), 0, 1))),
+            "real3", new LinearProfile(Segment.of(Interval.at(3, SECONDS), new LinearEquation(Duration.of(3, SECONDS), 0, 1)))
         ),
         Map.of(
-            "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(4, SECONDS), SerializedValue.of("one"))),
-            "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(5, SECONDS), SerializedValue.of(2))),
-            "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(6, SECONDS), SerializedValue.of("three")))
+            "discrete1", new DiscreteProfile(Segment.of(Interval.at(4, SECONDS), SerializedValue.of("one"))),
+            "discrete2", new DiscreteProfile(Segment.of(Interval.at(5, SECONDS), SerializedValue.of(2))),
+            "discrete3", new DiscreteProfile(Segment.of(Interval.at(6, SECONDS), SerializedValue.of("three")))
         )
     );
 
     final var result = new RealResource("discrete2").evaluate(simResults, new EvaluationEnvironment());
 
-    final var expected = new LinearProfile(new LinearProfilePiece(Interval.at(5, SECONDS), 2, 0));
+    final var expected = new LinearProfile(Segment.of(Interval.at(5, SECONDS), new LinearEquation(Duration.of(5, SECONDS), 2, 0)));
 
     assertEquivalent(expected, result);
   }
@@ -506,14 +505,14 @@ public class ASTTests {
         Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(
-            "real1", new LinearProfile(new LinearProfilePiece(Interval.at(1, SECONDS), 0, 1)),
-            "real2", new LinearProfile(new LinearProfilePiece(Interval.at(2, SECONDS), 0, 1)),
-            "real3", new LinearProfile(new LinearProfilePiece(Interval.at(3, SECONDS), 0, 1))
+            "real1", new LinearProfile(Segment.of(Interval.at(1, SECONDS), new LinearEquation(Duration.of(1, SECONDS), 0, 1))),
+            "real2", new LinearProfile(Segment.of(Interval.at(2, SECONDS), new LinearEquation(Duration.of(2, SECONDS), 0, 1))),
+            "real3", new LinearProfile(Segment.of(Interval.at(3, SECONDS), new LinearEquation(Duration.of(3, SECONDS), 0, 1)))
         ),
         Map.of(
-            "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(4, SECONDS), SerializedValue.of("one"))),
-            "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(5, SECONDS), SerializedValue.of(2))),
-            "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(6, SECONDS), SerializedValue.of("three")))
+            "discrete1", new DiscreteProfile(Segment.of(Interval.at(4, SECONDS), SerializedValue.of("one"))),
+            "discrete2", new DiscreteProfile(Segment.of(Interval.at(5, SECONDS), SerializedValue.of(2))),
+            "discrete3", new DiscreteProfile(Segment.of(Interval.at(6, SECONDS), SerializedValue.of("three")))
         )
     );
 
@@ -826,14 +825,14 @@ public class ASTTests {
     final var environment = new EvaluationEnvironment(
         Map.of(),
         Map.of(
-            "real1", new LinearProfile(new LinearProfilePiece(Interval.at(1, SECONDS), 0, 1)),
-            "real2", new LinearProfile(new LinearProfilePiece(Interval.at(2, SECONDS), 0, 1)),
-            "real3", new LinearProfile(new LinearProfilePiece(Interval.at(3, SECONDS), 0, 1))
+            "real1", new LinearProfile(Segment.of(Interval.at(1, SECONDS), new LinearEquation(Duration.of(1, SECONDS), 0, 1))),
+            "real2", new LinearProfile(Segment.of(Interval.at(2, SECONDS), new LinearEquation(Duration.of(2, SECONDS), 0, 1))),
+            "real3", new LinearProfile(Segment.of(Interval.at(3, SECONDS), new LinearEquation(Duration.of(3, SECONDS), 0, 1)))
         ),
         Map.of(
-            "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(4, SECONDS), SerializedValue.of("one"))),
-            "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(5, SECONDS), SerializedValue.of("two"))),
-            "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(6, SECONDS), SerializedValue.of("three")))
+            "discrete1", new DiscreteProfile(Segment.of(Interval.at(4, SECONDS), SerializedValue.of("one"))),
+            "discrete2", new DiscreteProfile(Segment.of(Interval.at(5, SECONDS), SerializedValue.of("two"))),
+            "discrete3", new DiscreteProfile(Segment.of(Interval.at(6, SECONDS), SerializedValue.of("three")))
         )
     );
 
@@ -856,14 +855,14 @@ public class ASTTests {
     final var environment = new EvaluationEnvironment(
         Map.of(),
         Map.of(
-            "real1", new LinearProfile(new LinearProfilePiece(Interval.at(1, SECONDS), 0, 1)),
-            "real2", new LinearProfile(new LinearProfilePiece(Interval.at(2, SECONDS), 0, 1)),
-            "real3", new LinearProfile(new LinearProfilePiece(Interval.at(3, SECONDS), 0, 1))
+            "real1", new LinearProfile(Segment.of(Interval.at(1, SECONDS), new LinearEquation(Duration.of(1, SECONDS), 0, 1))),
+            "real2", new LinearProfile(Segment.of(Interval.at(2, SECONDS), new LinearEquation(Duration.of(2, SECONDS), 0, 1))),
+            "real3", new LinearProfile(Segment.of(Interval.at(3, SECONDS), new LinearEquation(Duration.of(3, SECONDS), 0, 1)))
         ),
         Map.of(
-            "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(4, SECONDS), SerializedValue.of("one"))),
-            "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(5, SECONDS), SerializedValue.of("two"))),
-            "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Interval.at(6, SECONDS), SerializedValue.of("three")))
+            "discrete1", new DiscreteProfile(Segment.of(Interval.at(4, SECONDS), SerializedValue.of("one"))),
+            "discrete2", new DiscreteProfile(Segment.of(Interval.at(5, SECONDS), SerializedValue.of("two"))),
+            "discrete3", new DiscreteProfile(Segment.of(Interval.at(6, SECONDS), SerializedValue.of("three")))
         )
     );
 

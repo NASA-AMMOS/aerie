@@ -78,7 +78,7 @@ public class TimeRangeExpression {
 
     for (var constState : constantsStates) {
       final var domainOfInter = Interval.between(inter.minTrueTimePoint().get().getKey(), inter.maxTrueTimePoint().get().getKey());
-      final var changePoints = simulationResults.discreteProfiles.get(constState).changePoints(domainOfInter);
+      final var changePoints = simulationResults.discreteProfiles.get(constState).changePoints();
 
       // can't use non-final variables in lambdas, so its an array now.
       final Windows[] timeline = {new Windows(false)};

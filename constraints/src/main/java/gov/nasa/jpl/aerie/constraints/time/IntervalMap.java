@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.apache.commons.lang3.function.TriFunction;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -197,6 +198,33 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
   }
 
   /**
+   * A similar operation to {@link IntervalMap#map(Function)}, except it allows producing any number of segments
+   * per interval. Each segment is then flattened into a new IntervalMap.
+   *
+   * The outputted segments do not need to be contained to the original interval, but in that case the results from
+   * segments later in time will overwrite results from earlier in time. (i.e. last one wins).
+   */
+  public <R> IntervalMap<R> flatMap(final Function<V, Stream<Segment<R>>> transform) {
+    return flatMap(($, interval) -> transform.apply($));
+  }
+
+  /**
+   * A similar operation to {@link IntervalMap#map(BiFunction)}, except it allows producing any number of segments
+   * per interval. Each segment is then flattened into a new IntervalMap.
+   *
+   * The outputted segments do not need to be contained to the original interval, but in that case the results from
+   * segments later in time will overwrite results from earlier in time. (i.e. last one wins).
+   */
+  public <R> IntervalMap<R> flatMap(final BiFunction<V, Interval, Stream<Segment<R>>> transform) {
+    final var unflattened = this.map(transform);
+    final var result = IntervalMap.<R>builder();
+    for (final var segment: unflattened) {
+      segment.value().forEach(result::set);
+    }
+    return result.build();
+  }
+
+  /**
    * A generalized binary operation between two IntervalMaps.
    *
    * @param left left operand
@@ -213,6 +241,27 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
       final IntervalMap<V1> left,
       final IntervalMap<V2> right,
       final BiFunction<Optional<V1>, Optional<V2>, Optional<R>> transform
+  ) {
+    return map2(left, right, (interval, l, r) -> transform.apply(l, r));
+  }
+
+  /**
+   * A generalized binary operation between two IntervalMaps.
+   *
+   * @param left left operand
+   * @param right right operand
+   * @param transform a function that transforms an interval and two {@link Optional}s of the left and right operands' types to an
+   *                  optional of a new type.
+   * @param <V1> value type of the left operand
+   * @param <V2> value type of the right operand
+   * @param <R> value type of the result
+   * @return a new IntervalMap, the result of applying the transform
+   */
+  public static <V1, V2, R>
+  IntervalMap<R> map2(
+      final IntervalMap<V1> left,
+      final IntervalMap<V2> right,
+      final TriFunction<Interval, Optional<V1>, Optional<V2>, Optional<R>> transform
   ) {
     final var result = new ArrayList<Segment<R>>();
 
@@ -300,7 +349,7 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
       var finalInterval = Interval.between(startTime, startInclusivity, endTime, endInclusivity);
       if (finalInterval.isEmpty()) continue;
 
-      var newValue = transform.apply(leftValue, rightValue);
+      var newValue = transform.apply(finalInterval, leftValue, rightValue);
       if (newValue.isPresent()) {
         if (!newValue.equals(previousValue)) {
           result.add(Segment.of(finalInterval, newValue.get()));
@@ -321,6 +370,24 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
 
     // SAFETY: ???
     return new IntervalMap<>(result);
+  }
+
+  /**
+   * A similar operation to {@link IntervalMap#map2}, except it allows producing any number of segments
+   * per overlapping interval. Each segment is then flattened into a new IntervalMap.
+   */
+  public static <V1, V2, R>
+  IntervalMap<R> flatMap2(
+      final IntervalMap<V1> left,
+      final IntervalMap<V2> right,
+      final BiFunction<Optional<V1>, Optional<V2>, Stream<Segment<R>>> transform
+  ) {
+    final var unflattened = map2(left, right, (l, r) -> Optional.of(transform.apply(l,r)));
+    final var result = IntervalMap.<R>builder();
+    for (final var segment: unflattened) {
+      segment.value().forEach(result::set);
+    }
+    return result.build();
   }
 
   /** Gets the segment at a given index */
@@ -466,13 +533,28 @@ public final class IntervalMap<V> implements Iterable<Segment<V>> {
           if (IntervalAlgebra.contains(interval, existingInterval)) {
             i--;
           } else {
-            this.segments.add(Segment.of(Interval.between(interval.end, interval.endInclusivity.opposite(), existingInterval.end, existingInterval.endInclusivity), segment.value()));
+            final var newInterval = Interval.between(interval.end, interval.endInclusivity.opposite(), existingInterval.end, existingInterval.endInclusivity);
+            if (!newInterval.isEmpty()) {
+              this.segments.add(i, Segment.of(newInterval, segment.value()));
+            } else {
+              i--;
+            }
           }
         } else {
           final var segment = this.segments.remove(i);
-          this.segments.add(Segment.of(Interval.between(existingInterval.start, existingInterval.startInclusivity, interval.start, interval.startInclusivity.opposite()), segment.value()));
+          final var leftInterval = Interval.between(existingInterval.start, existingInterval.startInclusivity, interval.start, interval.startInclusivity.opposite());
+          if (!leftInterval.isEmpty()) {
+            this.segments.add(i, Segment.of(leftInterval, segment.value()));
+          } else {
+            i--;
+          }
           if (IntervalAlgebra.endsAfter(existingInterval, interval)) {
-            this.segments.add(Segment.of(Interval.between(interval.end, Interval.FOREVER.endInclusivity.opposite(), existingInterval.end, existingInterval.endInclusivity), segment.value()));
+            final var rightInterval = Interval.between(interval.end, interval.endInclusivity.opposite(), existingInterval.end, existingInterval.endInclusivity);
+            if (!rightInterval.isEmpty()) {
+              this.segments.add(i+1, Segment.of(rightInterval, segment.value()));
+            } else {
+              i--;
+            }
             i++;
           }
         }

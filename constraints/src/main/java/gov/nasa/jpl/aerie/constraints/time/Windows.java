@@ -46,7 +46,7 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
   }
 
   /** Wraps an IntervalMap of Booleans in Windows. */
-  private Windows(final IntervalMap<Boolean> segments) {
+  public Windows(final IntervalMap<Boolean> segments) {
     this.segments = segments;
   }
 

@@ -23,7 +23,7 @@ public final class GreaterThan implements Expression<Windows> {
     final var leftProfile = this.left.evaluate(results, bounds, environment);
     final var rightProfile = this.right.evaluate(results, bounds, environment);
 
-    return leftProfile.greaterThan(rightProfile, bounds);
+    return leftProfile.greaterThan(rightProfile).select(bounds);
   }
 
   @Override

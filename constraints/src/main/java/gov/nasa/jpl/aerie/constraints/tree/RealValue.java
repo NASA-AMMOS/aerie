@@ -2,9 +2,11 @@ package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
-import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
+import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.List;
 import java.util.Objects;
@@ -20,9 +22,7 @@ public final class RealValue implements Expression<LinearProfile> {
   @Override
   public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     return new LinearProfile(
-        List.of(
-            new LinearProfilePiece(bounds, this.value, 0.0)
-        )
+        Segment.of(bounds, new LinearEquation(Duration.ZERO, value, 0.0))
     );
   }
 

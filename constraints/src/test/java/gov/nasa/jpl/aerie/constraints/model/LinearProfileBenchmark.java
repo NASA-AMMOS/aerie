@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,35 +13,35 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 
 public class LinearProfileBenchmark {
 
-  private static List<LinearProfilePiece> getSubSequenceP1(final long start){
+  private static List<Segment<LinearEquation>> getSubSequenceP1(final long start){
     return List.of(
-        new LinearProfilePiece(Interval.between(start, Inclusive, start + 4, Exclusive, SECONDS), 0, 1),
-        new LinearProfilePiece(Interval.between( start + 4, Inclusive,  start + 8, Exclusive, SECONDS),  4,  0),
-        new LinearProfilePiece(Interval.between( start + 8, Inclusive, start + 12, Exclusive, SECONDS),  4, -1),
-        new LinearProfilePiece(Interval.between(start + 12, Inclusive, start + 16, Exclusive, SECONDS),  0,  1),
-        new LinearProfilePiece(Interval.between(start + 16, Inclusive, start + 20, Inclusive, SECONDS),  0,  0)
+        Segment.of(Interval.between(start, Inclusive, start + 4, Exclusive, SECONDS), new LinearEquation(Duration.of(start, SECONDS), 0, 1)),
+        Segment.of(Interval.between( start + 4, Inclusive,  start + 8, Exclusive, SECONDS), new LinearEquation(Duration.of( start + 4, SECONDS),  4,  0)),
+        Segment.of(Interval.between( start + 8, Inclusive, start + 12, Exclusive, SECONDS), new LinearEquation(Duration.of( start + 8, SECONDS),  4, -1)),
+        Segment.of(Interval.between(start + 12, Inclusive, start + 16, Exclusive, SECONDS), new LinearEquation(Duration.of(start + 12, SECONDS),  0,  1)),
+        Segment.of(Interval.between(start + 16, Inclusive, start + 20, Inclusive, SECONDS), new LinearEquation(Duration.of(start + 16, SECONDS),  0,  0))
     );
   }
 
-  private static List<LinearProfilePiece> getSubSequenceP2(final long start){
+  private static List<Segment<LinearEquation>> getSubSequenceP2(final long start){
     return List.of(
-        new LinearProfilePiece(Interval.between(start, Inclusive, start + 2, Exclusive, SECONDS), 0, 1),
-        new LinearProfilePiece(Interval.between( start + 2, Inclusive,  start + 4, Exclusive, SECONDS),  2,  0),
-        new LinearProfilePiece(Interval.between( start + 4, Inclusive,  start + 6, Exclusive, SECONDS),  2,  1),
-        new LinearProfilePiece(Interval.between( start + 6, Inclusive, start + 12, Exclusive, SECONDS),  4,  0),
-        new LinearProfilePiece(Interval.between(start + 12, Inclusive, start + 16, Exclusive, SECONDS),  4, -1),
-        new LinearProfilePiece(Interval.between(start + 16, Inclusive, start + 20, Inclusive, SECONDS),  0,  0)
+        Segment.of(Interval.between(start, Inclusive, start + 2, Exclusive, SECONDS), new LinearEquation(Duration.of(start, SECONDS), 0, 1)),
+        Segment.of(Interval.between( start + 2, Inclusive,  start + 4, Exclusive, SECONDS), new LinearEquation(Duration.of( start + 2, SECONDS),  2,  0)),
+        Segment.of(Interval.between( start + 4, Inclusive,  start + 6, Exclusive, SECONDS), new LinearEquation(Duration.of( start + 4, SECONDS),  2,  1)),
+        Segment.of(Interval.between( start + 6, Inclusive, start + 12, Exclusive, SECONDS), new LinearEquation(Duration.of( start + 6, SECONDS),  4,  0)),
+        Segment.of(Interval.between(start + 12, Inclusive, start + 16, Exclusive, SECONDS), new LinearEquation(Duration.of(start + 12, SECONDS), 4, -1)),
+        Segment.of(Interval.between(start + 16, Inclusive, start + 20, Inclusive, SECONDS), new LinearEquation(Duration.of(start + 16, SECONDS), 0, 0))
     );
   }
 
   public static void firstMethod(LinearProfile profile1, LinearProfile profile2, int times, long durationSequence){
     //test at the middle of the profile
     final var testAt = times / 2;
-    profile1.greaterThan(profile2, Interval.between(testAt * durationSequence, (testAt + 1) * durationSequence, SECONDS));
+    profile1.greaterThan(profile2);
   }
 
   public static void secondMethod(final LinearProfile profile1, final LinearProfile profile2, final long start, final int times, final long durationSequence){
-    profile1.greaterThan(profile2, Interval.between(start, times * durationSequence, SECONDS));
+    profile1.greaterThan(profile2);
   }
 
 
@@ -52,8 +54,8 @@ public class LinearProfileBenchmark {
     //number of runs
     final var nbRuns = 30;
 
-    final var list1 = new ArrayList<LinearProfilePiece>();
-    final var list2 = new ArrayList<LinearProfilePiece>();
+    final var list1 = new ArrayList<Segment<LinearEquation>>();
+    final var list2 = new ArrayList<Segment<LinearEquation>>();
 
     for(var i = 0; i < times; i++){
       long startsub = start + (i * durationSequence);
