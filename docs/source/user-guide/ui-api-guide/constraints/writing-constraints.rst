@@ -6,7 +6,7 @@ The goal of most constraints is to produce a ``Windows`` object through
 operations on profiles and activity instances. This is a conceptual
 guide to what they represent. More specific documentation is generated
 for the `Constraints API
-documentation <../../constraints-edsl-api>`_.
+documentation <../../../../constraints-edsl-api>`_.
 
 Important Concepts
 ==================
@@ -46,7 +46,7 @@ to happen, not the conditions you *don’t* want to happen.
 There are a few ways to calculate a ``Windows`` object from profiles,
 and many operations that can be done on them; including the traditional
 boolean ``and``, ``or``, and ``not``. These are all in the `API
-documentation <../../constraints-edsl-api>`__. Like all profiles,
+documentation <../../../../constraints-edsl-api>`__. Like all profiles,
 Windows can have gaps too. However, some operations (such as converting
 to ``Spans`` or splitting segments) are not possible on gaps, so you’ll
 be required to apply a default value using
@@ -82,7 +82,7 @@ ______________________
 
 Not all constraints are based solely off of a ``Windows`` object. The main exceptions are constraints that deal with
 individual activity instances, because these will use the
-`Constraint.ForEachActivity(...) <../../constraints-edsl-api/classes/Constraint/#foreachactivity>`_ function instead of
+`Constraint.ForEachActivity(...) <../../../../constraints-edsl-api/classes/Constraint/#foreachactivity>`_ function instead of
 returning a basic ``Windows``. This will evaluate your ``Windows`` expression once for each instance of the given activity
 type, and associate any violations in those expressions with the activity instance it was evaluated on, which can be helpful
 in the UI to figure out which activity caused the violation.
