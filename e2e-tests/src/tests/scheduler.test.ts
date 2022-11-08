@@ -32,6 +32,11 @@ test.describe('Scheduling', () => {
     await delay(2000);
   });
 
+  test('Get scheduling DSL TypeScript', async ({ request }) => {
+    const schedulingDslTypes = await req.getSchedulingDslTypeScript(request, mission_model_id);
+    expect(schedulingDslTypes.typescriptFiles.length).toEqual(7);
+  });
+
   test('Create Plan', async ({ request }) => {
     const plan_input : CreatePlanInput = {
       model_id : mission_model_id,

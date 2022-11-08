@@ -1,8 +1,13 @@
 type SchedulingDslTypesResponse = {
   reason: string;
   status: 'failure' | 'success';
-  typescript: string;
+  typescriptFiles: TypescriptFile[];
 };
+
+type TypescriptFile = {
+  filePath: string;
+  content: string;
+}
 
 type SchedulingGoal = {
   analyses: SchedulingGoalAnalysis[];
