@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -51,9 +50,14 @@ public class SimulateMapSchedule {
           startTime,
           simulationDuration);
 
-      SimulationResults.resourceSamples(simulationResults).forEach((name, samples) -> {
+      simulationResults.realProfiles.forEach((name, samples) -> {
         System.out.println(name + ":");
-        samples.forEach(point -> System.out.format("\t%s\t%s\n", point.getKey(), point.getValue()));
+        samples.getRight().forEach(point -> System.out.format("\t%s\t%s\n", point.getKey(), point.getValue()));
+      });
+
+      simulationResults.discreteProfiles.forEach((name, samples) -> {
+        System.out.println(name + ":");
+        samples.getRight().forEach(point -> System.out.format("\t%s\t%s\n", point.getKey(), point.getValue()));
       });
 
       simulationResults.simulatedActivities.forEach((name, activity) -> {

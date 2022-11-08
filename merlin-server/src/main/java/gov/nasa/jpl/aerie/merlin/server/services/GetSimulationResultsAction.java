@@ -9,7 +9,6 @@ import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
@@ -75,10 +74,48 @@ public final class GetSimulationResultsAction {
   throws NoSuchPlanException
   {
     final var revisionData = this.planService.getPlanRevisionData(planId);
-    return this.simulationService
-        .get(planId, revisionData)
-        .map(SimulationResults::resourceSamples)
-        .orElseGet(Collections::emptyMap);
+    final var simulationResults$ = this.simulationService.get(planId, revisionData);
+    if (simulationResults$.isEmpty()) return Collections.emptyMap();
+    final var simulationResults = simulationResults$.get();
+
+    final var samples = new HashMap<String, List<Pair<Duration, SerializedValue>>>();
+
+    simulationResults.realProfiles.forEach((name, p) -> {
+      var elapsed = Duration.ZERO;
+      var profile = p.getRight();
+
+      final var timeline = new ArrayList<Pair<Duration, SerializedValue>>();
+      for (final var piece : profile) {
+        final var extent = piece.getLeft();
+        final var dynamics = piece.getRight();
+
+        timeline.add(Pair.of(elapsed, SerializedValue.of(
+            dynamics.initial)));
+        elapsed = elapsed.plus(extent);
+        timeline.add(Pair.of(elapsed, SerializedValue.of(
+            dynamics.initial + dynamics.rate * extent.ratioOver(Duration.SECONDS))));
+      }
+
+      samples.put(name, timeline);
+    });
+    simulationResults.discreteProfiles.forEach((name, p) -> {
+      var elapsed = Duration.ZERO;
+      var profile = p.getRight();
+
+      final var timeline = new ArrayList<Pair<Duration, SerializedValue>>();
+      for (final var piece : profile) {
+        final var extent = piece.getLeft();
+        final var value = piece.getRight();
+
+        timeline.add(Pair.of(elapsed, value));
+        elapsed = elapsed.plus(extent);
+        timeline.add(Pair.of(elapsed, value));
+      }
+
+      samples.put(name, timeline);
+    });
+
+    return samples;
   }
 
   public Map<String, List<Violation>> getViolations(final PlanId planId)

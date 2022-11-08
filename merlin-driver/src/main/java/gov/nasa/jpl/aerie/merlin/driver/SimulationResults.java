@@ -9,8 +9,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -40,55 +38,6 @@ public final class SimulationResults {
     this.simulatedActivities = simulatedActivities;
     this.unfinishedActivities = unfinishedActivities;
     this.events = events;
-  }
-
-  public static Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples(final SimulationResults results) {
-      return takeSamples(results.realProfiles, results.discreteProfiles);
-  }
-
-  private static Map<String, List<Pair<Duration, SerializedValue>>>
-  takeSamples(
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>> realProfiles,
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles)
-  {
-    final var samples = new HashMap<String, List<Pair<Duration, SerializedValue>>>();
-
-    realProfiles.forEach((name, p) -> {
-      var elapsed = Duration.ZERO;
-      var profile = p.getRight();
-
-      final var timeline = new ArrayList<Pair<Duration, SerializedValue>>();
-      for (final var piece : profile) {
-        final var extent = piece.getLeft();
-        final var dynamics = piece.getRight();
-
-        timeline.add(Pair.of(elapsed, SerializedValue.of(
-            dynamics.initial)));
-        elapsed = elapsed.plus(extent);
-        timeline.add(Pair.of(elapsed, SerializedValue.of(
-            dynamics.initial + dynamics.rate * extent.ratioOver(Duration.SECONDS))));
-      }
-
-      samples.put(name, timeline);
-    });
-    discreteProfiles.forEach((name, p) -> {
-      var elapsed = Duration.ZERO;
-      var profile = p.getRight();
-
-      final var timeline = new ArrayList<Pair<Duration, SerializedValue>>();
-      for (final var piece : profile) {
-        final var extent = piece.getLeft();
-        final var value = piece.getRight();
-
-        timeline.add(Pair.of(elapsed, value));
-        elapsed = elapsed.plus(extent);
-        timeline.add(Pair.of(elapsed, value));
-      }
-
-      samples.put(name, timeline);
-    });
-
-    return samples;
   }
 
   @Override
