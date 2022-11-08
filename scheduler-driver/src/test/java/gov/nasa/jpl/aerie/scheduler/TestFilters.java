@@ -1,9 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
-import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.And;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
@@ -79,23 +79,23 @@ public class TestFilters {
 
   public DiscreteProfile smallState1(final Interval horizon) {
     return new DiscreteProfile(List.of(
-        new DiscreteProfilePiece(Interval.between(horizon.start.in(SECONDS), Inclusive, 20, Exclusive, SECONDS), SerializedValue.of(true)),
-        new DiscreteProfilePiece(Interval.between(20, Inclusive, 25, Exclusive, SECONDS), SerializedValue.of(false)),
-        new DiscreteProfilePiece(Interval.between(25, Inclusive, horizon.end.in(SECONDS), Exclusive, SECONDS), SerializedValue.of(true))
+        Segment.of(Interval.between(horizon.start.in(SECONDS), Inclusive, 20, Exclusive, SECONDS), SerializedValue.of(true)),
+        Segment.of(Interval.between(20, Inclusive, 25, Exclusive, SECONDS), SerializedValue.of(false)),
+        Segment.of(Interval.between(25, Inclusive, horizon.end.in(SECONDS), Exclusive, SECONDS), SerializedValue.of(true))
     ));
   }
 
   public DiscreteProfile smallState2(final Interval horizon) {
     return new DiscreteProfile(List.of(
-        new DiscreteProfilePiece(Interval.between(horizon.start.in(SECONDS), Inclusive, 2, Exclusive, SECONDS), SerializedValue.of(true)),
-        new DiscreteProfilePiece(Interval.between(2, Inclusive, 3, Exclusive, SECONDS), SerializedValue.of(false)),
-        new DiscreteProfilePiece(Interval.between(3, Inclusive, 6, Exclusive, SECONDS), SerializedValue.of(true)),
-        new DiscreteProfilePiece(Interval.between(6, Inclusive, 7, Exclusive, SECONDS), SerializedValue.of(false)),
-        new DiscreteProfilePiece(Interval.between(7, Inclusive, 10, Exclusive, SECONDS), SerializedValue.of(true)),
-        new DiscreteProfilePiece(Interval.between(10, Inclusive, 11, Exclusive, SECONDS), SerializedValue.of(false)),
-        new DiscreteProfilePiece(Interval.between(11, Inclusive, 15, Exclusive, SECONDS), SerializedValue.of(true)),
-        new DiscreteProfilePiece(Interval.between(15, Inclusive, 22, Exclusive, SECONDS), SerializedValue.of(false)),
-        new DiscreteProfilePiece(Interval.between(22, Inclusive, horizon.end.in(SECONDS), Exclusive, SECONDS), SerializedValue.of(false))
+        Segment.of(Interval.between(horizon.start.in(SECONDS), Inclusive, 2, Exclusive, SECONDS), SerializedValue.of(true)),
+        Segment.of(Interval.between(2, Inclusive, 3, Exclusive, SECONDS), SerializedValue.of(false)),
+        Segment.of(Interval.between(3, Inclusive, 6, Exclusive, SECONDS), SerializedValue.of(true)),
+        Segment.of(Interval.between(6, Inclusive, 7, Exclusive, SECONDS), SerializedValue.of(false)),
+        Segment.of(Interval.between(7, Inclusive, 10, Exclusive, SECONDS), SerializedValue.of(true)),
+        Segment.of(Interval.between(10, Inclusive, 11, Exclusive, SECONDS), SerializedValue.of(false)),
+        Segment.of(Interval.between(11, Inclusive, 15, Exclusive, SECONDS), SerializedValue.of(true)),
+        Segment.of(Interval.between(15, Inclusive, 22, Exclusive, SECONDS), SerializedValue.of(false)),
+        Segment.of(Interval.between(22, Inclusive, horizon.end.in(SECONDS), Exclusive, SECONDS), SerializedValue.of(false))
         ));
   }
 
