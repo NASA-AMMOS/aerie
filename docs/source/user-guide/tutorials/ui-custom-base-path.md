@@ -12,10 +12,10 @@ This document lists the instructions for building an aerie-ui Docker image with 
    npm install
    ```
 
-   When you clone aerie-ui the default branch is [develop](https://github.com/NASA-AMMOS/aerie-ui/tree/develop). If you want to build an image from a [specific release](https://github.com/NASA-AMMOS/aerie-ui/releases) you have to checkout the proper tag. For example to checkout [v0.13.2](https://github.com/NASA-AMMOS/aerie-ui/releases/tag/v0.13.2) do:
+   When you clone aerie-ui the default branch is [develop](https://github.com/NASA-AMMOS/aerie-ui/tree/develop). If you want to build an image from a [specific release](https://github.com/NASA-AMMOS/aerie-ui/releases) you have to checkout the proper tag. For example to checkout [v1.0.0](https://github.com/NASA-AMMOS/aerie-ui/releases/tag/v1.0.0) do:
 
    ```sh
-   git checkout tags/v0.13.2 -b v0.13.2
+   git checkout tags/v1.0.0 -b v1.0.0
    ```
 
 2. Update [svelte.config.js](https://github.com/NASA-AMMOS/aerie-ui/blob/develop/svelte.config.js) with the [base path](https://github.com/NASA-AMMOS/aerie-ui/blob/develop/svelte.config.js#L9) you want to use. Note that a leading `/` is required. So for example a valid base path is `/aerie`.
