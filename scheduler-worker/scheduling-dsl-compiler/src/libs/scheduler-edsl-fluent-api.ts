@@ -7,7 +7,6 @@
 
 import * as AST from "./scheduler-ast.js";
 import  * as WindowsEDSL from "./constraints-edsl-fluent-api.js";
-import type {ActivityType} from "./scheduler-mission-model-generated-code.js";
 
 type WindowProperty = AST.WindowProperty
 type TimingConstraintOperator = AST.TimingConstraintOperator
@@ -439,7 +438,7 @@ export class ActivityExpression {
    * Creates an actvity expression of a type
    * @param activityType the type
    */
-  public static ofType(activityType: ActivityType): ActivityExpression {
+  public static ofType(activityType: WindowsEDSL.Gen.ActivityType): ActivityExpression {
     return ActivityExpression.new({
       kind: AST.NodeKind.ActivityExpression,
       type: activityType
@@ -637,7 +636,7 @@ declare global {
      * Creates an actvity expression of a type
      * @param activityType the type
      */
-    public static ofType(activityType: ActivityType): ActivityExpression
+    public static ofType(activityType: WindowsEDSL.Gen.ActivityType): ActivityExpression
   }
   class TimingConstraint {
     /**
@@ -660,6 +659,7 @@ declare global {
   }
   var WindowProperty: typeof AST.WindowProperty
   var Operator: typeof AST.TimingConstraintOperator
+  var ActivityTypes: typeof WindowsEDSL.Gen.ActivityType
 
   type Double = number;
   type Integer = number;
@@ -679,4 +679,4 @@ export interface ClosedOpenInterval extends AST.ClosedOpenInterval {}
 export interface ActivityTemplate extends AST.ActivityTemplate {}
 
 // Make Goal available on the global object
-Object.assign(globalThis, { GlobalSchedulingCondition, Goal, ActivityExpression, TimingConstraint: TimingConstraint, WindowProperty: AST.WindowProperty, Operator: AST.TimingConstraintOperator });
+Object.assign(globalThis, { GlobalSchedulingCondition, Goal, ActivityExpression, TimingConstraint: TimingConstraint, WindowProperty: AST.WindowProperty, Operator: AST.TimingConstraintOperator, ActivityTypes: WindowsEDSL.Gen.ActivityType });

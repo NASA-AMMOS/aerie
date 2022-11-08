@@ -1,8 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
+import org.junit.jupiter.api.Test;
+
 import static gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationServiceTestFixtures.MISSION_MODEL_TYPES;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import org.junit.jupiter.api.Test;
 
 public final class TypescriptCodeGenerationServiceTest {
 
@@ -13,11 +14,6 @@ public final class TypescriptCodeGenerationServiceTest {
             /** Start Codegen */
             import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';
             import type { Windows } from './constraints-edsl-fluent-api.js';
-            export enum ActivityType {
-              SampleActivity1 = 'SampleActivity1',
-              SampleActivity2 = 'SampleActivity2',
-              SampleActivityEmpty = 'SampleActivityEmpty',
-            }
             interface SampleActivity1 extends ActivityTemplate {}
             interface SampleActivity2 extends ActivityTemplate {}
             interface SampleActivityEmpty extends ActivityTemplate {}
@@ -44,7 +40,6 @@ public final class TypescriptCodeGenerationServiceTest {
             };
             declare global {
               var ActivityTemplates: typeof ActivityTemplateConstructors;
-              var ActivityTypes: typeof ActivityType;
               var Resources: typeof Resource;
             }
             // Make ActivityTemplates and ActivityTypes available on the global object
