@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.IntervalMap;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
@@ -17,130 +19,94 @@ import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
 
 public final class DiscreteProfile implements Profile<DiscreteProfile> {
-  public final List<DiscreteProfilePiece> profilePieces;
+  public final IntervalMap<SerializedValue> profilePieces;
 
-  public DiscreteProfile(final List<DiscreteProfilePiece> profilePieces) {
+  public DiscreteProfile(final IntervalMap<SerializedValue> profilePieces) {
     this.profilePieces = profilePieces;
   }
 
-  public DiscreteProfile(final DiscreteProfilePiece... profilePieces) {
-    this(List.of(profilePieces));
+  @SafeVarargs
+  public DiscreteProfile(final Segment<SerializedValue>... profilePieces) {
+    this.profilePieces = IntervalMap.of(profilePieces);
   }
 
-  private static boolean profileOutsideBounds(final DiscreteProfilePiece piece, final Interval bounds){
-    return piece.interval.isStrictlyBefore(bounds) || piece.interval.isStrictlyAfter(bounds);
+  public DiscreteProfile(final List<Segment<SerializedValue>> profilePieces) {
+    this.profilePieces = IntervalMap.of(profilePieces);
+  }
+
+  private static boolean profileOutsideBounds(final Segment<SerializedValue> piece, final Interval bounds){
+    return piece.interval().isStrictlyBefore(bounds) || piece.interval().isStrictlyAfter(bounds);
   }
 
   @Override
-  public Windows equalTo(final DiscreteProfile other, final Interval bounds) {
-    var windows = new Windows();
-    for (final var profilePiece : this.profilePieces) {
-      if(profileOutsideBounds(profilePiece, bounds)) continue;
-      for (final var otherPiece : other.profilePieces) {
-        if(profileOutsideBounds(otherPiece, bounds)) continue;
-        final var overlap = Interval.intersect(profilePiece.interval, otherPiece.interval);
-        if (!overlap.isEmpty()) {
-          windows = windows.set(overlap, profilePiece.value.equals(otherPiece.value));
+  public Windows equalTo(final DiscreteProfile other) {
+    return new Windows(
+        IntervalMap.map2(
+            this.profilePieces, other.profilePieces,
+            (left, right) -> left.flatMap($l -> right.map($l::equals))
+        )
+    );
+  }
+
+  @Override
+  public Windows notEqualTo(final DiscreteProfile other) {
+    return new Windows(
+        IntervalMap.map2(
+            this.profilePieces, other.profilePieces,
+            (left, right) -> left.flatMap($l -> right.map($r -> !$l.equals($r)))
+        )
+    );
+  }
+
+  @Override
+  public Windows changePoints() {
+    final var result = IntervalMap.<Boolean>builder().set(this.profilePieces.map($ -> false));
+    for (int i = 0; i < this.profilePieces.size(); i++) {
+      final var segment = this.profilePieces.get(i);
+      if (i == 0) {
+        if (!segment.interval().contains(Duration.MIN_VALUE)) {
+          result.unset(Interval.at(segment.interval().start));
+        }
+      } else {
+        final var previousSegment = this.profilePieces.get(i-1);
+        if (Interval.meets(previousSegment.interval(), segment.interval())) {
+          if (!previousSegment.value().equals(segment.value())) {
+            result.set(Interval.at(segment.interval().start), true);
+          }
+        } else {
+          result.unset(Interval.at(segment.interval().start));
         }
       }
     }
-    return windows.select(bounds);
+
+    return new Windows(result.build());
   }
 
-  @Override
-  public Windows notEqualTo(final DiscreteProfile other, final Interval bounds) {
-    return this.equalTo(other, bounds).not();
-  }
-
-  @Override
-  public Windows changePoints(final Interval bounds) {
-    var changePoints = new Windows();
-    if (this.profilePieces.size() == 0) return changePoints;
-
-    final var iter = this.profilePieces.iterator();
-    var prev = iter.next();
-    if (prev.interval.start.noLongerThan(bounds.start)) {
-      changePoints = changePoints.set(prev.interval, false);
-    } else {
-      changePoints = changePoints.set(
-          Interval.between(
-              prev.interval.start,
-              Interval.Inclusivity.Exclusive,
-              prev.interval.end,
-              prev.interval.endInclusivity
-          ),
-          false
-      );
-    }
-
-    while (iter.hasNext()) {
-      final var curr = iter.next();
-
-      if (Interval.meets(prev.interval, curr.interval)) {
-        changePoints = changePoints.set(curr.interval, false);
-        if (!prev.value.equals(curr.value)) changePoints = changePoints.set(Interval.at(curr.interval.start), true);
+  public Windows transitions(final SerializedValue oldState, final SerializedValue newState) {
+    final var result = IntervalMap.<Boolean>builder().set(this.profilePieces.map($ -> false));
+    for (int i = 0; i < this.profilePieces.size(); i++) {
+      final var segment = this.profilePieces.get(i);
+      if (i == 0) {
+        if (segment.value().equals(newState) && !segment.interval().contains(Duration.MIN_VALUE)) {
+          result.unset(Interval.at(segment.interval().start));
+        }
       } else {
-        changePoints = changePoints.set(
-            Interval.between(
-                curr.interval.start,
-                Interval.Inclusivity.Exclusive,
-                curr.interval.end,
-                curr.interval.endInclusivity),
-            false
-        );
+        final var previousSegment = this.profilePieces.get(i-1);
+        if (Interval.meets(previousSegment.interval(), segment.interval())) {
+          if (previousSegment.value().equals(oldState) && segment.value().equals(newState)) {
+            result.set(Interval.at(segment.interval().start), true);
+          }
+        } else if (segment.value().equals(newState)) {
+          result.unset(Interval.at(segment.interval().start));
+        }
       }
-
-      prev = curr;
     }
 
-    return changePoints.select(bounds);
+    return new Windows(result.build());
   }
 
-  public Windows transitions(final SerializedValue oldState, final SerializedValue newState, final Interval bounds) {
-    var transitionPoints = new Windows();
-    if (this.profilePieces.size() == 0) return transitionPoints;
-
-    final var iter = this.profilePieces.iterator();
-    var prev = iter.next();
-    if (prev.interval.start.noLongerThan(bounds.start)) {
-      transitionPoints = transitionPoints.set(prev.interval, false);
-    } else {
-      transitionPoints = transitionPoints.set(
-          Interval.between(
-              prev.interval.start,
-              Interval.Inclusivity.Exclusive,
-              prev.interval.end,
-              prev.interval.endInclusivity
-          ),
-          false
-      );
-    }
-
-    while (iter.hasNext()) {
-      final var curr = iter.next();
-
-      if (Interval.meets(prev.interval, curr.interval)) {
-        transitionPoints = transitionPoints.set(curr.interval, false);
-        if (prev.value.equals(oldState) && curr.value.equals(newState)) transitionPoints = transitionPoints.set(Interval.at(curr.interval.start), true);
-      } else {
-        transitionPoints = transitionPoints.set(
-            Interval.between(
-                curr.interval.start,
-                Interval.Inclusivity.Exclusive,
-                curr.interval.end,
-                curr.interval.endInclusivity),
-            false
-        );
-      }
-
-      prev = curr;
-    }
-
-    return transitionPoints.select(bounds);
-  }
-
-  public static DiscreteProfile fromSimulatedProfile(final Duration offsetFromPlanStart, final List<Pair<Duration, SerializedValue>> simulatedProfile) {
-    return fromProfileHelper(offsetFromPlanStart, simulatedProfile, Optional::of);
+  public static DiscreteProfile fromSimulatedProfile(final List<Pair<Duration, SerializedValue>> simulatedProfile) {
+    return fromProfileHelper(Duration.ZERO, simulatedProfile, Optional::of);
   }
 
   public static DiscreteProfile fromExternalProfile(final Duration offsetFromPlanStart, final List<Pair<Duration, Optional<SerializedValue>>> externalProfile) {
@@ -152,7 +118,7 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
       final List<Pair<Duration, T>> profile,
       final Function<T, Optional<SerializedValue>> transform
   ) {
-    final var result = new ArrayList<DiscreteProfilePiece>(profile.size());
+    final var result = new IntervalMap.Builder<SerializedValue>();
     var cursor = offsetFromPlanStart;
     for (final var pair: profile) {
       final var nextCursor = cursor.plus(pair.getKey());
@@ -160,16 +126,16 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
       final var value = transform.apply(pair.getValue());
       final Duration finalCursor = cursor;
       value.ifPresent(
-          $ -> result.add(new DiscreteProfilePiece(
+          $ -> result.set(
               Interval.between(finalCursor, Inclusive, nextCursor, Exclusive),
               $
-          ))
+          )
       );
 
       cursor = nextCursor;
     }
 
-    return new DiscreteProfile(result);
+    return new DiscreteProfile(result.build());
   }
 
   @Override

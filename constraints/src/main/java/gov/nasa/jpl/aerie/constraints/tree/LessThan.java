@@ -23,7 +23,7 @@ public final class LessThan implements Expression<Windows> {
     LinearProfile leftProfile = this.left.evaluate(results, bounds, environment);
     LinearProfile rightProfile = this.right.evaluate(results, bounds, environment);
 
-    return leftProfile.lessThan(rightProfile, bounds);
+    return leftProfile.lessThan(rightProfile).select(bounds);
   }
 
   @Override

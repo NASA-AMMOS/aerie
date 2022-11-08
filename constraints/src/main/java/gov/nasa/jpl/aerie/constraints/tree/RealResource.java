@@ -5,9 +5,10 @@ import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
-import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
+import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -37,14 +38,11 @@ public final class RealResource implements Expression<LinearProfile> {
   }
 
   private LinearProfile convertDiscreteProfile(final DiscreteProfile profile) {
-    final var linearPieces = new ArrayList<LinearProfilePiece>(profile.profilePieces.size());
-    for (final var piece : profile.profilePieces) {
-      final var value = piece.value.asReal().orElseThrow(
-          () -> new InputMismatchException("Discrete profile of non-real type cannot be converted to linear"));
-      linearPieces.add(new LinearProfilePiece(piece.interval, value, 0));
-    }
-
-    return new LinearProfile(linearPieces);
+    return new LinearProfile(profile.profilePieces.map(
+        $ -> new LinearEquation(Duration.ZERO, $.asReal().orElseThrow(
+            () -> new InputMismatchException("Discrete profile of non-real type cannot be converted to linear")
+        ), 0.0)
+    ));
   }
 
   @Override

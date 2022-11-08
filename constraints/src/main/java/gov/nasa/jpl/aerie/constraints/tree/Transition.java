@@ -23,7 +23,7 @@ public final class Transition implements Expression<Windows> {
 
   @Override
   public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    return this.profile.evaluate(results, bounds, environment).transitions(oldState, newState, bounds);
+    return this.profile.evaluate(results, bounds, environment).transitions(oldState, newState).select(bounds);
   }
 
   @Override

@@ -23,7 +23,7 @@ public final class LessThanOrEqual implements Expression<Windows> {
     final var leftProfile = this.left.evaluate(results, bounds, environment);
     final var rightProfile = this.right.evaluate(results, bounds, environment);
 
-    return leftProfile.lessThanOrEqualTo(rightProfile, bounds);
+    return leftProfile.lessThanOrEqualTo(rightProfile).select(bounds);
   }
 
   @Override

@@ -23,7 +23,7 @@ public final class GreaterThanOrEqual implements Expression<Windows> {
     final var leftProfile = this.left.evaluate(results, bounds, environment);
     final var rightProfile = this.right.evaluate(results, bounds, environment);
 
-    return leftProfile.greaterThanOrEqualTo(rightProfile, bounds);
+    return leftProfile.greaterThanOrEqualTo(rightProfile).select(bounds);
   }
 
   @Override

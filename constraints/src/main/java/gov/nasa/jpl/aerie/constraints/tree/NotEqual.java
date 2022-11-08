@@ -23,7 +23,7 @@ public final class NotEqual<P extends Profile<P>> implements Expression<Windows>
     final var leftProfile = this.left.evaluate(results, bounds, environment);
     final var rightProfile = this.right.evaluate(results, bounds, environment);
 
-    return leftProfile.notEqualTo(rightProfile, bounds);
+    return leftProfile.notEqualTo(rightProfile).select(bounds);
   }
 
   @Override
