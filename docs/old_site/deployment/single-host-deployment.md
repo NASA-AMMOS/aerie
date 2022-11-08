@@ -30,12 +30,12 @@ The Aerie deployment configures the port numbers for each container via docker-c
 ## Administration Procedures
 
 Aerie employs an orchestrated containerized architecture. Each of the software components are independently packaged and run in a container. 
-- aerie-commanding: Provides activity to command expansion authoring and processing. 
 - aerie-gateway: Main API gateway for Aerie
 - aerie-merlin: Handles all the logic and functionality for activity planning.
 - aerie-merlin-worker: Runs simulation jobs requested of the aerie-merlin service.
 - aerie-scheduler: Provides automated activity plan scheduling. 
 - aerie-scheduler-worker: Runs scheduling request jobs requested of the aerie-scheduler service.
+- aerie-sequencing: Provides command expansion, sequencing authoring, and command dictionary management.
 - aerie-ui: Hosts the web application and communicates with Aerie via the GraphQL Apollo Server.
 - postgres: Holds the data for the Merlin server container. This container is optional and included in many of the aerie docker compose files for convenience. Long term deployments will want to integrate a Postgres database not running within a container. 
 - hasura: Serves the Aerie GraphQL API.

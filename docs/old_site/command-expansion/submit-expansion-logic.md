@@ -2,7 +2,7 @@
 
 ## Upload
 
-Once you've defined your expansion logic you need to upload it back to the commanding server and link it to the `activity_type` you wrote it for. Below you can use the GraphGL to upload the expansion logic. Use the GraphQL to upload the expansion logic file for the activity_type
+Once you've defined your expansion logic you need to upload it back to the sequencing server and link it to the `activity_type` you wrote it for. Below you can use the GraphGL to upload the expansion logic. Use the GraphQL to upload the expansion logic file for the activity_type
 
 ```
 mutation UploadExpansionLogic(

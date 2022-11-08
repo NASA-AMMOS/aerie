@@ -13,10 +13,10 @@ include 'parsing-utilities'
 
 // Services for deployment within the Aerie infrastructure
 include 'merlin-server'
-include 'scheduler-server'
-include 'command-expansion-server'
 include 'merlin-worker'
+include 'scheduler-server'
 include 'scheduler-worker'
+include 'sequencing-server'
 
 // Command-line interface direct to services
 include 'constraints'

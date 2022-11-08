@@ -6,7 +6,7 @@ remote_relationships:
   definition:
     to_source:
       relationship_type: array
-      source: AerieCommanding
+      source: AerieSequencing
       table:
         schema: public
         name: expansion_rule

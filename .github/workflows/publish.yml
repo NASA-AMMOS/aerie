@@ -153,33 +153,33 @@ jobs:
           push: true
           tags: ${{ steps.aerieScheduler.outputs.tags }}
           labels: ${{ steps.aerieScheduler.outputs.labels }}
-      # Build, scan, and push aerie-commanding Docker artifacts.
-      - name: Extract metadata (tags, labels) for aerie-commanding Docker image
-        id: aerieCommanding
+      # Build, scan, and push aerie-sequencing Docker artifacts.
+      - name: Extract metadata (tags, labels) for aerie-sequencing Docker image
+        id: aerieSequencing
         uses: docker/metadata-action@v3
         with:
-          images: ${{ env.REGISTRY }}/nasa-ammos/aerie-commanding
-      - name: Build aerie-commanding Docker image
+          images: ${{ env.REGISTRY }}/nasa-ammos/aerie-sequencing
+      - name: Build aerie-sequencing Docker image
         uses: docker/build-push-action@v2
         with:
-          context: ./command-expansion-server
+          context: ./sequencing-server
           load: true
-          tags: ${{ env.REGISTRY }}/nasa-ammos/aerie-commanding:${{ github.sha }}
-      - name: Scan aerie-commanding Docker image
+          tags: ${{ env.REGISTRY }}/nasa-ammos/aerie-sequencing:${{ github.sha }}
+      - name: Scan aerie-sequencing Docker image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-commanding:${{ github.sha }}
+          image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-sequencing:${{ github.sha }}
           format: 'table'
           exit-code: '0'
           ignore-unfixed: true
           severity: 'CRITICAL'
-      - name: Push aerie-commanding Docker image
+      - name: Push aerie-sequencing Docker image
         uses: docker/build-push-action@v2
         with:
-          context: ./command-expansion-server
+          context: ./sequencing-server
           push: true
-          tags: ${{ steps.aerieCommanding.outputs.tags }}
-          labels: ${{ steps.aerieCommanding.outputs.labels }}
+          tags: ${{ steps.aerieSequencing.outputs.tags }}
+          labels: ${{ steps.aerieSequencing.outputs.labels }}
       # Publish via Gradle.
       - name: Publish Package
         run: ./gradlew publish -Pversion.isRelease=$IS_RELEASE

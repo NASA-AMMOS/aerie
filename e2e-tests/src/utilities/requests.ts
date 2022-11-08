@@ -71,13 +71,13 @@ const req = {
     return response.ok();
   },
 
-  async healthCommanding(request: APIRequestContext): Promise<boolean> {
-    const response = await request.get(`${urls.COMMANDING_URL}/health`);
+  async healthScheduler(request: APIRequestContext): Promise<boolean> {
+    const response = await request.get(`${urls.SCHEDULER_URL}/health`);
     return response.ok();
   },
 
-  async healthScheduler(request: APIRequestContext): Promise<boolean> {
-    const response = await request.get(`${urls.SCHEDULER_URL}/health`);
+  async healthSequencing(request: APIRequestContext): Promise<boolean> {
+    const response = await request.get(`${urls.SEQUENCING_URL}/health`);
     return response.ok();
   },
 
