@@ -2045,8 +2045,8 @@ public class PlanCollaborationTests {
       final int deleteUncontestedActId = insertActivity(basePlan);
       final int modifyContestedSupplyingActId = insertActivity(basePlan);
       final int modifyContestedReceivingActId = insertActivity(basePlan);
-      final int deleteContestedSupplyingActId = insertActivity(basePlan);
-      final int deleteContestedReceivingActId = insertActivity(basePlan);
+      final int deleteContestedSupplyingResolveSupplyingActId = insertActivity(basePlan);
+      final int deleteContestedReceivingResolveReceivingActId = insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child");
 
       assertEquals(6, getActivities(basePlan).size());
@@ -2062,11 +2062,11 @@ public class PlanCollaborationTests {
       updateActivityName("Modify Contested Receiving Parent", modifyContestedReceivingActId, basePlan);
       updateActivityName("Modify Contested Receiving Child", modifyContestedReceivingActId, childPlan);
 
-      updateActivityName("Delete Contested Supplying Parent", deleteContestedSupplyingActId, basePlan);
-      deleteActivityDirective(childPlan, deleteContestedSupplyingActId);
+      updateActivityName("Delete Contested Supplying Parent Resolve Supplying", deleteContestedSupplyingResolveSupplyingActId, basePlan);
+      deleteActivityDirective(childPlan, deleteContestedSupplyingResolveSupplyingActId);
 
-      deleteActivityDirective(basePlan, deleteContestedReceivingActId);
-      updateActivityName("Delete Contested Receiving Child", deleteContestedReceivingActId, childPlan);
+      deleteActivityDirective(basePlan, deleteContestedReceivingResolveReceivingActId);
+      updateActivityName("Delete Contested Receiving Child Resolve Receiving", deleteContestedReceivingResolveReceivingActId, childPlan);
 
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
       beginMerge(mergeRQ);
@@ -2074,8 +2074,8 @@ public class PlanCollaborationTests {
       assertEquals(4, getConflictingActivities(mergeRQ).size());
       setResolution(mergeRQ, modifyContestedSupplyingActId, "supplying");
       setResolution(mergeRQ, modifyContestedReceivingActId, "receiving");
-      setResolution(mergeRQ, deleteContestedSupplyingActId, "supplying");
-      setResolution(mergeRQ, deleteContestedReceivingActId, "receiving");
+      setResolution(mergeRQ, deleteContestedSupplyingResolveSupplyingActId, "supplying");
+      setResolution(mergeRQ, deleteContestedReceivingResolveReceivingActId, "receiving");
 
       final Activity muActivityBefore = getActivity(basePlan, modifyUncontestedActId);
       final Activity mcsActivityBefore = getActivity(basePlan, modifyContestedSupplyingActId);
