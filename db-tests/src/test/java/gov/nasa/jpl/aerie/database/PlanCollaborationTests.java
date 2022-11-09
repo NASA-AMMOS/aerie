@@ -2046,11 +2046,13 @@ public class PlanCollaborationTests {
       final int modifyContestedSupplyingActId = insertActivity(basePlan);
       final int modifyContestedReceivingActId = insertActivity(basePlan);
       final int deleteContestedSupplyingResolveSupplyingActId = insertActivity(basePlan);
+      final int deleteContestedSupplyingResolveReceivingActId = insertActivity(basePlan);
       final int deleteContestedReceivingResolveReceivingActId = insertActivity(basePlan);
+      final int deleteContestedReceivingResolveSupplyingActId = insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child");
 
-      assertEquals(6, getActivities(basePlan).size());
-      assertEquals(6, getActivities(childPlan).size());
+      assertEquals(8, getActivities(basePlan).size());
+      assertEquals(8, getActivities(childPlan).size());
 
       updateActivityName("Test", modifyUncontestedActId, childPlan);
 
@@ -2065,28 +2067,37 @@ public class PlanCollaborationTests {
       updateActivityName("Delete Contested Supplying Parent Resolve Supplying", deleteContestedSupplyingResolveSupplyingActId, basePlan);
       deleteActivityDirective(childPlan, deleteContestedSupplyingResolveSupplyingActId);
 
+      updateActivityName("Delete Contested Supplying Parent Resolve Receiving", deleteContestedSupplyingResolveReceivingActId, basePlan);
+      deleteActivityDirective(childPlan, deleteContestedSupplyingResolveReceivingActId);
+
       deleteActivityDirective(basePlan, deleteContestedReceivingResolveReceivingActId);
       updateActivityName("Delete Contested Receiving Child Resolve Receiving", deleteContestedReceivingResolveReceivingActId, childPlan);
+
+      deleteActivityDirective(basePlan, deleteContestedReceivingResolveSupplyingActId);
+      updateActivityName("Delete Contested Receiving Child Resolve Supplying", deleteContestedReceivingResolveSupplyingActId, childPlan);
 
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
       beginMerge(mergeRQ);
 
-      assertEquals(4, getConflictingActivities(mergeRQ).size());
+      assertEquals(6, getConflictingActivities(mergeRQ).size());
       setResolution(mergeRQ, modifyContestedSupplyingActId, "supplying");
       setResolution(mergeRQ, modifyContestedReceivingActId, "receiving");
       setResolution(mergeRQ, deleteContestedSupplyingResolveSupplyingActId, "supplying");
+      setResolution(mergeRQ, deleteContestedSupplyingResolveReceivingActId, "receiving");
       setResolution(mergeRQ, deleteContestedReceivingResolveReceivingActId, "receiving");
+      setResolution(mergeRQ, deleteContestedReceivingResolveSupplyingActId, "supplying");
 
       final Activity muActivityBefore = getActivity(basePlan, modifyUncontestedActId);
       final Activity mcsActivityBefore = getActivity(basePlan, modifyContestedSupplyingActId);
       final Activity mcrActivityBefore = getActivity(basePlan, modifyContestedReceivingActId);
+      final Activity dcsActivityBefore = getActivity(basePlan, deleteContestedSupplyingResolveReceivingActId);
 
       commitMerge(mergeRQ);
 
       final var postMergeActivities = getActivities(basePlan);
 
-      assertEquals(3, postMergeActivities.size());
-      assertEquals(4, getActivities(childPlan).size());
+      assertEquals(5, postMergeActivities.size());
+      assertEquals(5, getActivities(childPlan).size());
 
       for (Activity activity : postMergeActivities) {
         if (activity.activityId == muActivityBefore.activityId) {
@@ -2100,6 +2111,12 @@ public class PlanCollaborationTests {
         } else if (activity.activityId == mcrActivityBefore.activityId) {
           // validate all shared properties
           assertActivityEquals(mcrActivityBefore, activity);
+        } else if (activity.activityId == deleteContestedSupplyingResolveReceivingActId) {
+          // validate all shared properties
+          assertActivityEquals(dcsActivityBefore, activity);
+        } else if (activity.activityId == deleteContestedReceivingResolveSupplyingActId) {
+          // validate all shared properties
+          assertActivityEquals(getActivity(childPlan, deleteContestedReceivingResolveSupplyingActId), activity);
         } else fail();
       }
     }
