@@ -11,7 +11,6 @@ import org.junit.jupiter.api.TestInstance;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -585,6 +584,22 @@ public class PlanCollaborationTests {
           WHERE id = %d;
           """.formatted(newStatus, requestId)
       );
+    }
+  }
+
+  private static void assertActivityEquals(final Activity expected, final Activity actual) {
+    // validate all shared properties
+    assertEquals(expected.name, actual.name);
+    assertEquals(expected.sourceSchedulingGoalId, actual.sourceSchedulingGoalId);
+    assertEquals(expected.createdAt, actual.createdAt);
+    assertEquals(expected.startOffset, actual.startOffset);
+    assertEquals(expected.type, actual.type);
+    assertEquals(expected.arguments, actual.arguments);
+    assertEquals(expected.metadata, actual.metadata);
+    assertEquals(expected.tags.length, actual.tags.length);
+    for(int j = 0; j < expected.tags.length; ++j)
+    {
+      assertEquals(expected.tags[j], actual.tags[j]);
     }
   }
   //endregion
@@ -2077,47 +2092,14 @@ public class PlanCollaborationTests {
         if (activity.activityId == muActivityBefore.activityId) {
           final var muActivityChild = getActivity(childPlan, modifyUncontestedActId);
           // validate all shared properties
-          assertEquals(muActivityChild.name, activity.name);
-          assertEquals(muActivityChild.sourceSchedulingGoalId, activity.sourceSchedulingGoalId);
-          assertEquals(muActivityChild.createdAt, activity.createdAt);
-          assertEquals(muActivityChild.startOffset, activity.startOffset);
-          assertEquals(muActivityChild.type, activity.type);
-          assertEquals(muActivityChild.arguments, activity.arguments);
-          assertEquals(muActivityChild.metadata, activity.metadata);
-          assertEquals(muActivityChild.tags.length, activity.tags.length);
-          for(int j = 0; j < muActivityChild.tags.length; ++j)
-          {
-            assertEquals(muActivityChild.tags[j], activity.tags[j]);
-          }
+          assertActivityEquals(muActivityChild, activity);
         } else if (activity.activityId == mcsActivityBefore.activityId) {
           final var mcsActivityChild = getActivity(childPlan, modifyContestedSupplyingActId);
           // validate all shared properties
-          assertEquals(mcsActivityChild.name, activity.name);
-          assertEquals(mcsActivityChild.sourceSchedulingGoalId, activity.sourceSchedulingGoalId);
-          assertEquals(mcsActivityChild.createdAt, activity.createdAt);
-          assertEquals(mcsActivityChild.startOffset, activity.startOffset);
-          assertEquals(mcsActivityChild.type, activity.type);
-          assertEquals(mcsActivityChild.arguments, activity.arguments);
-          assertEquals(mcsActivityChild.metadata, activity.metadata);
-          assertEquals(mcsActivityChild.tags.length, activity.tags.length);
-          for(int j = 0; j < mcsActivityChild.tags.length; ++j)
-          {
-            assertEquals(mcsActivityChild.tags[j], activity.tags[j]);
-          }
+          assertActivityEquals(mcsActivityChild, activity);
         } else if (activity.activityId == mcrActivityBefore.activityId) {
           // validate all shared properties
-          assertEquals(mcrActivityBefore.name, activity.name);
-          assertEquals(mcrActivityBefore.sourceSchedulingGoalId, activity.sourceSchedulingGoalId);
-          assertEquals(mcrActivityBefore.createdAt, activity.createdAt);
-          assertEquals(mcrActivityBefore.startOffset, activity.startOffset);
-          assertEquals(mcrActivityBefore.type, activity.type);
-          assertEquals(mcrActivityBefore.arguments, activity.arguments);
-          assertEquals(mcrActivityBefore.metadata, activity.metadata);
-          assertEquals(mcrActivityBefore.tags.length, activity.tags.length);
-          for(int j = 0; j < mcrActivityBefore.tags.length; ++j)
-          {
-            assertEquals(mcrActivityBefore.tags[j], activity.tags[j]);
-          }
+          assertActivityEquals(mcrActivityBefore, activity);
         } else fail();
       }
     }
