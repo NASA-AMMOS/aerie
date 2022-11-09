@@ -25,7 +25,7 @@ public final class RealParameter implements Expression<LinearProfile> {
   }
 
   @Override
-  public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public LinearProfile evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
     final var activity = environment.activityInstances().get(this.activityAlias);
     final var parameter = activity.parameters.get(this.parameterName);
     final var value = parameter.asReal().orElseThrow(

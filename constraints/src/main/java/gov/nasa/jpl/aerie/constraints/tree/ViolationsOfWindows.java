@@ -18,9 +18,9 @@ public final class ViolationsOfWindows implements Expression<List<Violation>> {
   }
 
   @Override
-  public List<Violation> evaluate(SimulationResults results, final Interval bounds, EvaluationEnvironment environment) {
-    final var satisfiedWindows = this.expression.evaluate(results, bounds, environment);
-    return List.of(new Violation(satisfiedWindows.not().select(bounds)));
+  public List<Violation> evaluate(SimulationResults results, EvaluationEnvironment environment) {
+    final var satisfiedWindows = this.expression.evaluate(results, environment);
+    return List.of(new Violation(satisfiedWindows.not()));
   }
 
   @Override

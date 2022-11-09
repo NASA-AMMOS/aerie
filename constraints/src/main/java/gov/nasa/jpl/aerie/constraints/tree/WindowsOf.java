@@ -18,9 +18,9 @@ public final class WindowsOf implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(SimulationResults results, final Interval bounds, EvaluationEnvironment environment) {
-    var ret = new Windows(bounds, false);
-    final var unsatisfiedWindows = this.expression.evaluate(results, bounds, environment);
+  public Windows evaluate(SimulationResults results, EvaluationEnvironment environment) {
+    var ret = new Windows(false);
+    final var unsatisfiedWindows = this.expression.evaluate(results, environment);
     for(var unsatisfiedWindow : unsatisfiedWindows){
       ret = ret.set(unsatisfiedWindow.violationWindows, true);
     }

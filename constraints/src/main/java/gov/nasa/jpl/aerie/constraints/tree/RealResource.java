@@ -23,7 +23,7 @@ public final class RealResource implements Expression<LinearProfile> {
   }
 
   @Override
-  public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public LinearProfile evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
     if (results.realProfiles.containsKey(this.name)) {
       return results.realProfiles.get(this.name);
     } else if (results.discreteProfiles.containsKey(this.name)) {

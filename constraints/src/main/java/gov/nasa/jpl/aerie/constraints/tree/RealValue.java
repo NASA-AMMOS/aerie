@@ -20,9 +20,9 @@ public final class RealValue implements Expression<LinearProfile> {
   }
 
   @Override
-  public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public LinearProfile evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
     return new LinearProfile(
-        Segment.of(bounds, new LinearEquation(Duration.ZERO, value, 0.0))
+        Segment.of(Interval.FOREVER, new LinearEquation(Duration.ZERO, value, 0.0))
     );
   }
 

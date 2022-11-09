@@ -378,7 +378,7 @@ public class ASTTests {
     final var result = new RealValue(7).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new LinearProfile(
-        Segment.of(simResults.bounds, new LinearEquation(Duration.ZERO, 7, 0))
+        Segment.of(FOREVER, new LinearEquation(Duration.ZERO, 7, 0))
     );
 
     assertEquivalent(expected, result);
@@ -396,7 +396,7 @@ public class ASTTests {
     final var result = new DiscreteValue(SerializedValue.of("IDLE")).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new DiscreteProfile(
-        Segment.of(simResults.bounds, SerializedValue.of("IDLE"))
+        Segment.of(FOREVER, SerializedValue.of("IDLE"))
     );
 
     assertEquivalent(expected, result);
@@ -882,7 +882,7 @@ public class ASTTests {
 
 
     @Override
-    public T evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+    public T evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
       return this.value;
     }
 

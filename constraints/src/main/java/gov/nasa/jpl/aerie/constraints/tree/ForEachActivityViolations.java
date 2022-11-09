@@ -27,7 +27,7 @@ public final class ForEachActivityViolations implements Expression<List<Violatio
   }
 
   @Override
-  public List<Violation> evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public List<Violation> evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
     final var violations = new ArrayList<Violation>();
     for (final var activity : results.activities) {
       if (activity.type.equals(this.activityType)) {
@@ -38,7 +38,7 @@ public final class ForEachActivityViolations implements Expression<List<Violatio
         );
         newEnvironment.activityInstances().put(this.alias, activity);
 
-        final var expressionViolations = this.expression.evaluate(results, bounds, newEnvironment);
+        final var expressionViolations = this.expression.evaluate(results, newEnvironment);
         for (final var violation : expressionViolations) {
           if (!violation.violationWindows.isEmpty()) {
             final var newViolation = new Violation(violation);

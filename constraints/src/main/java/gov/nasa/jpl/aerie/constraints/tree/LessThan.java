@@ -19,11 +19,11 @@ public final class LessThan implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    LinearProfile leftProfile = this.left.evaluate(results, bounds, environment);
-    LinearProfile rightProfile = this.right.evaluate(results, bounds, environment);
+  public Windows evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
+    LinearProfile leftProfile = this.left.evaluate(results, environment);
+    LinearProfile rightProfile = this.right.evaluate(results, environment);
 
-    return leftProfile.lessThan(rightProfile).select(bounds);
+    return leftProfile.lessThan(rightProfile);
   }
 
   @Override

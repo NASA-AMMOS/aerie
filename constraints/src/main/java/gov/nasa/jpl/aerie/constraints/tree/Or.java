@@ -22,14 +22,14 @@ public final class Or implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public Windows evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
     Windows windows = new Windows(false);
     for (final var expression : this.expressions) {
       windows = windows.or(
-          expression.evaluate(results, bounds, environment)
+          expression.evaluate(results, environment)
       );
     }
-    return windows.select(bounds);
+    return windows;
   }
 
   @Override

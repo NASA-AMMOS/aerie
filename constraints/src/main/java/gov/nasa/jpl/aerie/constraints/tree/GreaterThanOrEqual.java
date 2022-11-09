@@ -19,11 +19,11 @@ public final class GreaterThanOrEqual implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    final var leftProfile = this.left.evaluate(results, bounds, environment);
-    final var rightProfile = this.right.evaluate(results, bounds, environment);
+  public Windows evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
+    final var leftProfile = this.left.evaluate(results, environment);
+    final var rightProfile = this.right.evaluate(results, environment);
 
-    return leftProfile.greaterThanOrEqualTo(rightProfile).select(bounds);
+    return leftProfile.greaterThanOrEqualTo(rightProfile);
   }
 
   @Override

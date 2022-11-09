@@ -18,8 +18,8 @@ public final class DiscreteValue implements Expression<DiscreteProfile> {
   }
 
   @Override
-  public DiscreteProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    return new DiscreteProfile(Segment.of(bounds, this.value));
+  public DiscreteProfile evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
+    return new DiscreteProfile(Segment.of(Interval.FOREVER, this.value));
   }
 
   @Override

@@ -18,7 +18,7 @@ public final class ActivitySpan implements Expression<Spans> {
   }
 
   @Override
-  public Spans evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public Spans evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
     final var activity = environment.activityInstances().get(this.activityAlias);
     return new Spans(Segment.of(activity.interval, Optional.of(new Spans.Metadata(activity.id))));
   }

@@ -16,8 +16,8 @@ public final class Ends<I extends IntervalContainer<I>> implements Expression<I>
   }
 
   @Override
-  public I evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    final var expression = this.expression.evaluate(results, bounds, environment);
+  public I evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
+    final var expression = this.expression.evaluate(results, environment);
     return expression.ends();
   }
 

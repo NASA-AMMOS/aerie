@@ -27,8 +27,8 @@ public final class Split<I extends IntervalContainer<?>> implements Expression<S
   }
 
   @Override
-  public Spans evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    final var intervals = this.intervals.evaluate(results, bounds, environment);
+  public Spans evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
+    final var intervals = this.intervals.evaluate(results, environment);
     return intervals.split(this.numberOfSubIntervals, this.internalStartInclusivity, this.internalEndInclusivity);
   }
 

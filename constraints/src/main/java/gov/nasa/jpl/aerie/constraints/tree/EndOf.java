@@ -17,7 +17,7 @@ public final class EndOf implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public Windows evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
     final var activity = environment.activityInstances().get(this.activityAlias);
     return new Windows(
         Segment.of(Interval.FOREVER, false),

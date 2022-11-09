@@ -18,8 +18,8 @@ public final class Times implements Expression<LinearProfile> {
   }
 
   @Override
-  public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    return this.profile.evaluate(results, bounds, environment).times(this.multiplier);
+  public LinearProfile evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
+    return this.profile.evaluate(results, environment).times(this.multiplier);
   }
 
   @Override

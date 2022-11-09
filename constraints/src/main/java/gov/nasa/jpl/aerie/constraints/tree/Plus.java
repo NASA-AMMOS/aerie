@@ -18,9 +18,9 @@ public final class Plus implements Expression<LinearProfile> {
   }
 
   @Override
-  public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    return left.evaluate(results, bounds, environment)
-               .plus(right.evaluate(results, bounds, environment));
+  public LinearProfile evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
+    return left.evaluate(results, environment)
+               .plus(right.evaluate(results, environment));
   }
 
   @Override

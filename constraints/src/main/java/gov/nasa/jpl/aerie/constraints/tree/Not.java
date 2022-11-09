@@ -16,8 +16,8 @@ public final class Not implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    return this.expression.evaluate(results, bounds, environment).not();
+  public Windows evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
+    return this.expression.evaluate(results, environment).not();
   }
 
   @Override

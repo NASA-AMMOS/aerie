@@ -16,8 +16,8 @@ public final class ProfileExpression<P extends Profile<P>> implements Expression
   }
 
   @Override
-  public Profile<P> evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    return this.expression.evaluate(results, bounds, environment);
+  public Profile<P> evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
+    return this.expression.evaluate(results, environment);
   }
 
   @Override

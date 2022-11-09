@@ -17,8 +17,8 @@ public final class Changes<P extends Profile<P>> implements Expression<Windows> 
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    return this.expression.evaluate(results, bounds, environment).changePoints().select(bounds);
+  public Windows evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
+    return this.expression.evaluate(results, environment).changePoints();
   }
 
   @Override

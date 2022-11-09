@@ -35,10 +35,6 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
     this.profilePieces = IntervalMap.of(profilePieces);
   }
 
-  private static boolean profileOutsideBounds(final Segment<SerializedValue> piece, final Interval bounds){
-    return piece.interval().isStrictlyBefore(bounds) || piece.interval().isStrictlyAfter(bounds);
-  }
-
   @Override
   public Windows equalTo(final DiscreteProfile other) {
     return new Windows(

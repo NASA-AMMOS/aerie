@@ -25,7 +25,7 @@ public final class ForEachActivitySpans implements Expression<Spans> {
   }
 
   @Override
-  public Spans evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public Spans evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
     final var spans = new Spans();
     for (final var activity : results.activities) {
       if (activity.type.equals(this.activityType)) {
@@ -36,7 +36,7 @@ public final class ForEachActivitySpans implements Expression<Spans> {
         );
         newEnvironment.activityInstances().put(this.alias, activity);
 
-        final var expressionSpans = this.expression.evaluate(results, bounds, newEnvironment);
+        final var expressionSpans = this.expression.evaluate(results, newEnvironment);
         spans.addAll(expressionSpans);
       }
     }

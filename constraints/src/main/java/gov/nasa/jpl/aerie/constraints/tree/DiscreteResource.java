@@ -17,7 +17,7 @@ public final class DiscreteResource implements Expression<DiscreteProfile> {
   }
 
   @Override
-  public DiscreteProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public DiscreteProfile evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
     if (results.discreteProfiles.containsKey(this.name)) {
       return results.discreteProfiles.get(this.name);
     } else if (environment.discreteExternalProfiles().containsKey(this.name)) {

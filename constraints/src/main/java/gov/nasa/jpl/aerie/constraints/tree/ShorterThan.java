@@ -19,8 +19,8 @@ public final class ShorterThan implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    final var windows = this.windows.evaluate(results, bounds, environment);
+  public Windows evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
+    final var windows = this.windows.evaluate(results, environment);
     return windows.filterByDuration(Duration.ZERO, duration);
   }
 

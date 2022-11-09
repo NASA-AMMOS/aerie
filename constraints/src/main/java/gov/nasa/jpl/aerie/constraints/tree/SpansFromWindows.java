@@ -11,8 +11,8 @@ import java.util.Set;
 public record SpansFromWindows(Expression<Windows> expression) implements Expression<Spans> {
 
   @Override
-  public Spans evaluate(SimulationResults results, final Interval bounds, EvaluationEnvironment environment) {
-    final var windows = this.expression.evaluate(results, bounds, environment);
+  public Spans evaluate(SimulationResults results, EvaluationEnvironment environment) {
+    final var windows = this.expression.evaluate(results, environment);
     return windows.intoSpans();
   }
 

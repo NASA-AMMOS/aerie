@@ -13,7 +13,7 @@ public class WindowsWrapperExpression implements Expression<Windows> {
   public WindowsWrapperExpression(final Windows windows) { this.windows = windows; }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public Windows evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
     return windows;
   }
 

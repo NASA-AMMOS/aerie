@@ -22,12 +22,12 @@ public final class And implements Expression<Windows> {
   }
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public Windows evaluate(final SimulationResults results, final EvaluationEnvironment environment) {
     Windows windows = new Windows(true);
     for (final var expression : this.expressions) {
-      windows = windows.and(expression.evaluate(results, bounds, environment));
+      windows = windows.and(expression.evaluate(results, environment));
     }
-    return windows.select(bounds);
+    return windows;
   }
 
   @Override
