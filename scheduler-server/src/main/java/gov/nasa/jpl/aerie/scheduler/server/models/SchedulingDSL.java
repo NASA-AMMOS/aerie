@@ -170,8 +170,48 @@ public class SchedulingDSL {
     )));
   }
 
+  private static final JsonObjectParser<ConditionSpecifier.GlobalSchedulingCondition> globalSchedulingConditionP =
+      productP
+          .field("expression", windowsExpressionP)
+          .field("activityTypes", listP(stringP))
+          .map(
+              $ -> new ConditionSpecifier.GlobalSchedulingCondition($.getKey(), $.getRight()),
+              $ -> tuple($.expression, $.activityTypes)
+          );
+
+  private static JsonObjectParser<ConditionSpecifier.AndCondition> conditionAndF(final JsonParser<ConditionSpecifier> conditionSpecifierP) {
+    return productP
+        .field("conditions", listP(conditionSpecifierP))
+        .map(untuple(ConditionSpecifier.AndCondition::new),
+             ConditionSpecifier.AndCondition::conditionSpecifiers);
+  }
+
+  public static JsonParser<ConditionSpecifier> conditionSpecifierP =
+      recursiveP(self -> SumParsers.sumP("kind", ConditionSpecifier.class, List.of(
+        SumParsers.variant(
+            "GlobalSchedulingConditionAnd",
+            ConditionSpecifier.AndCondition.class,
+            conditionAndF(self)),
+        SumParsers.variant(
+            "GlobalSchedulingCondition",
+            ConditionSpecifier.GlobalSchedulingCondition.class,
+            globalSchedulingConditionP)
+  )));
+
+
   public static final JsonParser<GoalSpecifier> schedulingJsonP(MissionModelService.MissionModelTypes missionModelTypes){
     return goalSpecifierP(missionModelTypes);
+  }
+
+  public sealed interface ConditionSpecifier {
+    record GlobalSchedulingCondition(
+        Expression<Windows> expression,
+        List<String> activityTypes
+    )  implements ConditionSpecifier {}
+
+    record AndCondition(
+        List<ConditionSpecifier> conditionSpecifiers
+    ) implements ConditionSpecifier{}
   }
 
   public sealed interface GoalSpecifier {

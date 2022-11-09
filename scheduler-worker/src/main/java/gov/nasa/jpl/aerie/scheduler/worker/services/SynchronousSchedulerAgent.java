@@ -26,7 +26,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.BinaryMutexConstraint;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
@@ -139,9 +138,9 @@ public record SynchronousSchedulerAgent(
             missionModelService,
             planMetadata.planId(),
             $.source().source());
-        if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<Expression<Windows>> r) {
-          compiledGlobalSchedulingConditions.add(new SchedulingCondition(r.value(), $.activityTypes()));
-        } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<Expression<Windows>> r) {
+        if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.ConditionSpecifier> r) {
+          compiledGlobalSchedulingConditions.addAll(conditionBuilder(r.value(), problem));
+        } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.ConditionSpecifier> r) {
           failedGlobalSchedulingConditions.add(r.errors());
         } else {
           throw new Error("Unhandled variant of %s: %s".formatted(SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(), result));
@@ -157,9 +156,6 @@ public record SynchronousSchedulerAgent(
       }
 
       compiledGlobalSchedulingConditions.forEach(problem::add);
-
-      //TODO: workaround to get the Cardinality goal working. To remove once we have global constraints in the eDSL
-      problem.getActivityTypes().forEach(at -> problem.add(BinaryMutexConstraint.buildMutexConstraint(at, at)));
 
       final var orderedGoals = new ArrayList<Goal>();
       final var goals = new HashMap<Goal, GoalId>();
@@ -523,6 +519,19 @@ public record SynchronousSchedulerAgent(
     } catch (Exception e) {
       throw new ResultsProtocolFailure(e);
     }
+  }
+
+  public static List<SchedulingCondition> conditionBuilder(SchedulingDSL.ConditionSpecifier conditionSpecifier, Problem problem){
+    if(conditionSpecifier instanceof SchedulingDSL.ConditionSpecifier.AndCondition andCondition){
+      final var conditions = new ArrayList<SchedulingCondition>();
+      andCondition.conditionSpecifiers().forEach( (condition) -> conditions.addAll(conditionBuilder(condition, problem)));
+      return conditions;
+    } else if(conditionSpecifier instanceof SchedulingDSL.ConditionSpecifier.GlobalSchedulingCondition globalSchedulingCondition){
+      return List.of(new SchedulingCondition(
+          globalSchedulingCondition.expression(),
+          globalSchedulingCondition.activityTypes().stream().map((activityExpression -> problem.getActivityType(activityExpression))).toList()));
+    }
+    throw new Error("Unhandled variant of %s: %s".formatted(SchedulingDSL.ConditionSpecifier.class.getSimpleName(), conditionSpecifier));
   }
 
   /**

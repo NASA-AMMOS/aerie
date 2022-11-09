@@ -7,11 +7,16 @@ import java.util.Optional;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.*;
 import static gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationServiceTestFixtures.MISSION_MODEL_TYPES;
 import static org.junit.jupiter.api.Assertions.*;
+import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
+import gov.nasa.jpl.aerie.constraints.tree.ForEachActivitySpans;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
 import gov.nasa.jpl.aerie.constraints.tree.LessThan;
 import gov.nasa.jpl.aerie.constraints.tree.LongerThan;
+import gov.nasa.jpl.aerie.constraints.tree.Not;
+import gov.nasa.jpl.aerie.constraints.tree.Or;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
+import gov.nasa.jpl.aerie.constraints.tree.WindowsFromSpans;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
@@ -51,6 +56,52 @@ class SchedulingDSLCompilationServiceTests {
   @AfterAll
   void tearDown() {
     schedulingDSLCompilationService.close();
+  }
+
+  @Test
+  void  testSchedulingDSL_mutex()
+  {
+    final var result = schedulingDSLCompilationService.compileGlobalSchedulingCondition(
+        missionModelService,
+        PLAN_ID, """
+                  export default function myCondition() {
+                    return GlobalSchedulingCondition.mutex([ActivityTypes.SampleActivity2], [ActivityTypes.SampleActivity1])
+                  }
+              """);
+    final var expectedGoalDefinition = new SchedulingDSL.ConditionSpecifier.AndCondition(List.of(
+        new SchedulingDSL.ConditionSpecifier.GlobalSchedulingCondition(
+            new Not(
+                new Or(
+                    new WindowsFromSpans(
+                        new ForEachActivitySpans(
+                            "SampleActivity1",
+                            "span activity alias 0",
+                            new ActivitySpan("span activity alias 0"))
+                    )
+                )
+            ),
+            List.of("SampleActivity2")
+        ),
+        new SchedulingDSL.ConditionSpecifier.GlobalSchedulingCondition(
+            new Not(
+                new Or(
+                    new WindowsFromSpans(
+                        new ForEachActivitySpans(
+                            "SampleActivity2",
+                            "span activity alias 1",
+                            new ActivitySpan("span activity alias 1"))
+                    )
+                )
+            ),
+            List.of("SampleActivity1")
+        )
+    ));
+
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.ConditionSpecifier> r) {
+      assertEquals(expectedGoalDefinition, r.value());
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.ConditionSpecifier> r) {
+      fail(r.toString());
+    }
   }
 
   @Test
@@ -508,11 +559,17 @@ class SchedulingDSLCompilationServiceTests {
         PLAN_ID,
         """
           export default function() {
-            return Real.Resource("/sample/resource/1").lessThan(5.0);
+            return GlobalSchedulingCondition.scheduleOnlyWhen([], Real.Resource("/sample/resource/1").lessThan(5.0));
           }
         """);
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
-      assertEquals(new LessThan(new RealResource("/sample/resource/1"), new RealValue(5.0)), r.value());
+      assertEquals(
+          new SchedulingDSL.ConditionSpecifier.GlobalSchedulingCondition(
+              new LessThan(
+                  new RealResource("/sample/resource/1"),
+                  new RealValue(5.0)),
+              List.of()),
+          r.value());
     } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
       fail(r.toString());
     }

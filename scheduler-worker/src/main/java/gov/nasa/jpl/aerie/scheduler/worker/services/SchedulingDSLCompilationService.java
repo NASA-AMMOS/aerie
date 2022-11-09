@@ -48,10 +48,10 @@ public class SchedulingDSLCompilationService {
     this.nodeProcess.destroy();
   }
 
-  public SchedulingDSLCompilationResult<Expression<Windows>> compileGlobalSchedulingCondition(final MissionModelService missionModelService, final PlanId planId, final String conditionTypescript) {
+  public SchedulingDSLCompilationResult<SchedulingDSL.ConditionSpecifier> compileGlobalSchedulingCondition(final MissionModelService missionModelService, final PlanId planId, final String conditionTypescript) {
     try{
       final var missionModelTypes = missionModelService.getMissionModelTypes(planId);
-      return compile(missionModelTypes,  conditionTypescript, windowsExpressionP, "Windows");
+      return compile(missionModelTypes,  conditionTypescript, SchedulingDSL.conditionSpecifierP, "GlobalSchedulingCondition");
     } catch (IOException | MissionModelService.MissionModelServiceException e) {
         throw new Error(e);
     }

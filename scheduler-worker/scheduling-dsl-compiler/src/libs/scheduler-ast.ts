@@ -1,6 +1,6 @@
 /// <reference path="./TemporalPolyfillTypes.ts"; />
 import type * as WindowsExpressions from "./constraints-ast.js";
-import "./constraints-edsl-fluent-api.js";
+import type * as ConstraintEDSL from "./constraints-edsl-fluent-api.js";
 
 export interface ActivityTemplate {
   activityType: string,
@@ -24,7 +24,22 @@ export enum NodeKind {
   ActivityExpression = 'ActivityExpression',
   GoalAnd = 'GoalAnd',
   GoalOr = 'GoalOr',
-  ApplyWhen = 'ApplyWhen'
+  ApplyWhen = 'ApplyWhen',
+  GlobalSchedulingCondition = 'GlobalSchedulingCondition',
+  GlobalSchedulingConditionAnd = 'GlobalSchedulingConditionAnd'
+}
+
+export interface GlobalSchedulingCondition {
+  kind : NodeKind.GlobalSchedulingCondition;
+  expression : WindowsExpressions.WindowsExpression;
+  activityTypes : ConstraintEDSL.Gen.ActivityType[]
+}
+
+export type GlobalSchedulingConditionSpecifier = GlobalSchedulingCondition | GlobalSchedulingConditionAnd
+
+export interface GlobalSchedulingConditionAnd {
+  kind: NodeKind.GlobalSchedulingConditionAnd,
+  conditions: GlobalSchedulingConditionSpecifier[],
 }
 
 /**
