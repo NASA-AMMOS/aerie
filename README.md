@@ -24,7 +24,6 @@ To get started with a first Aerie deployment head over to the [deployment direct
 ```sh
 .
 ├── .github                     # GitHub metadata
-├── command-expansion-server    # Service for sequence generation and management
 ├── constraints                 # Java library for constraint checking
 ├── contrib                     # Java convenience classes for mission models
 ├── db-tests                    # Database unit tests
@@ -44,6 +43,7 @@ To get started with a first Aerie deployment head over to the [deployment direct
 ├── scheduler-driver            # Java library for goal-oriented scheduling
 ├── scheduler-server            # Service for scheduling
 ├── scheduler-worker            # Worker for executing scheduling goals
+├── sequencing-server           # Service for sequence generation and management
 └── third-party                 # External Java dependencies that are not obtained from Maven
 ```
 

@@ -24,7 +24,7 @@ export default {
       'jest-html-reporters',
       {
         publicPath: '<rootDir>',
-        pageTitle: 'command-expansion-server Test Report',
+        pageTitle: 'sequencing-server Test Report',
         filename: 'test-report.html',
         inlineSource: true,
       },

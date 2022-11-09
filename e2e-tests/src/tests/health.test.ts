@@ -22,13 +22,13 @@ test.describe('Health', () => {
     expect(healthy).toBeTruthy();
   });
 
-  test('Commanding is healthy', async ({ request }) => {
-    const healthy = await req.healthCommanding(request);
+  test('Scheduler is healthy', async ({ request }) => {
+    const healthy = await req.healthScheduler(request);
     expect(healthy).toBeTruthy();
   });
 
-  test('Scheduler is healthy', async ({ request }) => {
-    const healthy = await req.healthScheduler(request);
+  test('Sequencing is healthy', async ({ request }) => {
+    const healthy = await req.healthSequencing(request);
     expect(healthy).toBeTruthy();
   });
 

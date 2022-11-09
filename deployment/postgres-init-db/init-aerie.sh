@@ -22,16 +22,15 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL
   GRANT ALL PRIVILEGES ON DATABASE aerie_scheduler TO "$AERIE_USERNAME";
   \echo 'Done!'
 
+  \echo 'Initializing aerie_sequencing database...'
+  CREATE DATABASE aerie_sequencing;
+  GRANT ALL PRIVILEGES ON DATABASE aerie_sequencing TO "$AERIE_USERNAME";
+  \echo 'Done!'
+
   \echo 'Initializing aerie_ui database...'
   CREATE DATABASE aerie_ui;
   GRANT ALL PRIVILEGES ON DATABASE aerie_ui TO "$AERIE_USERNAME";
   \echo 'Done!'
-
-  \echo 'Initializing aerie_commanding database...'
-  CREATE DATABASE aerie_commanding;
-  GRANT ALL PRIVILEGES ON DATABASE aerie_commanding TO "$AERIE_USERNAME";
-  \echo 'Done!'
-
 EOSQL
 
 export PGPASSWORD="$AERIE_PASSWORD"
@@ -54,8 +53,8 @@ psql -v ON_ERROR_STOP=1 --username "$AERIE_USERNAME" --dbname "aerie_ui" <<-EOSQ
   \echo 'Done!'
 EOSQL
 
-psql -v ON_ERROR_STOP=1 --username "$AERIE_USERNAME" --dbname "aerie_commanding" <<-EOSQL
-  \echo 'Initializing aerie_commanding database objects...'
-  \ir /docker-entrypoint-initdb.d/sql/commanding/init.sql
+psql -v ON_ERROR_STOP=1 --username "$AERIE_USERNAME" --dbname "aerie_sequencing" <<-EOSQL
+  \echo 'Initializing aerie_sequencing database objects...'
+  \ir /docker-entrypoint-initdb.d/sql/sequencing/init.sql
   \echo 'Done!'
 EOSQL

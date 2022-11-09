@@ -6,9 +6,9 @@ export const UI_URL = 'http://localhost';
 
 export const MERLIN_URL = 'http://localhost:27183';
 
-export const COMMANDING_URL = 'http://localhost:27184';
-
 export const SCHEDULER_URL = 'http://localhost:27185';
+
+export const SEQUENCING_URL = 'http://localhost:27184';
 
 export const WORKER_1_URL = 'http://localhost:27187';
 

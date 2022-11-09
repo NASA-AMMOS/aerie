@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CommandExpansionDatabaseTests {
-  private static final File initSqlScriptFile = new File("../command-expansion-server/sql/commanding/init.sql");
+  private static final File initSqlScriptFile = new File("../sequencing-server/sql/sequencing/init.sql");
   private DatabaseTestHelper helper;
 
   private Connection connection;

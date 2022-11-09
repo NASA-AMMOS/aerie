@@ -6,23 +6,23 @@ actions:
   - name: uploadDictionary
     definition:
       kind: synchronous
-      handler: http://aerie_commanding:27184/put-dictionary
+      handler: http://aerie_sequencing:27184/put-dictionary
   - name: addCommandExpansionTypeScript
     definition:
       kind: synchronous
-      handler: http://aerie_commanding:27184/put-expansion
+      handler: http://aerie_sequencing:27184/put-expansion
   - name: createExpansionSet
     definition:
       kind: synchronous
-      handler: http://aerie_commanding:27184/put-expansion-set
+      handler: http://aerie_sequencing:27184/put-expansion-set
   - name: expandAllActivities
     definition:
       kind: synchronous
-      handler: http://aerie_commanding:27184/expand-all-activity-instances
+      handler: http://aerie_sequencing:27184/expand-all-activity-instances
   - name: getEdslForSeqJson
     definition:
       kind: synchronous
-      handler: http://aerie_commanding:27184/get-edsl-for-seqjson
+      handler: http://aerie_sequencing:27184/get-edsl-for-seqjson
   - name: getModelEffectiveArguments
     definition:
       kind: ""
@@ -34,19 +34,19 @@ actions:
   - name: getActivityTypeScript
     definition:
       kind: ""
-      handler: http://aerie_commanding:27184/get-activity-typescript
+      handler: http://aerie_sequencing:27184/get-activity-typescript
   - name: getCommandTypeScript
     definition:
       kind: ""
-      handler: http://aerie_commanding:27184/get-command-typescript
+      handler: http://aerie_sequencing:27184/get-command-typescript
   - name: getSequenceSeqJson
     definition:
       kind: ""
-      handler: http://aerie_commanding:27184/get-seqjson-for-seqid-and-simulation-dataset
+      handler: http://aerie_sequencing:27184/get-seqjson-for-seqid-and-simulation-dataset
   - name: getUserSequenceSeqJson
     definition:
       kind: ""
-      handler: http://aerie_commanding:27184/get-seqjson-for-sequence-standalone
+      handler: http://aerie_sequencing:27184/get-seqjson-for-sequence-standalone
   - name: resourceTypes
     definition:
       kind: ""

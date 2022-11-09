@@ -6,7 +6,7 @@ import { getEnv } from './env.js';
 const { Pool: DbPool } = pg;
 
 const {
-  POSTGRES_AERIE_EXPANSION_DB,
+  POSTGRES_AERIE_SEQUENCING_DB,
   POSTGRES_HOST: host,
   POSTGRES_PASSWORD: password,
   POSTGRES_PORT: port,
@@ -25,7 +25,7 @@ export class DbExpansion {
   static init() {
     try {
       const config: PoolConfig = {
-        database: POSTGRES_AERIE_EXPANSION_DB,
+        database: POSTGRES_AERIE_SEQUENCING_DB,
         host,
         password,
         port: parseInt(port, 10),
