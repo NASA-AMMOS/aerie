@@ -541,20 +541,24 @@ begin
     and change_type = 'add';
 
   -- Modify
-  update activity_directive
-  set name = msa.name,
-      tags = msa.tags,
-      source_scheduling_goal_id = msa.source_scheduling_goal_id,
-      created_at = msa.created_at,
-      start_offset = msa.start_offset,
-      type = msa.type,
-      arguments = msa.arguments,
-      metadata = msa.metadata
-  from merge_staging_area msa
-  where msa.merge_request_id = commit_merge.request_id
-    and activity_directive.plan_id = plan_id_R
-    and msa.change_type = 'modify'
-    and id = msa.activity_id;
+  insert into activity_directive(
+    id, plan_id, "name", tags, source_scheduling_goal_id, created_at,
+    start_offset, "type", arguments, metadata )
+  select  activity_id, plan_id_R, "name", tags, source_scheduling_goal_id, created_at,
+          start_offset, "type", arguments, metadata
+  from merge_staging_area
+  where merge_staging_area.merge_request_id = commit_merge.request_id
+    and change_type = 'modify'
+  on conflict (id, plan_id)
+  do update
+  set name = excluded.name,
+      tags = excluded.tags,
+      source_scheduling_goal_id = excluded.source_scheduling_goal_id,
+      created_at = excluded.created_at,
+      start_offset = excluded.start_offset,
+      type = excluded.type,
+      arguments = excluded.arguments,
+      metadata = excluded.metadata;
 
   -- Delete
   delete from activity_directive ad

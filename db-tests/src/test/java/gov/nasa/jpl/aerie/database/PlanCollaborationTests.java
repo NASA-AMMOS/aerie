@@ -11,7 +11,6 @@ import org.junit.jupiter.api.TestInstance;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -585,6 +584,22 @@ public class PlanCollaborationTests {
           WHERE id = %d;
           """.formatted(newStatus, requestId)
       );
+    }
+  }
+
+  private static void assertActivityEquals(final Activity expected, final Activity actual) {
+    // validate all shared properties
+    assertEquals(expected.name, actual.name);
+    assertEquals(expected.sourceSchedulingGoalId, actual.sourceSchedulingGoalId);
+    assertEquals(expected.createdAt, actual.createdAt);
+    assertEquals(expected.startOffset, actual.startOffset);
+    assertEquals(expected.type, actual.type);
+    assertEquals(expected.arguments, actual.arguments);
+    assertEquals(expected.metadata, actual.metadata);
+    assertEquals(expected.tags.length, actual.tags.length);
+    for(int j = 0; j < expected.tags.length; ++j)
+    {
+      assertEquals(expected.tags[j], actual.tags[j]);
     }
   }
   //endregion
@@ -2030,12 +2045,14 @@ public class PlanCollaborationTests {
       final int deleteUncontestedActId = insertActivity(basePlan);
       final int modifyContestedSupplyingActId = insertActivity(basePlan);
       final int modifyContestedReceivingActId = insertActivity(basePlan);
-      final int deleteContestedSupplyingActId = insertActivity(basePlan);
-      final int deleteContestedReceivingActId = insertActivity(basePlan);
+      final int deleteContestedSupplyingResolveSupplyingActId = insertActivity(basePlan);
+      final int deleteContestedSupplyingResolveReceivingActId = insertActivity(basePlan);
+      final int deleteContestedReceivingResolveReceivingActId = insertActivity(basePlan);
+      final int deleteContestedReceivingResolveSupplyingActId = insertActivity(basePlan);
       final int childPlan = duplicatePlan(basePlan, "Child");
 
-      assertEquals(6, getActivities(basePlan).size());
-      assertEquals(6, getActivities(childPlan).size());
+      assertEquals(8, getActivities(basePlan).size());
+      assertEquals(8, getActivities(childPlan).size());
 
       updateActivityName("Test", modifyUncontestedActId, childPlan);
 
@@ -2047,77 +2064,59 @@ public class PlanCollaborationTests {
       updateActivityName("Modify Contested Receiving Parent", modifyContestedReceivingActId, basePlan);
       updateActivityName("Modify Contested Receiving Child", modifyContestedReceivingActId, childPlan);
 
-      updateActivityName("Delete Contested Supplying Parent", deleteContestedSupplyingActId, basePlan);
-      deleteActivityDirective(childPlan, deleteContestedSupplyingActId);
+      updateActivityName("Delete Contested Supplying Parent Resolve Supplying", deleteContestedSupplyingResolveSupplyingActId, basePlan);
+      deleteActivityDirective(childPlan, deleteContestedSupplyingResolveSupplyingActId);
 
-      deleteActivityDirective(basePlan, deleteContestedReceivingActId);
-      updateActivityName("Delete Contested Receiving Child", deleteContestedReceivingActId, childPlan);
+      updateActivityName("Delete Contested Supplying Parent Resolve Receiving", deleteContestedSupplyingResolveReceivingActId, basePlan);
+      deleteActivityDirective(childPlan, deleteContestedSupplyingResolveReceivingActId);
+
+      deleteActivityDirective(basePlan, deleteContestedReceivingResolveReceivingActId);
+      updateActivityName("Delete Contested Receiving Child Resolve Receiving", deleteContestedReceivingResolveReceivingActId, childPlan);
+
+      deleteActivityDirective(basePlan, deleteContestedReceivingResolveSupplyingActId);
+      updateActivityName("Delete Contested Receiving Child Resolve Supplying", deleteContestedReceivingResolveSupplyingActId, childPlan);
 
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
       beginMerge(mergeRQ);
 
-      assertEquals(4, getConflictingActivities(mergeRQ).size());
+      assertEquals(6, getConflictingActivities(mergeRQ).size());
       setResolution(mergeRQ, modifyContestedSupplyingActId, "supplying");
       setResolution(mergeRQ, modifyContestedReceivingActId, "receiving");
-      setResolution(mergeRQ, deleteContestedSupplyingActId, "supplying");
-      setResolution(mergeRQ, deleteContestedReceivingActId, "receiving");
+      setResolution(mergeRQ, deleteContestedSupplyingResolveSupplyingActId, "supplying");
+      setResolution(mergeRQ, deleteContestedSupplyingResolveReceivingActId, "receiving");
+      setResolution(mergeRQ, deleteContestedReceivingResolveReceivingActId, "receiving");
+      setResolution(mergeRQ, deleteContestedReceivingResolveSupplyingActId, "supplying");
 
       final Activity muActivityBefore = getActivity(basePlan, modifyUncontestedActId);
       final Activity mcsActivityBefore = getActivity(basePlan, modifyContestedSupplyingActId);
       final Activity mcrActivityBefore = getActivity(basePlan, modifyContestedReceivingActId);
+      final Activity dcsActivityBefore = getActivity(basePlan, deleteContestedSupplyingResolveReceivingActId);
 
       commitMerge(mergeRQ);
 
       final var postMergeActivities = getActivities(basePlan);
 
-      assertEquals(3, postMergeActivities.size());
-      assertEquals(4, getActivities(childPlan).size());
+      assertEquals(5, postMergeActivities.size());
+      assertEquals(5, getActivities(childPlan).size());
 
       for (Activity activity : postMergeActivities) {
         if (activity.activityId == muActivityBefore.activityId) {
           final var muActivityChild = getActivity(childPlan, modifyUncontestedActId);
           // validate all shared properties
-          assertEquals(muActivityChild.name, activity.name);
-          assertEquals(muActivityChild.sourceSchedulingGoalId, activity.sourceSchedulingGoalId);
-          assertEquals(muActivityChild.createdAt, activity.createdAt);
-          assertEquals(muActivityChild.startOffset, activity.startOffset);
-          assertEquals(muActivityChild.type, activity.type);
-          assertEquals(muActivityChild.arguments, activity.arguments);
-          assertEquals(muActivityChild.metadata, activity.metadata);
-          assertEquals(muActivityChild.tags.length, activity.tags.length);
-          for(int j = 0; j < muActivityChild.tags.length; ++j)
-          {
-            assertEquals(muActivityChild.tags[j], activity.tags[j]);
-          }
+          assertActivityEquals(muActivityChild, activity);
         } else if (activity.activityId == mcsActivityBefore.activityId) {
           final var mcsActivityChild = getActivity(childPlan, modifyContestedSupplyingActId);
           // validate all shared properties
-          assertEquals(mcsActivityChild.name, activity.name);
-          assertEquals(mcsActivityChild.sourceSchedulingGoalId, activity.sourceSchedulingGoalId);
-          assertEquals(mcsActivityChild.createdAt, activity.createdAt);
-          assertEquals(mcsActivityChild.startOffset, activity.startOffset);
-          assertEquals(mcsActivityChild.type, activity.type);
-          assertEquals(mcsActivityChild.arguments, activity.arguments);
-          assertEquals(mcsActivityChild.metadata, activity.metadata);
-          assertEquals(mcsActivityChild.tags.length, activity.tags.length);
-          for(int j = 0; j < mcsActivityChild.tags.length; ++j)
-          {
-            assertEquals(mcsActivityChild.tags[j], activity.tags[j]);
-          }
+          assertActivityEquals(mcsActivityChild, activity);
         } else if (activity.activityId == mcrActivityBefore.activityId) {
           // validate all shared properties
-          assertEquals(mcrActivityBefore.name, activity.name);
-          assertEquals(mcrActivityBefore.sourceSchedulingGoalId, activity.sourceSchedulingGoalId);
-          assertEquals(mcrActivityBefore.createdAt, activity.createdAt);
-          assertEquals(mcrActivityBefore.startOffset, activity.startOffset);
-          assertEquals(mcrActivityBefore.type, activity.type);
-          assertEquals(mcrActivityBefore.arguments, activity.arguments);
-          assertEquals(mcrActivityBefore.metadata, activity.metadata);
-          assertEquals(mcrActivityBefore.tags.length, activity.tags.length);
-          for(int j = 0; j < mcrActivityBefore.tags.length; ++j)
-          {
-            assertEquals(mcrActivityBefore.tags[j], activity.tags[j]);
-          }
+          assertActivityEquals(mcrActivityBefore, activity);
+        } else if (activity.activityId == deleteContestedSupplyingResolveReceivingActId) {
+          // validate all shared properties
+          assertActivityEquals(dcsActivityBefore, activity);
+        } else if (activity.activityId == deleteContestedReceivingResolveSupplyingActId) {
+          // validate all shared properties
+          assertActivityEquals(getActivity(childPlan, deleteContestedReceivingResolveSupplyingActId), activity);
         } else fail();
       }
     }

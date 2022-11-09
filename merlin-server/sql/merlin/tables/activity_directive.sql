@@ -122,7 +122,9 @@ returns trigger
 security definer
 language plpgsql as $$begin
   call plan_locked_exception(new.plan_id);
-  new.name = new.type || ' ' || new.id;
+  if new.name is null
+  then new.name = new.type || ' ' || new.id;
+  end if;
   return new;
 end$$;
 
