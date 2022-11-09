@@ -7,7 +7,8 @@ When analyzing a simulation's results, it may be useful to detect windows where 
 Managing Constraints
 ====================
 
-All constraints are associated with either a mission model or a specific plan. If associated with a model, a constraint will be applied to all plans made with that model. If associated with a plan, it will only applied to the plan, and it will have access to any `external profiles <../external-datasets>`_ associated with the plan as well.
+All constraints are associated with either a mission model or a specific plan. If associated with a model, a constraint will be applied to all plans made with that model.
+If associated with a plan, it will only applied to the plan, and it will have access to any :doc:`external profiles <../external-datasets/index>` associated with the plan as well.
 
 .. tabs::
   .. group-tab:: UI
@@ -26,12 +27,12 @@ All constraints are associated with either a mission model or a specific plan. I
         }
 
      You then write some constraint that returns a constraint, and click *save*. For details on how to write constraints,
-     see the sub-pages of this section and the `API documentation for the constraints eDSL <../constraints-edsl-api>`_.
+     see the sub-pages of this section and the :doc:`API documentation for the constraints eDSL <../../../constraints-edsl-api/index>`.
 
 
   .. group-tab:: API
 
-     Constraints can be uploaded, updated, and deleted directly using the GraphQL API. See `this section <../graphql-api>`_ for information on the basics of GraphQL. To create a single constraint, send the following mutation:
+     Constraints can be uploaded, updated, and deleted directly using the GraphQL API. See `here <https://graphql.org/learn/>`__ for information on the basics of GraphQL. To create a single constraint, send the following mutation:
 
      .. code-block::
 
