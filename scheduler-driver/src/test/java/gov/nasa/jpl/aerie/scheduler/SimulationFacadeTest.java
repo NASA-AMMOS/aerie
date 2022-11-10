@@ -197,7 +197,8 @@ public class SimulationFacadeTest {
   public void whenValueAboveDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
-    var actual = new GreaterThan(getFruitRes(), new RealValue(2.9)).evaluate(facade.getLatestConstraintSimulationResults());
+    final var simResults = facade.getLatestConstraintSimulationResults();
+    var actual = new GreaterThan(getFruitRes(), new RealValue(2.9)).evaluate(simResults).select(simResults.bounds);
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 2, Exclusive, SECONDS), true),
         Segment.of(interval(2, 5, SECONDS), false)
@@ -209,7 +210,8 @@ public class SimulationFacadeTest {
   public void whenValueBelowDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
-    var actual = new LessThan(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
+    final var simResults = facade.getLatestConstraintSimulationResults();
+    var actual = new LessThan(getFruitRes(), new RealValue(3.0)).evaluate(simResults).select(simResults.bounds);
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 2, Exclusive, SECONDS), false),
         Segment.of(interval(2, 5, SECONDS), true)
@@ -221,7 +223,8 @@ public class SimulationFacadeTest {
   public void whenValueBetweenDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
-    var actual = new And(new GreaterThanOrEqual(getFruitRes(), new RealValue(3.0)), new LessThanOrEqual(getFruitRes(), new RealValue(3.99))).evaluate(facade.getLatestConstraintSimulationResults());
+    final var simResults = facade.getLatestConstraintSimulationResults();
+    var actual = new And(new GreaterThanOrEqual(getFruitRes(), new RealValue(3.0)), new LessThanOrEqual(getFruitRes(), new RealValue(3.99))).evaluate(simResults).select(simResults.bounds);
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
         Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), true),
@@ -234,7 +237,8 @@ public class SimulationFacadeTest {
   public void whenValueEqualDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
-    var actual = new Equal<>(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
+    final var simResults = facade.getLatestConstraintSimulationResults();
+    var actual = new Equal<>(getFruitRes(), new RealValue(3.0)).evaluate(simResults).select(simResults.bounds);
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
         Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), true),
@@ -247,7 +251,8 @@ public class SimulationFacadeTest {
   public void whenValueNotEqualDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
     facade.simulateActivities(makeTestPlanP0B1().getActivities());
     facade.computeSimulationResultsUntil(tEnd);
-    var actual = new NotEqual<>(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
+    final var simResults = facade.getLatestConstraintSimulationResults();
+    var actual = new NotEqual<>(getFruitRes(), new RealValue(3.0)).evaluate(simResults).select(simResults.bounds);
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), true),
         Segment.of(interval(1, Inclusive, 2, Exclusive, SECONDS), false),

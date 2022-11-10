@@ -706,7 +706,7 @@ public class PrioritySolver implements Solver {
     //REVIEW: could be some optimization in constraint ordering (smallest domain first to fail fast)
     for (final var constraint : constraints) {
       //REVIEW: loop through windows more efficient than enveloppe(windows) ?
-      final var validity = constraint.evaluate(simulationFacade.getLatestConstraintSimulationResults(), totalDomain);
+      final var validity = constraint.evaluate(simulationFacade.getLatestConstraintSimulationResults()).select(totalDomain);
       ret = ret.and(validity);
       //short-circuit if no possible windows left
       if (ret.stream().noneMatch(Segment::value)) {

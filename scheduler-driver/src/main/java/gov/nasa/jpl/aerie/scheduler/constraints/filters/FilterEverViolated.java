@@ -22,6 +22,6 @@ public class FilterEverViolated extends FilterFunctional {
 
   @Override
   public boolean shouldKeep(final SimulationResults simulationResults, final Plan plan, final Interval range) {
-    return !(expr.evaluate(simulationResults, range, new EvaluationEnvironment()).equals(new Windows(range, true)));
+    return !(expr.evaluate(simulationResults, new EvaluationEnvironment()).equals(new Windows(range, true)));
   }
 }

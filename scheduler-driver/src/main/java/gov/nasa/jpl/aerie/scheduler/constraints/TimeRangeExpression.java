@@ -71,7 +71,7 @@ public class TimeRangeExpression {
 
     for (var expr : stateExpr) {
       final var domainOfInter = Interval.between(inter.minTrueTimePoint().get().getKey(), inter.maxTrueTimePoint().get().getKey());
-      Windows windowsState = expr.evaluate(simulationResults, domainOfInter, new EvaluationEnvironment());
+      Windows windowsState = expr.evaluate(simulationResults, new EvaluationEnvironment()).select(domainOfInter);
       inter = inter.and(windowsState);
       if(inter.stream().noneMatch(Segment::value)) return inter;
     }
