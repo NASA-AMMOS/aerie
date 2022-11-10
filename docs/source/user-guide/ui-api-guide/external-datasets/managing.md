@@ -9,18 +9,18 @@ To upload external profiles, you will need to add them to a specific plan. A col
 
 ### GraphQL Mutation: `addExternalDataset`
 The `addExternalDataset` GraphQL mutation takes three parameters as specified below:
-- `planId`:
-    Type: Int
-    Description: The ID of the plan to associate the external dataset with.
-- `datasetStart`:
-    Type: String
-    Description: The UTC timestamp the dataset is based from.
-    UTC Format: `yyyy-dddThh:mm:ss`
-- `profileSet`: 
-    Type: Object
-    Description: The set of precomputed profiles that make up the external dataset.
 
-The profile set to be uploaded should have one entry for each profile, indexed by a unique name mapping to an object specifying the details of the profile. Each profile should have a `type` field, which specifies whether the profile is real- or discrete-valued. It must also contain a `schema` field, which specifies the schema of the values it takes on. For discrete profiles, these are not limited to basic types, but can take on any complex structure made up using our `ValueSchema` construct (for more information, see our [ValueSchema documentation](../../mission-modeler-guide/custom-value-types/index)). Currently, real profiles only support linear equations with the following schema:
+| Parameter      | Type    | Description                                                                      |
+|----------------|---------|----------------------------------------------------------------------------------|
+| `planId`       | Integer | The ID of the plan to associate the external dataset with.                       |
+| `datasetStart` | String  | The UTC timestamp the dataset is based from.<br/>UTC Format: `yyyy-dddThh:mm:ss` |
+| `profileSet`   | Object  | The set of precomputed profiles that make up the external dataset.               |
+
+The profile set to be uploaded should have one entry for each profile, indexed by a unique name mapping to an object specifying the details of the profile. 
+Each profile should have a `type` field, which specifies whether the profile is real- or discrete-valued. 
+It must also contain a `schema` field, which specifies the schema of the values it takes on. 
+For discrete profiles, these are not limited to basic types, but can take on any complex structure made up using our `ValueSchema` construct (for more information, see our [ValueSchema documentation](../../mission-modeler-guide/custom-value-types/index.rst)). 
+Currently, real profiles only support linear equations with the following schema:
 
 
 ```json
@@ -39,12 +39,10 @@ The profile set to be uploaded should have one entry for each profile, indexed b
 
 Finally, each profile requires a list of segments that describe the actual behavior of the profile. The `segments` field is a list of segment objects, where each segment should contain the following two fields:
 
-- `duration`:
-    Type: Integer
-    Description: The duration (in microseconds) the segment's dynamics hold before the next segment begins.
-- `dynamics` (optional):
-    Type: Dependent on profile type.
-    Description: The behavior of the profile over the lifetime of this segment.
+| Field                 | Type                      | Description                                                                                |
+|-----------------------|---------------------------|--------------------------------------------------------------------------------------------|
+| `duration`            | Integer                   | The duration (in microseconds) the segment's dynamics hold before the next segment begins. |
+| `dynamics` (optional) | Dependent on profile type | The behavior of the profile over the lifetime of this segment.                             |
 
 A discrete profile's dynamics should match the format specified by the `schema` field, while a real profile's dynamics should always contain an initial value and a rate of change. See our example external dataset mutations [below](#example-mutations) to see both profile specification types. If the `dynamics` field of a segment isn't specified, the segment is called a "gap", and represents intervals when the value is unknown.
 
