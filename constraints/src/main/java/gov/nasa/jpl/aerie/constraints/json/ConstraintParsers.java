@@ -36,6 +36,17 @@ public final class ConstraintParsers {
   static final JsonParser<Interval.Inclusivity> inclusivityP =
       enumP(Interval.Inclusivity.class, Enum::name);
 
+  static <P extends Profile<P>> JsonParser<AssignGaps<P>> assignGapsF(final JsonParser<Expression<P>> profileParser) {
+    return productP
+        .field("kind", literalP("AssignGapsExpression"))
+        .field("originalProfile", profileParser)
+        .field("defaultProfile", profileParser)
+        .map(
+            untuple((kind, originalProfile, defaultProfile) -> new AssignGaps<P>(originalProfile, defaultProfile)),
+            $ -> tuple(Unit.UNIT, $.originalProfile(), $.defaultProfile())
+        );
+  }
+
   static final JsonParser<DiscreteResource> discreteResourceP =
       productP
           .field("kind", literalP("DiscreteProfileResource"))
@@ -65,7 +76,9 @@ public final class ConstraintParsers {
       recursiveP(selfP -> chooseP(
           discreteResourceP,
           discreteValueP,
-          discreteParameterP));
+          discreteParameterP,
+          assignGapsF(selfP)
+      ));
 
   static final JsonParser<RealResource> realResourceP =
       productP
@@ -128,7 +141,9 @@ public final class ConstraintParsers {
           realParameterP,
           plusF(selfP),
           timesF(selfP),
-          rateF(selfP)));
+          rateF(selfP),
+          assignGapsF(selfP)
+      ));
 
   static final JsonParser<ProfileExpression<?>> profileExpressionP =
       BasicParsers.<ProfileExpression<?>>chooseP(
@@ -389,7 +404,9 @@ public final class ConstraintParsers {
         startsF(selfP),
         endsF(selfP),
         windowsFromSpansF(spansP),
-        activityWindowP));
+        activityWindowP,
+        assignGapsF(selfP)
+    ));
   }
 
   static JsonParser<SpansFromWindows> spansFromWindowsF(JsonParser<Expression<Windows>> windowsExpressionP) {
@@ -424,7 +441,6 @@ public final class ConstraintParsers {
           .map(
               untuple((kind, expression) -> new ViolationsOfWindows(expression)),
               $ -> tuple(Unit.UNIT, $.expression));
-
 
   public static final JsonParser<Expression<List<Violation>>> constraintP =
       recursiveP(selfP -> chooseP(
