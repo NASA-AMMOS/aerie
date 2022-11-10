@@ -34,70 +34,51 @@ If associated with a plan, it will only applied to the plan, and it will have ac
 
      Constraints can be uploaded, updated, and deleted directly using the GraphQL API. See `here <https://graphql.org/learn/>`__ for information on the basics of GraphQL. To create a single constraint, send the following mutation:
 
-     .. code-block::
-
-        mutation CreateConstraint($constraint: constraint_insert_input!) {
-          createConstraint: insert_constraint_one(object: $constraint) {
-            id
-          }
-        }
+     .. include:: ../api-examples.rst
+      :start-after: begin create constraint
+      :end-before: end create constraint
 
      with arguments of the following format:
 
-     .. code-block::
-
-        {
-          "constraint": {
-            "model_id": number, // required if plan_id is absent
-            "plan_id": number, // required if model_id is absent
-            "name": string,
-            "summary": string, // optional
-            "description": string, // optional
-            "definition": string
-          }
-        }
+     .. include:: ../api-examples.rst
+      :start-after: begin create constraint arguments
+      :end-before: end create constraint arguments
 
      This will return the new constraint's ID, which you can use to update or delete it.
 
      To update a single constraint, send the following mutation:
 
-     .. code-block::
+     .. include:: ../api-examples.rst
+      :start-after: begin update constraint
+      :end-before: end update constraint
 
-        mutation UpdateConstraint($id: Int!, $constraint: constraint_set_input!) {
-          updateConstraint: update_constraint_by_pk(
-            pk_columns: { id: $id }, _set: $constraint
-          ) {
-            id
-          }
-        }
+    with arguments:
 
-     .. code-block::
-
-        {
-          "id": number,
-          "constraint": {...} // same input as when creating
-        }
+     .. include:: ../api-examples.rst
+      :start-after: begin update constraint arguments
+      :end-before: end update constraint arguments
 
      All fields in the constraint data are optional when updating. This will update only the provided
      arguments on the specified constraint.
 
      Lastly, you can delete a constraint as follows:
 
-     .. code-block::
+     .. include:: ../api-examples.rst
+      :start-after: begin delete constraint
+      :end-before: end delete constraint
 
-        mutation DeleteConstraint($id: Int!) {
-          deleteConstraint: delete_constraint_by_pk(id: $id) {
-            id
-          }
-        }
+    with arguments:
 
-     The arguments only need to contain the id: ``{ "id": number }``.
+     .. include:: ../api-examples.rst
+      :start-after: begin delete constraint arguments
+      :end-before: end delete constraint arguments
 
 
 
 
 .. toctree::
   :maxdepth: 1
+  :hidden:
 
   writing-constraints
   examples

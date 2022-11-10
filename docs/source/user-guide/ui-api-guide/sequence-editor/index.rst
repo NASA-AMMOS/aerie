@@ -8,6 +8,7 @@ The Command Dictionary
 Uploading a Command Dictionary
 ==============================
 Before creating a Sequence, you must first upload a command dictionary.
+
 .. tabs::
 
   .. group-tab:: User Interface
