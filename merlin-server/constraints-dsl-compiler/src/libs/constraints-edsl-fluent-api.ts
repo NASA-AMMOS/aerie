@@ -82,7 +82,19 @@ export class Windows {
     this.__astNode = expression;
   }
 
-    /**
+  /**
+   * Produces a single window for all time.
+   *
+   * @param value value for all time
+   */
+  public static Value(value: boolean): Windows {
+    return new Windows({
+      kind: AST.NodeKind.WindowsExpressionValue,
+      value
+    });
+  }
+
+  /**
    * Produces windows for each activity present in the plan and belonging to one of the activity types passed
    *
    * @param activityTypes the activity types
@@ -759,6 +771,13 @@ declare global {
   export class Windows {
     /** Internal AST Node */
     public readonly __astNode: AST.WindowsExpression;
+
+    /**
+     * Produces a single window for all time.
+     *
+     * @param value value for all time
+     */
+    public static Value(value: boolean): Windows;
 
     /**
      * Performs the boolean And operation on any number of Windows.

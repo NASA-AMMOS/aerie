@@ -17,6 +17,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import java.util.List;
 
 import static gov.nasa.jpl.aerie.constraints.json.SerializedValueJsonParser.serializedValueP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.doubleP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.enumP;
@@ -188,6 +189,15 @@ public final class ConstraintParsers {
           . map(
               microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
               duration -> duration.in(Duration.MICROSECONDS));
+
+  static final JsonParser<WindowsValue> windowsValueP =
+      productP
+          .field("kind", literalP("WindowsValueExpression"))
+          .field("value", boolP)
+          .map(
+              untuple((kind, value) -> new WindowsValue(value)),
+              $ -> tuple(Unit.UNIT, $.value())
+          );
 
   static JsonParser<ShiftBy> shiftByF(JsonParser<Expression<Windows>> windowsExpressionP) {
     return productP
@@ -383,6 +393,7 @@ public final class ConstraintParsers {
 
   private static JsonParser<Expression<Windows>> windowsExpressionF(JsonParser<Expression<Spans>> spansP) {
     return recursiveP(selfP -> chooseP(
+        windowsValueP,
         startOfP,
         endOfP,
         changesP,

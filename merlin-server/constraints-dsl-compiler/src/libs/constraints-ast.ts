@@ -13,6 +13,7 @@ export enum NodeKind {
   DiscreteProfileTransition = 'DiscreteProfileTransition',
   WindowsExpressionActivityWindow = 'WindowsExpressionActivityWindow',
   SpansExpressionActivitySpan = 'SpansExpressionActivitySpan',
+  WindowsExpressionValue = 'WindowsExpressionValue',
   WindowsExpressionStartOf = 'WindowsExpressionStartOf',
   WindowsExpressionEndOf = 'WindowsExpressionEndOf',
   WindowsExpressionLongerThan = 'WindowsExpressionLongerThan',
@@ -60,6 +61,7 @@ export interface ForEachActivitySpans {
 }
 
 export type WindowsExpression =
+  | WindowsExpressionValue
   | WindowsExpressionActivityWindow
   | WindowsExpressionStartOf
   | WindowsExpressionEndOf
@@ -98,6 +100,11 @@ export type IntervalsExpression =
 export interface ProfileChanges {
   kind: NodeKind.ProfileChanges;
   expression: ProfileExpression;
+}
+
+export interface WindowsExpressionValue {
+  kind: NodeKind.WindowsExpressionValue,
+  value: boolean
 }
 
 export interface WindowsExpressionNot {
