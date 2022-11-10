@@ -465,3 +465,129 @@ Results in:
     }
   }
 .. end results mission model configuration effective arguments
+
+Create Constraint
+-----------------
+
+To create a single constraint, use the following mutation:
+
+.. begin create constraint
+.. code-block::
+
+  mutation CreateConstraint($constraint: constraint_insert_input!) {
+    createConstraint: insert_constraint_one(object: $constraint) {
+      id
+    }
+  }
+.. end create constraint
+
+with arguments of the following format:
+
+.. begin create constraint arguments
+.. code-block::
+
+  {
+    "constraint": {
+      "model_id": number, // required if plan_id is absent
+      "plan_id": number, // required if model_id is absent
+      "name": string,
+      "summary": string, // optional
+      "description": string, // optional
+      "definition": string
+    }
+  }
+.. end create constraint arguments
+
+Update a Constraint
+-------------------
+
+.. begin update constraint
+.. code-block::
+
+  mutation UpdateConstraint($id: Int!, $constraint: constraint_set_input!) {
+    updateConstraint: update_constraint_by_pk(
+      pk_columns: { id: $id }, _set: $constraint
+    ) {
+      id
+    }
+  }
+.. end update constraint
+
+with arguments:
+
+.. begin update constraint arguments
+.. code-block::
+
+  {
+    "id": number,
+    "constraint": {...} // same input as when creating
+  }
+.. end update constraint arguments
+
+Delete a Constraint
+-------------------
+
+.. begin delete constraint
+.. code-block::
+
+  mutation DeleteConstraint($id: Int!) {
+    deleteConstraint: delete_constraint_by_pk(id: $id) {
+      id
+    }
+  }
+.. end delete constraint
+
+with arguments:
+
+.. begin delete constraint arguments
+.. code-block::
+
+  {
+    "id": number
+  }
+.. end delete constraint arguments
+
+Add an External Dataset
+-----------------------
+
+.. begin add external dataset
+.. code-block::
+
+  mutation {
+    addExternalDataset(
+      planId: 1
+      datasetStart: "2030-180T00:00:00"
+      profileSet: {
+        sample: {
+          type: "discrete"
+          schema: {
+            type: "struct"
+            items: {
+              x: { type: "real" }
+            }
+          }
+          segments: [
+            { duration: 3600000000, dynamics: { x: 0 } }
+            { duration: 3600000000, dynamics: { x: 1 } }
+          ]
+        }
+      }
+    ) {
+      datasetId
+    }
+  }
+.. end add external dataset
+
+Delete an External Dataset
+--------------------------
+
+.. begin delete external dataset
+.. code-block::
+
+  mutation deletedDataset {
+    delete_dataset_by_pk(id: 1) {
+      id
+    }
+  }
+.. end delete external dataset
+

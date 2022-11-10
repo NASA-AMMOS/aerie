@@ -51,12 +51,10 @@ A discrete profile's dynamics should match the format specified by the `schema` 
 ## Deleting External Datasets
 There may be a time when you find an external dataset you've been using is no longer relevant, and must be removed. This is easily done by providing the ID of the dataset you wish to delete to the `delete_dataset_by_pk` mutation. For example, the following mutation will delete the dataset with id 5:
 
-```
-mutation deletedDataset {
-  delete_dataset_by_pk(id: 5) {
-    id
-  }
-}
+```{eval-rst}
+  .. include:: ../api-examples.rst
+    :start-after: begin delete external dataset
+    :end-before: end delete external dataset
 ```
 
 ## Example Mutations
