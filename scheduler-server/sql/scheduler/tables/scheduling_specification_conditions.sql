@@ -14,7 +14,9 @@ create table scheduling_specification_conditions (
     foreign key (condition_id)
       references scheduling_condition
       on update cascade
-      on delete cascade
+      on delete cascade,
+  constraint condition_owned_by_specification
+    unique (condition_id)
 );
 
 comment on table scheduling_specification_conditions is e''

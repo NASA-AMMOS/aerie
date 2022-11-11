@@ -21,7 +21,9 @@ create table scheduling_specification_goals (
     foreign key (goal_id)
       references scheduling_goal
       on update cascade
-      on delete cascade
+      on delete cascade,
+  constraint goal_owned_by_scheduling_specification
+    unique (goal_id)
 );
 
 comment on table scheduling_specification_goals is e''
