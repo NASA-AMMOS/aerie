@@ -31,6 +31,7 @@ Building a Mission Model
   activity-types/index
   resources-and-models/index
   configuration/index
+  parameters/index
   custom-value-types/index
   custom-value-mappers/index
   activity-mappers/index
