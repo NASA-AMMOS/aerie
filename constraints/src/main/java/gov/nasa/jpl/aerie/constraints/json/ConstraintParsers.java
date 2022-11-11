@@ -17,6 +17,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import java.util.List;
 
 import static gov.nasa.jpl.aerie.constraints.json.SerializedValueJsonParser.serializedValueP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.doubleP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.enumP;
@@ -35,6 +36,17 @@ public final class ConstraintParsers {
 
   static final JsonParser<Interval.Inclusivity> inclusivityP =
       enumP(Interval.Inclusivity.class, Enum::name);
+
+  static <P extends Profile<P>> JsonParser<AssignGaps<P>> assignGapsF(final JsonParser<Expression<P>> profileParser) {
+    return productP
+        .field("kind", literalP("AssignGapsExpression"))
+        .field("originalProfile", profileParser)
+        .field("defaultProfile", profileParser)
+        .map(
+            untuple((kind, originalProfile, defaultProfile) -> new AssignGaps<P>(originalProfile, defaultProfile)),
+            $ -> tuple(Unit.UNIT, $.originalProfile(), $.defaultProfile())
+        );
+  }
 
   static final JsonParser<DiscreteResource> discreteResourceP =
       productP
@@ -65,7 +77,9 @@ public final class ConstraintParsers {
       recursiveP(selfP -> chooseP(
           discreteResourceP,
           discreteValueP,
-          discreteParameterP));
+          discreteParameterP,
+          assignGapsF(selfP)
+      ));
 
   static final JsonParser<RealResource> realResourceP =
       productP
@@ -128,7 +142,9 @@ public final class ConstraintParsers {
           realParameterP,
           plusF(selfP),
           timesF(selfP),
-          rateF(selfP)));
+          rateF(selfP),
+          assignGapsF(selfP)
+      ));
 
   static final JsonParser<ProfileExpression<?>> profileExpressionP =
       BasicParsers.<ProfileExpression<?>>chooseP(
@@ -173,6 +189,15 @@ public final class ConstraintParsers {
           . map(
               microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
               duration -> duration.in(Duration.MICROSECONDS));
+
+  static final JsonParser<WindowsValue> windowsValueP =
+      productP
+          .field("kind", literalP("WindowsExpressionValue"))
+          .field("value", boolP)
+          .map(
+              untuple((kind, value) -> new WindowsValue(value)),
+              $ -> tuple(Unit.UNIT, $.value())
+          );
 
   static JsonParser<ShiftBy> shiftByF(JsonParser<Expression<Windows>> windowsExpressionP) {
     return productP
@@ -368,6 +393,7 @@ public final class ConstraintParsers {
 
   private static JsonParser<Expression<Windows>> windowsExpressionF(JsonParser<Expression<Spans>> spansP) {
     return recursiveP(selfP -> chooseP(
+        windowsValueP,
         startOfP,
         endOfP,
         changesP,
@@ -389,7 +415,9 @@ public final class ConstraintParsers {
         startsF(selfP),
         endsF(selfP),
         windowsFromSpansF(spansP),
-        activityWindowP));
+        activityWindowP,
+        assignGapsF(selfP)
+    ));
   }
 
   static JsonParser<SpansFromWindows> spansFromWindowsF(JsonParser<Expression<Windows>> windowsExpressionP) {
@@ -424,7 +452,6 @@ public final class ConstraintParsers {
           .map(
               untuple((kind, expression) -> new ViolationsOfWindows(expression)),
               $ -> tuple(Unit.UNIT, $.expression));
-
 
   public static final JsonParser<Expression<List<Violation>>> constraintP =
       recursiveP(selfP -> chooseP(

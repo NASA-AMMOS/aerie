@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
 import gov.nasa.jpl.aerie.constraints.tree.ActivityWindow;
 import gov.nasa.jpl.aerie.constraints.tree.And;
+import gov.nasa.jpl.aerie.constraints.tree.AssignGaps;
 import gov.nasa.jpl.aerie.constraints.tree.Changes;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
@@ -36,6 +37,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Times;
 import gov.nasa.jpl.aerie.constraints.tree.Transition;
 import gov.nasa.jpl.aerie.constraints.tree.ViolationsOfWindows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsFromSpans;
+import gov.nasa.jpl.aerie.constraints.tree.WindowsValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
@@ -273,6 +275,35 @@ class ConstraintsDSLCompilationServiceTests {
     );
   }
 
+  @Test
+  void testDiscreteAssignGaps() {
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Discrete.Resource("mode").assignGaps("Option1").equal("Option1");
+          }
+        """,
+        new ViolationsOfWindows(
+            new Equal<>(
+                new AssignGaps<>(
+                    new DiscreteResource("mode"),
+                    new DiscreteValue(SerializedValue.of("Option1"))
+                ),
+                new DiscreteValue(SerializedValue.of("Option1"))
+            )
+        )
+    );
+
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Discrete.Resource("mode").assignGaps(Discrete.Resource("mode")).equal("Option1");
+          }
+        """,
+        new ViolationsOfWindows(new Equal<>(new AssignGaps<>(new DiscreteResource("mode"), new DiscreteResource("mode")), new DiscreteValue(SerializedValue.of("Option1"))))
+    );
+  }
+
   //// TESTS FOR `Real` CLASS API
 
   @Test
@@ -484,6 +515,27 @@ class ConstraintsDSLCompilationServiceTests {
           }
         """,
         new ViolationsOfWindows(new LessThan(new Plus(new RealValue(2.2), new RealValue(-3.0)), new RealValue(5.0)))
+    );
+  }
+
+  @Test
+  void testRealAssignGaps() {
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Real.Resource("an integer").assignGaps(0).lessThan(5);
+          }
+        """,
+        new ViolationsOfWindows(new LessThan(new AssignGaps<>(new RealResource("an integer"), new RealValue(0.0)), new RealValue(5.0)))
+    );
+
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Real.Resource("an integer").assignGaps(Real.Resource("an integer")).lessThan(5);
+          }
+        """,
+        new ViolationsOfWindows(new LessThan(new AssignGaps<>(new RealResource("an integer"), new RealResource("an integer")), new RealValue(5.0)))
     );
   }
 
@@ -782,6 +834,30 @@ class ConstraintsDSLCompilationServiceTests {
         }
         """,
         new ViolationsOfWindows(new Equal<>(new RealResource("state of charge"), new RealValue(-1.0)))
+    );
+  }
+
+  @Test
+  void testWindowsValue() {
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Windows.Value(false);
+          }
+        """,
+        new ViolationsOfWindows(new WindowsValue(false))
+    );
+  }
+
+  @Test
+  void testWindowsAssignGaps() {
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Real.Resource("an integer").lessThan(5).assignGaps(false);
+          }
+        """,
+        new ViolationsOfWindows(new AssignGaps<>(new LessThan(new RealResource("an integer"), new RealValue(5.0)), new WindowsValue(false)))
     );
   }
 

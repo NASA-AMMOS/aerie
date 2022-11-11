@@ -1,6 +1,7 @@
 import type * as API from "./constraints-edsl-fluent-api";
 
 export enum NodeKind {
+  AssignGapsExpression = 'AssignGapsExpression',
   DiscreteProfileResource = 'DiscreteProfileResource',
   DiscreteProfileValue = 'DiscreteProfileValue',
   DiscreteProfileParameter = 'DiscreteProfileParameter',
@@ -13,6 +14,7 @@ export enum NodeKind {
   DiscreteProfileTransition = 'DiscreteProfileTransition',
   WindowsExpressionActivityWindow = 'WindowsExpressionActivityWindow',
   SpansExpressionActivitySpan = 'SpansExpressionActivitySpan',
+  WindowsExpressionValue = 'WindowsExpressionValue',
   WindowsExpressionStartOf = 'WindowsExpressionStartOf',
   WindowsExpressionEndOf = 'WindowsExpressionEndOf',
   WindowsExpressionLongerThan = 'WindowsExpressionLongerThan',
@@ -59,7 +61,14 @@ export interface ForEachActivitySpans {
   expression: SpansExpression;
 }
 
+export interface AssignGapsExpression<P extends ProfileExpression> {
+  kind: NodeKind.AssignGapsExpression,
+  originalProfile: P,
+  defaultProfile: P
+}
+
 export type WindowsExpression =
+  | WindowsExpressionValue
   | WindowsExpressionActivityWindow
   | WindowsExpressionStartOf
   | WindowsExpressionEndOf
@@ -81,7 +90,8 @@ export type WindowsExpression =
   | WindowsExpressionShiftBy
   | WindowsExpressionFromSpans
   | IntervalsExpressionStarts
-  | IntervalsExpressionEnds;
+  | IntervalsExpressionEnds
+  | AssignGapsExpression<WindowsExpression>;
 
 export type SpansExpression =
   | SpansExpressionActivitySpan
@@ -98,6 +108,11 @@ export type IntervalsExpression =
 export interface ProfileChanges {
   kind: NodeKind.ProfileChanges;
   expression: ProfileExpression;
+}
+
+export interface WindowsExpressionValue {
+  kind: NodeKind.WindowsExpressionValue,
+  value: boolean
 }
 
 export interface WindowsExpressionNot {
@@ -148,13 +163,13 @@ export interface RealProfileLessThan {
   right: RealProfileExpression;
 }
 
-export interface ExpressionNotEqual<T = ProfileExpression> {
+export interface ExpressionNotEqual<T extends ProfileExpression> {
   kind: NodeKind.ExpressionNotEqual;
   left: T;
   right: T;
 }
 
-export interface ExpressionEqual<T = ProfileExpression> {
+export interface ExpressionEqual<T extends ProfileExpression> {
   kind: NodeKind.ExpressionEqual;
   left: T;
   right: T;
@@ -227,7 +242,7 @@ export interface DiscreteProfileTransition {
   to: any;
 }
 
-export type ProfileExpression = RealProfileExpression | DiscreteProfileExpression;
+export type ProfileExpression = WindowsExpression | RealProfileExpression | DiscreteProfileExpression;
 
 export type RealProfileExpression =
   | RealProfileRate
@@ -235,7 +250,8 @@ export type RealProfileExpression =
   | RealProfilePlus
   | RealProfileResource
   | RealProfileValue
-  | RealProfileParameter;
+  | RealProfileParameter
+  | AssignGapsExpression<RealProfileExpression>;
 
 export interface RealProfileRate {
   kind: NodeKind.RealProfileRate;
@@ -270,7 +286,11 @@ export interface RealProfileParameter {
   name: string;
 }
 
-export type DiscreteProfileExpression = DiscreteProfileResource | DiscreteProfileValue | DiscreteProfileParameter;
+export type DiscreteProfileExpression =
+    | DiscreteProfileResource
+    | DiscreteProfileValue
+    | DiscreteProfileParameter
+    | AssignGapsExpression<DiscreteProfileExpression>;
 
 export interface DiscreteProfileResource {
   kind: NodeKind.DiscreteProfileResource;

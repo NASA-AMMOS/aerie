@@ -37,6 +37,51 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class ASTTests {
 
   @Test
+  public void testAssignGaps() {
+    final var simResults = new SimulationResults(
+        Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var originalWindows = new Windows()
+        .set(Interval.between(-2, -1, SECONDS), true)
+        .set(Interval.between(1, 2, SECONDS), false);
+
+    final var defaultWindows = new Windows(false)
+        .set(Interval.between(Duration.ZERO, Duration.MAX_VALUE), true);
+
+    final var result = new AssignGaps<>(
+        Supplier.of(originalWindows),
+        Supplier.of(defaultWindows)
+    ).evaluate(simResults, new EvaluationEnvironment());
+
+    final var expected = new Windows(false)
+        .set(Interval.between(-2, -1, SECONDS), true)
+        .set(Interval.between(0, Inclusive, 1, Exclusive, SECONDS), true)
+        .set(Interval.between(Duration.of(2, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive), true);
+
+    assertIterableEquals(expected, result);
+  }
+
+  @Test
+  public void testWindowsValue() {
+    final var simResults = new SimulationResults(
+        Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var result = new WindowsValue(true).evaluate(simResults, new EvaluationEnvironment());
+
+    final var expected = new Windows(Interval.between(0, 20, SECONDS), true);
+
+    assertIterableEquals(expected, result);
+  }
+
+  @Test
   public void testNot() {
     final var simResults = new SimulationResults(
         Interval.between(0, 20, SECONDS),
