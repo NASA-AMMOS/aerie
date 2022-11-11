@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 
 import java.util.function.Function;
 
@@ -125,14 +126,4 @@ public interface Initializer {
       String name,
       Topic<Event> topic,
       OutputType<Event> outputType);
-
-  /**
-   * A factory for creating fresh copies of a task. All tasks created by a factory must be observationally equivalent.
-   *
-   * @param <Return>
-   *   The type of data returned by a task created by this factory.
-   */
-  interface TaskFactory<Return> {
-    Task<Return> create();
-  }
 }

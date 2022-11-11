@@ -39,13 +39,13 @@ public interface DirectiveType<Model, Arguments, Result> {
   /**
    * Initializes a {@link Task} operating on the given model given a directive instance.
    *
-   * <p> This method and the returned {@code Task} must never cause the given {@code Model} or {@code Arguments} to be
+   * <p> This method and the {@code Task} returned from the {@code TaskFactory} must never cause the given {@code Model} or {@code Arguments} to be
    * mutated. It may only read/write cells allocated to the model via any {@link gov.nasa.jpl.aerie.merlin.protocol.driver.CellId}
    * references the model holds, or update the private state of the {@code Task} itself. This is because multiple {@code Task}s
    * may reference the {@code Model} or {@code Arguments} concurrently, and updates by one {@code Task} may interfere
    * with the transactional isolation afforded to others. </p>
    */
-  Task<Result> createTask(Model model, Arguments arguments);
+  TaskFactory<Result> getTaskFactory(Model model, Arguments arguments);
 
   /**
    * Initializes a {@link Task} given a set of arguments determining the directive instance.
@@ -54,7 +54,7 @@ public interface DirectiveType<Model, Arguments, Result> {
    * must behave as though implemented as: </p>
    *
    * {@snippet :
-   * return this.createTask(model, this.getInputType().instantiate(arguments));
+   * return this.getTaskFactory(model, this.getInputType().instantiate(arguments));
    * }
    *
    * @param model
@@ -68,9 +68,9 @@ public interface DirectiveType<Model, Arguments, Result> {
    * @see InputType#instantiate(Map)
    * @see #createTask(Model, Arguments)
    */
-  default Task<Result> createTask(final Model model, final Map<String, SerializedValue> arguments)
+  default TaskFactory<Result> getTaskFactory(final Model model, final Map<String, SerializedValue> arguments)
   throws InstantiationException
   {
-    return this.createTask(model, this.getInputType().instantiate(arguments));
+    return this.getTaskFactory(model, this.getInputType().instantiate(arguments));
   }
 }

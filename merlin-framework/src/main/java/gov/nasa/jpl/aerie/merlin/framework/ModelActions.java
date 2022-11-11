@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
@@ -13,22 +14,22 @@ public /*non-final*/ class ModelActions {
   static final Scoped<Context> context = Scoped.create();
 
 
-  public static <T> Context.TaskFactory<T> threaded(final Supplier<T> task) {
+  public static <T> TaskFactory<T> threaded(final Supplier<T> task) {
     return executor -> new ThreadedTask<>(executor, ModelActions.context, task);
   }
 
-  public static Context.TaskFactory<Unit> threaded(final Runnable task) {
+  public static TaskFactory<Unit> threaded(final Runnable task) {
     return threaded(() -> {
       task.run();
       return Unit.UNIT;
     });
   }
 
-  public static <T> Context.TaskFactory<T> replaying(final Supplier<T> task) {
-    return executor -> new ReplayingTask<>(executor, ModelActions.context, task);
+  public static <T> TaskFactory<T> replaying(final Supplier<T> task) {
+    return executor -> new ReplayingTask<>(ModelActions.context, task);
   }
 
-  public static Context.TaskFactory<Unit> replaying(final Runnable task) {
+  public static TaskFactory<Unit> replaying(final Runnable task) {
     return replaying(() -> {
       task.run();
       return Unit.UNIT;
@@ -52,7 +53,7 @@ public /*non-final*/ class ModelActions {
     });
   }
 
-  public static <T> void spawn(final Context.TaskFactory<T> task) {
+  public static <T> void spawn(final TaskFactory<T> task) {
     context.get().spawn(task);
   }
 
@@ -64,7 +65,7 @@ public /*non-final*/ class ModelActions {
     call(threaded(task));
   }
 
-  public static <T> void call(final Context.TaskFactory<T> task) {
+  public static <T> void call(final TaskFactory<T> task) {
     context.get().call(task);
   }
 
@@ -72,7 +73,7 @@ public /*non-final*/ class ModelActions {
     spawn(replaying(() -> { delay(duration); spawn(task); }));
   }
 
-  public static void defer(final Duration duration, final Context.TaskFactory<?> task) {
+  public static void defer(final Duration duration, final TaskFactory<?> task) {
     spawn(replaying(() -> { delay(duration); spawn(task); }));
   }
 
@@ -80,7 +81,7 @@ public /*non-final*/ class ModelActions {
     spawn(replaying(() -> { delay(quantity, unit); spawn(task); }));
   }
 
-  public static void defer(final long quantity, final Duration unit, final Context.TaskFactory<?> task) {
+  public static void defer(final long quantity, final Duration unit, final TaskFactory<?> task) {
     spawn(replaying(() -> { delay(quantity, unit); spawn(task); }));
   }
 

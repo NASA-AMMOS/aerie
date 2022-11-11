@@ -2,18 +2,19 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
 public final class ThreadedTask<Return> implements Task<Return> {
   private final Scoped<Context> rootContext;
   private final Supplier<Return> task;
-  private final ExecutorService executor;
+  private final Executor executor;
 
   private final ArrayBlockingQueue<TaskRequest> hostToTask = new ArrayBlockingQueue<>(1);
   private final ArrayBlockingQueue<TaskResponse<Return>> taskToHost = new ArrayBlockingQueue<>(1);
@@ -21,7 +22,7 @@ public final class ThreadedTask<Return> implements Task<Return> {
   private Lifecycle lifecycle = Lifecycle.Inactive;
   private Return returnValue;
 
-  public ThreadedTask(final ExecutorService executor, final Scoped<Context> rootContext, final Supplier<Return> task) {
+  public ThreadedTask(final Executor executor, final Scoped<Context> rootContext, final Supplier<Return> task) {
     this.rootContext = Objects.requireNonNull(rootContext);
     this.task = Objects.requireNonNull(task);
     this.executor = Objects.requireNonNull(executor);
@@ -134,11 +135,7 @@ public final class ThreadedTask<Return> implements Task<Return> {
       if (request instanceof TaskRequest.Resume resume) {
         final var scheduler = resume.scheduler;
 
-        final var context = new ThreadedReactionContext(
-            ThreadedTask.this.executor,
-            ThreadedTask.this.rootContext,
-            scheduler,
-            this);
+        final var context = new ThreadedReactionContext(ThreadedTask.this.rootContext, scheduler, this);
 
         try (final var restore = ThreadedTask.this.rootContext.set(context)) {
           return new TaskResponse.Success<>(TaskStatus.completed(ThreadedTask.this.task.get()));
@@ -206,7 +203,7 @@ public final class ThreadedTask<Return> implements Task<Return> {
     }
 
     @Override
-    public Scheduler call(final Task<?> child) {
+    public Scheduler call(final TaskFactory<?> child) {
       return this.yield(TaskStatus.calling(child, ThreadedTask.this));
     }
 

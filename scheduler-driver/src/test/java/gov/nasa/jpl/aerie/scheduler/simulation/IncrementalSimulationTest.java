@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.simulation;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.SimulationUtility;
@@ -83,12 +84,26 @@ public class IncrementalSimulationTest {
         new SerializedActivity("BasicActivity", Map.of()),
         new ActivityInstanceId(1));
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    final var executor = (ThreadPoolExecutor) fooMissionModel.getModel().executor();
     incrementalSimulationDriver = new IncrementalSimulationDriver<>(fooMissionModel);
+    final var executor = unsafeGetExecutor(incrementalSimulationDriver);
     for (var i = 0; i < 20000; i++) {
       incrementalSimulationDriver.initSimulation();
       incrementalSimulationDriver.simulateActivity(activity.activity, activity.start, activity.id);
       assertTrue(executor.getActiveCount() < 100, "Threads are not being cleaned up properly - this test shouldn't need more than 2 threads, but it used at least 100");
+    }
+  }
+
+  private static ThreadPoolExecutor unsafeGetExecutor(final IncrementalSimulationDriver<?> driver) {
+    try {
+      final var engineField = IncrementalSimulationDriver.class.getDeclaredField("engine");
+      engineField.setAccessible(true);
+
+      final var executorField = SimulationEngine.class.getDeclaredField("executor");
+      executorField.setAccessible(true);
+
+      return (ThreadPoolExecutor) executorField.get(engineField.get(driver));
+    } catch (final ReflectiveOperationException ex) {
+      throw new RuntimeException(ex);
     }
   }
 

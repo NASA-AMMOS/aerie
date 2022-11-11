@@ -1,15 +1,14 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
 import gov.nasa.jpl.aerie.foomissionmodel.activities.FooActivity;
-import gov.nasa.jpl.aerie.foomissionmodel.generated.ActivityTypes;
+import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
-import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinTestContext;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.time.Instant;
 
@@ -20,16 +19,12 @@ import static org.assertj.core.api.Assertions.within;
 
 public final class MissionConfigurationTest {
   @TestInstance(Lifecycle.PER_CLASS)
+  @ExtendWith(MerlinExtension.class)
   public @Nested final class Test1 {
-
-    @RegisterExtension
-    public static final MerlinExtension<ActivityTypes, Mission> ext = new MerlinExtension<>();
-
     private final Mission model;
 
-    public Test1(final MerlinTestContext<ActivityTypes, Mission> ctx) {
-      this.model = new Mission(ctx.registrar(), Instant.EPOCH, new Configuration());
-      ctx.use(model);
+    public Test1(final Registrar registrar) {
+      this.model = new Mission(registrar, Instant.EPOCH, new Configuration());
     }
 
     @Test
@@ -42,16 +37,12 @@ public final class MissionConfigurationTest {
   }
 
   @TestInstance(Lifecycle.PER_CLASS)
+  @ExtendWith(MerlinExtension.class)
   public @Nested final class Test2 {
-
-    @RegisterExtension
-    public static final MerlinExtension<ActivityTypes, Mission> ext = new MerlinExtension<>();
-
     private final Mission model;
 
-    public Test2(final MerlinTestContext<ActivityTypes, Mission> ctx) {
-      this.model = new Mission(ctx.registrar(), Instant.EPOCH.plusSeconds(1), new Configuration(2.0));
-      ctx.use(model);
+    public Test2(final Registrar registrar) {
+      this.model = new Mission(registrar, Instant.EPOCH.plusSeconds(1), new Configuration(2.0));
     }
 
     @Test

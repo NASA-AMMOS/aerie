@@ -3,10 +3,9 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
-import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
 public interface Context {
@@ -29,8 +28,6 @@ public interface Context {
 
   // Usable during simulation
   <Event> void emit(Event event, Topic<Event> topic);
-
-  interface TaskFactory<Return> { Task<Return> create(ExecutorService executor); }
 
   void spawn(TaskFactory<?> task);
   <Return> void call(TaskFactory<Return> task);

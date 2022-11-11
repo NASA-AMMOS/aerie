@@ -4,18 +4,17 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 /* package-local */
 final class ReplayingReactionContext implements Context {
-  private final ExecutorService executor;
   private final Scoped<Context> rootContext;
   private final TaskHandle handle;
   private Scheduler scheduler;
@@ -23,13 +22,11 @@ final class ReplayingReactionContext implements Context {
   private final MemoryCursor memory;
 
   public ReplayingReactionContext(
-      final ExecutorService executor,
       final Scoped<Context> rootContext,
       final Memory memory,
       final Scheduler scheduler,
       final TaskHandle handle)
   {
-    this.executor = Objects.requireNonNull(executor);
     this.rootContext = Objects.requireNonNull(rootContext);
     this.memory = new MemoryCursor(memory, new MutableInt(0), new MutableInt(0));
     this.scheduler = scheduler;
@@ -69,7 +66,7 @@ final class ReplayingReactionContext implements Context {
   @Override
   public void spawn(final TaskFactory<?> task) {
     this.memory.doOnce(() -> {
-      this.scheduler.spawn(task.create(this.executor));
+      this.scheduler.spawn(task);
     });
   }
 
@@ -77,7 +74,7 @@ final class ReplayingReactionContext implements Context {
   public <T> void call(final TaskFactory<T> task) {
     this.memory.doOnce(() -> {
       this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
-      this.scheduler = this.handle.call(task.create(this.executor));
+      this.scheduler = this.handle.call(task);
     });
   }
 

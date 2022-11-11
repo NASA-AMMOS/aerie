@@ -2,24 +2,22 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 public final class ReplayingTask<Return> implements Task<Return> {
-  private final ExecutorService executor;
   private final Scoped<Context> rootContext;
   private final Supplier<Return> task;
 
   private final ReplayingReactionContext.Memory memory = new ReplayingReactionContext.Memory(new ArrayList<>(), new MutableInt(0));
 
-  public ReplayingTask(final ExecutorService executor, final Scoped<Context> rootContext, final Supplier<Return> task) {
-    this.executor = Objects.requireNonNull(executor);
+  public ReplayingTask(final Scoped<Context> rootContext, final Supplier<Return> task) {
     this.rootContext = Objects.requireNonNull(rootContext);
     this.task = Objects.requireNonNull(task);
   }
@@ -27,7 +25,7 @@ public final class ReplayingTask<Return> implements Task<Return> {
   @Override
   public TaskStatus<Return> step(final Scheduler scheduler) {
     final var handle = new ReplayingTaskHandle();
-    final var context = new ReplayingReactionContext(this.executor, this.rootContext, this.memory, scheduler, handle);
+    final var context = new ReplayingReactionContext(this.rootContext, this.memory, scheduler, handle);
 
     try (final var restore = this.rootContext.set(context)){
       final var returnValue = this.task.get();
@@ -54,7 +52,7 @@ public final class ReplayingTask<Return> implements Task<Return> {
     }
 
     @Override
-    public Scheduler call(final Task<?> child) {
+    public Scheduler call(final TaskFactory<?> child) {
       return this.yield(TaskStatus.calling(child, ReplayingTask.this));
     }
 

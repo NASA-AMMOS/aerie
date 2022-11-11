@@ -9,12 +9,10 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import java.util.stream.Collectors;
 
 public interface ActivityMapper<Model, Specification, Return>
-    extends DirectiveType<RootModel<Model>, Specification, Return>
+    extends DirectiveType<Model, Specification, Return>
 {
   Topic<Specification> getInputTopic();
   Topic<Return> getOutputTopic();
-
-  Context.TaskFactory<Return> getTaskFactory(Model model, Specification activity);
 
   default OutputType<Specification> getInputAsOutput() {
     final var inputType = this.getInputType();

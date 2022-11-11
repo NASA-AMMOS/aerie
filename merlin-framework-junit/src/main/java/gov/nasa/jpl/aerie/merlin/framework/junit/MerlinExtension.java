@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.framework.InitializationContext;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
-import gov.nasa.jpl.aerie.merlin.framework.RootModel;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.DynamicTestInvocationContext;
@@ -24,18 +24,13 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Objects;
 
-public final class MerlinExtension<UNUSED, Model>
+public final class MerlinExtension
     implements BeforeAllCallback, ParameterResolver, InvocationInterceptor, TestInstancePreDestroyCallback
 {
-  private State<UNUSED, Model> getState(final ExtensionContext context) {
-    // SAFETY: This method is the only one where we store or retrieve a State,
-    //   and it's always instantiated with <Model>.
-    @SuppressWarnings("unchecked")
-    final var stateClass = (Class<State<UNUSED, Model>>) (Object) State.class;
-
+  private State getState(final ExtensionContext context) {
     return context
         .getStore(ExtensionContext.Namespace.create(context.getRequiredTestClass()))
-        .getOrComputeIfAbsent("state", $ -> new State<>(new MissionModelBuilder()), stateClass);
+        .getOrComputeIfAbsent("state", $ -> new State(new MissionModelBuilder()), State.class);
   }
 
   @Override
@@ -50,23 +45,22 @@ public final class MerlinExtension<UNUSED, Model>
   public boolean supportsParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
   throws ParameterResolutionException
   {
-    return parameterContext.getParameter().getType().equals(MerlinTestContext.class);
+    return parameterContext.getParameter().getType().equals(Registrar.class);
   }
 
   @Override
-  public MerlinTestContext<UNUSED, Model> resolveParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
+  public Object resolveParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
   throws ParameterResolutionException
   {
     final var state = this.getState(extensionContext);
     final var paramType = parameterContext.getParameter().getType();
 
-    if (!paramType.equals(MerlinTestContext.class)) {
+    if (paramType.equals(Registrar.class)) {
+      if (state.registrar == null) state.registrar = new Registrar(state.builder);
+      return state.registrar;
+    } else {
       throw new Error("Unsupported Merlin extension parameter type: " + paramType.getSimpleName());
     }
-
-    state.context = new MerlinTestContext<>(new Registrar(state.builder));
-
-    return state.context;
   }
 
   @Override
@@ -107,28 +101,24 @@ public final class MerlinExtension<UNUSED, Model>
   @Override
   public void preDestroyTestInstance(final ExtensionContext extensionContext) {
     final var state = this.getState(extensionContext);
-
-    state.missionModel.getModel().close();
     state.missionModel = null;
   }
 
-  private static final class State<UNUSED, Model> {
+  private static final class State {
     public MissionModelBuilder builder;
-    public MerlinTestContext<UNUSED, Model> context;
+    public Registrar registrar;
 
-    public MissionModel<RootModel<Model>> missionModel = null;
+    public MissionModel<Unit> missionModel = null;
 
     public State(final MissionModelBuilder builder) {
       this.builder = Objects.requireNonNull(builder);
-      this.context = new MerlinTestContext<>(new Registrar(this.builder));
+      this.registrar = new Registrar(this.builder);
     }
 
     public <T> T constructModel(final Invocation<T> invocation) throws Throwable {
-      final var executor = RootModel.makeExecutorService();
-
       final T value;
       try {
-        value = InitializationContext.initializing(executor, this.builder, () -> {
+        value = InitializationContext.initializing(this.builder, () -> {
           try {
             return invocation.proceed();
           } catch (final RuntimeException ex) {
@@ -141,13 +131,11 @@ public final class MerlinExtension<UNUSED, Model>
         throw ex.wrapped;
       }
 
-      this.missionModel = this.builder.build(
-          new RootModel<>(this.context.model(), executor),
-          new DirectiveTypeRegistry<>(Map.of()));
+      this.missionModel = this.builder.build(Unit.UNIT, new DirectiveTypeRegistry<>(Map.of()));
 
       // Clear the builder; it shouldn't be used from here on, and if it is, an error should be raised.
       this.builder = null;
-      this.context = null;
+      this.registrar = null;
 
       return value;
     }
@@ -155,7 +143,6 @@ public final class MerlinExtension<UNUSED, Model>
     private void simulate(final Invocation<Void> invocation) throws Throwable {
       final var completed = new Object() { boolean value = false; };
 
-      final var model = this.missionModel.getModel();
       final var task = ModelActions
           .threaded(() -> {
             try {
@@ -165,8 +152,7 @@ public final class MerlinExtension<UNUSED, Model>
             } finally {
               completed.value = true;
             }
-          })
-          .create(model.executor());
+          });
 
       try {
         SimulationDriver.simulateTask(this.missionModel, task);

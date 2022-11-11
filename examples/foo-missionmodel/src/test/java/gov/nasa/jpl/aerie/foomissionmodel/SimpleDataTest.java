@@ -13,7 +13,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
 // The `@ExtendWith` annotation injects the given extension into JUnit's testing apparatus.
-// If a test case needs to spawn activities, use the `@RegisterExtension` style instead.
 // Our `MerlinExtension` hooks test class construction and test method execution,
 //   executing each with the appropriate simulation context.
 @ExtendWith(MerlinExtension.class)

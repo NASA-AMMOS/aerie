@@ -10,14 +10,15 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -26,6 +27,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
+import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -40,6 +42,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -69,10 +73,35 @@ public final class SimulationEngine implements AutoCloseable {
   @DerivedFrom("taskParent")
   private final Map<TaskId, Set<TaskId>> taskChildren = new HashMap<>();
 
+  /** A thread pool that modeled tasks can use to keep track of their state between steps. */
+  private final ExecutorService executor = getLoomOrFallback();
+
+  private static ExecutorService getLoomOrFallback() {
+    // Try to use Loom's lightweight virtual threads, if possible. Otherwise, just use a thread pool.
+    // This approach is inspired by that of Javalin 5.
+    // https://github.com/javalin/javalin/blob/97e9e23ebe8f57aa353bc7a45feb560ad61e50a0/javalin/src/main/java/io/javalin/util/ConcurrencyUtil.kt#L48-L51
+    try {
+      // Use reflection to avoid needing `--enable-preview` at compile-time.
+      // If the runtime JVM is run with `--enable-preview`, this should succeed.
+      return (ExecutorService) Executors.class.getMethod("newVirtualThreadPerTaskExecutor").invoke(null);
+    } catch (final ReflectiveOperationException ex) {
+      return Executors.newCachedThreadPool($ -> {
+        final var t = new Thread($);
+        // TODO: Make threads non-daemons.
+        //  We're marking these as daemons right now solely to ensure that the JVM shuts down cleanly in lieu of
+        //  proper model lifecycle management.
+        //  In fact, daemon threads can mask bad memory leaks: a hanging thread is almost indistinguishable
+        //  from a dead thread.
+        t.setDaemon(true);
+        return t;
+      });
+    }
+  }
+
   /** Schedule a new task to be performed at the given time. */
-  public <Return> TaskId scheduleTask(final Duration startTime, final Task<Return> state) {
+  public <Return> TaskId scheduleTask(final Duration startTime, final TaskFactory<Return> state) {
     final var task = TaskId.generate();
-    this.tasks.put(task, new ExecutionState.InProgress<>(startTime, state));
+    this.tasks.put(task, new ExecutionState.InProgress<>(startTime, state.create(this.executor)));
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
     return task;
   }
@@ -209,7 +238,7 @@ public final class SimulationEngine implements AutoCloseable {
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
     } else if (status instanceof TaskStatus.CallingTask<Return> s) {
       final var target = TaskId.generate();
-      SimulationEngine.this.tasks.put(target, new ExecutionState.InProgress<>(currentTime, s.child()));
+      SimulationEngine.this.tasks.put(target, new ExecutionState.InProgress<>(currentTime, s.child().create(this.executor)));
       SimulationEngine.this.taskParent.put(target, task);
       SimulationEngine.this.taskChildren.computeIfAbsent(task, $ -> new HashSet<>()).add(target);
       frame.signal(JobId.forTask(target));
@@ -321,6 +350,8 @@ public final class SimulationEngine implements AutoCloseable {
         r.state.release();
       }
     }
+
+    this.executor.shutdownNow();
   }
 
   /** Determine if a given task has fully completed. */
@@ -707,9 +738,9 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public void spawn(final Task<?> state) {
+    public void spawn(final TaskFactory<?> state) {
       final var task = TaskId.generate();
-      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state));
+      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state.create(SimulationEngine.this.executor)));
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       this.frame.signal(JobId.forTask(task));

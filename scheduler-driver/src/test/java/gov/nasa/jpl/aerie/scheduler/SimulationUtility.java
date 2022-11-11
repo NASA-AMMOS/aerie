@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.foomissionmodel.Mission;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
-import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
 
 import java.nio.file.Path;
@@ -20,7 +19,7 @@ public final class SimulationUtility {
     return builder.build(model, registry);
   }
 
-  public static MissionModel<RootModel<Mission>>
+  public static MissionModel<Mission>
   getFooMissionModel() {
     final var config = new gov.nasa.jpl.aerie.foomissionmodel.Configuration();
     final var factory = new gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedModelType();

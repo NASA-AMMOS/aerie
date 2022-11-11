@@ -1,22 +1,18 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 
 public final class MissionModel<Model> {
   private final Model model;
@@ -24,14 +20,14 @@ public final class MissionModel<Model> {
   private final Map<String, Resource<?>> resources;
   private final List<SerializableTopic<?>> topics;
   private final DirectiveTypeRegistry<Model> directiveTypes;
-  private final List<Initializer.TaskFactory<?>> daemons;
+  private final List<TaskFactory<?>> daemons;
 
   public MissionModel(
       final Model model,
       final LiveCells initialCells,
       final Map<String, Resource<?>> resources,
       final List<SerializableTopic<?>> topics,
-      final List<Initializer.TaskFactory<?>> daemons,
+      final List<TaskFactory<?>> daemons,
       final DirectiveTypeRegistry<Model> directiveTypes)
   {
     this.model = Objects.requireNonNull(model);
@@ -50,16 +46,16 @@ public final class MissionModel<Model> {
     return this.directiveTypes;
   }
 
-  public Task<?> createTask(final SerializedActivity specification) throws InstantiationException {
+  public TaskFactory<?> getTaskFactory(final SerializedActivity specification) throws InstantiationException {
     return this.directiveTypes
         .directiveTypes()
         .get(specification.getTypeName())
-        .createTask(this.model, specification.getArguments());
+        .getTaskFactory(this.model, specification.getArguments());
   }
 
-  public Task<Unit> getDaemon() {
-    return scheduler -> {
-      MissionModel.this.daemons.forEach(daemon -> scheduler.spawn(daemon.create()));
+  public TaskFactory<Unit> getDaemon() {
+    return executor -> scheduler -> {
+      MissionModel.this.daemons.forEach(scheduler::spawn);
       return TaskStatus.completed(Unit.UNIT);
     };
   }
