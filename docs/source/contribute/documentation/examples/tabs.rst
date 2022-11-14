@@ -1,54 +1,65 @@
 Tabs
 ====
 
-When there are several languages or options available and the reader will use one and keep using that option throughout the procedure, a tabbed content box is the best way to display this informaiton.
+When there are several languages or options available and the reader will use one and keep using that option throughout the procedure, a tabbed content box is the best way to display this information.
 
 For example:
 
 .. code-block:: none
 
-   .. tabs::
+  .. tabs::
 
-      .. group-tab:: CentOS 7, Ubuntu 16.04/18.04, Debian 8/9
+    .. group-tab:: MacOS (BSD sed)
 
-         .. code-block:: shell
+      To replace every instance of the word "Hello" with the word "World" in a file using BSD sed, use the following command:
 
-            sudo systemctl stop scylla-server
+      .. code-block:: shell
 
-      .. group-tab:: Ubuntu 14.04, Debian 7
+         sed -i '' 's/Hello/World/g' index.rst
 
-         .. code-block:: shell
+    .. group-tab:: Linux (GNU sed)
 
-            sudo service scylla-server stop
+      To replace every instance of the word "Hello" with the word "World" in a file using GNU sed, use the following command:
 
-      .. group-tab:: Docker
+      .. code-block:: shell
 
-         .. code-block:: shell
+         sed -i -e 's/README/index/g' index.rst
 
-            docker exec -it some-scylla supervisorctl stop scylla
+    .. group-tab:: Windows (Powershell)
 
-         (without stopping *some-scylla* container)
+      Windows has no ``sed`` equivalent natively installed. Instead, in order to replace every instance of the word "Hello" with the word "World" in a file,
+      use the following command in Powershell:
+
+      .. code-block:: shell
+
+         (Get-Content index.rst) -replace 'Hello', 'World' | Out-File -encoding ASCII index.rst
+
 
 Renders as:
 
 .. tabs::
 
-   .. group-tab:: CentOS 7, Ubuntu 16.04/18.04, Debian 8/9
+   .. group-tab:: MacOS (BSD sed)
+
+      To replace every instance of the word "Hello" with the word "World" in a file using BSD sed, use the following syntax:
 
       .. code-block:: shell
 
-         sudo systemctl stop scylla-server
+         sed -i '' 's/Hello/World/g' index.rst
 
-   .. group-tab:: Ubuntu 14.04, Debian 7
+   .. group-tab:: Linux (GNU sed)
 
-      .. code-block:: shell
-
-         sudo service scylla-server stop
-
-   .. group-tab:: Docker
+      To replace every instance of the word "Hello" with the word "World" in a file using GNU sed, use the following syntax:
 
       .. code-block:: shell
 
-         docker exec -it some-scylla supervisorctl stop scylla
+         sed -i -e 's/README/index/g' index.rst
 
-      (without stopping *some-scylla* container)
+   .. group-tab:: Windows (Powershell)
+
+      Windows has no ``sed`` equivalent natively installed. Instead, in order to replace every instance of the word "Hello" with the word "World" in a file,
+      use the following command in Powershell:
+
+      .. code-block:: shell
+
+         (Get-Content index.rst) -replace 'Hello', 'World' | Out-File -encoding ASCII index.rst
