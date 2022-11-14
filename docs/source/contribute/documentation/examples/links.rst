@@ -14,8 +14,8 @@ There are a few links you can use with different purposes.
    * - External Link
      - .. code-block:: rst
 
-          `External Link <https://docs.scylladb.com/>`_
-     - `External Link <https://docs.scylladb.com/>`_
+          `External Link <https://github.com/NASA-AMMOS/aerie>`_
+     - `External Link <https://github.com/NASA-AMMOS/aerie>`_
      - Use this markup to create a link to another site or project. When rendered it has an arrow pointing out icon. It opens the content in a new tab.
    * - Internal Cross-reference
      - .. code-block:: rst
