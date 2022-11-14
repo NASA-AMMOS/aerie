@@ -6,19 +6,18 @@ This documentation covers the markup convention used for the Aerie Docs.
 Our official documentation is written in a mixture of restructuredText and Markdown.
 If you are not familiar with restructuredText, refer to `this cheat sheet <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`__.
 If you are not familiar with Markdown, refer to `this guide <https://myst-parser.readthedocs.io/en/latest/syntax/syntax.html#syntax-core>`__.
-If you're familiar with MD, and want a quick overview of the differences between it and RST, see `this website <https://docs.open-mpi.org/en/v5.0.x/developers/rst-for-markdown-expats.html>`__.
-Keep in mind, that in this cheat sheet there may be directives or elements of the markup we're not using.
 
 In general, the main components to the markup of any document include:
 
 * :doc:`Admonitions <admonitions>`
-* :doc:`Collapse <collapse>`
 * :doc:`Code blocks <code-blocks>`
+* :doc:`Collapse <collapse>`
+* :doc:`Eval-RST <eval-rst>`
 * :doc:`Glossary <glossary>`
 * :doc:`Headings <headings>`
 * :doc:`Hero box <hero-box>`
 * :doc:`Images <images>`
-* :doc:`Includes <includes>`
+* :doc:`Includes <include>`
 * :doc:`Links <links>`
 * :doc:`Lists <lists>`
 * :doc:`Substitutions <substitutions>`
@@ -40,8 +39,8 @@ In general, the main components to the markup of any document include:
   glossary
   headings
   hero-box
-  includes
   images
+  include
   links
   lists
   substitutions
