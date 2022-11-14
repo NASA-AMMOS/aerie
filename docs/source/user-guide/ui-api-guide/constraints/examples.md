@@ -9,7 +9,7 @@ Let's start off with a basic constraint that a resource, let's call it `BatteryT
 ```typescript
 export default (): Constraint =>
   Real.Resource("BatteryTemperature") // this references a real profile
-      .lessThanOrEqual(Real.Value(340)); // this transforms it into Windows
+    .lessThanOrEqual(Real.Value(340)); // this transforms it into Windows
 ```
 
 The `Real.Resource(...)` function creates an object that refers to the `BatteryTemperature` real resource profile. The `.lessThanOrEqual(...)` method then expects either another real profile or a number literal as argument. In the above example, we passed it a real profile which has the value `340` for all time. We could instead omit `Real.Value(...)`, and `.lessThanOrEqual(...)` will automatically wrap the `340` literal in `Real.Value(...)` for us:
@@ -33,10 +33,11 @@ Note that this breaks down to two conditions, either of which must be true the e
 
 ```typescript
 export default (): Constraint =>
-    Windows.Or( // This "or"s together any number of Windows objects
-        Discrete.Resource("OpMode").equal("IDLE"),
-        Real.Resource("PanelAngle").rate().lessThan(3)
-    );
+  Windows.Or(
+    // This "or"s together any number of Windows objects
+    Discrete.Resource("OpMode").equal("IDLE"),
+    Real.Resource("PanelAngle").rate().lessThan(3)
+  );
 ```
 
 The API keeps track of the type schemas of all your Discrete and Real value profiles. Real profiles are easy; they are always numbers. The structures of Discrete profiles are defined by the simulation developer. For example, the `OpMode` resource might be defined as an enum of either `"IDLE"` or `"ACTIVE"`. If you tried to use a different value, like `Discrete.Resource("OpMode").equal("BOOGIE")`, it would throw a compile-time type error.
@@ -47,8 +48,9 @@ We also provide a helper function `if`, which is used when a condition only need
 
 ```typescript
 export default (): Constraint =>
-    Real.Resource("PanelAngle").rate.lessThan(3)
-        .if(Discrete.Resource("OpMode").notEqual("IDLE"));
+  Real.Resource("PanelAngle")
+    .rate.lessThan(3)
+    .if(Discrete.Resource("OpMode").notEqual("IDLE"));
 ```
 
 ## Accessing Activities
@@ -57,9 +59,9 @@ This example of an activity constraint says that whenever an instance of `Activi
 
 ```typescript
 export default (): Constraint =>
-    Constraint.ForEachActivity(ActivityType.ActivityTypeA, (instance) =>
-        Real.Resource("ResourceX").lessThan(10).if(instance.window())
-    );
+  Constraint.ForEachActivity(ActivityType.ActivityTypeA, (instance) =>
+    Real.Resource("ResourceX").lessThan(10).if(instance.window())
+  );
 ```
 
 For those unfamiliar with Typescript, the `instance => ...` syntax defines an anonymous function which the `Constraint.ForEachActivity(...)` function calls. `instance` is of the type `ActivityInstance<A extends ActivityType>`, and can be used to access the instance's window, start time, end time, and parameters. Unfortunately, in order for `ForEachActivity` to behave correctly in more complex cases, it needs to re-evaluate the condition on the whole plan for each instance separately. This means that we need to manually trim the violation down to the extent of the activity with `.if(instance.window())`.
@@ -77,9 +79,7 @@ A single activity instance with ID "2" is in violation from the start of the pla
 ```json
 {
   "activityInstanceIds": ["2"],
-  "windows": [
-    [0, 3600000000]
-  ]
+  "windows": [[0, 3600000000]]
 }
 ```
 

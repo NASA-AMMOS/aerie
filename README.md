@@ -57,6 +57,6 @@ The scripts and documentation in this project are released under the [MIT Licens
 
 [contributing]: ./CONTRIBUTING.md
 [deployment]: ./deployment
-[dev]: ./docs/source/deployment/building.md
+[dev]: ./docs/old_site/deployment/building.md
 [documentation]: https://nasa-ammos.github.io/aerie
 [ui-repo]: https://github.com/NASA-AMMOS/aerie-ui

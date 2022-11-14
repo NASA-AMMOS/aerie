@@ -1,4 +1,4 @@
-# Views
+# UI Views
 
 Users can create custom planning views for different sub-systems (e.g. science, engineering, thermal, etc.), where only data (e.g. activities and resources) for those sub-systems are visualized. This is done through custom JSON configuration files (or directly via the UI). The format of a UI View is the subject of this document.
 
@@ -339,7 +339,7 @@ Notice how we connect the grid component `iFrameId` with the `id` of the definit
 
 ## GraphQL Queries
 
-The following queries can be used to programmatically operate on UI views. For more information on how to use these queries please see the [Aerie GraphQL API documentation](../graphql-api/index).
+The following GraphQL queries can be used to programmatically operate on UI views.
 
 ### Create Single View
 

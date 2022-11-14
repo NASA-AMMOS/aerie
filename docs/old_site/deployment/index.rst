@@ -7,7 +7,6 @@ Deployment
    :hidden:
 
    single-host-deployment
-   aws-deployment
    system-requirements
    product-support
    ui-custom-base-path

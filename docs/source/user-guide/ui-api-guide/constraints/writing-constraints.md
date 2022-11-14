@@ -1,7 +1,6 @@
 # Writing Constraints
 
-
-The goal of most constraints is to produce a ``Windows`` object through
+The goal of most constraints is to produce a `Windows` object through
 operations on profiles and activity instances. This is a conceptual
 guide to what they represent. More specific documentation is generated
 for the [Constraints API
@@ -25,7 +24,7 @@ Real profiles are for integers and floating point numbers, and provide
 methods for some basic math operations like addition and derivatives.
 Discrete profiles are for everything else, like strings or objects.
 
-Profiles can have *gaps*, or intervals where the value is unknown. This
+Profiles can have _gaps_, or intervals where the value is unknown. This
 comes up most often when dealing with external datasets. In most cases
 it is best to apply a default value to a profile’s gaps ASAP using the
 `profile.assignGaps(defaultValue)` method.
@@ -36,8 +35,8 @@ Windows are like a boolean profile, augmented with some extra
 functionality. For many constraints, the final result is a `Windows`
 object, which tells Aerie what times are violations of the constraint.
 `true` means the state is nominal and `false` means the state is a
-violation. This means that you should describe the conditions you *want*
-to happen, not the conditions you *don’t* want to happen.
+violation. This means that you should describe the conditions you _want_
+to happen, not the conditions you _don’t_ want to happen.
 
 There are a few ways to calculate a `Windows` object from profiles,
 and many operations that can be done on them; including the traditional
@@ -88,5 +87,5 @@ interpreted by the Merlin server. The exact implementation details don’t
 matter for constraint authors, but for this reason you cannot directly
 inspect a profile’s values or a plan’s activities. This is also why
 there are no plans to support querying external profiles directly from a
-web request or filesystem access *inside* the constraint code. For that,
+web request or filesystem access _inside_ the constraint code. For that,
 see the [external dataset documentation](../external-datasets/index.md).
