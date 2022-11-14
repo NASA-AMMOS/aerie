@@ -29,7 +29,7 @@ Merlin briefly explored the first extreme at its inception, with pervasive use o
 
 Merlin has chosen to pursue the second extreme on principle, utilizing the authoring language to its greatest extent while augmenting it with domain-specific semantics where necessary. Among other reasons, Java was originally chosen as a modeling language because it would serve as a "transferable skill" for those both entering and exiting the "mission modeler" role. As a general-purpose language, Java provides a solid baseline for building a modular, maintainable system of any variety. High-performance Java runtimes already exist, and the oft-forgotten debugging experience is present out of the box. Merlin intends that mission modeling "taste" like development in Java more broadly, with the mission model "flavors" carefully integrated into that experience.
 
-So what *is* the interface?
+So what is the interface?
 ---------------------------
 
 The Merlin interface must be minimal, to allow the authoring language to take center stage, while complete, to allow modeling knowledge to be transferred out of the mission model. A minimal interface can always be built upon the authoring language to provide more natural ergonomics. To that end, there are three primary landmarks in the Merlin mission modeling interface.
