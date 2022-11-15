@@ -22,7 +22,7 @@ Restricting when any activity type can be scheduled
 This condition takes an expression of type ``Windows`` and prevents the scheduler from inserting any activity outside the
 time intervals produced by the expression when evaluated.
 
-The ``Windows`` type is described in the `Constraints DSL documentation <../../constraints/writing-constraints>`_.
+The ``Windows`` type is described in the :ref:`Constraints DSL documentation <windows>`.
 
 Example:
 
@@ -42,7 +42,7 @@ Restricting when some activity types can be scheduled
 This condition takes a list of activity types and an expression of type ``Windows``. It prevents the scheduler from
 inserting activity of the given activity types outside the time intervals produced by the expression when evaluated.
 
-The ``Windows`` type is described in the `Constraints DSL documentation <../../constraints/writing-constraints>`_.
+The ``Windows`` type is described in the :ref:`Constraints DSL documentation <windows>`.
 
 Example:
 
