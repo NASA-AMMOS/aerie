@@ -130,11 +130,12 @@ public final class ResponseSerializers {
             .add("activityInstanceIds", serializeIterable(Json::createValue, violation.activityInstanceIds))
             .add("resourceIds", serializeIterable(Json::createValue, violation.resourceNames))
             .build())
-        .add("windows", serializeIterable(ResponseSerializers::serializeWindow, violation.violationWindows))
+        .add("windows", serializeIterable(ResponseSerializers::serializeInterval, violation.violationWindows))
+        .add("gaps", serializeIterable(ResponseSerializers::serializeInterval, violation.gaps))
         .build();
   }
 
-  public static JsonValue serializeWindow(final Interval interval) {
+  public static JsonValue serializeInterval(final Interval interval) {
     return Json.createObjectBuilder()
                .add("start", interval.start.in(Duration.MICROSECONDS))
                .add("end", interval.end.in(Duration.MICROSECONDS))

@@ -247,7 +247,8 @@ public final class GetSimulationResultsAction {
       violationEvents.forEach(violation -> violationEventsWithNames.add(new Violation(
           violation.activityInstanceIds,
           resourceNames,
-          violation.violationWindows)));
+          violation.violationWindows,
+          violation.gaps)));
 
       violations.put(entry.getKey(), violationEventsWithNames);
     }
