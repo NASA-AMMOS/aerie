@@ -116,7 +116,7 @@ export class Goal {
    *     return Goal.CoexistenceGoal({
    *       forEach: Real.Resource("/fruit").equal(4.0),
    *       activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-   *       endsAt: TimingConstraint.singleton(WindowProperty.END).plus(5 * 60 * 1000 * 1000)
+   *       endsAt: TimingConstraint.singleton(WindowProperty.END).plus(Temporal.Duration.from({ minutes: 5 }))
    *      }).and(
    *       Goal.CardinalityGoal({
    *             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
@@ -154,16 +154,16 @@ export class Goal {
    *     return Goal.CardinalityGoal({
    *              activityTemplate: ActivityTemplates.GrowBanana({
    *                quantity: 1,
-   *                growingDuration: 1000 * 1000 * 60 * 60, //1 hour in microseconds
+   *                growingDuration: Temporal.Duration.from({ hours: 1 })
    *            }),
    *           specification: { occurrence : 10 }
    *           }).or(
    *            Goal.ActivityRecurrenceGoal({
    *             activityTemplate: ActivityTemplates.GrowBanana({
    *             quantity: 1,
-   *             growingDuration: 1 * 60 * 60 * 1000 * 1000, //1 hour in microseconds
+   *             growingDuration: Temporal.Duration.from({ hours: 1 })
    *           }),
-   *           interval: 2 * 60 * 60 * 1000 * 1000 // 2 hours in microseconds
+   *           interval: Temporal.Duration.from({ hours: 2 })
    *         }))
    * }
    * ```
@@ -196,9 +196,9 @@ export class Goal {
    *     return Goal.ActivityRecurrenceGoal({
    *             activityTemplate: ActivityTemplates.GrowBanana({
    *             quantity: 1,
-   *             growingDuration: 1 * 60 * 60 * 1000 * 1000, //1 hour in microseconds
+   *             growingDuration: Temporal.Duration.from({ hours: 1 })
    *           }),
-   *           interval: 2 * 60 * 60 * 1000 * 1000 // 2 hours in microseconds
+   *           interval: Temporal.Duration.from({ hours: 2 })
    *         }).applyWhen(Real.Resource("/fruit").greaterThan(2))
    * }
    * ```
@@ -252,9 +252,9 @@ export class Goal {
    *     return Goal.ActivityRecurrenceGoal({
    *             activityTemplate: ActivityTemplates.GrowBanana({
    *             quantity: 1,
-   *             growingDuration: 1 * 60 * 60 * 1000 * 1000, //1 hour in microseconds
+   *             growingDuration: Temporal.Duration.from({ hours: 1 })
    *           }),
-   *           interval: 2 * 60 * 60 * 1000 * 1000 // 2 hours in microseconds
+   *           interval: Temporal.Duration.from({ hours: 2 })
    *         })
    * }
    * ```
@@ -297,7 +297,7 @@ export class Goal {
    * export default () => Goal.CoexistenceGoal({
    *   forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
    *   activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-   *   startsAt: TimingConstraint.singleton(WindowProperty.END).plus(5 * 60 * 1000 * 1000)
+   *   startsAt: TimingConstraint.singleton(WindowProperty.END).plus(Temporal.Duration.from({ minutes: 5 }))
    * })
    * ```
    * Behavior: for each activity A of type `GrowBanana` present in the plan when the goal is evaluated, place an activity of type `PeelBanana` starting exactly at the end of A + 5 minutes.
@@ -306,8 +306,8 @@ export class Goal {
    * export default () => Goal.CoexistenceGoal({
    *   forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
    *   activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-   *   startsWithin: TimingConstraint.range(WindowProperty.END, Operator.PLUS, 5 * 60 * 1000 * 1000),
-   *   endsWithin: TimingConstraint.range(WindowProperty.END, Operator.PLUS, 6 * 60 * 1000 * 1000)
+   *   startsWithin: TimingConstraint.range(WindowProperty.END, Operator.PLUS, Temporal.Duration.from({ minutes: 5 })),
+   *   endsWithin: TimingConstraint.range(WindowProperty.END, Operator.PLUS, Temporal.Duration.from({ minutes: 6 }))
    * })
    * ```
    *
@@ -318,7 +318,7 @@ export class Goal {
    * export default () => Goal.CoexistenceGoal({
    *   forEach: Real.Resource("/fruit").equal(4.0),
    *   activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
-   *   endsAt: TimingConstraint.singleton(WindowProperty.END).plus(5 * 60 * 1000 * 1000)
+   *   endsAt: TimingConstraint.singleton(WindowProperty.END).plus(Temporal.Duration.from({ minutes: 5 }))
    * })
    * ```
    * Behavior: for each continuous period of time during which the `/fruit` resource is equal to 4, place an activity of type `PeelBanana` ending exactly at the end of A + 6 minutes. Note that the scheduler will allow a default timing error of 500 milliseconds for temporal constraints. This parameter will be configurable in an upcoming release.
@@ -360,9 +360,9 @@ export class Goal {
    *     return Goal.CardinalityGoal({
    *         activityTemplate: ActivityTemplates.GrowBanana({
    *             quantity: 1,
-   *             growingDuration: 1000000,
+   *             growingDuration: Temporal.Duration.from({ seconds: 1 }),
    *         }),
-   *         specification: { duration: 10 * 1000000 }
+   *         specification: { duration: Temporal.Duration.from({ seconds: 10 }) }
    *     })
    * }
    * ```
@@ -374,7 +374,7 @@ export class Goal {
    *     return Goal.CardinalityGoal({
    *         activityTemplate: ActivityTemplates.GrowBanana({
    *             quantity: 1,
-   *             growingDuration: 1000000,
+   *             growingDuration: Temporal.Duration.from({ seconds: 1 }),
    *         }),
    *         specification: { occurrence: 10 }
    *     })
@@ -388,9 +388,9 @@ export class Goal {
    *     return Goal.CardinalityGoal({
    *         activityTemplate: ActivityTemplates.GrowBanana({
    *             quantity: 1,
-   *             growingDuration: 1000000,
+   *             growingDuration: Temporal.Duration.from({ seconds: 1 }),
    *         }),
-   *         specification: { occurrence: 10, duration: 10 * 1000000 }
+   *         specification: { occurrence: 10, duration: Temporal.Duration.from({ seconds: 10 }) }
    *     })
    * }
    * ```
