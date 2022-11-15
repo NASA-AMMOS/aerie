@@ -45,8 +45,8 @@ as such:
 
 The ``getParameters()`` method returns a ``Map<String, ValueSchema>``.
 In this map should be a key for every parameter, with a ``ValueSchema``
-describing the structure of that parameter. See our `Value Schema
-documentation <../../custom-value-types/value-schema-basics>`__ for more
+describing the structure of that parameter. See our :doc:`Value Schema
+documentation <../custom-value-types/value-schema-basics>` for more
 information on creating value schemas.
 
 Generated Activity Mappers
@@ -58,7 +58,7 @@ the Merlin Annotation Processor. When compiling your code with the
 Merlin annotation processor, the processor will produce an activity
 mapper for each activity type. This is made possible by the use of the
 ``@WithMappers()`` annotations in your
-`package-info.java <developing-a-mission-model.md#package-info-file>`__.
+:ref:`package-info.java <package-info-file>`.
 Each java-file specified by these annotations is parsed to determine
 what types of values can be mapped. As long as there is a mapper for
 each activity parameter type used in the model, the annotation processor
@@ -138,8 +138,8 @@ mapper for an apache ``Vector3D`` type as an example:
 
 Notice there are just 3 methods to implement for a ``ValueMapper``. The
 first is ``getValueSchema()``, which should return a ``ValueSchema``
-describing the structure of the value being mapped (see `value
-schemas <../../custom-value-types/value-schema-basics>`__ for more info)
+describing the structure of the value being mapped (see :doc:`value
+schemas <../custom-value-types/value-schema-basics>` for more info)
 
 The next two methods are inverses of each other: ``deserializeValue()``
 and ``serializeValue()``. It is the job of ``deserializeValue()`` to

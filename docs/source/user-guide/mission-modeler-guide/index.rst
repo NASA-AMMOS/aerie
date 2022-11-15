@@ -15,6 +15,8 @@ Creating a Mission Model
 ------------------------
 To see how to create a mission model, see our :doc:`Quickstart Guide <../quickstart/create-mission-model>`.
 
+.. _package-info-file:
+
 The Package-info File
 ---------------------
 A mission model must contain, at the very least, a
@@ -55,7 +57,7 @@ types. If multiple mapper classes are included via the
 ``@WithMappers`` annotations, and multiple mappers declare a mapping
 rule to the same data type, the rule found in the earlier declared
 mapper will take precedence. For more information on allowing custom
-values, see `value mappers <./custom-value-mappers>`__.
+values, see :doc:`value mappers <./custom-value-mappers/index>`.
 
 The Mission Model Class
 -----------------------

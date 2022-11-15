@@ -29,6 +29,7 @@ comes up most often when dealing with external datasets. In most cases
 it is best to apply a default value to a profile’s gaps ASAP using the
 `profile.assignGaps(defaultValue)` method.
 
+(windows)= 
 ### Windows
 
 Windows are like a boolean profile, augmented with some extra
@@ -88,4 +89,4 @@ matter for constraint authors, but for this reason you cannot directly
 inspect a profile’s values or a plan’s activities. This is also why
 there are no plans to support querying external profiles directly from a
 web request or filesystem access _inside_ the constraint code. For that,
-see the [external dataset documentation](../external-datasets/index.md).
+see the [external dataset documentation](../external-datasets/index.rst).
