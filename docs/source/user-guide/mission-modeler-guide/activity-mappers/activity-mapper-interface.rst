@@ -46,7 +46,7 @@ as such:
 The ``getParameters()`` method returns a ``Map<String, ValueSchema>``.
 In this map should be a key for every parameter, with a ``ValueSchema``
 describing the structure of that parameter. See our `Value Schema
-documentation <value-schemas.md#value-schemas-from-code>`__ for more
+documentation <../../custom-value-types/value-schema-basics>`__ for more
 information on creating value schemas.
 
 Generated Activity Mappers
@@ -139,7 +139,7 @@ mapper for an apache ``Vector3D`` type as an example:
 Notice there are just 3 methods to implement for a ``ValueMapper``. The
 first is ``getValueSchema()``, which should return a ``ValueSchema``
 describing the structure of the value being mapped (see `value
-schemas <value-schemas>`__ for more info)
+schemas <../../custom-value-types/value-schema-basics>`__ for more info)
 
 The next two methods are inverses of each other: ``deserializeValue()``
 and ``serializeValue()``. It is the job of ``deserializeValue()`` to

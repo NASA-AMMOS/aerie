@@ -2,10 +2,6 @@
 Quickstart
 ==========
 
----------------------
-Prerequisite Software
----------------------
-
 .. toctree::
   :includehidden:
 

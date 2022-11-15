@@ -52,15 +52,6 @@
   Author command expansion logic and link activities to their command expansions.
 
 .. topic-box::
-  :title: User Interface
-  :link: user-interface
-  :icon: scylla-icon scylla-icon--architecture
-  :class: large-6
-  :anchor: Learn more
-
-  The client application and API guide.
-
-.. topic-box::
 	:title: Constraints EDSL APIs
 	:link: constraints-edsl-api
 	:icon: scylla-icon scylla-icon--about-team

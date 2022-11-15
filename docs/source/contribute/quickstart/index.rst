@@ -7,7 +7,7 @@ Below you'll find a guide on how to get your own version of Aerie running for de
 
 If instead you would like to contribute to Aerie's UI, you'll find instructions on how to do so `at our sister repo <https://github.com/NASA-AMMOS/aerie-ui>`_.
 
-For guidelines on contributing, see :doc:`here <../guidelines/index>`.
+For guidelines on contributing, see `here <https://github.com/NASA-AMMOS/aerie/blob/develop/CONTRIBUTING.md>`_.
 
 Prerequisite Software
 ---------------------

@@ -55,7 +55,7 @@ types. If multiple mapper classes are included via the
 ``@WithMappers`` annotations, and multiple mappers declare a mapping
 rule to the same data type, the rule found in the earlier declared
 mapper will take precedence. For more information on allowing custom
-values, see `value mappers <activity-mappers.md#value-mappers>`__.
+values, see `value mappers <./custom-value-mappers>`__.
 
 The Mission Model Class
 -----------------------
