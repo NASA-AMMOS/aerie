@@ -1,23 +1,18 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
-import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.constraints.profile.Profile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
-import java.util.Objects;
 import java.util.Set;
 
-public final class DiscreteResource implements Expression<DiscreteProfile> {
-  public final String name;
-
-  public DiscreteResource(final String name) {
-    this.name = name;
-  }
+public record DiscreteResource(String name) implements Expression<Profile<SerializedValue>> {
 
   @Override
-  public DiscreteProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public Profile<SerializedValue> evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     if (results.discreteProfiles.containsKey(this.name)) {
       return results.discreteProfiles.get(this.name);
     } else if (environment.discreteExternalProfiles().containsKey(this.name)) {
@@ -41,18 +36,5 @@ public final class DiscreteResource implements Expression<DiscreteProfile> {
         prefix,
         this.name
     );
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof DiscreteResource)) return false;
-    final var o = (DiscreteResource)obj;
-
-    return Objects.equals(this.name, o.name);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.name);
   }
 }

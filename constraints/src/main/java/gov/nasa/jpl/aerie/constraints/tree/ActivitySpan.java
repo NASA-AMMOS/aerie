@@ -10,12 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-public final class ActivitySpan implements Expression<Spans> {
-  public final String activityAlias;
-
-  public ActivitySpan(final String activityAlias) {
-    this.activityAlias = activityAlias;
-  }
+public record ActivitySpan(String activityAlias) implements Expression<Spans> {
 
   @Override
   public Spans evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
@@ -24,7 +19,8 @@ public final class ActivitySpan implements Expression<Spans> {
   }
 
   @Override
-  public void extractResources(final Set<String> names) { }
+  public void extractResources(final Set<String> names) {
+  }
 
   @Override
   public String prettyPrint(final String prefix) {
@@ -33,18 +29,5 @@ public final class ActivitySpan implements Expression<Spans> {
         prefix,
         this.activityAlias
     );
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof ActivitySpan)) return false;
-    final var o = (ActivitySpan)obj;
-
-    return Objects.equals(this.activityAlias, o.activityAlias);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.activityAlias);
   }
 }

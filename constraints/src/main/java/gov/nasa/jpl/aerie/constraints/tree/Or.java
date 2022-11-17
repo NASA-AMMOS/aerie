@@ -2,34 +2,22 @@ package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.constraints.profile.Profile;
+import gov.nasa.jpl.aerie.constraints.profile.Windows;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
-public final class Or implements Expression<Windows> {
-  public final List<Expression<Windows>> expressions;
-
-  public Or(final List<Expression<Windows>> expressions) {
-    this.expressions = expressions;
-  }
-
-  @SafeVarargs
-  public Or(final Expression<Windows>... expressions) {
-    this(List.of(expressions));
-  }
+public record Or(List<Expression<Profile<Boolean>>> expressions) implements Expression<Windows> {
 
   @Override
   public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    Windows windows = new Windows(false);
+    Windows windows = Windows.from(false);
     for (final var expression : this.expressions) {
-      windows = windows.or(
-          expression.evaluate(results, bounds, environment)
-      );
+      windows = windows.or(expression.evaluate(results, bounds, environment));
     }
-    return windows.select(bounds);
+    return windows;
   }
 
   @Override
@@ -52,18 +40,5 @@ public final class Or implements Expression<Windows> {
 
     builder.append(")");
     return builder.toString();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof Or)) return false;
-    Or o = (Or)obj;
-
-    return Objects.equals(this.expressions, o.expressions);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.expressions);
   }
 }

@@ -28,7 +28,7 @@ import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
 import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
-import gov.nasa.jpl.aerie.constraints.tree.Split;
+import gov.nasa.jpl.aerie.constraints.tree.SplitSpans;
 import gov.nasa.jpl.aerie.constraints.tree.StartOf;
 import gov.nasa.jpl.aerie.constraints.tree.Starts;
 import gov.nasa.jpl.aerie.constraints.tree.Times;
@@ -601,7 +601,7 @@ public final class ConstraintParsersTest {
     final var result = spansExpressionP.parse(json).getSuccessOrThrow();
 
     final var expected =
-        new Split<>(
+        new SplitSpans<>(
             new ActivitySpan("A"),
             3,
             Interval.Inclusivity.Exclusive,
@@ -629,7 +629,7 @@ public final class ConstraintParsersTest {
     final var result = spansExpressionP.parse(json).getSuccessOrThrow();
 
     final var expected =
-        new Split<>(
+        new SplitSpans<>(
             new ActivityWindow("A"),
             3,
             Interval.Inclusivity.Inclusive,

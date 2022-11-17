@@ -1,24 +1,19 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
-import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.constraints.profile.LinearEquation;
+import gov.nasa.jpl.aerie.constraints.profile.LinearProfile;
+import gov.nasa.jpl.aerie.constraints.profile.Profile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 
-import java.util.Objects;
 import java.util.Set;
 
-public final class Rate implements Expression<LinearProfile> {
-  public final Expression<LinearProfile> profile;
-
-  public Rate(final Expression<LinearProfile> profile) {
-    this.profile = profile;
-  }
-
+public record Rate(Expression<Profile<LinearEquation>> profile) implements Expression<Profile<LinearEquation>> {
 
   @Override
   public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    return this.profile.evaluate(results, bounds, environment).rate();
+    return ((LinearProfile) this.profile.evaluate(results, bounds, environment)).rate();
   }
 
   @Override
@@ -32,18 +27,5 @@ public final class Rate implements Expression<LinearProfile> {
         "(rate-of %s)",
         this.profile.prettyPrint(prefix + "  ")
     );
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof Rate)) return false;
-    final var o = (Rate)obj;
-
-    return Objects.equals(this.profile, o.profile);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.profile);
   }
 }

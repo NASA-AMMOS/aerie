@@ -2,25 +2,21 @@ package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.constraints.profile.Profile;
+import gov.nasa.jpl.aerie.constraints.profile.Windows;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
-import java.util.Objects;
 import java.util.Set;
 
-public final class LongerThan implements Expression<Windows> {
-  public final Expression<Windows> windows;
-  public final Duration duration;
-
-  public LongerThan(final Expression<Windows> left, final Duration duration) {
-    this.windows = left;
-    this.duration = duration;
-  }
+public record LongerThan(
+    Expression<Profile<Boolean>> windows,
+    Duration duration
+) implements Expression<Windows> {
 
   @Override
   public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    final var windows = this.windows.evaluate(results, bounds, environment);
+    final var windows = (Windows) this.windows.evaluate(results, bounds, environment);
     return windows.filterByDuration(this.duration, Duration.MAX_VALUE);
   }
 
@@ -37,19 +33,5 @@ public final class LongerThan implements Expression<Windows> {
         this.windows.prettyPrint(prefix + "  "),
         this.duration.toString()
     );
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof LongerThan)) return false;
-    final var o = (LongerThan)obj;
-
-    return Objects.equals(this.windows, o.windows) &&
-           Objects.equals(this.duration, o.duration);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.windows, this.duration);
   }
 }

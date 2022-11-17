@@ -109,7 +109,7 @@ public class IntervalAlgebra {
    * @param y right operand
    * @return whether the operands overlap
    */
-  static boolean overlaps(Interval x, Interval y) {
+  public static boolean overlaps(Interval x, Interval y) {
     return !isEmpty(intersect(x, y));
   }
 
@@ -120,7 +120,7 @@ public class IntervalAlgebra {
    * @param inner inner interval
    * @return whether `outer` contains every point in `inner`
    */
-  static boolean contains(Interval outer, Interval inner) {
+  public static boolean contains(Interval outer, Interval inner) {
     // If `inner` doesn't overlap with the complement of `outer`,
     // then `inner` must exist entirely within `outer`.
     return !(overlaps(inner, strictUpperBoundsOf(outer)) || overlaps(inner, strictLowerBoundsOf(outer)));
@@ -135,7 +135,7 @@ public class IntervalAlgebra {
    * @param inner inner interval
    * @return whether `outer` contains every point in `inner`, but `inner` doesn't contain every point in `outer`
    */
-  static boolean strictlyContains(Interval outer, Interval inner) {
+  public static boolean strictlyContains(Interval outer, Interval inner) {
     return contains(outer, inner) && !contains(inner, outer);
   }
 
@@ -146,7 +146,7 @@ public class IntervalAlgebra {
    * @param y right operand
    * @return whether the operands are equal
    */
-  static boolean equals(Interval x, Interval y) {
+  public static boolean equals(Interval x, Interval y) {
     return x.equals(y);
   }
 
@@ -157,7 +157,7 @@ public class IntervalAlgebra {
    * @param y interval
    * @return whether the start point of x is before all points in y
    */
-  static boolean startsBefore(Interval x, Interval y) {
+  public static boolean startsBefore(Interval x, Interval y) {
     return strictlyContains(strictLowerBoundsOf(y), strictLowerBoundsOf(x));
   }
 
@@ -168,7 +168,7 @@ public class IntervalAlgebra {
    * @param y interval
    * @return whether the end point of x is after all points in y
    */
-  static boolean endsAfter(Interval x, Interval y) {
+  public static boolean endsAfter(Interval x, Interval y) {
     return strictlyContains(strictUpperBoundsOf(y), strictUpperBoundsOf(x));
   }
 
@@ -179,7 +179,7 @@ public class IntervalAlgebra {
    * @param y interval
    * @return whether the start point of x is after or equal to all points in y
    */
-  static boolean startsAfter(Interval x, Interval y) {
+  public static boolean startsAfter(Interval x, Interval y) {
     return endsBefore(y, x);
   }
 
@@ -190,7 +190,7 @@ public class IntervalAlgebra {
    * @param y interval
    * @return whether the end point of x is before or equal to all points in y
    */
-  static boolean endsBefore(Interval x, Interval y) {
+  public static boolean endsBefore(Interval x, Interval y) {
     return endsStrictlyBefore(x, y) || meets(x, y);
   }
 
@@ -201,7 +201,7 @@ public class IntervalAlgebra {
    * @param y interval
    * @return whether the start point of x is strictly after all points in y
    */
-  static boolean startsStrictlyAfter(Interval x, Interval y) {
+  public static boolean startsStrictlyAfter(Interval x, Interval y) {
     return endsStrictlyBefore(y, x);
   }
 
@@ -212,7 +212,7 @@ public class IntervalAlgebra {
    * @param y interval
    * @return whether the end point of x is strictly before all points in y
    */
-  static boolean endsStrictlyBefore(Interval x, Interval y) {
+  public static boolean endsStrictlyBefore(Interval x, Interval y) {
     return !isEmpty(intersect(strictUpperBoundsOf(x), strictLowerBoundsOf(y)));
   }
 
@@ -223,7 +223,7 @@ public class IntervalAlgebra {
    * @param y interval
    * @return whether x ends when y begins, with no overlap and no gap
    */
-  static boolean meets(Interval x, Interval y) {
+  public static boolean meets(Interval x, Interval y) {
     return equals(strictUpperBoundsOf(x), strictUpperBoundsOf(strictLowerBoundsOf(y)));
   }
 
@@ -234,7 +234,7 @@ public class IntervalAlgebra {
    * @param y interval
    * @return whether x begins when y ends, with no overlap and no gap
    */
-  static boolean isMetBy(Interval x, Interval y) {
+  public static boolean isMetBy(Interval x, Interval y) {
     return meets(y, x);
   }
 }

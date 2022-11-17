@@ -11,20 +11,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-public final class ForEachActivityViolations implements Expression<List<Violation>> {
-  public final String activityType;
-  public final String alias;
-  public final Expression<List<Violation>> expression;
-
-  public ForEachActivityViolations(
-      final String activityType,
-      final String alias,
-      final Expression<List<Violation>> expression
-  ) {
-    this.activityType = activityType;
-    this.alias = alias;
-    this.expression = expression;
-  }
+public record ForEachActivityViolations(
+    String activityType, String alias,
+    Expression<List<Violation>> expression) implements Expression<List<Violation>> {
 
   @Override
   public List<Violation> evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
@@ -65,20 +54,5 @@ public final class ForEachActivityViolations implements Expression<List<Violatio
         this.alias,
         this.expression.prettyPrint(prefix + "  ")
     );
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof ForEachActivityViolations)) return false;
-    final var o = (ForEachActivityViolations)obj;
-
-    return Objects.equals(this.activityType, o.activityType) &&
-           Objects.equals(this.alias, o.alias) &&
-           Objects.equals(this.expression, o.expression);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.activityType, this.alias, this.expression);
   }
 }

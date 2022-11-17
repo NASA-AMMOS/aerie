@@ -31,7 +31,7 @@ import gov.nasa.jpl.aerie.constraints.tree.RealValue;
 import gov.nasa.jpl.aerie.constraints.tree.ShiftBy;
 import gov.nasa.jpl.aerie.constraints.tree.ShorterThan;
 import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
-import gov.nasa.jpl.aerie.constraints.tree.Split;
+import gov.nasa.jpl.aerie.constraints.tree.SplitSpans;
 import gov.nasa.jpl.aerie.constraints.tree.Starts;
 import gov.nasa.jpl.aerie.constraints.tree.Times;
 import gov.nasa.jpl.aerie.constraints.tree.Transition;
@@ -721,7 +721,7 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(
             new WindowsFromSpans(
-              new Split<>(
+              new SplitSpans<>(
                   new LessThan(new RealResource("state of charge"), new RealValue(0.3)),
                   4,
                   Interval.Inclusivity.Inclusive,
@@ -739,7 +739,7 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(
             new WindowsFromSpans(
-              new Split<>(
+              new SplitSpans<>(
                   new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3))),
                   4,
                   Interval.Inclusivity.Inclusive,
@@ -757,7 +757,7 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(
             new WindowsFromSpans(
-                new Split<>(
+                new SplitSpans<>(
                     new LessThan(new RealResource("state of charge"), new RealValue(0.3)),
                     4,
                     Interval.Inclusivity.Exclusive,
@@ -775,7 +775,7 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(
             new WindowsFromSpans(
-                new Split<>(
+                new SplitSpans<>(
                     new SpansFromWindows(new LessThan(new RealResource("state of charge"), new RealValue(0.3))),
                     4,
                     Interval.Inclusivity.Exclusive,

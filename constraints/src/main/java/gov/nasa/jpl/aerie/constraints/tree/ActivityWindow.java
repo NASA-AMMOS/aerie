@@ -2,31 +2,23 @@ package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.constraints.profile.Profile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.constraints.time.Segment;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.profile.Windows;
 
-import java.util.Objects;
 import java.util.Set;
 
-public final class ActivityWindow implements Expression<Windows> {
-  public final String activityAlias;
-
-  public ActivityWindow(final String activityAlias) {
-    this.activityAlias = activityAlias;
-  }
+public record ActivityWindow(String activityAlias) implements Expression<Windows> {
 
   @Override
   public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     final var activity = environment.activityInstances().get(this.activityAlias);
-    return new Windows(
-        Segment.of(Interval.FOREVER, false),
-        Segment.of(activity.interval, true)
-    );
+    return Profile.from(false).set(activity.interval, true)::stream;
   }
 
   @Override
-  public void extractResources(final Set<String> names) { }
+  public void extractResources(final Set<String> names) {
+  }
 
   @Override
   public String prettyPrint(final String prefix) {
@@ -35,18 +27,5 @@ public final class ActivityWindow implements Expression<Windows> {
         prefix,
         this.activityAlias
     );
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof ActivityWindow)) return false;
-    final var o = (ActivityWindow)obj;
-
-    return Objects.equals(this.activityAlias, o.activityAlias);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.activityAlias);
   }
 }

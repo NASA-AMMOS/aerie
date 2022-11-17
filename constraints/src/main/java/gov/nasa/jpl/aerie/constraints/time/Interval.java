@@ -3,6 +3,9 @@ package gov.nasa.jpl.aerie.constraints.time;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.sql.PreparedStatement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
@@ -294,6 +297,25 @@ public final class Interval implements Comparable<Interval>{
 
   public static boolean metBy(final Interval x, final Interval y) {
     return meets(y, x);
+  }
+
+  public static List<Interval> subtract(final Interval left, final Interval right) {
+    final var intersection = intersect(left, right);
+    if (intersection.isEmpty()) {
+      return List.of(left);
+    } else if (intersection.equals(left)) {
+      return List.of();
+    } else {
+      final var firstInterval = Interval.between(left.start, left.startInclusivity, right.start, right.startInclusivity.opposite());
+      final var secondInterval = Interval.between(right.end, right.endInclusivity.opposite(), left.end, left.endInclusivity);
+
+      final var result = new ArrayList<Interval>(2);
+
+      if (!firstInterval.isEmpty()) result.add(firstInterval);
+      if (!secondInterval.isEmpty()) result.add(secondInterval);
+
+      return result;
+    }
   }
 
   @Override

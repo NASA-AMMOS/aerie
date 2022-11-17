@@ -76,7 +76,7 @@ public class ASTTests {
 
     final var result = new WindowsValue(true).evaluate(simResults, new EvaluationEnvironment());
 
-    final var expected = new Windows(Interval.between(0, 20, SECONDS), true);
+    final var expected = new Windows(FOREVER, true);
 
     assertIterableEquals(expected, result);
   }
@@ -222,7 +222,7 @@ public class ASTTests {
         .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), true)
         .set(Interval.between(10000000, Exclusive, 15000001, Exclusive, MICROSECONDS), true);
 
-    final var result = new WindowsFromSpans(new Split<>(Supplier.of(windows), 3, Exclusive, Exclusive)).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new WindowsFromSpans(new SplitSpans<>(Supplier.of(windows), 3, Exclusive, Exclusive)).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new Windows(false)
     		.set(Interval.between(0, Inclusive, 1666666, Exclusive, MICROSECONDS), true)
@@ -249,7 +249,7 @@ public class ASTTests {
     spans.add(Interval.between(0, Inclusive, 5, Exclusive, SECONDS));
     spans.add(Interval.between(0, Exclusive, 5000001, Inclusive, MICROSECONDS));
 
-    final var result = new Split<>(Supplier.of(spans), 3, Inclusive, Exclusive).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new SplitSpans<>(Supplier.of(spans), 3, Inclusive, Exclusive).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new Spans();
     expected.add(Interval.between(0, Inclusive, 1666666, Exclusive, MICROSECONDS));
@@ -276,7 +276,7 @@ public class ASTTests {
         Interval.at(5, SECONDS)
     );
 
-    assertThrows(UnsplittableSpanException.class, () -> new Split<Spans>(Supplier.of(spans), 3, Inclusive, Exclusive).evaluate(simResults, new EvaluationEnvironment()));
+    assertThrows(UnsplittableSpanException.class, () -> new SplitSpans<Spans>(Supplier.of(spans), 3, Inclusive, Exclusive).evaluate(simResults, new EvaluationEnvironment()));
   }
 
   @Test

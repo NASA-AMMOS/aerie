@@ -5,15 +5,10 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.IntervalContainer;
 
-import java.util.Objects;
 import java.util.Set;
 
-public final class Starts<I extends IntervalContainer<I>> implements Expression<I> {
-  public final Expression<I> expression;
-
-  public Starts(final Expression<I> expression) {
-    this.expression = expression;
-  }
+public record Starts<I extends IntervalContainer<I>>(
+    Expression<I> expression) implements Expression<I> {
 
   @Override
   public I evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
@@ -33,17 +28,5 @@ public final class Starts<I extends IntervalContainer<I>> implements Expression<
         prefix,
         this.expression.prettyPrint(prefix + "  ")
     );
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof final Starts o)) return false;
-
-    return Objects.equals(this.expression, o.expression);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.expression);
   }
 }

@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
+import gov.nasa.jpl.aerie.constraints.profile.Profile;
+import gov.nasa.jpl.aerie.constraints.profile.Windows;
 import gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
@@ -34,10 +36,10 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optiona
     this.intervals = new ArrayList<>(spans.intervals);
   }
 
-  public Spans(final Iterable<Interval> iter) {
-    this.intervals = new ArrayList<>();
-    StreamSupport.stream(iter.spliterator(), false).filter($ -> !$.isEmpty())
-                 .forEach(itv -> this.intervals.add(Segment.of(itv, Optional.empty())));
+  public Spans(final Stream<Interval> iter) {
+    this.intervals = iter.map(
+      $ -> Segment.of($, Optional.<Metadata>empty())
+    ).toList();
   }
 
   public Spans(final Interval... intervals) {
@@ -52,7 +54,11 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optiona
   }
 
   public Windows intoWindows() {
-    return new Windows(false).set(this.intervals.stream().map(Segment::interval).toList(), true);
+    final Profile<Boolean> trueProfile = (bounds -> this.intervals.stream()
+                                                                  .map($ -> $.mapInterval(i -> Interval.intersect(i, bounds)))
+                                                                  .filter($ -> !$.interval().isEmpty())
+                                                                  .map($ -> $.mapValue(v -> true)));
+    return (Windows) trueProfile.assignGaps(Profile.from(false));
   }
 
   public void add(final Interval window) {
@@ -75,6 +81,14 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optiona
         .stream(iter.spliterator(), false)
         .filter($ -> !$.interval().isEmpty())
         .forEach(this.intervals::add);
+  }
+
+  public Spans select(final Interval bounds) {
+    return new Spans(
+        this.intervals.stream()
+            .map($ -> $.mapInterval(i -> Interval.intersect(i, bounds)))
+            .filter($ -> !$.interval().isEmpty()).toList()
+    );
   }
 
   public Spans map(final Function<Interval, Interval> mapper) {
@@ -105,17 +119,20 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optiona
   }
 
   /**
-   * Splits each span into sub-spans.
+   * Splits each span into sub-spansExpression.
    *
-   * @param numberOfSubSpans number of sub-spans for each span.
+   * @param numberOfSubSpans number of sub-spansExpression for each span.
    * @param internalStartInclusivity Inclusivity for any newly generated span start points (default Inclusive in eDSL).
    * @param internalEndInclusivity Inclusivity for any newly generated span end points (default Exclusive in eDSL).
    * @return a new Spans
    * @throws UnsplittableSpanException if any span contains only one point or contains fewer microseconds than `numberOfSubSpans`.
    * @throws UnsplittableSpanException if any span contains {@link Duration#MIN_VALUE} or {@link Duration#MAX_VALUE} (representing unbounded intervals)
    */
-  @Override
-  public Spans split(final int numberOfSubSpans, final Inclusivity internalStartInclusivity, final Inclusivity internalEndInclusivity) {
+  public Spans split(
+      final int numberOfSubSpans,
+      final Inclusivity internalStartInclusivity,
+      final Inclusivity internalEndInclusivity
+  ) {
     if (numberOfSubSpans == 1) {
       return new Spans(this);
     }
@@ -125,7 +142,7 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optiona
 
       final var numberOfMicroSeconds = Duration.subtract(x.end, x.start).in(Duration.MICROSECOND);
 
-      // We throw an exception if the interval contains fewer microseconds than the requested number of sub-spans.
+      // We throw an exception if the interval contains fewer microseconds than the requested number of sub-spansExpression.
       if (x.isSingleton()) {
         throw new UnsplittableSpanException("Cannot split an instantaneous span into " + numberOfSubSpans + " pieces.");
       } else if (numberOfMicroSeconds < numberOfSubSpans) {

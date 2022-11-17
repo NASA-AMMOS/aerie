@@ -26,7 +26,7 @@ public class TransformWithReset implements TimeWindowsTransformer {
     Windows ret = new Windows();
     int totalFiltered = 0;
 
-    if (!windowsToTransform.isEmpty()) {
+    if (windowsToTransform.stream().anyMatch(Segment::value)) {
 
       var resetPeriods = resetExpr.computeRange(simulationResults, plan, new Windows(true));
 

@@ -1,26 +1,24 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.StreamSupport;
 
 public final class Violation {
   public final List<Long> activityInstanceIds;
   public final List<String> resourceNames;
   public final List<Interval> violationWindows;
 
-  public Violation(final List<Long> activityInstanceIds, final List<String> resourceNames, final Windows violationWindows) {
+  public Violation(final List<Long> activityInstanceIds, final List<String> resourceNames, final Iterable<Interval> violationWindows) {
     this.activityInstanceIds = new ArrayList<>(activityInstanceIds);
     this.resourceNames = new ArrayList<>(resourceNames);
-    this.violationWindows = new ArrayList<>(violationWindows.size());
-    for (final var interval: violationWindows.iterateEqualTo(true)) this.violationWindows.add(interval);
+    this.violationWindows = new ArrayList<>();
+    for (final var interval: violationWindows) this.violationWindows.add(interval);
   }
 
-  public Violation(final Windows violationWindows) {
+  public Violation(final Iterable<Interval> violationWindows) {
     this(new ArrayList<>(), new ArrayList<>(), violationWindows);
   }
 
