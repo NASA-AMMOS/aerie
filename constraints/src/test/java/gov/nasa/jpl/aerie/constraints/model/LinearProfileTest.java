@@ -3,10 +3,9 @@ package gov.nasa.jpl.aerie.constraints.model;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -325,9 +324,9 @@ public class LinearProfileTest {
   @Test
   public void testConvertFromExternalFormat() {
     final var externalProfile = List.of(
-        Pair.of(Duration.of(1, SECOND), Optional.of(RealDynamics.linear(1, 1))),
-        Pair.of(Duration.of(1, SECOND), Optional.<RealDynamics>empty()),
-        Pair.of(Duration.of(1, SECOND), Optional.of(RealDynamics.linear(5, -1)))
+        new ProfileSegment<>(Duration.of(1, SECOND), Optional.of(RealDynamics.linear(1, 1))),
+        new ProfileSegment<>(Duration.of(1, SECOND), Optional.<RealDynamics>empty()),
+        new ProfileSegment<>(Duration.of(1, SECOND), Optional.of(RealDynamics.linear(5, -1)))
     );
 
     final var profile = LinearProfile.fromExternalProfile(Duration.of(1, SECOND), externalProfile);

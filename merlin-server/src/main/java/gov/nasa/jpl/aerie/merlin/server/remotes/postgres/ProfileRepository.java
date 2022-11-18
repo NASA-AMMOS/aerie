@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -11,7 +12,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +25,8 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
       final Connection connection,
       final long datasetId
   ) throws SQLException {
-    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, Optional<RealDynamics>>>>>();
-    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, Optional<SerializedValue>>>>>();
+    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<Optional<RealDynamics>>>>>();
+    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<Optional<SerializedValue>>>>>();
 
     final var profileRecords = getProfileRecords(connection, datasetId);
     for (final var record : profileRecords) {
@@ -81,7 +81,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
     }
   }
 
-  static List<Pair<Duration, Optional<RealDynamics>>> getRealProfileSegments(
+  static List<ProfileSegment<Optional<RealDynamics>>> getRealProfileSegments(
       final Connection connection,
       final long datasetId,
       final long profileId,
@@ -92,7 +92,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
     }
   }
 
-  static List<Pair<Duration, Optional<SerializedValue>>> getDiscreteProfileSegments(
+  static List<ProfileSegment<Optional<SerializedValue>>> getDiscreteProfileSegments(
       final Connection connection,
       final long datasetId,
       final long profileId,
@@ -153,7 +153,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
       final Connection connection,
       final long datasetId,
       final ProfileRecord profileRecord,
-      final List<Pair<Duration, Optional<RealDynamics>>> segments
+      final List<ProfileSegment<Optional<RealDynamics>>> segments
   ) throws SQLException {
     try (final var postProfileSegmentsAction = new PostProfileSegmentsAction(connection)) {
       postProfileSegmentsAction.apply(datasetId, profileRecord, segments, realDynamicsP);
@@ -164,7 +164,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
       final Connection connection,
       final long datasetId,
       final ProfileRecord profileRecord,
-      final List<Pair<Duration, Optional<SerializedValue>>> segments
+      final List<ProfileSegment<Optional<SerializedValue>>> segments
   ) throws SQLException {
     try (final var postProfileSegmentsAction = new PostProfileSegmentsAction(connection)) {
       postProfileSegmentsAction.apply(datasetId, profileRecord, segments, serializedValueP);

@@ -17,6 +17,7 @@ repositories {
 }
 
 dependencies {
+  implementation project(':merlin-driver')
   implementation project(':merlin-sdk')
   implementation project(':parsing-utilities')
 

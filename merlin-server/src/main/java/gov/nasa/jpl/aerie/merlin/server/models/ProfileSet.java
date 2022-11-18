@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -15,12 +15,12 @@ import java.util.stream.Collectors;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 
 public record ProfileSet(
-    Map<String, Pair<ValueSchema, List<Pair<Duration, Optional<RealDynamics>>>>> realProfiles,
-    Map<String, Pair<ValueSchema, List<Pair<Duration, Optional<SerializedValue>>>>> discreteProfiles
+    Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<RealDynamics>>>>> realProfiles,
+    Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<SerializedValue>>>>> discreteProfiles
 ) {
   public static ProfileSet ofNullable(
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, Optional<RealDynamics>>>>> realProfiles,
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, Optional<SerializedValue>>>>> discreteProfiles
+      final Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<RealDynamics>>>>> realProfiles,
+      final Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<SerializedValue>>>>> discreteProfiles
   ) {
     return new ProfileSet(
         realProfiles,
@@ -28,8 +28,8 @@ public record ProfileSet(
     );
   }
   public static ProfileSet of(
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, RealDynamics>>>> realProfiles,
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles
+      final Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles,
+      final Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles
   ) {
     return new ProfileSet(
         wrapInOptional(realProfiles),
@@ -37,8 +37,8 @@ public record ProfileSet(
     );
   }
 
-  public static <T> Map<String, Pair<ValueSchema, List<Pair<Duration, Optional<T>>>>> wrapInOptional(
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, T>>>> profileMap
+  public static <T> Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<T>>>>> wrapInOptional(
+      final Map<String, Pair<ValueSchema, List<ProfileSegment<T>>>> profileMap
   ) {
     return profileMap
       .entrySet().stream()
@@ -48,15 +48,15 @@ public record ProfileSet(
               $.getValue().getLeft(),
               $.getValue().getRight()
                .stream()
-               .map(untuple((duration, dynamics) -> Pair.of(duration, Optional.of(dynamics))))
+               .map(untuple(segment -> new ProfileSegment<>(segment.extent(), Optional.of(segment.dynamics()))))
                .toList()
           )
       ))
       .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
   }
 
-  public static <T> Map<String, Pair<ValueSchema, List<Pair<Duration, T>>>> unwrapOptional(
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, Optional<T>>>>> profileMap
+  public static <T> Map<String, Pair<ValueSchema, List<ProfileSegment<T>>>> unwrapOptional(
+      final Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<T>>>>> profileMap
   ) throws NoSuchElementException {
     return profileMap
         .entrySet().stream()
@@ -66,7 +66,7 @@ public record ProfileSet(
                 $.getValue().getLeft(),
                 $.getValue().getRight()
                  .stream()
-                 .map(untuple((duration, dynamics) -> Pair.of(duration, dynamics.get())))
+                 .map(segment -> new ProfileSegment<>(segment.extent(), segment.dynamics().get()))
                  .toList()
             )
         ))

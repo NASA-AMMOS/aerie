@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -32,8 +33,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
   public Map<String, ProfileRecord> apply(
       final long datasetId,
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, Optional<RealDynamics>>>>> realProfiles,
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, Optional<SerializedValue>>>>> discreteProfiles
+      final Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<RealDynamics>>>>> realProfiles,
+      final Map<String, Pair<ValueSchema, List<ProfileSegment<Optional<SerializedValue>>>>> discreteProfiles
   ) throws SQLException {
     final var resourceNames = new ArrayList<String>();
     final var resourceTypes = new ArrayList<Pair<String, ValueSchema>>();
@@ -92,10 +93,10 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     return profileRecords;
   }
 
-  private static <T> Duration sumDurations(final List<Pair<Duration, Optional<T>>> segments) {
+  private static <T> Duration sumDurations(final List<ProfileSegment<Optional<T>>> segments) {
     return segments.stream().reduce(
         Duration.ZERO,
-        (acc, pair) -> acc.plus(pair.getLeft()),
+        (acc, pair) -> acc.plus(pair.extent()),
         Duration::plus
     );
   }

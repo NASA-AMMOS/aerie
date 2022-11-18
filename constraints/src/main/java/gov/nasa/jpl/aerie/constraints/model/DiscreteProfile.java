@@ -4,13 +4,11 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.IntervalMap;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Iterator;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -117,25 +115,25 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
     );
   }
 
-  public static DiscreteProfile fromSimulatedProfile(final List<Pair<Duration, SerializedValue>> simulatedProfile) {
+  public static DiscreteProfile fromSimulatedProfile(final List<ProfileSegment<SerializedValue>> simulatedProfile) {
     return fromProfileHelper(Duration.ZERO, simulatedProfile, Optional::of);
   }
 
-  public static DiscreteProfile fromExternalProfile(final Duration offsetFromPlanStart, final List<Pair<Duration, Optional<SerializedValue>>> externalProfile) {
+  public static DiscreteProfile fromExternalProfile(final Duration offsetFromPlanStart, final List<ProfileSegment<Optional<SerializedValue>>> externalProfile) {
     return fromProfileHelper(offsetFromPlanStart, externalProfile, $ -> $);
   }
 
   private static <T> DiscreteProfile fromProfileHelper(
       final Duration offsetFromPlanStart,
-      final List<Pair<Duration, T>> profile,
+      final List<ProfileSegment<T>> profile,
       final Function<T, Optional<SerializedValue>> transform
   ) {
     final var result = new IntervalMap.Builder<SerializedValue>();
     var cursor = offsetFromPlanStart;
     for (final var pair: profile) {
-      final var nextCursor = cursor.plus(pair.getKey());
+      final var nextCursor = cursor.plus(pair.extent());
 
-      final var value = transform.apply(pair.getValue());
+      final var value = transform.apply(pair.dynamics());
       final Duration finalCursor = cursor;
       value.ifPresent(
           $ -> result.set(

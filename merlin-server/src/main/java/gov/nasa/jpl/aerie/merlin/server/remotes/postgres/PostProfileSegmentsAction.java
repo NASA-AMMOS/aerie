@@ -1,9 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import org.apache.commons.lang3.tuple.Pair;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -12,8 +11,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
-
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatements.setTimestamp;
 
 public final class PostProfileSegmentsAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
@@ -29,7 +26,7 @@ public final class PostProfileSegmentsAction implements AutoCloseable {
   public <Dynamics> void apply(
       final long datasetId,
       final ProfileRecord profileRecord,
-      final List<Pair<Duration, Optional<Dynamics>>> segments,
+      final List<ProfileSegment<Optional<Dynamics>>> segments,
       final JsonParser<Dynamics> dynamicsP
       ) throws SQLException {
 
@@ -38,8 +35,8 @@ public final class PostProfileSegmentsAction implements AutoCloseable {
     // we need to convert to offsets from the simulation start so order can be preserved
     var accumulatedOffset = Duration.ZERO;
     for (final var pair : segments) {
-      final var duration = pair.getLeft();
-      final var dynamics = pair.getRight();
+      final var duration = pair.extent();
+      final var dynamics = pair.dynamics();
 
       this.statement.setLong(1, datasetId);
       this.statement.setLong(2, profileRecord.id());
