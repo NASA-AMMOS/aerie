@@ -2,6 +2,7 @@
 *
 
 # Explicitly whitelist files relevant to image creation.
+!deployment
 !merlin-server/build/distributions/*.tar
 !merlin-worker/build/distributions/*.tar
 !scheduler-server/build/distributions/*.tar

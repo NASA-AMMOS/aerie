@@ -28,6 +28,7 @@ To get started with a first Aerie deployment head over to the [deployment direct
 ├── contrib                     # Java convenience classes for mission models
 ├── db-tests                    # Database unit tests
 ├── deployment                  # Deployment artifacts and documentation
+├── docker                      # Additional Dockerfiles for Aerie-specific images
 ├── docs                        # Documentation
 ├── e2e-tests                   # End-to-end tests
 ├── examples                    # Example mission models
