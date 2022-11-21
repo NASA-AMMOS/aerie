@@ -547,47 +547,29 @@ with arguments:
   }
 .. end delete constraint arguments
 
-Add an External Dataset
------------------------
+Add External Dataset
+--------------------------
 
 .. begin add external dataset
 .. code-block::
 
-  mutation {
-    addExternalDataset(
-      planId: 1
-      datasetStart: "2030-180T00:00:00"
-      profileSet: {
-        sample: {
-          type: "discrete"
-          schema: {
-            type: "struct"
-            items: {
-              x: { type: "real" }
-            }
-          }
-          segments: [
-            { duration: 3600000000, dynamics: { x: 0 } }
-            { duration: 3600000000, dynamics: { x: 1 } }
-          ]
-        }
-      }
-    ) {
+  mutation AddExternalDataset($planId: Int!, $datasetStart: String!, $profileSet: ProfileSet!) {
+    addExternalDataset(planId: $planId, datasetStart: $datasetStart, profileSet: $profileSet) {
       datasetId
     }
   }
 .. end add external dataset
 
-Delete an External Dataset
+
+Delete External Dataset
 --------------------------
 
 .. begin delete external dataset
 .. code-block::
 
-  mutation deletedDataset {
-    delete_dataset_by_pk(id: 1) {
+  mutation DeleteExternalDataset($id: Int!) {
+    delete_dataset_by_pk(id: $id) {
       id
     }
   }
 .. end delete external dataset
-
