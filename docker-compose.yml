@@ -205,7 +205,7 @@ services:
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store:ro
   hasura:
-    container_name: hasura
+    container_name: aerie_hasura
     depends_on: ["postgres"]
     environment:
       AERIE_MERLIN_DATABASE_URL: "postgres://${AERIE_USERNAME}:${AERIE_PASSWORD}@postgres:5432/aerie_merlin"
@@ -224,7 +224,7 @@ services:
     volumes:
       - ./deployment/hasura/metadata:/hasura-metadata
   postgres:
-    container_name: postgres
+    container_name: aerie_postgres
     environment:
       POSTGRES_DB: postgres
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
