@@ -45,6 +45,35 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ github.token }}
+      # Build, scan, and push aerie-hasura Docker artifacts.
+      - name: Extract metadata (tags, labels) for aerie-hasura Docker image
+        id: aerieHasura
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/nasa-ammos/aerie-hasura
+      - name: Build aerie-hasura Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./docker/Dockerfile.hasura
+          load: true
+          tags: ${{ env.REGISTRY }}/nasa-ammos/aerie-hasura:${{ github.sha }}
+      - name: Scan aerie-hasura Docker image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-hasura:${{ github.sha }}
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: 'CRITICAL'
+      - name: Push aerie-hasura Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./docker/Dockerfile.hasura
+          push: true
+          tags: ${{ steps.aerieHasura.outputs.tags }}
+          labels: ${{ steps.aerieHasura.outputs.labels }}
       # Build, scan, and push aerie-merlin Docker artifacts.
       - name: Extract metadata (tags, labels) for aerie-merlin Docker image
         id: aerieMerlin
@@ -99,6 +128,35 @@ jobs:
           push: true
           tags: ${{ steps.aerieMerlinWorker.outputs.tags }}
           labels: ${{ steps.aerieMerlinWorker.outputs.labels }}
+      # Build, scan, and push aerie-postgres Docker artifacts.
+      - name: Extract metadata (tags, labels) for aerie-postgres Docker image
+        id: aeriePostgres
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/nasa-ammos/aerie-postgres
+      - name: Build aerie-postgres Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./docker/Dockerfile.postgres
+          load: true
+          tags: ${{ env.REGISTRY }}/nasa-ammos/aerie-postgres:${{ github.sha }}
+      - name: Scan aerie-postgres Docker image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/nasa-ammos/aerie-postgres:${{ github.sha }}
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: 'CRITICAL'
+      - name: Push aerie-postgres Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./docker/Dockerfile.postgres
+          push: true
+          tags: ${{ steps.aeriePostgres.outputs.tags }}
+          labels: ${{ steps.aeriePostgres.outputs.labels }}
       # Build, scan, and push aerie-scheduler-worker Docker artifacts.
       - name: Extract metadata (tags, labels) for aerie-scheduler-worker Docker image
         id: aerieSchedulerWorker
