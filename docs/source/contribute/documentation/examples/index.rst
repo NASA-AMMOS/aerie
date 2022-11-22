@@ -11,49 +11,43 @@ Keep in mind, that in this cheat sheet there may be directives or elements of th
 
 In general, the main components to the markup of any document include:
 
+* :doc:`Admonitions <admonitions>`
+* :doc:`Collapse <collapse>`
+* :doc:`Code blocks <code-blocks>`
+* :doc:`Glossary <glossary>`
+* :doc:`Headings <headings>`
+* :doc:`Hero box <hero-box>`
+* :doc:`Images <images>`
+* :doc:`Includes <includes>`
+* :doc:`Links <links>`
+* :doc:`Lists <lists>`
+* :doc:`Substitutions <substitutions>`
+* :doc:`Tables <tables>`
+* :doc:`Tabs <tabs>`
+* :doc:`Text <text>`
+* :doc:`Table of Contents (TOC) <toc>`
+* :doc:`Topic box <topic-box>`
+* :doc:`Versions <versions>`
+
 .. toctree::
-   :maxdepth: 2
-   :hidden:
+  :maxdepth: 2
+  :hidden:
 
-   admonitions
-   collapse
-   code-blocks
-   glossary
-   headings
-   hero-box
-   includes
-   images
-   links
-   lists
-   panel-box
-   substitutions
-   tables
-   tabs
-   text
-   toc
-   topic-box
-   versions
-
-.. panel-box::
-  :title: Components
-  :id: "components"
-  :class: my-panel
-
-  * :doc:`Admonitions <admonitions>`
-  * :doc:`Collapse <collapse>`
-  * :doc:`Code blocks <code-blocks>`
-  * :doc:`Glossary <glossary>`
-  * :doc:`Headings <headings>`
-  * :doc:`Hero box <hero-box>`
-  * :doc:`Images <images>`
-  * :doc:`Includes <includes>`
-  * :doc:`Links <links>`
-  * :doc:`Lists <lists>`
-  * :doc:`Panel box <panel-box>`
-  * :doc:`Substitutions <substitutions>`
-  * :doc:`Tables <tables>`
-  * :doc:`Tabs <tabs>`
-  * :doc:`Text <text>`
-  * :doc:`Table of Contents (TOC) <toc>`
-  * :doc:`Topic box <topic-box>`
-  * :doc:`Versions <versions>`
+  admonitions
+  code-blocks
+  collapse
+  eval-rst
+  glossary
+  headings
+  hero-box
+  includes
+  images
+  links
+  lists
+  substitutions
+  tables
+  tabs
+  text
+  toc
+  topic-box
+  versions
