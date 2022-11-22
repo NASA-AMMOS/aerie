@@ -22,7 +22,7 @@ We generally try to guide our writing and organization by the
 * All content must be written in US English. Use as few words as possible and try to keep the reading level to under grade 8. You can use word counters and readability tests to keep the reading level down.
 
 Write procedures
-................
+================
 
 Each procedure should have an introductory paragraph (1-3 sentences) which explains what the procedure does, when you should use it, and what benefit the procedure provides.
 After the introduction, there should be a numbered list of steps. Use the following guidelines to write the steps:

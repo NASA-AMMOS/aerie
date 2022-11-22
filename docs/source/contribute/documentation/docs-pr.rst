@@ -17,10 +17,9 @@ Also, if there is an issue with any guide and the issue does not exist, please c
 Guidelines for branch names
 ===========================
 
-If you are providing documentation alongside new code, prefix the name of your branch with ``feature/AERIE-[Issue Number]--``.
+If you are providing documentation alongside new code, prefix the name of your branch with ``feat/``.
 
-If you are only providing documentation, prefix the name of your branch with ``docs/AERIE-[Issue Number]--``.
-
+If you are only providing documentation, prefix the name of your branch with ``docs/``.
 
 Previewing local changes
 ========================
@@ -34,12 +33,16 @@ To preview your changes while you are working, run ``make preview`` from the com
 If you have previously run ``make preview``, it is recommended to run ``make clean`` first. Navigate to http://127.0.0.1:5500/.
 The site will automatically update as you work. Fix all warnings raised during the build.
 
+.. _validating_docs:
+
 When you are finished making changes, run ``make clean`` and then ``make dirhtml-ext`` to ensure that the site will deploy.
+This also checks that there are no broken *internal* links.
 Once the site builds successfully without warnings, you may proceed to the next step.
 
-To check for broken links, run ``make clean && make dirhtml-ext`` then ``make linkcheck``.
+To check for broken *external* links, run ``make clean && make dirhtml-ext`` then ``make linkcheck``.
 Once ``make linkcheck`` builds with the only broken links being those that reference ``localhost`` sites, you may proceed to open a PR.
 
+For more information on internal vs external links, see :doc:`examples/links`.
 
 Submit a pull request (PR)
 ==========================
@@ -50,12 +53,11 @@ When creating a PR, fill out the provided template.
 For Documentation PRs, the following guidelines apply:
 
 * Test the instructions against the product. For all tests you must use a clean, new install unless otherwise specified in the issue.
-* Make sure the PR renders with no errors and that make preview does not return any errors.
+* Make sure the PR renders with no errors and that ``make dirhtml-ext`` does not return any errors.
 * Cite the issue you are fixing in the PR comments and use screenshots to show changes in formatting.
-* In the subject line of the PR prepend the subject with ``[Aerie Issue Number]``.
 * Apply the ``documentation`` label to your PR.
 
-If you have any questions about the process, ask the maintainer of the project you're working on.
+If you have any questions about the process, ask a question in `GitHub Discussions <https://github.com/NASA-AMMOS/aerie/discussions>`__.
 
 Best practices for content submission
 =====================================
