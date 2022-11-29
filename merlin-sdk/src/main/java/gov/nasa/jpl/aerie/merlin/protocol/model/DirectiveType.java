@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.protocol.model;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
 import java.util.Map;
 
@@ -45,7 +46,7 @@ public interface DirectiveType<Model, Arguments, Result> {
    * may reference the {@code Model} or {@code Arguments} concurrently, and updates by one {@code Task} may interfere
    * with the transactional isolation afforded to others. </p>
    */
-  TaskFactory<Result> getTaskFactory(Model model, Arguments arguments);
+  TaskFactory<Unit, Result> getTaskFactory(Model model, Arguments arguments);
 
   /**
    * Initializes a {@link Task} given a set of arguments determining the directive instance.
@@ -68,7 +69,7 @@ public interface DirectiveType<Model, Arguments, Result> {
    * @see InputType#instantiate(Map)
    * @see #createTask(Model, Arguments)
    */
-  default TaskFactory<Result> getTaskFactory(final Model model, final Map<String, SerializedValue> arguments)
+  default TaskFactory<Unit, Result> getTaskFactory(final Model model, final Map<String, SerializedValue> arguments)
   throws InstantiationException
   {
     return this.getTaskFactory(model, this.getInputType().instantiate(arguments));

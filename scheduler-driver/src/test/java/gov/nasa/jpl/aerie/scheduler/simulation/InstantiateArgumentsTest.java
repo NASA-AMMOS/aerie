@@ -139,10 +139,10 @@ public class InstantiateArgumentsTest {
     }
 
     @Override
-    public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
-      return executor -> $ -> {
+    public TaskFactory<Unit, Object> getTaskFactory(final Object o, final Object o2) {
+      return executor -> ($, input1) -> {
         $.emit(this, delayedActivityDirectiveInputTopic);
-        return TaskStatus.delayed(oneMinute, $$ -> {
+        return TaskStatus.delayed(oneMinute, ($$, input2) -> {
           $$.emit(Unit.UNIT, delayedActivityDirectiveOutputTopic);
           return TaskStatus.completed(Unit.UNIT);
         });

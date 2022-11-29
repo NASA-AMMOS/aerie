@@ -5,29 +5,30 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public final class ReplayingTask<Return> implements Task<Return> {
+public final class ReplayingTask<Output> implements Task<Unit, Output> {
   private final Scoped<Context> rootContext;
-  private final Supplier<Return> task;
+  private final Supplier<Output> task;
 
   private final ReplayingReactionContext.Memory memory = new ReplayingReactionContext.Memory(new ArrayList<>(), new MutableInt(0));
 
-  public ReplayingTask(final Scoped<Context> rootContext, final Supplier<Return> task) {
+  public ReplayingTask(final Scoped<Context> rootContext, final Supplier<Output> task) {
     this.rootContext = Objects.requireNonNull(rootContext);
     this.task = Objects.requireNonNull(task);
   }
 
   @Override
-  public TaskStatus<Return> step(final Scheduler scheduler) {
+  public TaskStatus<Output> step(final Scheduler scheduler, final Unit input) {
     final var handle = new ReplayingTaskHandle();
     final var context = new ReplayingReactionContext(this.rootContext, this.memory, scheduler, handle);
 
-    try (final var restore = this.rootContext.set(context)){
+    try (final var restore = this.rootContext.set(context)) {
       final var returnValue = this.task.get();
 
       // If we get here, the activity has completed normally.
@@ -39,9 +40,9 @@ public final class ReplayingTask<Return> implements Task<Return> {
   }
 
   private final class ReplayingTaskHandle implements TaskHandle {
-    public TaskStatus<Return> status = null;
+    public TaskStatus<Output> status = null;
 
-    private Scheduler yield(final TaskStatus<Return> status) {
+    private Scheduler yield(final TaskStatus<Output> status) {
       this.status = status;
       throw Yield;
     }
@@ -52,7 +53,7 @@ public final class ReplayingTask<Return> implements Task<Return> {
     }
 
     @Override
-    public Scheduler call(final TaskFactory<?> child) {
+    public Scheduler call(final TaskFactory<Unit, ?> child) {
       return this.yield(TaskStatus.calling(child, ReplayingTask.this));
     }
 

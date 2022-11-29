@@ -881,10 +881,10 @@ public final class AnchorSimulationTest {
       }
 
       @Override
-      public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
-        return executor -> $ -> {
+      public TaskFactory<Unit, Object> getTaskFactory(final Object o, final Object o2) {
+        return executor -> ($, input1) -> {
           $.emit(this, delayedActivityDirectiveInputTopic);
-          return TaskStatus.delayed(oneMinute, $$ -> {
+          return TaskStatus.delayed(oneMinute, ($$, input2) -> {
             $$.emit(Unit.UNIT, delayedActivityDirectiveOutputTopic);
             return TaskStatus.completed(Unit.UNIT);
           });
@@ -906,19 +906,19 @@ public final class AnchorSimulationTest {
       }
 
       @Override
-      public TaskFactory<Object> getTaskFactory(final Object o, final Object o2) {
-        return executor -> scheduler -> {
+      public TaskFactory<Unit, Object> getTaskFactory(final Object o, final Object o2) {
+        return executor -> (scheduler, input) -> {
           scheduler.emit(this, decomposingActivityDirectiveInputTopic);
           return TaskStatus.delayed(
               Duration.ZERO,
-              $ -> {
+              ($, input1) -> {
                 try {
                   $.spawn(delayedActivityDirective.getTaskFactory(null, null));
                 } catch (final InstantiationException ex) {
                   throw new Error("Unexpected state: activity instantiation of DelayedActivityDirective failed with: %s".formatted(
                       ex.toString()));
                 }
-                return TaskStatus.delayed(Duration.of(120, Duration.SECOND), $$ -> {
+                return TaskStatus.delayed(Duration.of(120, Duration.SECOND), ($$, input2) -> {
                   try {
                     $$.spawn(delayedActivityDirective.getTaskFactory(null, null));
                   } catch (final InstantiationException ex) {

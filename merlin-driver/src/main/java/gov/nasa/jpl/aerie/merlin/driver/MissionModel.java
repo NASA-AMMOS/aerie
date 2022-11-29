@@ -20,14 +20,14 @@ public final class MissionModel<Model> {
   private final Map<String, Resource<?>> resources;
   private final List<SerializableTopic<?>> topics;
   private final DirectiveTypeRegistry<Model> directiveTypes;
-  private final List<TaskFactory<?>> daemons;
+  private final List<TaskFactory<Unit, ?>> daemons;
 
   public MissionModel(
       final Model model,
       final LiveCells initialCells,
       final Map<String, Resource<?>> resources,
       final List<SerializableTopic<?>> topics,
-      final List<TaskFactory<?>> daemons,
+      final List<TaskFactory<Unit, ?>> daemons,
       final DirectiveTypeRegistry<Model> directiveTypes)
   {
     this.model = Objects.requireNonNull(model);
@@ -46,15 +46,15 @@ public final class MissionModel<Model> {
     return this.directiveTypes;
   }
 
-  public TaskFactory<?> getTaskFactory(final SerializedActivity specification) throws InstantiationException {
+  public TaskFactory<Unit, ?> getTaskFactory(final SerializedActivity specification) throws InstantiationException {
     return this.directiveTypes
         .directiveTypes()
         .get(specification.getTypeName())
         .getTaskFactory(this.model, specification.getArguments());
   }
 
-  public TaskFactory<Unit> getDaemon() {
-    return executor -> scheduler -> {
+  public TaskFactory<Unit, Unit> getDaemon() {
+    return executor -> (scheduler, input) -> {
       MissionModel.this.daemons.forEach(scheduler::spawn);
       return TaskStatus.completed(Unit.UNIT);
     };

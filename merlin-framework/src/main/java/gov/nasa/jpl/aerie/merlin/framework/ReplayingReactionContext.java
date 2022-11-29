@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.List;
@@ -64,14 +65,14 @@ final class ReplayingReactionContext implements Context {
   }
 
   @Override
-  public void spawn(final TaskFactory<?> task) {
+  public void spawn(final TaskFactory<Unit, ?> task) {
     this.memory.doOnce(() -> {
       this.scheduler.spawn(task);
     });
   }
 
   @Override
-  public <T> void call(final TaskFactory<T> task) {
+  public <T> void call(final TaskFactory<Unit, T> task) {
     this.memory.doOnce(() -> {
       this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
       this.scheduler = this.handle.call(task);

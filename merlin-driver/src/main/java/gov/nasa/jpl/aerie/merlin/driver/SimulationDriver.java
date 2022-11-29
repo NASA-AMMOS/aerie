@@ -91,8 +91,8 @@ public final class SimulationDriver {
     }
   }
 
-  public static <Model, Return>
-  void simulateTask(final MissionModel<Model> missionModel, final TaskFactory<Return> task) {
+  public static <Model, Output>
+  void simulateTask(final MissionModel<Model> missionModel, final TaskFactory<Unit, Output> task) {
     try (final var engine = new SimulationEngine()) {
       /* The top-level simulation timeline. */
       var timeline = new TemporalEventSource();
@@ -154,7 +154,7 @@ public final class SimulationDriver {
       final var startOffset = directivePair.getRight();
       final var serializedDirective = schedule.get(directiveId).serializedActivity();
 
-      final TaskFactory<?> task;
+      final TaskFactory<Unit, ?> task;
       try {
         task = missionModel.getTaskFactory(serializedDirective);
       } catch (final InstantiationException ex) {
@@ -174,9 +174,9 @@ public final class SimulationDriver {
     }
   }
 
-  private static <Model, Output> TaskFactory<Unit> makeTaskFactory(
+  private static <Model, Output> TaskFactory<Unit, Unit> makeTaskFactory(
       final ActivityDirectiveId directiveId,
-      final TaskFactory<Output> task,
+      final TaskFactory<Unit, Output> task,
       final Map<ActivityDirectiveId, ActivityDirective> schedule,
       final HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved,
       final MissionModel<Model> missionModel,
@@ -184,22 +184,22 @@ public final class SimulationDriver {
   )
   {
     // Emit the current activity (defined by directiveId)
-    return executor -> scheduler0 -> TaskStatus.calling((TaskFactory<Output>) (executor1 -> scheduler1 -> {
+    return executor -> (scheduler0, input0) -> TaskStatus.calling((TaskFactory<Unit, Output>) (executor1 -> (scheduler1, input1) -> {
       scheduler1.emit(directiveId, activityTopic);
-      return task.create(executor1).step(scheduler1);
-    }), scheduler2 -> {
+      return task.create(executor1).step(scheduler1, input1);
+    }), (scheduler2, input2) -> {
       // When the current activity finishes, get the list of the activities that needed this activity to finish to know their start time
       final List<Pair<ActivityDirectiveId, Duration>> dependents = resolved.get(directiveId) == null ? List.of() : resolved.get(directiveId);
       // Iterate over the dependents
       for (final var dependent : dependents) {
-        scheduler2.spawn(executor2 -> scheduler3 ->
+        scheduler2.spawn(executor2 -> (scheduler3, input3) ->
             // Delay until the dependent starts
-            TaskStatus.delayed(dependent.getRight(), scheduler4 -> {
+            TaskStatus.delayed(dependent.getRight(), (scheduler4, input4) -> {
               final var dependentDirectiveId = dependent.getLeft();
               final var serializedDependentDirective = schedule.get(dependentDirectiveId).serializedActivity();
 
               // Initialize the Task for the dependent
-              final TaskFactory<?> dependantTask;
+              final TaskFactory<Unit, ?> dependantTask;
               try {
                 dependantTask = missionModel.getTaskFactory(serializedDependentDirective);
               } catch (final InstantiationException ex) {
