@@ -15,7 +15,7 @@ public /*non-final*/ class ModelActions {
 
 
   public static <T> TaskFactory<Unit, T> threaded(final Supplier<T> task) {
-    return executor -> new ThreadedTask<>(executor, ModelActions.context, task);
+    return executor -> new ThreadedTask<>(executor, ModelActions.context, $ -> task.get());
   }
 
   public static TaskFactory<Unit, Unit> threaded(final Runnable task) {

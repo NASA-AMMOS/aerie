@@ -1,6 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
+import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -10,168 +14,235 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
-public final class ThreadedTask<Output> implements Task<Unit, Output> {
-  private final Scoped<Context> rootContext;
-  private final Supplier<Output> task;
+public final class ThreadedTask<Input, Output> implements Task<Input, Output> {
   private final Executor executor;
+  private final Scoped<Context> rootContext;
+  private final Function<Input, Output> task;
 
-  private final ArrayBlockingQueue<TaskRequest> hostToTask = new ArrayBlockingQueue<>(1);
-  private final ArrayBlockingQueue<TaskResponse<Output>> taskToHost = new ArrayBlockingQueue<>(1);
-
-  private Lifecycle lifecycle = Lifecycle.Inactive;
-  private Output returnValue;
-
-  public ThreadedTask(final Executor executor, final Scoped<Context> rootContext, final Supplier<Output> task) {
+  public ThreadedTask(final Executor executor, final Scoped<Context> rootContext, final Function<Input, Output> task) {
+    this.executor = Objects.requireNonNull(executor);
     this.rootContext = Objects.requireNonNull(rootContext);
     this.task = Objects.requireNonNull(task);
-    this.executor = Objects.requireNonNull(executor);
   }
 
   @Override
-  public TaskStatus<Output> step(final Scheduler scheduler, final Unit input) {
+  public TaskStatus<Output> step(final Scheduler scheduler, final Input input) {
+    final var responseQueue = new ArrayBlockingQueue<Response<Output>>(1);
+    final var context = new TaskContext<>(responseQueue, scheduler);
+
+    // Use locals to avoid holding a reference on `this` from the thread's lambda.
+    final var task = this.task;
+    final var rootContext = this.rootContext;
+    this.executor.execute(() -> {
+      try (final var restore = rootContext.set(context)) {
+        final var output = task.apply(input);
+        responseQueue.add(new Response.Success<>(TaskStatus.completed(output)));
+      } catch (final TaskAbort ex) {
+        // Do nothing!
+      } catch (final Throwable ex) {
+        responseQueue.add(new Response.Failure<>(ex));
+      }
+    });
+
+    return ThreadedTask.await(responseQueue);
+  }
+
+  public static <Output> TaskStatus<Output> await(final ArrayBlockingQueue<Response<Output>> responseQueue) {
+    final Response<Output> response;
     try {
-      if (this.lifecycle == Lifecycle.Terminated) {
-        return TaskStatus.completed(this.returnValue);
-      } else if (this.lifecycle == Lifecycle.Inactive) {
-        this.lifecycle = Lifecycle.Running;
-        beginAsync();
-      }
-
-      // TODO: Add a (configurable) timeout to the `take()` call.
-      //   It should be sufficiently long as to allow the user-defined task to do its job.
-      //   The `put()` call is fine -- we know the thread will immediately wait
-      //   for a new request as soon as it puts a response to the last request.
-      // TODO: Track metrics for how long a task runs before responding.
-      //   This will help to tune the timeout.
-      this.hostToTask.put(new TaskRequest.Resume(scheduler));
-      final var response = this.taskToHost.take();
-
-      if (response instanceof TaskResponse.Success<Output> r) {
-        final var status = r.status;
-
-        if (status instanceof TaskStatus.Completed<Output> s) {
-          this.lifecycle = Lifecycle.Terminated;
-          this.returnValue = s.returnValue();
-        }
-
-        return status;
-      } else if (response instanceof TaskResponse.Failure<Output> r) {
-        this.lifecycle = Lifecycle.Terminated;
-
-        // We re-throw the received exception to avoid interfering with `catch` blocks
-        //   that might be looking for this specific exception, but we add a new exception
-        //   to its suppression list to provide a stack trace in this thread, too.
-        final var ex = r.failure;
-        ex.addSuppressed(new TaskFailureException());
-
-        // This exception shouldn't be a checked exception, but we have to prove it to Java.
-        if (ex instanceof RuntimeException runtimeException) {
-          throw runtimeException;
-        } else if (ex instanceof Error error) {
-          throw error;
-        } else {
-          throw new RuntimeException("Unexpected checked exception escaped from task thread", ex);
-        }
-      } else {
-        throw new Error(String.format(
-            "Unexpected variant of %s: %s",
-            TaskResponse.class.getCanonicalName(),
-            response.getClass().getCanonicalName()));
-      }
+      response = responseQueue.take();
     } catch (final InterruptedException ex) {
       throw new Error("Merlin host unexpectedly interrupted", ex);
     }
+
+    if (response instanceof Response.Success<Output> r) {
+      return r.status();
+    } else if (response instanceof Response.Failure<Output> r) {
+      // We re-throw the received exception to avoid interfering with `catch` blocks
+      //   that might be looking for this specific exception, but we add a new exception
+      //   to its suppression list to provide a stack trace in this thread, too.
+      final var ex = r.failure();
+      ex.addSuppressed(new TaskFailureException());
+
+      // This exception shouldn't be a checked exception, but we have to prove it to Java.
+      if (ex instanceof RuntimeException runtimeException) {
+        throw runtimeException;
+      } else if (ex instanceof Error error) {
+        throw error;
+      } else {
+        throw new RuntimeException("Unexpected checked exception escaped from task thread", ex);
+      }
+    } else {
+      throw new Error(String.format(
+          "Unexpected variant of %s: %s",
+          Response.class.getCanonicalName(),
+          response.getClass().getCanonicalName()));
+    }
   }
 
-  private void beginAsync() {
-    final var handle = new ThreadedTaskHandle();
+  private static final class YieldedTask<Input, Output> implements Task<Input, Output> {
+    private final ArrayBlockingQueue<Request<Input>> requestQueue;
+    private final ArrayBlockingQueue<Response<Output>> responseQueue;
 
-    this.executor.execute(() -> {
-      final TaskRequest request;
+    public YieldedTask(
+        final ArrayBlockingQueue<Request<Input>> requestQueue,
+        final ArrayBlockingQueue<Response<Output>> responseQueue
+    ) {
+      this.requestQueue = Objects.requireNonNull(requestQueue);
+      this.responseQueue = Objects.requireNonNull(responseQueue);
+    }
+
+    @Override
+    public TaskStatus<Output> step(final Scheduler scheduler, final Input input) {
       try {
-        request = ThreadedTask.this.hostToTask.take();
+        this.requestQueue.put(new Request.Resume<>(scheduler, input));
       } catch (final InterruptedException ex) {
-        throw new Error("Merlin task unexpectedly interrupted", ex);
+        throw new Error("Merlin host unexpectedly interrupted", ex);
       }
 
-      TaskResponse<Output> response;
-      try {
-        response = handle.run(request);
-      } catch (final Throwable ex) {
-        response = new TaskResponse.Failure<>(ex);
-      }
+      return ThreadedTask.await(this.responseQueue);
+    }
 
+    @Override
+    public void release() {
       try {
-        ThreadedTask.this.taskToHost.put(response);
-      } catch (final InterruptedException ex) {
-        throw new Error("Merlin task unexpectedly interrupted", ex);
-      }
-    });
-  }
-
-  @Override
-  public void release() {
-    if (this.lifecycle == Lifecycle.Running) {
-      try {
-        // TODO: Add a (configurable) timeout to the `take()` call.
-        //   This timeout can be (much) shorter than the one in `ThreadedTask.step()`.
-        //   The `put()` call is fine -- we know the thread will immediately wait
-        //   for a new request as soon as it puts a response to the last request.
-        this.hostToTask.put(new TaskRequest.Abort());
-        final var ignored = this.taskToHost.take();
+        this.requestQueue.put(new Request.Abort<>());
       } catch (final InterruptedException ex) {
         throw new Error("Merlin host unexpectedly interrupted", ex);
       }
     }
-
-    this.lifecycle = Lifecycle.Inactive;
   }
 
-  private final class ThreadedTaskHandle implements TaskHandle {
+  public sealed interface Request<Input> {
+    record Resume<Input>(Scheduler scheduler, Input input) implements Request<Input> {}
+
+    record Abort<Input>() implements Request<Input> {}
+  }
+
+  public sealed interface Response<Output> {
+    record Success<Output>(TaskStatus<Output> status) implements Response<Output> {}
+
+    record Failure<Output>(Throwable failure) implements Response<Output> {}
+  }
+
+  public static final class TaskFailureException extends RuntimeException {
+    public TaskFailureException() {
+      super("Observed task thread failure from driver thread");
+    }
+  }
+
+  /**
+   * A control-flow exception for quickly aborting a task which will never proceed any further.
+   *
+   * This exception extends Error instead of RuntimeException to reduce the likelihood that
+   * it gets spuriously caught by an over-broad catch clause.
+   */
+  private static final class TaskAbort extends Error {
+    public static final TaskAbort INSTANCE = new TaskAbort();
+
+    public TaskAbort() {
+      super(null, null, /* capture suppressed exceptions? */ true, /* capture stack trace? */ false);
+    }
+  }
+
+  private static final class TaskContext<Output> implements Context {
+    private final ArrayBlockingQueue<Response<Output>> responseQueue;
+
+    private Scheduler scheduler;
     private boolean isAborting = false;
 
-    public TaskResponse<Output> run(final TaskRequest request) {
-      if (request instanceof TaskRequest.Resume resume) {
-        final var scheduler = resume.scheduler;
-
-        final var context = new ThreadedReactionContext(scheduler, this);
-
-        try (final var restore = ThreadedTask.this.rootContext.set(context)) {
-          return new TaskResponse.Success<>(TaskStatus.completed(ThreadedTask.this.task.get()));
-        } catch (final TaskAbort ex) {
-          return new TaskResponse.Success<>(TaskStatus.completed(null));
-        } catch (final Throwable ex) {
-          return new TaskResponse.Failure<>(ex);
-        }
-      } else if (request instanceof TaskRequest.Abort) {
-        return new TaskResponse.Success<>(TaskStatus.completed(null));
-      } else {
-        throw new Error(String.format(
-            "Unexpected variant of %s: %s",
-            TaskRequest.class.getCanonicalName(),
-            request.getClass().getCanonicalName()));
-      }
+    public TaskContext(final ArrayBlockingQueue<Response<Output>> responseQueue, final Scheduler scheduler) {
+      this.responseQueue = Objects.requireNonNull(responseQueue);
+      this.scheduler = Objects.requireNonNull(scheduler);
     }
 
-    private Scheduler yield(final TaskStatus<Output> status) {
-      // If we're in the middle of aborting, just keep trying to bail out.
-      if (this.isAborting) throw TaskAbort;
+    @Override
+    public ContextType getContextType() {
+      return ContextType.Reacting;
+    }
 
+    @Override
+    public <State> State ask(final CellId<State> cellId) {
+      // If we're in the middle of aborting, just keep trying to bail out.
+      if (this.isAborting) throw TaskAbort.INSTANCE;
+
+      return this.scheduler.get(cellId);
+    }
+
+    @Override
+    public <Event, Effect, State> CellId<State> allocate(
+        final State initialState,
+        final CellType<Effect, State> cellType,
+        final Function<Event, Effect> interpretation,
+        final Topic<Event> topic
+    ) {
+      throw new IllegalStateException("Cannot allocate during simulation");
+    }
+
+    @Override
+    public <Event> void emit(final Event event, final Topic<Event> topic) {
+      // If we're in the middle of aborting, just keep trying to bail out.
+      if (this.isAborting) throw TaskAbort.INSTANCE;
+
+      this.scheduler.emit(event, topic);
+    }
+
+    @Override
+    public void spawn(final TaskFactory<Unit, ?> task) {
+      // If we're in the middle of aborting, just keep trying to bail out.
+      if (this.isAborting) throw TaskAbort.INSTANCE;
+
+      this.scheduler.spawn(task);
+    }
+
+    @Override
+    public <Midput> void call(final TaskFactory<Unit, Midput> child) {
+      // If we're in the middle of aborting, just keep trying to bail out.
+      if (this.isAborting) throw TaskAbort.INSTANCE;
+
+      this.scheduler = null;
+      final var request = this.<Unit>yield($ -> TaskStatus.calling(child, $));
+      this.scheduler = request.scheduler();
+    }
+
+    @Override
+    public void delay(final Duration duration) {
+      // If we're in the middle of aborting, just keep trying to bail out.
+      if (this.isAborting) throw TaskAbort.INSTANCE;
+
+      this.scheduler = null;
+      final var request = this.<Unit>yield($ -> TaskStatus.delayed(duration, $));
+      this.scheduler = request.scheduler();
+    }
+
+    @Override
+    public void waitUntil(final Condition condition) {
+      // If we're in the middle of aborting, just keep trying to bail out.
+      if (this.isAborting) throw TaskAbort.INSTANCE;
+
+      this.scheduler = null;
+      final var request = this.<Unit>yield($ -> TaskStatus.awaiting(condition, $));
+      this.scheduler = request.scheduler();
+    }
+
+    private <Midput> Request.Resume<Midput> yield(final Function<Task<Midput, Output>, TaskStatus<Output>> status) {
       // Get the next request from the driver.
-      final TaskRequest request;
+      final Request<Midput> request;
       try {
-        ThreadedTask.this.taskToHost.put(new TaskResponse.Success<>(status));
-        request = ThreadedTask.this.hostToTask.take();
+        final var requestQueue = new ArrayBlockingQueue<Request<Midput>>(1);
+        final var response = status.apply(new YieldedTask<>(requestQueue, this.responseQueue));
+        this.responseQueue.put(new Response.Success<>(response));
+        request = requestQueue.take();
       } catch (final InterruptedException ex) {
         throw new Error("Merlin task unexpectedly interrupted", ex);
       }
 
-      if (request instanceof TaskRequest.Resume resumeRequest) {
+      if (request instanceof Request.Resume<Midput> r) {
         // We've been told to continue executing.
-        return resumeRequest.scheduler;
-      } else if (request instanceof TaskRequest.Abort) {
+        return r;
+      } else if (request instanceof Request.Abort) {
         // We've been told to bail out and release this thread ASAP.
         //
         // We'll throw an exception to get as far up and out of the task as we can.
@@ -189,61 +260,13 @@ public final class ThreadedTask<Output> implements Task<Unit, Output> {
         //   sets its `scheduler` field to null before yielding. That's fine -- it keeps us bailing --
         //   but it's not great to have this interaction logic spread out.
         this.isAborting = true;
-        throw TaskAbort;
+        throw TaskAbort.INSTANCE;
       } else {
         throw new Error(String.format(
             "Unexpected variant of %s: %s",
-            TaskRequest.class.getCanonicalName(),
+            Request.class.getCanonicalName(),
             request.getClass().getCanonicalName()));
       }
-    }
-
-    @Override
-    public Scheduler delay(final Duration delay) {
-      return this.yield(TaskStatus.delayed(delay, ThreadedTask.this));
-    }
-
-    @Override
-    public Scheduler call(final TaskFactory<Unit, ?> child) {
-      return this.yield(TaskStatus.calling(child, ThreadedTask.this));
-    }
-
-    @Override
-    public Scheduler await(final gov.nasa.jpl.aerie.merlin.protocol.model.Condition condition) {
-      return this.yield(TaskStatus.awaiting(condition, ThreadedTask.this));
-    }
-  }
-
-  private enum Lifecycle { Inactive, Running, Terminated }
-
-  sealed interface TaskRequest {
-    record Resume(Scheduler scheduler) implements TaskRequest {}
-
-    record Abort() implements TaskRequest {}
-  }
-
-  sealed interface TaskResponse<Output> {
-    record Success<Output>(TaskStatus<Output> status) implements TaskResponse<Output> {}
-
-    record Failure<Output>(Throwable failure) implements TaskResponse<Output> {}
-  }
-
-  public static final class TaskFailureException extends RuntimeException {
-    public TaskFailureException() {
-      super("Observed task thread failure from driver thread");
-    }
-  }
-
-  private static final TaskAbort TaskAbort = new TaskAbort();
-  /**
-   * A control-flow exception for quickly aborting a task which will never proceed any further.
-   *
-   * This exception extends Error instead of RuntimeException to reduce the likelihood that
-   * it gets spuriously caught by an over-broad catch clause.
-   */
-  private static final class TaskAbort extends Error {
-    public TaskAbort() {
-      super(null, null, /* capture suppressed exceptions? */ true, /* capture stack trace? */ false);
     }
   }
 }
