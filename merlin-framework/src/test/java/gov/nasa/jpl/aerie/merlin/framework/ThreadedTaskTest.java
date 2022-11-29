@@ -41,7 +41,7 @@ public final class ThreadedTaskTest {
       final var task = new ThreadedTask<>(
         pool,
         Scoped.create(),
-        () -> { throw new TestException(); });
+        $ -> { throw new TestException(); });
 
       final var ex = assertThrows(TestException.class, () -> task.step(mockScheduler, Unit.UNIT));
       assertSuppressed(ThreadedTask.TaskFailureException.class, ex);
