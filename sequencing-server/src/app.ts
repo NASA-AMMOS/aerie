@@ -590,6 +590,11 @@ export interface SeqBuilder {
   ): Sequence;
 }
 
+/**
+ * Get the sequence JSON for a sequence based on seqid and simulation dataset id
+ * 
+ * @deprecated Use `/bulk-get-seqjson-for-seqid-and-simulation-dataset` instead
+ */
 app.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, res, next) => {
   // Get the specified sequence + activity instance ids + commands from the latest expansion run for each activity instance (filtered on simulation dataset)
   // get start time for each activity instance and join with activity instance command data
@@ -811,7 +816,7 @@ app.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (req, res, 
     const simulatedActivitiesLoadErrors = simulatedActivitiesForSeqId.filter(ai => ai instanceof Error);
 
     if (simulatedActivitiesLoadErrors.length > 0) {
-      throw new Error(`Error loading simulated activities for seqId: ${seqId}, simulationDatasetId: ${simulationDatasetId}`, { cause: simulatedActivitiesLoadErrors })]
+      throw new Error(`Error loading simulated activities for seqId: ${seqId}, simulationDatasetId: ${simulationDatasetId}`, { cause: simulatedActivitiesLoadErrors });
     }
 
     const sortedActivityInstances = (simulatedActivitiesForSeqId as Exclude<(typeof simulatedActivitiesLoadErrors)[number], Error>[])
@@ -868,7 +873,10 @@ app.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (req, res, 
   return next();
 });
 
-// Generate Sequence EDSL from sequence JSON
+/** Generate Sequence EDSL from sequence JSON
+ * 
+ * @deprecated Use `/bulk-get-edsl-for-seqjson` instead
+ */
 app.post('/get-edsl-for-seqjson', async (req, res, next) => {
   const seqJson = req.body.input.seqJson as SequenceSeqJson;
 
