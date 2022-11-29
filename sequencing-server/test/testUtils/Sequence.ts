@@ -1,7 +1,7 @@
 import { gql, GraphQLClient } from 'graphql-request';
 import type { SequenceSeqJson } from '../../src/lib/codegen/CommandEDSLPreface.js';
-import { convertActivityDirectiveIdToSimulatedActivityId } from './ActivityDirective.js';
 import { FallibleStatus } from '../../src/types.js';
+import { convertActivityDirectiveIdToSimulatedActivityId } from './ActivityDirective.js';
 
 export async function insertSequence(
   graphqlClient: GraphQLClient,

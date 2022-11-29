@@ -1,25 +1,24 @@
 import { gql, GraphQLClient } from 'graphql-request';
-import { removeMissionModel, uploadMissionModel } from './testUtils/MissionModel.js';
-import { createPlan, removePlan } from './testUtils/Plan.js';
+import { TimingTypes } from '../src/lib/codegen/CommandEDSLPreface.js';
+import { FallibleStatus } from '../src/types.js';
 import {
   convertActivityDirectiveIdToSimulatedActivityId,
   insertActivityDirective,
-  removeActivityDirective,
+  removeActivityDirective
 } from './testUtils/ActivityDirective.js';
-import { executeSimulation, removeSimulationArtifacts } from './testUtils/Simulation.js';
+import { insertCommandDictionary, removeCommandDictionary } from './testUtils/CommandDictionary.js';
 import {
   expand,
   insertExpansion,
   insertExpansionSet,
   removeExpansion,
   removeExpansionRun,
-  removeExpansionSet,
+  removeExpansionSet
 } from './testUtils/Expansion.js';
-import { insertCommandDictionary, removeCommandDictionary } from './testUtils/CommandDictionary.js';
-import type { SequenceSeqJson } from '../src/lib/codegen/CommandEDSLPreface.js';
-import { TimingTypes } from '../src/lib/codegen/CommandEDSLPreface.js';
-import { generateSequenceEDSL, insertSequence, linkActivityInstance, removeSequence } from './testUtils/Sequence.js';
-import { FallibleStatus } from '../src/types.js';
+import { removeMissionModel, uploadMissionModel } from './testUtils/MissionModel.js';
+import { createPlan, removePlan } from './testUtils/Plan.js';
+import { generateSequenceEDSL, generateSequenceEDSLBulk, getSequenceSeqJson, getSequenceSeqJsonBulk, insertSequence, linkActivityInstance, removeSequence } from './testUtils/Sequence.js';
+import { executeSimulation, removeSimulationArtifacts } from './testUtils/Simulation.js';
 
 let planId: number;
 let graphqlClient: GraphQLClient;

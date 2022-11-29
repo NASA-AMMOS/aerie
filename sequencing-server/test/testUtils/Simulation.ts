@@ -1,6 +1,6 @@
+import { jest } from '@jest/globals';
 import { gql, GraphQLClient } from 'graphql-request';
 import perf from 'perf_hooks';
-import { jest } from '@jest/globals';
 
 jest.setTimeout(10000);
 
