@@ -23,11 +23,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
-import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -99,7 +99,7 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Schedule a new task to be performed at the given time. */
-  public <Return> TaskId scheduleTask(final Duration startTime, final TaskFactory<Return> state) {
+  public <Output> TaskId scheduleTask(final Duration startTime, final TaskFactory<Unit, Output> state) {
     final var task = TaskId.generate();
     this.tasks.put(task, new ExecutionState.InProgress<>(startTime, state.create(this.executor)));
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
@@ -196,16 +196,16 @@ public final class SimulationEngine implements AutoCloseable {
     stepTaskHelper(task, frame, currentTime, lifecycle);
   }
 
-  private <Return> void stepTaskHelper(
+  private <Output> void stepTaskHelper(
       final TaskId task,
       final TaskFrame<JobId> frame,
       final Duration currentTime,
-      final ExecutionState<Return> lifecycle)
+      final ExecutionState<Output> lifecycle)
   {
     // Extract the current modeling state.
-    if (lifecycle instanceof ExecutionState.InProgress<Return> e) {
+    if (lifecycle instanceof ExecutionState.InProgress<Output> e) {
       stepEffectModel(task, e, frame, currentTime);
-    } else if (lifecycle instanceof ExecutionState.AwaitingChildren<Return> e) {
+    } else if (lifecycle instanceof ExecutionState.AwaitingChildren<Output> e) {
       stepWaitingTask(task, e, frame, currentTime);
     } else {
       // TODO: Log this issue to somewhere more general than stderr.
@@ -214,29 +214,29 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Make progress in a task by stepping its associated effect model forward. */
-  private <Return> void stepEffectModel(
+  private <Output> void stepEffectModel(
       final TaskId task,
-      final ExecutionState.InProgress<Return> progress,
+      final ExecutionState.InProgress<Output> progress,
       final TaskFrame<JobId> frame,
       final Duration currentTime
   ) {
     // Step the modeling state forward.
     final var scheduler = new EngineScheduler(currentTime, task, frame);
-    final var status = progress.state().step(scheduler);
+    final var status = progress.state().step(scheduler, Unit.UNIT);
 
     // TODO: Report which topics this activity wrote to at this point in time. This is useful insight for any user.
     // TODO: Report which cells this activity read from at this point in time. This is useful insight for any user.
 
     // Based on the task's return status, update its execution state and schedule its resumption.
-    if (status instanceof TaskStatus.Completed<Return>) {
+    if (status instanceof TaskStatus.Completed<Output>) {
       final var children = new LinkedList<>(this.taskChildren.getOrDefault(task, Collections.emptySet()));
 
       this.tasks.put(task, progress.completedAt(currentTime, children));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
-    } else if (status instanceof TaskStatus.Delayed<Return> s) {
+    } else if (status instanceof TaskStatus.Delayed<Output> s) {
       this.tasks.put(task, progress.continueWith(s.continuation()));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
-    } else if (status instanceof TaskStatus.CallingTask<Return> s) {
+    } else if (status instanceof TaskStatus.CallingTask<Output> s) {
       final var target = TaskId.generate();
       SimulationEngine.this.tasks.put(target, new ExecutionState.InProgress<>(currentTime, s.child().create(this.executor)));
       SimulationEngine.this.taskParent.put(target, task);
@@ -254,7 +254,7 @@ public final class SimulationEngine implements AutoCloseable {
       } else {
         this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(target)));
       }
-    } else if (status instanceof TaskStatus.AwaitingCondition<Return> s) {
+    } else if (status instanceof TaskStatus.AwaitingCondition<Output> s) {
       final var condition = ConditionId.generate();
       this.conditions.put(condition, s.condition());
       this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(currentTime));
@@ -267,9 +267,9 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Make progress in a task by checking if all of the tasks it's waiting on have completed. */
-  private <Return> void stepWaitingTask(
+  private <Output> void stepWaitingTask(
       final TaskId task,
-      final ExecutionState.AwaitingChildren<Return> awaiting,
+      final ExecutionState.AwaitingChildren<Output> awaiting,
       final TaskFrame<JobId> frame,
       final Duration currentTime
   ) {
@@ -738,7 +738,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public void spawn(final TaskFactory<?> state) {
+    public void spawn(final TaskFactory<Unit, ?> state) {
       final var task = TaskId.generate();
       SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state.create(SimulationEngine.this.executor)));
       SimulationEngine.this.taskParent.put(task, this.activeTask);
@@ -779,39 +779,39 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** The lifecycle stages every task passes through. */
-  private sealed interface ExecutionState<Return> {
+  private sealed interface ExecutionState<Output> {
     /** The task is in its primary operational phase. */
-    record InProgress<Return>(Duration startOffset, Task<Return> state)
-        implements ExecutionState<Return>
+    record InProgress<Output>(Duration startOffset, Task<Unit, Output> state)
+        implements ExecutionState<Output>
     {
-      public AwaitingChildren<Return> completedAt(
+      public AwaitingChildren<Output> completedAt(
           final Duration endOffset,
           final LinkedList<TaskId> remainingChildren) {
         return new AwaitingChildren<>(this.startOffset, endOffset, remainingChildren);
       }
 
-      public InProgress<Return> continueWith(final Task<Return> newState) {
+      public InProgress<Output> continueWith(final Task<Unit, Output> newState) {
         return new InProgress<>(this.startOffset, newState);
       }
     }
 
     /** The task has completed its primary operation, but has unfinished children. */
-    record AwaitingChildren<Return>(
+    record AwaitingChildren<Output>(
         Duration startOffset,
         Duration endOffset,
         LinkedList<TaskId> remainingChildren
-    ) implements ExecutionState<Return>
+    ) implements ExecutionState<Output>
     {
-      public Terminated<Return> joinedAt(final Duration joinOffset) {
+      public Terminated<Output> joinedAt(final Duration joinOffset) {
         return new Terminated<>(this.startOffset, this.endOffset, joinOffset);
       }
     }
 
     /** The task and all its delegated children have completed. */
-    record Terminated<Return>(
+    record Terminated<Output>(
         Duration startOffset,
         Duration endOffset,
         Duration joinOffset
-    ) implements ExecutionState<Return> {}
+    ) implements ExecutionState<Output> {}
   }
 }

@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
 import java.util.function.Function;
 
@@ -95,7 +96,7 @@ public interface Initializer {
    * @param factory
    *   A factory for constructing instances of the daemon task.
    */
-  void daemon(TaskFactory<?> factory);
+  void daemon(TaskFactory<Unit, ?> factory);
 
   /**
    * Registers a model resource whose value over time is observable by the environment.

@@ -862,6 +862,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                 .addAnnotation(Override.class)
                 .returns(ParameterizedTypeName.get(
                     ClassName.get(TaskFactory.class),
+                    ClassName.get(Unit.class),
                     activityType.getOutputTypeName()))
                 .addParameter(
                     ClassName.get(missionModel.topLevelModel),
@@ -901,7 +902,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         .orElseGet(() -> CodeBlock
                             .builder()
                             .add(
-                                "return executor -> scheduler -> {$>\n$L$<};\n",
+                                "return executor -> (scheduler, input) -> {$>\n$L$<};\n",
                                 CodeBlock.builder()
                                     .addStatement("scheduler.emit($L, this.$L)", "activity", "inputTopic")
                                     .addStatement("scheduler.emit($T.UNIT, this.$L)", Unit.class, "outputTopic")

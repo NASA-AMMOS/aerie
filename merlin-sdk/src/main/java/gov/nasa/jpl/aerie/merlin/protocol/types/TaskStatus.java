@@ -4,29 +4,29 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 
-public sealed interface TaskStatus<Return> {
-  record Completed<Return>(Return returnValue) implements TaskStatus<Return> {}
+public sealed interface TaskStatus<Output> {
+  record Completed<Output>(Output returnValue) implements TaskStatus<Output> {}
 
-  record Delayed<Return>(Duration delay, Task<Return> continuation) implements TaskStatus<Return> {}
+  record Delayed<Output>(Duration delay, Task<Unit, Output> continuation) implements TaskStatus<Output> {}
 
-  record CallingTask<Return>(TaskFactory<?> child, Task<Return> continuation) implements TaskStatus<Return> {}
+  record CallingTask<Output>(TaskFactory<Unit, ?> child, Task<Unit, Output> continuation) implements TaskStatus<Output> {}
 
-  record AwaitingCondition<Return>(Condition condition, Task<Return> continuation) implements TaskStatus<Return> {}
+  record AwaitingCondition<Output>(Condition condition, Task<Unit, Output> continuation) implements TaskStatus<Output> {}
 
 
-  static <Return> Completed<Return> completed(final Return returnValue) {
+  static <Output> Completed<Output> completed(final Output returnValue) {
     return new Completed<>(returnValue);
   }
 
-  static <Return> Delayed<Return> delayed(final Duration delay, final Task<Return> continuation) {
+  static <Output> Delayed<Output> delayed(final Duration delay, final Task<Unit, Output> continuation) {
     return new Delayed<>(delay, continuation);
   }
 
-  static <Return> CallingTask<Return> calling(final TaskFactory<?> child, final Task<Return> continuation) {
+  static <Output> CallingTask<Output> calling(final TaskFactory<Unit, ?> child, final Task<Unit, Output> continuation) {
     return new CallingTask<>(child, continuation);
   }
 
-  static <Return> AwaitingCondition<Return> awaiting(final Condition condition, final Task<Return> continuation) {
+  static <Output> AwaitingCondition<Output> awaiting(final Condition condition, final Task<Unit, Output> continuation) {
     return new AwaitingCondition<>(condition, continuation);
   }
 }

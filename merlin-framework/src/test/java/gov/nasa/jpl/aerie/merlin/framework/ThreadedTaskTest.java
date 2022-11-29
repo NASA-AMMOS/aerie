@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +29,7 @@ public final class ThreadedTaskTest {
       }
 
       @Override
-      public void spawn(final TaskFactory<?> task) {
+      public void spawn(final TaskFactory<Unit, ?> task) {
         throw new UnsupportedOperationException();
       }
     };
@@ -42,7 +43,7 @@ public final class ThreadedTaskTest {
         Scoped.create(),
         () -> { throw new TestException(); });
 
-      final var ex = assertThrows(TestException.class, () -> task.step(mockScheduler));
+      final var ex = assertThrows(TestException.class, () -> task.step(mockScheduler, Unit.UNIT));
       assertSuppressed(ThreadedTask.TaskFailureException.class, ex);
     } finally {
       pool.shutdown();

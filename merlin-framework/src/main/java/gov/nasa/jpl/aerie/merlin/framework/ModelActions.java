@@ -14,22 +14,22 @@ public /*non-final*/ class ModelActions {
   static final Scoped<Context> context = Scoped.create();
 
 
-  public static <T> TaskFactory<T> threaded(final Supplier<T> task) {
+  public static <T> TaskFactory<Unit, T> threaded(final Supplier<T> task) {
     return executor -> new ThreadedTask<>(executor, ModelActions.context, task);
   }
 
-  public static TaskFactory<Unit> threaded(final Runnable task) {
+  public static TaskFactory<Unit, Unit> threaded(final Runnable task) {
     return threaded(() -> {
       task.run();
       return Unit.UNIT;
     });
   }
 
-  public static <T> TaskFactory<T> replaying(final Supplier<T> task) {
+  public static <T> TaskFactory<Unit, T> replaying(final Supplier<T> task) {
     return executor -> new ReplayingTask<>(ModelActions.context, task);
   }
 
-  public static TaskFactory<Unit> replaying(final Runnable task) {
+  public static TaskFactory<Unit, Unit> replaying(final Runnable task) {
     return replaying(() -> {
       task.run();
       return Unit.UNIT;
@@ -53,7 +53,7 @@ public /*non-final*/ class ModelActions {
     });
   }
 
-  public static <T> void spawn(final TaskFactory<T> task) {
+  public static <T> void spawn(final TaskFactory<Unit, T> task) {
     context.get().spawn(task);
   }
 
@@ -65,7 +65,7 @@ public /*non-final*/ class ModelActions {
     call(threaded(task));
   }
 
-  public static <T> void call(final TaskFactory<T> task) {
+  public static <T> void call(final TaskFactory<Unit, T> task) {
     context.get().call(task);
   }
 
@@ -73,7 +73,7 @@ public /*non-final*/ class ModelActions {
     spawn(replaying(() -> { delay(duration); spawn(task); }));
   }
 
-  public static void defer(final Duration duration, final TaskFactory<?> task) {
+  public static void defer(final Duration duration, final TaskFactory<Unit, ?> task) {
     spawn(replaying(() -> { delay(duration); spawn(task); }));
   }
 
@@ -81,7 +81,7 @@ public /*non-final*/ class ModelActions {
     spawn(replaying(() -> { delay(quantity, unit); spawn(task); }));
   }
 
-  public static void defer(final long quantity, final Duration unit, final TaskFactory<?> task) {
+  public static void defer(final long quantity, final Duration unit, final TaskFactory<Unit, ?> task) {
     spawn(replaying(() -> { delay(quantity, unit); spawn(task); }));
   }
 

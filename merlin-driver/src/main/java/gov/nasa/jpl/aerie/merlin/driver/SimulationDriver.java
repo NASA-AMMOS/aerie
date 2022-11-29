@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -52,7 +53,7 @@ public final class SimulationDriver {
         final var startOffset = entry.getValue().getLeft();
         final var serializedDirective = entry.getValue().getRight();
 
-        final TaskFactory<?> task;
+        final TaskFactory<Unit, ?> task;
         try {
           task = missionModel.getTaskFactory(serializedDirective);
         } catch (final InstantiationException ex) {
@@ -90,8 +91,8 @@ public final class SimulationDriver {
     }
   }
 
-  public static <Model, Return>
-  void simulateTask(final MissionModel<Model> missionModel, final TaskFactory<Return> task) {
+  public static <Model, Output>
+  void simulateTask(final MissionModel<Model> missionModel, final TaskFactory<Unit, Output> task) {
     try (final var engine = new SimulationEngine()) {
       /* The top-level simulation timeline. */
       var timeline = new TemporalEventSource();
@@ -137,11 +138,11 @@ public final class SimulationDriver {
     }
   }
 
-  private static <E, T>
-  TaskFactory<T> emitAndThen(final E event, final Topic<E> topic, final TaskFactory<T> continuation) {
-    return executor -> scheduler -> {
+  private static <E, Input, Output>
+  TaskFactory<Input, Output> emitAndThen(final E event, final Topic<E> topic, final TaskFactory<Input, Output> continuation) {
+    return executor -> (scheduler, input) -> {
       scheduler.emit(event, topic);
-      return continuation.create(executor).step(scheduler);
+      return continuation.create(executor).step(scheduler, input);
     };
   }
 }

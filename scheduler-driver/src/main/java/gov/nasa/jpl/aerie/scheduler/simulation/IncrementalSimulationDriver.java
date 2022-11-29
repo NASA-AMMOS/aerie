@@ -226,11 +226,11 @@ public class IncrementalSimulationDriver<Model> {
     return engine.getTaskDuration(plannedDirectiveToTask.get(activityInstanceId));
   }
 
-  private static <E, T>
-  TaskFactory<T> emitAndThen(final E event, final Topic<E> topic, final TaskFactory<T> continuation) {
-    return executor -> scheduler -> {
+  private static <E, Input, Output>
+  TaskFactory<Input, Output> emitAndThen(final E event, final Topic<E> topic, final TaskFactory<Input, Output> continuation) {
+    return executor -> (scheduler, input) -> {
       scheduler.emit(event, topic);
-      return continuation.create(executor).step(scheduler);
+      return continuation.create(executor).step(scheduler, input);
     };
   }
 }

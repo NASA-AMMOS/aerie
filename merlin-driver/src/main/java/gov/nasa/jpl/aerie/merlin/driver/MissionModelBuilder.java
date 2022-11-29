@@ -14,6 +14,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.OutputType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,7 +58,7 @@ public final class MissionModelBuilder implements Initializer {
   }
 
   @Override
-  public void daemon(final TaskFactory<?> task) {
+  public void daemon(final TaskFactory<Unit, ?> task) {
     this.state.daemon(task);
   }
 
@@ -77,7 +78,7 @@ public final class MissionModelBuilder implements Initializer {
     private final LiveCells initialCells = new LiveCells(new CausalEventSource());
 
     private final Map<String, Resource<?>> resources = new HashMap<>();
-    private final List<TaskFactory<?>> daemons = new ArrayList<>();
+    private final List<TaskFactory<Unit, ?>> daemons = new ArrayList<>();
     private final List<MissionModel.SerializableTopic<?>> topics = new ArrayList<>();
 
     @Override
@@ -131,7 +132,7 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
-    public void daemon(final TaskFactory<?> task) {
+    public void daemon(final TaskFactory<Unit, ?> task) {
       this.daemons.add(task);
     }
 
@@ -186,7 +187,7 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
-    public void daemon(final TaskFactory<?> task) {
+    public void daemon(final TaskFactory<Unit, ?> task) {
       throw new IllegalStateException("Daemons cannot be added after the schema is built");
     }
 
