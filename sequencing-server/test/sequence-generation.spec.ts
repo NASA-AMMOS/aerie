@@ -39,24 +39,11 @@ afterEach(async () => {
 });
 
 describe('sequence generation', () => {
-  let activityId1: number;
-  let activityId2: number;
-  let activityId3: number;
-  let activityId4: number;
-  let simulationArtifactPk: { simulationId: number; simulationDatasetId: number };
-
   let expansionId1: number;
   let expansionId2: number;
   let expansionId3: number;
-  let expansionId4: number;
-  let expansionSetId: number;
-  let sequencePk: { seqId: string; simulationDatasetId: number };
 
   beforeEach(async () => {
-    activityId1 = await insertActivityDirective(graphqlClient, planId, 'GrowBanana');
-    activityId2 = await insertActivityDirective(graphqlClient, planId, 'PeelBanana', '30 minutes');
-    activityId4 = await insertActivityDirective(graphqlClient, planId, 'ThrowBanana', '60 minutes');
-    commandDictionaryId = await insertCommandDictionary(graphqlClient);
     expansionId1 = await insertExpansion(
       graphqlClient,
       'GrowBanana',
@@ -83,7 +70,7 @@ describe('sequence generation', () => {
     }
     `,
     );
-    expansionId4 = await insertExpansion(
+    expansionId3 = await insertExpansion(
       graphqlClient,
       'ThrowBanana',
       `
@@ -114,55 +101,78 @@ describe('sequence generation', () => {
     }
     `,
     );
-    expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
-      expansionId1,
-      expansionId2,
-      expansionId4,
-    ]);
   });
 
   afterEach(async () => {
-    await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
-    await removeActivityDirective(graphqlClient, activityId1, planId);
-    await removeMissionModel(graphqlClient, missionModelId);
-    await removeExpansionSet(graphqlClient, expansionSetId);
     await removeExpansion(graphqlClient, expansionId1);
     await removeExpansion(graphqlClient, expansionId2);
-    await removeExpansion(graphqlClient, expansionId4);
+    await removeExpansion(graphqlClient, expansionId3);
   });
 
   it('should return sequence seqjson', async () => {
-    let expansionRunPk: number;
-    // Setup
-    {
-      simulationArtifactPk = await executeSimulation(graphqlClient, planId);
-      expansionRunPk = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
-      sequencePk = await insertSequence(graphqlClient, {
+    /** Begin Setup */
+    // Create Expansion Set
+    const expansionSetId = await insertExpansionSet(
+      graphqlClient,
+      commandDictionaryId,
+      missionModelId,
+      [
+        expansionId1,
+        expansionId2,
+        expansionId3,
+      ],
+    );
+
+    // Create Activity Directives
+    const [activityId1, activityId2, activityId3] = await Promise.all([
+      insertActivityDirective(graphqlClient, planId, 'GrowBanana'),
+      insertActivityDirective(graphqlClient, planId, 'PeelBanana', '30 minutes'),
+      insertActivityDirective(graphqlClient, planId, 'ThrowBanana', '60 minutes'),
+    ]);
+
+    // Simulate Plan
+    const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
+    // Expand Plan to Sequence Fragments
+    const expansionRunPk = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
+    // Create Sequence
+    const sequencePk = await insertSequence(graphqlClient, {
         seqId: 'test00000',
         simulationDatasetId: simulationArtifactPk.simulationDatasetId,
       });
-      await linkActivityInstance(graphqlClient, sequencePk, activityId1);
-      await linkActivityInstance(graphqlClient, sequencePk, activityId2);
-      await linkActivityInstance(graphqlClient, sequencePk, activityId4);
-    }
+    // Link Activity Instances to Sequence
+    await Promise.all([
+      linkActivityInstance(graphqlClient, sequencePk, activityId1),
+      linkActivityInstance(graphqlClient, sequencePk, activityId2),  
+      linkActivityInstance(graphqlClient, sequencePk, activityId3),
+    ]);
 
-    const simulatedActivityId1 = await convertActivityDirectiveIdToSimulatedActivityId(
+
+    // Get the simulated activity ids
+    const [
+      simulatedActivityId1,
+      simulatedActivityId2,
+      simulatedActivityId3,
+    ] = await Promise.all([
+      convertActivityDirectiveIdToSimulatedActivityId(
       graphqlClient,
       simulationArtifactPk.simulationDatasetId,
       activityId1,
-    );
-    const simulatedActivityId2 = await convertActivityDirectiveIdToSimulatedActivityId(
+      ),
+      convertActivityDirectiveIdToSimulatedActivityId(
       graphqlClient,
       simulationArtifactPk.simulationDatasetId,
       activityId2,
-    );
-    const simulatedActivityId4 = await convertActivityDirectiveIdToSimulatedActivityId(
+      ),
+      convertActivityDirectiveIdToSimulatedActivityId(
       graphqlClient,
       simulationArtifactPk.simulationDatasetId,
-      activityId4,
-    );
+        activityId3,
+      ),
+    ]);
+    /** End Setup */
 
-    const getSequenceSeqJsonResponse = await getSequenceSeqJson('test00000', simulationArtifactPk.simulationDatasetId);
+    // Retrieve seqJson
+    const getSequenceSeqJsonResponse = await getSequenceSeqJson(graphqlClient, 'test00000', simulationArtifactPk.simulationDatasetId);
 
     if (getSequenceSeqJsonResponse.status !== FallibleStatus.SUCCESS) {
       throw getSequenceSeqJsonResponse.errors;
@@ -224,7 +234,7 @@ describe('sequence generation', () => {
           type: 'ABSOLUTE',
         },
         args: [],
-        metadata: { simulatedActivityId: simulatedActivityId4 },
+        metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
@@ -234,7 +244,7 @@ describe('sequence generation', () => {
           type: 'ABSOLUTE',
         },
         args: [360],
-        metadata: { simulatedActivityId: simulatedActivityId4 },
+        metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
@@ -244,7 +254,7 @@ describe('sequence generation', () => {
           type: 'COMMAND_RELATIVE',
         },
         args: [425],
-        metadata: { simulatedActivityId: simulatedActivityId4 },
+        metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
@@ -254,7 +264,7 @@ describe('sequence generation', () => {
           type: 'COMMAND_RELATIVE',
         },
         args: [],
-        metadata: { simulatedActivityId: simulatedActivityId4 },
+        metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
@@ -264,7 +274,7 @@ describe('sequence generation', () => {
           type: 'EPOCH_RELATIVE',
         },
         args: [50, false],
-        metadata: { simulatedActivityId: simulatedActivityId4 },
+        metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
@@ -274,43 +284,51 @@ describe('sequence generation', () => {
           type: 'EPOCH_RELATIVE',
         },
         args: [],
-        metadata: { simulatedActivityId: simulatedActivityId4 },
+        metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: ['Chiquita', 43, 'Dole', 12, 1093],
-        metadata: { simulatedActivityId: simulatedActivityId4 },
+        metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: ['Chiquita', 43, 'Dole', 12, 1093],
-        metadata: { simulatedActivityId: simulatedActivityId4 },
+        metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: ['Chiquita', 43, 'Dole', 12, 'Blue', 1, 1093],
-        metadata: { simulatedActivityId: simulatedActivityId4 },
+        metadata: { simulatedActivityId: simulatedActivityId3 },
       },
     ]);
 
-    // Cleanup
-    {
+    /** Begin Cleanup */
       await removeSequence(graphqlClient, sequencePk);
       await removeExpansionRun(graphqlClient, expansionRunPk);
+    await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
+    await Promise.all([
+      removeActivityDirective(graphqlClient, activityId1, planId),
+      removeActivityDirective(graphqlClient, activityId2, planId),
+      removeActivityDirective(graphqlClient, activityId3, planId),
+    ]);
+    await removeExpansionSet(graphqlClient, expansionSetId);
+    /** End Cleanup */
+  }, 30000);
+
     }
   }, 30000);
 
   it('should work for throwing expansions', async () => {
-    let expansionRunPk: number;
-    // Setup
-    {
-      expansionId3 = await insertExpansion(
+    /** Begin Setup */
+    // Add throwing expansion
+    const expansionId4 = await insertExpansion(
         graphqlClient,
         'BiteBanana',
         `
@@ -319,42 +337,74 @@ describe('sequence generation', () => {
       }
       `,
       );
-      expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
+
+    // Create Expansion Set
+    const expansionSetId = await insertExpansionSet(
+      graphqlClient,
+      commandDictionaryId,
+      missionModelId,
+      [
         expansionId1,
         expansionId2,
         expansionId3,
+        expansionId4,
+      ],
+    );
+
+    // Create Activity Directives
+    const [activityId1, activityId2, activityId3, activityId4] = await Promise.all([
+      insertActivityDirective(graphqlClient, planId, 'GrowBanana'),
+      insertActivityDirective(graphqlClient, planId, 'PeelBanana', '30 minutes'),
+      insertActivityDirective(graphqlClient, planId, 'ThrowBanana', '60 minutes'),
+      insertActivityDirective(graphqlClient, planId, 'BiteBanana', '90 minutes'),
       ]);
-      activityId3 = await insertActivityDirective(graphqlClient, planId, 'BiteBanana', '1 hours');
-      simulationArtifactPk = await executeSimulation(graphqlClient, planId);
-      expansionRunPk = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
-      sequencePk = await insertSequence(graphqlClient, {
+
+    // Simulate Plan
+    const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
+    // Expand Plan to Sequence Fragments
+    const expansionRunPk = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
+    // Create Sequence
+    const sequencePk = await insertSequence(graphqlClient, {
         seqId: 'test00000',
         simulationDatasetId: simulationArtifactPk.simulationDatasetId,
       });
-      await linkActivityInstance(graphqlClient, sequencePk, activityId1);
-      await linkActivityInstance(graphqlClient, sequencePk, activityId2);
-      await linkActivityInstance(graphqlClient, sequencePk, activityId3);
-    }
+    // Link Activity Instances to Sequence
+    await Promise.all([
+      linkActivityInstance(graphqlClient, sequencePk, activityId1),
+      linkActivityInstance(graphqlClient, sequencePk, activityId2),  
+      linkActivityInstance(graphqlClient, sequencePk, activityId3),
+      linkActivityInstance(graphqlClient, sequencePk, activityId4),
+    ]);
 
-    const simulatedActivityId1 = await convertActivityDirectiveIdToSimulatedActivityId(
+
+    // Get the simulated activity ids
+    const [simulatedActivityId1, simulatedActivityId2, simulatedActivityId3, simulatedActivityId4] = await Promise.all([
+      convertActivityDirectiveIdToSimulatedActivityId(
       graphqlClient,
       simulationArtifactPk.simulationDatasetId,
       activityId1,
-    );
-    const simulatedActivityId2 = await convertActivityDirectiveIdToSimulatedActivityId(
+      ),
+      convertActivityDirectiveIdToSimulatedActivityId(
       graphqlClient,
       simulationArtifactPk.simulationDatasetId,
       activityId2,
-    );
-    const simulatedActivityId3 = await convertActivityDirectiveIdToSimulatedActivityId(
+      ),
+      convertActivityDirectiveIdToSimulatedActivityId(
       graphqlClient,
       simulationArtifactPk.simulationDatasetId,
       activityId3,
-    );
+      ),
+      convertActivityDirectiveIdToSimulatedActivityId(
+        graphqlClient,
+        simulationArtifactPk.simulationDatasetId,
+        activityId4,
+      ),
+    ]);
 
-    const getSequenceSeqJsonResponse = await getSequenceSeqJson('test00000', simulationArtifactPk.simulationDatasetId);
+    /** End Setup */
 
-    expect(getSequenceSeqJsonResponse.status).toEqual(FallibleStatus.FAILURE)
+    // Retrieve seqJson
+    const getSequenceSeqJsonResponse = await getSequenceSeqJson(graphqlClient, 'test00000', simulationArtifactPk.simulationDatasetId);
 
     expect(getSequenceSeqJsonResponse.errors).toIncludeAllMembers([
       { message: 'Error: Unimplemented', stack: 'at SingleCommandExpansion(3:14)' },
@@ -364,6 +414,7 @@ describe('sequence generation', () => {
     expect(getSequenceSeqJsonResponse.seqJson?.metadata).toEqual({});
     expect(getSequenceSeqJsonResponse.seqJson?.steps).toEqual([
       {
+        // expansion 1
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
@@ -385,6 +436,7 @@ describe('sequence generation', () => {
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
+        // expansion 2
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
@@ -404,12 +456,112 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [50, false],
         metadata: { simulatedActivityId: simulatedActivityId2 },
+      },
+      {
+        // expansion 4
+        type: 'command',
+        stem: 'ADD_WATER',
+        time: {
+          tag: '2020-060T03:45:19.000',
+          type: 'ABSOLUTE',
+        },
+        args: [],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'PREHEAT_OVEN',
+        time: {
+          tag: '2025-358T12:01:59.000',
+          type: 'ABSOLUTE',
+        },
+        args: [360],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'PREHEAT_OVEN',
+        time: {
+          tag: '00:15:30.000',
+          type: 'COMMAND_RELATIVE',
+        },
+        args: [425],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'EAT_BANANA',
+        time: {
+          tag: '01:15:30.000',
+          type: 'COMMAND_RELATIVE',
+        },
+        args: [],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'PREPARE_LOAF',
+        time: {
+          tag: '12:06:54.000',
+          type: 'EPOCH_RELATIVE',
+        },
+        args: [50, false],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'EAT_BANANA',
+        time: {
+          tag: '04:56:54.000',
+          type: 'EPOCH_RELATIVE',
+        },
+        args: [],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'PACKAGE_BANANA',
+        time: { type: TimingTypes.COMMAND_COMPLETE },
+        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'PACKAGE_BANANA',
+        time: { type: TimingTypes.COMMAND_COMPLETE },
+        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'PACKAGE_BANANA',
+        time: { type: TimingTypes.COMMAND_COMPLETE },
+        args: ['Chiquita', 43, 'Dole', 12, 'Blue', 1, 1093],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: '$$ERROR$$',
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: ['Error: Unimplemented'],
+        metadata: { simulatedActivityId: simulatedActivityId4 },
+      },
+    ]);
+
+    /** Begin Cleanup */
+    await removeSequence(graphqlClient, sequencePk);
+    await removeExpansionRun(graphqlClient, expansionRunPk);
+    await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
+    await Promise.all([
+      removeActivityDirective(graphqlClient, activityId1, planId),
+      removeActivityDirective(graphqlClient, activityId2, planId),
+      removeActivityDirective(graphqlClient, activityId3, planId),
+    ]);
+    await removeExpansion(graphqlClient, expansionId4);
+    await removeExpansionSet(graphqlClient, expansionSetId);
+    /** End Cleanup */
+  }, 30000);
+
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
     ]);
@@ -423,34 +575,77 @@ describe('sequence generation', () => {
   }, 30000);
 
   it('should work for non-existent expansions', async () => {
-    let activityId3: number;
-    let expansionRunPk: number;
-    // Setup
-    {
-      activityId3 = await insertActivityDirective(graphqlClient, planId, 'BiteBanana', '1 hours');
-      simulationArtifactPk = await executeSimulation(graphqlClient, planId);
-      expansionRunPk = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
-      sequencePk = await insertSequence(graphqlClient, {
+    /** Begin Setup */
+    // Create Expansion Set
+    const expansionSetId = await insertExpansionSet(
+      graphqlClient,
+      commandDictionaryId,
+      missionModelId,
+      [
+        expansionId1,
+        expansionId2,
+        expansionId3,
+      ],
+    );
+
+    // Create Activity Directives
+    const [activityId1, activityId2, activityId3, activityId4] = await Promise.all([
+      insertActivityDirective(graphqlClient, planId, 'GrowBanana'),
+      insertActivityDirective(graphqlClient, planId, 'PeelBanana', '30 minutes'),
+      insertActivityDirective(graphqlClient, planId, 'ThrowBanana', '60 minutes'),
+      insertActivityDirective(graphqlClient, planId, 'BiteBanana', '90 minutes'), // non-existent expansion
+    ]);
+
+    // Simulate Plan
+    const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
+    // Expand Plan to Sequence Fragments
+    const expansionRunPk = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
+    // Create Sequence
+    const sequencePk = await insertSequence(graphqlClient, {
         seqId: 'test00000',
         simulationDatasetId: simulationArtifactPk.simulationDatasetId,
       });
-      await linkActivityInstance(graphqlClient, sequencePk, activityId1);
-      await linkActivityInstance(graphqlClient, sequencePk, activityId2);
-      await linkActivityInstance(graphqlClient, sequencePk, activityId3);
-    }
+    // Link Activity Instances to Sequence
+    await Promise.all([
+      linkActivityInstance(graphqlClient, sequencePk, activityId1),
+      linkActivityInstance(graphqlClient, sequencePk, activityId2),  
+      linkActivityInstance(graphqlClient, sequencePk, activityId3),
+      linkActivityInstance(graphqlClient, sequencePk, activityId4),
+    ]);
 
-    const simulatedActivityId1 = await convertActivityDirectiveIdToSimulatedActivityId(
+    // Get the simulated activity ids
+    const [
+      simulatedActivityId1,
+      simulatedActivityId2,
+      simulatedActivityId3,
+      _simulatedActivityId4, // No expansion, so no check required on this one
+    ] = await Promise.all([
+      convertActivityDirectiveIdToSimulatedActivityId(
       graphqlClient,
       simulationArtifactPk.simulationDatasetId,
       activityId1,
-    );
-    const simulatedActivityId2 = await convertActivityDirectiveIdToSimulatedActivityId(
+      ),
+      convertActivityDirectiveIdToSimulatedActivityId(
       graphqlClient,
       simulationArtifactPk.simulationDatasetId,
       activityId2,
-    );
+      ),
+      convertActivityDirectiveIdToSimulatedActivityId(
+        graphqlClient,
+        simulationArtifactPk.simulationDatasetId,
+        activityId3,
+      ),
+      convertActivityDirectiveIdToSimulatedActivityId(
+        graphqlClient,
+        simulationArtifactPk.simulationDatasetId,
+        activityId4,
+      ),
+    ]);
 
-    const getSequenceSeqJsonResponse = await getSequenceSeqJson('test00000', simulationArtifactPk.simulationDatasetId);
+    /** End Setup */
+
+    // Retrieve seqJson
+    const getSequenceSeqJsonResponse = await getSequenceSeqJson(graphqlClient, 'test00000', simulationArtifactPk.simulationDatasetId);
 
     if (getSequenceSeqJsonResponse.status !== FallibleStatus.SUCCESS) {
       throw getSequenceSeqJsonResponse.errors;
@@ -460,6 +655,7 @@ describe('sequence generation', () => {
     expect(getSequenceSeqJsonResponse.seqJson.metadata).toEqual({});
     expect(getSequenceSeqJsonResponse.seqJson.steps).toEqual([
       {
+        // expansion 1
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
@@ -481,6 +677,7 @@ describe('sequence generation', () => {
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
+        // expansion 2
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
@@ -500,20 +697,111 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [50, false],
         metadata: { simulatedActivityId: simulatedActivityId2 },
+      },
+      {
+        // expansion 4
+        type: 'command',
+        stem: 'ADD_WATER',
+        time: {
+          tag: '2020-060T03:45:19.000',
+          type: 'ABSOLUTE',
+        },
+        args: [],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'PREHEAT_OVEN',
+        time: {
+          tag: '2025-358T12:01:59.000',
+          type: 'ABSOLUTE',
+        },
+        args: [360],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'PREHEAT_OVEN',
+        time: {
+          tag: '00:15:30.000',
+          type: 'COMMAND_RELATIVE',
+        },
+        args: [425],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'EAT_BANANA',
+        time: {
+          tag: '01:15:30.000',
+          type: 'COMMAND_RELATIVE',
+        },
+        args: [],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'PREPARE_LOAF',
+        time: {
+          tag: '12:06:54.000',
+          type: 'EPOCH_RELATIVE',
+        },
+        args: [50, false],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'EAT_BANANA',
+        time: {
+          tag: '04:56:54.000',
+          type: 'EPOCH_RELATIVE',
+        },
+        args: [],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'PACKAGE_BANANA',
+        time: { type: TimingTypes.COMMAND_COMPLETE },
+        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'PACKAGE_BANANA',
+        time: { type: TimingTypes.COMMAND_COMPLETE },
+        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'PACKAGE_BANANA',
+        time: { type: TimingTypes.COMMAND_COMPLETE },
+        args: ['Chiquita', 43, 'Dole', 12, 'Blue', 1, 1093],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
       },
     ]);
 
-    // Cleanup
-    {
+    /** Begin Cleanup */
       await removeSequence(graphqlClient, sequencePk);
       await removeExpansionRun(graphqlClient, expansionRunPk);
+    await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
+    await Promise.all([
+      removeActivityDirective(graphqlClient, activityId1, planId),
+      removeActivityDirective(graphqlClient, activityId2, planId),
+      removeActivityDirective(graphqlClient, activityId3, planId),
+    ]);
+    await removeExpansionSet(graphqlClient, expansionSetId);
+    /** End Cleanup */
+  }, 30000);
+
     }
   }, 30000);
 });
 
 describe('expansion regressions', () => {
   test('start_offset undefined regression', async () => {
-    // Setup
+    /** Begin Setup*/
     const activityId = await insertActivityDirective(graphqlClient, planId, 'GrowBanana', '1 hours');
     const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
     const expansionId = await insertExpansion(
@@ -536,6 +824,7 @@ describe('expansion regressions', () => {
       simulationArtifactPk.simulationDatasetId,
       activityId,
     );
+    /** End Setup*/
 
     const { activity_instance_commands } = await graphqlClient.request<{
       activity_instance_commands: { commands: ReturnType<Command['toSeqJson']>; errors: string[] }[];
@@ -625,7 +914,7 @@ it('should provide start, end, and computed attributes on activities', async () 
     activityId,
   );
 
-  const getSequenceSeqJsonResponse = await getSequenceSeqJson('test00000', simulationArtifactPk.simulationDatasetId);
+  const getSequenceSeqJsonResponse = await getSequenceSeqJson(graphqlClient, 'test00000', simulationArtifactPk.simulationDatasetId);
 
   if (getSequenceSeqJsonResponse.status !== FallibleStatus.SUCCESS) {
     throw getSequenceSeqJsonResponse.errors;
@@ -663,6 +952,7 @@ it('should provide start, end, and computed attributes on activities', async () 
   }
 }, 30000);
 
+describe('user sequence to seqjson', () => {
 it('generate sequence seqjson from static sequence', async () => {
   var results = await generateSequenceEDSL(
     graphqlClient,
@@ -763,5 +1053,4 @@ async function getSequenceSeqJson(seqId: string, simulationDatasetId: number) {
       },
   );
 
-  return getSequenceSeqJson;
-}
+});

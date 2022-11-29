@@ -32,6 +32,56 @@ export async function insertSequence(
   return { seqId: res.insert_sequence_one.seq_id, simulationDatasetId: res.insert_sequence_one.simulation_dataset_id };
 }
 
+export async function getSequenceSeqJson(
+  graphqlClient: GraphQLClient,
+  seqId: string,
+  simulationDatasetId: number,
+) {
+  const { getSequenceSeqJson } = await graphqlClient.request<{
+    getSequenceSeqJson: {
+      status: FallibleStatus.FAILURE,
+      seqJson?: SequenceSeqJson,
+      errors: { message: string, stack: string}[]
+    } | {
+      status: FallibleStatus.SUCCESS,
+      seqJson: SequenceSeqJson,
+      errors: { message: string, stack: string}[]
+    }
+  }>(
+      gql`
+        query GetSeqJsonForSequence($seqId: String!, $simulationDatasetId: Int!) {
+          getSequenceSeqJson(seqId: $seqId, simulationDatasetId: $simulationDatasetId) {
+            status
+            errors {
+              message
+              stack
+            }
+            seqJson {
+              id
+              metadata
+              steps {
+                type
+                stem
+                time {
+                  type
+                  tag
+                }
+                args
+                metadata
+              }
+            }
+          }
+        }
+      `,
+      {
+        seqId,
+        simulationDatasetId,
+      },
+  );
+
+  return getSequenceSeqJson;
+}
+
 export async function generateSequenceEDSL(
   graphqlClient: GraphQLClient,
   commandDictionaryID: number,
