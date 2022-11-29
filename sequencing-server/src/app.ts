@@ -482,18 +482,11 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
   return next();
 });
 
-export interface SeqBuilder {
-  (
-    sortedActivityInstancesWithCommands: (SimulatedActivity & {
-      commands: Command[] | null;
-      errors: ReturnType<UserCodeError['toJSON']>[] | null;
-    })[],
-    seqId: string,
-    seqMetadata: Record<string, any>,
-  ): Sequence;
-}
-
-// Generate a sequence JSON from a sequence standalone file
+/**
+ * Generate a sequence JSON from a sequence standalone file
+ * 
+ * @deprecated Use `/bulk-get-seqjson-for-sequence-standalone` instead
+ */
 app.post('/get-seqjson-for-sequence-standalone', async (req, res, next) => {
   const commandDictionaryID = req.body.input.commandDictionaryID as number;
   const edslBody = req.body.input.edslBody as string;
@@ -503,7 +496,7 @@ app.post('/get-seqjson-for-sequence-standalone', async (req, res, next) => {
     const context: Context = res.locals['context'];
     commandTypes = await context.commandTypescriptDataLoader.load({ dictionaryId: commandDictionaryID });
   } catch (e) {
-    res.status(200).json({
+    res.status(500).json({
       message: 'Error loading command dictionary',
       cause: (e as Error).message,
     });
@@ -536,6 +529,65 @@ app.post('/get-seqjson-for-sequence-standalone', async (req, res, next) => {
 
   return next();
 });
+
+/** Generate multiple sequence JSONs from multiple sequence standalone files */
+app.post('/bulk-get-seqjson-for-sequence-standalone', async (req, res, next) => {
+  const inputs = req.body.input.inputs as { commandDictionaryId: number, edslBody: string }[]
+
+  const context: Context = res.locals['context'];
+
+  const results = await Promise.all(inputs.map(async ({ commandDictionaryId, edslBody }) => {
+    let commandTypes: string;
+    try {
+      commandTypes = await context.commandTypescriptDataLoader.load({ dictionaryId: commandDictionaryId });
+    } catch (e) {
+      return {
+        status: FallibleStatus.FAILURE,
+        seqJson: null,
+        errors: new Error('Error loading command dictionary', { cause: e })
+      };
+    }
+
+    const result = Result.fromJSON(
+      await (piscina.run(
+        {
+          edslBody,
+          commandTypes,
+        },
+        { name: 'executeEDSL' },
+      ) as ReturnType<typeof executeEDSL>),
+    );
+
+    if (result.isErr()) {
+      return {
+        status: FallibleStatus.FAILURE,
+        seqJson: null,
+        errors: result.unwrapErr(),
+      };
+    } else {
+      return {
+        status: FallibleStatus.SUCCESS,
+        seqJson: result.unwrap(),
+        errors: [],
+      }
+    }
+  }));
+
+  res.json(results);
+
+  return next();
+});
+
+export interface SeqBuilder {
+  (
+    sortedActivityInstancesWithCommands: (SimulatedActivity & {
+      commands: Command[] | null;
+      errors: ReturnType<UserCodeError['toJSON']>[] | null;
+    })[],
+    seqId: string,
+    seqMetadata: Record<string, any>,
+  ): Sequence;
+}
 
 app.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, res, next) => {
   // Get the specified sequence + activity instance ids + commands from the latest expansion run for each activity instance (filtered on simulation dataset)

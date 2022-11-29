@@ -47,6 +47,10 @@ actions:
     definition:
       kind: ""
       handler: http://aerie_sequencing:27184/get-seqjson-for-sequence-standalone
+  - name: getUserSequenceSeqJsonBulk
+    definition:
+      kind: ""
+      handler: http://aerie_sequencing:27184/bulk-get-seqjson-for-sequence-standalone
   - name: resourceTypes
     definition:
       kind: ""

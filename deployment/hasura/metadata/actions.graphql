@@ -151,7 +151,18 @@ type Query {
   getUserSequenceSeqJson(
     commandDictionaryID: Int!
     edslBody: String!
-  ): GetSeqJsonResponse!
+  ): GetSeqJsonResponse! @deprecated(reason: "Use bulk query getUserSequenceSeqJsonBulk instead")
+}
+
+input GetUserSequenceSeqJsonBulkInput {
+  commandDictionaryId: Int!
+  edslBody: String!
+}
+
+type Query {
+  getUserSequenceSeqJsonBulk(
+    inputs: [GetUserSequenceSeqJsonBulkInput!]!
+  ): [GetSeqJsonResponse!]!
 }
 
 type GetSeqJsonResponse implements Fallible {

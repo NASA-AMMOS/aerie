@@ -1010,47 +1010,117 @@ it('generate sequence seqjson from static sequence', async () => {
   ]);
 }, 30000);
 
-async function getSequenceSeqJson(seqId: string, simulationDatasetId: number) {
-  const { getSequenceSeqJson } = await graphqlClient.request<{
-    getSequenceSeqJson: {
-      status: FallibleStatus.FAILURE,
-      seqJson?: SequenceSeqJson,
-      errors: { message: string, stack: string}[]
-    } | {
-      status: FallibleStatus.SUCCESS,
-      seqJson: SequenceSeqJson,
-      errors: { message: string, stack: string}[]
-    }
-  }>(
-      gql`
-        query GetSeqJsonForSequence($seqId: String!, $simulationDatasetId: Int!) {
-          getSequenceSeqJson(seqId: $seqId, simulationDatasetId: $simulationDatasetId) {
-            status
-            errors {
-              message
-              stack
-            }
-            seqJson {
-              id
-              metadata
-              steps {
-                type
-                stem
-                time {
-                  type
-                  tag
-                }
-                args
-                metadata
-              }
-            }
-          }
-        }
-      `,
+  it('generate sequence seqjson from static sequence in bulk', async () => {
+    var results = await generateSequenceEDSLBulk(
+      graphqlClient,
+      [
+        {
+          commandDictionaryId,
+          edslBody: `
+            export default () =>
+            Sequence.new({
+              seqId: "test00001",
+              metadata: {},
+              commands: [
+                  C.BAKE_BREAD,
+                  A\`2020-060T03:45:19\`.PREHEAT_OVEN(100),
+                  E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PACKAGE_BANANA({
+                    bundle_name_2: "Dole",
+                    number_of_bananas_1: 43,
+                    bundle_name_1: "Chiquita",
+                    lot_number: 1093,
+                    number_of_bananas_2: 12
+                  }),
+              ],
+            });
+          `
+        },
       {
-        seqId,
-        simulationDatasetId,
+          commandDictionaryId,
+          edslBody: `
+            export default () =>
+            Sequence.new({
+              seqId: "test00002",
+              metadata: {},
+              commands: [
+                  C.BAKE_BREAD,
+                  A\`2020-061T03:45:19\`.PREHEAT_OVEN(100),
+                  E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PACKAGE_BANANA({
+                    bundle_name_2: "Dole",
+                    number_of_bananas_1: 43,
+                    bundle_name_1: "Chiquita",
+                    lot_number: 1093,
+                    number_of_bananas_2: 12
+                  }),
+              ],
+            });
+          `
       },
+      ],
   );
 
+    expect(results[0]!.id).toBe('test00001');
+    expect(results[0]!.metadata).toEqual({});
+    expect(results[0]!.steps).toEqual([
+      {
+        type: 'command',
+        stem: 'BAKE_BREAD',
+        time: { type: TimingTypes.COMMAND_COMPLETE },
+        args: [],
+        metadata: {},
+      },
+      {
+        type: 'command',
+        stem: 'PREHEAT_OVEN',
+        time: {
+          tag: '2020-060T03:45:19.000',
+          type: 'ABSOLUTE',
+        },
+        args: [100],
+        metadata: {},
+      },
+      {
+        type: 'command',
+        stem: 'PACKAGE_BANANA',
+        time: {
+          tag: '12:06:54.000',
+          type: 'EPOCH_RELATIVE',
+        },
+        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        metadata: {},
+      },
+    ]);
+  
+    expect(results[1]!.id).toBe('test00002');
+    expect(results[1]!.metadata).toEqual({});
+    expect(results[1]!.steps).toEqual([
+      {
+        type: 'command',
+        stem: 'BAKE_BREAD',
+        time: { type: TimingTypes.COMMAND_COMPLETE },
+        args: [],
+        metadata: {},
+      },
+      {
+        type: 'command',
+        stem: 'PREHEAT_OVEN',
+        time: {
+          tag: '2020-061T03:45:19.000',
+          type: 'ABSOLUTE',
+        },
+        args: [100],
+        metadata: {},
+      },
+      {
+        type: 'command',
+        stem: 'PACKAGE_BANANA',
+        time: {
+          tag: '12:06:54.000',
+          type: 'EPOCH_RELATIVE',
+        },
+        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        metadata: {},
+      },
+    ]);
+  }, 30000);
 });

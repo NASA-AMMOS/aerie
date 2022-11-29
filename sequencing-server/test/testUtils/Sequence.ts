@@ -136,6 +136,63 @@ export async function generateSequenceEDSL(
   return res.getUserSequenceSeqJson.seqJson;
 }
 
+export async function generateSequenceEDSLBulk(
+  graphqlClient: GraphQLClient,
+  inputs: {
+    commandDictionaryId: number,
+    edslBody: string
+  }[],
+): Promise<SequenceSeqJson[]> {
+  const res = await graphqlClient.request<{
+    getUserSequenceSeqJsonBulk: ({
+      status: FallibleStatus.FAILURE,
+      seqJson?: SequenceSeqJson,
+      errors: { message: string, stack: string}[]
+    } | {
+      status: FallibleStatus.SUCCESS,
+      seqJson: SequenceSeqJson,
+      errors: { message: string, stack: string}[]
+    })[]
+  }>(
+    gql`
+      query generateSequence($inputs: [GetUserSequenceSeqJsonBulkInput!]!) {
+        getUserSequenceSeqJsonBulk(inputs: $inputs) {
+          status
+          errors {
+            message
+            stack
+          }
+          seqJson {
+            id
+            metadata
+            steps {
+              args
+              metadata
+              stem
+              time {
+                tag
+                type
+              }
+              type
+            }
+          }
+        }
+      }
+    `,
+    {
+      inputs,
+    },
+  );
+
+  const errors = res.getUserSequenceSeqJsonBulk.filter((res) => res.status === FallibleStatus.FAILURE).flatMap((res) => res.errors);
+
+  if (errors.length > 0) {
+    throw errors;
+  }
+
+  return res.getUserSequenceSeqJsonBulk.map((res) => res.seqJson!);
+}
+
 export async function removeSequence(
   graphqlClient: GraphQLClient,
   sequencePk: { simulationDatasetId: number; seqId: string },
