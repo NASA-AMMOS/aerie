@@ -185,7 +185,13 @@ type GetSeqJsonResponse implements Fallible {
 type Query {
   getEdslForSeqJson(
     seqJson: SequenceSeqJsonInput!
-  ): String!
+  ): String! @deprecated(reason: "Use bulk query getEdslForSeqJsonBulk instead")
+}
+
+type Query {
+  getEdslForSeqJsonBulk(
+    seqJsons: [SequenceSeqJsonInput!]!
+  ): [String!]!
 }
 
 enum MerlinSimulationStatus {

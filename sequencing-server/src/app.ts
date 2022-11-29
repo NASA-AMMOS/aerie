@@ -607,44 +607,44 @@ app.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, res, next)
       errors: ReturnType<UserCodeError['toJSON']>[] | null;
     }>(
       `
-          with joined_table as (select activity_instance_commands.commands,
-                                       activity_instance_commands.activity_instance_id,
-                                       activity_instance_commands.errors,
-                                       activity_instance_commands.expansion_run_id
-                                from sequence
-                                       join sequence_to_simulated_activity
-                                            on sequence.seq_id = sequence_to_simulated_activity.seq_id and
-                                               sequence.simulation_dataset_id =
-                                               sequence_to_simulated_activity.simulation_dataset_id
-                                       join activity_instance_commands
-                                            on sequence_to_simulated_activity.simulated_activity_id =
-                                               activity_instance_commands.activity_instance_id
-                                       join expansion_run
-                                            on activity_instance_commands.expansion_run_id = expansion_run.id
-                                where sequence.seq_id = $2
-                                  and sequence.simulation_dataset_id = $1),
-               max_values as (select activity_instance_id, max(expansion_run_id) as max_expansion_run_id
-                              from joined_table
-                              group by activity_instance_id)
-          select joined_table.commands,
-                 joined_table.activity_instance_id,
-                 joined_table.errors
-          from joined_table,
-               max_values
-          where joined_table.activity_instance_id = max_values.activity_instance_id
-            and joined_table.expansion_run_id = max_values.max_expansion_run_id;
-        `,
+        with joined_table as (select activity_instance_commands.commands,
+                                      activity_instance_commands.activity_instance_id,
+                                      activity_instance_commands.errors,
+                                      activity_instance_commands.expansion_run_id
+                              from sequence
+                                      join sequence_to_simulated_activity
+                                          on sequence.seq_id = sequence_to_simulated_activity.seq_id and
+                                              sequence.simulation_dataset_id =
+                                              sequence_to_simulated_activity.simulation_dataset_id
+                                      join activity_instance_commands
+                                          on sequence_to_simulated_activity.simulated_activity_id =
+                                              activity_instance_commands.activity_instance_id
+                                      join expansion_run
+                                          on activity_instance_commands.expansion_run_id = expansion_run.id
+                              where sequence.seq_id = $2
+                                and sequence.simulation_dataset_id = $1),
+              max_values as (select activity_instance_id, max(expansion_run_id) as max_expansion_run_id
+                            from joined_table
+                            group by activity_instance_id)
+        select joined_table.commands,
+                joined_table.activity_instance_id,
+                joined_table.errors
+        from joined_table,
+              max_values
+        where joined_table.activity_instance_id = max_values.activity_instance_id
+          and joined_table.expansion_run_id = max_values.max_expansion_run_id;
+      `,
       [simulationDatasetId, seqId],
     ),
     db.query<{
       metadata: Record<string, any>;
     }>(
       `
-          select metadata
-          from sequence
-          where sequence.seq_id = $2
-            and sequence.simulation_dataset_id = $1;
-        `,
+        select metadata
+        from sequence
+        where sequence.seq_id = $2
+          and sequence.simulation_dataset_id = $1;
+      `,
       [simulationDatasetId, seqId],
     ),
   ]);
@@ -873,6 +873,14 @@ app.post('/get-edsl-for-seqjson', async (req, res, next) => {
   const seqJson = req.body.input.seqJson as SequenceSeqJson;
 
   res.json(Sequence.fromSeqJson(seqJson).toEDSLString());
+  return next();
+});
+
+// Generate Sequence EDSL from many sequence JSONs
+app.post('/bulk-get-edsl-for-seqjson', async (req, res, next) => {
+  const seqJsons = req.body.input.seqJsons as SequenceSeqJson[];
+
+  res.json(seqJsons.map(seqJson => Sequence.fromSeqJson(seqJson).toEDSLString()));
   return next();
 });
 
