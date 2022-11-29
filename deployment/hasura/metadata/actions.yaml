@@ -43,6 +43,10 @@ actions:
     definition:
       kind: ""
       handler: http://aerie_sequencing:27184/get-seqjson-for-seqid-and-simulation-dataset
+  - name: getSequenceSeqJsonBulk
+    definition:
+      kind: ""
+      handler: http://aerie_sequencing:27184/bulk-get-seqjson-for-seqid-and-simulation-dataset
   - name: getUserSequenceSeqJson
     definition:
       kind: ""

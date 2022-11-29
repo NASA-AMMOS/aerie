@@ -144,7 +144,18 @@ type Query {
   getSequenceSeqJson(
     seqId: String!
     simulationDatasetId: Int!
-  ): GetSeqJsonResponse!
+  ): GetSeqJsonResponse! @deprecated(reason: "Use bulk query getSequenceSeqJsonBulk instead")
+}
+
+input GetSequenceSeqJsonsInput {
+  seqId: String!
+  simulationDatasetId: Int!
+}
+
+type Query {
+  getSequenceSeqJsonBulk(
+    inputs: [GetSequenceSeqJsonsInput!]!
+  ): [GetSeqJsonResponse!]!
 }
 
 type Query {
