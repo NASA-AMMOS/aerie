@@ -4,9 +4,11 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -62,7 +64,7 @@ public final class SimulationDriver {
               .formatted(serializedDirective.getTypeName(), ex.toString()));
         }
 
-        final var taskId = engine.scheduleTask(startOffset, emitAndThen(directiveId, activityTopic, task));
+        final var taskId = engine.scheduleTask(startOffset, task.map($ -> $.butFirst(emitting(activityTopic, directiveId))));
       }
 
       // Drive the engine until we're out of time.
@@ -138,11 +140,10 @@ public final class SimulationDriver {
     }
   }
 
-  private static <E, Input, Output>
-  TaskFactory<Input, Output> emitAndThen(final E event, final Topic<E> topic, final TaskFactory<Input, Output> continuation) {
-    return executor -> (scheduler, input) -> {
+  private static <E, T> Task<T, T> emitting(final Topic<E> topic, final E event) {
+    return (scheduler, input) -> {
       scheduler.emit(event, topic);
-      return continuation.create(executor).step(scheduler, input);
+      return TaskStatus.completed(input);
     };
   }
 }

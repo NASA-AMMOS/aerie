@@ -9,9 +9,10 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
+import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -186,7 +187,7 @@ public class IncrementalSimulationDriver<Model> {
       final var serializedDirective = entry.getValue().getRight();
 
       final var task = missionModel.getTaskFactory(serializedDirective);
-      final var taskId = engine.scheduleTask(startOffset, emitAndThen(directiveId, this.activityTopic, task));
+      final var taskId = engine.scheduleTask(startOffset, task.map($ -> $.butFirst(emitting(activityTopic, directiveId))));
 
       plannedDirectiveToTask.put(directiveId,taskId);
     }
@@ -226,11 +227,10 @@ public class IncrementalSimulationDriver<Model> {
     return engine.getTaskDuration(plannedDirectiveToTask.get(activityInstanceId));
   }
 
-  private static <E, Input, Output>
-  TaskFactory<Input, Output> emitAndThen(final E event, final Topic<E> topic, final TaskFactory<Input, Output> continuation) {
-    return executor -> (scheduler, input) -> {
+  private static <E, T> Task<T, T> emitting(final Topic<E> topic, final E event) {
+    return (scheduler, input) -> {
       scheduler.emit(event, topic);
-      return continuation.create(executor).step(scheduler, input);
+      return TaskStatus.completed(input);
     };
   }
 }
