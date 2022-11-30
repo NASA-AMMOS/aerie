@@ -461,7 +461,7 @@ public class ASTTests {
         Map.of(),
         Map.of()
     );
-    final var environment = new EvaluationEnvironment(Map.of("act", act), Map.of(), Map.of());
+    final var environment = new EvaluationEnvironment(Map.of("act", act), Map.of(), Map.of(), Map.of());
 
     final var result = new RealParameter("act", "p1").evaluate(simResults, environment);
 
@@ -726,6 +726,7 @@ public class ASTTests {
                 Interval.between(4, 8, SECONDS))
         ),
         Map.of(),
+        Map.of(),
         Map.of()
     );
 
@@ -756,6 +757,7 @@ public class ASTTests {
                 Map.of(),
                 Interval.between(4, 8, SECONDS))
         ),
+        Map.of(),
         Map.of(),
         Map.of()
     );
@@ -788,6 +790,7 @@ public class ASTTests {
                 Map.of(),
                 Interval.between(4, 8, SECONDS))
         ),
+        Map.of(),
         Map.of(),
         Map.of()
     );
@@ -879,6 +882,7 @@ public class ASTTests {
 
     final var environment = new EvaluationEnvironment(
         Map.of(),
+        Map.of(),
         Map.of(
             "real1", new LinearProfile(Segment.of(Interval.at(1, SECONDS), new LinearEquation(Duration.of(1, SECONDS), 0, 1))),
             "real2", new LinearProfile(Segment.of(Interval.at(2, SECONDS), new LinearEquation(Duration.of(2, SECONDS), 0, 1))),
@@ -908,6 +912,7 @@ public class ASTTests {
     );
 
     final var environment = new EvaluationEnvironment(
+        Map.of(),
         Map.of(),
         Map.of(
             "real1", new LinearProfile(Segment.of(Interval.at(1, SECONDS), new LinearEquation(Duration.of(1, SECONDS), 0, 1))),

@@ -33,6 +33,7 @@ public final class ForEachActivityViolations implements Expression<List<Violatio
       if (activity.type.equals(this.activityType)) {
         final var newEnvironment = new EvaluationEnvironment(
             new HashMap<>(environment.activityInstances()),
+            environment.spansInstances(),
             environment.realExternalProfiles(),
             environment.discreteExternalProfiles()
         );

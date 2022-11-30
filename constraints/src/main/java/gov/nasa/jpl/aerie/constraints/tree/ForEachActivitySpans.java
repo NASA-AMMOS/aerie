@@ -31,6 +31,7 @@ public final class ForEachActivitySpans implements Expression<Spans> {
       if (activity.type.equals(this.activityType)) {
         final var newEnvironment = new EvaluationEnvironment(
             new HashMap<>(environment.activityInstances()),
+            environment.spansInstances(),
             environment.realExternalProfiles(),
             environment.discreteExternalProfiles()
         );
@@ -61,8 +62,7 @@ public final class ForEachActivitySpans implements Expression<Spans> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof ForEachActivitySpans)) return false;
-    final var o = (ForEachActivitySpans)obj;
+    if (!(obj instanceof final ForEachActivitySpans o)) return false;
 
     return Objects.equals(this.activityType, o.activityType) &&
            Objects.equals(this.alias, o.alias) &&
