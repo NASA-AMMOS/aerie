@@ -4,25 +4,19 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
-import java.util.Objects;
 import java.util.function.Function;
 
 /* package-local */
 final class ThreadedReactionContext implements Context {
-  private final Scoped<Context> rootContext;
   private final TaskHandle handle;
   private Scheduler scheduler;
 
-  public ThreadedReactionContext(
-      final Scoped<Context> rootContext,
-      final Scheduler scheduler,
-      final TaskHandle handle)
-  {
-    this.rootContext = Objects.requireNonNull(rootContext);
+  public ThreadedReactionContext(final Scheduler scheduler, final TaskHandle handle) {
     this.scheduler = scheduler;
     this.handle = handle;
   }
@@ -73,10 +67,6 @@ final class ThreadedReactionContext implements Context {
   @Override
   public void waitUntil(final Condition condition) {
     this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
-    this.scheduler = this.handle.await((now, atLatest) -> {
-      try (final var restore = this.rootContext.set(new QueryContext(now))) {
-        return condition.nextSatisfied(true, Duration.ZERO, atLatest);
-      }
-    });
+    this.scheduler = this.handle.await(condition);
   }
 }

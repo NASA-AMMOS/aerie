@@ -95,6 +95,10 @@ public /*non-final*/ class ModelActions {
   }
 
   public static void waitUntil(final Condition condition) {
-    context.get().waitUntil(condition);
+    context.get().waitUntil((now, atLatest) -> {
+      try (final var restore = ModelActions.context.set(new QueryContext(now))) {
+        return condition.nextSatisfied(true, Duration.ZERO, atLatest);
+      }
+    });
   }
 }

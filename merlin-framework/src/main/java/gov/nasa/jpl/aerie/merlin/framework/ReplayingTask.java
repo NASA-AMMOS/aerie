@@ -26,7 +26,7 @@ public final class ReplayingTask<Output> implements Task<Unit, Output> {
   @Override
   public TaskStatus<Output> step(final Scheduler scheduler, final Unit input) {
     final var handle = new ReplayingTaskHandle();
-    final var context = new ReplayingReactionContext(this.rootContext, this.memory, scheduler, handle);
+    final var context = new ReplayingReactionContext(this.memory, scheduler, handle);
 
     try (final var restore = this.rootContext.set(context)) {
       final var returnValue = this.task.get();
