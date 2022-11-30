@@ -1,13 +1,12 @@
-package gov.nasa.jpl.aerie.constraints.model;
+package gov.nasa.jpl.aerie.constraints.profile;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
@@ -24,6 +23,10 @@ public final class LinearEquation {
     this.initialTime = initialTime;
     this.initialValue = initialValue;
     this.rate = rate;
+  }
+
+  public LinearEquation(final double value) {
+    this(Duration.ZERO, value, 0);
   }
 
   public double valueAt(final Duration time) {
@@ -54,93 +57,36 @@ public final class LinearEquation {
     );
   }
 
-  public Windows intervalsLessThan(final LinearEquation other) {
-    return getInequalityIntervals(other, (l, r) -> l < r);
-  }
-
-  public Windows intervalsLessThanOrEqualTo(final LinearEquation other) {
-    return getInequalityIntervals(other, (l, r) -> l <= r);
-  }
-
-  public Windows intervalsGreaterThan(final LinearEquation other) {
-    return getInequalityIntervals(other, (l, r) -> l > r);
-  }
-
-  public Windows intervalsGreaterThanOrEqualTo(final LinearEquation other) {
-    return getInequalityIntervals(other, (l, r) -> l >= r);
-  }
-
-  private Windows getInequalityIntervals(
-      final LinearEquation other,
-      final BiFunction<Double, Double, Boolean> op
+  public static Windows compare(
+      final LinearEquation left,
+      final LinearEquation right,
+      final BiPredicate<Double, Double> predicate
   ) {
-    final var intersectionOption = this.intersectionPointWith(other);
+    final var intersectionOption = left.intersectionPointWith(right);
 
     if (intersectionOption.isEmpty()) {
-      final var resultEverywhere = op.apply(this.initialValue, other.valueAt(this.initialTime));
-      return new Windows(resultEverywhere);
+      final var resultEverywhere = predicate.test(left.initialValue, right.valueAt(left.initialTime));
+      return Windows.from(resultEverywhere);
     } else {
       final var intersection = intersectionOption.get();
       final var oneSecondBefore = intersection.minus(Duration.SECOND);
       final var oneSecondAfter = intersection.plus(Duration.SECOND);
-      return new Windows(
+      final var result = IntervalMap.of(
           Segment.of(
               Interval.between(Duration.MIN_VALUE, Inclusive, intersection, Exclusive),
-              op.apply(this.valueAt(oneSecondBefore), other.valueAt(oneSecondBefore))
+              predicate.test(left.valueAt(oneSecondBefore), right.valueAt(oneSecondBefore))
           ),
           Segment.of(
               Interval.at(intersection),
-              op.apply(this.valueAt(intersection), other.valueAt(intersection))
+              predicate.test(left.valueAt(intersection), right.valueAt(intersection))
           ),
           Segment.of(
               Interval.between(intersection, Exclusive, Duration.MAX_VALUE, Inclusive),
-              op.apply(this.valueAt(oneSecondAfter), other.valueAt(oneSecondAfter))
+              predicate.test(left.valueAt(oneSecondAfter), right.valueAt(oneSecondAfter))
           )
       );
+      return result::stream;
     }
-  }
-
-  public Windows intervalsEqualTo(final LinearEquation other) {
-    final var intersection = this.intersectionPointWith(other);
-
-    if (intersection.isEmpty()) {
-      return new Windows(this.initialValue == other.valueAt(this.initialTime));
-    } else {
-      final var t = intersection.get();
-      return new Windows(
-          Segment.of(Interval.between(Duration.MIN_VALUE, Inclusive, t, Exclusive), false),
-          Segment.of(Interval.at(t), true),
-          Segment.of(Interval.between(t, Exclusive, Duration.MAX_VALUE, Inclusive), false)
-      );
-    }
-  }
-
-  public Windows intervalsNotEqualTo(final LinearEquation other) {
-    return this.intervalsEqualTo(other).not();
-  }
-
-  public static Windows lessThan(LinearEquation left, LinearEquation right) {
-    return left.intervalsLessThan(right);
-  }
-
-  public static Windows lessThanOrEqualTo(final LinearEquation left, final LinearEquation right) {
-    return left.intervalsLessThanOrEqualTo(right);
-  }
-
-  public static Windows greaterThan(final LinearEquation left, final LinearEquation right) {
-    return left.intervalsGreaterThan(right);
-  }
-
-  public static Windows greaterThanOrEqualTo(final LinearEquation left, final LinearEquation right) {
-    return left.intervalsGreaterThanOrEqualTo(right);
-  }
-
-  public static Windows equalTo(final LinearEquation left, final LinearEquation right) {
-    return left.intervalsEqualTo(right);
-  }
-
-  public static Windows notEqualTo(final LinearEquation left, final LinearEquation right) {
-    return left.intervalsNotEqualTo(right);
   }
 
   public String toString() {
