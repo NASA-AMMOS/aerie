@@ -933,6 +933,31 @@ public class ASTTests {
     assertEquivalent(expected, result);
   }
 
+  @Test
+  public void testSpansAlias() {
+    final var simResults = new SimulationResults(
+        Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var spans = new Spans(
+        Interval.between(0, 1, SECONDS)
+    );
+
+    final var environment = new EvaluationEnvironment(
+        Map.of(),
+        Map.of("my spans", spans),
+        Map.of(),
+        Map.of()
+    );
+
+    final var result = new SpansAlias("my spans").evaluate(simResults, environment);
+
+    assertEquivalent(spans, result);
+  }
+
   private static final class Supplier<T> implements Expression<T> {
     private final T value;
 
