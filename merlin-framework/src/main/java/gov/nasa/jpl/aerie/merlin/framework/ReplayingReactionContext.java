@@ -4,31 +4,24 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 /* package-local */
 final class ReplayingReactionContext implements Context {
-  private final Scoped<Context> rootContext;
   private final TaskHandle handle;
   private Scheduler scheduler;
 
   private final MemoryCursor memory;
 
-  public ReplayingReactionContext(
-      final Scoped<Context> rootContext,
-      final Memory memory,
-      final Scheduler scheduler,
-      final TaskHandle handle)
-  {
-    this.rootContext = Objects.requireNonNull(rootContext);
+  public ReplayingReactionContext(final Memory memory, final Scheduler scheduler, final TaskHandle handle) {
     this.memory = new MemoryCursor(memory, new MutableInt(0), new MutableInt(0));
     this.scheduler = scheduler;
     this.handle = handle;
@@ -91,11 +84,7 @@ final class ReplayingReactionContext implements Context {
   public void waitUntil(final Condition condition) {
     this.memory.doOnce(() -> {
       this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
-      this.scheduler = this.handle.await((now, atLatest) -> {
-        try (final var restore = this.rootContext.set(new QueryContext(now))) {
-          return condition.nextSatisfied(true, Duration.ZERO, atLatest);
-        }
-      });
+      this.scheduler = this.handle.await(condition);
     });
   }
 

@@ -136,7 +136,7 @@ public final class ThreadedTask<Output> implements Task<Unit, Output> {
       if (request instanceof TaskRequest.Resume resume) {
         final var scheduler = resume.scheduler;
 
-        final var context = new ThreadedReactionContext(ThreadedTask.this.rootContext, scheduler, this);
+        final var context = new ThreadedReactionContext(scheduler, this);
 
         try (final var restore = ThreadedTask.this.rootContext.set(context)) {
           return new TaskResponse.Success<>(TaskStatus.completed(ThreadedTask.this.task.get()));
