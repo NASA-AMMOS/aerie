@@ -26,7 +26,7 @@ public /*non-final*/ class ModelActions {
   }
 
   public static <T> TaskFactory<Unit, T> replaying(final Supplier<T> task) {
-    return executor -> new ReplayingTask<>(ModelActions.context, task);
+    return executor -> new ReplayingTask<>(ModelActions.context, $ -> task.get());
   }
 
   public static TaskFactory<Unit, Unit> replaying(final Runnable task) {
