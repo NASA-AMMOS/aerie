@@ -1,6 +1,6 @@
+import { jest } from '@jest/globals';
 import { gql, GraphQLClient } from 'graphql-request';
 import perf from 'perf_hooks';
-import { jest } from '@jest/globals';
 
 jest.setTimeout(10000);
 
@@ -25,7 +25,7 @@ export async function executeSimulation(
     );
     const status = simulationRes.simulate.status;
     if (status === 'failed') {
-      throw new Error(simulationRes.simulate.reason);
+      throw new Error(simulationRes.simulate.reason.message);
     }
     if (status !== 'pending' && status !== 'incomplete') {
       const getSimulationRes = await graphqlClient.request(

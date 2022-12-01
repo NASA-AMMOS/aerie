@@ -1,4 +1,7 @@
 {
   "extends": "@tsconfig/node16-strictest-esm/tsconfig.json",
-  "exclude":["sequencing_file_store", "build","cdict"]
+  "exclude":["sequencing_file_store", "build","cdict"],
+  "compilerOptions": {
+    "lib": ["es2022"]
+  }
 }

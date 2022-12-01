@@ -1,7 +1,7 @@
 import { gql, GraphQLClient } from 'graphql-request';
 import type { SequenceSeqJson } from '../../src/lib/codegen/CommandEDSLPreface.js';
-import { convertActivityDirectiveIdToSimulatedActivityId } from './ActivityDirective.js';
 import { FallibleStatus } from '../../src/types.js';
+import { convertActivityDirectiveIdToSimulatedActivityId } from './ActivityDirective.js';
 
 export async function insertSequence(
   graphqlClient: GraphQLClient,
@@ -30,6 +30,106 @@ export async function insertSequence(
     },
   );
   return { seqId: res.insert_sequence_one.seq_id, simulationDatasetId: res.insert_sequence_one.simulation_dataset_id };
+}
+
+export async function getSequenceSeqJson(
+  graphqlClient: GraphQLClient,
+  seqId: string,
+  simulationDatasetId: number,
+) {
+  const { getSequenceSeqJson } = await graphqlClient.request<{
+    getSequenceSeqJson: {
+      status: FallibleStatus.FAILURE,
+      seqJson?: SequenceSeqJson,
+      errors: { message: string, stack: string}[]
+    } | {
+      status: FallibleStatus.SUCCESS,
+      seqJson: SequenceSeqJson,
+      errors: { message: string, stack: string}[]
+    }
+  }>(
+      gql`
+        query GetSeqJsonForSequence($seqId: String!, $simulationDatasetId: Int!) {
+          getSequenceSeqJson(seqId: $seqId, simulationDatasetId: $simulationDatasetId) {
+            status
+            errors {
+              message
+              stack
+            }
+            seqJson {
+              id
+              metadata
+              steps {
+                type
+                stem
+                time {
+                  type
+                  tag
+                }
+                args
+                metadata
+              }
+            }
+          }
+        }
+      `,
+      {
+        seqId,
+        simulationDatasetId,
+      },
+  );
+
+  return getSequenceSeqJson;
+}
+
+export async function getSequenceSeqJsonBulk(
+  graphqlClient: GraphQLClient,
+  inputs: {
+    seqId: string,
+    simulationDatasetId: number,
+  }[]
+) {
+  const res = await graphqlClient.request<{
+    getSequenceSeqJsonBulk: ({
+      status: FallibleStatus.FAILURE,
+      seqJson?: SequenceSeqJson,
+      errors: { message: string, stack: string}[]
+    } | {
+      status: FallibleStatus.SUCCESS,
+      seqJson: SequenceSeqJson,
+      errors: { message: string, stack: string}[]
+    })[]
+  }>(
+      gql`
+        query GetSeqJsonForSequenceBulk($inputs: [GetSequenceSeqJsonsInput!]!) {
+          getSequenceSeqJsonBulk(inputs: $inputs) {
+            status
+            errors {
+              message
+              stack
+            }
+            seqJson {
+              id              metadata
+              steps {
+                type
+                stem
+                time {
+                  type
+                  tag
+                }
+                args
+                metadata
+              }
+            }
+          }
+        }
+      `,
+      {
+        inputs,
+      },
+  );
+
+  return res.getSequenceSeqJsonBulk;
 }
 
 export async function generateSequenceEDSL(
@@ -84,6 +184,63 @@ export async function generateSequenceEDSL(
   }
 
   return res.getUserSequenceSeqJson.seqJson;
+}
+
+export async function generateSequenceEDSLBulk(
+  graphqlClient: GraphQLClient,
+  inputs: {
+    commandDictionaryId: number,
+    edslBody: string
+  }[],
+): Promise<SequenceSeqJson[]> {
+  const res = await graphqlClient.request<{
+    getUserSequenceSeqJsonBulk: ({
+      status: FallibleStatus.FAILURE,
+      seqJson?: SequenceSeqJson,
+      errors: { message: string, stack: string}[]
+    } | {
+      status: FallibleStatus.SUCCESS,
+      seqJson: SequenceSeqJson,
+      errors: { message: string, stack: string}[]
+    })[]
+  }>(
+    gql`
+      query generateSequence($inputs: [GetUserSequenceSeqJsonBulkInput!]!) {
+        getUserSequenceSeqJsonBulk(inputs: $inputs) {
+          status
+          errors {
+            message
+            stack
+          }
+          seqJson {
+            id
+            metadata
+            steps {
+              args
+              metadata
+              stem
+              time {
+                tag
+                type
+              }
+              type
+            }
+          }
+        }
+      }
+    `,
+    {
+      inputs,
+    },
+  );
+
+  const errors = res.getUserSequenceSeqJsonBulk.filter((res) => res.status === FallibleStatus.FAILURE).flatMap((res) => res.errors);
+
+  if (errors.length > 0) {
+    throw errors;
+  }
+
+  return res.getUserSequenceSeqJsonBulk.map((res) => res.seqJson!);
 }
 
 export async function removeSequence(

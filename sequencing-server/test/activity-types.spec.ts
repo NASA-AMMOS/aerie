@@ -8,7 +8,7 @@ let missionModelId: number;
 beforeEach(async () => {
   graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string);
   missionModelId = await uploadMissionModel(graphqlClient);
-});
+}, 10000);
 
 afterEach(async () => {
   await removeMissionModel(graphqlClient, missionModelId);

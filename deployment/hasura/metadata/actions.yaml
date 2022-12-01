@@ -23,6 +23,10 @@ actions:
     definition:
       kind: synchronous
       handler: http://aerie_sequencing:27184/get-edsl-for-seqjson
+  - name: getEdslForSeqJsonBulk
+    definition:
+      kind: synchronous
+      handler: http://aerie_sequencing:27184/bulk-get-edsl-for-seqjson
   - name: getModelEffectiveArguments
     definition:
       kind: ""
@@ -43,10 +47,18 @@ actions:
     definition:
       kind: ""
       handler: http://aerie_sequencing:27184/get-seqjson-for-seqid-and-simulation-dataset
+  - name: getSequenceSeqJsonBulk
+    definition:
+      kind: ""
+      handler: http://aerie_sequencing:27184/bulk-get-seqjson-for-seqid-and-simulation-dataset
   - name: getUserSequenceSeqJson
     definition:
       kind: ""
       handler: http://aerie_sequencing:27184/get-seqjson-for-sequence-standalone
+  - name: getUserSequenceSeqJsonBulk
+    definition:
+      kind: ""
+      handler: http://aerie_sequencing:27184/bulk-get-seqjson-for-sequence-standalone
   - name: resourceTypes
     definition:
       kind: ""
