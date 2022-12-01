@@ -142,12 +142,17 @@ public interface Task<Input, Output> {
           return TaskStatus.delayed(s.delay(), Task.compose(s.continuation(), second));
         } else if (status instanceof TaskStatus.AwaitingCondition<B> s) {
           return TaskStatus.awaiting(s.condition(), Task.compose(s.continuation(), second));
-        } else if (status instanceof TaskStatus.CallingTask<B> s) {
-          return TaskStatus.calling(s.child(), Task.compose(s.continuation(), second));
+        } else if (status instanceof TaskStatus.CallingTask<?, B> s) {
+          // We need to bind the intermediate result type to a name using a helper method.
+          return calling(s);
         } else {
           throw new IllegalArgumentException(
               "Unexpected variant %s of type %s".formatted(status, TaskStatus.class.getCanonicalName()));
         }
+      }
+
+      private <Midput> TaskStatus<C> calling(final TaskStatus.CallingTask<Midput, B> status) {
+        return TaskStatus.calling(status.child(), Task.compose(status.continuation(), second));
       }
 
       @Override
