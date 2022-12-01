@@ -228,6 +228,8 @@ function convertType(value: any, schema: Schema): any {
       return Temporal.Duration.from(parse(value).toISOString());
     case SchemaTypes.Boolean:
       return value;
+    case SchemaTypes.Path:
+      return value;
     case SchemaTypes.String:
       return value;
     case SchemaTypes.Series:
