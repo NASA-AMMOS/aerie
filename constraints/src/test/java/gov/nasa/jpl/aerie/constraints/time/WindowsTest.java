@@ -495,19 +495,25 @@ public class WindowsTest {
 
     assertThrows(
         InvalidGapsException.class,
-        windowsWithGaps::intoSpans,
+        () -> windowsWithGaps.intoSpans(Interval.between(0, 10, SECONDS)),
         "cannot convert Windows with gaps into Spans (unbounded gap to -infinity)"
     );
 
     final var windowsWithoutGaps = new Windows(false).set(windowsWithGaps);
 
-    final var expected = new Spans(
+    var expected = new Spans(
         interval(0, 3, SECONDS),
         interval(5, 5, SECONDS)
     );
 
-    assertIterableEquals(expected, windowsWithoutGaps.intoSpans());
+    assertIterableEquals(expected, windowsWithoutGaps.intoSpans(Interval.FOREVER));
 
-
+    expected = new Spans(
+        interval(1, 2, SECONDS)
+    );
+    assertIterableEquals(
+        expected,
+        windowsWithGaps.intoSpans(interval(1, 2, SECONDS))
+    );
   }
 }
