@@ -1,10 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public /*non-final*/ class ModelActions {
@@ -14,23 +16,31 @@ public /*non-final*/ class ModelActions {
   static final Scoped<Context> context = Scoped.create();
 
 
+  public static <Input, Output> TaskFactory<Input, Output> threaded(final Function<Input, Output> task) {
+    return executor -> new ThreadedTask<>(executor, ModelActions.context, task);
+  }
+
   public static <T> TaskFactory<Unit, T> threaded(final Supplier<T> task) {
-    return executor -> new ThreadedTask<>(executor, ModelActions.context, $ -> task.get());
+    return threaded($ -> task.get());
   }
 
   public static TaskFactory<Unit, Unit> threaded(final Runnable task) {
-    return threaded(() -> {
+    return threaded($ -> {
       task.run();
       return Unit.UNIT;
     });
   }
 
+  public static <Input, Output> TaskFactory<Input, Output> replaying(final Function<Input, Output> task) {
+    return executor -> new ReplayingTask<>(ModelActions.context, task);
+  }
+
   public static <T> TaskFactory<Unit, T> replaying(final Supplier<T> task) {
-    return executor -> new ReplayingTask<>(ModelActions.context, $ -> task.get());
+    return replaying($ -> task.get());
   }
 
   public static TaskFactory<Unit, Unit> replaying(final Runnable task) {
-    return replaying(() -> {
+    return replaying($ -> {
       task.run();
       return Unit.UNIT;
     });
@@ -46,43 +56,56 @@ public /*non-final*/ class ModelActions {
     spawn(threaded(task));
   }
 
-  public static void spawn(final Runnable task) {
-    spawn(() -> {
-      task.run();
-      return Unit.UNIT;
-    });
+  public static <I, T> void spawn(final TaskFactory<I, T> task, final I input) {
+    context.get().spawn(task, input);
   }
 
   public static <T> void spawn(final TaskFactory<Unit, T> task) {
-    context.get().spawn(task);
+    spawn(task, Unit.UNIT);
+  }
+
+  public static void spawn(final Runnable task) {
+    spawn(threaded(task));
+  }
+
+  public static <I, T> T call(final TaskFactory<I, T> task, final I input) {
+    return context.get().call(task, input);
+  }
+
+  public static <T> T call(final TaskFactory<Unit, T> task) {
+    return call(task, Unit.UNIT);
+  }
+
+  public static <T> T call(final Supplier<T> task) {
+    return call(threaded(task));
   }
 
   public static void call(final Runnable task) {
     call(threaded(task));
   }
 
-  public static <T> void call(final Supplier<T> task) {
-    call(threaded(task));
-  }
-
-  public static <T> void call(final TaskFactory<Unit, T> task) {
-    context.get().call(task);
-  }
-
-  public static void defer(final Duration duration, final Runnable task) {
-    spawn(replaying(() -> { delay(duration); spawn(task); }));
+  public static <I> void defer(final Duration duration, final TaskFactory<I, ?> task, final I input) {
+    spawn(task.butFirst(Task.delaying(duration)), input);
   }
 
   public static void defer(final Duration duration, final TaskFactory<Unit, ?> task) {
-    spawn(replaying(() -> { delay(duration); spawn(task); }));
+    defer(duration, task, Unit.UNIT);
+  }
+
+  public static void defer(final Duration duration, final Runnable task) {
+    defer(duration, threaded(task));
   }
 
   public static void defer(final long quantity, final Duration unit, final Runnable task) {
-    spawn(replaying(() -> { delay(quantity, unit); spawn(task); }));
+    defer(Duration.of(quantity, unit), task);
   }
 
   public static void defer(final long quantity, final Duration unit, final TaskFactory<Unit, ?> task) {
-    spawn(replaying(() -> { delay(quantity, unit); spawn(task); }));
+    defer(Duration.of(quantity, unit), task);
+  }
+
+  public static <I> void defer(final long quantity, final Duration unit, final TaskFactory<I, ?> task, final I input) {
+    defer(Duration.of(quantity, unit), task, input);
   }
 
 

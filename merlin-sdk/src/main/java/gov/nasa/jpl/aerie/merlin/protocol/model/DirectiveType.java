@@ -14,7 +14,7 @@ import java.util.Map;
  * request to store and forward a given payload to another node in the system. </p>
  *
  * <p> A directive can be instantiated using its associated {@link InputType}, and its associated behavior can be
- * extracted using the {@link #createTask(Model, Arguments)} method. When the directive's behavior is finished, its
+ * extracted using the {@link #getTaskFactory(Model)} method. When the directive's behavior is finished, its
  * result value can be manipulated using its associated {@link OutputType}. </p>
  *
  * <p> As a reflective interface, {@code DirectiveType} is analogous to {@link java.lang.reflect.Method}. It represents
@@ -46,7 +46,7 @@ public interface DirectiveType<Model, Arguments, Result> {
    * may reference the {@code Model} or {@code Arguments} concurrently, and updates by one {@code Task} may interfere
    * with the transactional isolation afforded to others. </p>
    */
-  TaskFactory<Unit, Result> getTaskFactory(Model model, Arguments arguments);
+  TaskFactory<Arguments, Result> getTaskFactory(Model model);
 
   /**
    * Initializes a {@link Task} given a set of arguments determining the directive instance.
@@ -55,23 +55,26 @@ public interface DirectiveType<Model, Arguments, Result> {
    * must behave as though implemented as: </p>
    *
    * {@snippet :
-   * return this.getTaskFactory(model, this.getInputType().instantiate(arguments));
+   * final var input = this.getInputType().instantiate(arguments);
+   * return this.getTaskFactory(model).butFirst(Task.lift($ -> input));
    * }
    *
    * @param model
-   *   The model to perform the directive.
+   *   The model to perform the directive upon.
    * @param arguments
    *   Arguments uniquely determining the directive to perform.
    * @return
    *   An executable task operating on the model's state, terminating with a {@code Result} value.
-   * @throws InvalidArgumentsException
+   * @throws InstantiationException
    *   When the given arguments do not uniquely determine a directive instance.
    * @see InputType#instantiate(Map)
-   * @see #createTask(Model, Arguments)
+   * @see #getTaskFactory(Model)
    */
-  default TaskFactory<Unit, Result> getTaskFactory(final Model model, final Map<String, SerializedValue> arguments)
-  throws InstantiationException
-  {
-    return this.getTaskFactory(model, this.getInputType().instantiate(arguments));
+  default TaskFactory<Unit, Result> getTaskFactory(
+      final Model model,
+      final Map<String, SerializedValue> arguments
+  ) throws InstantiationException {
+    final var input = this.getInputType().instantiate(arguments);
+    return this.getTaskFactory(model).butFirst(Task.lift($ -> input));
   }
 }

@@ -55,7 +55,7 @@ public final class MissionModel<Model> {
 
   public TaskFactory<Unit, Unit> getDaemon() {
     return executor -> (scheduler, input) -> {
-      MissionModel.this.daemons.forEach(scheduler::spawn);
+      MissionModel.this.daemons.forEach(daemon -> scheduler.spawn(daemon, Unit.UNIT));
       return TaskStatus.completed(Unit.UNIT);
     };
   }

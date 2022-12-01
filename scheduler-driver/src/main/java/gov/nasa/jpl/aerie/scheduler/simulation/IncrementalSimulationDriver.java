@@ -13,6 +13,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -75,7 +76,7 @@ public class IncrementalSimulationDriver<Model> {
 
     // Start daemon task(s) immediately, before anything else happens.
     {
-      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
+      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), Unit.UNIT);
 
       final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
       final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
@@ -187,7 +188,7 @@ public class IncrementalSimulationDriver<Model> {
       final var serializedDirective = entry.getValue().getRight();
 
       final var task = missionModel.getTaskFactory(serializedDirective);
-      final var taskId = engine.scheduleTask(startOffset, task.map($ -> $.butFirst(emitting(activityTopic, directiveId))));
+      final var taskId = engine.scheduleTask(startOffset, task.butFirst(emitting(activityTopic, directiveId)), Unit.UNIT);
 
       plannedDirectiveToTask.put(directiveId,taskId);
     }

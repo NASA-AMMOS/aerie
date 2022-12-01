@@ -39,7 +39,7 @@ public final class SimulationDriver {
       }
 
       // Start daemon task(s) immediately, before anything else happens.
-      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
+      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), Unit.UNIT);
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
@@ -64,7 +64,7 @@ public final class SimulationDriver {
               .formatted(serializedDirective.getTypeName(), ex.toString()));
         }
 
-        final var taskId = engine.scheduleTask(startOffset, task.map($ -> $.butFirst(emitting(activityTopic, directiveId))));
+        final var taskId = engine.scheduleTask(startOffset, task.butFirst(emitting(activityTopic, directiveId)), Unit.UNIT);;
       }
 
       // Drive the engine until we're out of time.
@@ -111,7 +111,7 @@ public final class SimulationDriver {
       }
 
       // Start daemon task(s) immediately, before anything else happens.
-      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
+      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), Unit.UNIT);
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
@@ -119,7 +119,7 @@ public final class SimulationDriver {
       }
 
       // Schedule all activities.
-      final var taskId = engine.scheduleTask(elapsedTime, task);
+      final var taskId = engine.scheduleTask(elapsedTime, task, Unit.UNIT);
 
       // Drive the engine until we're out of time.
       // TERMINATION: Actually, we might never break if real time never progresses forward.

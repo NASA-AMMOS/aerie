@@ -1,7 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.protocol.model;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
 import java.util.function.Function;
 
@@ -64,7 +67,7 @@ public interface Task<Input, Output> {
    * @return
    *   A task performing this task and the output transformation in sequence.
    */
-  default <X> Task<Input, X> map(final Function<Output, X> step) {
+  default <X> Task<Input, X> andThen(final Function<Output, X> step) {
     return this.andThen(Task.lift(step));
   }
 
@@ -78,7 +81,7 @@ public interface Task<Input, Output> {
    * @return
    *   A task performing the input transformation and this task in sequence.
    */
-  default <X> Task<X, Output> contramap(final Function<X, Input> step) {
+  default <X> Task<X, Output> butFirst(final Function<X, Input> step) {
     return this.butFirst(Task.lift(step));
   }
 
@@ -99,6 +102,36 @@ public interface Task<Input, Output> {
   // LAW: lift(Function.identity()) === identity()
   static <A, B> Task<A, B> lift(final Function<A, B> step) {
     return (scheduler, input) -> TaskStatus.completed(step.apply(input));
+  }
+
+  static <A, B> Task<A, B> completed(final B value) {
+    return (scheduler, input) -> TaskStatus.completed(value);
+  }
+
+  static <T> Task<T, T> delaying(final Duration duration) {
+    return (scheduler, input) -> TaskStatus.delayed(duration, Task.lift($ -> input));
+  }
+
+  static <T> Task<T, T> awaiting(final Condition condition) {
+    return (scheduler, input) -> TaskStatus.awaiting(condition, Task.lift($ -> input));
+  }
+
+  static <Input, Output> Task<Input, Output> calling(final TaskFactory<Input, Output> child) {
+    return (scheduler, input) -> TaskStatus.calling(input, child, Task.identity());
+  }
+
+  static <Input, Output> Task<Input, Unit> spawning(final TaskFactory<Input, Output> child) {
+    return (scheduler, input) -> {
+      scheduler.spawn(child, input);
+      return TaskStatus.completed(Unit.UNIT);
+    };
+  }
+
+  static <T, E> Task<T, T> emitting(final E event, final Topic<E> topic) {
+    return (scheduler, input) -> {
+      scheduler.emit(event, topic);
+      return TaskStatus.completed(input);
+    };
   }
 
   /**
@@ -142,7 +175,7 @@ public interface Task<Input, Output> {
           return TaskStatus.delayed(s.delay(), Task.compose(s.continuation(), second));
         } else if (status instanceof TaskStatus.AwaitingCondition<B> s) {
           return TaskStatus.awaiting(s.condition(), Task.compose(s.continuation(), second));
-        } else if (status instanceof TaskStatus.CallingTask<?, B> s) {
+        } else if (status instanceof TaskStatus.CallingTask<?, ?, B> s) {
           // We need to bind the intermediate result type to a name using a helper method.
           return calling(s);
         } else {
@@ -151,8 +184,8 @@ public interface Task<Input, Output> {
         }
       }
 
-      private <Midput> TaskStatus<C> calling(final TaskStatus.CallingTask<Midput, B> status) {
-        return TaskStatus.calling(status.child(), Task.compose(status.continuation(), second));
+      private <Input, Midput> TaskStatus<C> calling(final TaskStatus.CallingTask<Input, Midput, B> status) {
+        return TaskStatus.calling(status.input(), status.child(), Task.compose(status.continuation(), second));
       }
 
       @Override
