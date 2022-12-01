@@ -13,7 +13,7 @@ public record SpansFromWindows(Expression<Windows> expression) implements Expres
   @Override
   public Spans evaluate(SimulationResults results, final Interval bounds, EvaluationEnvironment environment) {
     final var windows = this.expression.evaluate(results, bounds, environment);
-    return windows.intoSpans();
+    return windows.intoSpans(bounds);
   }
 
   @Override

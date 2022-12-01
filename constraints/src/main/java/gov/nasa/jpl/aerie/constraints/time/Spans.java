@@ -115,7 +115,7 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optiona
    * @throws UnsplittableSpanException if any span contains {@link Duration#MIN_VALUE} or {@link Duration#MAX_VALUE} (representing unbounded intervals)
    */
   @Override
-  public Spans split(final int numberOfSubSpans, final Inclusivity internalStartInclusivity, final Inclusivity internalEndInclusivity) {
+  public Spans split(final Interval bounds, final int numberOfSubSpans, final Inclusivity internalStartInclusivity, final Inclusivity internalEndInclusivity) {
     if (numberOfSubSpans == 1) {
       return new Spans(this);
     }
@@ -153,7 +153,7 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optiona
         cursor = nextCursor;
       }
       ret.add(Interval.between(cursor, internalStartInclusivity, x.end, x.endInclusivity));
-      return ret.stream();
+      return ret.stream().map($ -> Interval.intersect(bounds, $));
     });
   }
 

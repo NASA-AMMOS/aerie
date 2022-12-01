@@ -372,8 +372,8 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
    * @throws InvalidGapsException if there are any gaps in the windows.
    */
   @Override
-  public Spans split(final int numberOfSubWindows, final Inclusivity internalStartInclusivity, final Inclusivity internalEndInclusivity) {
-    return this.intoSpans().split(numberOfSubWindows, internalStartInclusivity, internalEndInclusivity);
+  public Spans split(final Interval bounds, final int numberOfSubWindows, final Inclusivity internalStartInclusivity, final Inclusivity internalEndInclusivity) {
+    return this.intoSpans(bounds).split(bounds, numberOfSubWindows, internalStartInclusivity, internalEndInclusivity);
   }
 
   /**
@@ -464,15 +464,18 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
    *
    * @throws InvalidGapsException if there are any gaps in the windows.
    */
-  public Spans intoSpans() {
-    if (!this.segments.get(0).interval().contains(Duration.MIN_VALUE)) {
-      throw new InvalidGapsException("cannot convert Windows with gaps into Spans (unbounded gap to -infinity)");
-    } else if (!this.segments.get(-1).interval().contains(Duration.MAX_VALUE)) {
-      throw new InvalidGapsException("cannot convert Windows with gaps into Spans (unbounded gap to +infinity)");
-    }
+  public Spans intoSpans(final Interval bounds) {
+    final var firstInterval = this.segments.get(0).interval();
+    final var lastInterval = this.segments.get(-1).interval();
+    boolean boundsStartContained = false;
+    boolean boundsEndContained = false;
     for (int i = 0; i < this.segments.size() - 1; i++) {
       final var leftInterval = this.segments.get(i).interval();
       final var rightInterval = this.segments.get(i+1).interval();
+      if (leftInterval.contains(bounds.start) || rightInterval.contains(bounds.start)) boundsStartContained = true;
+      if (leftInterval.contains(bounds.end) || rightInterval.contains(bounds.end)) boundsEndContained = true;
+      if (leftInterval.isStrictlyBefore(bounds)) continue;
+      if (rightInterval.isStrictlyAfter(bounds)) continue;
       if (!leftInterval.adjacent(rightInterval)) {
         var message = new StringBuilder("cannot convert Windows with gaps into Spans (gap at ");
         final var gap = Interval.between(leftInterval.end, leftInterval.endInclusivity.opposite(), rightInterval.start, rightInterval.startInclusivity.opposite());
@@ -481,9 +484,12 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
         throw new InvalidGapsException(message.toString());
       }
     }
+    if (!boundsStartContained) throw new InvalidGapsException("cannot convert Windows with gaps into Spans (gap detected at plan bounds start)");
+    if (!boundsEndContained) throw new InvalidGapsException("cannot convert Windows with gaps into Spans (gap detected at plan bounds end)");
     return new Spans(stream()
         .filter(Segment::value)
-        .map(Segment::interval)
+        .map($ -> Interval.intersect(bounds, $.interval()))
+        .filter($ -> !$.isEmpty())
         .toList());
   }
 
