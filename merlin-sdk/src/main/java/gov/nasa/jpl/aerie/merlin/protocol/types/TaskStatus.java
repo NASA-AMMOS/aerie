@@ -9,7 +9,7 @@ public sealed interface TaskStatus<Output> {
 
   record Delayed<Output>(Duration delay, Task<Unit, Output> continuation) implements TaskStatus<Output> {}
 
-  record CallingTask<Output>(TaskFactory<Unit, ?> child, Task<Unit, Output> continuation) implements TaskStatus<Output> {}
+  record CallingTask<Midput, Output>(TaskFactory<Unit, Midput> child, Task<Midput, Output> continuation) implements TaskStatus<Output> {}
 
   record AwaitingCondition<Output>(Condition condition, Task<Unit, Output> continuation) implements TaskStatus<Output> {}
 
@@ -22,7 +22,7 @@ public sealed interface TaskStatus<Output> {
     return new Delayed<>(delay, continuation);
   }
 
-  static <Output> CallingTask<Output> calling(final TaskFactory<Unit, ?> child, final Task<Unit, Output> continuation) {
+  static <Midput, Output> CallingTask<Midput, Output> calling(final TaskFactory<Unit, Midput> child, final Task<Midput, Output> continuation) {
     return new CallingTask<>(child, continuation);
   }
 

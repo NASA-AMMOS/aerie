@@ -26,6 +26,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -103,7 +104,11 @@ public final class SimulationEngine implements AutoCloseable {
     if (startTime.isNegative()) throw new IllegalArgumentException("Cannot schedule a task before the start time of the simulation");
 
     final var task = TaskId.generate();
-    this.tasks.put(task, new ExecutionState.InProgress<>(startTime, state.create(this.executor)));
+    this.tasks.put(task, new ExecutionState.InProgress<>(
+        startTime,
+        state.create(this.executor),
+        new MutableObject<>(Unit.UNIT),
+        $ -> {}));
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
     return task;
   }
@@ -205,7 +210,7 @@ public final class SimulationEngine implements AutoCloseable {
       final ExecutionState<Output> lifecycle)
   {
     // Extract the current modeling state.
-    if (lifecycle instanceof ExecutionState.InProgress<Output> e) {
+    if (lifecycle instanceof ExecutionState.InProgress<?, Output> e) {
       stepEffectModel(task, e, frame, currentTime);
     } else if (lifecycle instanceof ExecutionState.AwaitingChildren<Output> e) {
       stepWaitingTask(task, e, frame, currentTime);
@@ -216,21 +221,24 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Make progress in a task by stepping its associated effect model forward. */
-  private <Output> void stepEffectModel(
+  private <Input, Output> void stepEffectModel(
       final TaskId task,
-      final ExecutionState.InProgress<Output> progress,
+      final ExecutionState.InProgress<Input, Output> progress,
       final TaskFrame<JobId> frame,
       final Duration currentTime
   ) {
     // Step the modeling state forward.
     final var scheduler = new EngineScheduler(currentTime, task, frame);
-    final var status = progress.state().step(scheduler, Unit.UNIT);
+    final var status = progress.state().step(scheduler, progress.input().getValue());
 
     // TODO: Report which topics this activity wrote to at this point in time. This is useful insight for any user.
     // TODO: Report which cells this activity read from at this point in time. This is useful insight for any user.
 
     // Based on the task's return status, update its execution state and schedule its resumption.
-    if (status instanceof TaskStatus.Completed<Output>) {
+    if (status instanceof TaskStatus.Completed<Output> s) {
+      // Propagate this task's output to any interested parties.
+      progress.output().accept(s.returnValue());
+
       final var children = new LinkedList<>(this.taskChildren.getOrDefault(task, Collections.emptySet()));
 
       this.tasks.put(task, progress.completedAt(currentTime, children));
@@ -238,27 +246,49 @@ public final class SimulationEngine implements AutoCloseable {
     } else if (status instanceof TaskStatus.Delayed<Output> s) {
       if (s.delay().isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
 
-      this.tasks.put(task, progress.continueWith(s.continuation()));
+      this.tasks.put(task, progress.continueWith(s.continuation(), Unit.UNIT));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
-    } else if (status instanceof TaskStatus.CallingTask<Output> s) {
-      final var target = TaskId.generate();
-      SimulationEngine.this.tasks.put(target, new ExecutionState.InProgress<>(currentTime, s.child().create(this.executor)));
-      SimulationEngine.this.taskParent.put(target, task);
-      SimulationEngine.this.taskChildren.computeIfAbsent(task, $ -> new HashSet<>()).add(target);
-      frame.signal(JobId.forTask(target));
-
-      this.tasks.put(task, progress.continueWith(s.continuation()));
-      this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(target)));
+    } else if (status instanceof TaskStatus.CallingTask<?, Output> s) {
+      processCallStatus(task, progress, frame, currentTime, s);
     } else if (status instanceof TaskStatus.AwaitingCondition<Output> s) {
       final var condition = ConditionId.generate();
       this.conditions.put(condition, s.condition());
       this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(currentTime));
 
-      this.tasks.put(task, progress.continueWith(s.continuation()));
+      this.tasks.put(task, progress.continueWith(s.continuation(), Unit.UNIT));
       this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forCondition(condition)));
     } else {
       throw new IllegalArgumentException("Unknown subclass of %s: %s".formatted(TaskStatus.class, status));
     }
+  }
+
+  // This helper binds Midput; if it were inlined, the captured `?` would not propagate correctly,
+  // causing type errors.
+  private <Midput, Output>
+  void processCallStatus(
+      final TaskId task,
+      final ExecutionState.InProgress<?, Output> progress,
+      final TaskFrame<JobId> frame,
+      final Duration currentTime,
+      final TaskStatus.CallingTask<Midput, Output> s
+  ) {
+    final var child = TaskId.generate();
+
+    // Waiting for Midput; will produce Output
+    final var blocked = progress.blockWith(s.continuation());
+    this.tasks.put(task, blocked);
+    this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(child)));
+
+    // Ready to run (with the given Input); will produce Midput
+    this.tasks.put(child, new ExecutionState.InProgress<>(
+        currentTime,
+        s.child().create(this.executor),
+        new MutableObject<>(Unit.UNIT),
+        blocked.input()::setValue));
+    this.taskParent.put(child, task);
+    this.taskChildren.computeIfAbsent(task, $ -> new HashSet<>()).add(child);
+
+    frame.signal(JobId.forTask(child));
   }
 
   /** Make progress in a task by checking if all of the tasks it's waiting on have completed. */
@@ -341,7 +371,7 @@ public final class SimulationEngine implements AutoCloseable {
   @Override
   public void close() {
     for (final var task : this.tasks.values()) {
-      if (task instanceof ExecutionState.InProgress r) {
+      if (task instanceof ExecutionState.InProgress<?, ?> r) {
         r.state.release();
       }
     }
@@ -540,7 +570,7 @@ public final class SimulationEngine implements AutoCloseable {
             (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(directiveId),
             outputAttributes
         ));
-      } else if (state instanceof ExecutionState.InProgress<?> e){
+      } else if (state instanceof ExecutionState.InProgress<?, ?> e){
         final var inputAttributes = taskInfo.input().get(task.id());
         unfinishedActivities.put(activityId, new UnfinishedActivity(
             inputAttributes.getTypeName(),
@@ -609,7 +639,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   public Optional<Duration> getTaskDuration(TaskId taskId){
     final var state = tasks.get(taskId);
-    if (state instanceof ExecutionState.Terminated e) {
+    if (state instanceof ExecutionState.Terminated<?> e) {
       return Optional.of(e.joinOffset().minus(e.startOffset()));
     }
     return Optional.empty();
@@ -734,7 +764,11 @@ public final class SimulationEngine implements AutoCloseable {
     @Override
     public void spawn(final TaskFactory<Unit, ?> state) {
       final var task = TaskId.generate();
-      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state.create(SimulationEngine.this.executor)));
+      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(
+          this.currentTime,
+          state.create(SimulationEngine.this.executor),
+          new MutableObject<>(Unit.UNIT),
+          $ -> {}));
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       this.frame.signal(JobId.forTask(task));
@@ -774,22 +808,27 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** The lifecycle stages every task passes through. */
   private sealed interface ExecutionState<Output> {
-    /** The task is in its primary operational phase. */
-    record InProgress<Output>(Duration startOffset, Task<Unit, Output> state)
-        implements ExecutionState<Output>
+    record InProgress<Input, Output>(
+        Duration startOffset,
+        Task<Input, Output> state,
+        MutableObject<Input> input,
+        Consumer<Output> output
+    ) implements ExecutionState<Output>
     {
-      public AwaitingChildren<Output> completedAt(
-          final Duration endOffset,
-          final LinkedList<TaskId> remainingChildren) {
+      public AwaitingChildren<Output> completedAt(final Duration endOffset, final LinkedList<TaskId> remainingChildren) {
         return new AwaitingChildren<>(this.startOffset, endOffset, remainingChildren);
       }
 
-      public InProgress<Output> continueWith(final Task<Unit, Output> newState) {
-        return new InProgress<>(this.startOffset, newState);
+      public <Midput> InProgress<Midput, Output> continueWith(final Task<Midput, Output> newState, final Midput midput) {
+        return new InProgress<>(this.startOffset, newState, new MutableObject<>(midput), this.output);
+      }
+
+      public <Midput> InProgress<Midput, Output> blockWith(final Task<Midput, Output> newState) {
+        return new InProgress<>(this.startOffset, newState, new MutableObject<>(), this.output);
       }
     }
 
-    /** The task has completed its primary operation, but has unfinished children. */
+    /** The task has completed its primary operation, but has delegated work to children which may not be finished. */
     record AwaitingChildren<Output>(
         Duration startOffset,
         Duration endOffset,

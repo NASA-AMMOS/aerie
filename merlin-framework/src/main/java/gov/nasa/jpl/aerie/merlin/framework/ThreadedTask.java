@@ -203,7 +203,7 @@ public final class ThreadedTask<Input, Output> implements Task<Input, Output> {
       if (this.isAborting) throw TaskAbort.INSTANCE;
 
       this.scheduler = null;
-      final var request = this.<Unit>yield($ -> TaskStatus.calling(child, $));
+      final var request = this.<Midput>yield($ -> TaskStatus.calling(child, $));
       this.scheduler = request.scheduler();
     }
 
