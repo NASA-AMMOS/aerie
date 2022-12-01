@@ -353,7 +353,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     missionModel.getTypesName(),
                                     entry.inputType().mapper().name.canonicalName().replace(".", "_"))
                                 .addStatement(
-                                    "$T.spawn($L.getTaskFactory($L, $L))",
+                                    "$T.spawn($L.getTaskFactory($L), $L)",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "mapper",
                                     "model",
@@ -380,7 +380,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     missionModel.getTypesName(),
                                     entry.inputType().mapper().name.canonicalName().replace(".", "_"))
                                 .addStatement(
-                                    "$T.defer($L, $L.getTaskFactory($L, $L))",
+                                    "$T.defer($L, $L.getTaskFactory($L), $L)",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "duration",
                                     "mapper",
@@ -436,7 +436,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     missionModel.getTypesName(),
                                     entry.inputType().mapper().name.canonicalName().replace(".", "_"))
                                 .addStatement(
-                                    "$T.call($L.getTaskFactory($L, $L))",
+                                    "$T.call($L.getTaskFactory($L), $L)",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "mapper",
                                     "model",
@@ -862,22 +862,18 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                 .addAnnotation(Override.class)
                 .returns(ParameterizedTypeName.get(
                     ClassName.get(TaskFactory.class),
-                    ClassName.get(Unit.class),
+                    TypeName.get(activityType.inputType().declaration().asType()),
                     activityType.getOutputTypeName()))
                 .addParameter(
                     ClassName.get(missionModel.topLevelModel),
                     "model",
-                    Modifier.FINAL)
-                .addParameter(
-                    TypeName.get(activityType.inputType().declaration().asType()),
-                    "activity",
                     Modifier.FINAL)
                 .addCode(
                     activityType.effectModel()
                         .map(effectModel -> CodeBlock
                             .builder()
                             .add(
-                                "return $T.$L(() -> {$>\n$L$<});\n",
+                                "return $T.$L(activity -> {$>\n$L$<});\n",
                                 ModelActions.class,
                                 switch (effectModel.executor()) {
                                   case Threaded -> "threaded";
@@ -902,10 +898,10 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         .orElseGet(() -> CodeBlock
                             .builder()
                             .add(
-                                "return executor -> (scheduler, input) -> {$>\n$L$<};\n",
+                                "return executor -> (scheduler, activity) -> {$>\n$L$<};\n",
                                 CodeBlock.builder()
-                                    .addStatement("scheduler.emit($L, this.$L)", "activity", "inputTopic")
-                                    .addStatement("scheduler.emit($T.UNIT, this.$L)", Unit.class, "outputTopic")
+                                    .addStatement("$L.emit($L, this.$L)", "scheduler", "activity", "inputTopic")
+                                    .addStatement("$L.emit($T.UNIT, this.$L)", "scheduler", Unit.class, "outputTopic")
                                     .addStatement("return $T.completed($T.UNIT)", TaskStatus.class, Unit.class)
                                     .build())
                             .build()))

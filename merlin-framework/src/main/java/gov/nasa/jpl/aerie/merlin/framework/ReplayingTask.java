@@ -9,7 +9,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -186,18 +185,18 @@ public final class ReplayingTask<Input, Output> implements Task<Input, Output> {
     }
 
     @Override
-    public void spawn(final TaskFactory<Unit, ?> child) {
+    public <Input> void spawn(final TaskFactory<Input, ?> child, final Input input) {
       if (this.isYielding) throw Yield.INSTANCE;
 
-      this.history.forget(() -> this.scheduler.spawn(child));
+      this.history.forget(() -> this.scheduler.spawn(child, input));
     }
 
     @Override
-    public <Midput> void call(final TaskFactory<Unit, Midput> child) {
+    public <Input, Midput> Midput call(final TaskFactory<Input, Midput> child, final Input input) {
       if (this.isYielding) throw Yield.INSTANCE;
 
-      this.history.forget(() -> {
-        this.status = TaskStatus.calling(child, new YieldedTask<>(this.history, this.task, KeepDiscard.Discard));
+      return this.history.remember(() -> {
+        this.status = TaskStatus.calling(input, child, new YieldedTask<>(this.history, this.task, KeepDiscard.Keep));
         this.isYielding = true;
         throw Yield.INSTANCE;
       });

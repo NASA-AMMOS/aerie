@@ -190,21 +190,22 @@ public final class ThreadedTask<Input, Output> implements Task<Input, Output> {
     }
 
     @Override
-    public void spawn(final TaskFactory<Unit, ?> task) {
+    public <Input> void spawn(final TaskFactory<Input, ?> task, final Input input) {
       // If we're in the middle of aborting, just keep trying to bail out.
       if (this.isAborting) throw TaskAbort.INSTANCE;
 
-      this.scheduler.spawn(task);
+      this.scheduler.spawn(task, input);
     }
 
     @Override
-    public <Midput> void call(final TaskFactory<Unit, Midput> child) {
+    public <Input, Midput> Midput call(final TaskFactory<Input, Midput> child, final Input input) {
       // If we're in the middle of aborting, just keep trying to bail out.
       if (this.isAborting) throw TaskAbort.INSTANCE;
 
       this.scheduler = null;
-      final var request = this.<Midput>yield($ -> TaskStatus.calling(child, $));
+      final var request = this.<Midput>yield($ -> TaskStatus.calling(input, child, $));
       this.scheduler = request.scheduler();
+      return request.input();
     }
 
     @Override

@@ -29,4 +29,32 @@ public interface TaskFactory<Input, Output> {
   default <I2, O2> TaskFactory<I2, O2> map(final Function<Task<Input, Output>, Task<I2, O2>> transform) {
     return executor -> transform.apply(this.create(executor));
   }
+
+  /**
+   * Perform another task following this one.
+   *
+   * @param <X>
+   *   The type of the output of the suffixed task.
+   * @param suffix
+   *   The task to perform following this one.
+   * @return
+   *   A task performing this task and the suffixed task in sequence.
+   */
+  default <X> TaskFactory<Input, X> andThen(final Task<Output, X> suffix) {
+    return executor -> this.create(executor).andThen(suffix);
+  }
+
+  /**
+   * Perform another task preceding this one.
+   *
+   * @param <X>
+   *   The type of the output of the prefixed task.
+   * @param prefix
+   *   The task to perform preceding this one.
+   * @return
+   *   A task performing the prefixed task and this task in sequence.
+   */
+  default <X> TaskFactory<X, Output> butFirst(final Task<X, Input> prefix) {
+    return executor -> this.create(executor).butFirst(prefix);
+  }
 }

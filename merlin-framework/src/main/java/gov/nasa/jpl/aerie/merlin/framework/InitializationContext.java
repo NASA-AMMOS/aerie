@@ -5,9 +5,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -54,12 +54,12 @@ public final class InitializationContext implements Context {
   }
 
   @Override
-  public void spawn(final TaskFactory<Unit, ?> task) {
-    this.builder.daemon(task);
+  public <Input> void spawn(final TaskFactory<Input, ?> task, final Input input) {
+    this.builder.daemon(task.butFirst(Task.lift($ -> input)));
   }
 
   @Override
-  public <Output> void call(final TaskFactory<Unit, Output> task) {
+  public <Input, Output> Output call(final TaskFactory<Input, Output> task, final Input input) {
     throw new IllegalStateException("Cannot yield during initialization");
   }
 

@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
@@ -42,7 +41,7 @@ public final class SimulationDriver {
       }
 
       // Start daemon task(s) immediately, before anything else happens.
-      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
+      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), Unit.UNIT);
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
@@ -110,7 +109,7 @@ public final class SimulationDriver {
       }
 
       // Start daemon task(s) immediately, before anything else happens.
-      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
+      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), Unit.UNIT);
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
@@ -118,7 +117,7 @@ public final class SimulationDriver {
       }
 
       // Schedule all activities.
-      final var taskId = engine.scheduleTask(elapsedTime, task);
+      final var taskId = engine.scheduleTask(elapsedTime, task, Unit.UNIT);
 
       // Drive the engine until we're out of time.
       // TERMINATION: Actually, we might never break if real time never progresses forward.
@@ -171,7 +170,7 @@ public final class SimulationDriver {
           resolved,
           missionModel,
           activityTopic
-      ));
+      ), Unit.UNIT);
     }
   }
 
@@ -185,10 +184,10 @@ public final class SimulationDriver {
   )
   {
     // Emit the current activity (defined by directiveId)
-    return executor -> (scheduler0, input0) -> TaskStatus.calling((TaskFactory<Unit, Output>) (executor1 -> (scheduler1, input1) -> {
+    return executor -> (scheduler0, input0) -> TaskStatus.calling(Unit.UNIT, executor1 -> (scheduler1, input1) -> {
       scheduler1.emit(directiveId, activityTopic);
       return task.create(executor1).step(scheduler1, input1);
-    }), (scheduler2, input2) -> {
+    }, (scheduler2, input2) -> {
       // When the current activity finishes, get the list of the activities that needed this activity to finish to know their start time
       final List<Pair<ActivityDirectiveId, Duration>> dependents = resolved.get(directiveId) == null ? List.of() : resolved.get(directiveId);
       // Iterate over the dependents
@@ -218,9 +217,9 @@ public final class SimulationDriver {
                   resolved,
                   missionModel,
                   activityTopic
-              ));
+              ), Unit.UNIT);
               return TaskStatus.completed(Unit.UNIT);
-            }));
+            }), Unit.UNIT);
       }
       return TaskStatus.completed(Unit.UNIT);
     });

@@ -83,7 +83,7 @@ public class ResumableSimulationDriver<Model> {
 
     // Start daemon task(s) immediately, before anything else happens.
     {
-      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
+      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), Unit.UNIT);
 
       batch = engine.extractNextJobs(Duration.MAX_VALUE);
       final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
@@ -292,7 +292,7 @@ public class ResumableSimulationDriver<Model> {
           resolved,
           missionModel,
           activityTopic
-      ));
+      ), Unit.UNIT);
       plannedDirectiveToTask.put(directiveId,taskId);
     }
   }
@@ -307,10 +307,10 @@ public class ResumableSimulationDriver<Model> {
   )
   {
     // Emit the current activity (defined by directiveId)
-    return executor -> (scheduler0, input0) -> TaskStatus.calling((TaskFactory<Unit, Output>) (executor1 -> (scheduler1, input1) -> {
+    return executor -> (scheduler0, input0) -> TaskStatus.calling(Unit.UNIT, executor1 -> (scheduler1, input1) -> {
       scheduler1.emit(directiveId, activityTopic);
       return task.create(executor1).step(scheduler1, input1);
-    }), (scheduler2, input2) -> {
+    }, (scheduler2, input2) -> {
       // When the current activity finishes, get the list of the activities that needed this activity to finish to know their start time
       final List<Pair<ActivityDirectiveId, Duration>> dependents = resolved.get(directiveId) == null ? List.of() : resolved.get(directiveId);
       // Iterate over the dependents
@@ -340,9 +340,9 @@ public class ResumableSimulationDriver<Model> {
                   resolved,
                   missionModel,
                   activityTopic
-              ));
+              ), Unit.UNIT);
               return TaskStatus.completed(Unit.UNIT);
-            }));
+            }), Unit.UNIT);
       }
       return TaskStatus.completed(Unit.UNIT);
     });

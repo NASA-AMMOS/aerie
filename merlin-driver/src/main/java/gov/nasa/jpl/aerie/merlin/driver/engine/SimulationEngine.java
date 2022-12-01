@@ -100,14 +100,14 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Schedule a new task to be performed at the given time. */
-  public <Output> TaskId scheduleTask(final Duration startTime, final TaskFactory<Unit, Output> state) {
+  public <Input, Output> TaskId scheduleTask(final Duration startTime, final TaskFactory<Input, Output> state, final Input input) {
     if (startTime.isNegative()) throw new IllegalArgumentException("Cannot schedule a task before the start time of the simulation");
 
     final var task = TaskId.generate();
     this.tasks.put(task, new ExecutionState.InProgress<>(
         startTime,
         state.create(this.executor),
-        new MutableObject<>(Unit.UNIT),
+        new MutableObject<>(input),
         $ -> {}));
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
     return task;
@@ -248,7 +248,7 @@ public final class SimulationEngine implements AutoCloseable {
 
       this.tasks.put(task, progress.continueWith(s.continuation(), Unit.UNIT));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
-    } else if (status instanceof TaskStatus.CallingTask<?, Output> s) {
+    } else if (status instanceof TaskStatus.CallingTask<?, ?, Output> s) {
       processCallStatus(task, progress, frame, currentTime, s);
     } else if (status instanceof TaskStatus.AwaitingCondition<Output> s) {
       final var condition = ConditionId.generate();
@@ -262,15 +262,15 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
-  // This helper binds Midput; if it were inlined, the captured `?` would not propagate correctly,
+  // This helper binds Input and Midput; if it were inlined, the captured `?`s would not propagate correctly,
   // causing type errors.
-  private <Midput, Output>
+  private <Input, Midput, Output>
   void processCallStatus(
       final TaskId task,
       final ExecutionState.InProgress<?, Output> progress,
       final TaskFrame<JobId> frame,
       final Duration currentTime,
-      final TaskStatus.CallingTask<Midput, Output> s
+      final TaskStatus.CallingTask<Input, Midput, Output> s
   ) {
     final var child = TaskId.generate();
 
@@ -283,7 +283,7 @@ public final class SimulationEngine implements AutoCloseable {
     this.tasks.put(child, new ExecutionState.InProgress<>(
         currentTime,
         s.child().create(this.executor),
-        new MutableObject<>(Unit.UNIT),
+        new MutableObject<>(s.input()),
         blocked.input()::setValue));
     this.taskParent.put(child, task);
     this.taskChildren.computeIfAbsent(task, $ -> new HashSet<>()).add(child);
@@ -762,12 +762,12 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public void spawn(final TaskFactory<Unit, ?> state) {
+    public <Input> void spawn(final TaskFactory<Input, ?> state, final Input input) {
       final var task = TaskId.generate();
       SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(
           this.currentTime,
           state.create(SimulationEngine.this.executor),
-          new MutableObject<>(Unit.UNIT),
+          new MutableObject<>(input),
           $ -> {}));
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);

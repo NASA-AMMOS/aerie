@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 
 import java.util.function.Function;
 
@@ -45,12 +44,12 @@ public final class QueryContext implements Context {
   }
 
   @Override
-  public void spawn(final TaskFactory<Unit, ?> task) {
+  public <Input> void spawn(final TaskFactory<Input, ?> task, final Input input) {
     throw new IllegalStateException("Cannot schedule tasks in a query-only context");
   }
 
   @Override
-  public <Output> void call(final TaskFactory<Unit, Output> task) {
+  public <Input, Output> Output call(final TaskFactory<Input, Output> task, final Input input) {
     throw new IllegalStateException("Cannot schedule tasks in a query-only context");
   }
 
