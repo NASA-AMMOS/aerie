@@ -600,7 +600,7 @@ public class ASTTests {
     );
 
     final var spansSupplied = new Windows(Segment.of(Interval.FOREVER, false),
-                                              Segment.of(interval(4, 6, SECONDS), true)).intoSpans();
+                                              Segment.of(interval(4, 6, SECONDS), true)).intoSpans(simResults.bounds);
     final var result = new ForEachActivitySpans(
         "TypeA",
         "act",
