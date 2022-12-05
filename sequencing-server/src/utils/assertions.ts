@@ -116,5 +116,5 @@ export function assert(expression: boolean, message?: string, context?: any) {
 }
 
 export function assertUnreachable(x: never): never {
-  throw new Error('This code should never be reached!');
+  throw new Error(x + ' This code should never be reached!');
 }
