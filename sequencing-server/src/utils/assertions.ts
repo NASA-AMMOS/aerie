@@ -114,3 +114,7 @@ export function assert(expression: boolean, message?: string, context?: any) {
     throw new AssertionError(message ?? `Assertion failed`, context ?? expression);
   }
 }
+
+export function assertUnreachable(x: never): never {
+  throw new Error(x + ' This code should never be reached!');
+}

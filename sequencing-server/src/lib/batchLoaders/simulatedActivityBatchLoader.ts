@@ -4,6 +4,7 @@ import { ErrorWithStatusCode } from '../../utils/ErrorWithStatusCode.js';
 import parse from 'postgres-interval';
 import { GraphQLActivitySchema, Schema, SchemaTypes } from './activitySchemaBatchLoader.js';
 import type { activitySchemaBatchLoader } from './activitySchemaBatchLoader.js';
+import { assertUnreachable } from '../../utils/assertions.js';
 
 export const simulatedActivitiesBatchLoader: BatchLoader<
   { simulationDatasetId: number },
@@ -228,6 +229,8 @@ function convertType(value: any, schema: Schema): any {
       return Temporal.Duration.from(parse(value).toISOString());
     case SchemaTypes.Boolean:
       return value;
+    case SchemaTypes.Path:
+      return value;
     case SchemaTypes.String:
       return value;
     case SchemaTypes.Series:
@@ -244,6 +247,6 @@ function convertType(value: any, schema: Schema): any {
       }
       return value;
     default:
-      throw new Error(`Unknown schema type: ${(schema as any).type}`);
+      assertUnreachable(schema);
   }
 }

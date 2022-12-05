@@ -57,6 +57,7 @@ export enum SchemaTypes {
   Series = 'series',
   Struct = 'struct',
   Variant = 'variant',
+  Path = 'path',
 }
 
 export type Schema =
@@ -67,7 +68,8 @@ export type Schema =
   | StringSchema
   | SeriesSchema
   | StructSchema
-  | VariantSchema;
+  | VariantSchema
+  | PathSchema;
 
 interface BaseSchema<T extends SchemaTypes | unknown> {
   type: T;
@@ -78,6 +80,7 @@ type BooleanSchema = BaseSchema<SchemaTypes.Boolean>;
 type IntSchema = BaseSchema<SchemaTypes.Int>;
 type RealSchema = BaseSchema<SchemaTypes.Real>;
 type DurationSchema = BaseSchema<SchemaTypes.Duration>;
+type PathSchema = BaseSchema<SchemaTypes.Path>;
 
 interface SeriesSchema extends BaseSchema<SchemaTypes.Series> {
   items: Schema;
