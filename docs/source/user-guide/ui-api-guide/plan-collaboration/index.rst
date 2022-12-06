@@ -31,7 +31,18 @@ It will not, however, contain any simulation data, scheduling goals, or constrai
 
   .. group-tab:: API
 
-    This is how to create a branch using the API.
+    The following mutation can be used to create a branch:
+
+    .. include:: ../api-examples.rst
+      :start-after: begin branch plan
+      :end-before: end branch plan
+
+    In order to perform scheduling tasks on a branch, it is necessary to first create a scheduling specification.
+
+    .. include:: ../api-examples.rst
+      :start-after: begin create scheduling specification
+      :end-before: end create scheduling specification input
+
 
 .. toctree::
   :hidden:
