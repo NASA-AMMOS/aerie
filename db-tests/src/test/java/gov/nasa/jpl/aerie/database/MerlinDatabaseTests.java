@@ -37,7 +37,7 @@ class MerlinDatabaseTests {
         "Merlin Database Tests",
         initSqlScriptFile
     );
-    helper.startDatabase();
+    helper.startDatabaseWithLatestSchema();
     connection = helper.connection();
   }
 

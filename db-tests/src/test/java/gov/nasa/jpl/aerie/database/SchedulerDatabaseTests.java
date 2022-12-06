@@ -6,12 +6,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SchedulerDatabaseTests {
   private static final File initSqlScriptFile = new File("../scheduler-server/sql/scheduler/init.sql");
+  private static final Path migrationsDirectory = Path.of(System.getenv("AERIE_ROOT"), "deployment", "hasura", "migrations", "AerieScheduler");
   private DatabaseTestHelper helper;
 
   private Connection connection;
@@ -28,9 +27,10 @@ class SchedulerDatabaseTests {
     helper = new DatabaseTestHelper(
         "aerie_scheduler_test",
         "Scheduler Database Tests",
-        initSqlScriptFile
+        initSqlScriptFile,
+        migrationsDirectory
     );
-    helper.startDatabase();
+    helper.startDatabaseWithLatestSchema();
     connection = helper.connection();
   }
 

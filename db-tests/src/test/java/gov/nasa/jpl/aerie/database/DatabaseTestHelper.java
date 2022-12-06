@@ -7,8 +7,16 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Manages the test database.
@@ -19,16 +27,36 @@ public class DatabaseTestHelper {
   private final String dbName;
   private final String appName;
   private final File initSqlScriptFile;
+  private final Optional<Path> migrationsDirectory;
 
   public DatabaseTestHelper(String dbName, String appName, File initSqlScriptFile) {
+    this(dbName, appName, initSqlScriptFile, Optional.empty());
+  }
+
+  public DatabaseTestHelper(String dbName, String appName, File initSqlScriptFile, Path migrationsDirectory) {
+    this(dbName, appName, initSqlScriptFile, Optional.of(migrationsDirectory));
+  }
+
+  private DatabaseTestHelper(String dbName, String appName, File initSqlScriptFile, Optional<Path> migrationsDirectory) {
     this.dbName = dbName;
     this.appName = appName;
     this.initSqlScriptFile = initSqlScriptFile;
+    this.migrationsDirectory = migrationsDirectory;
   }
 
-  public void startDatabase() throws SQLException, IOException, InterruptedException {
+  public void startDatabaseWithLatestSchema() throws SQLException, IOException, InterruptedException {
     createDatabase();
-    runInitSql();
+    if (migrationsDirectory.isPresent()) {
+      applyAllMigrations();
+    } else {
+      runInitSql();
+    }
+    establishConnection();
+  }
+
+  public void startDatabaseBeforeMigration(final String migrationName) throws SQLException, IOException, InterruptedException {
+    createDatabase();
+    applyMigrationsBefore(migrationName);
     establishConnection();
   }
 
@@ -130,5 +158,80 @@ public class DatabaseTestHelper {
 
   public Connection connection() {
     return connection;
+  }
+
+  void applyMigration(final String migrationName) throws IOException, InterruptedException, SQLException {
+    assertMigrationExists(migrationName);
+    runSqlFile(migrationsDirectory.get().resolve(migrationName).resolve("up.sql").toString());
+  }
+
+  void rollbackMigration(final String migrationName) throws IOException, InterruptedException, SQLException {
+    assertMigrationExists(migrationName);
+    runSqlFile(migrationsDirectory.get().resolve(migrationName).resolve("down.sql").toString());
+  }
+
+  /**
+   * Applies all migrations alphabetically up to but not including the given migration
+   */
+  void applyMigrationsBefore(final String migrationName) throws IOException, InterruptedException, SQLException {
+    assertMigrationExists(migrationName);
+    Integer previousVersion = null;
+    for (final var migration : getSortedMigrations()) {
+      if (previousVersion == null) {
+        previousVersion = migration.version();
+      } else {
+        assertTrue(
+            migration.version() > previousVersion,
+            "Duplicate migration version found: %d is not greater than %d".formatted(
+                migration.version(),
+                previousVersion));
+      }
+      if (migration.name().equals(migrationName)) {
+        return;
+      }
+      applyMigration(migration.name());
+    }
+  }
+
+  /**
+   * Applies all migrations alphabetically
+   */
+  void applyAllMigrations() throws IOException, InterruptedException, SQLException {
+    Integer previousVersion = null;
+    for (final var migration : getSortedMigrations()) {
+      if (previousVersion == null) {
+        previousVersion = migration.version();
+      } else {
+        assertTrue(
+            migration.version() > previousVersion,
+            "Duplicate migration version found: %d is not greater than %d".formatted(
+                migration.version(),
+                previousVersion));
+      }
+      applyMigration(migration.name());
+    }
+  }
+
+  private List<Migration> getSortedMigrations() {
+    return Arrays
+        .stream(Objects.requireNonNull(migrationsDirectory.get().toFile().listFiles()))
+        .map(Migration::of)
+        .sorted(Comparator.comparing(Migration::name))
+        .toList();
+  }
+
+  void assertMigrationExists(final String migrationName) {
+    if (!new File(migrationsDirectory.get().resolve(migrationName).toString()).isDirectory()) {
+      throw new AssertionError("No such migration found: %s".formatted(migrationName));
+    }
+  }
+
+  record Migration(int version, String name) {
+    static Migration of(final String migrationName) {
+      return new Migration(Integer.parseInt(migrationName.split("_")[0]), migrationName);
+    }
+    static Migration of(final File file) {
+      return Migration.of(file.getName());
+    }
   }
 }

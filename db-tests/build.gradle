@@ -10,6 +10,7 @@ java {
 
 task e2eTest(type: Test) {
   useJUnitPlatform()
+  environment 'AERIE_ROOT', rootDir.toString()
 }
 
 dependencies {

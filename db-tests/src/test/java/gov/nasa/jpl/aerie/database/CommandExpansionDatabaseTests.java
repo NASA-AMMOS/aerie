@@ -29,7 +29,7 @@ class CommandExpansionDatabaseTests {
         "Command Expansion Database Tests",
         initSqlScriptFile
     );
-    helper.startDatabase();
+    helper.startDatabaseWithLatestSchema();
     connection = helper.connection();
   }
 
