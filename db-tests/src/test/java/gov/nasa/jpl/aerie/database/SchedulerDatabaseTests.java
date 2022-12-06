@@ -41,13 +41,13 @@ class SchedulerDatabaseTests {
     helper = null;
   }
 
-  int insertSpecification() throws SQLException {
+  int insertSpecification(final long planId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery("""
         insert into scheduling_specification(
           revision, plan_id, plan_revision, horizon_start, horizon_end, simulation_arguments, analysis_only
-        ) values (0, 0, 0, now(), now(), '{}', false) returning id;
-      """);
+        ) values (0, %d, 0, now(), now(), '{}', false) returning id;
+      """.formatted(planId));
       res.next();
       return res.getInt("id");
     }
@@ -86,7 +86,7 @@ class SchedulerDatabaseTests {
     @BeforeEach
     void beforeEach() throws SQLException {
       specAndTemplateIds = new HashMap<>();
-      specAndTemplateIds.put("specification", new int[]{insertSpecification(), insertSpecification()});
+      specAndTemplateIds.put("specification", new int[]{insertSpecification(0), insertSpecification(1)});
       specAndTemplateIds.put("template", new int[]{insertTemplate(), insertTemplate()});
       goalIds = new int[]{insertGoal(), insertGoal(), insertGoal()};
     }
