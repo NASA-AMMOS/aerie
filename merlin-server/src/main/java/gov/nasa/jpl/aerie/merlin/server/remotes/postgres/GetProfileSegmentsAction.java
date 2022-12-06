@@ -47,7 +47,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     // Profile segments are stored with their start offset relative to simulation start
     // We must convert these to durations describing how long each segment lasts
     if (resultSet.next()) {
-      var offset = Duration.fromISO8601String(resultSet.getString(1));
+      var offset = PostgresParsers.parseDurationISO8601(resultSet.getString(1));
       Optional<Dynamics> dynamics;
       var isGap = resultSet.getBoolean("is_gap");
       if (!isGap) {
@@ -58,7 +58,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       }
 
       while (resultSet.next()) {
-        final var nextOffset = Duration.fromISO8601String(resultSet.getString(1));
+        final var nextOffset = PostgresParsers.parseDurationISO8601(resultSet.getString(1));
         final var duration = nextOffset.minus(offset);
         segments.add(new ProfileSegment<>(duration, dynamics));
         offset = nextOffset;

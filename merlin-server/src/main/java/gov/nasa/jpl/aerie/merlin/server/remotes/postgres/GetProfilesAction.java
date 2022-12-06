@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -41,7 +40,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       final var type = getJsonColumn(resultSet, "type", profileTypeP).getSuccessOrThrow(
               failureReason -> new Error(
                   "Corrupt profile type: " + failureReason.reason()));
-      final var duration = Duration.fromISO8601String(resultSet.getString(4));
+      final var duration = PostgresParsers.parseDurationISO8601(resultSet.getString(4));
       records.add(new ProfileRecord(profileId, datasetId, resourceName, type, duration));
     }
 
