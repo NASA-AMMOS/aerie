@@ -12,7 +12,15 @@ a merge request must first be created between the **source plan** (the one suppl
 
   .. group-tab:: User Interface
 
-    This is how to create a merge request using the UI.
+    From the child plan, open the dropdown and select ``Create merge request``. Confirm which plan you wish to be the target plan and press ``Create merge request``.
+
+    .. image:: ../images/plan_collaboration/create_merge_rq.png
+      :width: 25%
+
+    .. image:: ../images/plan_collaboration/create_merge_rq_modal.png
+      :width: 25%
+
+    .. note:: Currently it is only possible to select the parent branch as the target plan via the User Interface. To merge between other related plans, use the API.
 
   .. group-tab:: API
 
@@ -23,7 +31,7 @@ a merge request must first be created between the **source plan** (the one suppl
       :end-before: end create merge request
 
 Withdraw a Merge Request
-========================
+------------------------
 
 You can withdraw a merge request so long as it is in the ``pending`` state. A withdrawn merge request cannot be used to begin a merge.
 
@@ -31,7 +39,13 @@ You can withdraw a merge request so long as it is in the ``pending`` state. A wi
 
   .. group-tab:: User Interface
 
-    This is how to withdraw a merge request using the UI.
+    While on the **source plan**, select the ``Merge requests`` text besides the plan's name. Then, press the ``Withdraw`` button next to the merge request you wish to withdraw.
+
+    .. image:: ../images/plan_collaboration/view_outgoing_merge_rqs.png
+      :width: 25%
+
+    .. image:: ../images/plan_collaboration/withdraw_merge_rq.png
+      :width: 25%
 
   .. group-tab:: API
 
@@ -41,6 +55,9 @@ You can withdraw a merge request so long as it is in the ``pending`` state. A wi
 
 Begin a Merge
 -------------
+
+You can begin a merge from a pending merge request so long as the plan is not currently locked.
+
 .. note::
 
   Beginning a merge locks the target plan until the merge is either cancelled, denied, or committed.
@@ -49,7 +66,13 @@ Begin a Merge
 
   .. group-tab:: User Interface
 
-    This is how to begin a merge using the UI.
+    While on the **target plan**, select the ``Merge requests`` text beside the list of branches. Then, press ``Review`` next to the merge request you wish to begin.
+
+    .. image:: ../images/plan_collaboration/view_incoming_merge_rqs.png
+      :width: 25%
+
+    .. image:: ../images/plan_collaboration/begin_merge.png
+      :width: 25%
 
   .. group-tab:: API
 
@@ -80,7 +103,7 @@ Begin a Merge
       :end-before: end conflicting activities
 
 Cancel a Merge
-==============
+--------------
 
 You can cancel any ``in-progress`` merge.
 
@@ -88,7 +111,10 @@ You can cancel any ``in-progress`` merge.
 
   .. group-tab:: User Interface
 
-    This is how to do so via the UI.
+    From the merge review screen, press the ``Cancel`` button in the bottom-right corner.
+
+    .. image:: ../images/plan_collaboration/cancel_merge.png
+      :width: 25%
 
   .. group-tab:: API
 
@@ -97,13 +123,22 @@ You can cancel any ``in-progress`` merge.
       :end-before: end cancel merge
 
 Resolving Conflicts
-===================
+-------------------
 
 Before a merge can be committed, all conflicts must be resolved to either ``source`` or ``target``.
 
 .. tabs::
 
   .. group-tab:: User Interface
+
+    First, select a conflicting activity from the list. The version of the activity in the source and target plan will appear to the right, with the differing fields highlighted.
+    Then, determine which version to keep by pressing either "Keep Source Activity" or "Keep Target Activity".
+
+    .. image:: ../images/plan_collaboration/unresolved_conflict.png
+      :width: 25%
+
+    .. image:: ../images/plan_collaboration/resolved_conflict.png
+      :width: 25%
 
   .. group-tab:: API
 
@@ -117,6 +152,9 @@ You can also resolve conflicts in bulk:
 
   .. group-tab:: User Interface
 
+    .. image:: ../images/plan_collaboration/resolve_bulk.png
+      :width: 25%
+
   .. group-tab:: API
 
     .. include:: ../api-examples.rst
@@ -124,7 +162,7 @@ You can also resolve conflicts in bulk:
       :end-before: end resolve conflict bulk
 
 Deny a Merge
-============
+------------
 
 It is possible to deny an in-progress merge, for example, if a request is outdated.
 Once a merge has been denied, that request cannot be used to begin a merge.
@@ -133,6 +171,11 @@ Once a merge has been denied, that request cannot be used to begin a merge.
 
   .. group-tab:: User Interface
 
+    From the merge review screen, press the ``Deny Changes`` button in the bottom-right corner.
+
+    .. image:: ../images/plan_collaboration/deny_merge.png
+      :width: 25%
+
   .. group-tab:: API
 
     .. include:: ../api-examples.rst
@@ -140,13 +183,18 @@ Once a merge has been denied, that request cannot be used to begin a merge.
       :end-before: end deny merge
 
 Commit a Merge
-==============
+--------------
 
 Once all conflicts have been resolved, you can commit a merge.
 
 .. tabs::
 
   .. group-tab:: User Interface
+
+    From the merge review screen, press the ``Approve Changes`` button in the bottom-right corner.
+
+    .. image:: ../images/plan_collaboration/approve_merge.png
+      :width: 25%
 
   .. group-tab:: API
 
