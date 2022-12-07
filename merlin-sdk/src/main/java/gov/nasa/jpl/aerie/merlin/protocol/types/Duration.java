@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol.types;
 
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 
@@ -494,11 +495,12 @@ public final class Duration implements Comparable<Duration> {
   }
 
   public static Duration fromISO8601String(final String iso8601String){
-    return of(java.time.Duration.parse(iso8601String).toMillis(), MILLISECOND);
+    final var javaDuration = java.time.Duration.parse(iso8601String);
+    return of((javaDuration.getSeconds() * 1_000_000L) + (javaDuration.getNano() / 1000L), MICROSECONDS);
   }
 
   public String toISO8601String() {
-    return java.time.Duration.ofMillis(dividedBy(Duration.MILLISECONDS)).toString();
+    return java.time.Duration.of(this.durationInMicroseconds, ChronoUnit.MICROS).toString();
   }
 
   @Override
