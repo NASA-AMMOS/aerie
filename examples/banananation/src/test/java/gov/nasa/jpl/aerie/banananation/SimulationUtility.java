@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.banananation;
 
 import gov.nasa.jpl.aerie.banananation.generated.GeneratedModelType;
+import gov.nasa.jpl.aerie.merlin.driver.ActionTree;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
@@ -9,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.nio.file.Path;
@@ -32,11 +34,14 @@ public final class SimulationUtility {
     final var startTime = Instant.now();
     final var missionModel = makeMissionModel(new MissionModelBuilder(), Instant.EPOCH, config);
 
-    return SimulationDriver.simulate(
-        missionModel,
-        schedule,
-        startTime,
-        simulationDuration);
+    final ActionTree plan;
+    try {
+      plan = ActionTree.from(simulationDuration, missionModel, schedule);
+    } catch (final InstantiationException ex) {
+      throw new RuntimeException(ex);
+    }
+
+    return SimulationDriver.simulate(missionModel, plan, startTime, simulationDuration);
   }
 
   @SafeVarargs

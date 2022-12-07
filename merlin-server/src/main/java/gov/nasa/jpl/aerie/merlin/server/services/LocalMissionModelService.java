@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActionTree;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
@@ -231,12 +232,19 @@ public final class LocalMissionModelService implements MissionModelService {
           "No mission model configuration defined for mission model. Simulations will receive an empty set of configuration arguments.");
     }
 
+    final var model = loadAndInstantiateMissionModel(message.missionModelId(), message.startTime(), SerializedValue.of(config));
+
+    final ActionTree plan;
+    try {
+      plan = ActionTree.from(message.samplingDuration(), model, message.activityInstances());
+    } catch (final InstantiationException ex) {
+      // All activity instantiations are assumed to be validated by this point
+      throw new Error("Unexpected state: activity instantiation %s failed with: %s"
+          .formatted(ex.containerName, ex.toString()));
+    }
+
     // TODO: [AERIE-1516] Teardown the mission model after use to release any system resources (e.g. threads).
-    return SimulationDriver.simulate(
-        loadAndInstantiateMissionModel(message.missionModelId(), message.startTime(), SerializedValue.of(config)),
-        message.activityInstances(),
-        message.startTime(),
-        message.samplingDuration());
+    return SimulationDriver.simulate(model, plan, message.startTime(), message.samplingDuration());
   }
 
   @Override

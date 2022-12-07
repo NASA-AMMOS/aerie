@@ -28,7 +28,9 @@ public final class CellExpiryTest {
   public void testResourceProfilingByExpiry() {
     final var model = makeModel("/key", "value", MILLISECONDS.times(500));
 
-    final var results = SimulationDriver.simulate(model, Map.of(), Instant.now(), Duration.SECONDS.times(5));
+    final var simulationDuration = Duration.SECONDS.times(5);
+    final var plan = new ActionTree(new Action.AnonymousEvent(simulationDuration), List.of(), List.of());
+    final var results = SimulationDriver.simulate(model, plan, Instant.now(), simulationDuration);
 
     final var actual = results.discreteProfiles.get("/key").getRight();
 
