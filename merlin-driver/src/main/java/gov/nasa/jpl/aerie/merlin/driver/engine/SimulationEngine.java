@@ -759,7 +759,7 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public <Input> void spawn(final TaskFactory<Input, ?> state, final Input input) {
+    public <Input, Output> void spawn(final TaskFactory<Input, Output> state, final Input input) {
       final var task = TaskId.generate();
       SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(
           this.currentTime,
