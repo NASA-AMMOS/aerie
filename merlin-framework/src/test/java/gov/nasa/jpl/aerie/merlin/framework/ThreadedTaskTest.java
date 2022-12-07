@@ -29,7 +29,7 @@ public final class ThreadedTaskTest {
       }
 
       @Override
-      public <Input> void spawn(final TaskFactory<Input, ?> task, final Input input) {
+      public <Input, Output> void spawn(final TaskFactory<Input, Output> task, final Input input) {
         throw new UnsupportedOperationException();
       }
     };
