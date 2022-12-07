@@ -1257,4 +1257,33 @@ public class SchedulingIntegrationTests {
         PLANNING_HORIZON);
     assertEquals(96, results.updatedPlan().size());
   }
+
+
+  @Test
+  void test_inf_loop(){
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(new MockMerlinService.PlannedActivityInstance(
+            "BiteBanana",
+            Map.of("biteSize", SerializedValue.of(10)),
+            Duration.of(23, HOURS))),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+              export default (): Goal =>
+                 Goal.ActivityRecurrenceGoal({
+                   activityTemplate: ActivityTemplates.BakeBananaBread({ temperature: 325.0, tbSugar: 2, glutenFree: false }),
+                   interval: Temporal.Duration.from({ hours: 2 }),
+                 });
+            """, true)),
+        List.of(new GlobalSchedulingConditionRecord(new GlobalSchedulingConditionSource(
+            """
+        export default function myFirstSchedulingCondition(): GlobalSchedulingCondition {
+          return GlobalSchedulingCondition.scheduleActivitiesOnlyWhen(Real.Resource('/fruit').lessThan(3.0));
+        }
+        """
+        ), true)),
+        new PlanningHorizon(
+            TimeUtility.fromDOY("2022-318T00:00:00"),
+            TimeUtility.fromDOY("2022-319T00:00:00")));
+    assertEquals(2, results.updatedPlan().size());
+  }
 }
