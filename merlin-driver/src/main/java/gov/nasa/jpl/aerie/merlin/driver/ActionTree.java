@@ -16,8 +16,9 @@ import java.util.Map;
 
 /**
  * A tree of simulation actions, each scheduled relative to (or "anchored to") the start or end of its parent.
- * The root of the the tree, representing the plan as a whole, is the only absolutely-scheduled entity.
  *
+ * @param offset
+ *   The relative offset at which to perform this action.
  * @param action
  *   An action to be performed.
  * @param startAnchor
@@ -25,11 +26,7 @@ import java.util.Map;
  * @param endAnchor
  *   The set of actions anchored to the end of this action.
  */
-public record ActionTree(
-    Action action,
-    List<Pair<Duration, ActionTree>> startAnchor,
-    List<Pair<Duration, ActionTree>> endAnchor
-) {
+public record ActionTree(Duration offset, Action action, List<ActionTree> startAnchor, List<ActionTree> endAnchor) {
   /**
    * A helper method for creating an action tree from a set of serialized activities anchored to the start of a plan.
    *
@@ -51,7 +48,7 @@ public record ActionTree(
       final MissionModel<Model> model,
       final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule
   ) throws InstantiationException {
-    final var roots = new ArrayList<Pair<Duration, ActionTree>>(schedule.size());
+    final var roots = new ArrayList<ActionTree>(schedule.size());
 
     for (final var entry : schedule.entrySet()) {
       final var directiveId = entry.getKey();
@@ -60,17 +57,23 @@ public record ActionTree(
 
       final var task = model.getTaskFactory(serializedDirective);
 
-      roots.add(Pair.of(startOffset, new ActionTree(
+      roots.add(new ActionTree(
+          startOffset,
           new Action.Directive<>(directiveId, Unit.UNIT, task),
           List.of(),
-          List.of())));
+          List.of()));
     }
 
-    return new ActionTree(new Action.AnonymousEvent(duration), Collections.unmodifiableList(roots), List.of());
+    return new ActionTree(
+        Duration.ZERO,
+        new Action.AnonymousEvent(duration),
+        Collections.unmodifiableList(roots),
+        List.of());
   }
 
   /**
-   * Compile this action tree to a simulable task which spawns its immediate children at their scheduled times..
+   * Compile this action tree to a simulable task which spawns its immediate children at their scheduled times.
+   * Equivalent to calling {@link #toTask(Topic, Duration)} with {@code Duration.ZERO}.
    *
    * @param activityTopic
    *   The topic on which to emit each constituent activity's ID when it spawns.
@@ -78,109 +81,70 @@ public record ActionTree(
    *   A simulable task that spawns the plan's immediate children at their scheduled times.
    */
   public TaskFactory<Unit, Unit> toTask(final Topic<ActivityInstanceId> activityTopic) {
-    return $ -> ActionTree.spawnAll(activityTopic, this.startAnchor)
-        .andThen(this.action.toTask(activityTopic))
-        .andThen(ActionTree.spawnAll(activityTopic, this.endAnchor));
-  }
-
-  private static Task<Unit, Unit> spawnAll(final Topic<ActivityInstanceId> activityTopic, final List<Pair<Duration, ActionTree>> actions) {
-    return (scheduler, unit) -> {
-      for (final var entry : actions) {
-        final var startOffset = entry.getLeft();
-        final var action = entry.getRight();
-
-        scheduler.spawn(
-            $$ -> Task
-                .spawning(action.toTask(activityTopic))
-                .butFirst(Task.delaying(startOffset)),
-            Unit.UNIT);
-      }
-
-      return TaskStatus.completed(Unit.UNIT);
-    };
+    return this.toTask(activityTopic, Duration.ZERO);
   }
 
   /**
-   * Recursively re-schedule each action relative to the earliest resolvable point in the plan.
+   * Compile this action tree to a simulable task which spawns its immediate children at their scheduled times, all
+   * shifted relative to a given initial offset.
    *
-   * <p> The following transformations are repeatedly made to the plan until no further transformation
-   * is possible. </p>
-   *
-   * <ul>
-   *   <li> If an action (the "child") is anchored to the start of another action (its "parent"), and its parent itself
-   *   has a parent, then the child is re-anchored to its parent's parent, and the offset of its parent is added to
-   *   its own offset. </li>
-   *
-   *   <li> If an action is anchored to the end of a plan or event, it is re-anchored to the start of that plan
-   *   or event, and the duration of the plan or event is added to the action's offset. </li>
-   * </ul>
-   *
-   * <p> Neither of these transformations affects the absolute time at which an action is scheduled. Instead, these
-   * transformations cause an action to become anchored the earliest point at which we know its precise start time.
-   * Notably, any actions anchored to the end of an activity cannot be migrated any earlier, as we do not know the
-   * duration of an activity until it has actually terminated. </p>
-   *
-   * @return
-   *   A new, equivalent plan with all actions re-anchored to the first point at which its absolute start time
-   *   becomes known.
-   */
-  public ActionTree resolveOffsets() {
-    final var startAnchor = new ArrayList<Pair<Duration, ActionTree>>(this.startAnchor.size());
-
-    // Recursively resolve each start-anchored child, then add it and its own start-anchored children to ours.
-    // But, instead of doing this in two steps, we pass to each child its own offset and the accumulating list of
-    // start-anchored actions, so that it can add itself and any descendants directly.
-    final var self = this.liftInto(startAnchor, Duration.ZERO);
-
-    // `self.startAnchor` should always be empty after lifting, but to be robust against future changes,
-    // there's no harm in accumulating it anyway.
-    startAnchor.addAll(self.startAnchor);
-
-    return new ActionTree(self.action(), startAnchor, self.endAnchor());
-  }
-
-  /**
-   * Lift as many descendant actions as possible into the parent's anchor, and return an ActionTree with all remaining
-   * actions lifted as high as possible.
-   *
-   * @param anchor
-   *   The anchor of the parent which this action tree is scheduled relative to.
+   * @param activityTopic
+   *   The topic on which to emit each constituent activity's ID when it spawns.
    * @param offset
-   *   The offset from the parent's anchor that this action tree is scheduled at.
+   *   The initial offset to apply to the whole tree.
    * @return
-   *   A residual ActionTree with all actions stripped that could be re-scheduled against the parent.
+   *   A simulable task that spawns the plan's immediate children at their scheduled times.
    */
-  private ActionTree liftInto(final List<Pair<Duration, ActionTree>> anchor, final Duration offset) {
-    // Our start-anchored actions can always be lifted into the parent. Just add their offset to ours.
-    for (final var entry : this.startAnchor) {
-      final var childOffset = entry.getLeft().plus(offset);
-      anchor.add(Pair.of(childOffset, entry.getRight().liftInto(anchor, childOffset)));
-    }
+  public TaskFactory<Unit, Unit> toTask(final Topic<ActivityInstanceId> activityTopic, final Duration offset) {
+    return $ -> {
+      // Move each field into a local to avoid closing over `this` in the subtasks.
+      final var startAnchor = this.startAnchor;
+      final var action = this.action;
+      final var endAnchor = this.endAnchor;
 
-    final var duration$ = this.action.getDuration();
-    final List<Pair<Duration, ActionTree>> endAnchor;
-    if (duration$.isPresent()) {
-      endAnchor = List.of();
+      // Spawn everything whose start time is known when this action begins.
+      final var startOffset = offset.plus(this.offset);
+      final Task<Unit, Unit> before = (scheduler, unit) -> {
+        for (final var child : startAnchor) {
+          scheduler.spawn(child.toTask(activityTopic, startOffset), Unit.UNIT);
+        }
 
-      // If we know how long this action will take, we can re-schedule our end-anchored actions
-      // against our start anchor, and from there lift them into the parent as well. Just add their offset
-      // to our own offset and duration.
-      for (final var entry : this.endAnchor) {
-        final var childOffset = entry.getLeft().plus(duration$.get()).plus(offset);
-        anchor.add(Pair.of(childOffset, entry.getRight().liftInto(anchor, childOffset)));
+        return TaskStatus.completed(Unit.UNIT);
+      };
+
+      // Spawn the action itself.
+      final Duration endOffset;
+      final Task<Unit, Unit> during;
+      {
+        final var duration$ = action.getDuration();
+        if (duration$.isEmpty()) {
+          // If we don't know how long the action will take, block on the action,
+          // so that when we regain control we're ready to spawn the end-anchored actions immediately.
+          endOffset = Duration.ZERO;
+          during = Task
+              .calling(action.toTask(activityTopic))
+              .butFirst(Task.delaying(startOffset))
+              .andThen(Task.completed(Unit.UNIT));
+        } else {
+          // If we know how long the action will take, don't block on it before spawning end-anchored actions.
+          // Just accumulate the action's duration so we can spawn the end-anchored actions early.
+          endOffset = startOffset.plus(duration$.get());
+          during = Task.spawning($$ -> Task
+              .calling(action.toTask(activityTopic))
+              .butFirst(Task.delaying(startOffset)));
+        }
       }
-    } else {
-      endAnchor = new ArrayList<>(this.endAnchor.size());
 
-      // If we don't know how long this action takes, we can't re-schedule our immediate dependents.
-      // However, we can at least lift *their* descendants as high as possible.
-      for (final var entry : this.endAnchor) {
-        final var childOffset = entry.getLeft();
-        anchor.add(Pair.of(childOffset, entry.getRight().liftInto(endAnchor, childOffset)));
-      }
-    }
+      // Spawn everything whose start time is known when this action ends.
+      final Task<Unit, Unit> after = (scheduler, unit) -> {
+        for (final var child : endAnchor) {
+          scheduler.spawn(child.toTask(activityTopic, endOffset), Unit.UNIT);
+        }
 
-    // Return this action as the root of the residual tree of actions.
-    return new ActionTree(this.action, List.of(), Collections.unmodifiableList(endAnchor));
+        return TaskStatus.completed(Unit.UNIT);
+      };
+
+      return before.andThen(during).andThen(after);
+    };
   }
 }

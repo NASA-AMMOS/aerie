@@ -37,7 +37,7 @@ public final class SimulationDriver {
       }
 
       final var activityTopic = new Topic<ActivityInstanceId>();
-      engine.scheduleTask(Duration.ZERO, action.resolveOffsets().toTask(activityTopic), Unit.UNIT);
+      engine.scheduleTask(Duration.ZERO, action.toTask(activityTopic), Unit.UNIT);
 
       // Drive the engine until we're out of time.
       // TERMINATION: Actually, we might never break if real time never progresses forward.
