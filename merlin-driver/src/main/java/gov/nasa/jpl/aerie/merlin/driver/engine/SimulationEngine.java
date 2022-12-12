@@ -99,6 +99,8 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** Schedule a new task to be performed at the given time. */
   public <Return> TaskId scheduleTask(final Duration startTime, final TaskFactory<Return> state) {
+    if (startTime.isNegative()) throw new IllegalArgumentException("Cannot schedule a task before the start time of the simulation");
+
     final var task = TaskId.generate();
     this.tasks.put(task, new ExecutionState.InProgress<>(startTime, state.create(this.executor)));
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
