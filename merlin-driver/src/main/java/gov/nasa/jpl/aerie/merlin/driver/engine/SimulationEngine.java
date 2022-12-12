@@ -27,7 +27,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
-import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -234,6 +233,8 @@ public final class SimulationEngine implements AutoCloseable {
       this.tasks.put(task, progress.completedAt(currentTime, children));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
     } else if (status instanceof TaskStatus.Delayed<Return> s) {
+      if (s.delay().isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
+
       this.tasks.put(task, progress.continueWith(s.continuation()));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
     } else if (status instanceof TaskStatus.CallingTask<Return> s) {
