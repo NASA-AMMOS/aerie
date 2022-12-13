@@ -160,8 +160,9 @@ public class ActivityCreationTemplate extends ActivityExpression {
                                      + " because its DurationType is Uncontrollable");
         }
         if(this.acceptableAbsoluteTimingError.isZero()){
-          logger.warn("Root-finding is likely to fail as activity has an uncontrollable duration and the timing "
-          + "precision is 0. Setting it for you at 1s. Next time, use withTimingPrecision() when building the template.");
+          //TODO: uncomment when precision can be set by user
+          //logger.warn("Root-finding is likely to fail as activity has an uncontrollable duration and the timing "
+          //+ "precision is 0. Setting it for you at 1s. Next time, use withTimingPrecision() when building the template.");
           this.acceptableAbsoluteTimingError = Duration.of(500, Duration.MILLISECOND);
         }
       }
