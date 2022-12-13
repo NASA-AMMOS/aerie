@@ -27,7 +27,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
-import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -100,6 +99,8 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** Schedule a new task to be performed at the given time. */
   public <Return> TaskId scheduleTask(final Duration startTime, final TaskFactory<Return> state) {
+    if (startTime.isNegative()) throw new IllegalArgumentException("Cannot schedule a task before the start time of the simulation");
+
     final var task = TaskId.generate();
     this.tasks.put(task, new ExecutionState.InProgress<>(startTime, state.create(this.executor)));
     this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(startTime));
@@ -234,6 +235,8 @@ public final class SimulationEngine implements AutoCloseable {
       this.tasks.put(task, progress.completedAt(currentTime, children));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
     } else if (status instanceof TaskStatus.Delayed<Return> s) {
+      if (s.delay().isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
+
       this.tasks.put(task, progress.continueWith(s.continuation()));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
     } else if (status instanceof TaskStatus.CallingTask<Return> s) {
