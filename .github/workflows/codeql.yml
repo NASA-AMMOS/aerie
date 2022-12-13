@@ -14,6 +14,7 @@ name: "CodeQL"
 on:
   push:
     branches: [ develop ]
+    tags: [ v* ]
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ develop ]
@@ -75,14 +76,24 @@ jobs:
       uses: github/codeql-action/analyze@v2
 
     - name: NASA Scrub
-      continue-on-error: true
       run: |
-        pip3 install nasa-scrub
-        python3 -m scrub.tools.parsers.translate_results /home/runner/work/aerie/results/*.sarif /home/runner/work/aerie/results/codeql.scrub ${{ github.workspace }} scrub
-        python3 -m scrub.tools.parsers.csv_parser /home/runner/work/aerie/results
+        python3 -m pip install nasa-scrub
+
+        results_dir=`realpath ${{ github.workspace }}/../results`
+        sarif_files=`find $results_dir -name '*.sarif'`
+
+        for sarif_file in $sarif_files
+        do
+          output_file="$results_dir/$(basename $sarif_file .sarif).scrub"
+          python3 -m scrub.tools.parsers.translate_results $sarif_file $output_file ${{ github.workspace }} scrub
+        done
+
+        python3 -m scrub.tools.parsers.csv_parser $results_dir
+        
+        echo "RESULTS_DIR=$results_dir" >> $GITHUB_ENV
 
     - name: Upload CodeQL Artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: codeql-artifacts
-        path: /home/runner/work/aerie/results/*
+        name: code-scan-results
+        path: ${{ env.RESULTS_DIR }}
