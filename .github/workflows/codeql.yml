@@ -75,8 +75,9 @@ jobs:
       uses: github/codeql-action/analyze@v2
 
     - name: NASA Scrub
+      continue-on-error: true
       run: |
-        pip install nasa-scrub
+        pip3 install nasa-scrub
         python3 -m scrub.tools.parsers.translate_results /home/runner/work/aerie/results/*.sarif /home/runner/work/aerie/results/codeql.scrub ${{ github.workspace }} scrub
         python3 -m scrub.tools.parsers.csv_parser /home/runner/work/aerie/results
 
