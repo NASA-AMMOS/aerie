@@ -40,7 +40,7 @@ public final class PostProfileSegmentsAction implements AutoCloseable {
 
       this.statement.setLong(1, datasetId);
       this.statement.setLong(2, profileRecord.id());
-      this.statement.setString(3, accumulatedOffset.toISO8601String());
+      PreparedStatements.setDuration(this.statement, 3, accumulatedOffset);
       if (dynamics.isPresent()) {
         this.statement.setString(4, serializeDynamics(dynamics.get(), dynamicsP));
         this.statement.setBoolean(5, false);

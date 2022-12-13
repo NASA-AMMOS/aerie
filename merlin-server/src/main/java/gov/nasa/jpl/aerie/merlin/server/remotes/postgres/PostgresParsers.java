@@ -104,7 +104,13 @@ public final class PostgresParsers {
     return parseOffset(resultSet, index, new Timestamp(epoch));
   }
 
+  public static Duration parseDurationISO8601(final String iso8601String){
+    final var javaDuration = java.time.Duration.parse(iso8601String);
+    return Duration.of((javaDuration.getSeconds() * 1_000_000L) + (javaDuration.getNano() / 1000L), Duration.MICROSECONDS);
+  }
+
   public static final JsonParser<Map<String, SerializedValue>> activityArgumentsP = mapP(serializedValueP);
+
   public static final JsonParser<Map<String, SerializedValue>> simulationArgumentsP = mapP(serializedValueP);
 
   public static final JsonParser<ActivityAttributesRecord> activityAttributesP = productP

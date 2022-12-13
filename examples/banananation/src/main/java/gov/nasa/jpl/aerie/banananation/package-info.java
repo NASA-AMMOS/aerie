@@ -20,6 +20,7 @@
 @WithActivityType(BakeBananaBreadActivity.class)
 @WithActivityType(BananaNapActivity.class)
 @WithActivityType(DurationParameterActivity.class)
+@WithActivityType(ControllableDurationActivity.class)
 
 package gov.nasa.jpl.aerie.banananation;
 
@@ -27,6 +28,7 @@ import gov.nasa.jpl.aerie.banananation.activities.BakeBananaBreadActivity;
 import gov.nasa.jpl.aerie.banananation.activities.BananaNapActivity;
 import gov.nasa.jpl.aerie.banananation.activities.BiteBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.ChangeProducerActivity;
+import gov.nasa.jpl.aerie.banananation.activities.ControllableDurationActivity;
 import gov.nasa.jpl.aerie.banananation.activities.DecomposingActivity;
 import gov.nasa.jpl.aerie.banananation.activities.DecomposingSpawnActivity;
 import gov.nasa.jpl.aerie.banananation.activities.DurationParameterActivity;

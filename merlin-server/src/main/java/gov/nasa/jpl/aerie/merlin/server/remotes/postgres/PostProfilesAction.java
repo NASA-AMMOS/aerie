@@ -51,7 +51,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       this.statement.setLong(1, datasetId);
       this.statement.setString(2, resource);
       this.statement.setString(3, realProfileTypeP.unparse(realResourceType).toString());
-      this.statement.setString(4, duration.toISO8601String());
+      PreparedStatements.setDuration(this.statement, 4, duration);
       this.statement.addBatch();
     }
 
@@ -67,7 +67,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       this.statement.setLong(1, datasetId);
       this.statement.setString(2, resource);
       this.statement.setString(3, discreteProfileTypeP.unparse(resourceType).toString());
-      this.statement.setString(4, duration.toISO8601String());
+      PreparedStatements.setDuration(this.statement, 4, duration);
       this.statement.addBatch();
     }
 

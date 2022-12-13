@@ -162,6 +162,14 @@ const req = {
     return schedule;
   },
 
+  async simulate(request: APIRequestContext, planId: number): Promise<SimulationResponse> {
+    const data = await req.hasura(request, gql.SIMULATE, {
+      plan_id: planId,
+    });
+    const { simulate } = data;
+    return simulate;
+  },
+
   async createSchedulingSpecGoal(request: APIRequestContext, spec_goal: SchedulingSpecGoalInsertInput): Promise<void> {
     const data = await req.hasura(request, gql.CREATE_SCHEDULING_SPEC_GOAL, {spec_goal});
     const { insert_scheduling_specification_goals_one } = data;

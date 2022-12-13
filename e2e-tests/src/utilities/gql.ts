@@ -28,6 +28,14 @@ const gql = {
     }
   `,
 
+  SIMULATE: `#graphql
+  query Simulate($plan_id: Int!) {
+    simulate(planId: $plan_id){
+      status
+      reason
+    }
+  }`,
+
   CREATE_PLAN: `#graphql
     mutation CreatePlan($plan: plan_insert_input!) {
       insert_plan_one(object: $plan) {
@@ -36,6 +44,7 @@ const gql = {
       }
     }
   `,
+
   CREATE_SIMULATION: `#graphql
     mutation CreateSimulation($simulation: simulation_insert_input!) {
       insert_simulation_one(object: $simulation) {
@@ -68,14 +77,6 @@ const gql = {
       }
     }
   `,
-
-  TRIGGER_SCHEDULING: `#graphql
-  query TriggerSchedulingRun($spec_id: Int!) {
-    schedule(specificationId: $spec_id){
-      status
-      reason
-    }
-  }`,
 
   INSERT_SCHEDULING_SPECIFICATION: `#graphql
   mutation MakeSchedulingSpec($scheduling_spec: scheduling_specification_insert_input!) {

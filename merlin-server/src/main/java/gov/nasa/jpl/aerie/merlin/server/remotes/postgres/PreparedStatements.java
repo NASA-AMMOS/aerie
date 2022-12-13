@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers;
 import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
@@ -65,6 +66,11 @@ public final class PreparedStatements {
   public static void setTimestamp(final PreparedStatement statement, final int parameter, final Timestamp argument)
   throws SQLException {
     statement.setString(parameter, TIMESTAMP_FORMAT.format(argument.time()));
+  }
+
+  public static void setDuration(final PreparedStatement statement, final int parameter, final Duration argument) throws SQLException {
+    final var micros = argument.in(Duration.MICROSECONDS);
+    statement.setString(parameter, "PT%d.%06dS".formatted(micros / 1_000_000, micros % 1_000_000));
   }
 
   public static void setParameters(final PreparedStatement statement, final int parameter, final List<Parameter> parameters)

@@ -36,3 +36,11 @@ type SimulationResponseActivity = Omit<ActivityDirective, 'id' | 'startTime'> & 
   computedAttributes: string;
   startTimestamp: string;
 };
+
+type SimulationResponseStatus = 'pending' | 'complete' | 'failed' | 'incomplete';
+
+type SimulationResponse = {
+  reason: any;
+  status: SimulationResponseStatus;
+  simulationDatasetId: number;
+};

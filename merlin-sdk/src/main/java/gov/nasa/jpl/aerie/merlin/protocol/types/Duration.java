@@ -493,14 +493,6 @@ public final class Duration implements Comparable<Duration> {
     return this.isEqualTo(other);
   }
 
-  public static Duration fromISO8601String(final String iso8601String){
-    return of(java.time.Duration.parse(iso8601String).toMillis(), MILLISECOND);
-  }
-
-  public String toISO8601String() {
-    return java.time.Duration.ofMillis(dividedBy(Duration.MILLISECONDS)).toString();
-  }
-
   @Override
   public int hashCode() {
     return Long.hashCode(this.durationInMicroseconds);
