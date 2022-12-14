@@ -55,5 +55,10 @@
     "supervisor": "^0.12.0",
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1"
+  },
+  "overrides": {
+    "express": {
+      "qs": "6.9.7"
+    }
   }
 }
