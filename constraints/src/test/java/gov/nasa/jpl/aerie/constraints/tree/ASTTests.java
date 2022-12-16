@@ -692,7 +692,17 @@ public class ASTTests {
 
     final var result = new ViolationsOfWindows(new Supplier<>(windows)).evaluate(simResults, new EvaluationEnvironment());
 
-    final var expected = List.of(new Violation(windows.not().select(simResults.bounds)));
+    final var expected = List.of(new Violation(
+        List.of(),
+        List.of(),
+        List.of(Interval.between(5, 6, SECONDS)),
+        List.of(
+            Interval.between(Duration.MIN_VALUE, Inclusive, Duration.SECOND, Exclusive),
+            Interval.between(4, Exclusive, 5, Exclusive, SECONDS),
+            Interval.between(6, Exclusive, 7, Exclusive, SECONDS),
+            Interval.between(Duration.of(20, SECONDS), Exclusive, Duration.MAX_VALUE, Inclusive)
+        )
+    ));
 
     assertEquivalent(expected, result);
   }
