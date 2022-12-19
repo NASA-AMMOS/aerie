@@ -1,9 +1,9 @@
 import type * as WindowsExpressions from "./constraints-ast.js";
 import type * as ConstraintEDSL from "./constraints-edsl-fluent-api.js";
 
-export interface ActivityTemplate {
-  activityType: string,
-  args: {[key: string]: any},
+export interface ActivityTemplate<A extends ConstraintEDSL.Gen.ActivityType> {
+  activityType: A,
+  args: ConstraintEDSL.Gen.ActivityTypeParameterMap[A]
 }
 
 export interface ClosedOpenInterval {
@@ -56,19 +56,20 @@ export type Goal =
 
 export interface ActivityRecurrenceGoal {
   kind: NodeKind.ActivityRecurrenceGoal,
-  activityTemplate: ActivityTemplate,
+  activityTemplate: ActivityTemplate<any>,
   interval: Temporal.Duration,
 }
 
 export interface ActivityCardinalityGoal {
   kind: NodeKind.ActivityCardinalityGoal,
-  activityTemplate: ActivityTemplate,
+  activityTemplate: ActivityTemplate<any>,
   specification: CardinalityGoalArguments
 }
 
 export interface ActivityCoexistenceGoal {
   kind: NodeKind.ActivityCoexistenceGoal,
-  activityTemplate: ActivityTemplate,
+  activityTemplate: ActivityTemplate<any>,
+  alias: string,
   forEach: WindowsExpressions.WindowsExpression | ActivityExpression,
   startConstraint: ActivityTimingConstraintSingleton | ActivityTimingConstraintRange | undefined,
   endConstraint: ActivityTimingConstraintSingleton | ActivityTimingConstraintRange | undefined,
