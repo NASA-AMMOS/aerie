@@ -2,10 +2,16 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
+import gov.nasa.jpl.aerie.constraints.tree.ForEachActivitySpans;
+import gov.nasa.jpl.aerie.constraints.tree.Not;
+import gov.nasa.jpl.aerie.constraints.tree.Or;
+import gov.nasa.jpl.aerie.constraints.tree.WindowsFromSpans;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingCondition;
 
 import java.time.Instant;
 import java.util.List;
@@ -59,6 +65,36 @@ public class TestUtility {
       }
     }
     return false;
+  }
+
+  public static List<SchedulingCondition> createAutoMutexGlobalSchedulingCondition(final ActivityType activityType) {
+    return List.of(
+        new SchedulingCondition(
+            new Not(
+                new Or(
+                    new WindowsFromSpans(
+                        new ForEachActivitySpans(
+                            activityType.getName(),
+                            "span activity alias 0",
+                            new ActivitySpan("span activity alias 0"))
+                    )
+                )
+            ),
+            List.of(activityType)),
+        new SchedulingCondition(
+            new Not(
+                new Or(
+                    new WindowsFromSpans(
+                        new ForEachActivitySpans(
+                            activityType.getName(),
+                            "span activity alias 1",
+                            new ActivitySpan("span activity alias 1"))
+                    )
+                )
+            ),
+            List.of(activityType)
+        )
+    );
   }
 
   /**

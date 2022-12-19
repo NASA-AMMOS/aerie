@@ -440,7 +440,7 @@ public class TestApplyWhen {
         fooMissionModel), SimulationUtility.getFooSchedulerModel());
 
     final var activityType = problem.getActivityType("ControllableDurationActivity");
-    problem.add(BinaryMutexConstraint.buildMutexConstraint(activityType, activityType));
+    TestUtility.createAutoMutexGlobalSchedulingCondition(activityType).forEach(problem::add);
 
     CardinalityGoal goal = new CardinalityGoal.Builder()
         .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
@@ -500,7 +500,7 @@ public class TestApplyWhen {
         .build();
 
 
-    problem.add(BinaryMutexConstraint.buildMutexConstraint(activityType, activityType));
+    TestUtility.createAutoMutexGlobalSchedulingCondition(activityType).forEach(problem::add);
     problem.setGoals(List.of(goal));
 
     final var solver = new PrioritySolver(problem);
@@ -550,7 +550,7 @@ public class TestApplyWhen {
         .build();
 
 
-    problem.add(BinaryMutexConstraint.buildMutexConstraint(activityType, activityType));
+    TestUtility.createAutoMutexGlobalSchedulingCondition(activityType).forEach(problem::add);
     problem.setGoals(List.of(goal));
 
     final var solver = new PrioritySolver(problem);
@@ -581,7 +581,7 @@ public class TestApplyWhen {
 
 
     final var activityType = problem.getActivityType("BasicActivity");
-    problem.add(BinaryMutexConstraint.buildMutexConstraint(activityType, activityType));
+    TestUtility.createAutoMutexGlobalSchedulingCondition(activityType).forEach(problem::add);
 
     CardinalityGoal goal = new CardinalityGoal.Builder()
         .duration(Interval.between(Duration.of(16, Duration.SECONDS), Duration.of(19, Duration.SECONDS)))
@@ -1112,7 +1112,7 @@ public class TestApplyWhen {
     final var activityTypeDependent = problem.getActivityType("ControllableDurationActivity");
     logger.debug("ControllableDurationActivity: " + activityTypeDependent.toString());
 
-    problem.add(BinaryMutexConstraint.buildMutexConstraint(activityTypeDependent, activityTypeDependent));
+    TestUtility.createAutoMutexGlobalSchedulingCondition(activityTypeDependent).forEach(problem::add);
 
 
     // "Make an expression that depends on a resource (the resource here is mission.activitiesExecuted).
@@ -1186,7 +1186,7 @@ public class TestApplyWhen {
     final var activityTypeDependent = problem.getActivityType("ControllableDurationActivity");
     logger.debug("ControllableDurationActivity: " + activityTypeDependent.toString());
 
-    problem.add(BinaryMutexConstraint.buildMutexConstraint(activityTypeDependent, activityTypeDependent));
+    TestUtility.createAutoMutexGlobalSchedulingCondition(activityTypeDependent).forEach(problem::add);
 
 
     // "Make an expression that depends on a resource (the resource here is mission.activitiesExecuted).
@@ -1262,7 +1262,7 @@ public class TestApplyWhen {
     final var activityTypeDependent = problem.getActivityType("ControllableDurationActivity");
     logger.debug("ControllableDurationActivity: " + activityTypeDependent.toString());
 
-    problem.add(BinaryMutexConstraint.buildMutexConstraint(activityTypeDependent, activityTypeDependent));
+    TestUtility.createAutoMutexGlobalSchedulingCondition(activityTypeDependent).forEach(problem::add);
 
 
     // "Make an expression that depends on a resource (the resource here is mission.activitiesExecuted).
