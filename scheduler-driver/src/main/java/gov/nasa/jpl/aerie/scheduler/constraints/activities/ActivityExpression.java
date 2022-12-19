@@ -1,19 +1,25 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
+import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
+import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.Nullable;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateQueryParam;
-import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * the criteria used to identify activity instances in scheduling goals
@@ -32,7 +38,7 @@ import java.util.Map;
  * templates may be fluently constructed via builders that parse like first
  * order logic predicate clauses, used in building up scheduling rules
  */
-public class ActivityExpression {
+public class ActivityExpression implements Expression<Spans> {
 
   private Windows startOrEndRangeW;
 
@@ -46,7 +52,7 @@ public class ActivityExpression {
    *
    * please use the enclosed fluent Builder class instead
    *
-   * leaves all criteria fields unspecified
+   * leaves all criteria elements unspecified
    */
   protected ActivityExpression() { }
 
@@ -74,20 +80,15 @@ public class ActivityExpression {
 
     protected Duration acceptableAbsoluteTimingError = Duration.of(0, Duration.MILLISECOND);
 
-    Map<String, SerializedValue> arguments = new HashMap<>();
-    Map<String, VariableArgumentComputer> variableArguments = new HashMap<>();
+    Map<String, ProfileExpression<?>> arguments = new HashMap<>();
 
-    public B withArgument(String argument, String resourceName, TimeExpression timeToQuery) {
-      variableArguments.put(argument, new StateQueryParam(resourceName, timeToQuery));
-      return getThis();
-    }
-
-    public B withArgument(String argument, String resourceName) {
-      variableArguments.put(argument, new StateQueryParam(resourceName, TimeExpression.atStart()));
-      return getThis();
-    }
 
     public B withArgument(String argument, SerializedValue val) {
+      arguments.put(argument, new ProfileExpression<>(new DiscreteValue(val)));
+      return getThis();
+    }
+
+    public B withArgument(String argument, ProfileExpression<?> val) {
       arguments.put(argument, val);
       return getThis();
     }
@@ -258,12 +259,12 @@ public class ActivityExpression {
     B basedOn(@NotNull ActivityInstance existingAct) {
       type = existingAct.getType();
 
-      if (existingAct.getStartTime() != null) {
-        startsIn = Interval.at(existingAct.getStartTime());
+      if (existingAct.startTime() != null) {
+        startsIn = Interval.at(existingAct.startTime());
       }
 
-      if (existingAct.getDuration() != null) {
-        durationIn = Interval.at(existingAct.getDuration());
+      if (existingAct.duration() != null) {
+        durationIn = Interval.at(existingAct.duration());
       }
 
       //FINISH: extract all param values as == criteria
@@ -334,7 +335,6 @@ public class ActivityExpression {
       durationIn = template.durationRange;
       startsOrEndsIn = template.startOrEndRange;
       arguments = template.arguments;
-      variableArguments = template.variableArguments;
       return getThis();
     }
 
@@ -347,7 +347,6 @@ public class ActivityExpression {
       template.startOrEndRange = startsOrEndsIn;
       template.startOrEndRangeW = startsOrEndsInW;
       template.arguments = arguments;
-      template.variableArguments = variableArguments;
       return template;
     }
 
@@ -471,8 +470,8 @@ public class ActivityExpression {
   }
 
 
-  Map<String, SerializedValue> arguments = new HashMap<>();
-  Map<String, VariableArgumentComputer> variableArguments = new HashMap<>();
+  Map<String, ProfileExpression<?>> arguments = new HashMap<>();
+
 
   /**
    * determines if the given activity matches all criteria of this template
@@ -485,26 +484,26 @@ public class ActivityExpression {
    *     by this template, or false if it does not meet one or more of
    *     the template criteria
    */
-  public boolean matches(@NotNull ActivityInstance act, SimulationResults simulationResults) {
+  public boolean matches(@NotNull ActivityInstance act, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment) {
     boolean match = true;
 
     //REVIEW: literal object equality is probably correct for type
     match = match && (type == null || type == act.getType());
 
     if (match && startRange != null) {
-      final var startT = act.getStartTime();
+      final var startT = act.startTime();
       match = (startT != null) && startRange.contains(startT);
     }
 
     if (match && startOrEndRange != null) {
-      final var startT = act.getStartTime();
+      final var startT = act.startTime();
       final var endT = act.getEndTime();
       match =
           ((startT != null) && startOrEndRange.contains(startT)) || (endT != null) && startOrEndRange.contains(endT);
     }
 
     if (match && startOrEndRangeW != null) {
-      final var startT = act.getStartTime();
+      final var startT = act.startTime();
       final var endT = act.getEndTime();
       match = ((startT != null) && startOrEndRangeW.includes(Interval.at(startT))
               || (endT != null) && startOrEndRangeW.includes(Interval.at(endT)));
@@ -516,14 +515,15 @@ public class ActivityExpression {
     }
 
     if (match && durationRange != null) {
-      final var dur = act.getDuration();
+      final var dur = act.duration();
       match = (dur != null) && durationRange.contains(dur);
     }
 
     //activity must have all instantiated arguments of template to be compatible
     if (match && arguments != null) {
-      Map<String, SerializedValue> actInstanceArguments = act.getArguments();
-      for (var param : arguments.entrySet()) {
+      Map<String, SerializedValue> actInstanceArguments = act.arguments();
+      final var instantiatedArguments = ActivityInstance.instantiateArguments(arguments, act.startTime(), simulationResults, evaluationEnvironment, type);
+      for (var param : instantiatedArguments.entrySet()) {
         if (actInstanceArguments.containsKey(param.getKey())) {
           match = actInstanceArguments.get(param.getKey()).equals(param.getValue());
         }
@@ -532,31 +532,80 @@ public class ActivityExpression {
         }
       }
     }
-    if(match && variableArguments != null){
-      Map<String, VariableArgumentComputer> actVariableParams = act.getVariableArguments();
-      for (var templateVariableArgument : variableArguments.entrySet()) {
-        var templateParamName = templateVariableArgument.getKey();
-        var templateParamValue = templateVariableArgument.getValue();
+    return match;
+  }
 
-        if (actVariableParams.containsKey(templateParamName)) {
-          //if the variable argument is formally defined
-          //we check on the equality between expression definitions
-          match = actVariableParams.get(templateParamName).equals(templateParamValue);
-        } else if(act.getArguments().containsKey(templateParamName)){
-            //if the variable argument has been instantiated (which is always the case for instances coming from the
-            //simulation), we check that the value would correspond
-            //TODO: value computed at the start time of the activity, per the current behavior of ActivityCreationTemplate/ActivityInstance
-            // but should be different and more specialized
-            match = ActivityInstance.getValue(templateParamValue, act.getStartTime(), simulationResults).equals(act.getArguments().get(templateParamName));
+  public boolean matches(@NotNull gov.nasa.jpl.aerie.constraints.model.ActivityInstance act, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment) {
+    boolean match = true;
+
+    //REVIEW: literal object equality is probably correct for type
+    match = match && (type == null || Objects.equals(type.getName(), act.type));
+
+    if (match && startRange != null) {
+      final var startT = act.interval.start;
+      match = (startT != null) && startRange.contains(startT);
+    }
+
+    if (match && startOrEndRange != null) {
+      final var startT = act.interval.start;
+      final var endT = act.interval.end;
+      match =
+          ((startT != null) && startOrEndRange.contains(startT)) || (endT != null) && startOrEndRange.contains(endT);
+    }
+
+    if (match && startOrEndRangeW != null) {
+      final var startT = act.interval.start;
+      final var endT = act.interval.end;
+      match = ((startT != null) && startOrEndRangeW.includes(Interval.at(startT))
+               || (endT != null) && startOrEndRangeW.includes(Interval.at(endT)));
+    }
+
+    if (match && endRange != null) {
+      final var endT = act.interval.end;;
+      match = (endT != null) && endRange.contains(endT);
+    }
+
+    if (match && durationRange != null) {
+      final var dur = act.interval.end.minus(act.interval.start);
+      match = durationRange.contains(dur);
+    }
+
+    //activity must have all instantiated arguments of template to be compatible
+    if (match && arguments != null) {
+      Map<String, SerializedValue> actInstanceArguments = act.parameters;
+      final var instantiatedArguments = ActivityInstance.instantiateArguments(arguments, act.interval.start, simulationResults, evaluationEnvironment, type);
+      for (var param : instantiatedArguments.entrySet()) {
+        if (actInstanceArguments.containsKey(param.getKey())) {
+          match = actInstanceArguments.get(param.getKey()).equals(param.getValue());
         }
         if (!match) {
           break;
         }
       }
     }
-
     return match;
   }
 
+  @Override
+  public Spans evaluate(
+      final SimulationResults results,
+      final Interval bounds,
+      final EvaluationEnvironment environment)
+  {
+    final var spans = new Spans();
+    results.activities.stream().filter(x -> matches(x, results, environment)).forEach(x -> spans.add(x.interval));
+    return spans;
+  }
+
+  @Override
+  public String prettyPrint(final String prefix) {
+    return String.format(
+        "\n%s(look-for-activity %s)",
+        prefix,
+        this.type
+    );  }
+
+  @Override
+  public void extractResources(final Set<String> names) { }
 
 }

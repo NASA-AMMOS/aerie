@@ -50,13 +50,13 @@ public class TimeRangeExpression {
         final var anchorActSearch = new ActivityExpression.Builder()
             .basedOn(actTemplate)
             .startsIn(inter).build(); //check if it exists IN the windows, not just the upper and lower bounds of the interval
-        final var anchorActs = plan.find(anchorActSearch, simulationResults);
+        final var anchorActs = plan.find(anchorActSearch, simulationResults, new EvaluationEnvironment());
         for (var anchorAct : anchorActs) {
           var endInclusivity = Interval.Inclusivity.Exclusive;
-          if(anchorAct.getDuration().isZero()){
+          if(anchorAct.duration().isZero()){
             endInclusivity = Interval.Inclusivity.Inclusive;
           }
-          actTw = actTw.set(Interval.between(anchorAct.getStartTime(), Interval.Inclusivity.Inclusive, anchorAct.getEndTime(), endInclusivity), true);
+          actTw = actTw.set(Interval.between(anchorAct.duration(), Interval.Inclusivity.Inclusive, anchorAct.getEndTime(), endInclusivity), true);
         }
       }
       inter = inter.and(actTw);

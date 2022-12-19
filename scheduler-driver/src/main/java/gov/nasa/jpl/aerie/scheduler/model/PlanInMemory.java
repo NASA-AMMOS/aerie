@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.model;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
@@ -81,7 +82,7 @@ public class PlanInMemory implements Plan {
       throw new IllegalArgumentException(
           "adding null activity to plan");
     }
-    final var startT = act.getStartTime();
+    final var startT = act.startTime();
     if (startT == null) {
       throw new IllegalArgumentException(
           "adding activity with null start time to plan");
@@ -115,7 +116,7 @@ public class PlanInMemory implements Plan {
   public void remove(ActivityInstance act) {
     //TODO: handle ownership. Constraint propagation ?
     actsById.remove(act.getId());
-    var acts = actsByTime.get(act.getStartTime());
+    var acts = actsByTime.get(act.startTime());
     if (acts != null) acts.remove(act);
     acts = actsByType.get(act.getType());
     if (acts != null) acts.remove(act);
@@ -165,14 +166,15 @@ public class PlanInMemory implements Plan {
    */
   @Override
   public Collection<ActivityInstance> find(
-      ActivityExpression template, SimulationResults simulationResults)
+      ActivityExpression template, SimulationResults simulationResults,
+      EvaluationEnvironment evaluationEnvironment)
   {
     //REVIEW: could do something clever with returning streams to prevent wasted work
     //REVIEW: something more clever for time-based queries using time index
     LinkedList<ActivityInstance> matched = new LinkedList<>();
     for (final var actsAtTime : actsByTime.values()) {
       for (final var act : actsAtTime) {
-        if (template.matches(act, simulationResults)) {
+        if (template.matches(act, simulationResults, evaluationEnvironment)) {
           matched.add(act);
         }
       }

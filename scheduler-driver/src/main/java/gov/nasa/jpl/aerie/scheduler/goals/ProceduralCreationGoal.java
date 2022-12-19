@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
@@ -123,7 +124,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
       final var satisfyingActSearch = new ActivityExpression.Builder()
           .basedOn(requestedAct)
           .build();
-      final var matchingActs = plan.find(satisfyingActSearch, simulationResults);
+      final var matchingActs = plan.find(satisfyingActSearch, simulationResults, new EvaluationEnvironment());
 
       var missingActAssociations = new ArrayList<ActivityInstance>();
       var planEvaluation = plan.getEvaluation();
@@ -149,7 +150,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
         //generate a conflict if no matching acts found
         if (matchingActs.isEmpty()) {
           conflicts.add(new MissingActivityInstanceConflict(
-              this, requestedAct));
+              this, requestedAct, new EvaluationEnvironment()));
           //REVIEW: pass the requested instance to conflict or otherwise cache it
           //        for the imminent request to create it in the plan
         } else {
@@ -209,8 +210,8 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
     //filter out acts that don't have a start time within the goal purview
     final var evaluatedGoalContext = getTemporalContext().evaluate(simulationResults);
     final var filteredActs = allActs.stream().filter(
-        act -> ((act.getStartTime() != null)
-                && evaluatedGoalContext.includes(Interval.at(0, act.getStartTime())))
+        act -> ((act.startTime() != null)
+                && evaluatedGoalContext.includes(Interval.at(0, act.startTime())))
     ).collect(java.util.stream.Collectors.toList());
 
     return filteredActs;

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.scheduling;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -13,7 +14,7 @@ public interface GlobalConstraintWithIntrospection extends GlobalConstraint {
 
   //specific to introspectable constraint : find the windows in which we can insert activities without violating
   //the constraint
-  Windows findWindows(Plan plan, Windows windows, Conflict conflict, SimulationResults simulationResults);
+  Windows findWindows(Plan plan, Windows windows, Conflict conflict, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment);
 
 
 }

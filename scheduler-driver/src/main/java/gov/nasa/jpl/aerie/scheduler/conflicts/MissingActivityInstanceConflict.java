@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.conflicts;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityExistentialGoal;
@@ -23,9 +24,10 @@ public class MissingActivityInstanceConflict extends MissingActivityConflict {
    */
   public MissingActivityInstanceConflict(
       ActivityExistentialGoal goal,
-      ActivityInstance instance)
+      ActivityInstance instance,
+      EvaluationEnvironment evaluationEnvironment)
   {
-    super(goal);
+    super(goal, evaluationEnvironment);
 
     if (instance == null) {
       throw new IllegalArgumentException(
@@ -57,7 +59,7 @@ public class MissingActivityInstanceConflict extends MissingActivityConflict {
    */
   @Override
   public Windows getTemporalContext() {
-    return new Windows(false).set(Interval.between(instance.getStartTime(), instance.getEndTime()), true);
+    return new Windows(false).set(Interval.between(instance.startTime(), instance.getEndTime()), true);
   }
 
   /**

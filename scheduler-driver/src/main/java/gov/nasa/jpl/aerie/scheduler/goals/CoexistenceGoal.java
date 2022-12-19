@@ -1,23 +1,26 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.time.Segment;
+import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
+import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityTemplateConflict;
+import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplateDisjunction;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
-import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpression;
-import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
-import gov.nasa.jpl.aerie.scheduler.conflicts.MissingAssociationConflict;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * describes the desired coexistence of an activity with another
@@ -27,28 +30,28 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
   private TimeExpression startExpr;
   private TimeExpression endExpr;
   private DurationExpression durExpr;
+  private String alias;
 
+  /**
+   * the pattern used to locate anchor activity instances in the plan
+   */
+  protected Expression<Spans> expr;
+
+  /**
+   * used to check this hasn't changed, as if it did, that's probably unanticipated behavior
+   */
+  protected Spans evaluatedExpr;
   /**
    * the builder can construct goals piecemeal via a series of method calls
    */
   public static class Builder extends ActivityTemplateGoal.Builder<Builder> {
 
-    public Builder forEach(ActivityExpression actExpr) {
-      forEach = new TimeRangeExpression.Builder().from(actExpr).build();
+    public Builder forEach(Expression<Spans> expression) {
+      forEach = expression;
       return getThis();
     }
 
-    public Builder forEach(Expression<Windows> expression) {
-      forEach = new TimeRangeExpression.Builder().from(expression).build();
-      return getThis();
-    }
-
-    public Builder forEach(TimeRangeExpression expr) {
-      forEach = expr;
-      return getThis();
-    }
-
-    protected TimeRangeExpression forEach;
+    protected Expression<Spans> forEach;
 
     public Builder startsAt(TimeExpression timeExpression) {
       startExpr = timeExpression;
@@ -106,6 +109,12 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       return getThis();
     }
 
+    String alias;
+    public Builder aliasForAnchors(String alias){
+      this.alias = alias;
+      return getThis();
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -144,6 +153,8 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
       goal.durExpr = durExpression;
 
+      goal.alias = alias;
+
       return goal;
     }
 
@@ -177,7 +188,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       this.initiallyEvaluatedTemporalContext = windows;
     }
 
-    Windows anchors = expr.computeRange(simulationResults, plan, windows);
+    final var anchors = expr.evaluate(simulationResults).intersectWith(windows);
 
     //make sure expr hasn't changed either as that could yield unexpected behavior
     if (this.evaluatedExpr != null && !anchors.isCollectionSubsetOf(this.evaluatedExpr)) {
@@ -193,8 +204,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
     //the rest is the same if no such bisection has happened
     final var conflicts = new java.util.LinkedList<Conflict>();
-    for (var window : anchors.iterateEqualTo(true)) {
-
+    for (var window : anchors) {
       boolean disj = false;
       ActivityExpression.AbstractBuilder actTB = null;
       if (this.desiredActTemplate instanceof ActivityCreationTemplateDisjunction) {
@@ -208,17 +218,17 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
       if(this.startExpr != null) {
         Interval startTimeRange = null;
-        startTimeRange = this.startExpr.computeTime(simulationResults, plan, window);
+        startTimeRange = this.startExpr.computeTime(simulationResults, plan, window.interval());
         actTB.startsIn(startTimeRange);
       }
       if(this.endExpr != null) {
         Interval endTimeRange = null;
-        endTimeRange = this.endExpr.computeTime(simulationResults, plan, window);
+        endTimeRange = this.endExpr.computeTime(simulationResults, plan, window.interval());
         actTB.endsIn(endTimeRange);
       }
       /* this will override whatever might be already present in the template */
       if(durExpr!=null){
-        var durRange = this.durExpr.compute(window, simulationResults);
+        var durRange = this.durExpr.compute(window.interval(), simulationResults);
         actTB.durationIn(Interval.between(durRange, durRange));
       }
 
@@ -227,9 +237,8 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         temp = (ActivityCreationTemplateDisjunction) actTB.build();
       } else {
         temp = (ActivityCreationTemplate) actTB.build();
-
       }
-      final var existingActs = plan.find(temp, simulationResults);
+      final var existingActs = plan.find(temp, simulationResults, createEvaluationEnvironmentFromAnchor(window));
 
       var missingActAssociations = new ArrayList<ActivityInstance>();
       var planEvaluation = plan.getEvaluation();
@@ -253,7 +262,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       if (!alreadyOneActivityAssociated) {
         //create conflict if no matching target activity found
         if (existingActs.isEmpty()) {
-          conflicts.add(new MissingActivityTemplateConflict(this, this.temporalContext.evaluate(simulationResults), temp));
+          conflicts.add(new MissingActivityTemplateConflict(this, this.temporalContext.evaluate(simulationResults), temp, createEvaluationEnvironmentFromAnchor(window)));
         } else {
           conflicts.add(new MissingAssociationConflict(this, missingActAssociations));
         }
@@ -282,16 +291,5 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
    * client code should use builders to instance goals
    */
   protected CoexistenceGoal() { }
-
-  /**
-   * the pattern used to locate anchor activity instances in the plan
-   */
-  protected TimeRangeExpression expr;
-
-  /**
-   * used to check this hasn't changed, as if it did, that's probably unanticipated behavior
-   */
-  protected Windows evaluatedExpr;
-
 
 }
