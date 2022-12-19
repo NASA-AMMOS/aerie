@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
@@ -123,8 +124,8 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
           .basedOn(desiredActTemplate)
           .startsIn(subInterval)
           .build();
-      final var acts = new java.util.LinkedList<>(plan.find(satisfyingActSearch, simulationResults));
-      acts.sort(java.util.Comparator.comparing(ActivityInstance::getStartTime));
+      final var acts = new java.util.LinkedList<>(plan.find(satisfyingActSearch, simulationResults, new EvaluationEnvironment()));
+      acts.sort(java.util.Comparator.comparing(ActivityInstance::startTime));
 
       //walk through existing matching activities to find too-large gaps,
       //starting from the goal's own start time
@@ -134,7 +135,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
       var prevStartT = subInterval.start;
       while (actI.hasNext() && prevStartT.compareTo(lastStartT) < 0) {
         final var act = actI.next();
-        final var actStartT = act.getStartTime();
+        final var actStartT = act.startTime();
 
         //check if the inter-activity gap is too large
         //REVIEW: should do any check based on min gap duration?
@@ -203,7 +204,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
          intervalT = intervalT.plus(recurrenceInterval.max)
     ) {
       final var windows = new Windows(false).set(Interval.betweenClosedOpen(intervalT.minus(recurrenceInterval.max), Duration.min(intervalT, end)), true);
-      conflicts.add(new MissingActivityTemplateConflict(this, windows, this.getActTemplate()));
+      conflicts.add(new MissingActivityTemplateConflict(this, windows, this.getActTemplate(), new EvaluationEnvironment()));
       if(intervalT.compareTo(end) >= 0){
         break;
       }

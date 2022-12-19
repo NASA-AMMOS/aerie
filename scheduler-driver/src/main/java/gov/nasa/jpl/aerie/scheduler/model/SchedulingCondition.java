@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.model;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
@@ -21,7 +22,8 @@ public record SchedulingCondition(
       final Plan plan,
       final Windows windows,
       final Conflict conflict,
-      final SimulationResults simulationResults)
+      final SimulationResults simulationResults,
+      final EvaluationEnvironment evaluationEnvironment)
   {
     final ActivityType type;
     if (conflict instanceof MissingActivityInstanceConflict c) {
@@ -32,7 +34,7 @@ public record SchedulingCondition(
       throw new Error("Unsupported conflict %s".formatted(conflict));
     }
     if(anyMatch(this.activityTypes, type)){
-      return this.expression.evaluate(simulationResults).and(windows);
+      return this.expression.evaluate(simulationResults, evaluationEnvironment).and(windows);
     } else {
       return windows;
     }

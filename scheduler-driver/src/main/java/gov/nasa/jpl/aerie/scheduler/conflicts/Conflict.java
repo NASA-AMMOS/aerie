@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.conflicts;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 
@@ -22,12 +23,12 @@ public abstract class Conflict {
    *
    * @param goal IN STORED the dissatisfied goal that issued the conflict
    */
-  public Conflict(Goal goal) {
+  public Conflict(Goal goal, EvaluationEnvironment evaluationEnvironment) {
     if (goal == null) {
       throw new IllegalArgumentException(
           "creating conflict from null goal");
     }
-
+    this.evaluationEnvironment = evaluationEnvironment;
     this.goal = goal;
   }
 
@@ -38,6 +39,10 @@ public abstract class Conflict {
    */
   public Goal getGoal() {
     return goal;
+  }
+
+  public EvaluationEnvironment getEvaluationEnvironment(){
+    return evaluationEnvironment;
   }
 
   /**
@@ -56,5 +61,9 @@ public abstract class Conflict {
    */
   private final Goal goal;
 
+  /**
+   * the evaluation environment is used to pass information to the scheduler
+   */
+  private final EvaluationEnvironment evaluationEnvironment;
 
 }

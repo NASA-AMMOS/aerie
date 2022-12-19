@@ -1,17 +1,16 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.EquationSolvingAlgorithms;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateQueryParam;
-import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpression;
-import gov.nasa.jpl.aerie.scheduler.constraints.durationexpressions.DurationExpressionState;
-import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
@@ -39,7 +38,7 @@ import java.util.Optional;
  * creation templates may be fluently constructed via builders that parse like
  * first order logic predicate clauses used in building up scheduling rules
  */
-public class ActivityCreationTemplate extends ActivityExpression {
+public class ActivityCreationTemplate extends ActivityExpression implements Expression<Spans> {
 
   private static final Logger logger = LoggerFactory.getLogger(ActivityCreationTemplate.class);
 
@@ -49,7 +48,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
    *
    * please use the enclosed fluent Builder class instead
    *
-   * leaves all criteria fields unspecified
+   * leaves all criteria elements unspecified
    */
   protected ActivityCreationTemplate() { }
 
@@ -109,17 +108,11 @@ public class ActivityCreationTemplate extends ActivityExpression {
       return getThis();
     }
 
-    protected DurationExpression parametricDur;
+    // parametric dur
+    //-> either state value
+    // or
+    //recognize the dur in the parameters instead of a specific builder ?
 
-    public Builder duration(@NotNull String nameState, TimeExpression expr){
-      this.parametricDur = new DurationExpressionState(new StateQueryParam(nameState, expr));
-      return this;
-    }
-
-    public Builder duration(@NotNull DurationExpression durExpr){
-      this.parametricDur = durExpr;
-      return this;
-    }
 
     @Override
     public Builder basedOn(ActivityCreationTemplate template) {
@@ -129,8 +122,6 @@ public class ActivityCreationTemplate extends ActivityExpression {
       durationIn = template.durationRange;
       startsOrEndsIn = template.startOrEndRange;
       arguments = template.arguments;
-      variableArguments = template.variableArguments;
-      parametricDur = template.parametricDur;
       return getThis();
     }
 
@@ -146,19 +137,9 @@ public class ActivityCreationTemplate extends ActivityExpression {
       template.startRange = this.startsIn;
       template.endRange = this.endsIn;
       template.startOrEndRange = this.startsOrEndsIn;
-      if (this.parametricDur != null){
-        if (this.durationIn != null){
-          throw new RuntimeException("Cannot specify two different types of durations");
-        }
-        template.parametricDur = this.parametricDur;
-      }
+
 
       if (this.type.getDurationType() instanceof DurationType.Uncontrollable) {
-        if (this.parametricDur != null) {
-          throw new RuntimeException("Cannot define parametric duration on activity of type "
-                                     + this.type.getName()
-                                     + " because its DurationType is Uncontrollable");
-        }
         if(this.acceptableAbsoluteTimingError.isZero()){
           //TODO: uncomment when precision can be set by user
           //logger.warn("Root-finding is likely to fail as activity has an uncontrollable duration and the timing "
@@ -176,7 +157,6 @@ public class ActivityCreationTemplate extends ActivityExpression {
       //        default value
 
       template.arguments = this.arguments;
-      template.variableArguments = this.variableArguments;
       return template;
     }
 
@@ -209,20 +189,6 @@ public class ActivityCreationTemplate extends ActivityExpression {
 
   }
 
-  protected DurationExpression parametricDur;
-
-  public boolean hasParametricDuration(){
-    return parametricDur != null;
-  }
-
-  public DurationExpression getParametricDuration(){
-    return parametricDur;
-  }
-
-  public void setParametricDuration(DurationExpression durExpression){
-    this.parametricDur = durExpression;
-  }
-
   /**
    * create activity if possible
    *
@@ -231,22 +197,19 @@ public class ActivityCreationTemplate extends ActivityExpression {
    * @return the instance of the activity (if successful; else, an empty object) wrapped as an Optional.
    */
   public @NotNull
-  Optional<ActivityInstance> createActivity(String name, Windows windows, boolean instantiateVariableArguments, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
+  Optional<ActivityInstance> createActivity(String name, Windows windows, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
     //REVIEW: how to properly export any flexibility to instance?
     for (var window : windows.iterateEqualTo(true)) {
-      var act = createInstanceForReal(name, window, instantiateVariableArguments, facade, plan, planningHorizon);
+      var act = createInstanceForReal(name, window, facade, plan, planningHorizon, evaluationEnvironment);
       if (act.isPresent()) {
         return act;
       }
     }
     return Optional.empty();
-
   }
 
-  private Optional<ActivityInstance> createInstanceForReal(final String name, final Interval interval, final boolean instantiateVariableArguments, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
-    final var act = new ActivityInstance(this.type);
-    act.setArguments(this.arguments);
-    act.setVariableArguments(this.variableArguments);
+
+  private Optional<ActivityInstance> createInstanceForReal(final String name, final Interval interval, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
     final var tnw = new TaskNetworkAdapter(new TaskNetwork());
     tnw.addAct(name);
     if (interval != null) {
@@ -282,9 +245,15 @@ public class ActivityCreationTemplate extends ActivityExpression {
 
         @Override
         public Duration valueAt(final Duration start) {
-          final var actToSim = new ActivityInstance(act);
-          actToSim.setStartTime(start);
-          actToSim.instantiateVariableArguments(facade.getLatestConstraintSimulationResults());
+          final var actToSim = ActivityInstance.of(type,
+                                                   start,
+                                                   null,
+                                                   ActivityInstance.instantiateArguments(arguments,
+                                                                                         start,
+                                                                                         facade.getLatestConstraintSimulationResults(),
+                                                                                         evaluationEnvironment,
+                                                                                         type),
+                                                   null);
           try {
             facade.simulateActivity(actToSim);
             final var dur = facade.getActivityDuration(actToSim);
@@ -311,12 +280,20 @@ public class ActivityCreationTemplate extends ActivityExpression {
                                                                                             startInterval.start,
                                                                                             startInterval.end,
                                                                                             20);
-        act.setStartTime(result.x());
+
+        Duration dur = null;
         if(!f.isApproximation()){
           //f is calling simulation -> we do not need to resimulate this activity later
-          act.setDuration(result.fx().minus(result.x()));
+          dur = result.fx().minus(result.x());
         }
-        return Optional.of(act);
+        return Optional.of(ActivityInstance.of(type,
+                                               result.x(),
+                                               dur,
+                                               ActivityInstance.instantiateArguments(this.arguments, result.x(),
+                                                                                     facade.getLatestConstraintSimulationResults(),
+                                                                                     evaluationEnvironment,
+                                                                                     type),
+                                               null));
       } catch (EquationSolvingAlgorithms.ZeroDerivativeException zeroOrInfiniteDerivativeException) {
         logger.debug("Rootfinding encountered a zero-derivative");
       } catch (EquationSolvingAlgorithms.InfiniteDerivativeException infiniteDerivativeException) {
@@ -332,30 +309,42 @@ public class ActivityCreationTemplate extends ActivityExpression {
       }
       return Optional.empty();
       //CASE 2: activity has a controllable duration
-    } else{
+    } else if (this.type.getDurationType() instanceof DurationType.Controllable dt) {
       //select earliest start time, STN guarantees satisfiability
       final var earliestStart = solved.start().start;
-      act.setStartTime(earliestStart);
-      if (this.parametricDur == null) {
-        //select smallest duration
-        act.setDuration(solved.end().start.minus(solved.start().start));
-      } else {
-        final var computedDur = this.parametricDur.compute(Interval.between(earliestStart, earliestStart),
-                                                           facade.getLatestConstraintSimulationResults());
-        if (solved.duration().contains(computedDur)) {
-          act.setDuration(computedDur);
-        } else {
-          throw new IllegalArgumentException("Parametric duration is incompatible with temporal constraints");
-        }
-      }
-    }
+      final var instantiatedArguments = ActivityInstance.instantiateArguments(this.arguments,
+                                                                              earliestStart,
+                                                                              facade.getLatestConstraintSimulationResults(),
+                                                                              evaluationEnvironment,
+                                                                              type);
 
-    for (final var param : this.variableArguments.entrySet()) {
-      if (instantiateVariableArguments) {
-        act.instantiateVariableArgument(param.getKey(), facade.getLatestConstraintSimulationResults());
+      final var durationParameterName = dt.parameterName();
+        //handle variable duration parameter here
+      final Duration setActivityDuration;
+      if (instantiatedArguments.containsKey(durationParameterName)) {
+        final var argumentDuration = Duration.of(instantiatedArguments.get(durationParameterName).asInt().get(), Duration.MICROSECOND);
+        if (solved.duration().contains(argumentDuration)) {
+          setActivityDuration = argumentDuration;
+        } else{
+          logger.debug("Controllable duration set by user is incompatible with temporal constraints associated to the activity template");
+          return Optional.empty();
+        }
+      } else {
+        //REVIEW: should take default duration of activity type maybe ?
+        setActivityDuration = solved.end().start.minus(solved.start().start);
       }
+      return Optional.of(ActivityInstance.of(type,
+                                             earliestStart,
+                                             setActivityDuration,
+                                             ActivityInstance.instantiateArguments(this.arguments,
+                                                                                   earliestStart,
+                                                                                   facade.getLatestConstraintSimulationResults(),
+                                                                                   evaluationEnvironment,
+                                                                                   type),
+                                             null));
+    } else{
+     throw new UnsupportedOperationException("Duration type other than Uncontrollable and Controllable are not suppoerted");
     }
-    return Optional.of(act);
   }
 
   /**
@@ -374,8 +363,8 @@ public class ActivityCreationTemplate extends ActivityExpression {
    *     according to any specified template criteria
    */
   public @NotNull
-  Optional<ActivityInstance> createActivity(String name, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
-    return createInstanceForReal(name,null, true, facade, plan, planningHorizon);
+  Optional<ActivityInstance> createActivity(String name, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
+    return createInstanceForReal(name,null, facade, plan, planningHorizon, evaluationEnvironment);
   }
 
 

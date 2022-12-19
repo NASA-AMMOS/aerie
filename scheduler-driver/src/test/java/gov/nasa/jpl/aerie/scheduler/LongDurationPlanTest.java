@@ -44,10 +44,10 @@ public class LongDurationPlanTest {
   private static PlanInMemory makePlanA012(Problem problem) {
     final var plan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("GrowBanana");
-    plan.add(new ActivityInstance(actTypeA, t0, d1min));
-    plan.add(new ActivityInstance(actTypeA, t1year, d1min));
-    plan.add(new ActivityInstance(actTypeA, t2year, d1min));
-    plan.add(new ActivityInstance(actTypeA, t3year, d1min));
+    plan.add(ActivityInstance.of(actTypeA, t0, d1min));
+    plan.add(ActivityInstance.of(actTypeA, t1year, d1min));
+    plan.add(ActivityInstance.of(actTypeA, t2year, d1min));
+    plan.add(ActivityInstance.of(actTypeA, t3year, d1min));
     return plan;
   }
 
@@ -55,10 +55,10 @@ public class LongDurationPlanTest {
   private static boolean equalsExceptInName(ActivityInstance a, ActivityInstance b) {
     //REVIEW: maybe unify within ActivityInstance closer to data
     return Objects.equals(a.getType(), b.getType())
-           && Objects.equals(a.getStartTime(), b.getStartTime())
+           && Objects.equals(a.startTime(), b.startTime())
            && Objects.equals(a.getEndTime(), b.getEndTime())
-           && Objects.equals(a.getDuration(), b.getDuration())
-           && Objects.equals(a.getArguments(), b.getArguments());
+           && Objects.equals(a.duration(), b.duration())
+           && Objects.equals(a.arguments(), b.arguments());
   }
 
   /** matches activities if they agree in everything except the (possibly auto-generated) names **/

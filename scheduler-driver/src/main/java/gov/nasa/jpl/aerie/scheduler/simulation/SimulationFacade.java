@@ -101,7 +101,7 @@ public class SimulationFacade {
         final var schedulingActId = planActInstanceIdToSimulationActInstanceId.entrySet().stream().filter(
             entry -> entry.getValue().equals(rootParent)
         ).findFirst().get().getKey();
-        final var activityInstance = new ActivityInstance(activityTypes.get(activity.type()),
+        final var activityInstance = ActivityInstance.of(activityTypes.get(activity.type()),
                                                           this.planningHorizon.toDur(activity.start()),
                                                           activity.duration(),
                                                           activity.arguments(),
@@ -133,7 +133,7 @@ public class SimulationFacade {
   public void simulateActivities(final Collection<ActivityInstance> activities)
   throws SimulationException {
     final var activitiesSortedByStartTime =
-        activities.stream().sorted(Comparator.comparing(ActivityInstance::getStartTime)).toList();
+        activities.stream().sorted(Comparator.comparing(ActivityInstance::startTime)).toList();
     for (final var activityInstance : activitiesSortedByStartTime) {
       try {
         simulateActivity(activityInstance);
@@ -156,11 +156,11 @@ public class SimulationFacade {
     if(activity.getParentActivity().isPresent()) {
       throw new Error("This method should not be called with a generated activity but with its top-level parent.");
     }
-    final var arguments = new HashMap<>(activity.getArguments());
-    if (activity.hasDuration()) {
+    final var arguments = new HashMap<>(activity.arguments());
+    if (activity.duration() != null) {
       final var durationType = activity.getType().getDurationType();
       if (durationType instanceof DurationType.Controllable dt) {
-        arguments.put(dt.parameterName(), SerializedValue.of(activity.getDuration().in(Duration.MICROSECONDS)));
+        arguments.put(dt.parameterName(), SerializedValue.of(activity.duration().in(Duration.MICROSECONDS)));
       } else if (durationType instanceof DurationType.Uncontrollable) {
         // If an activity has already been simulated, it will have a duration, even if its DurationType is Uncontrollable.
       } else {
@@ -175,7 +175,7 @@ public class SimulationFacade {
     var serializedActivity = new SerializedActivity(activity.getType().getName(), arguments);
 
     try {
-      driver.simulateActivity(serializedActivity, activity.getStartTime(), activityIdSim);
+      driver.simulateActivity(serializedActivity, activity.startTime(), activityIdSim);
     } catch (InstantiationException e) {
       throw new SimulationException("Failed to simulate " + activity + ", possibly because it has invalid arguments", e);
     }

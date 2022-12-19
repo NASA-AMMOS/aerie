@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.model;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.solver.Evaluation;
@@ -87,7 +88,7 @@ public interface Plan {
    * @return collection of instances that match the given template
    */
   Collection<ActivityInstance> find(
-      ActivityExpression template, SimulationResults simulationResults);
+      ActivityExpression template, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment);
   /**
    * adds a new evaluation to the plan
    *

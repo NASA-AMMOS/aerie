@@ -183,17 +183,17 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
     final var plannedActivityInstances = new ArrayList<PlannedActivityInstance>();
     for (final var activity : plan.getActivities()) {
       final var type = activity.getType();
-      final var arguments = new HashMap<>(activity.getArguments());
+      final var arguments = new HashMap<>(activity.arguments());
       if(type.getDurationType() instanceof DurationType.Controllable durationType){
         //detect duration parameter and add it to parameters
         if(!arguments.containsKey(durationType.parameterName())){
-          arguments.put(durationType.parameterName(), SerializedValue.of(activity.getDuration().in(Duration.MICROSECONDS)));
+          arguments.put(durationType.parameterName(), SerializedValue.of(activity.duration().in(Duration.MICROSECONDS)));
         }
       }
       plannedActivityInstances.add(new PlannedActivityInstance(
           activity.getType().getName(),
           arguments,
-          activity.getStartTime()));
+          activity.startTime()));
     }
     return plannedActivityInstances;
   }

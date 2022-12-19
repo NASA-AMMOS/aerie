@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
@@ -15,11 +16,11 @@ import java.util.Optional;
 public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplate {
 
 
-  List<ActivityCreationTemplate> acts;
+  List<ActivityCreationTemplate> activityCreationTemplates;
 
-  protected ActivityCreationTemplateDisjunction(List<ActivityCreationTemplate> acts) {
-    assert (acts.size() > 0);
-    this.acts = new ArrayList<>(acts);
+  protected ActivityCreationTemplateDisjunction(List<ActivityCreationTemplate> activityCreationTemplates) {
+    assert (activityCreationTemplates.size() > 0);
+    this.activityCreationTemplates = new ArrayList<>(activityCreationTemplates);
   }
 
   @Override
@@ -38,9 +39,9 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
    */
   @Override
   public @NotNull
-  Optional<ActivityInstance> createActivity(String name, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
+  Optional<ActivityInstance> createActivity(String name, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
     //TODO: returns first ACT of disjunction, change it
-    return acts.get(0).createActivity(name, facade, plan, planningHorizon);
+    return activityCreationTemplates.get(0).createActivity(name, facade, plan, planningHorizon, evaluationEnvironment);
 
   }
 
@@ -54,9 +55,9 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
    */
   @Override
   public @NotNull
-  Optional<ActivityInstance> createActivity(String name, Windows windows, boolean instantiateVariableArguments, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
-    for(var act : acts) {
-      final var activityCreation = act.createActivity(name, windows, instantiateVariableArguments, facade, plan, planningHorizon);
+  Optional<ActivityInstance> createActivity(String name, Windows windows, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
+    for(var act : activityCreationTemplates) {
+      final var activityCreation = act.createActivity(name, windows, facade, plan, planningHorizon, evaluationEnvironment);
       if(activityCreation.isPresent()){
         return activityCreation;
       }
@@ -70,13 +71,12 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
    * @return true if the act instance matches one of the activity expression of the disjunction
    */
   @Override
-  public boolean matches(@NotNull ActivityInstance act, SimulationResults simulationResults) {
-    for (var expr : acts) {
-      if (expr.matches(act, simulationResults)) {
+  public boolean matches(@NotNull ActivityInstance act, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment) {
+    for (var expr : activityCreationTemplates) {
+      if (expr.matches(act, simulationResults, evaluationEnvironment)) {
         return true;
       }
     }
-
     return false;
   }
 
@@ -115,14 +115,14 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
       durationIn = template.durationRange;
       startsOrEndsIn = template.startOrEndRange;
       arguments = template.arguments;
-      exprs = template.acts;
+      activityCreationTemplates = template.activityCreationTemplates;
       return getThis();
     }
 
 
     @Override
     public ActivityCreationTemplateDisjunction build() {
-      for (var expr : exprs) {
+      for (var expr : activityCreationTemplates) {
         if (type != null) {
           expr.type = type;
         }
@@ -143,15 +143,15 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
         }
       }
 
-      return new ActivityCreationTemplateDisjunction(exprs);
+      return new ActivityCreationTemplateDisjunction(activityCreationTemplates);
     }
 
     protected boolean orBuilder = false;
 
-    List<ActivityCreationTemplate> exprs = new ArrayList<>();
+    List<ActivityCreationTemplate> activityCreationTemplates = new ArrayList<>();
 
     public OrBuilder or(ActivityCreationTemplate expr) {
-      exprs.add(expr);
+      activityCreationTemplates.add(expr);
       return getThis();
     }
   }

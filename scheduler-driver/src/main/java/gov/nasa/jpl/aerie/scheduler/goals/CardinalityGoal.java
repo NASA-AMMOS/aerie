@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
@@ -163,8 +164,8 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       ActivityCreationTemplate actTB =
           new ActivityCreationTemplate.Builder().basedOn(this.desiredActTemplate).startsOrEndsIn(subIntervalWindows).build();
 
-      final var acts = new LinkedList<>(plan.find(actTB, simulationResults));
-      acts.sort(Comparator.comparing(ActivityInstance::getStartTime));
+      final var acts = new LinkedList<>(plan.find(actTB, simulationResults, new EvaluationEnvironment()));
+      acts.sort(Comparator.comparing(ActivityInstance::startTime));
 
       int nbActs = 0;
       Duration total = Duration.ZERO;
@@ -172,7 +173,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       var associatedActivitiesToThisGoal = planEvaluation.forGoal(this).getAssociatedActivities();
       for (var act : acts) {
         if (planEvaluation.canAssociateMoreToCreatorOf(act) || associatedActivitiesToThisGoal.contains(act)) {
-          total = total.plus(act.getDuration());
+          total = total.plus(act.duration());
           nbActs++;
         }
       }
@@ -218,7 +219,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       }
       //1) solve occurence part, we just need a certain number of activities
       for (int i = 0; i < nbToSchedule; i++) {
-        conflicts.add(new MissingActivityTemplateConflict(this, subIntervalWindows, this.desiredActTemplate));
+        conflicts.add(new MissingActivityTemplateConflict(this, subIntervalWindows, this.desiredActTemplate, new EvaluationEnvironment()));
       }
       /*
        * 2) solve duration part: we can't assume stuff about duration, we post one conflict. The scheduler will solve this conflict by inserting one
@@ -226,7 +227,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
        * conflict will be posted and so on
        * */
       if (nbToSchedule == 0 && durToSchedule.isPositive()) {
-        conflicts.add(new MissingActivityTemplateConflict(this, subIntervalWindows, this.desiredActTemplate));
+        conflicts.add(new MissingActivityTemplateConflict(this, subIntervalWindows, this.desiredActTemplate, new EvaluationEnvironment()));
       }
     }
 
@@ -237,7 +238,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
     if(this.durationRange != null && occurrencePartIsSatisfied){
       final var inserted = plan.getEvaluation().forGoal(this).getInsertedActivities();
       final var newlyInsertedActivities = inserted.stream().filter(a -> !insertedSoFar.contains(a.getId())).toList();
-      final var durationNewlyInserted = newlyInsertedActivities.stream().reduce(Duration.ZERO, (partialSum, activityInstance2) -> partialSum.plus(activityInstance2.getDuration()), Duration::plus);
+      final var durationNewlyInserted = newlyInsertedActivities.stream().reduce(Duration.ZERO, (partialSum, activityInstance2) -> partialSum.plus(activityInstance2.duration()), Duration::plus);
       if(durationNewlyInserted.isZero()) {
         this.stepsWithoutProgress++;
         //otherwise, reset it, we have made some progress
