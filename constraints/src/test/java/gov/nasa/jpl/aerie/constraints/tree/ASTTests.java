@@ -466,7 +466,7 @@ public class ASTTests {
     final var result = new RealParameter("act", "p1").evaluate(simResults, environment);
 
     final var expected = new LinearProfile(
-        Segment.of(Interval.between(0, Inclusive, 10, Inclusive, SECONDS), new LinearEquation(Duration.ZERO, 2, 0))
+        Segment.of(FOREVER, new LinearEquation(Duration.ZERO, 2, 0))
     );
 
     assertEquivalent(expected, result);
