@@ -243,6 +243,96 @@ public class SchedulingIntegrationTests {
       assertEquals(SerializedValue.of("fromStem"), peelBanana.args().get("peelDirection"));
     }
   }
+  @Test
+  void testSingleActivityPlanSimpleCoexistenceGoalWithValueAtParams() {
+    final var growBananaDuration = Duration.of(1, Duration.HOUR);
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(new MockMerlinService.PlannedActivityInstance(
+            "GrowBanana",
+            Map.of(
+                "quantity", SerializedValue.of(3),
+                "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+            Duration.ZERO)),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+          export default () => Goal.CoexistenceGoal({
+            forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+            activityTemplate: (growBananaActivity) => ActivityTemplates.ChangeProducer({producer: Discrete.Resource("/producer").valueAt(growBananaActivity.span().starts())}),
+            startsAt: TimingConstraint.singleton(WindowProperty.END).plus(Temporal.Duration.from({ minutes : 5}))
+          })
+          """, true)),
+        PLANNING_HORIZON);
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(1, goalResult.createdActivities().size());
+    for (final var activity : goalResult.createdActivities()) {
+      assertNotNull(activity);
+    }
+    for (final var activity : goalResult.satisfyingActivities()) {
+      assertNotNull(activity);
+    }
+
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var changeProducers = planByActivityType.get("ChangeProducer");
+    final var growBananas = planByActivityType.get("GrowBanana");
+    assertEquals(1, changeProducers.size());
+    assertEquals(1, growBananas.size());
+    final var peelBanana = changeProducers.iterator().next();
+    final var growBanana = growBananas.iterator().next();
+
+    assertEquals(SerializedValue.of("Chiquita"), peelBanana.args().get("producer"));
+
+    assertEquals(growBanana.startTime().plus(growBananaDuration).plus(Duration.of(5, Duration.MINUTES)), peelBanana.startTime());
+  }
+
+
+  @Test
+  void testSingleActivityPlanSimpleCoexistenceGoalWithFunctionalParameters() {
+    final var growBananaDuration = Duration.of(1, Duration.HOUR);
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(new MockMerlinService.PlannedActivityInstance(
+            "GrowBanana",
+            Map.of(
+                "quantity", SerializedValue.of(3),
+                "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+            Duration.ZERO)),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+          export default () => Goal.CoexistenceGoal({
+            forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
+            activityTemplate: (growBananaActivity) => ActivityTemplates.PickBanana({quantity: growBananaActivity.parameters.quantity}),
+            startsAt: TimingConstraint.singleton(WindowProperty.END).plus(Temporal.Duration.from({ minutes : 5}))
+          })
+          """, true)),
+        PLANNING_HORIZON);
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    final var goalResult = results.scheduleResults.goalResults().get(new GoalId(0L));
+
+    assertTrue(goalResult.satisfied());
+    assertEquals(1, goalResult.createdActivities().size());
+    for (final var activity : goalResult.createdActivities()) {
+      assertNotNull(activity);
+    }
+    for (final var activity : goalResult.satisfyingActivities()) {
+      assertNotNull(activity);
+    }
+
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    final var peelBananas = planByActivityType.get("PickBanana");
+    final var growBananas = planByActivityType.get("GrowBanana");
+    assertEquals(1, peelBananas.size());
+    assertEquals(1, growBananas.size());
+    final var peelBanana = peelBananas.iterator().next();
+    final var growBanana = growBananas.iterator().next();
+
+    assertEquals(SerializedValue.of(3), peelBanana.args().get("quantity"));
+
+    assertEquals(growBanana.startTime().plus(growBananaDuration).plus(Duration.of(5, Duration.MINUTES)), peelBanana.startTime());
+  }
 
   @Test
   void testSingleActivityPlanSimpleCoexistenceGoal() {
@@ -304,7 +394,7 @@ public class SchedulingIntegrationTests {
         List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.CoexistenceGoal({
             forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
-            activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+            activityTemplate: (span) => ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
             endsWithin: TimingConstraint.range(WindowProperty.END, Operator.PLUS, Temporal.Duration.from( { minutes: 5 }))
           })
           """, true)),

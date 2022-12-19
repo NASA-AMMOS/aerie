@@ -2,12 +2,12 @@ package gov.nasa.jpl.aerie.scheduler.server.models;
 
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
+import gov.nasa.jpl.aerie.constraints.tree.StructExpressionAt;
 import gov.nasa.jpl.aerie.json.JsonObjectParser;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.SumParsers;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.server.http.ActivityTemplateJsonParser;
@@ -15,7 +15,6 @@ import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.windowsExpressionP;
@@ -33,7 +32,7 @@ import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 public class SchedulingDSL {
 
-  private static final JsonParser<Duration> durationP =
+  public static final JsonParser<Duration> durationP =
       longP.map(
           microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
           duration -> duration.in(Duration.MICROSECONDS));
@@ -54,7 +53,7 @@ public class SchedulingDSL {
               untuple(CardinalitySpecification::new),
               $ -> tuple($.duration(), $.occurrence()));
 
-  private static final JsonObjectParser<GoalSpecifier.RecurrenceGoalDefinition> recurrenceGoalDefinitionP(
+  private static JsonObjectParser<GoalSpecifier.RecurrenceGoalDefinition> recurrenceGoalDefinitionP(
       MissionModelService.MissionModelTypes activityTypes)
   {
     return productP
@@ -85,7 +84,7 @@ public class SchedulingDSL {
               ConstraintExpression.WindowsExpression::new,
               ConstraintExpression.WindowsExpression::expression));
 
-  private static final JsonParser<ActivityTimingConstraint> activityTimingConstraintP =
+  public static final JsonParser<ActivityTimingConstraint> activityTimingConstraintP =
       productP
           .field("windowProperty", enumP(TimeAnchor.class, Enum::name))
           .field("operator", enumP(TimeUtility.Operator.class, Enum::name))
@@ -101,6 +100,7 @@ public class SchedulingDSL {
     return
         productP
             .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
+            .field("alias", stringP)
             .field("forEach", constraintExpressionP)
             .optionalField("startConstraint", activityTimingConstraintP)
             .optionalField("endConstraint", activityTimingConstraintP)
@@ -108,6 +108,7 @@ public class SchedulingDSL {
                 untuple(GoalSpecifier.CoexistenceGoalDefinition::new),
                 goalDefinition -> tuple(
                     goalDefinition.activityTemplate(),
+                    goalDefinition.alias(),
                     goalDefinition.forEach(),
                     goalDefinition.startConstraint(),
                     goalDefinition.endConstraint()));
@@ -150,7 +151,7 @@ public class SchedulingDSL {
   }
 
 
-  private static final JsonParser<GoalSpecifier> goalSpecifierP(MissionModelService.MissionModelTypes missionModelTypes) {
+  private static JsonParser<GoalSpecifier> goalSpecifierF(MissionModelService.MissionModelTypes missionModelTypes) {
     return recursiveP(self -> SumParsers.sumP("kind", GoalSpecifier.class, List.of(
         SumParsers.variant(
             "ActivityRecurrenceGoal",
@@ -198,9 +199,8 @@ public class SchedulingDSL {
             globalSchedulingConditionP)
   )));
 
-
   public static final JsonParser<GoalSpecifier> schedulingJsonP(MissionModelService.MissionModelTypes missionModelTypes){
-    return goalSpecifierP(missionModelTypes);
+    return goalSpecifierF(missionModelTypes);
   }
 
   public sealed interface ConditionSpecifier {
@@ -221,6 +221,7 @@ public class SchedulingDSL {
     ) implements GoalSpecifier {}
     record CoexistenceGoalDefinition(
         ActivityTemplate activityTemplate,
+        String alias,
         ConstraintExpression forEach,
         Optional<ActivityTimingConstraint> startConstraint,
         Optional<ActivityTimingConstraint> endConstraint
@@ -240,7 +241,8 @@ public class SchedulingDSL {
   public record LinearResource(String name) {}
   public record CardinalitySpecification(Optional<Duration> duration, Optional<Integer> occurrence){}
   public record ClosedOpenInterval(Duration start, Duration end){}
-  public record ActivityTemplate(String activityType, Map<String, SerializedValue> arguments) {}
+
+  public record ActivityTemplate(String activityType, StructExpressionAt arguments) {}
   public sealed interface ConstraintExpression {
     record ActivityExpression(String type) implements ConstraintExpression {}
     record WindowsExpression(Expression<Windows> expression) implements ConstraintExpression {}

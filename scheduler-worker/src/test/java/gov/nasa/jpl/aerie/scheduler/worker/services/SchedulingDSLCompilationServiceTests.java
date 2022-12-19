@@ -1,21 +1,22 @@
 package gov.nasa.jpl.aerie.scheduler.worker.services;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.*;
-import static gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationServiceTestFixtures.MISSION_MODEL_TYPES;
-import static org.junit.jupiter.api.Assertions.*;
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
 import gov.nasa.jpl.aerie.constraints.tree.ForEachActivitySpans;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
 import gov.nasa.jpl.aerie.constraints.tree.LessThan;
+import gov.nasa.jpl.aerie.constraints.tree.ListExpressionAt;
 import gov.nasa.jpl.aerie.constraints.tree.LongerThan;
 import gov.nasa.jpl.aerie.constraints.tree.Not;
 import gov.nasa.jpl.aerie.constraints.tree.Or;
+import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
+import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
+import gov.nasa.jpl.aerie.constraints.tree.Starts;
+import gov.nasa.jpl.aerie.constraints.tree.StructExpressionAt;
+import gov.nasa.jpl.aerie.constraints.tree.ValueAt;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsFromSpans;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -29,6 +30,19 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
+import static gov.nasa.jpl.aerie.scheduler.server.services.TypescriptCodeGenerationServiceTestFixtures.MISSION_MODEL_TYPES;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SchedulingDSLCompilationServiceTests {
@@ -104,6 +118,19 @@ class SchedulingDSLCompilationServiceTests {
     }
   }
 
+  private static StructExpressionAt getSampleActivity1Parameters(){
+    return new StructExpressionAt(Map.ofEntries(
+        Map.entry("variant", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("option2")))),
+        Map.entry("fancy", new ProfileExpression<>(new StructExpressionAt(Map.ofEntries(
+                      Map.entry("subfield1", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("value1")))),
+                      Map.entry("subfield2", new ProfileExpression<>(new ListExpressionAt(List.of(new ProfileExpression<>(new StructExpressionAt(Map.of("subsubfield1",
+                                                                                                        new ProfileExpression<>(new DiscreteValue(SerializedValue.of(2 )))))))))))
+                  ))
+        ),
+        Map.entry("duration", new ProfileExpression<>(new DiscreteValue(SerializedValue.of(Duration.of(1, HOUR).in(MICROSECONDS))))))
+    );
+  }
+
   @Test
   void  testSchedulingDSL_basic()
   {
@@ -114,7 +141,7 @@ class SchedulingDSLCompilationServiceTests {
                   return Goal.ActivityRecurrenceGoal({
                     activityTemplate: ActivityTemplates.SampleActivity1({
                       variant: 'option2',
-                      fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
+                      fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2.0}]},
                       duration: Temporal.Duration.from({ hours: 1 })
                     }),
                     interval: Temporal.Duration.from({ hours: 1 })
@@ -124,17 +151,9 @@ class SchedulingDSLCompilationServiceTests {
     final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
         new SchedulingDSL.ActivityTemplate(
             "SampleActivity1",
-            Map.ofEntries(
-                Map.entry("variant", SerializedValue.of("option2")),
-                Map.entry("fancy", SerializedValue.of(Map.ofEntries(
-                    Map.entry("subfield1", SerializedValue.of("value1")),
-                    Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
-                )))),
-                Map.entry("duration", SerializedValue.of(Duration.of(1, HOUR).in(MICROSECONDS)))
-            )
+            getSampleActivity1Parameters()
         ),
-        HOUR
-    );
+        HOUR);
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
       assertEquals(expectedGoalDefinition, r.value());
     } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
@@ -165,14 +184,7 @@ class SchedulingDSLCompilationServiceTests {
     final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
         new SchedulingDSL.ActivityTemplate(
             "SampleActivity1",
-            Map.ofEntries(
-                Map.entry("variant", SerializedValue.of("option2")),
-                Map.entry("fancy", SerializedValue.of(Map.ofEntries(
-                    Map.entry("subfield1", SerializedValue.of("value1")),
-                    Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
-                    )))),
-                Map.entry("duration", SerializedValue.of(HOUR.in(MICROSECONDS)))
-            )
+            getSampleActivity1Parameters()
         ),
         HOUR);
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
@@ -231,18 +243,7 @@ class SchedulingDSLCompilationServiceTests {
         new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
             new SchedulingDSL.ActivityTemplate(
                 "SampleActivity1",
-                Map.ofEntries(
-                    Map.entry("variant", SerializedValue.of("option2")),
-                    Map.entry("fancy", SerializedValue.of(Map.ofEntries(
-                        Map.entry("subfield1", SerializedValue.of("value1")),
-                        Map.entry(
-                            "subfield2",
-                            SerializedValue.of(List.of(SerializedValue.of(Map.of(
-                                "subsubfield1",
-                                SerializedValue.of(2.0)))))
-                        )))),
-                    Map.entry("duration", SerializedValue.of(HOUR.in(MICROSECONDS)))
-                )
+                getSampleActivity1Parameters()
             ),
             HOUR
         ),
@@ -294,14 +295,7 @@ class SchedulingDSLCompilationServiceTests {
     final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
         new SchedulingDSL.ActivityTemplate(
             "SampleActivity1",
-            Map.ofEntries(
-                Map.entry("variant", SerializedValue.of("option2")),
-                Map.entry("fancy", SerializedValue.of(Map.ofEntries(
-                    Map.entry("subfield1", SerializedValue.of("value1")),
-                    Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
-                    )))),
-                Map.entry("duration", SerializedValue.of(HOUR.in(MICROSECONDS)))
-            )
+            getSampleActivity1Parameters()
         ),
         Duration.HOURS.times(24)
     );
@@ -333,14 +327,7 @@ class SchedulingDSLCompilationServiceTests {
     final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
         new SchedulingDSL.ActivityTemplate(
             "SampleActivity1",
-            Map.ofEntries(
-                Map.entry("variant", SerializedValue.of("option2")),
-                Map.entry("fancy", SerializedValue.of(Map.ofEntries(
-                    Map.entry("subfield1", SerializedValue.of("value1")),
-                    Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
-                    )))),
-                Map.entry("duration", SerializedValue.of(HOUR.in(MICROSECONDS)))
-            )
+            getSampleActivity1Parameters()
         ),
         HOUR
     );
@@ -358,9 +345,9 @@ class SchedulingDSLCompilationServiceTests {
         PLAN_ID, """
           export default function() {
             return Goal.CoexistenceGoal({
-              activityTemplate: ActivityTemplates.SampleActivity1({
+              activityTemplate: (span) => ActivityTemplates.SampleActivity1({
                 variant: 'option2',
-                fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
+                fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2.0}]},
                 duration: Temporal.Duration.from({ hours : 1 })
               }),
               forEach: ActivityExpression.ofType(ActivityTypes.SampleActivity2),
@@ -373,14 +360,7 @@ class SchedulingDSLCompilationServiceTests {
       assertEquals(
           new SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition(
               new SchedulingDSL.ActivityTemplate("SampleActivity1",
-                                                 Map.ofEntries(
-                                                     Map.entry("variant", SerializedValue.of("option2")),
-                                                     Map.entry("fancy", SerializedValue.of(Map.ofEntries(
-                                                         Map.entry("subfield1", SerializedValue.of("value1")),
-                                                         Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
-                                                         )))),
-                                                     Map.entry("duration", SerializedValue.of(HOUR.in(MICROSECONDS)))
-                                                 )
+                                                 getSampleActivity1Parameters()
               ),
               "coexistence activity alias 0",
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2"),
@@ -561,7 +541,7 @@ class SchedulingDSLCompilationServiceTests {
     final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
         new SchedulingDSL.ActivityTemplate(
             "SampleActivityEmpty",
-            Map.of()
+            new StructExpressionAt(Map.of())
         ),
         HOUR
     );
@@ -617,19 +597,13 @@ class SchedulingDSLCompilationServiceTests {
           }
         """);
 
-    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<?> r) {
       assertEquals(
           new SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition(
               new SchedulingDSL.ActivityTemplate("SampleActivity1",
-                                                 Map.ofEntries(
-                                                     Map.entry("variant", SerializedValue.of("option2")),
-                                                     Map.entry("fancy", SerializedValue.of(Map.ofEntries(
-                                                         Map.entry("subfield1", SerializedValue.of("value1")),
-                                                         Map.entry("subfield2", SerializedValue.of(List.of(SerializedValue.of(Map.of("subsubfield1", SerializedValue.of(2.0)))))
-                                                         )))),
-                                                     Map.entry("duration", SerializedValue.of(HOUR.in(MICROSECONDS)))
-                                                 )
+                                                 getSampleActivity1Parameters()
               ),
+              "coexistence activity alias 0",
               new SchedulingDSL.ConstraintExpression.WindowsExpression(new LongerThan(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)), Duration.of(10, Duration.MICROSECOND))),
               Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.END, TimeUtility.Operator.PLUS, Duration.ZERO, true)),
               Optional.empty()
@@ -685,13 +659,13 @@ class SchedulingDSLCompilationServiceTests {
         new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
           new SchedulingDSL.ActivityTemplate(
               "SampleActivityEmpty",
-              Map.of()
+              new StructExpressionAt(Map.of())
           ),
           HOUR
     ), new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
             new SchedulingDSL.ActivityTemplate(
                 "SampleActivityEmpty",
-                Map.of()
+                new StructExpressionAt(Map.of())
             ),
             HOUR.times(2)
         )));
@@ -726,13 +700,13 @@ class SchedulingDSLCompilationServiceTests {
         new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
             new SchedulingDSL.ActivityTemplate(
                 "SampleActivityEmpty",
-                Map.of()
+                new StructExpressionAt(Map.of())
             ),
             HOUR
         ), new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
             new SchedulingDSL.ActivityTemplate(
                 "SampleActivityEmpty",
-                Map.of()
+                new StructExpressionAt(Map.of())
             ),
             HOUR.times(2)
         )));
