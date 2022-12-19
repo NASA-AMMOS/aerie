@@ -466,10 +466,12 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
    * @throws InvalidGapsException if there are any gaps in the windows.
    */
   public Spans intoSpans(final Interval bounds) {
-    final var firstInterval = this.segments.get(0).interval();
-    final var lastInterval = this.segments.get(-1).interval();
     boolean boundsStartContained = false;
     boolean boundsEndContained = false;
+    if(this.segments.size() == 1){
+      if (segments.get(0).interval().contains(bounds.start)) boundsStartContained = true;
+      if (segments.get(0).interval().contains(bounds.end)) boundsEndContained = true;
+    }
     for (int i = 0; i < this.segments.size() - 1; i++) {
       final var leftInterval = this.segments.get(i).interval();
       final var rightInterval = this.segments.get(i+1).interval();
