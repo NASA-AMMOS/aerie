@@ -382,6 +382,97 @@ class SchedulingDSLCompilationServiceTests {
                                                      Map.entry("duration", SerializedValue.of(HOUR.in(MICROSECONDS)))
                                                  )
               ),
+              "coexistence activity alias 0",
+              new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2"),
+              Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
+              Optional.empty()
+          ),
+          r.value()
+      );
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+      fail(r.toString());
+    }
+  }
+
+  @Test
+  void testCoexistenceGoalParameterReference() {
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
+        PLAN_ID, """
+          export default function() {
+            return Goal.CoexistenceGoal({
+              activityTemplate: (anchorActivity) => ActivityTemplates.SampleActivity1({
+                variant: 'option2',
+                fancy: { subfield1: 'value1', subfield2: [{subsubfield1: anchorActivity.parameters.quantity}]},
+                duration: Temporal.Duration.from({ hours : 1 })
+              }),
+              forEach: ActivityExpression.ofType(ActivityTypes.SampleActivity2),
+              startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ seconds : 1 }))
+            })
+          }
+        """);
+
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+      assertEquals(
+          new SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition(
+              new SchedulingDSL.ActivityTemplate("SampleActivity1",
+                   new StructExpressionAt(Map.ofEntries(
+                      Map.entry("variant", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("option2")))),
+                      Map.entry("fancy", new ProfileExpression<>(new StructExpressionAt(Map.ofEntries(
+                                    Map.entry("subfield1", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("value1")))),
+                                    Map.entry("subfield2", new ProfileExpression<>(new ListExpressionAt(List.of(new ProfileExpression<>(new StructExpressionAt(Map.of("subsubfield1",
+                                                                                                                                                                      new ProfileExpression<>(new RealParameter("coexistence activity alias 0", "quantity"))))))))))
+                                ))
+                      ),
+                      Map.entry("duration", new ProfileExpression<>(new DiscreteValue(SerializedValue.of(Duration.of(1, HOUR).in(MICROSECONDS))))))
+                  )
+              ),
+              "coexistence activity alias 0",
+              new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2"),
+              Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
+              Optional.empty()
+          ),
+          r.value()
+      );
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+      fail(r.toString());
+    }
+  }
+
+  @Test
+  void testCoexistenceGoalParameterReferenceValueAt() {
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
+        PLAN_ID, """
+          export default function() {
+            return Goal.CoexistenceGoal({
+              activityTemplate: (anchorActivity) => ActivityTemplates.SampleActivity1({
+                variant: Discrete.Resource('/sample/resource/3').valueAt(anchorActivity.span().starts()),
+                fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2.0}]},
+                duration: Temporal.Duration.from({ hours : 1 })
+              }),
+              forEach: ActivityExpression.ofType(ActivityTypes.SampleActivity2),
+              startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ seconds : 1 }))
+            })
+          }
+        """);
+
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success r) {
+      assertEquals(
+          new SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition(
+              new SchedulingDSL.ActivityTemplate("SampleActivity1",
+                                                 new StructExpressionAt(Map.ofEntries(
+                                                     Map.entry("variant", new ProfileExpression<>(new ValueAt<>(new ProfileExpression<>(new DiscreteResource("/sample/resource/3")),new Starts<>(new ActivitySpan("coexistence activity alias 0"))))),
+                                                     Map.entry("fancy", new ProfileExpression<>(new StructExpressionAt(Map.ofEntries(
+                                                                   Map.entry("subfield1", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("value1")))),
+                                                                   Map.entry("subfield2", new ProfileExpression<>(new ListExpressionAt(List.of(new ProfileExpression<>(new StructExpressionAt(Map.of("subsubfield1",
+                                                                                                                                                                                                     new ProfileExpression<>(new DiscreteValue(SerializedValue.of(2)))))))))))
+                                                               ))
+                                                     ),
+                                                     Map.entry("duration", new ProfileExpression<>(new DiscreteValue(SerializedValue.of(Duration.of(1, HOUR).in(MICROSECONDS))))))
+                                                 )
+              ),
+              "coexistence activity alias 0",
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2"),
               Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.START, TimeUtility.Operator.PLUS, SECOND, true)),
               Optional.empty()
