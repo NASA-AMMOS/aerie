@@ -1,6 +1,10 @@
 package gov.nasa.jpl.aerie.constraints.model;
 
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+
+import java.util.Optional;
 
 public interface Profile<P extends Profile<P>> {
   Windows equalTo(P other);
@@ -8,4 +12,6 @@ public interface Profile<P extends Profile<P>> {
   Windows changePoints();
 
   P assignGaps(P def);
+
+  Optional<SerializedValue> valueAt(Duration timepoint);
 }

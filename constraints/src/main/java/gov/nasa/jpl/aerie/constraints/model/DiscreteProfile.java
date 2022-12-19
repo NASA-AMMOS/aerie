@@ -115,6 +115,16 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
     );
   }
 
+  @Override
+  public Optional<SerializedValue> valueAt(final Duration timepoint) {
+    final var matchPiece = profilePieces
+        .stream()
+        .filter($ -> $.interval().contains(timepoint))
+        .findFirst();
+    return matchPiece
+        .map(Segment::value);
+  }
+
   public static DiscreteProfile fromSimulatedProfile(final List<ProfileSegment<SerializedValue>> simulatedProfile) {
     return fromProfileHelper(Duration.ZERO, simulatedProfile, Optional::of);
   }

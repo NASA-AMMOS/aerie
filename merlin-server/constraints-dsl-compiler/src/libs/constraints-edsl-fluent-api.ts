@@ -10,7 +10,7 @@
 
 import * as AST from './constraints-ast.js';
 import * as Gen from './mission-model-generated-code.js';
-import {ActivityType, ActivityTypeParameterMap} from "./mission-model-generated-code.js";
+import {ActivityType, ActivityTypeParameterInstantiationMap} from "./mission-model-generated-code.js";
 
 export { Gen };
 
@@ -631,6 +631,42 @@ export class Discrete<Schema> {
   }
 
   /**
+   * @internal
+   * Returns a discrete profile producing an object.
+   * Used internally. Do not use to build constraints or goals.
+   */
+  public static Map<Schema>(expressions: {[key:string] : any}): Discrete<Schema>{
+    return new Discrete({
+      kind: AST.NodeKind.StructProfileExpression,
+      expressions,
+    });
+  }
+
+  /**
+   * @internal
+   * Returns a discrete profile producing a list.
+   * Used internally. Do not use to build constraints or goals.
+   */
+  public static List<Schema>(expressions: any[]): Discrete<Schema>{
+    return new Discrete({
+      kind: AST.NodeKind.ListProfileExpression,
+      expressions,
+    });
+  }
+
+  /**
+   * Will use the start of the first span in the spans
+   * @param timepoint
+   */
+  public valueAt(timepoint: Spans) : Discrete<Schema> {
+    return new Discrete({
+      kind: AST.NodeKind.ValueAtExpression,
+      profile: this.__astNode,
+      timepoint : timepoint.__astNode
+    });
+  }
+
+  /**
    * Reference the discrete profile associated with a resource.
    * @param name
    * @constructor
@@ -731,12 +767,12 @@ export class ActivityInstance<A extends ActivityType> {
 
   private readonly __activityType: A;
   private readonly __alias: string;
-  public readonly parameters: ReturnType<typeof ActivityTypeParameterMap[A]>;
+  public readonly parameters: ReturnType<typeof ActivityTypeParameterInstantiationMap[A]>;
 
-  constructor(activityType: A, alias: string) {
+  public constructor(activityType: A, alias: string) {
     this.__activityType = activityType;
     this.__alias = alias;
-    this.parameters = ActivityTypeParameterMap[activityType](alias) as ReturnType<typeof ActivityTypeParameterMap[A]>;
+    this.parameters = ActivityTypeParameterInstantiationMap[activityType](alias) as ReturnType<typeof ActivityTypeParameterInstantiationMap[A]>;
   }
 
   /**
@@ -1122,6 +1158,18 @@ declare global {
     private readonly __schemaInstance: Schema;
 
     /**
+     * Returns a discrete profile producing an object.
+     * Used internally. Do not use to build constraints or goals.
+     */
+    public static Map<Schema>(expressions: { [key: string]: any }): Discrete<Schema>;
+
+    /**
+     * Returns a discrete profile producing a list.
+     * Used internally. Do not use to build constraints or goals.
+     */
+    public static List<Schema>(expressions: any[]): Discrete<Schema>;
+
+    /**
      * Reference the discrete profile associated with a resource.
      * @param name
      * @constructor
@@ -1166,6 +1214,12 @@ declare global {
      * @param defaultProfile value or discrete profile to take default values from
      */
     public assignGaps(defaultProfile: Discrete<Schema> | Schema): Discrete<Schema>;
+
+    /**
+     * Returns the value of this profile at a specific timepoint.
+     * @param timepoint the timepoint, represented by a Spans (must be reduced to a single point)
+     */
+    public valueAt(timepoint: Spans): Discrete<Schema>;
   }
 
   /** An enum for whether an interval includes its bounds. */
@@ -1176,4 +1230,4 @@ declare global {
 }
 
 // Make Constraint available on the global object
-Object.assign(globalThis, { Constraint, Windows, Spans, Real, Discrete, Inclusivity });
+Object.assign(globalThis, { ActivityInstance, Constraint, Windows, Spans, Real, Discrete, Inclusivity });

@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.constraints;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +23,7 @@ public final class TypescriptCodeGenerationService {
     final var result = new ArrayList<String>();
     result.add("/** Start Codegen */");
     result.add("import * as AST from './constraints-ast.js';");
-    result.add("import { Discrete, Real, Windows } from './constraints-edsl-fluent-api.js';");
+    result.add("import { Discrete, Real, Windows, ActivityInstance } from './constraints-edsl-fluent-api.js';");
 
     result.add("export enum ActivityType {");
     for (String activityType: activityTypes.keySet()) {
@@ -48,7 +49,7 @@ public final class TypescriptCodeGenerationService {
 
     // ActivityParameters
 
-    result.add("export const ActivityTypeParameterMap = {");
+    result.add("export const ActivityTypeParameterInstantiationMap = {");
     for (String activityType: activityTypes.keySet()) {
       result.add(indent("[ActivityType." + activityType + "]: (alias: string) => ({"));
       for (final var parameter: activityTypes.get(activityType).parameters()) {
@@ -70,6 +71,23 @@ public final class TypescriptCodeGenerationService {
       result.add(indent("}),"));
     }
     result.add("};");
+
+
+    Map<String, String> mapInterfaces = new HashMap<>();
+    for (final var activityType: activityTypes.entrySet()) {
+      final var nameInterface = "ParameterType"+activityType.getKey();
+      final var interfaceType = activityTypeToInterface(nameInterface, activityType.getValue());
+      mapInterfaces.put(activityType.getKey(), nameInterface);
+      result.add(interfaceType);
+    }
+
+    result.add("export type ActivityTypeParameterMap = {");
+    for (final var activityType: mapInterfaces.entrySet()) {
+      result.add(indent("[ActivityType." + activityType.getKey() + "]:"+activityType.getValue()+","));
+    }
+    result.add("};");
+
+
     result.add("""
                    declare global {""");
     result.add(indent("enum ActivityType {"));
@@ -87,6 +105,17 @@ public final class TypescriptCodeGenerationService {
     return joinLines(result);
   }
 
+  public static String activityTypeToInterface(String typeName, TypescriptCodeGenerationService.ActivityType activityType){
+    final var result = new ArrayList<String>();
+    result.add("export type %s = {".formatted(typeName));
+    for (final var parameter: activityType.parameters()) {
+      var parameterProfile = valueSchemaToTypescriptAdditional(parameter.schema());
+      result.add(indent(parameter.name() + ": " + parameterProfile + ","));
+    }
+    result.add("}");
+    return joinLines(result);
+  }
+
   private static String joinLines(final Iterable<String> result) {
     return String.join("\n", result);
   }
@@ -95,6 +124,73 @@ public final class TypescriptCodeGenerationService {
     return joinLines(s.lines().map(line -> "  " + line).toList());
   }
 
+  static String valueSchemaToTypescriptAdditional(final ValueSchema valueSchema){
+    return valueSchema.match(new ValueSchema.Visitor<>() {
+      @Override
+      public String onReal() {
+        return "("+valueSchemaToTypescript(valueSchema) +" | Real)";
+      }
+
+      @Override
+      public String onInt() {
+        final var res = valueSchemaToTypescript(valueSchema);
+        //REVIEW: even on int, we are expecting a Real and not a Discrete<number> so we have access to operations,
+        // conversion will happen at activity instantiation during scheduling
+        return "(%s | Real)".formatted(res);
+      }
+
+      @Override
+      public String onBoolean() {
+        final var res = valueSchemaToTypescript(valueSchema);
+        return "(%s | Discrete<%s>)".formatted(res, res);
+      }
+
+      @Override
+      public String onString() {
+        final var res = valueSchemaToTypescript(valueSchema);
+        return "(%s | Discrete<%s>)".formatted(res, res);
+      }
+
+      @Override
+      public String onDuration() {
+        final var res = valueSchemaToTypescript(valueSchema);
+        return "(%s | Discrete<%s>)".formatted(res, res);
+      }
+
+      @Override
+      public String onPath() { final var res = valueSchemaToTypescript(valueSchema);
+        return "(%s | Discrete<%s>)".formatted(res, res);}
+
+      @Override
+      public String onSeries(final ValueSchema value) {
+        final var vsTs = valueSchemaToTypescriptAdditional(value) + "[]";
+        return "(%s | Discrete<%s>)".formatted(vsTs, vsTs);
+      }
+
+      @Override
+      public String onStruct(final Map<String, ValueSchema> values) {
+        final var result = new StringBuilder("{\n");
+
+        for (final var member: values.keySet().stream().sorted().toList()) {
+          result
+              .append(indent(member))
+              .append(": ")
+              .append(valueSchemaToTypescriptAdditional(values.get(member)))
+              .append(",\n ");
+        }
+
+        result.append("}");
+        final var res = result.toString();
+        return indent("(%s | Discrete<%s>)".formatted(res, res));
+      }
+
+      @Override
+      public String onVariant(final List<ValueSchema.Variant> variants) {
+        final var res = valueSchemaToTypescript(valueSchema);
+        return "(%s | Discrete<%s>)".formatted(res, res);
+      }
+    });
+  }
 
   private static String valueSchemaToTypescript(final ValueSchema valueSchema) {
     return valueSchema.match(new ValueSchema.Visitor<>() {

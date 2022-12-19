@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
 import gov.nasa.jpl.aerie.constraints.tree.ActivityWindow;
 import gov.nasa.jpl.aerie.constraints.tree.And;
@@ -35,6 +37,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Split;
 import gov.nasa.jpl.aerie.constraints.tree.Starts;
 import gov.nasa.jpl.aerie.constraints.tree.Times;
 import gov.nasa.jpl.aerie.constraints.tree.Transition;
+import gov.nasa.jpl.aerie.constraints.tree.ValueAt;
 import gov.nasa.jpl.aerie.constraints.tree.ViolationsOfWindows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsFromSpans;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsValue;
@@ -179,6 +182,22 @@ class ConstraintsDSLCompilationServiceTests {
         new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(5)))))
     );
   }
+
+  @Test
+  void testValueAt() {
+    checkSuccessfulCompilation(
+        """
+            import { ActivityInstance } from './constraints-edsl-fluent-api.js';
+            export default () => {
+              return Discrete.Resource("mode").valueAt(new ActivityInstance(ActivityType.activity, "alias1").span().starts()).notEqual("Option1")
+            }
+        """,
+        new ViolationsOfWindows(new NotEqual<DiscreteProfile>(new ValueAt(
+            new DiscreteResource("mode"),
+            new Starts<Spans>(new ActivitySpan("alias1"))),
+                                      new DiscreteValue(SerializedValue.of("Option1")))));
+  }
+
 
   @Test
   void testDiscreteParameter() {

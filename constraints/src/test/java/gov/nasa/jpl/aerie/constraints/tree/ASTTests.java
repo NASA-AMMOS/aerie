@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.IntervalMap;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.UnsplittableSpanException;
@@ -492,6 +493,30 @@ public class ASTTests {
     final var result = new DiscreteResource("discrete2").evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = simResults.discreteProfiles.get("discrete2");
+
+    assertEquivalent(expected, result);
+  }
+
+  public void testValueAt(){
+    final var simResults = new SimulationResults(
+        Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of(
+            "discrete1", new DiscreteProfile(Segment.of(Interval.between(1,2, SECONDS), SerializedValue.of("one")),
+                                             Segment.of(Interval.between(2,4, SECONDS), SerializedValue.of("two")),
+                                             Segment.of(Interval.between(4,7, SECONDS), SerializedValue.of("three"))
+                                             )
+        )
+    );
+
+    final var result = new ValueAt(new DiscreteResource("discrete2"),
+                                   new SpansFromWindows(new WindowsWrapperExpression(new Windows(Interval.at(Duration.of(5, SECONDS)), true))))
+        .evaluate(simResults, new EvaluationEnvironment());
+
+    final var expected = new DiscreteProfile(IntervalMap.<SerializedValue>builder()
+                                                        .set(Segment.of(Interval.between(0, 20, SECONDS), SerializedValue.of("two")))
+                                                        .build());
 
     assertEquivalent(expected, result);
   }

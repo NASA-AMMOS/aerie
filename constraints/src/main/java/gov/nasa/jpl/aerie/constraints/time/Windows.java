@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.constraints.time;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Iterator;
@@ -493,6 +494,11 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
         .toList());
   }
 
+  @Override
+  public boolean isConstant() {
+    return segments.size() <= 1;
+  }
+
   /** Assigns a default value to all gaps in the profile. */
   @Override
   public Windows assignGaps(final Windows def) {
@@ -502,6 +508,16 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
             (original, defaultSegment) -> original.isPresent() ? original : defaultSegment
         )
     );
+  }
+
+  @Override
+  public Optional<SerializedValue> valueAt(final Duration timepoint) {
+    final var matchPiece = segments
+        .stream()
+        .filter($ -> $.interval().contains(timepoint))
+        .findFirst();
+    return matchPiece
+        .map(a -> SerializedValue.of(a.value()));
   }
 
   @Override

@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Iterator;
 import java.util.List;
@@ -137,6 +138,15 @@ public final class LinearProfile implements Profile<LinearProfile>, Iterable<Seg
             (original, defaultSegment) -> original.isPresent() ? original : defaultSegment
         )
     );
+  }
+
+  @Override
+  public Optional<SerializedValue> valueAt(final Duration timepoint) {
+    return profilePieces
+        .stream()
+        .filter($ -> $.interval().contains(timepoint))
+        .findFirst()
+        .map(linearEquationSegment -> SerializedValue.of(linearEquationSegment.value().valueAt(timepoint)));
   }
 
   public static LinearProfile fromSimulatedProfile(final List<ProfileSegment<RealDynamics>> simulatedProfile) {
