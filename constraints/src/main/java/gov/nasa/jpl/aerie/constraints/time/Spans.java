@@ -1,10 +1,12 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
+import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -20,7 +22,7 @@ import java.util.stream.StreamSupport;
 public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optional<Spans.Metadata>>> {
   private final List<Segment<Optional<Metadata>>> intervals;
 
-  public record Metadata(long id){}
+  public record Metadata(ActivityInstance activityInstance){}
 
   public Spans() {
     this.intervals = new ArrayList<>();
@@ -155,6 +157,23 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optiona
       ret.add(Interval.between(cursor, internalStartInclusivity, x.end, x.endInclusivity));
       return ret.stream().map($ -> Interval.intersect(bounds, $));
     });
+  }
+
+  /**
+   * Evaluates whether this set of spans is a strict subset of another set of spans
+   * {[1,3]} is not a strict subset of {[0,4]}
+   * {[1,3]} is a strict subset of {[1, 3], [5, 6]}
+   * @param otherSpans the other set of spans
+   * @return true if the other set of spans contains exactly all the spans in this set, false otherwise
+   */
+  public boolean isCollectionSubsetOf(final Spans otherSpans){
+    return new HashSet<>(otherSpans.intervals).containsAll(this.intervals);
+  }
+
+  public Spans intersectWith(final Windows windows){
+    final var ret = new Spans();
+    this.intervals.forEach(x -> windows.iterator().forEachRemaining(y -> ret.add(Interval.intersect(y.interval(), x.interval()), x.value())));
+    return ret;
   }
 
   @Override

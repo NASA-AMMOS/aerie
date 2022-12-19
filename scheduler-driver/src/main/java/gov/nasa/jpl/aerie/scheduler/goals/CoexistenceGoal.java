@@ -180,7 +180,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
     Windows anchors = expr.computeRange(simulationResults, plan, windows);
 
     //make sure expr hasn't changed either as that could yield unexpected behavior
-    if (this.evaluatedExpr != null && !anchors.includes(this.evaluatedExpr)) {
+    if (this.evaluatedExpr != null && !anchors.isCollectionSubsetOf(this.evaluatedExpr)) {
       throw new UnexpectedTemporalContextChangeException("The expr Windows has changed from: " + this.expr.toString() + " to " + anchors.toString());
     }
     else if (this.initiallyEvaluatedTemporalContext == null) {
@@ -262,6 +262,18 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
     }//for(anchorAct)
 
     return conflicts;
+  }
+
+  private EvaluationEnvironment createEvaluationEnvironmentFromAnchor(Segment<Optional<Spans.Metadata>> span){
+    if(span.value().isPresent()){
+      final var metadata = span.value().get();
+      return new EvaluationEnvironment(Map.of(this.alias, metadata.activityInstance()),
+                                       Map.of(),
+                                       Map.of(),
+                                       Map.of());
+    } else{
+      return new EvaluationEnvironment();
+    }
   }
 
   /**
