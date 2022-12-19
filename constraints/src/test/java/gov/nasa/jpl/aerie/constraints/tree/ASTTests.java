@@ -741,14 +741,16 @@ public class ASTTests {
         Map.of()
     );
 
+    final var activityInstance = new ActivityInstance(
+        1,
+        "TypeA",
+        Map.of(),
+        Interval.between(4, 8, SECONDS));
+
     final var environment = new EvaluationEnvironment(
         Map.of(
             "act",
-            new ActivityInstance(
-                1,
-                "TypeA",
-                Map.of(),
-                Interval.between(4, 8, SECONDS))
+            activityInstance
         ),
         Map.of(),
         Map.of(),
@@ -758,7 +760,7 @@ public class ASTTests {
     final var result = new ActivitySpan("act").evaluate(simResults, environment);
 
     final var expected = new Spans(
-        List.of(Segment.of(interval(4, 8, SECONDS), Optional.of(new Spans.Metadata(1))))
+        List.of(Segment.of(interval(4, 8, SECONDS), Optional.of(new Spans.Metadata(activityInstance))))
     );
 
     assertEquivalent(expected, result);
