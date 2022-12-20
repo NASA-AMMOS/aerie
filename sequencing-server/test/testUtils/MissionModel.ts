@@ -11,13 +11,15 @@ export async function uploadMissionModel(graphqlClient: GraphQLClient): Promise<
   const banananationBuildDir = new URL('../../../examples/banananation/build/libs', import.meta.url);
   const banananationListings = await fs.readdir(banananationBuildDir.pathname);
 
-  const banananationStats = await Promise.all(banananationListings.map(async listing => {
-    const path = banananationBuildDir.pathname + '/' + listing;
-    return {
-      path,
-      stats: await fs.stat(path),
-    }
-  }));
+  const banananationStats = await Promise.all(
+    banananationListings.map(async listing => {
+      const path = banananationBuildDir.pathname + '/' + listing;
+      return {
+        path,
+        stats: await fs.stat(path),
+      };
+    }),
+  );
   const latestBuild = banananationStats.sort((a, b) => a.stats.mtime.getTime() - b.stats.mtime.getTime()).reverse()[0];
 
   if (latestBuild === undefined) {
