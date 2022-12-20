@@ -1,12 +1,21 @@
 import { Command, Sequence } from './lib/codegen/CommandEDSLPreface.js';
-import type { SeqBuilder } from './app.js';
+import type { SeqBuilder } from './types/seqBuilder';
 
-export const defaultSeqBuilder: SeqBuilder = (sortedActivityInstancesWithCommands, seqId, seqMetadata) => {
+export const defaultSeqBuilder: SeqBuilder = (
+  sortedActivityInstancesWithCommands,
+  seqId,
+  seqMetadata,
+  simulationDatasetId,
+) => {
+  let planId;
+
   const commands = sortedActivityInstancesWithCommands.flatMap(ai => {
     // No associated Expansion
     if (ai.errors === null) {
       return [];
     }
+
+    planId = ai?.simulationDataset.simulation?.planId;
 
     if (ai.errors.length > 0) {
       return ai.errors.map(e =>
@@ -28,7 +37,11 @@ export const defaultSeqBuilder: SeqBuilder = (sortedActivityInstancesWithCommand
 
   return Sequence.new({
     seqId: seqId,
-    metadata: seqMetadata,
+    metadata: {
+      ...seqMetadata,
+      planId,
+      simulationDatasetId,
+    },
     commands,
   });
 };

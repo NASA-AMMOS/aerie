@@ -94,6 +94,7 @@ export const simulatedActivityInstanceBySimulatedActivityIdBatchLoader: BatchLoa
                 plan {
                   model_id
                 }
+                plan_id
               }
             }
             attributes
@@ -159,6 +160,11 @@ export interface SimulatedActivity<
 > {
   id: number;
   simulationDatasetId: number;
+  simulationDataset: {
+    simulation: {
+      planId: number;
+    };
+  };
   attributes: SimulatedActivityAttributes<ActivityArguments, ActivityComputedAttributes>;
   duration: Temporal.Duration;
   startOffset: Temporal.Duration;
@@ -178,6 +184,7 @@ export interface GraphQLSimulatedActivityInstance<
       plan: {
         model_id: number;
       };
+      plan_id: number;
     };
   };
   attributes: GraphQLSimulatedActivityAttributes<ActivityArguments, ActivityComputedAttributes>;
@@ -193,6 +200,11 @@ export function mapGraphQLActivityInstance(
   activitySchema: GraphQLActivitySchema,
 ): SimulatedActivity {
   return {
+    simulationDataset: {
+      simulation: {
+        planId: activityInstance.simulation_dataset.simulation.plan_id,
+      },
+    },
     id: activityInstance.id,
     duration: Temporal.Duration.from(parse(activityInstance.duration).toISOString()),
     startOffset: Temporal.Duration.from(parse(activityInstance.start_offset).toISOString()),
