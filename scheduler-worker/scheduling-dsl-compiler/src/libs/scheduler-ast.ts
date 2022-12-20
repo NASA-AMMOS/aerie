@@ -1,4 +1,4 @@
-/// <reference path="./TemporalPolyfillTypes.ts"; />
+/// <reference path="./constraints/TemporalPolyfillTypes.ts"; />
 import type * as WindowsExpressions from "./constraints-ast.js";
 import type * as ConstraintEDSL from "./constraints-edsl-fluent-api.js";
 
