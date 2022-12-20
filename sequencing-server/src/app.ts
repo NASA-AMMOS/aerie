@@ -18,7 +18,9 @@ import { expansionBatchLoader } from './lib/batchLoaders/expansionBatchLoader.js
 import { expansionSetBatchLoader } from './lib/batchLoaders/expansionSetBatchLoader.js';
 import { InferredDataloader, objectCacheKeyFunction, unwrapPromiseSettledResults } from './lib/batchLoaders/index.js';
 import {
-  simulatedActivitiesBatchLoader, SimulatedActivity, simulatedActivityInstanceBySimulatedActivityIdBatchLoader
+  simulatedActivitiesBatchLoader,
+  SimulatedActivity,
+  simulatedActivityInstanceBySimulatedActivityIdBatchLoader,
 } from './lib/batchLoaders/simulatedActivityBatchLoader.js';
 import { generateTypescriptForGraphQLActivitySchema } from './lib/codegen/ActivityTypescriptCodegen.js';
 import { Command, CommandSeqJson, Sequence, SequenceSeqJson } from './lib/codegen/CommandEDSLPreface.js';
@@ -485,7 +487,7 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
 
 /**
  * Generate a sequence JSON from a sequence standalone file
- * 
+ *
  * @deprecated Use `/bulk-get-seqjson-for-sequence-standalone` instead
  */
 app.post('/get-seqjson-for-sequence-standalone', async (req, res, next) => {
@@ -533,46 +535,48 @@ app.post('/get-seqjson-for-sequence-standalone', async (req, res, next) => {
 
 /** Generate multiple sequence JSONs from multiple sequence standalone files */
 app.post('/bulk-get-seqjson-for-sequence-standalone', async (req, res, next) => {
-  const inputs = req.body.input.inputs as { commandDictionaryId: number, edslBody: string }[]
+  const inputs = req.body.input.inputs as { commandDictionaryId: number; edslBody: string }[];
 
   const context: Context = res.locals['context'];
 
-  const results = await Promise.all(inputs.map(async ({ commandDictionaryId, edslBody }) => {
-    let commandTypes: string;
-    try {
-      commandTypes = await context.commandTypescriptDataLoader.load({ dictionaryId: commandDictionaryId });
-    } catch (e) {
-      return {
-        status: FallibleStatus.FAILURE,
-        seqJson: null,
-        errors: new Error('Error loading command dictionary', { cause: e })
-      };
-    }
-
-    const result = Result.fromJSON(
-      await (piscina.run(
-        {
-          edslBody,
-          commandTypes,
-        },
-        { name: 'executeEDSL' },
-      ) as ReturnType<typeof executeEDSL>),
-    );
-
-    if (result.isErr()) {
-      return {
-        status: FallibleStatus.FAILURE,
-        seqJson: null,
-        errors: result.unwrapErr(),
-      };
-    } else {
-      return {
-        status: FallibleStatus.SUCCESS,
-        seqJson: result.unwrap(),
-        errors: [],
+  const results = await Promise.all(
+    inputs.map(async ({ commandDictionaryId, edslBody }) => {
+      let commandTypes: string;
+      try {
+        commandTypes = await context.commandTypescriptDataLoader.load({ dictionaryId: commandDictionaryId });
+      } catch (e) {
+        return {
+          status: FallibleStatus.FAILURE,
+          seqJson: null,
+          errors: new Error('Error loading command dictionary', { cause: e }),
+        };
       }
-    }
-  }));
+
+      const result = Result.fromJSON(
+        await (piscina.run(
+          {
+            edslBody,
+            commandTypes,
+          },
+          { name: 'executeEDSL' },
+        ) as ReturnType<typeof executeEDSL>),
+      );
+
+      if (result.isErr()) {
+        return {
+          status: FallibleStatus.FAILURE,
+          seqJson: null,
+          errors: result.unwrapErr(),
+        };
+      } else {
+        return {
+          status: FallibleStatus.SUCCESS,
+          seqJson: result.unwrap(),
+          errors: [],
+        };
+      }
+    }),
+  );
 
   res.json(results);
 
@@ -592,7 +596,7 @@ export interface SeqBuilder {
 
 /**
  * Get the sequence JSON for a sequence based on seqid and simulation dataset id
- * 
+ *
  * @deprecated Use `/bulk-get-seqjson-for-seqid-and-simulation-dataset` instead
  */
 app.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, res, next) => {
@@ -724,7 +728,7 @@ app.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (req, res, 
   // Create sequence object with all the commands and return the seqjson
   const context: Context = res.locals['context'];
 
-  const inputs = req.body.input.inputs as { seqId: string, simulationDatasetId: number }[];
+  const inputs = req.body.input.inputs as { seqId: string; simulationDatasetId: number }[];
 
   const inputTuples = inputs.map(input => [input.seqId, input.simulationDatasetId] as [string, number]);
 
@@ -758,7 +762,7 @@ app.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (req, res, 
                 activity_instance_commands.activity_instance_id
             join expansion_run
               on activity_instance_commands.expansion_run_id = expansion_run.id
-          where (sequence.seq_id, sequence.simulation_dataset_id) in (${pgFormat("%L", inputTuples)})
+          where (sequence.seq_id, sequence.simulation_dataset_id) in (${pgFormat('%L', inputTuples)})
         ),
         max_values as (
           select
@@ -788,7 +792,7 @@ app.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (req, res, 
       `
         select metadata, seq_id, simulation_dataset_id
         from sequence
-        where (sequence.seq_id, sequence.simulation_dataset_id) in (${pgFormat("%L", inputTuples)});
+        where (sequence.seq_id, sequence.simulation_dataset_id) in (${pgFormat('%L', inputTuples)});
       `,
     ),
   ]);
@@ -797,84 +801,97 @@ app.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (req, res, 
   // building. For now, we just use the 'defaultSeqBuilder' until such a feature request is made.
   const seqBuilder = defaultSeqBuilder;
 
-  const promises = await Promise.allSettled(inputs.map(async ({ seqId, simulationDatasetId }) => {
-    const activityInstanceCommandRowsForSeq = activityInstanceCommandRows.filter(row => row.seq_id === seqId && row.simulation_dataset_id === simulationDatasetId);
-    const seqRowsForSeq = seqRows.find(row => row.seq_id === seqId && row.simulation_dataset_id === simulationDatasetId);
+  const promises = await Promise.allSettled(
+    inputs.map(async ({ seqId, simulationDatasetId }) => {
+      const activityInstanceCommandRowsForSeq = activityInstanceCommandRows.filter(
+        row => row.seq_id === seqId && row.simulation_dataset_id === simulationDatasetId,
+      );
+      const seqRowsForSeq = seqRows.find(
+        row => row.seq_id === seqId && row.simulation_dataset_id === simulationDatasetId,
+      );
 
-    const seqMetadata = assertDefined(
-      seqRowsForSeq,
-      `No sequence found with seq_id: ${seqId} and simulation_dataset_id: ${simulationDatasetId}`,
-    ).metadata;
+      const seqMetadata = assertDefined(
+        seqRowsForSeq,
+        `No sequence found with seq_id: ${seqId} and simulation_dataset_id: ${simulationDatasetId}`,
+      ).metadata;
 
-    const simulatedActivitiesForSeqId = await context.simulatedActivityInstanceBySimulatedActivityIdDataLoader.loadMany(
-      activityInstanceCommandRowsForSeq.map(row => ({
-        simulationDatasetId,
-        simulatedActivityId: row.activity_instance_id,
-      }),
-      ));
+      const simulatedActivitiesForSeqId =
+        await context.simulatedActivityInstanceBySimulatedActivityIdDataLoader.loadMany(
+          activityInstanceCommandRowsForSeq.map(row => ({
+            simulationDatasetId,
+            simulatedActivityId: row.activity_instance_id,
+          })),
+        );
 
-    const simulatedActivitiesLoadErrors = simulatedActivitiesForSeqId.filter(ai => ai instanceof Error);
+      const simulatedActivitiesLoadErrors = simulatedActivitiesForSeqId.filter(ai => ai instanceof Error);
 
-    if (simulatedActivitiesLoadErrors.length > 0) {
-      throw new Error(`Error loading simulated activities for seqId: ${seqId}, simulationDatasetId: ${simulationDatasetId}`, { cause: simulatedActivitiesLoadErrors });
-    }
+      if (simulatedActivitiesLoadErrors.length > 0) {
+        throw new Error(
+          `Error loading simulated activities for seqId: ${seqId}, simulationDatasetId: ${simulationDatasetId}`,
+          { cause: simulatedActivitiesLoadErrors },
+        );
+      }
 
-    const sortedActivityInstances = (simulatedActivitiesForSeqId as Exclude<(typeof simulatedActivitiesLoadErrors)[number], Error>[])
-      .sort((a, b) => Temporal.Instant.compare(a.startTime, b.startTime));
+      const sortedActivityInstances = (
+        simulatedActivitiesForSeqId as Exclude<typeof simulatedActivitiesLoadErrors[number], Error>[]
+      ).sort((a, b) => Temporal.Instant.compare(a.startTime, b.startTime));
 
-    const sortedSimulatedActivitiesWithCommands = sortedActivityInstances.map(ai => {
-      const row = activityInstanceCommandRows.find(row => row.activity_instance_id === ai.id);
-      // Hasn't ever been expanded
-      if (!row) {
+      const sortedSimulatedActivitiesWithCommands = sortedActivityInstances.map(ai => {
+        const row = activityInstanceCommandRows.find(row => row.activity_instance_id === ai.id);
+        // Hasn't ever been expanded
+        if (!row) {
+          return {
+            ...ai,
+            commands: null,
+            errors: null,
+          };
+        }
         return {
           ...ai,
-          commands: null,
-          errors: null,
+          commands: row.commands?.map(Command.fromSeqJson) ?? null,
+          errors: row.errors,
+        };
+      });
+
+      const errors = sortedSimulatedActivitiesWithCommands.flatMap(ai => ai.errors ?? []);
+
+      const sequenceJson = seqBuilder(sortedSimulatedActivitiesWithCommands, seqId, seqMetadata).toSeqJson();
+
+      if (errors.length > 0) {
+        return {
+          status: FallibleStatus.FAILURE,
+          seqJson: sequenceJson,
+          errors,
+        };
+      } else {
+        return {
+          status: FallibleStatus.SUCCESS,
+          seqJson: sequenceJson,
+          errors: [],
         };
       }
-      return {
-        ...ai,
-        commands: row.commands?.map(Command.fromSeqJson) ?? null,
-        errors: row.errors,
-      };
-    });
+    }),
+  );
 
-    const errors = sortedSimulatedActivitiesWithCommands.flatMap(ai => ai.errors ?? []);
-
-    const sequenceJson = seqBuilder(sortedSimulatedActivitiesWithCommands, seqId, seqMetadata).toSeqJson();
-
-    if (errors.length > 0) {
-      return {
-        status: FallibleStatus.FAILURE,
-        seqJson: sequenceJson,
-        errors,
-      };
-    } else {
-      return {
-        status: FallibleStatus.SUCCESS,
-        seqJson: sequenceJson,
-        errors: [],
-      };
-    }
-  }));
-
-  res.json(promises.map(promise => {
-    if (isResolved(promise)) {
-      return promise.value;
-    } else {
-      return {
-        status: FallibleStatus.FAILURE,
-        seqJson: null,
-        errors: [promise.reason],
-      };
-    }
-  }));
+  res.json(
+    promises.map(promise => {
+      if (isResolved(promise)) {
+        return promise.value;
+      } else {
+        return {
+          status: FallibleStatus.FAILURE,
+          seqJson: null,
+          errors: [promise.reason],
+        };
+      }
+    }),
+  );
 
   return next();
 });
 
 /** Generate Sequence EDSL from sequence JSON
- * 
+ *
  * @deprecated Use `/bulk-get-edsl-for-seqjson` instead
  */
 app.post('/get-edsl-for-seqjson', async (req, res, next) => {

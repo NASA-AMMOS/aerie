@@ -8,43 +8,42 @@ beforeEach(async () => {
 });
 
 describe('getEdslForSeqJson', () => {
-    it('should return the seqjson for a given sequence edsl', async () => {
-
-      const res = await graphqlClient.request<{
-        getEdslForSeqJson: string
-      }>(
-        gql`
-          query GetEdslForSeqJson($seqJson: SequenceSeqJsonInput!) {
-            getEdslForSeqJson(seqJson: $seqJson)
-          }
-        `,
-        {
-          seqJson: {
-            id: 'test_00001',
-            metadata: {},
-            steps: [
-              {
-                // expansion 1
-                type: 'command',
-                stem: 'BAKE_BREAD',
-                time: { type: TimingTypes.COMMAND_COMPLETE },
-                args: [],
-                metadata: {},
-              },
-              {
-                type: 'command',
-                stem: 'PREHEAT_OVEN',
-                time: { type: TimingTypes.ABSOLUTE, tag: '2020-060T03:45:19.000Z' },
-                args: [100],
-                metadata: {},
-              },
-            ]
-          },
+  it('should return the seqjson for a given sequence edsl', async () => {
+    const res = await graphqlClient.request<{
+      getEdslForSeqJson: string;
+    }>(
+      gql`
+        query GetEdslForSeqJson($seqJson: SequenceSeqJsonInput!) {
+          getEdslForSeqJson(seqJson: $seqJson)
+        }
+      `,
+      {
+        seqJson: {
+          id: 'test_00001',
+          metadata: {},
+          steps: [
+            {
+              // expansion 1
+              type: 'command',
+              stem: 'BAKE_BREAD',
+              time: { type: TimingTypes.COMMAND_COMPLETE },
+              args: [],
+              metadata: {},
+            },
+            {
+              type: 'command',
+              stem: 'PREHEAT_OVEN',
+              time: { type: TimingTypes.ABSOLUTE, tag: '2020-060T03:45:19.000Z' },
+              args: [100],
+              metadata: {},
+            },
+          ],
         },
-      );
+      },
+    );
 
-      expect(res.getEdslForSeqJson).toEqual(
-`export default () =>
+    expect(res.getEdslForSeqJson).toEqual(
+      `export default () =>
   Sequence.new({
     seqId: 'test_00001',
     metadata: {},
@@ -52,17 +51,15 @@ describe('getEdslForSeqJson', () => {
       C.BAKE_BREAD,
       A\`2020-060T03:45:19.000\`.PREHEAT_OVEN(100),
     ],
-  });`
-      );
-
-    });
+  });`,
+    );
+  });
 });
 
 describe('getEdslForSeqJsonBulk', () => {
   it('should return the seqjson for a given sequence edsl', async () => {
-
     const res = await graphqlClient.request<{
-      getEdslForSeqJsonBulk: string
+      getEdslForSeqJsonBulk: string;
     }>(
       gql`
         query GetEdslForSeqJsonBulk($seqJsons: [SequenceSeqJsonInput!]!) {
@@ -90,7 +87,7 @@ describe('getEdslForSeqJsonBulk', () => {
                 args: [100],
                 metadata: {},
               },
-            ]
+            ],
           },
           {
             id: 'test_00002',
@@ -111,14 +108,14 @@ describe('getEdslForSeqJsonBulk', () => {
                 args: [100],
                 metadata: {},
               },
-            ]
+            ],
           },
         ],
       },
     );
 
     expect(res.getEdslForSeqJsonBulk).toEqual([
-`export default () =>
+      `export default () =>
   Sequence.new({
     seqId: 'test_00001',
     metadata: {},
@@ -127,7 +124,7 @@ describe('getEdslForSeqJsonBulk', () => {
       A\`2020-060T03:45:19.000\`.PREHEAT_OVEN(100),
     ],
   });`,
-`export default () =>
+      `export default () =>
   Sequence.new({
     seqId: 'test_00002',
     metadata: {},
@@ -137,6 +134,5 @@ describe('getEdslForSeqJsonBulk', () => {
     ],
   });`,
     ]);
-
   });
 });

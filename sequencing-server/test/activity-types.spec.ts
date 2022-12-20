@@ -15,7 +15,6 @@ afterEach(async () => {
 });
 
 it('should return activity types', async () => {
-
   const { getActivityTypeScript } = await graphqlClient.request<{
     getActivityTypeScript: {
       status: Status;
@@ -54,8 +53,7 @@ it('should return activity types', async () => {
     {
       content: expect.any(String),
       filePath: 'TemporalPolyfillTypes.ts',
-    }
+    },
   ]);
   expect(getActivityTypeScript.reason).toBe(null);
-
 }, 10000);

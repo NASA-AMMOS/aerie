@@ -108,25 +108,22 @@ export async function expand(
   return result.expandAllActivities.id;
 }
 
-export async function removeExpansionRun(
-    graphqlClient: GraphQLClient,
-    expansionRunId: number,
-): Promise<void> {
+export async function removeExpansionRun(graphqlClient: GraphQLClient, expansionRunId: number): Promise<void> {
   await graphqlClient.request<{
     delete_expansion_run_by_pk: {
       id: number;
     };
   }>(
-      gql`
-        mutation deleteExpansionRun($expansionRunId: Int!) {
-          delete_expansion_run_by_pk(id: $expansionRunId) {
-            id
-          }
+    gql`
+      mutation deleteExpansionRun($expansionRunId: Int!) {
+        delete_expansion_run_by_pk(id: $expansionRunId) {
+          id
         }
-      `,
-      {
-        expansionRunId,
-      },
+      }
+    `,
+    {
+      expansionRunId,
+    },
   );
 
   return;
