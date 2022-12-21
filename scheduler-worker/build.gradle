@@ -72,7 +72,7 @@ task publishDocs {
 
 assemble {
   dependsOn assembleSchedulingDSLCompiler
-  dependsOn generateASTJsonSchema
+  //dependsOn generateASTJsonSchema
   dependsOn generateDocumentation
 }
 
