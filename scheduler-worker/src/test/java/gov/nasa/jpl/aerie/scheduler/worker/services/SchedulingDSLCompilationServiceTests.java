@@ -271,7 +271,7 @@ class SchedulingDSLCompilationServiceTests {
     assertTrue(
         actualErrors.errors()
                     .stream()
-                    .anyMatch(e -> e.message().contains("TypeError: TS2322 Incorrect return type. Expected: 'Goal', Actual: 'number'."))
+                    .anyMatch(e -> e.message().contains("TypeError: TS2322 Incorrect return type. Expected: 'Goal | Promise<Goal>', Actual: 'number'."))
     );
   }
 
@@ -422,10 +422,7 @@ class SchedulingDSLCompilationServiceTests {
 
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
       assertEquals(1, r.errors().size());
-      assertEquals(
-          "TypeError: TS2741 Incorrect return type. Expected: 'Goal', Actual: 'FakeGoal'.",
-          r.errors().get(0).message()
-      );
+      assertTrue(r.errors().get(0).message().contains("Incorrect return type. Expected: 'Goal | Promise<Goal>', Actual: 'FakeGoal'."));
     }
   }
 

@@ -150,7 +150,7 @@ class ConstraintsDSLCompilationServiceTests {
              return Real.Resource("state of charge");
           }
         """,
-        "TypeError: TS2322 Incorrect return type. Expected: 'Constraint', Actual: 'Real'."
+        "TypeError: TS2322 Incorrect return type. Expected: 'Constraint | Promise<Constraint>', Actual: 'Real'."
     );
   }
 
