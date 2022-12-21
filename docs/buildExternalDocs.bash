@@ -60,6 +60,7 @@ do
   [ -e "$file" ] || continue
   tail -n +3 "$file" > "$file.tmp" && mv "$file.tmp" "$file"
   sed -i -e 's/README/index/g' $file
+  sed -i -e 's,../modules/Constraint_eDSL.,../../constraints-edsl-api/modules/,g' $file
   sed -i -e 's,../modules/Scheduling_eDSL.md,../index.md,g' $file
   sed -i -e 's,../enums/Constraint_eDSL.,../../constraints-edsl-api/enums/,g' $file
   sed -i -e 's,../interfaces/Constraint_eDSL.,../../constraints-edsl-api/enums/,g' $file
@@ -70,6 +71,7 @@ do
   [ -e "$file" ] || continue
   tail -n +3 "$file" > "$file.tmp" && mv "$file.tmp" "$file"
   sed -i -e 's/README/index/g' $file
+  sed -i -e 's,../modules/Constraint_eDSL.,../../constraints-edsl-api/modules/,g' $file
   sed -i -e 's,../modules/Scheduling_eDSL.md,../index.md,g' $file
   sed -i -e 's,../classes/Constraint_eDSL.,../../constraints-edsl-api/classes/,g' $file
   sed -i -e 's,../interfaces/Constraint_eDSL.,../../constraints-edsl-api/interfaces/,g' $file
@@ -80,6 +82,7 @@ do
   [ -e "$file" ] || continue
   tail -n +3 "$file" > "$file.tmp" && mv "$file.tmp" "$file"
   sed -i -e 's/README/index/g' $file
+  sed -i -e 's,../modules/Constraint_eDSL.,../../constraints-edsl-api/modules/,g' $file
   sed -i -e 's,../modules/Scheduling_eDSL.md,../index.md,g' $file
   sed -i -e 's,../classes/Constraint_eDSL.,../../constraints-edsl-api/classes/,g' $file
   sed -i -e 's,../enums/Constraint_eDSL.,../../constraints-edsl-api/enums/,g' $file
