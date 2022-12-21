@@ -120,7 +120,7 @@ public final class TypescriptCodeGenerationService {
 
       @Override
       public String onDuration() {
-        return "Duration";
+        return "Temporal.Duration";
       }
 
       @Override

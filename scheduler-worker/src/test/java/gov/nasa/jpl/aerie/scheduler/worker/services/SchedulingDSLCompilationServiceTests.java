@@ -515,6 +515,7 @@ class SchedulingDSLCompilationServiceTests {
         missionModelService,
         PLAN_ID,
         """
+          const micro = (m: number) => Temporal.Duration.from({microseconds: m});
           export default function() {
             return Goal.CoexistenceGoal({
               activityTemplate: ActivityTemplates.SampleActivity1({
@@ -522,7 +523,7 @@ class SchedulingDSLCompilationServiceTests {
                 fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
                 duration: Temporal.Duration.from({ hours: 1 })
               }),
-              forEach: Real.Resource(Resources["/sample/resource/1"]).greaterThan(50.0).longerThan(10),
+              forEach: Real.Resource(Resources["/sample/resource/1"]).greaterThan(50.0).longerThan(micro(10)),
               startsAt: TimingConstraint.singleton(WindowProperty.END)
             })
           }
