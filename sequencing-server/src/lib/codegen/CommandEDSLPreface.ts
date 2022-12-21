@@ -169,7 +169,7 @@ export class Command<
 
   public toSeqJson(): CommandSeqJson {
     return {
-      args: typeof this.arguments == 'object' ? Object.values(this.arguments) : this.arguments,
+      args: flatten(this.arguments),
       stem: this.stem,
       time:
         this.absoluteTime !== null
@@ -483,30 +483,30 @@ function commandsWithTimeValue<T extends TimingTypes>(
   }, {} as typeof Commands);
 }
 
-// @ts-ignore
-function orderCommandArguments(args: { [argName: string]: any }, order: string[]): any {
-  return order.map(key => args[key]);
-}
+function flatten(input: { [argName: string]: any }): any {
+  let flatList: any[] = [];
 
-// @ts-ignore: Used in generated code
-function findAndOrderCommandArguments(
-  commandName: string,
-  args: { [argName: string]: any },
-  argumentOrders: string[][],
-): any {
-  for (const argumentOrder of argumentOrders) {
-    if (argumentOrder.length === Object.keys(args).length) {
-      let difference = argumentOrder
-        .filter((value: string) => !Object.keys(args).includes(value))
-        .concat(Object.keys(args).filter((value: string) => !argumentOrder.includes(value))).length;
+  for (const element of Object.values(input)) {
+    // If our input was already flattened, don't try and flatten it again.
+    if (typeof element !== 'object') {
+      return input;
+    }
 
-      // found correct argument order to apply
-      if (difference === 0) {
-        return orderCommandArguments(args, argumentOrder);
+    const values = Object.values(element);
+
+    for (const value of values) {
+      if (Array.isArray(value)) {
+        // We've come across a repeat arg so we need to extract its values.
+        for (const repeat of value) {
+          flatList = flatList.concat([...Object.values(repeat)]);
+        }
+      } else {
+        flatList.push(value);
       }
     }
   }
-  throw new Error(`Could not find correct argument order for command: ${commandName}`);
+
+  return flatList;
 }
 
 function indent(text: string, numTimes: number = 1, char: string = '  '): string {

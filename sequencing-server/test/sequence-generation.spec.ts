@@ -58,8 +58,8 @@ describe('sequence generation', () => {
       `
     export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
       return [
-        C.PREHEAT_OVEN({temperature: 70}),
-        C.PREPARE_LOAF(50, false),
+        C.PREHEAT_OVEN({ temperature: 70 }),
+        C.PREPARE_LOAF({ tb_sugar: 50, gluten_free: false }),
         C.BAKE_BREAD,
       ];
     }
@@ -71,9 +71,9 @@ describe('sequence generation', () => {
       `
     export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
       return [
-        C.PREHEAT_OVEN({temperature: 70}),
+        C.PREHEAT_OVEN({ temperature: 70 }),
         C.BAKE_BREAD,
-        C.PREPARE_LOAF(50, false),
+        C.PREPARE_LOAF({ tb_sugar: 50, gluten_free: false }),
       ];
     }
     `,
@@ -85,26 +85,37 @@ describe('sequence generation', () => {
     export default function TimeDynamicCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
       return [
         A\`2020-060T03:45:19\`.ADD_WATER,
-        A(Temporal.Instant.from("2025-12-24T12:01:59Z")).PREHEAT_OVEN({temperature: 360}),
-        R\`00:15:30\`.PREHEAT_OVEN({temperature: 425}),
+        A(Temporal.Instant.from("2025-12-24T12:01:59Z")).PREHEAT_OVEN({ temperature: 360 }),
+        R\`00:15:30\`.PREHEAT_OVEN({ temperature: 425 }),
         R(Temporal.Duration.from({ hours: 1, minutes: 15, seconds: 30 })).EAT_BANANA,
-        E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PREPARE_LOAF(50, false),
+        E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PREPARE_LOAF({ tb_sugar: 50, gluten_free: false }),
         E\`04:56:54\`.EAT_BANANA,
         C.PACKAGE_BANANA({
-          bundle_name_1: "Chiquita",
-          number_of_bananas_1: 43,
-          bundle_name_2: "Dole",
-          number_of_bananas_2: 12,
           lot_number: 1093,
+          bundle: [
+            {
+              bundle_name: "Chiquita",
+              number_of_bananas: 43
+            },
+            {
+              bundle_name: "Dole",
+              number_of_bananas: 12 
+            }
+          ]
         }),
         C.PACKAGE_BANANA({
-          bundle_name_2: "Dole",
-          number_of_bananas_1: 43,
-          bundle_name_1: "Chiquita",
           lot_number: 1093,
-          number_of_bananas_2: 12
-        }),
-        C.PACKAGE_BANANA("Chiquita",43,"Dole",12,"Blue",1,1093)
+          bundle: [
+            {
+              bundle_name: "Chiquita",
+              number_of_bananas: 43
+            },
+            {
+              bundle_name: "Blue",
+              number_of_bananas: 12 
+            }
+          ]
+        })
       ];
     }
     `,
@@ -295,21 +306,14 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        args: [1093, 'Chiquita', 43, 'Dole', 12],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
-        metadata: { simulatedActivityId: simulatedActivityId3 },
-      },
-      {
-        type: 'command',
-        stem: 'PACKAGE_BANANA',
-        time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 'Blue', 1, 1093],
+        args: [1093, 'Chiquita', 43, 'Blue', 12],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
     ]);
@@ -547,21 +551,14 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        args: [1093, 'Chiquita', 43, 'Dole', 12],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
-        metadata: { simulatedActivityId: simulatedActivityId3 },
-      },
-      {
-        type: 'command',
-        stem: 'PACKAGE_BANANA',
-        time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 'Blue', 1, 1093],
+        args: [1093, 'Chiquita', 43, 'Blue', 12],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
     ]);
@@ -687,21 +684,14 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        args: [1093, 'Chiquita', 43, 'Dole', 12],
         metadata: { simulatedActivityId: simulatedActivityId6 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
-        metadata: { simulatedActivityId: simulatedActivityId6 },
-      },
-      {
-        type: 'command',
-        stem: 'PACKAGE_BANANA',
-        time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 'Blue', 1, 1093],
+        args: [1093, 'Chiquita', 43, 'Blue', 12],
         metadata: { simulatedActivityId: simulatedActivityId6 },
       },
     ]);
@@ -920,21 +910,14 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        args: [1093, 'Chiquita', 43, 'Dole', 12],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
-        metadata: { simulatedActivityId: simulatedActivityId3 },
-      },
-      {
-        type: 'command',
-        stem: 'PACKAGE_BANANA',
-        time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 'Blue', 1, 1093],
+        args: [1093, 'Chiquita', 43, 'Blue', 12],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -1203,21 +1186,14 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        args: [1093, 'Chiquita', 43, 'Dole', 12],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
-        metadata: { simulatedActivityId: simulatedActivityId3 },
-      },
-      {
-        type: 'command',
-        stem: 'PACKAGE_BANANA',
-        time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 'Blue', 1, 1093],
+        args: [1093, 'Chiquita', 43, 'Blue', 12],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -1346,21 +1322,14 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        args: [1093, 'Chiquita', 43, 'Dole', 12],
         metadata: { simulatedActivityId: simulatedActivityId7 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
-        metadata: { simulatedActivityId: simulatedActivityId7 },
-      },
-      {
-        type: 'command',
-        stem: 'PACKAGE_BANANA',
-        time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 'Blue', 1, 1093],
+        args: [1093, 'Chiquita', 43, 'Blue', 12],
         metadata: { simulatedActivityId: simulatedActivityId7 },
       },
       {
@@ -1582,21 +1551,14 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        args: [1093, 'Chiquita', 43, 'Dole', 12],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
-        metadata: { simulatedActivityId: simulatedActivityId3 },
-      },
-      {
-        type: 'command',
-        stem: 'PACKAGE_BANANA',
-        time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 'Blue', 1, 1093],
+        args: [1093, 'Chiquita', 43, 'Blue', 12],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
     ]);
@@ -1845,21 +1807,14 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        args: [1093, 'Chiquita', 43, 'Dole', 12],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
-        metadata: { simulatedActivityId: simulatedActivityId3 },
-      },
-      {
-        type: 'command',
-        stem: 'PACKAGE_BANANA',
-        time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 'Blue', 1, 1093],
+        args: [1093, 'Chiquita', 43, 'Blue', 12],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
     ]);
@@ -1985,21 +1940,14 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        args: [1093, 'Chiquita', 43, 'Dole', 12],
         metadata: { simulatedActivityId: simulatedActivityId7 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
-        metadata: { simulatedActivityId: simulatedActivityId7 },
-      },
-      {
-        type: 'command',
-        stem: 'PACKAGE_BANANA',
-        time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Chiquita', 43, 'Dole', 12, 'Blue', 1, 1093],
+        args: [1093, 'Chiquita', 43, 'Blue', 12],
         metadata: { simulatedActivityId: simulatedActivityId7 },
       },
     ]);
@@ -2118,7 +2066,7 @@ it('should provide start, end, and computed attributes on activities', async () 
       return [
         A(props.activityInstance.startTime).BAKE_BREAD,
         A(props.activityInstance.endTime).BAKE_BREAD,
-        C.ECHO("Computed attributes: " + props.activityInstance.attributes.computed),
+        C.ECHO({ echo_string: "Computed attributes: " + props.activityInstance.attributes.computed }),
       ];
     }
     `,
@@ -2195,13 +2143,19 @@ describe('user sequence to seqjson', () => {
         metadata: {},
         commands: [
             C.BAKE_BREAD,
-            A\`2020-060T03:45:19\`.PREHEAT_OVEN(100),
+            A\`2020-060T03:45:19\`.PREHEAT_OVEN({ temperature: 100 }),
             E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PACKAGE_BANANA({
-              bundle_name_2: "Dole",
-              number_of_bananas_1: 43,
-              bundle_name_1: "Chiquita",
               lot_number: 1093,
-              number_of_bananas_2: 12
+              bundle: [
+                {
+                  bundle_name: "Chiquita",
+                  number_of_bananas: 43
+                },
+                {
+                  bundle_name: "Dole",
+                  number_of_bananas: 12 
+                }
+              ]
             }),
         ],
       });
@@ -2235,7 +2189,7 @@ describe('user sequence to seqjson', () => {
           tag: '12:06:54.000',
           type: 'EPOCH_RELATIVE',
         },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        args: [1093, 'Chiquita', 43, 'Dole', 12],
         metadata: {},
       },
     ]);
@@ -2252,14 +2206,20 @@ describe('user sequence to seqjson', () => {
               metadata: {},
               commands: [
                   C.BAKE_BREAD,
-                  A\`2020-060T03:45:19\`.PREHEAT_OVEN(100),
+                  A\`2020-060T03:45:19\`.PREHEAT_OVEN({ temperature: 100 }),
                   E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PACKAGE_BANANA({
-                    bundle_name_2: "Dole",
-                    number_of_bananas_1: 43,
-                    bundle_name_1: "Chiquita",
                     lot_number: 1093,
-                    number_of_bananas_2: 12
-                  }),
+                    bundle: [
+                      {
+                        bundle_name: "Chiquita",
+                        number_of_bananas: 43
+                      },
+                      {
+                        bundle_name: "Dole",
+                        number_of_bananas: 12 
+                      }
+                    ]
+                }),
               ],
             });
           `,
@@ -2273,13 +2233,19 @@ describe('user sequence to seqjson', () => {
               metadata: {},
               commands: [
                   C.BAKE_BREAD,
-                  A\`2020-061T03:45:19\`.PREHEAT_OVEN(100),
+                  A\`2020-061T03:45:19\`.PREHEAT_OVEN({ temperature: 100 }),
                   E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PACKAGE_BANANA({
-                    bundle_name_2: "Dole",
-                    number_of_bananas_1: 43,
-                    bundle_name_1: "Chiquita",
                     lot_number: 1093,
-                    number_of_bananas_2: 12
+                    bundle: [
+                      {
+                        bundle_name: "Chiquita",
+                        number_of_bananas: 43
+                      },
+                      {
+                        bundle_name: "Dole",
+                        number_of_bananas: 12 
+                      }
+                    ]
                   }),
               ],
             });
@@ -2314,7 +2280,7 @@ describe('user sequence to seqjson', () => {
           tag: '12:06:54.000',
           type: 'EPOCH_RELATIVE',
         },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        args: [1093, 'Chiquita', 43, 'Dole', 12],
         metadata: {},
       },
     ]);
@@ -2346,7 +2312,7 @@ describe('user sequence to seqjson', () => {
           tag: '12:06:54.000',
           type: 'EPOCH_RELATIVE',
         },
-        args: ['Chiquita', 43, 'Dole', 12, 1093],
+        args: [1093, 'Chiquita', 43, 'Dole', 12],
         metadata: {},
       },
     ]);
