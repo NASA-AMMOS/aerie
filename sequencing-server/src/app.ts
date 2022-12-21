@@ -19,7 +19,6 @@ import { expansionSetBatchLoader } from './lib/batchLoaders/expansionSetBatchLoa
 import { InferredDataloader, objectCacheKeyFunction, unwrapPromiseSettledResults } from './lib/batchLoaders/index.js';
 import {
   simulatedActivitiesBatchLoader,
-  SimulatedActivity,
   simulatedActivityInstanceBySimulatedActivityIdBatchLoader,
 } from './lib/batchLoaders/simulatedActivityBatchLoader.js';
 import { generateTypescriptForGraphQLActivitySchema } from './lib/codegen/ActivityTypescriptCodegen.js';
@@ -583,17 +582,6 @@ app.post('/bulk-get-seqjson-for-sequence-standalone', async (req, res, next) => 
   return next();
 });
 
-export interface SeqBuilder {
-  (
-    sortedActivityInstancesWithCommands: (SimulatedActivity & {
-      commands: Command[] | null;
-      errors: ReturnType<UserCodeError['toJSON']>[] | null;
-    })[],
-    seqId: string,
-    seqMetadata: Record<string, any>,
-  ): Sequence;
-}
-
 /**
  * Get the sequence JSON for a sequence based on seqid and simulation dataset id
  *
@@ -704,7 +692,12 @@ app.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, res, next)
   // This is here to easily enable a future feature of allowing the mission to configure their own sequence
   // building. For now, we just use the 'defaultSeqBuilder' until such a feature request is made.
   const seqBuilder = defaultSeqBuilder;
-  const sequenceJson = seqBuilder(sortedSimulatedActivitiesWithCommands, seqId, seqMetadata).toSeqJson();
+  const sequenceJson = seqBuilder(
+    sortedSimulatedActivitiesWithCommands,
+    seqId,
+    seqMetadata,
+    simulationDatasetId,
+  ).toSeqJson();
 
   if (errors.length > 0) {
     res.json({
@@ -855,7 +848,12 @@ app.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (req, res, 
 
       const errors = sortedSimulatedActivitiesWithCommands.flatMap(ai => ai.errors ?? []);
 
-      const sequenceJson = seqBuilder(sortedSimulatedActivitiesWithCommands, seqId, seqMetadata).toSeqJson();
+      const sequenceJson = seqBuilder(
+        sortedSimulatedActivitiesWithCommands,
+        seqId,
+        seqMetadata,
+        simulationDatasetId,
+      ).toSeqJson();
 
       if (errors.length > 0) {
         return {

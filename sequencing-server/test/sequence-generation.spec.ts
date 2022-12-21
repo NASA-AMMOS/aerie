@@ -181,7 +181,10 @@ describe('sequence generation', () => {
     }
 
     expect(getSequenceSeqJsonResponse.seqJson.id).toBe('test00000');
-    expect(getSequenceSeqJsonResponse.seqJson.metadata).toEqual({});
+    expect(getSequenceSeqJsonResponse.seqJson.metadata).toEqual({
+      planId: planId,
+      simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+    });
     expect(getSequenceSeqJsonResponse.seqJson.steps).toEqual([
       {
         // expansion 1
@@ -430,7 +433,10 @@ describe('sequence generation', () => {
     }
 
     expect(firstSequence.seqJson.id).toBe('test00000');
-    expect(firstSequence.seqJson.metadata).toEqual({});
+    expect(firstSequence.seqJson.metadata).toEqual({
+      planId: planId,
+      simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+    });
     expect(firstSequence.seqJson.steps).toEqual([
       {
         // expansion 1
@@ -567,7 +573,10 @@ describe('sequence generation', () => {
     }
 
     expect(secondSequence.seqJson.id).toBe('test00001');
-    expect(secondSequence.seqJson.metadata).toEqual({});
+    expect(secondSequence.seqJson.metadata).toEqual({
+      planId: planId,
+      simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+    });
     expect(secondSequence.seqJson.steps).toEqual([
       {
         // expansion 1
@@ -797,7 +806,10 @@ describe('sequence generation', () => {
     ]);
 
     expect(getSequenceSeqJsonResponse.seqJson?.id).toBe('test00000');
-    expect(getSequenceSeqJsonResponse.seqJson?.metadata).toEqual({});
+    expect(getSequenceSeqJsonResponse.seqJson?.metadata).toEqual({
+      planId: planId,
+      simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+    });
     expect(getSequenceSeqJsonResponse.seqJson?.steps).toEqual([
       {
         // expansion 1
@@ -1077,7 +1089,10 @@ describe('sequence generation', () => {
     const firstSequence = getSequenceSeqJsonBulkResponse[0]!;
 
     expect(firstSequence.seqJson?.id).toBe('test00000');
-    expect(firstSequence.seqJson?.metadata).toEqual({});
+    expect(firstSequence.seqJson?.metadata).toEqual({
+      planId: planId,
+      simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+    });
     expect(firstSequence.seqJson?.steps).toEqual([
       {
         // expansion 1
@@ -1217,7 +1232,10 @@ describe('sequence generation', () => {
     const secondSequence = getSequenceSeqJsonBulkResponse[1]!;
 
     expect(secondSequence.seqJson?.id).toBe('test00001');
-    expect(secondSequence.seqJson?.metadata).toEqual({});
+    expect(secondSequence.seqJson?.metadata).toEqual({
+      planId: planId,
+      simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+    });
     expect(secondSequence.seqJson?.steps).toEqual([
       {
         // expansion 1
@@ -1450,7 +1468,10 @@ describe('sequence generation', () => {
     }
 
     expect(getSequenceSeqJsonResponse.seqJson.id).toBe('test00000');
-    expect(getSequenceSeqJsonResponse.seqJson.metadata).toEqual({});
+    expect(getSequenceSeqJsonResponse.seqJson.metadata).toEqual({
+      planId: planId,
+      simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+    });
     expect(getSequenceSeqJsonResponse.seqJson.steps).toEqual([
       {
         // expansion 1
@@ -1710,7 +1731,10 @@ describe('sequence generation', () => {
     }
 
     expect(firstSequence.seqJson.id).toBe('test00000');
-    expect(firstSequence.seqJson.metadata).toEqual({});
+    expect(firstSequence.seqJson.metadata).toEqual({
+      planId: planId,
+      simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+    });
     expect(firstSequence.seqJson.steps).toEqual([
       {
         // expansion 1
@@ -1847,7 +1871,10 @@ describe('sequence generation', () => {
     }
 
     expect(secondSequence.seqJson.id).toBe('test00001');
-    expect(secondSequence.seqJson.metadata).toEqual({});
+    expect(secondSequence.seqJson.metadata).toEqual({
+      planId: planId,
+      simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+    });
     expect(secondSequence.seqJson.steps).toEqual([
       {
         // expansion 1
@@ -2122,7 +2149,10 @@ it('should provide start, end, and computed attributes on activities', async () 
   }
 
   expect(getSequenceSeqJsonResponse.seqJson.id).toBe('test00000');
-  expect(getSequenceSeqJsonResponse.seqJson.metadata).toEqual({});
+  expect(getSequenceSeqJsonResponse.seqJson.metadata).toEqual({
+    planId: planId,
+    simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+  });
   expect(getSequenceSeqJsonResponse.seqJson.steps).toEqual([
     {
       type: 'command',
