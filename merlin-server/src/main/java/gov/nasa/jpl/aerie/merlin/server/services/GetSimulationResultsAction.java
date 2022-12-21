@@ -188,7 +188,7 @@ public final class GetSimulationResultsAction {
       }
     }
 
-    final var environment = new EvaluationEnvironment(Map.of(), realExternalProfiles, discreteExternalProfiles);
+    final var environment = new EvaluationEnvironment(Map.of(), Map.of(), realExternalProfiles, discreteExternalProfiles);
 
     final var planDuration = Duration.of(
         plan.startTimestamp.toInstant().until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS),
