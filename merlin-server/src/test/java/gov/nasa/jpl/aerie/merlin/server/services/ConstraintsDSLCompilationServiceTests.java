@@ -364,10 +364,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default() => {
-              return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).longerThan(1000)
+              return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).longerThan(Temporal.Duration.from({seconds: 1}));
             }
         """,
-        new ViolationsOfWindows(new LongerThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), Duration.of(1000, Duration.MICROSECOND)))
+        new ViolationsOfWindows(new LongerThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), Duration.of(1000, Duration.MILLISECONDS)))
     );
   }
 
@@ -376,10 +376,10 @@ class ConstraintsDSLCompilationServiceTests {
     checkSuccessfulCompilation(
         """
             export default() => {
-              return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).shorterThan(1000)
+              return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).shorterThan(Temporal.Duration.from({hours: 2}));
             }
         """,
-        new ViolationsOfWindows(new ShorterThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), Duration.of(1000, Duration.MICROSECOND)))
+        new ViolationsOfWindows(new ShorterThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), Duration.of(2, Duration.HOURS)))
     );
   }
 
@@ -387,14 +387,15 @@ class ConstraintsDSLCompilationServiceTests {
   void testShiftBy() {
     checkSuccessfulCompilation(
         """
+            const minute = (m: number) => Temporal.Duration.from({minutes: m});
             export default() => {
-              return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).shiftBy(1000, -200)
+              return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).shiftBy(minute(2), minute(-20))
             }
         """,
         new ViolationsOfWindows(new ShiftBy(
             new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)),
-            Duration.of(1000, Duration.MICROSECOND),
-            Duration.of(-200, Duration.MICROSECOND)))
+            Duration.of(2, Duration.MINUTE),
+            Duration.of(-20, Duration.MINUTE)))
     );
   }
 

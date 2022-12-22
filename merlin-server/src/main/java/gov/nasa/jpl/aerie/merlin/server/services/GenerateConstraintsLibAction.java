@@ -34,11 +34,14 @@ public record GenerateConstraintsLibAction(ConstraintsCodeGenService typescriptC
       final var constraintsDslCompilerRoot = System.getenv("CONSTRAINTS_DSL_COMPILER_ROOT");
       final var constraintsApi = Files.readString(Paths.get(constraintsDslCompilerRoot, "src", "libs", "constraints-edsl-fluent-api.ts"));
       final var constraintsAst = Files.readString(Paths.get(constraintsDslCompilerRoot, "src", "libs", "constraints-ast.ts"));
+      final var temporalPolyfillTypes = Files.readString(Paths.get(constraintsDslCompilerRoot, "src", "libs", "TemporalPolyfillTypes.ts"));
       final var generated = typescriptCodeGenerationService.generateTypescriptTypes(missionModelId, planId);
       return new Response.Success(
           Map.of("constraints-edsl-fluent-api.ts", constraintsApi,
                  "mission-model-generated-code.ts", generated,
-                 "constraints-ast.ts", constraintsAst));
+                 "constraints-ast.ts", constraintsAst,
+                 "TemporalPolyfillTypes.ts", temporalPolyfillTypes
+          ));
     } catch (MissionModelService.NoSuchMissionModelException | NoSuchPlanException | IOException e) {
       return new Response.Failure(e.getMessage());
     }
