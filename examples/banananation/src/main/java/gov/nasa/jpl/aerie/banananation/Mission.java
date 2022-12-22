@@ -9,6 +9,9 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.StringValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
+import gov.nasa.jpl.aerie.spice.SpiceLoader;
+import spice.basic.CSPICE;
+import spice.basic.SpiceErrorException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -36,6 +39,14 @@ public final class Mission {
     registrar.discrete("/producer", this.producer, new StringValueMapper());
     registrar.discrete("/data/line_count", this.dataLineCount, new IntegerValueMapper());
     registrar.topic("/producer", this.producer.ref, new StringValueMapper());
+
+    // Load SPICE in the Mission constructor
+    try {
+      SpiceLoader.loadSpice();
+      System.out.println(CSPICE.ktotal("ALL"));
+    } catch (final SpiceErrorException ex) {
+      throw new Error(ex);
+    }
   }
 
   private static int countLines(final Path path) {

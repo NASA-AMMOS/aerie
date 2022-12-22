@@ -33,11 +33,18 @@ public final class SpiceLoader {
 
     private static String getResourcePathByOS() {
         final String osName = System.getProperty("os.name").toLowerCase();
+        final String osArch = System.getProperty("os.arch").toLowerCase();
 
         if (osName.startsWith("win")) {
             return "JNISpice.dll";
         } else if (osName.startsWith("linux")) {
-            return "libJNISpice.so";
+          if(osArch.startsWith("aarch")||osArch.startsWith("arm")) {    //ARM and AArch refer to the same thing
+            return "libJNISpice_M1.so";
+          }
+          else if(osArch.startsWith("amd")||osArch.startsWith("x86")) { //AMD and x86 are compatible
+            return "libJNISpice_Intel.so";
+          }
+          throw new UnsupportedOperationException("Architecture " +osArch + " is not supported by JNISpice.");
         } else if (osName.startsWith("mac")) {
             return "libJNISpice.jnilib";
         }
