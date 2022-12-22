@@ -1,4 +1,4 @@
-import './libs/polyfills.js'
+import './libs/constraints/polyfills.js'
 import fs from 'fs';
 import ts from 'typescript';
 import {UserCodeRunner} from '@nasa-jpl/aerie-ts-user-code-runner';
@@ -23,7 +23,7 @@ const windowsAST = fs.readFileSync(
   "utf8"
 );
 const temporalPolyfillTypes = fs.readFileSync(
-    `${process.env["SCHEDULING_DSL_COMPILER_ROOT"]}/src/libs/TemporalPolyfillTypes.ts`,
+    `${process.env["SCHEDULING_DSL_COMPILER_ROOT"]}/src/libs/constraints/TemporalPolyfillTypes.ts`,
     'utf8',
 );
 const tsConfig = JSON.parse(fs.readFileSync(new URL('../tsconfig.json', import.meta.url).pathname, 'utf-8'));

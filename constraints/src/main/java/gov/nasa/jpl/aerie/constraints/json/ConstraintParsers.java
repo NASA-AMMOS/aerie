@@ -186,7 +186,7 @@ public final class ConstraintParsers {
 
   static final JsonParser<Duration> durationP =
       longP
-          . map(
+          .map(
               microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
               duration -> duration.in(Duration.MICROSECONDS));
 

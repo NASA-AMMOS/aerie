@@ -1,3 +1,4 @@
+/// <reference path="./TemporalPolyfillTypes.ts"; />
 import type * as API from "./constraints-edsl-fluent-api";
 
 export enum NodeKind {
@@ -120,13 +121,11 @@ export interface WindowsExpressionNot {
   expression: WindowsExpression;
 }
 
-export type Duration = number
-
 export interface WindowsExpressionShiftBy {
   kind: NodeKind.WindowsExpressionShiftBy,
   windowExpression: WindowsExpression,
-  fromStart: Duration,
-  fromEnd: Duration,
+  fromStart: Temporal.Duration,
+  fromEnd: Temporal.Duration,
 }
 
 export interface WindowsExpressionOr {
@@ -198,13 +197,13 @@ export interface SpansExpressionActivitySpan {
 export interface WindowsExpressionShorterThan {
   kind: NodeKind.WindowsExpressionShorterhan,
   windowExpression: WindowsExpression,
-  duration: number
+  duration: Temporal.Duration
 }
 
 export interface WindowsExpressionLongerThan {
   kind: NodeKind.WindowsExpressionLongerThan,
   windowExpression: WindowsExpression,
-  duration: number
+  duration: Temporal.Duration
 }
 
 export interface SpansExpressionSplit {

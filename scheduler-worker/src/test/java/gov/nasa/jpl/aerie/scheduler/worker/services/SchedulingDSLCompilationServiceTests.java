@@ -271,7 +271,7 @@ class SchedulingDSLCompilationServiceTests {
     assertTrue(
         actualErrors.errors()
                     .stream()
-                    .anyMatch(e -> e.message().contains("TypeError: TS2322 Incorrect return type. Expected: 'Goal', Actual: 'number'."))
+                    .anyMatch(e -> e.message().contains("TypeError: TS2322 Incorrect return type. Expected: 'Goal | Promise<Goal>', Actual: 'number'."))
     );
   }
 
@@ -422,10 +422,7 @@ class SchedulingDSLCompilationServiceTests {
 
     if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
       assertEquals(1, r.errors().size());
-      assertEquals(
-          "TypeError: TS2741 Incorrect return type. Expected: 'Goal', Actual: 'FakeGoal'.",
-          r.errors().get(0).message()
-      );
+      assertTrue(r.errors().get(0).message().contains("Incorrect return type. Expected: 'Goal | Promise<Goal>', Actual: 'FakeGoal'."));
     }
   }
 
@@ -515,6 +512,7 @@ class SchedulingDSLCompilationServiceTests {
         missionModelService,
         PLAN_ID,
         """
+          const micro = (m: number) => Temporal.Duration.from({microseconds: m});
           export default function() {
             return Goal.CoexistenceGoal({
               activityTemplate: ActivityTemplates.SampleActivity1({
@@ -522,7 +520,7 @@ class SchedulingDSLCompilationServiceTests {
                 fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
                 duration: Temporal.Duration.from({ hours: 1 })
               }),
-              forEach: Real.Resource(Resources["/sample/resource/1"]).greaterThan(50.0).longerThan(10),
+              forEach: Real.Resource(Resources["/sample/resource/1"]).greaterThan(50.0).longerThan(micro(10)),
               startsAt: TimingConstraint.singleton(WindowProperty.END)
             })
           }

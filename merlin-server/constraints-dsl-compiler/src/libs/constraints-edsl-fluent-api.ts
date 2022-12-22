@@ -192,11 +192,11 @@ export class Windows {
    *
    * @param duration the duration
    */
-  public longerThan(duration: Duration) : Windows {
+  public longerThan(duration: Temporal.Duration) : Windows {
     return new Windows({
       kind: AST.NodeKind.WindowsExpressionLongerThan,
       windowExpression: this.__astNode,
-      duration: duration
+      duration
     })
   }
 
@@ -206,11 +206,11 @@ export class Windows {
    *
    * @param duration the duration
    */
-  public shorterThan(duration: Duration) : Windows {
+  public shorterThan(duration: Temporal.Duration) : Windows {
     return new Windows({
       kind: AST.NodeKind.WindowsExpressionShorterhan,
       windowExpression: this.__astNode,
-      duration: duration
+      duration
     })
   }
 
@@ -223,12 +223,12 @@ export class Windows {
    * @param fromStart duration to add from the start of each true segment
    * @param fromEnd duration to add from the end of each true segment
    */
-  public shiftBy(fromStart: Duration, fromEnd: Duration) : Windows {
+  public shiftBy(fromStart: Temporal.Duration, fromEnd: Temporal.Duration) : Windows {
     return new Windows({
       kind: AST.NodeKind.WindowsExpressionShiftBy,
       windowExpression: this.__astNode,
-      fromStart: fromStart,
-      fromEnd: fromEnd
+      fromStart,
+      fromEnd
     })
   }
 
@@ -257,8 +257,8 @@ export class Windows {
       kind: AST.NodeKind.SpansExpressionSplit,
       intervals: this.__astNode,
       numberOfSubIntervals: numberOfSubSpans,
-      internalStartInclusivity: internalStartInclusivity,
-      internalEndInclusivity: internalEndInclusivity
+      internalStartInclusivity,
+      internalEndInclusivity
     })
   }
 
@@ -361,8 +361,8 @@ export class Spans {
       kind: AST.NodeKind.SpansExpressionSplit,
       intervals: this.__astNode,
       numberOfSubIntervals: numberOfSubSpans,
-      internalStartInclusivity: internalStartInclusivity,
-      internalEndInclusivity: internalEndInclusivity
+      internalStartInclusivity,
+      internalEndInclusivity
     })
   }
 
@@ -879,7 +879,7 @@ declare global {
      * @param fromStart duration to add from the start of each true segment
      * @param fromEnd duration to add from the end of each true segment
      */
-    public shiftBy(fromStart: number, fromEnd: number): Windows;
+    public shiftBy(fromStart: Temporal.Duration, fromEnd: Temporal.Duration): Windows;
 
     /**
      * Returns a new windows object, with all true segments shorter than or equal to the given
@@ -887,7 +887,7 @@ declare global {
      *
      * @param duration the duration
      */
-    public longerThan(duration: Duration): Windows;
+    public longerThan(duration: Temporal.Duration): Windows;
 
     /**
      * Returns a new windows object, with all true segments longer than or equal to the given
@@ -895,7 +895,7 @@ declare global {
      *
      * @param duration the duration
      */
-    public shorterThan(duration: Duration): Windows;
+    public shorterThan(duration: Temporal.Duration): Windows;
 
     /**
      * Splits each window into equal sized sub-intervals. Returns a Spans object.
@@ -1167,8 +1167,6 @@ declare global {
      */
     public assignGaps(defaultProfile: Discrete<Schema> | Schema): Discrete<Schema>;
   }
-
-  type Duration = number;
 
   /** An enum for whether an interval includes its bounds. */
   enum Inclusivity {
