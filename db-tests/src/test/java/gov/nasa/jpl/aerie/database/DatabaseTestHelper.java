@@ -226,6 +226,12 @@ public class DatabaseTestHelper {
     }
   }
 
+  void executeUpdate(final String sql, final Object... args) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement.executeUpdate(sql.formatted(args));
+    }
+  }
+
   String dumpSchema() throws IOException, InterruptedException {
     final var pb = new ProcessBuilder(
         "pg_dump",
