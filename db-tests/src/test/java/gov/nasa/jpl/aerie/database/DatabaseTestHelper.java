@@ -226,6 +226,21 @@ public class DatabaseTestHelper {
     }
   }
 
+  String dumpSchema() throws IOException, InterruptedException {
+    final var pb = new ProcessBuilder(
+        "pg_dump",
+        "--schema-only",
+        "postgresql://postgres:postgres@localhost:5432/" + dbName);
+
+    final var proc = pb.start();
+    try {
+      proc.waitFor();
+      return new String(proc.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+    } finally {
+      proc.destroy();
+    }
+  }
+
   record Migration(int version, String name) {
     static Migration of(final String migrationName) {
       return new Migration(Integer.parseInt(migrationName.split("_")[0]), migrationName);
