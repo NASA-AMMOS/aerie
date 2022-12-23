@@ -1,6 +1,10 @@
 -- The order of inclusion is important! Tables referenced by foreign keys must be loaded before their dependants.
 
 begin;
+  -- Schema migrations
+  \ir tables/schema_migrations.sql
+  \ir applied_migrations.sql
+
   -- Scheduling intents.
   \ir tables/scheduling_goal.sql
   \ir tables/scheduling_template.sql
