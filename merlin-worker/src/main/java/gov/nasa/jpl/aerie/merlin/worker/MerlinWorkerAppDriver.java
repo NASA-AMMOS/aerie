@@ -14,6 +14,7 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresResultsCellRepo
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
+import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresSimulationNotificationPayload;
 import io.javalin.Javalin;
@@ -54,7 +55,8 @@ public final class MerlinWorkerAppDriver {
         stores.missionModels(),
         configuration.untruePlanStart());
     final var planController = new LocalPlanService(stores.plans());
-    final var simulationAgent = new SynchronousSimulationAgent(planController, missionModelController);
+    final var simulationAgent = ThreadedSimulationAgent.spawn("Simulation Agent",
+        new SynchronousSimulationAgent(planController, missionModelController));
 
     final var notificationQueue = new LinkedBlockingQueue<PostgresSimulationNotificationPayload>();
     final var listenAction = new ListenSimulationCapability(hikariDataSource, notificationQueue);
