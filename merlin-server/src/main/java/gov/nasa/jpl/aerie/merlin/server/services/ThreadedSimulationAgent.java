@@ -1,11 +1,18 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 public final class ThreadedSimulationAgent implements SimulationAgent {
   private /*sealed*/ interface SimulationRequest {
@@ -17,7 +24,7 @@ public final class ThreadedSimulationAgent implements SimulationAgent {
 
   private final BlockingQueue<SimulationRequest> requestQueue;
 
-  private ThreadedSimulationAgent(final BlockingQueue<SimulationRequest> requestQueue) {
+  public ThreadedSimulationAgent(final BlockingQueue<SimulationRequest> requestQueue) {
     this.requestQueue = Objects.requireNonNull(requestQueue);
   }
 
@@ -63,7 +70,7 @@ public final class ThreadedSimulationAgent implements SimulationAgent {
 
           if (request instanceof SimulationRequest.Simulate req) {
             try {
-              this.simulationAgent.simulate(req.planId(), req.revisionData(), req.writer());
+              this.simulationAgent.simulate(req.planId(), req.revisionData(), new ThreadedWriter(req.writer()));
             } catch (final Throwable ex) {
               ex.printStackTrace(System.err);
               req.writer().failWith(b -> b
@@ -81,6 +88,54 @@ public final class ThreadedSimulationAgent implements SimulationAgent {
           ex.printStackTrace(System.err);
           // continue
         }
+      }
+    }
+
+    private static class ThreadedWriter implements ResultsProtocol.WriterRole {
+      private final ResultsProtocol.WriterRole writer;
+      private final AtomicBoolean isCanceled = new AtomicBoolean(false);
+      private final AtomicLong keepAlive = new AtomicLong();
+      private Optional<Thread> cancelPoller = Optional.empty();
+
+      ThreadedWriter(final ResultsProtocol.WriterRole writer) {
+        this.writer = writer;
+      }
+
+      @Override
+      public boolean isCanceled() {
+        this.keepAlive.set(System.nanoTime());
+        // if no thread, spin one up
+        if (cancelPoller.isEmpty() || !cancelPoller.get().isAlive()) {
+          cancelPoller = Optional.of(new Thread(() -> {
+            try {
+              while (System.nanoTime() - keepAlive.get() < Duration.of(15, ChronoUnit.SECONDS).toNanos()) {
+                Thread.sleep(2000);
+                if (writer.isCanceled()) {
+                  isCanceled.set(true);
+                  break;
+                }
+              }
+            } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+              // Exit gracefully
+            }
+          }));
+          cancelPoller.get().start();
+        }
+
+        return this.isCanceled.get();
+      }
+
+      @Override
+      public void succeedWith(final SimulationResults results) {
+        cancelPoller.ifPresent(Thread::interrupt);
+        writer.succeedWith(results);
+      }
+
+      @Override
+      public void failWith(final SimulationFailure reason) {
+        cancelPoller.ifPresent(Thread::interrupt);
+        writer.failWith(reason);
       }
     }
   }
