@@ -36,7 +36,8 @@ public final class SimulationUtility {
         missionModel,
         schedule,
         startTime,
-        simulationDuration);
+        simulationDuration,
+        () -> false);
   }
 
   @SafeVarargs

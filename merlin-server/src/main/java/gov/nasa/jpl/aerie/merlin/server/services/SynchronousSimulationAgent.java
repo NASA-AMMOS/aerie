@@ -78,7 +78,8 @@ public record SynchronousSimulationAgent (
           plan.startTimestamp.toInstant(),
           planDuration,
           serializeScheduledActivities(plan.startTimestamp.toInstant(), plan.activityInstances),
-          plan.configuration));
+          plan.configuration,
+          writer::isCanceled));
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       writer.failWith(b -> b
           .type("NO_SUCH_MISSION_MODEL")

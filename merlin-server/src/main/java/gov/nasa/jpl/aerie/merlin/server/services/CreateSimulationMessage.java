@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.CancelChecker;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -15,7 +16,8 @@ public record CreateSimulationMessage(
   Instant startTime,
   Duration samplingDuration,
   Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> activityInstances,
-  Map<String, SerializedValue> configuration
+  Map<String, SerializedValue> configuration,
+  CancelChecker cancelChecker
 )
 {
   public CreateSimulationMessage {
@@ -24,5 +26,6 @@ public record CreateSimulationMessage(
     Objects.requireNonNull(samplingDuration);
     Objects.requireNonNull(activityInstances);
     Objects.requireNonNull(configuration);
+    Objects.requireNonNull(cancelChecker);
   }
 }

@@ -11,6 +11,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 
 public final class SimulationDriver {
   public static <Model>
@@ -18,7 +19,8 @@ public final class SimulationDriver {
       final MissionModel<Model> missionModel,
       final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule,
       final Instant startTime,
-      final Duration simulationDuration
+      final Duration simulationDuration,
+      final CancelChecker cancelChecker
   ) {
     try (final var engine = new SimulationEngine()) {
       /* The top-level simulation timeline. */
@@ -67,6 +69,9 @@ public final class SimulationDriver {
       // Drive the engine until we're out of time.
       // TERMINATION: Actually, we might never break if real time never progresses forward.
       while (true) {
+        if (cancelChecker.isCanceled()) {
+          throw new CancellationException("Simulation cancelled");
+        }
         final var batch = engine.extractNextJobs(simulationDuration);
 
         // Increment real time, if necessary.
