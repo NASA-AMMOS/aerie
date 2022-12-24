@@ -13,6 +13,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class ThreadedSimulationAgent implements SimulationAgent {
   private /*sealed*/ interface SimulationRequest {
@@ -96,6 +97,7 @@ public final class ThreadedSimulationAgent implements SimulationAgent {
       private final AtomicBoolean isCanceled = new AtomicBoolean(false);
       private final AtomicLong keepAlive = new AtomicLong();
       private Optional<Thread> cancelPoller = Optional.empty();
+      private final AtomicReference<Optional<Throwable>> propagatableThrowable = new AtomicReference<>(Optional.empty());
 
       ThreadedWriter(final ResultsProtocol.WriterRole writer) {
         this.writer = writer;
@@ -118,11 +120,18 @@ public final class ThreadedSimulationAgent implements SimulationAgent {
             } catch (InterruptedException e) {
               Thread.currentThread().interrupt();
               // Exit gracefully
+            } catch (Throwable e) {
+              propagatableThrowable.set(Optional.of(e)); // A failure of the cancelPoller should stop the simulation... right?
+              throw e;
             }
           }));
           cancelPoller.get().start();
         }
 
+        final var throwable = propagatableThrowable.get();
+        if (throwable.isPresent()) {
+          throw new Error(throwable.get());
+        }
         return this.isCanceled.get();
       }
 
