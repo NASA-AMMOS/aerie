@@ -105,6 +105,8 @@ public final class ThreadedSimulationAgent implements SimulationAgent {
 
       @Override
       public boolean isCanceled() {
+        if (isCanceled.get()) return true; // short circuit
+
         this.keepAlive.set(System.nanoTime());
         // if no thread, spin one up
         if (cancelPoller.isEmpty() || !cancelPoller.get().isAlive()) {
@@ -114,7 +116,7 @@ public final class ThreadedSimulationAgent implements SimulationAgent {
                 Thread.sleep(2000);
                 if (writer.isCanceled()) {
                   isCanceled.set(true);
-                  break;
+                  break; // No need to poll further, once a simulation has been cancelled it cannot be un-cancelled.
                 }
               }
             } catch (InterruptedException e) {
