@@ -1,6 +1,6 @@
 # Aerie Project Governance
 
-The Aerie project aims to create an open source community that encourages transparency, contributions, and collaboration, but maintains sound technical and quality standards. Our goal is to build a community comprised of members across the the space community and beyond, including from private organizations, universities, Federaly Funded Research and Development Ceneters (FRDCs), other government organizations, and international organizations. 
+The Aerie project aims to create an open source community that encourages transparency, contributions, and collaboration, but maintains sound technical and quality standards. Our goal is to build a community comprised of members across the the space community and beyond, including from private organizations, universities, Federally Funded Research and Development Centers (FFRDCs), other government organizations, and international organizations. 
 
 The project follows a fairly liberal contribution model where people and/or organizations who do the most work will have the most influence on project direction. Technical decision making will primarily be made through a "[consensus-seeking](https://en.wikipedia.org/wiki/Consensus-seeking_decision-making)" approach. 
 
@@ -8,7 +8,7 @@ The project follows a fairly liberal contribution model where people and/or orga
 
 ### User
 
-Anyone who has downloaded, deployed, or operated the Aerie system to meet a specific objective. Aeire was primarily designed for space mission activity planning, modeling, and simulation, but let us know if you've found other uses for it.  
+Anyone who has downloaded, deployed, or operated the Aerie system to meet a specific objective. Aerie was primarily designed for space mission activity planning, modeling, and simulation, but let us know if you've found other uses for it.  
 
 ### Contributor
 
@@ -56,14 +56,14 @@ Addtionally, the TSC has authority over a few other "Aerie Extended Universe" pr
 
 Any community member can create a GitHub issue or comment asking the TSC to review something. Prior to implementing a substantial contribution, the design of that contribution should be reviewed by at least one member of the TSC. If consensus-seeking fails during the review of a pull request or in design discussions, the issue will be addressed by the TSC to make a determination on direction. TSC members will meet regularly and will keep track of decisions made when consensus was not met. 
 
-The TSC can nominate new members at any time. Candidates for membership tend to be collaboraters who have shown great dedication to the project and/or experts in a particular domain or project component. TSC members are expected to be active contributors or members who have made significant contributions within the past 12 months. 
+The TSC can nominate new members at any time. Candidates for membership tend to be collaborators who have shown great dedication to the project and/or experts in a particular domain or project component. TSC members are expected to be active contributors or members who have made significant contributions within the past 12 months. 
 
 ## Project Management Committee 
 
-The Project Management Committee (PMC) is made up of sponsor organization representives (i.e. those providing funding to the project) and key stakeholders who rely or plan to rely on Aerie to meet a crticial need (e.g. project using Aerie for space mission operations). The PMC has the following primary responsibilities
+The Project Management Committee (PMC) is made up of sponsor organization representatives (i.e. those providing funding to the project) and key stakeholders who rely or plan to rely on Aerie to meet a critical need (e.g. project using Aerie for space mission operations). The PMC has the following primary responsibilities
 
 - Maintaining the overall project roadmap
-- Determining project requirements and committments to sponsors and stakeholders
+- Determining project requirements and commitments to sponsors and stakeholders
 - Assessing available resources and allocating them across the project
 - Monitoring and reporting on progress against the roadmap 
 - On-boarding new sponsors and stakeholders
@@ -77,7 +77,7 @@ The PMC has management authority over the same projects over which the TSC has t
 
 ### Decision Making Process
 
-The PMC will consist of a product owner and additional representive from sponsors and key stakeholders. The PMC or sponsoring organiztions can nominate new members at any time. Care should be taken not to include too many members from a single stakeholder project or organization.
+The PMC will consist of a product owner and additional representative from sponsors and key stakeholders. The PMC or sponsoring organizations can nominate new members at any time. Care should be taken not to include too many members from a single stakeholder project or organization.
 
 Monthly stakeholder meetings are held to discuss current project status and propose changes to the project roadmap. If stakeholder representatives and sponsors concur with these proposals during the meeting, they will be immediately adopted. A member of the PMC will ensure the changes have been captured and recorded. Monthly stakeholder meetings will be open to the community, but only members of the PMC have decision making authority. 
 
