@@ -30,8 +30,21 @@ A subset of the collaborators forms the Technical Steering Committee (TSC). The 
 - Conduct guidelines
 - Maintaining the list of collaborators
 
-The current list of TSC members is maintained TBD
+### TSC Committee Members
+- Chris Camargo ([camargo](https://github.com/camargo)), Jet Propulsion Laboratory
+- Matt Dailis ([mattdailis](https://github.com/mattdailis)), Jet Propulsion Laboratory
+- Jonathan Castello ([Twisol](https://github.com/Twisol)), University of California, Santa Cruz
+- Basak Alper Ramaswamy, Jet Propulsion Laboratory
 
+<details>
+
+<summary>Emeriti</summary>
+
+### TSC Emeriti
+- Pat Kenneally ([patkenneally](https://github.com/patkenneally)), Laboratory for Atmospheric and Space Physics
+
+</details>
+ 
 ### Scope
 
 The TSC is primarily responsible for the Aerie core and UI projects:
