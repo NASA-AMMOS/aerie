@@ -18,7 +18,7 @@ Contributors include anyone that provides input to the project. This includes co
 
 Subset of contributors who have been given write access to one or more of the Aerie repositories. Both contributors and collaborators can propose changes to the project via pull requests, but only collaborators can formally review and approve (merge) these requests. Any contributor who has made a non-trivial contribution should be on-boarded as a collaborator in a timely manner. 
 
-If you are planning on making a substantial contribution to the project or feel as though you should be given write access to a repository, please reach out to TBD (some email list??)...
+If you are planning on making a substantial contribution to the project or feel as though you should be given write access to a repository, please send a request to aerie_support@jpl.nasa.gov. 
 
 ## Technical Steering Committee
 
@@ -82,7 +82,7 @@ The Project Management Committee (PMC) is made up of sponsor organization repres
 - On-boarding new sponsors and stakeholders
 - Addressing any legal considerations
 
-The current list of PMC members is maintained TBD. If your project or organization is planning to use Aerie and you would like to join the PMC, please contact TBD....  
+The current list of PMC members is currently in work. If your project or organization is planning to use Aerie and you would like to join the PMC, please contact aerie_support@jpl.nasa.gov.   
 
 ### Scope
 
