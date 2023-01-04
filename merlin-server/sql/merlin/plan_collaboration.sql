@@ -38,6 +38,9 @@ create table plan_snapshot_activities(
     last_modified_arguments_at timestamptz not null,
     metadata merlin_activity_directive_metadata_set,
 
+   anchor_id integer default null,
+   anchored_to_start boolean default true not null,
+
     primary key (id, snapshot_id)
 );
 
@@ -84,11 +87,14 @@ begin
     select id, revision, name, duration, start_time
     from plan where id = plan_id
     returning snapshot_id into inserted_snapshot_id;
-  insert into plan_snapshot_activities(snapshot_id, id, name, tags, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type, arguments, last_modified_arguments_at, metadata)
+  insert into plan_snapshot_activities(
+                snapshot_id, id, name, tags, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type,
+                arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start
+                )
     select
-      inserted_snapshot_id,                                   --this is the snapshot id
+      inserted_snapshot_id,                                   -- this is the snapshot id
       id, name, tags,source_scheduling_goal_id, created_at,   -- these are the rest of the data for an activity row
-      last_modified_at, start_offset, type, arguments, last_modified_arguments_at, metadata
+      last_modified_at, start_offset, type, arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start
     from activity_directive where activity_directive.plan_id = create_snapshot.plan_id;
 
   --all snapshots in plan_latest_snapshot for plan plan_id become the parent of the current snapshot
@@ -132,11 +138,11 @@ begin
     returning id into new_plan_id;
   insert into activity_directive(
       id, plan_id, name, tags, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type, arguments,
-      last_modified_arguments_at, metadata
+      last_modified_arguments_at, metadata, anchor_id, anchored_to_start
     )
     select
       id, new_plan_id, name, tags, source_scheduling_goal_id, created_at, last_modified_at, start_offset, type, arguments,
-      last_modified_arguments_at, metadata
+      last_modified_arguments_at, metadata, anchor_id, anchored_to_start
     from activity_directive where activity_directive.plan_id = duplicate_plan.plan_id;
   insert into simulation (revision, simulation_template_id, plan_id, arguments)
     select 0, simulation_template_id, new_plan_id, arguments
