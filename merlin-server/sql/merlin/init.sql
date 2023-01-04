@@ -22,6 +22,7 @@ begin;
   \ir tables/plan.sql
   \ir tables/activity_directive.sql
   \ir tables/activity_directive_validations.sql
+  \ir tables/anchor_validation_status.sql
   \ir tables/simulation_template.sql
   \ir tables/simulation.sql
 
