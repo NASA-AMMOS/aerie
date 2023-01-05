@@ -19,7 +19,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-java@v3
         with:
           distribution: "temurin"
@@ -40,19 +40,21 @@ jobs:
       - name: Assemble
         run: ./gradlew assemble
       - name: Login to the Container Registry
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ github.token }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
       # Build, scan, and push aerie-hasura Docker artifacts.
       - name: Extract metadata (tags, labels) for aerie-hasura Docker image
         id: aerieHasura
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/nasa-ammos/aerie-hasura
       - name: Build aerie-hasura Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: .
           file: ./docker/Dockerfile.hasura
@@ -67,21 +69,22 @@ jobs:
           ignore-unfixed: true
           severity: 'CRITICAL'
       - name: Push aerie-hasura Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: .
           file: ./docker/Dockerfile.hasura
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.aerieHasura.outputs.tags }}
           labels: ${{ steps.aerieHasura.outputs.labels }}
       # Build, scan, and push aerie-merlin Docker artifacts.
       - name: Extract metadata (tags, labels) for aerie-merlin Docker image
         id: aerieMerlin
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin
       - name: Build aerie-merlin Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: ./merlin-server
           load: true
@@ -95,20 +98,21 @@ jobs:
           ignore-unfixed: true
           severity: 'CRITICAL'
       - name: Push aerie-merlin Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: ./merlin-server
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.aerieMerlin.outputs.tags }}
           labels: ${{ steps.aerieMerlin.outputs.labels }}
       # Build, scan, and push aerie-merlin-worker Docker artifacts.
       - name: Extract metadata (tags, labels) for aerie-merlin-worker Docker image
         id: aerieMerlinWorker
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin-worker
       - name: Build aerie-merlin-worker Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: ./merlin-worker
           load: true
@@ -122,20 +126,21 @@ jobs:
           ignore-unfixed: true
           severity: 'CRITICAL'
       - name: Push aerie-merlin-worker Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: ./merlin-worker
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.aerieMerlinWorker.outputs.tags }}
           labels: ${{ steps.aerieMerlinWorker.outputs.labels }}
       # Build, scan, and push aerie-postgres Docker artifacts.
       - name: Extract metadata (tags, labels) for aerie-postgres Docker image
         id: aeriePostgres
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/nasa-ammos/aerie-postgres
       - name: Build aerie-postgres Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: .
           file: ./docker/Dockerfile.postgres
@@ -150,21 +155,22 @@ jobs:
           ignore-unfixed: true
           severity: 'CRITICAL'
       - name: Push aerie-postgres Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: .
           file: ./docker/Dockerfile.postgres
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.aeriePostgres.outputs.tags }}
           labels: ${{ steps.aeriePostgres.outputs.labels }}
       # Build, scan, and push aerie-scheduler-worker Docker artifacts.
       - name: Extract metadata (tags, labels) for aerie-scheduler-worker Docker image
         id: aerieSchedulerWorker
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/nasa-ammos/aerie-scheduler-worker
       - name: Build aerie-scheduler-worker Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: ./scheduler-worker
           load: true
@@ -178,20 +184,21 @@ jobs:
           ignore-unfixed: true
           severity: 'CRITICAL'
       - name: Push aerie-scheduler-worker Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: ./scheduler-worker
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.aerieSchedulerWorker.outputs.tags }}
           labels: ${{ steps.aerieSchedulerWorker.outputs.labels }}
       # Build, scan, and push aerie-scheduler Docker artifacts.
       - name: Extract metadata (tags, labels) for aerie-scheduler Docker image
         id: aerieScheduler
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/nasa-ammos/aerie-scheduler
       - name: Build aerie-scheduler Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: ./scheduler-server
           load: true
@@ -205,20 +212,21 @@ jobs:
           ignore-unfixed: true
           severity: 'CRITICAL'
       - name: Push aerie-scheduler Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: ./scheduler-server
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.aerieScheduler.outputs.tags }}
           labels: ${{ steps.aerieScheduler.outputs.labels }}
       # Build, scan, and push aerie-sequencing Docker artifacts.
       - name: Extract metadata (tags, labels) for aerie-sequencing Docker image
         id: aerieSequencing
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/nasa-ammos/aerie-sequencing
       - name: Build aerie-sequencing Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: ./sequencing-server
           load: true
@@ -232,9 +240,10 @@ jobs:
           ignore-unfixed: true
           severity: 'CRITICAL'
       - name: Push aerie-sequencing Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: ./sequencing-server
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.aerieSequencing.outputs.tags }}
           labels: ${{ steps.aerieSequencing.outputs.labels }}
@@ -247,7 +256,7 @@ jobs:
       - name: Create deployment archive
         run: ./gradlew archiveDeployment
       - name: Publish deployment
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Deployment
           path: deployment.tar
