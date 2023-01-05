@@ -34,7 +34,8 @@ A subset of the collaborators forms the Technical Steering Committee (TSC). The 
 - Chris Camargo ([camargo](https://github.com/camargo)), Jet Propulsion Laboratory
 - Matt Dailis ([mattdailis](https://github.com/mattdailis)), Jet Propulsion Laboratory
 - Jonathan Castello ([Twisol](https://github.com/Twisol)), University of California, Santa Cruz
-- Basak Alper Ramaswamy, Jet Propulsion Laboratory
+- Basak Alper Ramaswamy ([bashbash](https://github.com/bashbash)), Jet Propulsion Laboratory
+
 
 <details>
 
