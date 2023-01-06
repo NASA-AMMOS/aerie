@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import javax.json.*;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -80,14 +81,7 @@ public final class StrictSerializedValueJsonParser implements JsonParser<Seriali
       case TRUE -> SerializedValue.of(true);
       case FALSE -> SerializedValue.of(false);
       case STRING -> SerializedValue.of(((JsonString) value).getString());
-      case NUMBER -> {
-        final var isInt = schema.asInt().isPresent();
-        final var isDuration = schema.asDuration().isPresent();
-        final var num = (JsonNumber) value;
-        yield (isInt || isDuration)
-            ? SerializedValue.of(num.longValue())
-            : SerializedValue.of(num.doubleValue());
-      }
+      case NUMBER -> SerializedValue.of(((JsonNumber) value).bigDecimalValue());
       case ARRAY -> {
         final var arr = (JsonArray) value;
         final var list = new ArrayList<SerializedValue>(arr.size());
@@ -117,12 +111,7 @@ public final class StrictSerializedValueJsonParser implements JsonParser<Seriali
       }
 
       @Override
-      public JsonValue onReal(final double value) {
-        return Json.createValue(value);
-      }
-
-      @Override
-      public JsonValue onInt(final long value) {
+      public JsonValue onNumeric(final BigDecimal value) {
         return Json.createValue(value);
       }
 
