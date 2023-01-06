@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.server.http;
+package gov.nasa.jpl.aerie.merlin.driver.json;
 
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
