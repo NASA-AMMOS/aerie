@@ -19,6 +19,11 @@ Aerie is a software framework for modeling spacecraft. Its main features include
 
 To get started with a first Aerie deployment head over to the [deployment directory][deployment]. Please visit our [documentation website][documentation] for complete instructions on how to use Aerie.
 
+## Need Help?
+
+- Join us on the [NASA-AMMOS Slack](https://join.slack.com/t/nasa-ammos/shared_invite/zt-1mlgmk5c2-MgqVSyKzVRUWrXy87FNqPw) (#aerie-users)
+- Contact aerie_support@jpl.nasa.gov
+
 ## Directory Structure
 
 ```sh
