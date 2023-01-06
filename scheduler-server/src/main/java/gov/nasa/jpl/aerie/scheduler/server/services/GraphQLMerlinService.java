@@ -12,12 +12,10 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
-import gov.nasa.jpl.aerie.scheduler.server.http.SerializedValueJsonParser;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
@@ -50,10 +48,10 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLInterval;
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLTimestamp;
-import static gov.nasa.jpl.aerie.scheduler.server.http.SerializedValueJsonParser.serializedValueP;
 
 /**
  * {@inheritDoc}
@@ -214,7 +212,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
       if (!sims.isEmpty()) {
         final var args = sims.getJsonObject(0).getJsonObject("arguments");
         modelConfiguration = BasicParsers
-            .mapP(new SerializedValueJsonParser()).parse(args)
+            .mapP(serializedValueP).parse(args)
             .getSuccessOrThrow((reason) -> new InvalidJsonException(new InvalidEntityException(List.of(reason))));
       }
 
@@ -257,7 +255,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
       final var start = jsonActivity.getString("start_offset");
       final var arguments = jsonActivity.getJsonObject("arguments");
       final var deserializedArguments = BasicParsers
-          .mapP(new SerializedValueJsonParser())
+          .mapP(serializedValueP)
           .parse(arguments)
           .getSuccessOrThrow((reason) -> new InvalidJsonException(new InvalidEntityException(List.of(reason))));
       final var effectiveArguments = problem
