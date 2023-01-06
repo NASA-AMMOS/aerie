@@ -16,7 +16,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.List;
 
-import static gov.nasa.jpl.aerie.constraints.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.doubleP;
@@ -32,6 +31,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
+import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 
 public final class ConstraintParsers {
   private ConstraintParsers() {}
