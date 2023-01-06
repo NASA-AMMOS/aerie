@@ -23,6 +23,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import javax.json.Json;
 import javax.json.JsonValue;
 import javax.json.stream.JsonParsingException;
+import java.math.BigDecimal;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
@@ -503,12 +504,7 @@ public final class ResponseSerializers {
     }
 
     @Override
-    public JsonValue onReal(final double value) {
-      return Json.createValue(value);
-    }
-
-    @Override
-    public JsonValue onInt(final long value) {
+    public JsonValue onNumeric(final BigDecimal value) {
       return Json.createValue(value);
     }
 

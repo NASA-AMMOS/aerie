@@ -50,7 +50,7 @@ public class InstantiateArgumentsTest {
   @Test
   public void instantiateArgumentsSingletonBoundsTest(){
     // Environment needs data
-    final ActivityInstance activityInstance = new ActivityInstance(0, "Faux", Map.of("PeelCount", new SerializedValue.IntValue(1)), Interval.between(Duration.of(1, HOUR), Duration.of(2, HOUR)));
+    final ActivityInstance activityInstance = new ActivityInstance(0, "Faux", Map.of("PeelCount", SerializedValue.of(1)), Interval.between(Duration.of(1, HOUR), Duration.of(2, HOUR)));
 
     final EvaluationEnvironment environment = new EvaluationEnvironment(
         Map.of("Faux", activityInstance),

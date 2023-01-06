@@ -8,6 +8,7 @@ import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonValue;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,12 +28,7 @@ public final class JsonEncoding {
       }
 
       @Override
-      public JsonValue onReal(final double value) {
-        return Json.createValue(value);
-      }
-
-      @Override
-      public JsonValue onInt(final long value) {
+      public JsonValue onNumeric(final BigDecimal value) {
         return Json.createValue(value);
       }
 
@@ -65,11 +61,7 @@ public final class JsonEncoding {
       case TRUE: return SerializedValue.of(true);
       case FALSE: return SerializedValue.of(false);
       case NUMBER:
-        if (((JsonNumber) value).isIntegral()) {
-          return SerializedValue.of(((JsonNumber) value).longValueExact());
-        } else {
-          return SerializedValue.of(((JsonNumber) value).doubleValue());
-        }
+        return SerializedValue.of(((JsonNumber) value).bigDecimalValue());
       case STRING:
         return SerializedValue.of(((JsonString) value).getString());
       case ARRAY: {

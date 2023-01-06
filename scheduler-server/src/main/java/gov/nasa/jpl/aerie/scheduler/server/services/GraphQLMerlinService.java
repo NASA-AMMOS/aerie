@@ -28,6 +28,7 @@ import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -703,13 +704,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
       }
 
       @Override
-      public String onReal(final double value) {
-        return String.valueOf(value);
-      }
-
-      @Override
-      public String onInt(final long value) {
-        return String.valueOf(value);
+      public String onNumeric(final BigDecimal value) {
+        return value.toPlainString();
       }
 
       @Override
