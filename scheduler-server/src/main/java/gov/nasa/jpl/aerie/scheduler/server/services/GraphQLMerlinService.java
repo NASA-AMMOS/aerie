@@ -27,7 +27,6 @@ import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -43,7 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
@@ -693,41 +691,5 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     //TODO: (defensive) should escape contents of bare strings, eg internal quotes
     //NB: Time::toString will format correctly as HH:MM:SS.sss, just need to quote it here
     return "\"" + s + "\"";
-  }
-
-  public String serializeForGql(final SerializedValue value) {
-    return value.match(new SerializedValue.Visitor<>() {
-      @Override
-      public String onNull() {
-        return "null";
-      }
-
-      @Override
-      public String onNumeric(final BigDecimal value) {
-        return value.toPlainString();
-      }
-
-      @Override
-      public String onBoolean(final boolean value) {
-        return value ? "true" : "false";
-      }
-
-      @Override
-      public String onString(final String value) {
-        return serializeForGql(value);
-      }
-
-      @Override
-      public String onMap(final Map<String, SerializedValue> value) {
-        return "{%s}".formatted(value.entrySet().stream()
-            .map(e -> "\"%s\": %s".formatted( //TODO: (defensive) should escape contents of bare strings, eg internal quotes
-                e.getKey(), serializeForGql(e.getValue()))).collect(Collectors.joining(",")));
-      }
-
-      @Override
-      public String onList(final List<SerializedValue> value) {
-        return "[%s]".formatted(value.stream().map(v -> serializeForGql(v)).collect(Collectors.joining(",")));
-      }
-    });
   }
 }
