@@ -17,7 +17,7 @@ Aerie is a software framework for modeling spacecraft. Its main features include
 
 ## Getting Started
 
-To get started with a first Aerie deployment head over to the [deployment directory][deployment]. Please visit our [documentation website][documentation] for complete instructions on how to use Aerie.
+To get started using Aerie for the first time please do our [fast track tutorial][fast-track] on our documentation website.
 
 ## Need Help?
 
@@ -64,5 +64,5 @@ The scripts and documentation in this project are released under the [MIT Licens
 [contributing]: ./CONTRIBUTING.md
 [deployment]: ./deployment
 [dev]: ./docs/old_site/deployment/building.md
-[documentation]: https://nasa-ammos.github.io/aerie
+[fast-track]: https://nasa-ammos.github.io/aerie-docs/introduction/#fast-track
 [ui-repo]: https://github.com/NASA-AMMOS/aerie-ui
