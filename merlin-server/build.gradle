@@ -90,7 +90,7 @@ dependencies {
   implementation 'io.javalin:javalin:5.1.2'
   implementation 'org.slf4j:slf4j-simple:2.0.3'
   implementation 'org.glassfish:javax.json:1.1.4'
-  implementation 'org.apache.bcel:bcel:6.5.0'
+  implementation 'org.apache.bcel:bcel:6.6.0'
 
   implementation 'com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9'
   implementation 'com.zaxxer:HikariCP:5.0.1'
