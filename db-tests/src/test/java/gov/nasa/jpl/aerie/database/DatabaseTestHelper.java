@@ -55,7 +55,7 @@ public class DatabaseTestHelper {
     // Apparently, the previous privileges are insufficient on their own
     {
       final var pb = new ProcessBuilder("psql",
-                                        "postgresql://postgres:postgres@localhost:5432/" + dbName,
+                                        "postgresql://aerie:aerie@localhost:5432/" + dbName,
                                         "-v", "ON_ERROR_STOP=1",
                                         "-c", "ALTER DEFAULT PRIVILEGES GRANT ALL ON TABLES TO aerie;",
                                         "-c", "\\ir %s".formatted(initSqlScriptFile.getAbsolutePath())
