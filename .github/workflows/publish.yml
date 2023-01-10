@@ -45,6 +45,12 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ github.token }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: linux/amd64,linux/arm64
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
       # Build, scan, and push aerie-hasura Docker artifacts.
       - name: Extract metadata (tags, labels) for aerie-hasura Docker image
         id: aerieHasura
@@ -71,6 +77,7 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile.hasura
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.aerieHasura.outputs.tags }}
           labels: ${{ steps.aerieHasura.outputs.labels }}
@@ -98,6 +105,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ./merlin-server
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.aerieMerlin.outputs.tags }}
           labels: ${{ steps.aerieMerlin.outputs.labels }}
@@ -125,6 +133,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ./merlin-worker
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.aerieMerlinWorker.outputs.tags }}
           labels: ${{ steps.aerieMerlinWorker.outputs.labels }}
@@ -154,6 +163,7 @@ jobs:
         with:
           context: .
           file: ./docker/Dockerfile.postgres
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.aeriePostgres.outputs.tags }}
           labels: ${{ steps.aeriePostgres.outputs.labels }}
@@ -181,6 +191,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ./scheduler-worker
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.aerieSchedulerWorker.outputs.tags }}
           labels: ${{ steps.aerieSchedulerWorker.outputs.labels }}
@@ -208,6 +219,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ./scheduler-server
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.aerieScheduler.outputs.tags }}
           labels: ${{ steps.aerieScheduler.outputs.labels }}
@@ -235,6 +247,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ./sequencing-server
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.aerieSequencing.outputs.tags }}
           labels: ${{ steps.aerieSequencing.outputs.labels }}
