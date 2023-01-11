@@ -26,17 +26,6 @@ jobs:
           java-version: "19"
       - uses: gradle/wrapper-validation-action@v1
       - uses: gradle/gradle-build-action@v2
-      - name: Build Classes
-        run: ./gradlew classes
-      - name: Test
-        run: ./gradlew test
-      - name: Publish Test Report
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: JUnit Test Report
-          path: '**/build/test-results/test/TEST-*.xml'
-          reporter: java-junit
       - name: Assemble
         run: ./gradlew assemble
       - name: Login to the Container Registry
