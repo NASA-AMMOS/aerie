@@ -481,8 +481,18 @@ public final class ConstraintParsers {
             $ -> tuple(Unit.UNIT, $.expression()));
   }
 
+  private static final JsonParser<SpansInterval> spansIntervalP =
+      productP
+          .field("kind", literalP("SpansExpressionInterval"))
+          .field("interval", absoluteIntervalP)
+          .map(
+              untuple((kind, interval) -> new SpansInterval(interval)),
+              $ -> tuple(Unit.UNIT, $.interval())
+          );
+
   private static JsonParser<Expression<Spans>> spansExpressionF(JsonParser<Expression<Windows>> windowsP) {
       return recursiveP(selfP -> chooseP(
+          spansIntervalP,
           startsF(selfP),
           endsF(selfP),
           splitF(selfP),

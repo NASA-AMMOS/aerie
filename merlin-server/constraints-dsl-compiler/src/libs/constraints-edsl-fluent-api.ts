@@ -340,6 +340,19 @@ export class Spans {
   public constructor(expression: AST.SpansExpression) {
     this.__astNode = expression;
   }
+
+  /**
+   * Create a Spans object with a single span defined by an interval.
+   * @param interval interval for the span
+   * @constructor
+   */
+  public static FromInterval(interval: Interval): Spans {
+    return new Spans({
+      kind: AST.NodeKind.SpansExpressionInterval,
+      interval
+    });
+  }
+
   /**
    * Splits each span into equal sized sub-spans.
    *
@@ -1051,6 +1064,13 @@ declare global {
    */
   export class Spans {
     public readonly __astNode: AST.SpansExpression;
+
+    /**
+     * Create a Spans object with a single span defined by an interval.
+     * @param interval interval for the span
+     * @constructor
+     */
+    public static FromInterval(interval: Interval): Spans;
 
     /**
      * Returns the instantaneous start points of the these spans.

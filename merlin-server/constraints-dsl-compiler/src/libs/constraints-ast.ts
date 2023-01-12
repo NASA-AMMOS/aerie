@@ -27,6 +27,7 @@ export enum NodeKind {
   WindowsExpressionFromSpans = 'WindowsExpressionFromSpans',
   SpansExpressionFromWindows = 'SpansExpressionFromWindows',
   SpansExpressionSplit = 'SpansExpressionSplit',
+  SpansExpressionInterval = 'SpansExpressionInterval',
   ExpressionEqual = 'ExpressionEqual',
   ExpressionNotEqual = 'ExpressionNotEqual',
   RealProfileLessThan = 'RealProfileLessThan',
@@ -103,7 +104,8 @@ export type SpansExpression =
   | IntervalsExpressionStarts
   | IntervalsExpressionEnds
   | SpansExpressionFromWindows
-  | ForEachActivitySpans;
+  | ForEachActivitySpans
+  | SpansExpressionInterval;
 
 export type IntervalsExpression =
   | WindowsExpression
@@ -216,6 +218,11 @@ export interface SpansExpressionSplit {
   numberOfSubIntervals: number,
   internalStartInclusivity: API.Inclusivity,
   internalEndInclusivity: API.Inclusivity
+}
+
+export interface SpansExpressionInterval {
+  kind: NodeKind.SpansExpressionInterval,
+  interval: API.Interval
 }
 
 export interface WindowsExpressionFromSpans {
