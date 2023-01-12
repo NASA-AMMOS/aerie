@@ -25,14 +25,6 @@ task assembleConstraintsDSLCompiler(type: NpmTask) {
   inputs.dir('src')
 }
 
-task generateASTJsonSchema(type: NpmTask) {
-  dependsOn processResources
-  dependsOn npmInstall
-  args = ['run', 'generate-ast-schema']
-  inputs.files('package.json', 'package-lock.json', 'tsconfig.json')
-  inputs.dir('src')
-}
-
 task generateDocumentation(type: NpmTask) {
   dependsOn npmInstall
   dependsOn processResources
@@ -53,7 +45,6 @@ task publishDocs {
 
 assemble {
   dependsOn assembleConstraintsDSLCompiler
-  dependsOn generateASTJsonSchema
   dependsOn generateDocumentation
 }
 
