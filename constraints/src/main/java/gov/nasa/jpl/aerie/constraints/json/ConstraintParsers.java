@@ -129,9 +129,11 @@ public final class ConstraintParsers {
       productP
           .field("kind", literalP("RealProfileValue"))
           .field("value", doubleP)
+          .field("rate", doubleP)
+          .field("interval", absoluteIntervalP)
           .map(
-              untuple((kind, value) -> new RealValue(value)),
-              $ -> tuple(Unit.UNIT, $.value));
+              untuple((kind, value, rate, interval) -> new RealValue(value, rate, interval)),
+              $ -> tuple(Unit.UNIT, $.value(), $.rate(), $.interval()));
 
   static final JsonParser<RealParameter> realParameterP =
       productP

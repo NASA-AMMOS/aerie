@@ -297,6 +297,8 @@ export interface RealProfileResource {
 export interface RealProfileValue {
   kind: NodeKind.RealProfileValue;
   value: number;
+  rate: number;
+  interval: API.Interval;
 }
 
 export interface RealProfileParameter {
