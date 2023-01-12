@@ -15,14 +15,20 @@ import java.sql.SQLException;
   public void apply(final long datasetId) throws SQLException {
     final var generatedSql = generateSql(datasetId);
 
-    try (final var statement = connection.prepareStatement(generatedSql)) {
-      statement.executeUpdate();
+    try (final var statement = connection.createStatement()) {
+      statement.executeUpdate(generatedSql);
     }
   }
 
   private static String generateSql(final long datasetId) {
     final @Language("SQL") String sql =
-        "create table event_" + datasetId + " partition of event for values in (" + datasetId + ")";
+        """
+        create table event_%d (
+           like event including defaults including constraints
+        );
+        alter table event
+          attach partition event_%d for values in (%d);
+        """.formatted(datasetId, datasetId, datasetId, datasetId);
     return sql;
   }
 
