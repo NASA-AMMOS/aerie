@@ -83,14 +83,16 @@ export class Windows {
   }
 
   /**
-   * Produces a single window for all time.
+   * Produces a single window.
    *
-   * @param value value for all time
+   * @param value value of the window segment.
+   * @param interval interval of the window segment.
    */
-  public static Value(value: boolean): Windows {
+  public static Value(value: boolean, interval?: Interval): Windows {
     return new Windows({
       kind: AST.NodeKind.WindowsExpressionValue,
-      value
+      value,
+      interval: interval ?? {}
     });
   }
 
@@ -899,11 +901,13 @@ declare global {
     public readonly __astNode: AST.WindowsExpression;
 
     /**
-     * Produces a single window for all time.
+     * Creates a single window.
      *
-     * @param value value for all time
+     * @param value value for the window segment.
+     * @param interval interval for the window segment.
+     *
      */
-    public static Value(value: boolean): Windows;
+    public static Value(value: boolean, interval?: Interval): Windows;
 
     /**
      * Performs the boolean And operation on any number of Windows.

@@ -231,9 +231,10 @@ public final class ConstraintParsers {
       productP
           .field("kind", literalP("WindowsExpressionValue"))
           .field("value", boolP)
+          .field("interval", absoluteIntervalP)
           .map(
-              untuple((kind, value) -> new WindowsValue(value)),
-              $ -> tuple(Unit.UNIT, $.value())
+              untuple((kind, value, interval) -> new WindowsValue(value, interval)),
+              $ -> tuple(Unit.UNIT, $.value(), $.interval())
           );
 
   static JsonParser<ShiftBy> shiftByF(JsonParser<Expression<Windows>> windowsExpressionP) {

@@ -116,7 +116,8 @@ export interface ProfileChanges {
 
 export interface WindowsExpressionValue {
   kind: NodeKind.WindowsExpressionValue,
-  value: boolean
+  value: boolean,
+  interval: API.Interval
 }
 
 export interface WindowsExpressionNot {
