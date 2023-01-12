@@ -695,12 +695,14 @@ export class Discrete<Schema> {
   /**
    * Create a constant discrete profile for all time.
    * @param value
+   * @param interval
    * @constructor
    */
-  public static Value<Schema>(value: Schema): Discrete<Schema> {
+  public static Value<Schema>(value: Schema, interval?: Interval): Discrete<Schema> {
     return new Discrete({
       kind: AST.NodeKind.DiscreteProfileValue,
       value,
+      interval: interval ?? {}
     });
   }
 
@@ -1230,10 +1232,11 @@ declare global {
 
     /**
      * Create a constant discrete profile for all time.
-     * @param value
+     * @param value value of the segment
+     * @param interval interval of the segment (default: plan horizon)
      * @constructor
      */
-    public static Value<Schema>(value: Schema): Discrete<Schema>;
+    public static Value<Schema>(value: Schema, interval?: Interval): Discrete<Schema>;
 
     /**
      * Produce an instantaneous window whenever this profile makes a specific transition.

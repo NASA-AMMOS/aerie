@@ -322,6 +322,7 @@ export interface DiscreteProfileResource {
 export interface DiscreteProfileValue {
   kind: NodeKind.DiscreteProfileValue;
   value: any;
+  interval: API.Interval;
 }
 
 export interface DiscreteProfileParameter {

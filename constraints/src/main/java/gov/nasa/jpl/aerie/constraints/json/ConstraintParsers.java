@@ -73,9 +73,10 @@ public final class ConstraintParsers {
       productP
           .field("kind", literalP("DiscreteProfileValue"))
           .field("value", serializedValueP)
+          .field("interval", absoluteIntervalP)
           .map(
-              untuple((kind, value) -> new DiscreteValue(value)),
-              $ -> tuple(Unit.UNIT, $.value));
+              untuple((kind, value, interval) -> new DiscreteValue(value, interval)),
+              $ -> tuple(Unit.UNIT, $.value(), $.interval()));
 
   static final JsonParser<DiscreteParameter> discreteParameterP =
       productP
