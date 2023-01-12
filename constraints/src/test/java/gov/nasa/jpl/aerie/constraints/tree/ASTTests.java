@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.time.AbsoluteInterval;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.IntervalMap;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
@@ -32,6 +33,7 @@ import static gov.nasa.jpl.aerie.constraints.time.Interval.at;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.interval;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -78,7 +80,7 @@ public class ASTTests {
         Map.of()
     );
 
-    final var result = new WindowsValue(true).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new WindowsValue(true, AbsoluteInterval.FOREVER).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new Windows(Interval.between(0, 20, SECONDS), true);
 
@@ -427,10 +429,10 @@ public class ASTTests {
         Map.of()
     );
 
-    final var result = new RealValue(7).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new RealValue(7, 3.14, AbsoluteInterval.FOREVER).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new LinearProfile(
-        Segment.of(simResults.bounds, new LinearEquation(Duration.ZERO, 7, 0))
+        Segment.of(simResults.bounds, new LinearEquation(Duration.ZERO, 7, 3.14))
     );
 
     assertEquivalent(expected, result);
@@ -445,7 +447,7 @@ public class ASTTests {
         Map.of()
     );
 
-    final var result = new DiscreteValue(SerializedValue.of("IDLE")).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new DiscreteValue(SerializedValue.of("IDLE"), AbsoluteInterval.FOREVER).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new DiscreteProfile(
         Segment.of(simResults.bounds, SerializedValue.of("IDLE"))
@@ -990,6 +992,25 @@ public class ASTTests {
     final var result = new SpansAlias("my spans").evaluate(simResults, environment);
 
     assertEquivalent(spans, result);
+  }
+
+  @Test
+  public void testSpansFromInterval() {
+    final var simResults = new SimulationResults(
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var interval = new AbsoluteInterval(Optional.of(Instant.EPOCH), Optional.of(Instant.ofEpochSecond(10)), Optional.empty(), Optional.empty());
+    final var environment = new EvaluationEnvironment();
+
+    final var result = new SpansInterval(interval).evaluate(simResults, environment);
+
+    final var expected = new Spans(Interval.between(0, 10, SECONDS));
+
+    assertEquals(expected, result);
   }
 
   private static final class Supplier<T> implements Expression<T> {
