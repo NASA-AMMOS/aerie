@@ -8,6 +8,7 @@ import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonValue;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -104,6 +105,11 @@ public abstract class BasicParsers {
       return Json.createValue(value);
     }
   };
+
+  public static final JsonParser<Instant> instantP = stringP.map(
+      Instant::parse,
+      Instant::toString
+  );
 
   public static final JsonParser<Integer> intP = new JsonParser<>() {
     @Override

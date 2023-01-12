@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.time.AbsoluteInterval;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.IntervalContainer;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
@@ -20,6 +21,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.doubleP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.enumP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.instantP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
@@ -36,6 +38,17 @@ public final class ConstraintParsers {
 
   static final JsonParser<Interval.Inclusivity> inclusivityP =
       enumP(Interval.Inclusivity.class, Enum::name);
+
+  static final JsonParser<AbsoluteInterval> absoluteIntervalP =
+      productP
+          .optionalField("start", instantP)
+          .optionalField("end", instantP)
+          .optionalField("startInclusivity", inclusivityP)
+          .optionalField("endInclusivity", inclusivityP)
+          .map(
+              untuple(AbsoluteInterval::new),
+              $ -> tuple($.start(), $.end(), $.startInclusivity(), $.endInclusivity())
+          );
 
   static <P extends Profile<P>> JsonParser<AssignGaps<P>> assignGapsF(final JsonParser<Expression<P>> profileParser) {
     return productP
