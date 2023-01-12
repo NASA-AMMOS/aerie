@@ -828,6 +828,36 @@ export enum Inclusivity {
   Exclusive = "Exclusive"
 }
 
+/** Represents an absolute time range, using Temporal.Instant. */
+export class Interval {
+  private readonly start?: Temporal.Instant;
+  private readonly end?: Temporal.Instant;
+  private readonly startInclusivity?: Inclusivity;
+  private readonly endInclusivity?: Inclusivity;
+
+  private constructor(start?: Temporal.Instant, end?: Temporal.Instant, startInclusivity?: Inclusivity | undefined, endInclusivity?: Inclusivity | undefined) {
+    if (start !== undefined) this.start = start;
+    if (end !== undefined) this.end = end;
+    if (startInclusivity !== undefined) this.startInclusivity = startInclusivity;
+    if (endInclusivity !== undefined) this.endInclusivity = endInclusivity;
+  }
+
+  /** Creates an instantaneous interval at a single time. */
+  public static At(time: Temporal.Instant): Interval {
+    return new Interval(time, time);
+  }
+
+  /** Creates an interval between two times, with optional bounds inclusivity (default inclusive). */
+  public static Between(start: Temporal.Instant, end: Temporal.Instant, startInclusivity?: Inclusivity | undefined, endInclusivity?: Inclusivity | undefined): Interval {
+    return new Interval(start, end, startInclusivity, endInclusivity);
+  }
+
+  /** Creates an interval for the whole planning horizon. */
+  public static Horizon(): Interval {
+    return new Interval();
+  }
+}
+
 declare global {
   /**
    * An expression that discriminates between valid and invalid states.
@@ -1245,7 +1275,24 @@ declare global {
     Inclusive = "Inclusive",
     Exclusive = "Exclusive"
   }
+
+  /** Represents an absolute time range, using Temporal.Instant. */
+  export class Interval {
+    private readonly start?: Temporal.Instant;
+    private readonly end?: Temporal.Instant;
+    private readonly startInclusivity?: Inclusivity;
+    private readonly endInclusivity?: Inclusivity;
+
+    /** Creates an instantaneous interval at a single time. */
+    public static At(time: Temporal.Instant): Interval;
+
+    /** Creates an interval between two times, with optional bounds inclusivity (default inclusive). */
+    public static Between(start: Temporal.Instant, end: Temporal.Instant, startInclusivity?: Inclusivity | undefined, endInclusivity?: Inclusivity | undefined): Interval;
+
+    /** Creates an interval for the whole planning horizon. */
+    public static Horizon(): Interval;
+  }
 }
 
 // Make Constraint available on the global object
-Object.assign(globalThis, { ActivityInstance, Constraint, Windows, Spans, Real, Discrete, Inclusivity });
+Object.assign(globalThis, { Constraint, Windows, Spans, Real, Discrete, Inclusivity, Interval });
