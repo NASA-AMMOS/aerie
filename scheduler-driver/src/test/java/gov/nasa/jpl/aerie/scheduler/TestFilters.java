@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.time.Instant;
 
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive;
@@ -34,6 +35,7 @@ public class TestFilters {
     final var horizon = Interval.between(Duration.of(0, Duration.SECONDS), Duration.of(50, Duration.SECONDS));
     final var horizonW = new Windows(horizon, true);
     final var simResults = new SimulationResults(
+        Instant.EPOCH,
         Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),

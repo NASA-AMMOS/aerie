@@ -195,6 +195,7 @@ public final class GetSimulationResultsAction {
         Duration.MICROSECONDS);
 
     final var preparedResults = new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
+        plan.startTimestamp.toInstant(),
         Interval.between(Duration.ZERO, planDuration),
         activities,
         realProfiles,
