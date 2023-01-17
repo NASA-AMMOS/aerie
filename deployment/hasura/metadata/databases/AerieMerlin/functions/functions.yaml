@@ -70,3 +70,21 @@
   configuration:
     custom_root_fields:
       function: set_resolution_bulk
+- function:
+    name: delete_activity_by_pk_reanchor_plan_start
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: delete_activity_by_pk_reanchor_plan_start
+- function:
+    name: delete_activity_by_pk_reanchor_to_anchor
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: delete_activity_by_pk_reanchor_to_anchor
+- function:
+    name: delete_activity_by_pk_delete_subtree
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: delete_activity_by_pk_delete_subtree

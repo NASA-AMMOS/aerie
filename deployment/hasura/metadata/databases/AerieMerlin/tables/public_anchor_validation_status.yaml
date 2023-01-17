@@ -1,0 +1,3 @@
+table:
+  name: anchor_validation_status
+  schema: public

@@ -27,6 +27,7 @@
 - "!include public_merge_staging_area.yaml"
 - "!include public_conflicting_activities.yaml"
 - "!include public_plan_snapshot.yaml"
+- "!include public_anchor_validation_status.yaml"
 # Function return values:
 - table:
     name: create_merge_request_return_value
@@ -51,4 +52,7 @@
     schema: hasura_functions
 - table:
     name: get_conflicting_activities_return_value
+    schema: hasura_functions
+- table:
+    name: delete_anchor_return_value
     schema: hasura_functions
