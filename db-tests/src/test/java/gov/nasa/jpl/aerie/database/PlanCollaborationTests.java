@@ -2562,4 +2562,155 @@ public class PlanCollaborationTests {
       }
     }
   }
+
+  @Nested
+  class AnchorMergeTests{
+
+    // Method is taken from AnchorTests
+    private void setAnchor(int anchorId, boolean anchoredToStart, int activityId, int planId) throws SQLException {
+      try(final var statement = connection.createStatement()) {
+        if (anchorId == -1) {
+          statement.execute(
+              """
+                  update activity_directive
+                  set anchor_id = null,
+                      anchored_to_start = %b
+                  where id = %d and plan_id = %d;
+                  """.formatted(anchoredToStart, activityId, planId));
+        } else {
+          statement.execute(
+              """
+                  update activity_directive
+                  set anchor_id = %d,
+                      anchored_to_start = %b
+                  where id = %d and plan_id = %d;
+                  """.formatted(anchorId, anchoredToStart, activityId, planId));
+        }
+      }
+    }
+
+    @Test
+    void cantMergeCycle() throws SQLException{
+      final int planId = insertPlan(missionModelId);
+      final int activityA = insertActivity(planId);
+      final int activityB = insertActivity(planId);
+
+      final int childPlan = duplicatePlan(planId, "Cycle Test Plan");
+
+      // Plan chain: B -> A
+      setAnchor(activityA, true, activityB, planId);
+      // ChildPlan chain: A -> B
+      setAnchor(activityB, true, activityA, childPlan);
+
+      // Merge fails as it would establish B -> A -> B cycle
+      final int mergeRQ = createMergeRequest(planId, childPlan);
+      beginMerge(mergeRQ);
+      try {
+        commitMerge(mergeRQ);
+        fail();
+      } catch (SQLException ex) {
+        if(!ex.getMessage().contains("Cycle detected. Cannot apply changes.")){
+          throw ex;
+        }
+      }
+    }
+
+    @Test
+    void anchorMustBeInTargetPlanAtEndOfMerge() throws SQLException{
+      // Can't merge in a version of an activity that is anchored to an activity that is deleted from the target plan.
+      final int planId = insertPlan(missionModelId);
+      final int activityA = insertActivity(planId);
+      final int activityB = insertActivity(planId);
+
+      final int childPlan = duplicatePlan(planId, "Anchor Delete Test");
+      setAnchor(activityA, true, activityB, childPlan);
+
+      deleteActivityDirective(planId, activityA);
+
+      final int mergeRQ = createMergeRequest(planId, childPlan);
+      beginMerge(mergeRQ);
+      try{
+        commitMerge(mergeRQ);
+        fail();
+      } catch (SQLException ex){
+        if(!ex.getMessage().contains(
+            "insert or update on table \"activity_directive\" violates foreign key constraint \"anchor_in_plan\"")){
+          throw ex;
+        }
+      }
+
+    }
+
+    @Test
+    void deleteSubtreeDoesNotImpactRelatedPlans() throws SQLException{
+      final int planId = insertPlan(missionModelId);
+      final int activityAId = insertActivity(planId);
+      final int activityBId = insertActivity(planId);
+      setAnchor(activityAId, true, activityBId, planId);
+      final int childPlanId = duplicatePlan(planId, "Delete Chain Test");
+
+      final Activity activityABefore = getActivity(childPlanId, activityAId);
+      final Activity activityBBefore = getActivity(childPlanId, activityBId);
+
+      try(final var statement = connection.createStatement()) {
+        statement.execute(
+            """
+             select hasura_functions.delete_activity_by_pk_delete_subtree(%d, %d)
+             """.formatted(activityAId, planId));
+      }
+      assertEquals(0, getActivities(planId).size());
+      assertEquals(2, getActivities(childPlanId).size());
+      assertActivityEquals(activityABefore, getActivity(childPlanId, activityAId));
+      assertActivityEquals(activityBBefore, getActivity(childPlanId, activityBId));
+    }
+
+    @Test
+    void deletePlanReanchorDoesNotImpactRelatedPlans() throws SQLException{
+      final int planId = insertPlan(missionModelId);
+      final int activityAId = insertActivity(planId);
+      final int activityBId = insertActivity(planId);
+      setAnchor(activityAId, true, activityBId, planId);
+      final int childPlanId = duplicatePlan(planId, "Delete Chain Test");
+
+      final Activity activityABefore = getActivity(childPlanId, activityAId);
+      final Activity activityBBefore = getActivity(childPlanId, activityBId);
+
+      try(final var statement = connection.createStatement()) {
+        statement.execute(
+            """
+             select hasura_functions.delete_activity_by_pk_reanchor_plan_start(%d, %d)
+             """.formatted(activityAId, planId));
+      }
+      assertEquals(1, getActivities(planId).size());
+      assertEquals(2, getActivities(childPlanId).size());
+      assertActivityEquals(activityABefore, getActivity(childPlanId, activityAId));
+      assertActivityEquals(activityBBefore, getActivity(childPlanId, activityBId));
+    }
+    @Test
+    void deleteActivityReanchorDoesNotImpactRelatedPlans() throws SQLException{
+      final int planId = insertPlan(missionModelId);
+      final int activityAId = insertActivity(planId);
+      final int activityBId = insertActivity(planId);
+      final int activityCId = insertActivity(planId);
+      setAnchor(activityAId, true, activityBId, planId);
+      setAnchor(activityCId, true, activityAId, planId);
+      final int childPlanId = duplicatePlan(planId, "Delete Chain Test");
+
+      final Activity activityABefore = getActivity(childPlanId, activityAId);
+      final Activity activityBBefore = getActivity(childPlanId, activityBId);
+      final Activity activityCBefore = getActivity(childPlanId, activityCId);
+
+      try(final var statement = connection.createStatement()) {
+        statement.execute(
+            """
+             select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(%d, %d)
+             """.formatted(activityAId, planId));
+      }
+      assertEquals(2, getActivities(planId).size());
+      assertEquals(3, getActivities(childPlanId).size());
+      assertActivityEquals(activityABefore, getActivity(childPlanId, activityAId));
+      assertActivityEquals(activityBBefore, getActivity(childPlanId, activityBId));
+      assertActivityEquals(activityCBefore, getActivity(childPlanId, activityCId));
+    }
+  }
 }
