@@ -2,6 +2,7 @@ plugins {
   id 'java'
   id 'application'
   id 'com.github.node-gradle.node' version '3.5.0'
+  id 'jacoco'
 }
 
 java {
@@ -73,6 +74,13 @@ test {
 
   environment "CONSTRAINTS_DSL_COMPILER_ROOT", projectDir.toPath().resolve('constraints-dsl-compiler')
   environment "CONSTRAINTS_DSL_COMPILER_COMMAND", './build/main.js'
+}
+
+jacocoTestReport {
+  dependsOn test
+  reports {
+    xml.required = true
+  }
 }
 
 application {

@@ -2,6 +2,7 @@ plugins {
   id 'java'
   id 'application'
   id 'com.github.node-gradle.node' version '3.5.0'
+  id 'jacoco'
 }
 
 java {
@@ -98,6 +99,13 @@ test {
 
   dependsOn ":examples:banananation:assemble"
   environment 'AERIE_ROOT', rootDir.toString()
+}
+
+jacocoTestReport {
+  dependsOn test
+  reports {
+    xml.required = true
+  }
 }
 
 application {
