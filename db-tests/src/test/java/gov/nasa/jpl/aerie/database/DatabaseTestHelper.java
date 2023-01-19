@@ -111,4 +111,10 @@ public class DatabaseTestHelper {
   public Connection connection() {
     return connection;
   }
+
+  public void clearTable(String table) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement.executeUpdate("TRUNCATE " + table + " CASCADE;");
+    }
+  }
 }

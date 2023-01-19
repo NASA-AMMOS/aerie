@@ -202,12 +202,6 @@ class MerlinDatabaseTests {
     }
   }
 
-  void clearTable(String table) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement.executeUpdate("TRUNCATE " + table + " CASCADE;");
-    }
-  }
-
   int fileId;
   int missionModelId;
   int planId;
@@ -235,15 +229,15 @@ class MerlinDatabaseTests {
 
   @AfterEach
   void afterEach() throws SQLException {
-    clearTable("uploaded_file");
-    clearTable("mission_model");
-    clearTable("plan");
-    clearTable("activity_directive");
-    clearTable("simulation_template");
-    clearTable("simulation");
-    clearTable("dataset");
-    clearTable("plan_dataset");
-    clearTable("simulation_dataset");
+    helper.clearTable("uploaded_file");
+    helper.clearTable("mission_model");
+    helper.clearTable("plan");
+    helper.clearTable("activity_directive");
+    helper.clearTable("simulation_template");
+    helper.clearTable("simulation");
+    helper.clearTable("dataset");
+    helper.clearTable("plan_dataset");
+    helper.clearTable("simulation_dataset");
   }
 
   @Nested

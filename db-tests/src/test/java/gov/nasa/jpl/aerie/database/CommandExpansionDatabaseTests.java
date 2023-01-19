@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.database;
 
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,13 @@ class CommandExpansionDatabaseTests {
     helper.stopDatabase();
     connection = null;
     helper = null;
+  }
+
+  @AfterEach
+  void afterEach() throws SQLException {
+    helper.clearTable("expansion_rule");
+    helper.clearTable("sequence");
+    helper.clearTable("sequence_to_simulated_activity");
   }
 
   @Nested
