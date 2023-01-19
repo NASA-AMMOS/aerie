@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.constraints.time.AbsoluteInterval;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.tree.AccumulatedDuration;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
 import gov.nasa.jpl.aerie.constraints.tree.ActivityWindow;
@@ -924,6 +925,25 @@ class ConstraintsDSLCompilationServiceTests {
           }
         """,
         ".split numberOfSubSpans cannot be less than 1, but was: -2"
+    );
+  }
+
+  @Test
+  void testAccumulatedDuration() {
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").equal(4)
+              .accumulatedDuration(Temporal.Duration.from({minutes: 1}))
+              .lessThan(5);
+          }
+        """,
+        new ViolationsOfWindows(
+            new LessThan(
+                new AccumulatedDuration<>(new Equal<>(new RealResource("state of charge"), new RealValue(4.0)), Duration.MINUTE),
+                new RealValue(5.0)
+            )
+        )
     );
   }
 
