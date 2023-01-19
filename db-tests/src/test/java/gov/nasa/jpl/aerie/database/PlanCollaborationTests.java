@@ -56,22 +56,22 @@ public class PlanCollaborationTests {
 
   @AfterEach
   void afterEach() throws SQLException {
-    clearTable("uploaded_file");
-    clearTable("mission_model");
-    clearTable("plan");
-    clearTable("activity_directive");
-    clearTable("simulation_template");
-    clearTable("simulation");
-    clearTable("dataset");
-    clearTable("plan_dataset");
-    clearTable("simulation_dataset");
-    clearTable("plan_snapshot");
-    clearTable("plan_latest_snapshot");
-    clearTable("plan_snapshot_activities");
-    clearTable("plan_snapshot_parent");
-    clearTable("merge_request");
-    clearTable("merge_staging_area");
-    clearTable("conflicting_activities");
+    helper.clearTable("uploaded_file");
+    helper.clearTable("mission_model");
+    helper.clearTable("plan");
+    helper.clearTable("activity_directive");
+    helper.clearTable("simulation_template");
+    helper.clearTable("simulation");
+    helper.clearTable("dataset");
+    helper.clearTable("plan_dataset");
+    helper.clearTable("simulation_dataset");
+    helper.clearTable("plan_snapshot");
+    helper.clearTable("plan_latest_snapshot");
+    helper.clearTable("plan_snapshot_activities");
+    helper.clearTable("plan_snapshot_parent");
+    helper.clearTable("merge_request");
+    helper.clearTable("merge_staging_area");
+    helper.clearTable("conflicting_activities");
   }
 
   @BeforeAll
@@ -250,12 +250,6 @@ public class PlanCollaborationTests {
       return new gov.nasa.jpl.aerie.database.SimulationDatasetRecord(
           res.getInt("simulation_id"),
           res.getInt("dataset_id"));
-    }
-  }
-
-  void clearTable(String table) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement.executeUpdate("TRUNCATE " + table + " CASCADE;");
     }
   }
   //endregion

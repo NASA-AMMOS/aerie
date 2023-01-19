@@ -77,11 +77,6 @@ class SchedulerDatabaseTests {
     }
   }
 
-  void clearTable(String table) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      statement.executeUpdate("TRUNCATE " + table + " CASCADE;");
-    }
-  }
 
   @Nested
   class TestSpecificationAndTemplateGoalTriggers {
@@ -98,11 +93,11 @@ class SchedulerDatabaseTests {
 
     @AfterEach
     void afterEach() throws SQLException {
-      clearTable("scheduling_specification");
-      clearTable("scheduling_template");
-      clearTable("scheduling_goal");
-      clearTable("scheduling_specification_goals");
-      clearTable("scheduling_template_goals");
+      helper.clearTable("scheduling_specification");
+      helper.clearTable("scheduling_template");
+      helper.clearTable("scheduling_goal");
+      helper.clearTable("scheduling_specification_goals");
+      helper.clearTable("scheduling_template_goals");
     }
 
     void insertGoalPriorities(String tableStem, int specOrTemplateIndex, int[] priorities) throws SQLException {
