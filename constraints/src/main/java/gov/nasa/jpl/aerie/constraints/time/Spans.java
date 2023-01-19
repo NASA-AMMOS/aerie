@@ -186,6 +186,7 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optiona
 
     for (final var segment: this.intervals) {
       final var interval = segment.interval();
+      if (interval.isPoint()) continue; // ignore instantaneous point spans
       final var rate = Duration.SECOND.ratioOver(unit);
       final var total = interval.duration().ratioOver(unit);
       final var slopedLine = new LinearEquation(

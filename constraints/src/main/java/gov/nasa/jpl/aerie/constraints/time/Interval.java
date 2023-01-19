@@ -140,6 +140,14 @@ public final class Interval implements Comparable<Interval>{
     return !(this.includesStart() && this.includesEnd());
   }
 
+  // Use this instead of `.duration().isZero()` to avoid overflow on long intervals.
+  public boolean isPoint() {
+    return
+        this.includesStart() &&
+        this.includesEnd() &&
+        this.start == this.end;
+  }
+
   public Duration duration() {
     if (this.isEmpty()) return Duration.ZERO;
     return this.end.minus(this.start);

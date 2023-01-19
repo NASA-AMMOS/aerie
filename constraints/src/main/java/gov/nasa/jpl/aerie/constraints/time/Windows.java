@@ -388,9 +388,9 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
       final var interval = segment.interval();
       final var rate = segment.value() ? Duration.SECOND.ratioOver(unit) : 0.0;
       final var line = new LinearEquation(
-          interval.start,
+          segment.value() ? interval.start : Duration.ZERO,
           accumulator,
-          rate
+          !interval.isPoint() ? rate : 0.0 // allows coalescing of instantaneous true points
       );
       builder.set(Segment.of(interval, line));
       accumulator += segment.value() ? segment.interval().duration().ratioOver(unit) : 0.0;
