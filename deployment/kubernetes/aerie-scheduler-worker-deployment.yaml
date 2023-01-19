@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: aerie-dev
+  name: aerie-scheduler-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aerie-scheduler-worker
+  template:
+    metadata:
+      labels:
+        app: aerie-scheduler-worker
+    spec:
+      containers:
+        - name: aerie-scheduler-worker
+          image: ghcr.io/nasa-ammos/aerie-scheduler-worker:develop
+          ports:
+            - containerPort: 8080
+          resources: {}
+          volumeMounts:
+            - mountPath: /usr/src/app/merlin_file_store
+              name: aerie-file-store
+              readOnly: true
+          env:
+            - name: JAVA_OPTS
+              value: |
+                -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=INFO -Dorg.slf4j.simpleLogger.logFile=System.err
+            - name: MERLIN_GRAPHQL_URL
+              value: http://hasura:8080/v1/graphql
+            - name: MERLIN_LOCAL_STORE
+              value: /usr/src/app/merlin_file_store
+            - name: SCHEDULER_OUTPUT_MODE
+              value: UpdateInputPlanWithNewActivities
+            - name: SCHEDULER_RULES_JAR
+              value: /usr/src/app/merlin_file_store/scheduler_rules.jar
+            - name: SCHEDULER_WORKER_DB
+              value: aerie_scheduler
+            - name: SCHEDULER_WORKER_DB_PORT
+              value: "5432"
+            - name: SCHEDULER_WORKER_DB_SERVER
+              value: postgres
+            - name: SCHEDULER_WORKER_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: dev-env
+                  key: AERIE_USERNAME
+            - name: SCHEDULER_WORKER_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dev-env
+                  key: AERIE_PASSWORD
+      restartPolicy: Always
+      volumes:
+        - name: aerie-file-store
+          persistentVolumeClaim:
+            claimName: aerie-file-store
+            readOnly: true
