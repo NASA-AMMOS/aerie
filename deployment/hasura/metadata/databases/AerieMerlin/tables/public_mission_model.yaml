@@ -53,7 +53,7 @@ event_triggers:
     interval_sec: 10
     num_retries: 0
     timeout_sec: 60
-  webhook: http://aerie_merlin:27183/refreshActivityTypes
+  webhook: http://aerie-merlin:27183/refreshActivityTypes
 - definition:
     enable_manual: false
     insert:
@@ -72,4 +72,4 @@ event_triggers:
     interval_sec: 10
     num_retries: 0
     timeout_sec: 60
-  webhook: http://aerie_merlin:27183/refreshModelParameters
+  webhook: http://aerie-merlin:27183/refreshModelParameters

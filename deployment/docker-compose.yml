@@ -1,7 +1,7 @@
 version: "3.7"
 services:
-  aerie_gateway:
-    container_name: aerie_gateway
+  aerie-gateway:
+    container_name: aerie-gateway
     depends_on: ["postgres"]
     environment:
       AUTH_TYPE: none
@@ -19,8 +19,8 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/app/files
-  aerie_merlin:
-    container_name: aerie_merlin
+  aerie-merlin:
+    container_name: aerie-merlin
     depends_on: ["postgres"]
     environment:
       MERLIN_DB: "aerie_merlin"
@@ -39,8 +39,8 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store
-  aerie_merlin_worker_1:
-    container_name: aerie_merlin_worker
+  aerie-merlin-worker-1:
+    container_name: aerie-merlin-worker-1
     depends_on: ["postgres"]
     environment:
       MERLIN_WORKER_DB: "aerie_merlin"
@@ -59,9 +59,9 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store:ro
-  aerie_scheduler:
-    container_name: aerie_scheduler
-    depends_on: ["aerie_merlin", "postgres"]
+  aerie-scheduler:
+    container_name: aerie-scheduler
+    depends_on: ["aerie-merlin", "postgres"]
     environment:
       MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
       SCHEDULER_DB: "aerie_scheduler"
@@ -78,8 +78,8 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store
-  aerie_scheduler_worker_1:
-    container_name: aerie_scheduler_worker_1
+  aerie-scheduler-worker-1:
+    container_name: aerie-scheduler-worker-1
     depends_on: ["postgres"]
     environment:
       MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
@@ -99,8 +99,8 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store:ro
-  aerie_sequencing:
-    container_name: aerie_sequencing
+  aerie-sequencing:
+    container_name: aerie-sequencing
     depends_on: ["postgres"]
     environment:
       LOG_FILE: console
@@ -118,14 +118,14 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/sequencing_file_store
-  aerie_ui:
-    container_name: aerie_ui
+  aerie-ui:
+    container_name: aerie-ui
     depends_on: ["postgres"]
     environment:
       ORIGIN: http://localhost
       PUBLIC_AUTH_TYPE: none
       PUBLIC_GATEWAY_CLIENT_URL: http://localhost:9000
-      PUBLIC_GATEWAY_SERVER_URL: http://aerie_gateway:9000
+      PUBLIC_GATEWAY_SERVER_URL: http://aerie-gateway:9000
       PUBLIC_HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
       PUBLIC_HASURA_SERVER_URL: http://hasura:8080/v1/graphql
       PUBLIC_HASURA_WEB_SOCKET_URL: ws://localhost:8080/v1/graphql

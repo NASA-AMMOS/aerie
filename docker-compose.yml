@@ -1,7 +1,7 @@
 version: "3.7"
 services:
-  aerie_gateway:
-    container_name: aerie_gateway
+  aerie-gateway:
+    container_name: aerie-gateway
     depends_on: ["postgres"]
     environment:
       AUTH_TYPE: none
@@ -21,11 +21,11 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/app/files
-  aerie_merlin:
+  aerie-merlin:
     build:
       context: ./merlin-server
       dockerfile: Dockerfile
-    container_name: aerie_merlin
+    container_name: aerie-merlin
     depends_on: ["postgres"]
     environment:
       MERLIN_DB: "aerie_merlin"
@@ -41,17 +41,16 @@ services:
         -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=INFO
         -Dorg.slf4j.simpleLogger.logFile=System.err
       UNTRUE_PLAN_START: "2000-01-01T11:58:55.816Z"
-    image: aerie_merlin
     ports: ["27183:27183", "5005:5005"]
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store
-  aerie_scheduler:
+  aerie-scheduler:
     build:
       context: ./scheduler-server
       dockerfile: Dockerfile
-    container_name: aerie_scheduler
-    depends_on: ["aerie_merlin", "postgres"]
+    container_name: aerie-scheduler
+    depends_on: ["aerie-merlin", "postgres"]
     environment:
       MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
       SCHEDULER_DB: "aerie_scheduler"
@@ -65,16 +64,15 @@ services:
         -Dorg.slf4j.simpleLogger.defaultLogLevel=DEBUG
         -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=INFO
         -Dorg.slf4j.simpleLogger.logFile=System.err
-    image: aerie_scheduler
     ports: ["27185:27185", "5006:5005"]
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store
-  aerie_sequencing:
+  aerie-sequencing:
     build:
       context: ./sequencing-server
-      dockerfile: Dockerfile.dev
-    container_name: aerie_sequencing
+      dockerfile: Dockerfile
+    container_name: aerie-sequencing
     depends_on: ["postgres"]
     environment:
       LOG_FILE: console
@@ -87,32 +85,30 @@ services:
       SEQUENCING_DB_SERVER: postgres
       SEQUENCING_DB_USER: "${AERIE_USERNAME}"
       SEQUENCING_LOCAL_STORE: /usr/src/app/sequencing_file_store
-    image: aerie_sequencing
     ports: ["27184:27184"]
     restart: always
     volumes:
-      - ./sequencing-server:/app:cached
       - aerie_file_store:/usr/src/app/sequencing_file_store
-  aerie_ui:
-    container_name: aerie_ui
+  aerie-ui:
+    container_name: aerie-ui
     depends_on: ["postgres"]
     environment:
       NODE_TLS_REJECT_UNAUTHORIZED: "0"
       ORIGIN: http://localhost
       PUBLIC_AUTH_TYPE: none
       PUBLIC_GATEWAY_CLIENT_URL: http://localhost:9000
-      PUBLIC_GATEWAY_SERVER_URL: http://aerie_gateway:9000
+      PUBLIC_GATEWAY_SERVER_URL: http://aerie-gateway:9000
       PUBLIC_HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
       PUBLIC_HASURA_SERVER_URL: http://hasura:8080/v1/graphql
       PUBLIC_HASURA_WEB_SOCKET_URL: ws://localhost:8080/v1/graphql
     image: "ghcr.io/nasa-ammos/aerie-ui:develop"
     ports: ["80:80"]
     restart: always
-  aerie_merlin_worker_1:
+  aerie-merlin-worker-1:
     build:
       context: ./merlin-worker
       dockerfile: Dockerfile
-    container_name: aerie_merlin_worker_1
+    container_name: aerie-merlin-worker-1
     depends_on: ["postgres"]
     environment:
       MERLIN_WORKER_DB: "aerie_merlin"
@@ -131,11 +127,11 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store:ro
-  aerie_merlin_worker_2:
+  aerie-merlin-worker-2:
     build:
       context: ./merlin-worker
       dockerfile: Dockerfile
-    container_name: aerie_merlin_worker_2
+    container_name: aerie-merlin-worker-2
     depends_on: ["postgres"]
     environment:
       MERLIN_WORKER_DB: "aerie_merlin"
@@ -154,11 +150,11 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store:ro
-  aerie_scheduler_worker_1:
+  aerie-scheduler-worker-1:
     build:
       context: ./scheduler-worker
       dockerfile: Dockerfile
-    container_name: aerie_scheduler_worker_1
+    container_name: aerie-scheduler-worker-1
     depends_on: ["postgres"]
     environment:
       MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
@@ -179,11 +175,11 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store:ro
-  aerie_scheduler_worker_2:
+  aerie-scheduler-worker-2:
     build:
       context: ./scheduler-worker
       dockerfile: Dockerfile
-    container_name: aerie_scheduler_worker_2
+    container_name: aerie-scheduler-worker-2
     depends_on: ["postgres"]
     environment:
       MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
@@ -205,7 +201,7 @@ services:
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store:ro
   hasura:
-    container_name: aerie_hasura
+    container_name: aerie-hasura
     depends_on: ["postgres"]
     environment:
       AERIE_MERLIN_DATABASE_URL: "postgres://${AERIE_USERNAME}:${AERIE_PASSWORD}@postgres:5432/aerie_merlin"
@@ -224,7 +220,7 @@ services:
     volumes:
       - ./deployment/hasura/metadata:/hasura-metadata
   postgres:
-    container_name: aerie_postgres
+    container_name: aerie-postgres
     environment:
       POSTGRES_DB: postgres
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
