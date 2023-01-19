@@ -325,6 +325,26 @@ export class Windows {
       defaultProfile: defaultProfile.__astNode
     });
   }
+
+  /**
+   * Counts the cumulative amount of time spent in an active Span, as a multiple of some unit of time.
+   *
+   * WARNING: This method does not guarantee any particular zero point. Meaning, don't base behavior off of
+   * the total absolute time over the whole plan, because features such as temporal subset branches or
+   * simulation might change the zero point.
+   *
+   * Instead, use this for *relative* changes. Unfortunately, this requires subtraction, which is
+   * surprisingly difficult right now. We're working on it.
+   *
+   * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
+   */
+  public accumulatedDuration(unit: Temporal.Duration): Real {
+    return new Real({
+      kind: AST.NodeKind.RealProfileAccumulatedDuration,
+      intervalsExpression: this.__astNode,
+      unit
+    });
+  }
 }
 
 /**
@@ -412,6 +432,27 @@ export class Spans {
       kind: AST.NodeKind.WindowsExpressionFromSpans,
       spansExpression: this.__astNode
     })
+  }
+
+  /**
+   * Counts the cumulative amount of time spent in an active Span, as a multiple of some unit of time.
+   * Overlapping spans are double-counted.
+   *
+   * WARNING: This method does not guarantee any particular zero point. Meaning, don't base behavior off of
+   * the total absolute time over the whole plan, because features such as temporal subset branches or
+   * simulation might change the zero point.
+   *
+   * Instead, use this for *relative* changes. Unfortunately, this requires subtraction, which is
+   * surprisingly difficult right now. We're working on it.
+   *
+   * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
+   */
+  public accumulatedDuration(unit: Temporal.Duration): Real {
+    return new Real({
+      kind: AST.NodeKind.RealProfileAccumulatedDuration,
+      intervalsExpression: this.__astNode,
+      unit
+    });
   }
 
 
@@ -1057,6 +1098,20 @@ declare global {
      * @param defaultProfile boolean or windows to take default values from
      */
     public assignGaps(defaultProfile: Windows | boolean): Windows;
+
+    /**
+     * Counts the cumulative amount of time spent in an active Span, as a multiple of some unit of time.
+     *
+     * WARNING: This method does not guarantee any particular zero point. Meaning, don't base behavior off of
+     * the total absolute time over the whole plan, because features such as temporal subset branches or
+     * simulation might change the zero point.
+     *
+     * Instead, use this for *relative* changes. Unfortunately, this requires subtraction, which is
+     * surprisingly difficult right now. We're working on it.
+     *
+     * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
+     */
+    public accumulatedDuration(unit: Temporal.Duration): Real;
   }
 
   /**
@@ -1102,7 +1157,6 @@ declare global {
      */
     public windows(): Windows;
 
-
     /**
      * Applies an expression producing spans for each instance of an activity type and returns the aggregated set of spans.
      *
@@ -1115,6 +1169,20 @@ declare global {
         expression: (instance: ActivityInstance<A>) => Spans,
     ): Spans;
 
+    /**
+     * Counts the cumulative amount of time spent in an active Span, as a multiple of some unit of time.
+     * Overlapping spans are double-counted.
+     *
+     * WARNING: This method does not guarantee any particular zero point. Meaning, don't base behavior off of
+     * the total absolute time over the whole plan, because features such as temporal subset branches or
+     * simulation might change the zero point.
+     *
+     * Instead, use this for *relative* changes. Unfortunately, this requires subtraction, which is
+     * surprisingly difficult right now. We're working on it.
+     *
+     * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
+     */
+    public accumulatedDuration(unit: Temporal.Duration): Real;
   }
 
   /**

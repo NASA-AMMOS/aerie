@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
+import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity;
@@ -375,6 +377,26 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
   @Override
   public Spans split(final Interval bounds, final int numberOfSubWindows, final Inclusivity internalStartInclusivity, final Inclusivity internalEndInclusivity) {
     return this.intoSpans(bounds).split(bounds, numberOfSubWindows, internalStartInclusivity, internalEndInclusivity);
+  }
+
+  @Override
+  public LinearProfile accumulatedDuration(final Duration unit) {
+    final var builder = IntervalMap.<LinearEquation>builder();
+
+    double accumulator = 0.0;
+    for (final var segment: this.segments) {
+      final var interval = segment.interval();
+      final var rate = segment.value() ? Duration.SECOND.ratioOver(unit) : 0.0;
+      final var line = new LinearEquation(
+          interval.start,
+          accumulator,
+          rate
+      );
+      builder.set(Segment.of(interval, line));
+      accumulator += segment.value() ? segment.interval().duration().ratioOver(unit) : 0.0;
+    }
+
+    return new LinearProfile(builder.build());
   }
 
   /**
