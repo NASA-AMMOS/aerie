@@ -144,7 +144,7 @@ public class LinearProfileTest {
         Segment.of(Interval.between( 4, Inclusive,  6, Exclusive, SECONDS), new LinearEquation(Duration.of( 4, SECONDS),  2,  1)),
         Segment.of(Interval.between( 6, Inclusive, 12, Exclusive, SECONDS), new LinearEquation(Duration.of( 6, SECONDS),  4,  0)),
         Segment.of(Interval.between(12, Inclusive, 16, Exclusive, SECONDS), new LinearEquation(Duration.of(12, SECONDS),  4, -1)),
-        Segment.of(Interval.between(16, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(16, SECONDS),  0,  0))
+        Segment.of(Interval.between(16, Inclusive, 20, Inclusive, SECONDS), new LinearEquation(Duration.of(16, SECONDS),  -20,  1e-20))
     );
 
     final var result = profile.lessThan(other);

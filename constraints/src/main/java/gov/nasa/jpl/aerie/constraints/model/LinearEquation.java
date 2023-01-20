@@ -44,10 +44,26 @@ public final class LinearEquation {
 
   private Optional<Duration> intersectionPointWith(final LinearEquation other) {
     if (this.rate == other.rate) return Optional.empty();
+
+    /*
+    Floating point noise can cause rates to be extremely near zero, when they should
+    have been exactly zero. For example: `0.1 + 0.2 - 0.1 - 0.2 != 0`.
+
+    This can cause the denominator below to be tiny, leading to long overflow later.
+     */
+
+    // If the following causes an exception, something really has gone wrong, and we don't want to catch it.
+    final double numSeconds = (other.valueAt(this.initialTime) - this.initialValue) / (this.rate - other.rate);
+
+    // Check if numSeconds is too big before putting it in a long.
+    if (Math.abs(numSeconds) > ((double) Long.MAX_VALUE) / Duration.SECOND.dividedBy(Duration.MICROSECOND)) {
+      return Optional.empty();
+    }
+
     return Optional.of(
         this.initialTime.plus(
             Duration.roundNearest(
-                (other.valueAt(this.initialTime) - this.initialValue) / (this.rate - other.rate),
+                numSeconds,
                 Duration.SECONDS
             )
         )
