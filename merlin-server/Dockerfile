@@ -6,7 +6,7 @@ RUN cd /usr/src/app && tar --strip-components 1 -xf server.tar -C extracted
 
 FROM eclipse-temurin:19-jre-jammy
 
-ENV NODE_VERSION=16.14.0
+ENV NODE_VERSION=18.13.0
 ENV NVM_DIR=/usr/src/.nvm
 ENV PATH="${NVM_DIR}/versions/node/v${NODE_VERSION}/bin:${PATH}"
 RUN apt update && apt install --no-install-recommends -y curl \
