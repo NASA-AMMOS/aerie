@@ -230,7 +230,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
     private final ActivityDirectiveId activityId;
 
     private Optional<String> type = Optional.empty();
-    private Optional<Timestamp> startTimestamp = Optional.empty();
+    private Optional<Duration> startOffset = Optional.empty();
     private Optional<Map<String, SerializedValue>> parameters = Optional.empty();
 
     public MockActivityTransaction(final PlanId planId, final ActivityDirectiveId activityId) {
@@ -252,7 +252,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
       }
 
       this.type.ifPresent(type -> activity.type = type);
-      this.startTimestamp.ifPresent(startTimestamp -> activity.startTimestamp = startTimestamp);
+      this.startOffset.ifPresent(startTimestamp -> activity.startOffset = startTimestamp);
       this.parameters.ifPresent(arguments -> activity.arguments = arguments);
 
       InMemoryPlanRepository.this.plans.put(this.planId, Pair.of(revision, plan));
@@ -265,8 +265,8 @@ public final class InMemoryPlanRepository implements PlanRepository {
     }
 
     @Override
-    public ActivityTransaction setStartTimestamp(final Timestamp timestamp) {
-      this.startTimestamp = Optional.of(timestamp);
+    public ActivityTransaction setStartOffset(final Duration offset) {
+      this.startOffset = Optional.of(offset);
       return this;
     }
 

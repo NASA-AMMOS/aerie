@@ -37,7 +37,7 @@ public final class StubPlanService implements PlanService {
   static {
     EXISTENT_ACTIVITY = new ActivityDirective();
     EXISTENT_ACTIVITY.type = "existent activity";
-    EXISTENT_ACTIVITY.startTimestamp = Timestamp.fromString("2016-123T14:25:36");
+    EXISTENT_ACTIVITY.startOffset = Duration.ZERO;
     EXISTENT_ACTIVITY.arguments = Map.of(
         "abc", SerializedValue.of("test-param")
     );

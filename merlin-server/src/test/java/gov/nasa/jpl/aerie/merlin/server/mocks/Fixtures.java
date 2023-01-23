@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
@@ -68,7 +69,7 @@ public final class Fixtures {
     final ActivityDirective activityDirective = new ActivityDirective();
 
     activityDirective.type = this.EXISTENT_ACTIVITY_TYPE_ID;
-    activityDirective.startTimestamp = Timestamp.fromString("0000-111T22:33:44");
+    activityDirective.startOffset = Duration.ZERO;
     activityDirective.arguments = StubMissionModelService.VALID_ACTIVITY_INSTANCE.getArguments();
 
     return activityDirective;

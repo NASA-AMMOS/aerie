@@ -278,33 +278,8 @@ public final class PostgresPlanRepository implements PlanRepository {
               a -> new ActivityDirectiveId(a.id()),
               a -> new ActivityDirective(
                   a.type(),
-                  planStart.plusMicros(a.startOffsetInMicros()),
+                  Duration.of(a.startOffsetInMicros(), Duration.MICROSECONDS),
                   a.arguments())));
-    }
-  }
-
-  // TODO: This functionality is not required for the use-case
-  //       we are addressing at the time of creation, but it
-  //       will be necessary for our future use-cases of associating
-  //       multiple plans with an external dataset. At that time,
-  //       this function should be lifted to the PlanRepository interface
-  //       and hooked up to the merlin bindings
-  private static void useExternalDataset(
-      final Connection connection,
-      final PlanId planId,
-      final long datasetId,
-      final Timestamp planStart
-  ) throws SQLException {
-    associatePlanWithDataset(connection, planId, datasetId, planStart);
-  }
-
-  private static long toMissionModelId(final String modelId)
-  throws NoSuchMissionModelException
-  {
-    try {
-      return Long.parseLong(modelId, 10);
-    } catch (final NumberFormatException ex) {
-      throw new NoSuchMissionModelException();
     }
   }
 
@@ -319,70 +294,6 @@ public final class PostgresPlanRepository implements PlanRepository {
       final var pdr = createPlanDatasetAction.apply(planId.id(), planStart, datasetStart);
       createProfileSegmentPartitionAction.apply(pdr.datasetId());
       return pdr;
-    }
-  }
-
-  private static PlanDatasetRecord associatePlanWithDataset(
-      final Connection connection,
-      final PlanId planId,
-      final long datasetId,
-      final Timestamp planStart
-  ) throws SQLException {
-    try (final var associatePlanDatasetAction = new AssociatePlanDatasetAction(connection)) {
-      return associatePlanDatasetAction.apply(planId.id(), datasetId, planStart);
-    }
-  }
-
-  /*package-local*/ static Map<ActivityDirectiveId, ActivityDirective> parseActivitiesJson(final String json, final Timestamp planStartTime) {
-    try {
-      final var activityRowP =
-          productP
-              .field("id", activityInstanceIdP)
-              .field("start_offset_in_micros", longP)
-              .field("type", stringP)
-              .field("arguments", mapP(serializedValueP))
-              .map(
-                  untuple((actId, startOffsetInMicros, type, arguments) ->
-                              tuple(
-                                  actId,
-                                  new ActivityDirective(type,
-                                                        planStartTime.plusMicros(startOffsetInMicros),
-                                                        arguments))),
-                  untuple((ActivityDirectiveId actId, ActivityDirective $) ->
-                              tuple(actId, planStartTime.microsUntil($.startTimestamp), $.type, $.arguments)));
-
-      final var activities = new HashMap<ActivityDirectiveId, ActivityDirective>();
-      for (final var entry : parseJson(json, listP(activityRowP))) {
-        activities.put(entry.getKey(), entry.getValue());
-      }
-
-      return activities;
-    } catch (final InvalidJsonException ex) {
-      throw new UnexpectedJsonException("The JSON returned from the database has an unexpected structure", ex);
-    } catch (final InvalidEntityException ex) {
-      throw new UnexpectedJsonException("The JSON returned from the database is syntactically invalid", ex);
-    }
-  }
-
-  private static <T> T parseJson(final String subject, final JsonParser<T> parser)
-  throws InvalidJsonException, InvalidEntityException
-  {
-    try (JsonReader reader = Json.createReader(new StringReader(subject))) {
-      final var requestJson = reader.readValue();
-      final var result = parser.parse(requestJson);
-      return result.getSuccessOrThrow($ -> new InvalidEntityException(List.of($)));
-    } catch (final JsonParsingException ex) {
-      throw new InvalidJsonException(ex);
-    }
-  }
-
-  /*package-local*/ static Map<String, SerializedValue> parseActivityArgumentsJson(final String json) {
-    try {
-      return parseJson(json, mapP(serializedValueP));
-    } catch (final InvalidJsonException ex) {
-      throw new UnexpectedJsonException("The JSON returned from the database has an unexpected structure", ex);
-    } catch (final InvalidEntityException ex) {
-      throw new UnexpectedJsonException("The JSON returned from the database is syntactically invalid", ex);
     }
   }
 

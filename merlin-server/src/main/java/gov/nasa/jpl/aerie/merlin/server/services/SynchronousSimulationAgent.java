@@ -78,7 +78,7 @@ public record SynchronousSimulationAgent (
           plan.missionModelId,
           plan.startTimestamp.toInstant(),
           planDuration,
-          serializeScheduledActivities(plan.startTimestamp.toInstant(), plan.activityInstances),
+          serializeScheduledActivities(plan.activityInstances),
           plan.configuration));
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       writer.failWith(b -> b
@@ -101,7 +101,6 @@ public record SynchronousSimulationAgent (
 
   private static Map<ActivityDirectiveId, Pair<Duration, SerializedActivity>>
   serializeScheduledActivities(
-      final Instant startTime,
       final Map<ActivityDirectiveId, ActivityDirective> activityDirectives)
   {
     final var scheduledActivities = new HashMap<ActivityDirectiveId, Pair<Duration, SerializedActivity>>();
@@ -111,7 +110,7 @@ public record SynchronousSimulationAgent (
       final var activity = entry.getValue();
 
       scheduledActivities.put(id, Pair.of(
-          Duration.of(startTime.until(activity.startTimestamp.toInstant(), ChronoUnit.MICROS), Duration.MICROSECONDS),
+          activity.startOffset,
           new SerializedActivity(activity.type, activity.arguments)));
     }
 

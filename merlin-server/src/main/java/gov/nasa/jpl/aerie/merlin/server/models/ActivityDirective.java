@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.HashMap;
@@ -8,20 +9,20 @@ import java.util.Objects;
 
 public final class ActivityDirective {
   public String type;
-  public Timestamp startTimestamp;
+  public Duration startOffset;
   public Map<String, SerializedValue> arguments;
 
   public ActivityDirective() {}
 
   public ActivityDirective(final ActivityDirective other) {
     this.type = other.type;
-    this.startTimestamp = other.startTimestamp;
+    this.startOffset = other.startOffset;
     this.arguments = (other.arguments == null) ? null : new HashMap<>(other.arguments);
   }
 
-  public ActivityDirective(final String type, final Timestamp startTimestamp, final Map<String, SerializedValue> arguments) {
+  public ActivityDirective(final String type, final Duration startOffset, final Map<String, SerializedValue> arguments) {
     this.type = type;
-    this.startTimestamp = startTimestamp;
+    this.startOffset = startOffset;
     this.arguments = (arguments != null) ? Map.copyOf(arguments) : null;
   }
 
@@ -34,13 +35,13 @@ public final class ActivityDirective {
     final var other = (ActivityDirective)object;
     return
         (  Objects.equals(this.type, other.type)
-        && Objects.equals(this.startTimestamp, other.startTimestamp)
+        && Objects.equals(this.startOffset, other.startOffset)
         && Objects.equals(this.arguments, other.arguments)
         );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(type, startTimestamp, arguments);
+    return Objects.hash(type, startOffset, arguments);
   }
 }

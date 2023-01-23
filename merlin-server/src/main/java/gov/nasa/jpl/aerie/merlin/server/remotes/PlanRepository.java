@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -55,7 +56,7 @@ public interface PlanRepository {
     void commit() throws NoSuchPlanException, NoSuchActivityInstanceException;
 
     ActivityTransaction setType(String type);
-    ActivityTransaction setStartTimestamp(Timestamp timestamp);
+    ActivityTransaction setStartOffset(Duration offset);
     ActivityTransaction setParameters(Map<String, SerializedValue> parameters);
   }
 }
