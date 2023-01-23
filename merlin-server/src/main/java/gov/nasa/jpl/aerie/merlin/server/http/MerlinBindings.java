@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
@@ -156,7 +156,7 @@ public final class MerlinBindings implements Plugin {
       final var input = parseJson(ctx.body(), hasuraActivityDirectiveEventTriggerP);
       final var planId = input.planId();
       final var serializedActivity = new SerializedActivity(input.activityTypeName(), input.arguments());
-      final var activityDirective = new ActivityDirective(input.activityDirectiveId(), input.planId(), input.argumentsModifiedTime(), serializedActivity);
+      final var activityDirective = new ActivityDirectiveForValidation(input.activityDirectiveId(), input.planId(), input.argumentsModifiedTime(), serializedActivity);
 
       final var plan = this.planService.getPlan(planId);
       this.missionModelService.refreshActivityValidations(plan.missionModelId, activityDirective);
