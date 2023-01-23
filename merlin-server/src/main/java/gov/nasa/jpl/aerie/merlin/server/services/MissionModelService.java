@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
@@ -39,9 +39,9 @@ public interface MissionModelService {
   List<ValidationNotice> validateActivityArguments(String missionModelId, SerializedActivity activity)
   throws NoSuchMissionModelException, InstantiationException;
 
-  Map<ActivityInstanceId, ActivityInstantiationFailure> validateActivityInstantiations(
+  Map<ActivityDirectiveId, ActivityInstantiationFailure> validateActivityInstantiations(
       String missionModelId,
-      Map<ActivityInstanceId,
+      Map<ActivityDirectiveId,
       SerializedActivity> activities
   ) throws NoSuchMissionModelException, LocalMissionModelService.MissionModelLoadException;
 

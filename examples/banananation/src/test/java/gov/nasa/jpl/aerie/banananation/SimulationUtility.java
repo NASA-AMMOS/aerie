@@ -1,13 +1,8 @@
 package gov.nasa.jpl.aerie.banananation;
 
 import gov.nasa.jpl.aerie.banananation.generated.GeneratedModelType;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
-import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.*;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -26,7 +21,7 @@ public final class SimulationUtility {
   }
 
   public static SimulationResults
-  simulate(final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule, final Duration simulationDuration) {
+  simulate(final Map<ActivityDirectiveId, Pair<Duration, SerializedActivity>> schedule, final Duration simulationDuration) {
     final var dataPath = Path.of(SimulationUtility.class.getResource("data/lorem_ipsum.txt").getPath());
     final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath);
     final var startTime = Instant.now();
@@ -40,13 +35,13 @@ public final class SimulationUtility {
   }
 
   @SafeVarargs
-  public static Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> buildSchedule(final Pair<Duration, SerializedActivity>... activitySpecs) {
-    final var schedule = new HashMap<ActivityInstanceId, Pair<Duration, SerializedActivity>>();
+  public static Map<ActivityDirectiveId, Pair<Duration, SerializedActivity>> buildSchedule(final Pair<Duration, SerializedActivity>... activitySpecs) {
+    final var schedule = new HashMap<ActivityDirectiveId, Pair<Duration, SerializedActivity>>();
     long counter = 0;
 
     for (final var activitySpec : activitySpecs) {
       schedule.put(
-          new ActivityInstanceId(counter++),
+          new ActivityDirectiveId(counter++),
           activitySpec);
     }
 

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -31,7 +31,7 @@ public final class StubPlanService implements PlanService {
         }
       };
 
-  public static final ActivityInstanceId EXISTENT_ACTIVITY_ID = new ActivityInstanceId(10157);
+  public static final ActivityDirectiveId EXISTENT_ACTIVITY_ID = new ActivityDirectiveId(10157);
   public static final ActivityInstance EXISTENT_ACTIVITY;
 
   static {

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -32,7 +32,7 @@ public interface PlanRepository {
   Plan getPlan(PlanId planId) throws NoSuchPlanException;
   long getPlanRevision(PlanId planId) throws NoSuchPlanException;
   RevisionData getPlanRevisionData(PlanId planId) throws NoSuchPlanException;
-  Map<ActivityInstanceId, ActivityInstance> getAllActivitiesInPlan(PlanId planId) throws NoSuchPlanException;
+  Map<ActivityDirectiveId, ActivityInstance> getAllActivitiesInPlan(PlanId planId) throws NoSuchPlanException;
 
   Map<String, Constraint> getAllConstraintsInPlan(PlanId planId) throws NoSuchPlanException;
 
@@ -40,7 +40,7 @@ public interface PlanRepository {
   List<Pair<Duration, ProfileSet>> getExternalDatasets(PlanId planId) throws NoSuchPlanException;
   Map<String, ValueSchema> getExternalResourceSchemas(PlanId planId) throws NoSuchPlanException;
 
-  record CreatedPlan(PlanId planId, List<ActivityInstanceId> activityIds) {}
+  record CreatedPlan(PlanId planId, List<ActivityDirectiveId> activityIds) {}
 
   interface PlanTransaction {
     void commit() throws NoSuchPlanException;

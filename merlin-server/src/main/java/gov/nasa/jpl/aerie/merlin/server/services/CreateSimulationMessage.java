@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -14,7 +14,7 @@ public record CreateSimulationMessage(
   String missionModelId,
   Instant startTime,
   Duration samplingDuration,
-  Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> activityInstances,
+  Map<ActivityDirectiveId, Pair<Duration, SerializedActivity>> activityInstances,
   Map<String, SerializedValue> configuration
 )
 {

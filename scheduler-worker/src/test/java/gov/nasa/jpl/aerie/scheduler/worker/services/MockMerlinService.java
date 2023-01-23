@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -96,7 +96,7 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   }
 
   @Override
-  public Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivityDirectives(
+  public Pair<PlanId, Map<ActivityInstance, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
       final PlanMetadata planMetadata,
       final Plan plan,
       final Map<ActivityInstance, GoalId> activityToGoal
@@ -120,9 +120,9 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   }
 
   @Override
-  public Map<ActivityInstance, ActivityInstanceId> updatePlanActivityDirectives(
+  public Map<ActivityInstance, ActivityDirectiveId> updatePlanActivityDirectives(
       final PlanId planId,
-      final Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
+      final Map<SchedulingActivityInstanceId, ActivityDirectiveId> idsFromInitialPlan,
       final MerlinPlan initialPlan,
       final Plan plan,
       final Map<ActivityInstance, GoalId> activityToGoal
@@ -130,10 +130,10 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   throws IOException, NoSuchPlanException, PlanServiceException, NoSuchActivityInstanceException
   {
     this.updatedPlan = extractPlannedActivityInstances(plan);
-    final var res = new HashMap<ActivityInstance, ActivityInstanceId>();
+    final var res = new HashMap<ActivityInstance, ActivityDirectiveId>();
     var id = 0L;
     for (final var activity : plan.getActivities()) {
-      res.put(activity, new ActivityInstanceId(id++));
+      res.put(activity, new ActivityDirectiveId(id++));
     }
     return res;
   }
@@ -151,7 +151,7 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   }
 
   @Override
-  public Map<ActivityInstance, ActivityInstanceId> createAllPlanActivityDirectives(
+  public Map<ActivityInstance, ActivityDirectiveId> createAllPlanActivityDirectives(
       final PlanId planId,
       final Plan plan,
       final Map<ActivityInstance, GoalId> activityToGoalId
@@ -204,7 +204,7 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
     var id = 0L;
     for (final var activity : activities) {
       final var activityInstance = new MerlinActivityInstance(activity.type(), activity.startTime(), activity.args());
-      initialPlan.addActivity(new ActivityInstanceId(id++), activityInstance);
+      initialPlan.addActivity(new ActivityDirectiveId(id++), activityInstance);
     }
     return initialPlan;
   }

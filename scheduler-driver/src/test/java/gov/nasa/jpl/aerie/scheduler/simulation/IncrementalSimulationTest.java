@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -82,7 +82,7 @@ public class IncrementalSimulationTest {
     final var activity = new TestSimulatedActivity(
         Duration.of(0, SECONDS),
         new SerializedActivity("BasicActivity", Map.of()),
-        new ActivityInstanceId(1));
+        new ActivityDirectiveId(1));
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     incrementalSimulationDriver = new IncrementalSimulationDriver<>(fooMissionModel);
     final var executor = unsafeGetExecutor(incrementalSimulationDriver);
@@ -112,12 +112,12 @@ public class IncrementalSimulationTest {
     var act1 = new TestSimulatedActivity(
         Duration.of(0, SECONDS),
         new SerializedActivity("BasicActivity", Map.of()),
-        new ActivityInstanceId(1));
+        new ActivityDirectiveId(1));
     acts.add(act1);
     var act2 = new TestSimulatedActivity(
         Duration.of(14, SECONDS),
         new SerializedActivity("BasicActivity", Map.of()),
-        new ActivityInstanceId(2));
+        new ActivityDirectiveId(2));
     acts.add(act2);
 
     endOfLastAct = Duration.of(16,SECONDS);
@@ -125,7 +125,7 @@ public class IncrementalSimulationTest {
   }
 
 
-  record TestSimulatedActivity(Duration start, SerializedActivity activity, ActivityInstanceId id){}
+  record TestSimulatedActivity(Duration start, SerializedActivity activity, ActivityDirectiveId id){}
 
 
 }

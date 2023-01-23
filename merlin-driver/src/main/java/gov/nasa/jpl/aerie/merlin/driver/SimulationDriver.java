@@ -16,7 +16,7 @@ public final class SimulationDriver {
   public static <Model>
   SimulationResults simulate(
       final MissionModel<Model> missionModel,
-      final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule,
+      final Map<ActivityDirectiveId, Pair<Duration, SerializedActivity>> schedule,
       final Instant startTime,
       final Duration simulationDuration
   ) {
@@ -44,7 +44,7 @@ public final class SimulationDriver {
       }
 
       // Specify a topic on which tasks can log the activity they're associated with.
-      final var activityTopic = new Topic<ActivityInstanceId>();
+      final var activityTopic = new Topic<ActivityDirectiveId>();
 
       // Schedule all activities.
       for (final var entry : schedule.entrySet()) {

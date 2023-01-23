@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -66,7 +66,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<ActivityInstanceId, ActivityInstance> getAllActivitiesInPlan(final PlanId planId) throws NoSuchPlanException {
+  public Map<ActivityDirectiveId, ActivityInstance> getAllActivitiesInPlan(final PlanId planId) throws NoSuchPlanException {
     final Plan plan = this.plans.get(planId).getRight();
     if (plan == null) {
       throw new NoSuchPlanException(planId);
@@ -91,13 +91,13 @@ public final class InMemoryPlanRepository implements PlanRepository {
     plan.missionModelId = newPlan.missionModelId;
     plan.activityInstances = new HashMap<>();
 
-    final List<ActivityInstanceId> activityIds;
+    final List<ActivityDirectiveId> activityIds;
     if (newPlan.activityInstances == null) {
       activityIds = new ArrayList<>();
     } else {
       activityIds = new ArrayList<>(newPlan.activityInstances.size());
       for (final var activity : newPlan.activityInstances) {
-        final ActivityInstanceId activityId = new ActivityInstanceId(this.nextActivityId++);
+        final ActivityDirectiveId activityId = new ActivityDirectiveId(this.nextActivityId++);
 
         activityIds.add(activityId);
         plan.activityInstances.put(activityId, new ActivityInstance(activity));
@@ -122,14 +122,14 @@ public final class InMemoryPlanRepository implements PlanRepository {
     this.plans.remove(planId);
   }
 
-  public ActivityInstanceId createActivity(final PlanId planId, final ActivityInstance activity) throws NoSuchPlanException {
+  public ActivityDirectiveId createActivity(final PlanId planId, final ActivityInstance activity) throws NoSuchPlanException {
     final var entry = this.plans.get(planId);
     if (entry == null) throw new NoSuchPlanException(planId);
 
     final var plan = entry.getRight();
     final var revision = entry.getLeft() + 1;
 
-    final ActivityInstanceId activityId = new ActivityInstanceId(this.nextActivityId++);
+    final ActivityDirectiveId activityId = new ActivityDirectiveId(this.nextActivityId++);
     plan.activityInstances.put(activityId, new ActivityInstance(activity));
     this.plans.put(planId, Pair.of(revision, plan));
 
@@ -227,13 +227,13 @@ public final class InMemoryPlanRepository implements PlanRepository {
 
   private class MockActivityTransaction implements ActivityTransaction {
     private final PlanId planId;
-    private final ActivityInstanceId activityId;
+    private final ActivityDirectiveId activityId;
 
     private Optional<String> type = Optional.empty();
     private Optional<Timestamp> startTimestamp = Optional.empty();
     private Optional<Map<String, SerializedValue>> parameters = Optional.empty();
 
-    public MockActivityTransaction(final PlanId planId, final ActivityInstanceId activityId) {
+    public MockActivityTransaction(final PlanId planId, final ActivityDirectiveId activityId) {
       this.planId = planId;
       this.activityId = activityId;
     }

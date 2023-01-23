@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.HashMap;
@@ -12,7 +12,7 @@ public final class Plan {
   public String missionModelId;
   public Timestamp startTimestamp;
   public Timestamp endTimestamp;
-  public Map<ActivityInstanceId, ActivityInstance> activityInstances;
+  public Map<ActivityDirectiveId, ActivityInstance> activityInstances;
   public Map<String, SerializedValue> configuration = new HashMap<>();
 
   public Plan() {}
@@ -38,7 +38,7 @@ public final class Plan {
       final String missionModelId,
       final Timestamp startTimestamp,
       final Timestamp endTimestamp,
-      final Map<ActivityInstanceId, ActivityInstance> activityInstances,
+      final Map<ActivityDirectiveId, ActivityInstance> activityInstances,
       final Map<String, SerializedValue> configuration
   ) {
     this.name = name;

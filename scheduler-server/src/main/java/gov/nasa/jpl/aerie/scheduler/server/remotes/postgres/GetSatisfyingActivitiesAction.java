@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import org.intellij.lang.annotations.Language;
 
@@ -27,14 +27,14 @@ import java.util.Map;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Map<GoalId, List<ActivityInstanceId>> get(final long analysisId) throws SQLException {
+  public Map<GoalId, List<ActivityDirectiveId>> get(final long analysisId) throws SQLException {
     this.statement.setLong(1, analysisId);
     final var resultSet = this.statement.executeQuery();
 
-    final var satisfyingActivities = new HashMap<GoalId, List<ActivityInstanceId>>();
+    final var satisfyingActivities = new HashMap<GoalId, List<ActivityDirectiveId>>();
     while (resultSet.next()) {
       final var goalId = new GoalId(resultSet.getLong("goal_id"));
-      final var activityId = new ActivityInstanceId(resultSet.getLong("activity_id"));
+      final var activityId = new ActivityDirectiveId(resultSet.getLong("activity_id"));
 
       satisfyingActivities
           .computeIfAbsent(goalId, x -> new ArrayList<>())

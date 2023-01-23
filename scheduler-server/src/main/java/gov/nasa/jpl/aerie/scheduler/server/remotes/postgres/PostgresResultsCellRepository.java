@@ -6,7 +6,8 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Optional;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchRequestException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
@@ -201,8 +202,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   ) throws SQLException {
     final var numGoals = results.goalResults().size();
     final var goalSatisfaction = new HashMap<GoalId, Boolean>(numGoals);
-    final var createdActivities = new HashMap<GoalId, Collection<ActivityInstanceId>>(numGoals);
-    final var satisfyingActivities = new HashMap<GoalId, Collection<ActivityInstanceId>>(numGoals);
+    final var createdActivities = new HashMap<GoalId, Collection<ActivityDirectiveId>>(numGoals);
+    final var satisfyingActivities = new HashMap<GoalId, Collection<ActivityDirectiveId>>(numGoals);
 
     results.goalResults().forEach((goalId, result) -> {
       goalSatisfaction.put(goalId, result.satisfied());

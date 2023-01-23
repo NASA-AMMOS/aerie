@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -98,12 +98,12 @@ public record SynchronousSimulationAgent (
     writer.succeedWith(results);
   }
 
-  private static Map<ActivityInstanceId, Pair<Duration, SerializedActivity>>
+  private static Map<ActivityDirectiveId, Pair<Duration, SerializedActivity>>
   serializeScheduledActivities(
       final Instant startTime,
-      final Map<ActivityInstanceId, gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance> activityInstances)
+      final Map<ActivityDirectiveId, gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance> activityInstances)
   {
-    final var scheduledActivities = new HashMap<ActivityInstanceId, Pair<Duration, SerializedActivity>>();
+    final var scheduledActivities = new HashMap<ActivityDirectiveId, Pair<Duration, SerializedActivity>>();
 
     for (final var entry : activityInstances.entrySet()) {
       final var id = entry.getKey();

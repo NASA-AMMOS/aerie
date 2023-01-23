@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
@@ -155,7 +155,7 @@ public final class ResponseSerializers {
         .build();
   }
 
-  private static JsonValue serializeSimulatedActivities(final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities) {
+  private static JsonValue serializeSimulatedActivities(final Map<ActivityDirectiveId, SimulatedActivity> simulatedActivities) {
     return serializeMap(
         ResponseSerializers::serializeSimulatedActivity,
         simulatedActivities
@@ -176,7 +176,7 @@ public final class ResponseSerializers {
         .build();
   }
 
-  private static JsonValue serializeUnfinishedActivities(final Map<ActivityInstanceId, UnfinishedActivity> simulatedActivities) {
+  private static JsonValue serializeUnfinishedActivities(final Map<ActivityDirectiveId, UnfinishedActivity> simulatedActivities) {
     return serializeMap(
         ResponseSerializers::serializeUnfinishedActivity,
         simulatedActivities
@@ -198,7 +198,7 @@ public final class ResponseSerializers {
     throw new UnexpectedSubtypeError(MissionModelService.ActivityInstantiationFailure.class, reason);
   }
 
-  public static JsonValue serializeUnconstructableActivityFailures(final Map<ActivityInstanceId, MissionModelService.ActivityInstantiationFailure> failures) {
+  public static JsonValue serializeUnconstructableActivityFailures(final Map<ActivityDirectiveId, MissionModelService.ActivityInstantiationFailure> failures) {
     if (failures.isEmpty()) {
       return Json.createObjectBuilder()
         .add("success", JsonValue.TRUE)

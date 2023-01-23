@@ -1,9 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel.SerializableTopic;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
@@ -44,7 +45,6 @@ import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
@@ -247,16 +247,7 @@ public final class SimulationEngine implements AutoCloseable {
       frame.signal(JobId.forTask(target));
 
       this.tasks.put(task, progress.continueWith(s.continuation()));
-
-      final var targetExecution = this.tasks.get(target);
-      if (targetExecution == null) {
-        // TODO: Log that we saw a task ID that doesn't exist. Try to make this as visible as possible to users.
-        // pass -- nonexistent tasks will never complete
-      } else if (targetExecution instanceof ExecutionState.Terminated) {
-        this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
-      } else {
-        this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(target)));
-      }
+      this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(target)));
     } else if (status instanceof TaskStatus.AwaitingCondition<Return> s) {
       final var condition = ConditionId.generate();
       this.conditions.put(condition, s.condition());
@@ -363,7 +354,7 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   private record TaskInfo(
-      Map<String, ActivityInstanceId> taskToPlannedDirective,
+      Map<String, ActivityDirectiveId> taskToPlannedDirective,
       Map<String, SerializedActivity> input,
       Map<String, SerializedValue> output
   ) {
@@ -375,7 +366,7 @@ public final class SimulationEngine implements AutoCloseable {
       return this.input.containsKey(id.id());
     }
 
-    public record Trait(Iterable<SerializableTopic<?>> topics, Topic<ActivityInstanceId> activityTopic) implements EffectTrait<Consumer<TaskInfo>> {
+    public record Trait(Iterable<SerializableTopic<?>> topics, Topic<ActivityDirectiveId> activityTopic) implements EffectTrait<Consumer<TaskInfo>> {
       @Override
       public Consumer<TaskInfo> empty() {
         return taskInfo -> {};
@@ -445,7 +436,7 @@ public final class SimulationEngine implements AutoCloseable {
       final SimulationEngine engine,
       final Instant startTime,
       final Duration elapsedTime,
-      final Topic<ActivityInstanceId> activityTopic,
+      final Topic<ActivityDirectiveId> activityTopic,
       final TemporalEventSource timeline,
       final Iterable<SerializableTopic<?>> serializableTopics
   ) {
@@ -491,24 +482,23 @@ public final class SimulationEngine implements AutoCloseable {
 
 
     // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
-    final var taskToPlannedDirective = new HashMap<>(taskInfo.taskToPlannedDirective);
-    final var usedActivityInstanceIds =
-        taskToPlannedDirective
-            .values()
-            .stream()
-            .map(ActivityInstanceId::id)
-            .collect(Collectors.toSet());
-    var counter = 1L;
+    final var taskToSimulatedActivityId = new HashMap<String, SimulatedActivityId>(taskInfo.taskToPlannedDirective.size());
+    final var usedSimulatedActivityIds = new HashSet<>();
+    for (final var entry : taskInfo.taskToPlannedDirective.entrySet()) {
+      taskToSimulatedActivityId.put(entry.getKey(), new SimulatedActivityId(entry.getValue().id()));
+      usedSimulatedActivityIds.add(entry.getValue().id());
+    }
+    long counter = 1L;
     for (final var task : engine.tasks.keySet()) {
       if (!taskInfo.isActivity(task)) continue;
-      if (taskToPlannedDirective.containsKey(task.id())) continue;
+      if (taskToSimulatedActivityId.containsKey(task.id())) continue;
 
-      while (usedActivityInstanceIds.contains(counter)) counter++;
-      taskToPlannedDirective.put(task.id(), new ActivityInstanceId(counter++));
+      while (usedSimulatedActivityIds.contains(counter)) counter++;
+      taskToSimulatedActivityId.put(task.id(), new SimulatedActivityId(counter++));
     }
 
     // Identify the nearest ancestor *activity* (excluding intermediate anonymous tasks).
-    final var activityParents = new HashMap<ActivityInstanceId, ActivityInstanceId>();
+    final var activityParents = new HashMap<SimulatedActivityId, SimulatedActivityId>();
     engine.tasks.forEach((task, state) -> {
       if (!taskInfo.isActivity(task)) return;
 
@@ -518,21 +508,22 @@ public final class SimulationEngine implements AutoCloseable {
       }
 
       if (parent != null) {
-        activityParents.put(taskToPlannedDirective.get(task.id()), taskToPlannedDirective.get(parent.id()));
+        activityParents.put(taskToSimulatedActivityId.get(task.id()), taskToSimulatedActivityId.get(parent.id()));
       }
     });
 
-    final var activityChildren = new HashMap<ActivityInstanceId, List<ActivityInstanceId>>();
+    final var activityChildren = new HashMap<SimulatedActivityId, List<SimulatedActivityId>>();
     activityParents.forEach((task, parent) -> {
       activityChildren.computeIfAbsent(parent, $ -> new LinkedList<>()).add(task);
     });
 
-    final var simulatedActivities = new HashMap<ActivityInstanceId, SimulatedActivity>();
-    final var unfinishedActivities = new HashMap<ActivityInstanceId, UnfinishedActivity>();
+    final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>();
+    final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>();
     engine.tasks.forEach((task, state) -> {
       if (!taskInfo.isActivity(task)) return;
 
-      final var activityId = taskToPlannedDirective.get(task.id());
+      final var activityId = taskToSimulatedActivityId.get(task.id());
+      final var directiveId = taskInfo.taskToPlannedDirective.get(task.id()); // will be null for non-directives
 
       if (state instanceof ExecutionState.Terminated<?> e) {
         final var inputAttributes = taskInfo.input().get(task.id());
@@ -545,7 +536,7 @@ public final class SimulationEngine implements AutoCloseable {
             e.joinOffset().minus(e.startOffset()),
             activityParents.get(activityId),
             activityChildren.getOrDefault(activityId, Collections.emptyList()),
-            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(activityId),
+            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(directiveId),
             outputAttributes
         ));
       } else if (state instanceof ExecutionState.InProgress<?> e){
@@ -556,7 +547,7 @@ public final class SimulationEngine implements AutoCloseable {
             startTime.plus(e.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
             activityParents.get(activityId),
             activityChildren.getOrDefault(activityId, Collections.emptyList()),
-            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(activityId)
+            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(directiveId)
         ));
       } else if (state instanceof ExecutionState.AwaitingChildren<?> e){
         final var inputAttributes = taskInfo.input().get(task.id());
@@ -566,7 +557,7 @@ public final class SimulationEngine implements AutoCloseable {
             startTime.plus(e.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
             activityParents.get(activityId),
             activityChildren.getOrDefault(activityId, Collections.emptyList()),
-            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(activityId)
+            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(directiveId)
         ));
       } else {
         throw new Error("Unexpected subtype of %s: %s".formatted(ExecutionState.class, state.getClass()));
@@ -668,7 +659,6 @@ public final class SimulationEngine implements AutoCloseable {
 
     return RealDynamics.linear(initial, rate);
   }
-
 
   private static <Dynamics>
   SerializedValue extractDiscreteDynamics(final Resource<Dynamics> resource, final Dynamics dynamics) {

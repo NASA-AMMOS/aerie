@@ -1,12 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
-import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.*;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ModelType;
@@ -141,15 +136,15 @@ public final class LocalMissionModelService implements MissionModelService {
    * @return A map of validation errors mapping activity instance ID to failure message. If validation succeeds the map is empty.
    */
   @Override
-  public Map<ActivityInstanceId, ActivityInstantiationFailure>
+  public Map<ActivityDirectiveId, ActivityInstantiationFailure>
   validateActivityInstantiations(final String missionModelId,
-                                 final Map<ActivityInstanceId, SerializedActivity> activities)
+                                 final Map<ActivityDirectiveId, SerializedActivity> activities)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     final var factory = this.loadMissionModelType(missionModelId);
     final var registry = DirectiveTypeRegistry.extract(factory);
 
-    final var failures = new HashMap<ActivityInstanceId, ActivityInstantiationFailure>();
+    final var failures = new HashMap<ActivityDirectiveId, ActivityInstantiationFailure>();
 
     for (final var entry : activities.entrySet()) {
       final var id = entry.getKey();
