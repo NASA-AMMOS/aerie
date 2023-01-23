@@ -12,7 +12,7 @@ public final class Plan {
   public String missionModelId;
   public Timestamp startTimestamp;
   public Timestamp endTimestamp;
-  public Map<ActivityDirectiveId, ActivityInstance> activityInstances;
+  public Map<ActivityDirectiveId, ActivityDirective> activityInstances;
   public Map<String, SerializedValue> configuration = new HashMap<>();
 
   public Plan() {}
@@ -26,7 +26,7 @@ public final class Plan {
     if (other.activityInstances != null) {
       this.activityInstances = new HashMap<>();
       for (final var entry : other.activityInstances.entrySet()) {
-        this.activityInstances.put(entry.getKey(), new ActivityInstance(entry.getValue()));
+        this.activityInstances.put(entry.getKey(), new ActivityDirective(entry.getValue()));
       }
     }
 
@@ -38,7 +38,7 @@ public final class Plan {
       final String missionModelId,
       final Timestamp startTimestamp,
       final Timestamp endTimestamp,
-      final Map<ActivityDirectiveId, ActivityInstance> activityInstances,
+      final Map<ActivityDirectiveId, ActivityDirective> activityInstances,
       final Map<String, SerializedValue> configuration
   ) {
     this.name = name;

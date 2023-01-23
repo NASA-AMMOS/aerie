@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
@@ -157,7 +157,7 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<ActivityDirectiveId, ActivityInstance> getAllActivitiesInPlan(final PlanId planId)
+  public Map<ActivityDirectiveId, ActivityDirective> getAllActivitiesInPlan(final PlanId planId)
   throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       return getPlanActivities(connection, planId);
@@ -258,7 +258,7 @@ public final class PostgresPlanRepository implements PlanRepository {
     }
   }
 
-  private Map<ActivityDirectiveId, ActivityInstance> getPlanActivities(
+  private Map<ActivityDirectiveId, ActivityDirective> getPlanActivities(
       final Connection connection,
       final PlanId planId
   ) throws SQLException, NoSuchPlanException {
@@ -276,7 +276,7 @@ public final class PostgresPlanRepository implements PlanRepository {
           .stream()
           .collect(Collectors.toMap(
               a -> new ActivityDirectiveId(a.id()),
-              a -> new ActivityInstance(
+              a -> new ActivityDirective(
                   a.type(),
                   planStart.plusMicros(a.startOffsetInMicros()),
                   a.arguments())));
@@ -333,7 +333,7 @@ public final class PostgresPlanRepository implements PlanRepository {
     }
   }
 
-  /*package-local*/ static Map<ActivityDirectiveId, ActivityInstance> parseActivitiesJson(final String json, final Timestamp planStartTime) {
+  /*package-local*/ static Map<ActivityDirectiveId, ActivityDirective> parseActivitiesJson(final String json, final Timestamp planStartTime) {
     try {
       final var activityRowP =
           productP
@@ -345,13 +345,13 @@ public final class PostgresPlanRepository implements PlanRepository {
                   untuple((actId, startOffsetInMicros, type, arguments) ->
                               tuple(
                                   actId,
-                                  new ActivityInstance(type,
-                                                       planStartTime.plusMicros(startOffsetInMicros),
-                                                       arguments))),
-                  untuple((ActivityDirectiveId actId, ActivityInstance $) ->
+                                  new ActivityDirective(type,
+                                                        planStartTime.plusMicros(startOffsetInMicros),
+                                                        arguments))),
+                  untuple((ActivityDirectiveId actId, ActivityDirective $) ->
                               tuple(actId, planStartTime.microsUntil($.startTimestamp), $.type, $.arguments)));
 
-      final var activities = new HashMap<ActivityDirectiveId, ActivityInstance>();
+      final var activities = new HashMap<ActivityDirectiveId, ActivityDirective>();
       for (final var entry : parseJson(json, listP(activityRowP))) {
         activities.put(entry.getKey(), entry.getValue());
       }

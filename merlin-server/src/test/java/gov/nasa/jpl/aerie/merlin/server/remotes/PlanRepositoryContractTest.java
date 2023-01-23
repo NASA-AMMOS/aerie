@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryPlanRepository;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository.CreatedPlan;
@@ -42,7 +42,7 @@ public abstract class PlanRepositoryContractTest {
 
   @Test
   public void testUnsavedPlanTransactionHasNoEffect()
-  throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException
+  throws NoSuchPlanException
   {
     // GIVEN
     final NewPlan newPlan = new NewPlan();
@@ -61,17 +61,17 @@ public abstract class PlanRepositoryContractTest {
   }
 
   @Test
-  public void testCreatePlanWithActivity() throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException {
+  public void testCreatePlanWithActivity() throws NoSuchPlanException {
     // GIVEN
 
     // WHEN
-    final ActivityInstance activity = new ActivityInstance();
+    final ActivityDirective activity = new ActivityDirective();
     activity.type = "abc";
     activity.arguments = Map.of("abc", SerializedValue.of(1));
 
     final NewPlan newPlan = new NewPlan();
     newPlan.name = "new-plan";
-    newPlan.activityInstances = List.of();
+    newPlan.activityDirectives = List.of();
 
     final CreatedPlan ids = this.planRepository.createPlan(newPlan);
     this.planRepository.createActivity(ids.planId(), activity);
@@ -84,7 +84,7 @@ public abstract class PlanRepositoryContractTest {
 
   @Test
   public void testCreatePlanWithNullActivitiesList()
-  throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException
+  throws NoSuchPlanException
   {
     // GIVEN
 
@@ -96,7 +96,7 @@ public abstract class PlanRepositoryContractTest {
   }
 
   @Test
-  public void testCanDeletePlan() throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException {
+  public void testCanDeletePlan() throws NoSuchPlanException {
     // GIVEN
     this.planRepository.createPlan(new NewPlan());
     final CreatedPlan ids = this.planRepository.createPlan(new NewPlan());

@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
@@ -66,7 +66,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<ActivityDirectiveId, ActivityInstance> getAllActivitiesInPlan(final PlanId planId) throws NoSuchPlanException {
+  public Map<ActivityDirectiveId, ActivityDirective> getAllActivitiesInPlan(final PlanId planId) throws NoSuchPlanException {
     final Plan plan = this.plans.get(planId).getRight();
     if (plan == null) {
       throw new NoSuchPlanException(planId);
@@ -77,7 +77,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
         .stream()
         .collect(Collectors.toMap(
             (entry) -> entry.getKey(),
-            (entry) -> new ActivityInstance(entry.getValue())));
+            (entry) -> new ActivityDirective(entry.getValue())));
   }
 
   public CreatedPlan createPlan(final NewPlan newPlan) {
@@ -92,15 +92,15 @@ public final class InMemoryPlanRepository implements PlanRepository {
     plan.activityInstances = new HashMap<>();
 
     final List<ActivityDirectiveId> activityIds;
-    if (newPlan.activityInstances == null) {
+    if (newPlan.activityDirectives == null) {
       activityIds = new ArrayList<>();
     } else {
-      activityIds = new ArrayList<>(newPlan.activityInstances.size());
-      for (final var activity : newPlan.activityInstances) {
+      activityIds = new ArrayList<>(newPlan.activityDirectives.size());
+      for (final var activity : newPlan.activityDirectives) {
         final ActivityDirectiveId activityId = new ActivityDirectiveId(this.nextActivityId++);
 
         activityIds.add(activityId);
-        plan.activityInstances.put(activityId, new ActivityInstance(activity));
+        plan.activityInstances.put(activityId, new ActivityDirective(activity));
       }
     }
 
@@ -122,7 +122,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
     this.plans.remove(planId);
   }
 
-  public ActivityDirectiveId createActivity(final PlanId planId, final ActivityInstance activity) throws NoSuchPlanException {
+  public ActivityDirectiveId createActivity(final PlanId planId, final ActivityDirective activity) throws NoSuchPlanException {
     final var entry = this.plans.get(planId);
     if (entry == null) throw new NoSuchPlanException(planId);
 
@@ -130,7 +130,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
     final var revision = entry.getLeft() + 1;
 
     final ActivityDirectiveId activityId = new ActivityDirectiveId(this.nextActivityId++);
-    plan.activityInstances.put(activityId, new ActivityInstance(activity));
+    plan.activityInstances.put(activityId, new ActivityDirective(activity));
     this.plans.put(planId, Pair.of(revision, plan));
 
     return activityId;
@@ -246,7 +246,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
       final var plan = entry.getRight();
       final var revision = entry.getLeft() + 1;
 
-      final ActivityInstance activity = plan.activityInstances.get(this.activityId);
+      final ActivityDirective activity = plan.activityInstances.get(this.activityId);
       if (activity == null) {
         throw new NoSuchActivityInstanceException(this.planId, this.activityId);
       }

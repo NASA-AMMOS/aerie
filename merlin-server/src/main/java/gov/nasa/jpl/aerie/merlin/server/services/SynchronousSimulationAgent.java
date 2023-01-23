@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.apache.commons.lang3.tuple.Pair;
@@ -101,11 +102,11 @@ public record SynchronousSimulationAgent (
   private static Map<ActivityDirectiveId, Pair<Duration, SerializedActivity>>
   serializeScheduledActivities(
       final Instant startTime,
-      final Map<ActivityDirectiveId, gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance> activityInstances)
+      final Map<ActivityDirectiveId, ActivityDirective> activityDirectives)
   {
     final var scheduledActivities = new HashMap<ActivityDirectiveId, Pair<Duration, SerializedActivity>>();
 
-    for (final var entry : activityInstances.entrySet()) {
+    for (final var entry : activityDirectives.entrySet()) {
       final var id = entry.getKey();
       final var activity = entry.getValue();
 

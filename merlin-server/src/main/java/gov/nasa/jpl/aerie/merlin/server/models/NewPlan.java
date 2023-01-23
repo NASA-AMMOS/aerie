@@ -13,7 +13,7 @@ public final class NewPlan {
   public String missionModelId;
   public Timestamp startTimestamp;
   public Timestamp endTimestamp;
-  public List<ActivityInstance> activityInstances;
+  public List<ActivityDirective> activityDirectives;
   public Map<String, SerializedValue> configuration = new HashMap<>();
 
   public NewPlan() {}
@@ -25,9 +25,9 @@ public final class NewPlan {
     this.endTimestamp = template.endTimestamp;
 
     if (template.activityInstances != null) {
-      this.activityInstances = new ArrayList<>();
-      for (final ActivityInstance activity : template.activityInstances.values()) {
-        this.activityInstances.add(new ActivityInstance(activity));
+      this.activityDirectives = new ArrayList<>();
+      for (final ActivityDirective activity : template.activityInstances.values()) {
+        this.activityDirectives.add(new ActivityDirective(activity));
       }
     }
 
@@ -39,14 +39,14 @@ public final class NewPlan {
       final String missionModelId,
       final Timestamp startTimestamp,
       final Timestamp endTimestamp,
-      final List<ActivityInstance> activityInstances,
+      final List<ActivityDirective> activityInstances,
       final Map<String, SerializedValue> configuration
   ) {
     this.name = name;
     this.missionModelId = missionModelId;
     this.startTimestamp = startTimestamp;
     this.endTimestamp = endTimestamp;
-    this.activityInstances = List.copyOf(activityInstances);
+    this.activityDirectives = List.copyOf(activityInstances);
     if (configuration != null) this.configuration = new HashMap<>(configuration);
   }
 
@@ -62,7 +62,7 @@ public final class NewPlan {
         && Objects.equals(this.missionModelId, other.missionModelId)
         && Objects.equals(this.startTimestamp, other.startTimestamp)
         && Objects.equals(this.endTimestamp, other.endTimestamp)
-        && Objects.equals(this.activityInstances, other.activityInstances)
+        && Objects.equals(this.activityDirectives, other.activityDirectives)
         && Objects.equals(this.configuration, other.configuration)
         );
   }
@@ -74,7 +74,7 @@ public final class NewPlan {
         missionModelId,
         startTimestamp,
         endTimestamp,
-        activityInstances,
+        activityDirectives,
         configuration
     );
   }
