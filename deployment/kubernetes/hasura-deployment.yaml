@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: aerie-dev
+  name: hasura
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hasura
+  template:
+    metadata:
+      labels:
+        app: hasura
+    spec:
+      containers:
+        - name: hasura
+          image: ghcr.io/nasa-ammos/aerie-hasura
+          ports:
+            - containerPort: 8080
+          env:
+            - name: AERIE_MERLIN_DATABASE_URL
+              value: postgres://aerie:aerie@postgres:5432/aerie_merlin
+            - name: AERIE_SCHEDULER_DATABASE_URL
+              value: postgres://aerie:aerie@postgres:5432/aerie_scheduler
+            - name: AERIE_SEQUENCING_DATABASE_URL
+              value: postgres://aerie:aerie@postgres:5432/aerie_sequencing
+            - name: AERIE_UI_DATABASE_URL
+              value: postgres://aerie:aerie@postgres:5432/aerie_ui
+            - name: HASURA_GRAPHQL_METADATA_DATABASE_URL
+              value: postgres://aerie:aerie@postgres:5432/aerie_hasura
+            - name: HASURA_GRAPHQL_DEV_MODE
+              value: "true"
+            - name: HASURA_GRAPHQL_ENABLED_LOG_TYPES
+              value: startup, http-log, webhook-log, websocket-log, query-log
+            - name: HASURA_GRAPHQL_ENABLE_CONSOLE
+              value: "true"
+            - name: HASURA_GRAPHQL_LOG_LEVEL
+              value: warn
+            - name: HASURA_GRAPHQL_METADATA_DIR
+              value: /hasura-metadata
