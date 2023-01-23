@@ -1,4 +1,4 @@
-import { Command, Sequence } from './lib/codegen/CommandEDSLPreface.js';
+import { CommandStem, Sequence } from './lib/codegen/CommandEDSLPreface.js';
 import type { SeqBuilder } from './types/seqBuilder';
 
 export const defaultSeqBuilder: SeqBuilder = (
@@ -19,7 +19,7 @@ export const defaultSeqBuilder: SeqBuilder = (
 
     if (ai.errors.length > 0) {
       return ai.errors.map(e =>
-        Command.new({
+        CommandStem.new({
           stem: '$$ERROR$$',
           arguments: [e.message],
           metadata: {
