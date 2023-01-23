@@ -1999,7 +1999,7 @@ describe('expansion regressions', () => {
     /** End Setup*/
 
     const { activity_instance_commands } = await graphqlClient.request<{
-      activity_instance_commands: { commands: ReturnType<Command['toSeqJson']>; errors: string[] }[];
+      activity_instance_commands: { commands: ReturnType<CommandStem['toSeqJson']>; errors: string[] }[];
     }>(
       gql`
         query getExpandedCommands($expansionRunId: Int!, $simulatedActivityId: Int!) {
