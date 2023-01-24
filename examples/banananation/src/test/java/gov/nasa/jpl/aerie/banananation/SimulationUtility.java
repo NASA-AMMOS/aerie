@@ -42,7 +42,7 @@ public final class SimulationUtility {
     for (final var activitySpec : activitySpecs) {
       schedule.put(
           new ActivityDirectiveId(counter++),
-          new ActivityDirective(activitySpec.getLeft(), activitySpec.getRight()));
+          new ActivityDirective(activitySpec.getLeft(), activitySpec.getRight(), null, true));
     }
 
     return schedule;

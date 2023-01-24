@@ -69,7 +69,9 @@ public final class Fixtures {
     return new ActivityDirective(
         Duration.ZERO,
         this.EXISTENT_ACTIVITY_TYPE_ID,
-        StubMissionModelService.VALID_ACTIVITY_INSTANCE.getArguments()
+        StubMissionModelService.VALID_ACTIVITY_INSTANCE.getArguments(),
+        null,
+        true
     );
   }
 }

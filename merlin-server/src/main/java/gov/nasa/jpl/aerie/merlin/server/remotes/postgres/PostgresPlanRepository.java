@@ -245,14 +245,8 @@ public final class PostgresPlanRepository implements PlanRepository {
       final PlanId planId
   ) throws SQLException, NoSuchPlanException {
     try (
-        final var getPlanAction = new GetPlanAction(connection);
         final var getActivitiesAction = new GetActivityDirectivesAction(connection)
     ) {
-      final var planStart = getPlanAction
-          .get(planId.id())
-          .orElseThrow(() -> new NoSuchPlanException(planId))
-          .startTime();
-
       return getActivitiesAction
           .get(planId.id())
           .stream()
@@ -261,7 +255,9 @@ public final class PostgresPlanRepository implements PlanRepository {
               a -> new ActivityDirective(
                   Duration.of(a.startOffsetInMicros(), Duration.MICROSECONDS),
                   a.type(),
-                  a.arguments())));
+                  a.arguments(),
+                  a.anchorId()!=null? new ActivityDirectiveId(a.anchorId()): null,
+                  a.anchoredToStart())));
     }
   }
 

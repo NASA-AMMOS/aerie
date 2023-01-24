@@ -66,7 +66,7 @@ public abstract class PlanRepositoryContractTest {
     // GIVEN
 
     // WHEN
-    final ActivityDirective activity = new ActivityDirective(Duration.ZERO, "abc", Map.of("abc", SerializedValue.of(1)));
+    final ActivityDirective activity = new ActivityDirective(Duration.ZERO, "abc", Map.of("abc", SerializedValue.of(1)), null, true);
 
     final NewPlan newPlan = new NewPlan();
     newPlan.name = "new-plan";

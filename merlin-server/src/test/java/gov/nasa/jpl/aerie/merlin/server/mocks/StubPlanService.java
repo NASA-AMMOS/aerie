@@ -38,8 +38,10 @@ public final class StubPlanService implements PlanService {
     EXISTENT_ACTIVITY = new ActivityDirective(
         Duration.ZERO,
         "existent activity",
-        Map.of("abc", SerializedValue.of("test-param")
-    ));
+        Map.of("abc", SerializedValue.of("test-param")),
+        null,
+        true
+    );
 
     EXISTENT_PLAN = new Plan();
     EXISTENT_PLAN.name = "existent";

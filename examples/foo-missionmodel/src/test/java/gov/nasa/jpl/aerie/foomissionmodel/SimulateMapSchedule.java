@@ -42,6 +42,7 @@ public class SimulateMapSchedule {
         missionModel,
         schedule,
         startTime,
+        simulationDuration,
         simulationDuration);
 
       simulationResults.realProfiles.forEach((name, samples) -> {
@@ -77,7 +78,9 @@ public class SimulateMapSchedule {
           new ActivityDirectiveId(counter++),
           new ActivityDirective(
               duration(deferInMicroseconds, MICROSECONDS),
-              new SerializedActivity(activityType, arguments)));
+              new SerializedActivity(activityType, arguments),
+              null,
+              true));
     }
 
     return schedule;
