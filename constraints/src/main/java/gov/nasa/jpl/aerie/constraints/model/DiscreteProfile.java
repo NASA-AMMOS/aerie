@@ -104,6 +104,11 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
     return new Windows(result.build());
   }
 
+  @Override
+  public boolean isConstant() {
+    return profilePieces.size() <= 1;
+  }
+
   /** Assigns a default value to all gaps in the profile. */
   @Override
   public DiscreteProfile assignGaps(final DiscreteProfile def) {

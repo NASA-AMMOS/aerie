@@ -129,6 +129,13 @@ public final class LinearProfile implements Profile<LinearProfile>, Iterable<Seg
       return new Windows(result.build());
     }
 
+
+  @Override
+  public boolean isConstant() {
+    return profilePieces.isEmpty() ||
+           (profilePieces.size() == 1 && !profilePieces.get(0).value().changing());
+  }
+
   /** Assigns a default value to all gaps in the profile. */
   @Override
   public LinearProfile assignGaps(final LinearProfile def) {
