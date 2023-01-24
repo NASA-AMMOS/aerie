@@ -226,7 +226,10 @@ public record ActivityInstance(
                                                                   final ActivityType activityType){
     final var results = new HashMap<String, SerializedValue>();
     arguments.forEach((key, value) ->
-                          results.put(key, ValueAt.valueAt(value.evaluate(simulationResults, Interval.FOREVER, environment), startTime))
+                          results.put(key,
+                                      value.evaluate(simulationResults, Interval.FOREVER, environment)
+                                           .valueAt(startTime)
+                                           .orElseThrow(() -> new Error("Profile for argument " + key + " has no value at time " + startTime)))
     );
     return castCorrectToInt(results, activityType);
   }

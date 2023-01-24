@@ -267,7 +267,7 @@ export interface ListProfileExpression {
 
 export interface ValueAtExpression{
   kind: NodeKind.ValueAtExpression,
-  profile: DiscreteProfileExpression,
+  profile: ProfileExpression,
   timepoint: SpansExpression
 }
 

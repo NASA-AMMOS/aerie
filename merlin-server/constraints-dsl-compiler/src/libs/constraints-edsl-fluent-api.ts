@@ -613,6 +613,18 @@ export class Real {
       defaultProfile: defaultProfile.__astNode
     });
   }
+
+  /**
+   * Will use the start of the first span in the spans
+   * @param timepoint
+   */
+  public valueAt(timepoint: Spans) : Discrete<number> {
+    return new Discrete({
+      kind: AST.NodeKind.ValueAtExpression,
+      profile: this.__astNode,
+      timepoint : timepoint.__astNode
+    });
+  }
 }
 
 /**
@@ -1133,6 +1145,12 @@ declare global {
      * @param defaultProfile number or real profile to take default values from
      */
     public assignGaps(defaultProfile: Real | number): Real;
+
+    /**
+     * Returns the value of this profile at a specific timepoint.
+     * @param timepoint the timepoint, represented by a Spans (must be reduced to a single point)
+     */
+    public valueAt(timepoint: Spans): Discrete<number>;
   }
 
   /**
