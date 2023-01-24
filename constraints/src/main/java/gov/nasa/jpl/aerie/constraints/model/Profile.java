@@ -10,6 +10,7 @@ public interface Profile<P extends Profile<P>> {
   Windows equalTo(P other);
   Windows notEqualTo(P other);
   Windows changePoints();
+  boolean isConstant();
 
   P assignGaps(P def);
 

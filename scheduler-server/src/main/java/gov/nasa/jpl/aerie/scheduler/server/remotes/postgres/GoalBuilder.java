@@ -135,8 +135,18 @@ public class GoalBuilder {
       if(activityTemplate.arguments().fields().containsKey(durationType.parameterName())){
         final var argument = activityTemplate.arguments().fields().get(durationType.parameterName());
         if(argument != null){
+          final var profileValue = argument.evaluate(null, Interval.FOREVER, null);
+          if(!profileValue.isConstant()){
+            throw new Error("Controllable duration parameter is not a constant value");
+          }
+          final var validityTime = profileValue.changePoints().get(0).interval().start;
           //assume the duration parameter is a discrete value
-          final var value = Duration.of(argument.evaluate(null, Interval.FOREVER, null).valueAt(Duration.ZERO).asInt().get(), Duration.MICROSECOND);
+          final var value = Duration.of(profileValue
+                                                .valueAt(validityTime)
+                                                .get()
+                                                .asInt()
+                                                .get(),
+                                        Duration.MICROSECOND);
           builder.duration(value);
           activityTemplate.arguments().fields().remove(durationType.parameterName());
         } else {
