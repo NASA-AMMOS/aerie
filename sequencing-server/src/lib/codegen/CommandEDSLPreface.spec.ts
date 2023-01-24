@@ -1,5 +1,5 @@
 import {
-  Command,
+  CommandStem,
   doyToInstant,
   DOY_STRING,
   hmsToDuration,
@@ -11,7 +11,7 @@ import {
 describe('Command', () => {
   describe('fromSeqJson', () => {
     it('should parse a command seqjson', () => {
-      const command = Command.fromSeqJson({
+      const command = CommandStem.fromSeqJson({
         type: 'command',
         stem: 'test',
         metadata: {},
@@ -19,7 +19,7 @@ describe('Command', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
       });
 
-      expect(command).toBeInstanceOf(Command);
+      expect(command).toBeInstanceOf(CommandStem);
       expect(command.stem).toBe('test');
       expect(command.metadata).toEqual({});
       expect(command.arguments).toEqual([]);
@@ -28,7 +28,7 @@ describe('Command', () => {
 
   describe('toEDSLString()', () => {
     it('should handle absolute time tagged commands', () => {
-      const command = Command.new({
+      const command = CommandStem.new({
         stem: 'TEST',
         arguments: ['string', 0, true],
         absoluteTime: doyToInstant('2020-001T00:00:00.000' as DOY_STRING),
@@ -38,7 +38,7 @@ describe('Command', () => {
     });
 
     it('should handle relative time tagged commands', () => {
-      const command = Command.new({
+      const command = CommandStem.new({
         stem: 'TEST',
         arguments: ['string', 0, true],
         relativeTime: hmsToDuration('00:00:00.000' as HMS_STRING),
@@ -48,7 +48,7 @@ describe('Command', () => {
     });
 
     it('should handle epoch relative time tagged commands', () => {
-      const command = Command.new({
+      const command = CommandStem.new({
         stem: 'TEST',
         arguments: ['string', 0, true],
         epochTime: hmsToDuration('00:00:00.000' as HMS_STRING),
@@ -58,7 +58,7 @@ describe('Command', () => {
     });
 
     it('should handle command complete commands', () => {
-      const command = Command.new({
+      const command = CommandStem.new({
         stem: 'TEST',
         arguments: ['string', 0, true],
       });
@@ -67,14 +67,14 @@ describe('Command', () => {
     });
 
     it('should handle commands without arguments', () => {
-      const command = Command.new({
+      const command = CommandStem.new({
         stem: 'TEST',
         arguments: [],
       });
 
       expect(command.toEDSLString()).toEqual('C.TEST');
 
-      const command2 = Command.new({
+      const command2 = CommandStem.new({
         stem: 'TEST',
         arguments: {},
       });
@@ -83,7 +83,7 @@ describe('Command', () => {
     });
 
     it('should convert to EDSL string with array arguments', () => {
-      const command = Command.new({
+      const command = CommandStem.new({
         stem: 'TEST',
         arguments: ['string', 0, true],
         absoluteTime: doyToInstant('2020-001T00:00:00.000' as DOY_STRING),
@@ -93,7 +93,7 @@ describe('Command', () => {
     });
 
     it('should convert to EDSL string with named arguments', () => {
-      const command = Command.new({
+      const command = CommandStem.new({
         stem: 'TEST',
         arguments: {
           string: 'string',
@@ -139,12 +139,12 @@ describe('Sequence', () => {
       expect(sequence.metadata).toEqual({});
       expect(sequence.commands.length).toEqual(2);
 
-      expect(sequence.commands[0]!).toBeInstanceOf(Command);
+      expect(sequence.commands[0]!).toBeInstanceOf(CommandStem);
       expect(sequence.commands[0]!.stem).toBe('test');
       expect(sequence.commands[0]!.metadata).toEqual({});
       expect(sequence.commands[0]!.arguments).toEqual([]);
 
-      expect(sequence.commands[1]!).toBeInstanceOf(Command);
+      expect(sequence.commands[1]!).toBeInstanceOf(CommandStem);
       expect(sequence.commands[1]!.stem).toBe('test2');
       expect(sequence.commands[1]!.metadata).toEqual({});
       expect(sequence.commands[1]!.arguments).toEqual(['string', 0, true]);
@@ -173,12 +173,12 @@ describe('Sequence', () => {
         seqId: 'test',
         metadata: {},
         commands: [
-          Command.new({
+          CommandStem.new({
             stem: 'TEST',
             arguments: ['string', 0, true],
             absoluteTime: doyToInstant('2020-001T00:00:00.000' as DOY_STRING),
           }),
-          Command.new({
+          CommandStem.new({
             stem: 'TEST',
             arguments: {
               string: 'string',

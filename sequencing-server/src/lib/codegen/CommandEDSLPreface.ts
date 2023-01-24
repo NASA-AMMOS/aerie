@@ -59,11 +59,11 @@ export interface SequenceSeqJson {
 }
 
 declare global {
-  class Command<
+  class CommandStem<
     A extends ArgType[] | { [argName: string]: any } = [] | {},
     M extends Record<string, any> = Record<string, any>,
   > {
-    public static new<A extends any[] | { [argName: string]: any }>(opts: CommandOptions<A>): Command<A>;
+    public static new<A extends any[] | { [argName: string]: any }>(opts: CommandOptions<A>): CommandStem<A>;
 
     public toSeqJson(): CommandSeqJson;
   }
@@ -71,15 +71,15 @@ declare global {
   class Sequence {
     public readonly seqId: string;
     public readonly metadata: Record<string, any>;
-    public readonly commands: Command[];
+    public readonly commands: CommandStem[];
 
-    public static new(opts: { seqId: string; metadata: Record<string, any>; commands: Command[] }): Sequence;
+    public static new(opts: { seqId: string; metadata: Record<string, any>; commands: CommandStem[] }): Sequence;
 
     public toSeqJson(): SequenceSeqJson;
   }
 
   type Context = {};
-  type ExpansionReturn = Arrayable<Command>;
+  type ExpansionReturn = Arrayable<CommandStem>;
 
   type U<BitLength extends 8 | 16 | 32 | 64> = number;
   type U8 = U<8>;
@@ -122,7 +122,7 @@ declare global {
   const C: typeof Commands;
 }
 
-export class Command<
+export class CommandStem<
   A extends ArgType[] | { [argName: string]: any } = [] | {},
   M extends Record<string, any> = Record<string, any>,
 > {
@@ -146,24 +146,24 @@ export class Command<
     }
   }
 
-  public static new<A extends any[] | { [argName: string]: any }>(opts: CommandOptions<A>): Command<A> {
+  public static new<A extends any[] | { [argName: string]: any }>(opts: CommandOptions<A>): CommandStem<A> {
     if ('absoluteTime' in opts) {
-      return new Command<A>({
+      return new CommandStem<A>({
         ...opts,
         absoluteTime: opts.absoluteTime,
       });
     } else if ('epochTime' in opts) {
-      return new Command<A>({
+      return new CommandStem<A>({
         ...opts,
         epochTime: opts.epochTime,
       });
     } else if ('relativeTime' in opts) {
-      return new Command<A>({
+      return new CommandStem<A>({
         ...opts,
         relativeTime: opts.relativeTime,
       });
     } else {
-      return new Command<A>(opts);
+      return new CommandStem<A>(opts);
     }
   }
 
@@ -184,7 +184,7 @@ export class Command<
     };
   }
 
-  public static fromSeqJson<A extends ArgType[]>(json: CommandSeqJson<A>): Command<A> {
+  public static fromSeqJson<A extends ArgType[]>(json: CommandSeqJson<A>): CommandStem<A> {
     const timeValue =
       json.time.type === TimingTypes.ABSOLUTE
         ? { absoluteTime: doyToInstant(json.time.tag) }
@@ -194,7 +194,7 @@ export class Command<
         ? { epochTime: hmsToDuration(json.time.tag) }
         : {};
 
-    return Command.new<A>({
+    return CommandStem.new<A>({
       stem: json.stem,
       arguments: json.args as A,
       metadata: json.metadata,
@@ -202,24 +202,24 @@ export class Command<
     });
   }
 
-  public absoluteTiming(absoluteTime: Temporal.Instant): Command<A> {
-    return Command.new({
+  public absoluteTiming(absoluteTime: Temporal.Instant): CommandStem<A> {
+    return CommandStem.new({
       stem: this.stem,
       arguments: this.arguments,
       absoluteTime: absoluteTime,
     });
   }
 
-  public epochTiming(epochTime: Temporal.Duration): Command<A> {
-    return Command.new({
+  public epochTiming(epochTime: Temporal.Duration): CommandStem<A> {
+    return CommandStem.new({
       stem: this.stem,
       arguments: this.arguments,
       epochTime: epochTime,
     });
   }
 
-  public relativeTiming(relativeTime: Temporal.Duration): Command<A> {
-    return Command.new({
+  public relativeTiming(relativeTime: Temporal.Duration): CommandStem<A> {
+    return CommandStem.new({
       stem: this.stem,
       arguments: this.arguments,
       relativeTime: relativeTime,
@@ -235,7 +235,8 @@ export class Command<
       ? `R\`${durationToHms(this.relativeTime)}\``
       : 'C';
 
-    const argsString = Object.keys(this.arguments).length === 0 ? '' : `(${Command.argumentsToString(this.arguments)})`;
+    const argsString =
+      Object.keys(this.arguments).length === 0 ? '' : `(${CommandStem.argumentsToString(this.arguments)})`;
 
     return `${timeString}.${this.stem}${argsString}`;
   }
@@ -267,13 +268,13 @@ export class Command<
 export interface SequenceOptions {
   seqId: string;
   metadata: Record<string, any>;
-  commands: Command[];
+  commands: CommandStem[];
 }
 
 export class Sequence {
   public readonly seqId: string;
   public readonly metadata: Record<string, any>;
-  public readonly commands: Command[];
+  public readonly commands: CommandStem[];
 
   private constructor(opts: SequenceOptions) {
     this.seqId = opts.seqId;
@@ -310,7 +311,7 @@ export class Sequence {
     return Sequence.new({
       seqId: json.id,
       metadata: json.metadata,
-      commands: json.steps.map(c => Command.fromSeqJson(c)),
+      commands: json.steps.map(c => CommandStem.fromSeqJson(c)),
     });
   }
 }

@@ -60,14 +60,14 @@ function generateFswCommandCode(
     // language=TypeScript
     const value = `
 ${doc}
-const ${fswCommandName}: ${fswCommandName} = Command.new({
+const ${fswCommandName}: ${fswCommandName} = CommandStem.new({
 \tstem: '${fswCommand.stem}',
 \targuments: [],
 })`;
 
     const interfaces = `
 ${doc}
-\tinterface ${fswCommandName} extends Command<[]> {}
+\tinterface ${fswCommandName} extends CommandStem<[]> {}
 `;
     return {
       value,
@@ -104,14 +104,14 @@ ${doc}
   const value = `
 ${doc}
 function ${fswCommandName}(...args: [{ ${argsWithType.map(arg => arg.name + ': ' + arg.type).join(',')} }]) {
-  return Command.new({
+  return CommandStem.new({
     stem: '${fswCommandName}',
     arguments: args
   }) as ${fswCommandName};
 }`;
 
   const interfaces = `
-\tinterface ${fswCommandName} extends Command<[ [{ ${argsWithType
+\tinterface ${fswCommandName} extends CommandStem<[ [{ ${argsWithType
     .map(arg => arg.name + ': ' + arg.type)
     .join(',')} }] ]> {}`;
 
@@ -176,14 +176,19 @@ function mapArgumentType(argument: ampcs.FswCommandArgument, enumMap: ampcs.Enum
 
 export async function processDictionary(dictionary: ampcs.CommandDictionary) {
   const prefaceUrl = new URL('./CommandEDSLPreface.ts', import.meta.url);
+  const jsonSpecUrl = new URL('../../../node_modules/@nasa-jpl/seq-json-schema/types.ts', import.meta.url);
   const folder = `${getEnv().STORAGE}/${dictionary.header.mission_name.toLowerCase()}/`;
   const fileName = `command_lib.${dictionary.header.version}.ts`;
   const prefaceString = await fs.promises.readFile(prefaceUrl.pathname, 'utf8');
+  const jsonSpecString = `/** START Sequence JSON Spec */
+  //https://github.com/NASA-AMMOS/seq-json-schema/blob/develop/types.ts\n
+  ${await fs.promises.readFile(jsonSpecUrl.pathname, 'utf8')}
+  \n/** END Sequence JSON Spec */`;
 
   const { values, declarations } = generateTypescriptCode(dictionary); //update sql table store seprate
 
   await fs.promises.mkdir(folder, { recursive: true });
 
-  await fs.promises.writeFile(folder + fileName, prefaceString + declarations + values, { flag: 'w' });
+  await fs.promises.writeFile(folder + fileName, prefaceString + jsonSpecString + declarations + values, { flag: 'w' });
   return folder + fileName;
 }

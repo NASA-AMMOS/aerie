@@ -22,7 +22,7 @@ import {
   simulatedActivityInstanceBySimulatedActivityIdBatchLoader,
 } from './lib/batchLoaders/simulatedActivityBatchLoader.js';
 import { generateTypescriptForGraphQLActivitySchema } from './lib/codegen/ActivityTypescriptCodegen.js';
-import { Command, CommandSeqJson, Sequence, SequenceSeqJson } from './lib/codegen/CommandEDSLPreface.js';
+import { CommandStem, CommandSeqJson, Sequence, SequenceSeqJson } from './lib/codegen/CommandEDSLPreface.js';
 import { processDictionary } from './lib/codegen/CommandTypeCodegen.js';
 import './polyfills.js';
 import { FallibleStatus } from './types.js';
@@ -682,7 +682,7 @@ app.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, res, next)
     }
     return {
       ...ai,
-      commands: row.commands?.map(Command.fromSeqJson) ?? null,
+      commands: row.commands?.map(CommandStem.fromSeqJson) ?? null,
       errors: row.errors,
     };
   });
@@ -841,7 +841,7 @@ app.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (req, res, 
         }
         return {
           ...ai,
-          commands: row.commands?.map(Command.fromSeqJson) ?? null,
+          commands: row.commands?.map(CommandStem.fromSeqJson) ?? null,
           errors: row.errors,
         };
       });
