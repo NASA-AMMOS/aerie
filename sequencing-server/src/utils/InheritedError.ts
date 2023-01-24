@@ -6,7 +6,7 @@ export type ErrorLike = {
 };
 
 export class InheritedError extends Error {
-  public readonly cause: ErrorLike | ErrorLike[];
+  public override readonly cause: ErrorLike | ErrorLike[];
 
   constructor(message: string, cause: ErrorLike | ErrorLike[]) {
     let inheritedMessage =

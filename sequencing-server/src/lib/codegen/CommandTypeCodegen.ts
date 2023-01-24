@@ -54,10 +54,7 @@ function generateFswCommandCode(
   const fswCommandName = (needsUnderscore ? '_' : '') + fswCommand.stem;
   const numberOfArguments = fswCommand.arguments.length;
 
-  const hasRepeatedArgs = fswCommand.arguments.some(arg => arg.arg_type === 'repeat');
-
-  const doc = `
-\t/**${fswCommand.description}*/`;
+  const doc = generateDoc(fswCommand);
 
   if (numberOfArguments === 0) {
     // language=TypeScript
@@ -78,104 +75,71 @@ ${doc}
     };
   }
 
-  if (hasRepeatedArgs) {
-    const repeatArg = fswCommand.arguments.find(arg => arg.arg_type === 'repeat')! as ampcs.FswCommandArgumentRepeat;
-    const otherArgs = fswCommand.arguments.filter(arg => arg.arg_type !== 'repeat');
-    const minRepeat = repeatArg.repeat?.min ?? 0;
-    const maxRepeat = repeatArg.repeat?.max ?? 10;
+  let argsWithType: Array<{ name: string; type: string }> = [];
 
-    let repeatArgsDeclaration: Array<{ name: string; type: string }>[] = [];
-    let methodParameters: string[] = [];
-    let interfaceParameters: string[] = [];
-    let argsOrder: string[] = [];
-
-    for (let i = minRepeat; i <= maxRepeat; i++) {
+  fswCommand.arguments.forEach(arg => {
+    // If we come across a repeat arg we need to make an array type of all the repeats arguments.
+    if (arg.arg_type === 'repeat' && arg.repeat) {
       let repeatArgs: Array<{ name: string; type: string }> = [];
 
-      if (repeatArg.repeat) {
-        for (let n = 1; n < i; n++) {
-          repeatArgs = repeatArgs.concat(
-            repeatArg.repeat.arguments.map(arg => {
-              return { name: `${arg.name}_${n}`, type: mapArgumentType(arg, enumMap) };
-            }),
-          );
-        }
-      }
-      repeatArgsDeclaration.push(repeatArgs);
+      repeatArgs = repeatArgs.concat(
+        arg.repeat.arguments.map(repeatArg => {
+          return { name: `${repeatArg.name}`, type: mapArgumentType(repeatArg, enumMap) };
+        }),
+      );
+
+      argsWithType = argsWithType.concat({
+        name: `'${arg.name}'`,
+        type: `Array<{ ${repeatArgs.map(repeatArg => `'${repeatArg.name}': ${repeatArg.type}`).join(', ')} }>`,
+      });
+    } else {
+      // Otherwise we just have a normal arg with a type.
+      argsWithType = argsWithType.concat({
+        name: `'${arg.name}'`,
+        type: mapArgumentType(arg, enumMap),
+      });
     }
-
-    repeatArgsDeclaration.forEach(repeat => {
-      const repeatArgNameAndType = `${repeat.map(arg => `\t'${arg.name}': ${arg.type}`).join(', ')}`;
-      const repeatOtherNameAndType = `${otherArgs
-        .map(arg => `\t'${arg.name}': ${mapArgumentType(arg, enumMap)}`)
-        .join(',')}`;
-      const repeatArgType = `${repeat.map(arg => `${arg.type}`).join(', ')}`;
-      const repeatOtherType = `${otherArgs.map(arg => `${mapArgumentType(arg, enumMap)}`).join(', ')}`;
-
-      methodParameters = methodParameters.concat(
-        `[${repeatArgType}${repeatArgType !== '' ? ', ' : ''}${repeatOtherType}] \n|[{${repeatArgNameAndType}${
-          repeatArgNameAndType !== '' ? ', ' : ''
-        }${repeatOtherNameAndType}}]\n`,
-      );
-      interfaceParameters = interfaceParameters.concat(
-        `[${repeatArgType}${repeatArgType !== '' ? ', ' : ''}${repeatOtherType}] \n|[{${repeatArgNameAndType}${
-          repeatArgNameAndType !== '' ? ', ' : ''
-        }${repeatOtherNameAndType}}]\n`,
-      );
-
-      argsOrder = argsOrder.concat(
-        `[${repeat.map(arg => `'${arg.name}'`).concat(otherArgs.map(arg => `'${arg.name}'`))}]`,
-      );
-    });
-
-    const value = `
-const ${fswCommandName}_ARGS_ORDERS = [${argsOrder.join(',')}];
-${doc}
-function ${fswCommandName}(...args:\n ${methodParameters.join('|')}) {
-  return Command.new({
-    stem: '${fswCommandName}',
-    arguments: typeof args[0] === 'object' ? findAndOrderCommandArguments("${fswCommandName}",args[0],${fswCommandName}_ARGS_ORDERS) : args,
-  }) as ${fswCommandName};
-}`;
-
-    const interfaces = `
-\tinterface ${fswCommandName} extends Command<[\n${interfaceParameters.join('|')}]> {}`;
-    return {
-      value,
-      interfaces,
-    };
-  }
+  });
 
   const value = `
-const ${fswCommandName}_ARGS_ORDER = [${fswCommand.arguments.map(argument => `'${argument.name}'`).join(', ')}];
 ${doc}
-function ${fswCommandName}(...args: [\n${fswCommand.arguments
-    .map(argument => (argument.arg_type === 'repeat' ? '' : `\t${mapArgumentType(argument, enumMap)},\n`))
-    .join('')}] | [{\n${fswCommand.arguments
-    .map(argument =>
-      argument.arg_type === 'repeat' ? '' : `\t'${argument.name}': ${mapArgumentType(argument, enumMap)},\n`,
-    )
-    .join('')}}]): ${fswCommandName} {
+function ${fswCommandName}(...args: [{ ${argsWithType.map(arg => arg.name + ': ' + arg.type).join(',')} }]) {
   return Command.new({
-    stem: '${fswCommand.stem}',
-    arguments: typeof args[0] === 'object' ? orderCommandArguments(args[0],${fswCommandName}_ARGS_ORDER) : args,
+    stem: '${fswCommandName}',
+    arguments: args
   }) as ${fswCommandName};
 }`;
 
   const interfaces = `
-  ${doc}
-\tinterface ${fswCommandName} extends Command<[\n${fswCommand.arguments
-    .map(argument => (argument.arg_type === 'repeat' ? '' : `\t\t${mapArgumentType(argument, enumMap)},\n`))
-    .join('')}\t] | {\n${fswCommand.arguments
-    .map(argument =>
-      argument.arg_type === 'repeat' ? '' : `\t\t'${argument.name}': ${mapArgumentType(argument, enumMap)},\n`,
-    )
-    .join('')}\t}> {}`;
+\tinterface ${fswCommandName} extends Command<[ [{ ${argsWithType
+    .map(arg => arg.name + ': ' + arg.type)
+    .join(',')} }] ]> {}`;
 
   return {
     value,
     interfaces,
   };
+}
+
+/**
+ * Creates a jsdoc style doc for the given command. Right now it just includes the args as
+ * parameters.
+ *
+ * @param fswCommand The command we're generating documentation for.
+ * @returns The generated documentation.
+ */
+function generateDoc(fswCommand: ampcs.FswCommand): string {
+  let parameters: string[] = [];
+
+  fswCommand.arguments.forEach(arg => {
+    parameters.push(`* @param ${arg.name} ${arg.description}`);
+  });
+
+  return `
+/**
+* ${fswCommand.description}
+${parameters.length > 0 ? parameters.join('\n') : '*'}
+*/`;
 }
 
 function mapArgumentType(argument: ampcs.FswCommandArgument, enumMap: ampcs.EnumMap): string {
