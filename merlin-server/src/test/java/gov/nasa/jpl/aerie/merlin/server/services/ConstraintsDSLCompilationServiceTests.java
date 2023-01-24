@@ -193,7 +193,7 @@ class ConstraintsDSLCompilationServiceTests {
             }
         """,
         new ViolationsOfWindows(new NotEqual<DiscreteProfile>(new ValueAt(
-            new DiscreteResource("mode"),
+            new ProfileExpression<>(new DiscreteResource("mode")),
             new Starts<Spans>(new ActivitySpan("alias1"))),
                                       new DiscreteValue(SerializedValue.of("Option1")))));
   }

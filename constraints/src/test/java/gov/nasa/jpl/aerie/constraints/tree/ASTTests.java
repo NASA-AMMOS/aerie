@@ -510,8 +510,9 @@ public class ASTTests {
         )
     );
 
-    final var result = new ValueAt(new DiscreteResource("discrete2"),
-                                   new SpansFromWindows(new WindowsWrapperExpression(new Windows(Interval.at(Duration.of(5, SECONDS)), true))))
+    final var result = new ValueAt<>(
+        new ProfileExpression<>(new DiscreteResource("discrete2")),
+        new SpansFromWindows(new WindowsWrapperExpression(new Windows(Interval.at(Duration.of(5, SECONDS)), true))))
         .evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new DiscreteProfile(IntervalMap.<SerializedValue>builder()
