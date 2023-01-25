@@ -135,7 +135,7 @@ describe('Sequence', () => {
       });
 
       expect(sequence).toBeInstanceOf(Sequence);
-      expect(sequence.seqId).toBe('test00000');
+      expect(sequence.id).toBe('test00000');
       expect(sequence.metadata).toEqual({});
       expect(sequence.commands.length).toEqual(2);
 
