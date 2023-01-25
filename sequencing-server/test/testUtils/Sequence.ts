@@ -225,6 +225,8 @@ export async function generateSequenceEDSLBulk(
             steps {
               args
               metadata
+              models
+              description
               stem
               time {
                 tag

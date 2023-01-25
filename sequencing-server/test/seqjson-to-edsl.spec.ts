@@ -47,7 +47,7 @@ describe('getEdslForSeqJson', () => {
   Sequence.new({
     seqId: 'test_00001',
     metadata: {},
-    commands: [
+    steps: [
       C.BAKE_BREAD,
       A\`2020-060T03:45:19.000\`.PREHEAT_OVEN(100),
     ],
@@ -119,7 +119,7 @@ describe('getEdslForSeqJsonBulk', () => {
   Sequence.new({
     seqId: 'test_00001',
     metadata: {},
-    commands: [
+    steps: [
       C.BAKE_BREAD,
       A\`2020-060T03:45:19.000\`.PREHEAT_OVEN(100),
     ],
@@ -128,7 +128,7 @@ describe('getEdslForSeqJsonBulk', () => {
   Sequence.new({
     seqId: 'test_00002',
     metadata: {},
-    commands: [
+    steps: [
       C.BAKE_BREAD,
       A\`2020-060T03:45:19.000\`.PREHEAT_OVEN(100),
     ],
