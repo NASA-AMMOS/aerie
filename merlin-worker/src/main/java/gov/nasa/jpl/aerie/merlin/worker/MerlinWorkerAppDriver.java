@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresSimulationNotificationPayload;
+import gov.nasa.jpl.aerie.stats.Timer;
 import io.javalin.Javalin;
 
 import java.nio.file.Path;
@@ -77,6 +78,10 @@ public final class MerlinWorkerAppDriver {
           notification.simulationRevision(),
           notification.simulationTemplateRevision());
       final ResultsProtocol.WriterRole writer = owner.get();
+
+      Timer.reset();
+      Timer timer = new Timer("worker simulation", true);
+
       try {
         simulationAgent.simulate(planId, revisionData, writer);
       } catch (final Throwable ex) {
@@ -85,6 +90,9 @@ public final class MerlinWorkerAppDriver {
             .type("UNEXPECTED_SIMULATION_EXCEPTION")
             .message("Something went wrong while simulating")
             .trace(ex));
+      } finally {
+        timer.stop(true);
+        Timer.logStats();
       }
     }
   }

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
+import gov.nasa.jpl.aerie.stats.Timer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
@@ -28,7 +29,8 @@ public final class ReplayingTask<Return> implements Task<Return> {
     final var context = new ReplayingReactionContext(this.rootContext, this.memory, scheduler, handle);
 
     try (final var restore = this.rootContext.set(context)){
-      final var returnValue = this.task.get();
+      // This is where the adaptation is invoked.
+      final var returnValue = Timer.run("adaptation", this.task);
 
       // If we get here, the activity has completed normally.
       return TaskStatus.completed(returnValue);

@@ -26,6 +26,7 @@ javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
 dependencies {
   compileOnlyApi project(':merlin-sdk')
+  implementation project(':parsing-utilities')
   implementation 'org.apache.commons:commons-lang3:3.12.0'
 
   testImplementation project(':merlin-sdk')

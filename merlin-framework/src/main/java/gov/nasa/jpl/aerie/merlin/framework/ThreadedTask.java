@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
+import gov.nasa.jpl.aerie.stats.Timer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
@@ -87,7 +88,7 @@ public final class ThreadedTask<Return> implements Task<Return> {
   private void beginAsync() {
     final var handle = new ThreadedTaskHandle();
 
-    this.executor.execute(() -> {
+    this.executor.execute(() -> {  // This is where thread is created
       final TaskRequest request;
       try {
         request = ThreadedTask.this.hostToTask.take();
@@ -138,7 +139,8 @@ public final class ThreadedTask<Return> implements Task<Return> {
         final var context = new ThreadedReactionContext(ThreadedTask.this.rootContext, scheduler, this);
 
         try (final var restore = ThreadedTask.this.rootContext.set(context)) {
-          return new TaskResponse.Success<>(TaskStatus.completed(ThreadedTask.this.task.get()));
+          // This is where the adaptation is invoked.
+          return new TaskResponse.Success<>(TaskStatus.completed(Timer.run("adaptation", ThreadedTask.this.task)));
         } catch (final TaskAbort ex) {
           return new TaskResponse.Success<>(TaskStatus.completed(null));
         } catch (final Throwable ex) {
