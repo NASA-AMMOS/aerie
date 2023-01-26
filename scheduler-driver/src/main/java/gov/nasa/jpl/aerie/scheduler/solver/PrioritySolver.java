@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.solver;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
@@ -150,8 +151,7 @@ public class PrioritySolver implements Solver {
 
     for(var act: acts){
       //if some parameters are left uninstantiated, this is the last moment to do it
-      act.instantiateVariableArguments(simulationFacade.getLatestConstraintSimulationResults());
-      var duration = act.getDuration();
+      var duration = act.duration();
       if(duration != null && duration.longerThan(this.problem.getPlanningHorizon().getEndAerie())){
         logger.warn("Activity " + act
                            + " is planned to finish after the end of the planning horizon, not simulating. Extend the planning horizon.");
@@ -172,12 +172,10 @@ public class PrioritySolver implements Solver {
           allGood = false;
           break;
         }
-        if (act.getDuration() == null) {
-          act.setDuration(simDur.get());
-        } else if (simDur.get().compareTo(act.getDuration()) != 0) {
+        if (act.duration() == null || simDur.get().compareTo(act.duration()) != 0) {
           allGood = false;
           logger.error("When simulated, activity " + act
-                             + " has a different duration than expected (exp=" + act.getDuration() + ", real=" + simDur + ")");
+                             + " has a different duration than expected (exp=" + act.duration() + ", real=" + simDur + ")");
           break;
         }
       }
@@ -212,8 +210,8 @@ public class PrioritySolver implements Solver {
     final var prevCheckFlag = this.checkSimBeforeInsertingActivities;
     this.checkSimBeforeInsertingActivities = false;
     problem.getInitialPlan().getActivitiesByTime().stream()
-      .filter( act -> (act.getStartTime()==null)
-               || problem.getPlanningHorizon().contains( act.getStartTime() ) )
+      .filter( act -> (act.startTime()==null)
+               || problem.getPlanningHorizon().contains( act.startTime() ) )
       .forEach(this::checkAndInsertAct);
     this.checkSimBeforeInsertingActivities = prevCheckFlag;
 
@@ -223,8 +221,6 @@ public class PrioritySolver implements Solver {
     //if backed by real models, initialize the simulation states/resources/profiles for the plan so state queries work
     if (problem.getMissionModel() != null) {
       simulationFacade.simulateActivities(plan.getActivities());
-      plan.getActivities().forEach(activity -> simulationFacade.getActivityDuration(activity)
-                                                       .ifPresent(activity::setDuration));
       final var allGeneratedActivities = simulationFacade.getAllGeneratedActivities(problem.getPlanningHorizon().getEndAerie());
       processNewGeneratedActivities(allGeneratedActivities);
     }
@@ -507,7 +503,7 @@ public class PrioritySolver implements Solver {
           //no global constraint for the same reason above mentioned
           //only the target goal state constraints to consider
           for(var act : actToChooseFrom){
-            var actWindow = new Windows(false).set(Interval.between(act.getStartTime(), act.getEndTime()), true);
+            var actWindow = new Windows(false).set(Interval.between(act.startTime(), act.getEndTime()), true);
             var stateConstraints = goal.getResourceConstraints();
             var narrowed = actWindow;
             if(stateConstraints!= null) {
@@ -630,7 +626,7 @@ public class PrioritySolver implements Solver {
     }
     possibleWindows = narrowByResourceConstraints(possibleWindows, resourceConstraints);
 
-    possibleWindows = narrowGlobalConstraints(plan, missing, possibleWindows, this.problem.getGlobalConstraints());
+    possibleWindows = narrowGlobalConstraints(plan, missing, possibleWindows, this.problem.getGlobalConstraints(), missing.getEvaluationEnvironment());
 
     //narrow to windows where activity duration will fit
     var startWindows = possibleWindows;
@@ -648,7 +644,7 @@ public class PrioritySolver implements Solver {
       if (missing instanceof final MissingActivityInstanceConflict missingInstance) {
         //FINISH: clean this up code dupl re windows etc
         final var act = missingInstance.getInstance();
-        newActs.add(new ActivityInstance(act));
+        newActs.add(ActivityInstance.of(act));
 
       } else if (missing instanceof final MissingActivityTemplateConflict missingTemplate) {
         //select the "best" time among the possibilities, and latest among ties
@@ -660,10 +656,10 @@ public class PrioritySolver implements Solver {
         final var act = missingTemplate.getActTemplate().createActivity(
             goal.getName() + "_" + java.util.UUID.randomUUID(),
             startWindows,
-            true,
             simulationFacade,
             plan,
-            this.problem.getPlanningHorizon());
+            this.problem.getPlanningHorizon(),
+            missing.getEvaluationEnvironment());
         act.ifPresent(newActs::add);
       }
 
@@ -720,7 +716,8 @@ public class PrioritySolver implements Solver {
       Plan plan,
       MissingActivityConflict mac,
       Windows windows,
-      Collection<GlobalConstraint> constraints) {
+      Collection<GlobalConstraint> constraints,
+      EvaluationEnvironment evaluationEnvironment) {
     Windows tmp = windows;
     if(tmp.stream().noneMatch(Segment::value)){
       return tmp;
@@ -729,7 +726,7 @@ public class PrioritySolver implements Solver {
     simulationFacade.computeSimulationResultsUntil(tmp.maxTrueTimePoint().get().getKey());
     for (GlobalConstraint gc : constraints) {
       if (gc instanceof GlobalConstraintWithIntrospection c) {
-        tmp = c.findWindows(plan, tmp, mac, simulationFacade.getLatestConstraintSimulationResults());
+        tmp = c.findWindows(plan, tmp, mac, simulationFacade.getLatestConstraintSimulationResults(), evaluationEnvironment);
       } else {
         throw new Error("Unhandled variant of GlobalConstraint: %s".formatted(gc));
       }

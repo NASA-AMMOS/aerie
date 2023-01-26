@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.goals;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
@@ -107,10 +108,10 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
    * @return a new activity instance that will improve the satisfaction of
    *     this goal if it were inserted into a plan
    */
-  public Optional<ActivityInstance> createActivity(SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon) {
+  public Optional<ActivityInstance> createActivity(SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
     //REVIEW: uuid probably overkill. random is especially bad for repeatability.
     final var actName = getName() + "_" + java.util.UUID.randomUUID();
-    return desiredActTemplate.createActivity(actName, facade, plan, planningHorizon);
+    return desiredActTemplate.createActivity(actName, facade, plan, planningHorizon, evaluationEnvironment);
   }
 
   /**

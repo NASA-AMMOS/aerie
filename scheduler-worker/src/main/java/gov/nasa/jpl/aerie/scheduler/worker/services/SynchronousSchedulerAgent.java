@@ -16,8 +16,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
@@ -356,25 +354,23 @@ public record SynchronousSchedulerAgent(
                                              + "merlin server.");
         }
         final var schedulerActType = activityTypes.get(activity.type());
-        final var act = new ActivityInstance(schedulerActType);
-        act.setArguments(activity.arguments());
-        act.setStartTime(activity.startTimestamp());
-        schedulingIdToMerlinId.put(act.getId(), elem.getKey());
+        Duration actDuration = null;
         if (schedulerActType.getDurationType() instanceof DurationType.Controllable s) {
           final var serializedDuration = activity.arguments().get(s.parameterName());
           if (serializedDuration != null) {
-            final var duration = Duration.of(
+            actDuration = Duration.of(
                 serializedDuration
                     .asInt()
                     .orElseThrow(() -> new Exception("Controllable Duration parameter was not an Int")),
                 Duration.MICROSECONDS);
-            act.setDuration(duration);
           }
         } else if (schedulerActType.getDurationType() instanceof DurationType.Uncontrollable s) {
           // Do nothing
         } else {
           throw new Error("Unhandled variant of DurationType:" + schedulerActType.getDurationType());
         }
+        final var act = ActivityInstance.of(schedulerActType, activity.startTimestamp(), actDuration, activity.arguments());
+        schedulingIdToMerlinId.put(act.getId(), elem.getKey());
         plan.add(act);
       }
       return new PlanComponents(plan, merlinPlan, schedulingIdToMerlinId);

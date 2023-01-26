@@ -1,14 +1,17 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
+import gov.nasa.jpl.aerie.constraints.tree.ForEachActivitySpans;
+import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.Range;
-import gov.nasa.jpl.aerie.scheduler.constraints.TimeRangeExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
-import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeFixed;
 import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
@@ -42,10 +45,10 @@ public class GoalBuilder {
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition g) {
       var builder = new CoexistenceGoal.Builder()
           .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)))
-          .forEach(timeRangeExpressionOfConstraintExpression(
-              g.forEach(),
-              lookupActivityType))
-          .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType));
+          .forEach(spansOfConstraintExpression(
+              g.forEach()))
+          .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
+          .aliasForAnchors(g.alias());
       if (g.startConstraint().isPresent()) {
         final var startConstraint = g.startConstraint().get();
         final var timeExpression = new TimeExpressionRelativeFixed(
@@ -111,21 +114,17 @@ public class GoalBuilder {
       throw new Error("Unhandled variant of GoalSpecifier:" + goalSpecifier);
     }
   }
-  private static TimeRangeExpression timeRangeExpressionOfConstraintExpression(
-      final SchedulingDSL.ConstraintExpression constraintExpression,
-      final Function<String, ActivityType> lookupActivityType) {
+  private static Expression<Spans> spansOfConstraintExpression(
+      final SchedulingDSL.ConstraintExpression constraintExpression) {
     if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.ActivityExpression c) {
-      return new TimeRangeExpression.Builder()
-          .from(ActivityExpression.ofType(lookupActivityType.apply(c.type())))
-          .build();
+      return new ForEachActivitySpans(c.type(), "alias"+c.type(), new ActivitySpan("alias" + c.type()));
     } else if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.WindowsExpression c){
-      return new TimeRangeExpression.Builder()
-          .from(c.expression())
-          .build();
+      return new SpansFromWindows(c.expression());
     } else {
       throw new UnexpectedSubtypeError(SchedulingDSL.ConstraintExpression.class, constraintExpression);
     }
   }
+
   private static ActivityCreationTemplate makeActivityTemplate(
       final SchedulingDSL.ActivityTemplate activityTemplate,
       final Function<String, ActivityType> lookupActivityType) {
@@ -133,15 +132,31 @@ public class GoalBuilder {
     final var type = lookupActivityType.apply(activityTemplate.activityType());
     if(type.getDurationType() instanceof DurationType.Controllable durationType){
       //detect duration parameter
-      if(activityTemplate.arguments().containsKey(durationType.parameterName())){
-        final var argument = activityTemplate.arguments().get(durationType.parameterName());
-        builder.duration(Duration.of(argument.asInt().get(), Duration.MICROSECONDS));
-        activityTemplate.arguments().remove(durationType.parameterName());
+      if(activityTemplate.arguments().fields().containsKey(durationType.parameterName())){
+        final var argument = activityTemplate.arguments().fields().get(durationType.parameterName());
+        if(argument != null){
+          final var profileValue = argument.evaluate(null, Interval.FOREVER, null);
+          if(!profileValue.isConstant()){
+            throw new Error("Controllable duration parameter is not a constant value");
+          }
+          final var validityTime = profileValue.changePoints().get(0).interval().start;
+          //assume the duration parameter is a discrete value
+          final var value = Duration.of(profileValue
+                                                .valueAt(validityTime)
+                                                .get()
+                                                .asInt()
+                                                .get(),
+                                        Duration.MICROSECOND);
+          builder.duration(value);
+          activityTemplate.arguments().fields().remove(durationType.parameterName());
+        } else {
+          //nothing, other cases will be handled by below section
+        }
       }
     }
     builder = builder.ofType(type);
-    for (final var argument : activityTemplate.arguments().entrySet()) {
-      builder = builder.withArgument(argument.getKey(), argument.getValue());
+    for (final var argument : activityTemplate.arguments().fields().entrySet()) {
+      builder.withArgument(argument.getKey(), argument.getValue());
     }
     return builder.build();
   }

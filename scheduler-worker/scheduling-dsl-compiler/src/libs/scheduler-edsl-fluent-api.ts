@@ -7,11 +7,12 @@
 
 import * as AST from "./scheduler-ast.js";
 import  * as WindowsEDSL from "./constraints-edsl-fluent-api.js";
+import {ActivityInstance} from "./constraints-edsl-fluent-api.js";
 
 type WindowProperty = AST.WindowProperty
 type TimingConstraintOperator = AST.TimingConstraintOperator
 
-export type { CardinalityGoalArguments, WindowProperty, TimingConstraintOperator} from "./scheduler-ast.js";
+export type { CardinalityGoalArguments, WindowProperty, TimingConstraintOperator } from "./scheduler-ast.js";
 
 export class GlobalSchedulingCondition {
 
@@ -88,6 +89,7 @@ export class GlobalSchedulingCondition {
 export class Goal {
   /** @internal **/
   public readonly __astNode: AST.GoalSpecifier;
+  private static __numGeneratedAliases: number = 0;
 
   /** @internal **/
   private constructor(__astNode: AST.GoalSpecifier) {
@@ -263,7 +265,7 @@ export class Goal {
    *
    * @param opts an object containing the activity template and the interval at which the activities must be placed
    */
-  public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Temporal.Duration }): Goal {
+  public static ActivityRecurrenceGoal <A extends WindowsEDSL.Gen.ActivityType>(opts: { activityTemplate: ActivityTemplate<A>, interval: Temporal.Duration }): Goal {
     return Goal.new({
       kind: AST.NodeKind.ActivityRecurrenceGoal,
       activityTemplate: opts.activityTemplate,
@@ -327,13 +329,19 @@ export class Goal {
    *
    * @param opts an object containing the activity template, a set of windows, and optionally temporal constraints.
    */
-  public static CoexistenceGoal(opts: {
-    activityTemplate: ActivityTemplate,
-    forEach: WindowsEDSL.Windows | ActivityExpression,
+
+  public static CoexistenceGoal<T extends WindowsEDSL.Gen.ActivityType, S extends WindowsEDSL.Gen.ActivityType>(opts: {
+    activityTemplate: (( span: ActivityInstance<T> ) => ActivityTemplate<S>) | ActivityTemplate<S>,
+    forEach:  ActivityExpression<T> | WindowsEDSL.Windows,
   } & CoexistenceGoalTimingConstraints): Goal {
+    let alias = 'coexistence activity alias ' + Goal.__numGeneratedAliases;
+    Goal.__numGeneratedAliases += 1;
     return Goal.new({
       kind: AST.NodeKind.ActivityCoexistenceGoal,
-      activityTemplate: opts.activityTemplate,
+      alias:alias,
+      activityTemplate: (opts.activityTemplate instanceof Function)
+          ? opts.activityTemplate(new ActivityInstance((<ActivityExpression<T>>opts.forEach).activityType, alias))
+          : opts.activityTemplate,
       forEach: opts.forEach.__astNode,
       startConstraint: (("startsAt" in opts) ? opts.startsAt.__astNode : ("startsWithin" in opts) ? opts.startsWithin.__astNode : undefined),
       endConstraint: (("endsAt" in opts) ? opts.endsAt.__astNode : ("endsWithin" in opts) ? opts.endsWithin.__astNode : undefined),
@@ -398,7 +406,7 @@ export class Goal {
    * NOTE: In order to avoid placing multiple activities at the same start time, the Cardinality goal introduces an assumed mutual exclusion constraint - namely that new activities will not be allowed to overlap with existing activities.
    * @param opts an object containing the activity template and a  {@link ActivityCardinalityGoal} specification of what kind of cardinality is considered
    */
-  public static CardinalityGoal(opts: { activityTemplate: ActivityTemplate, specification: AST.CardinalityGoalArguments }): Goal {
+  public static CardinalityGoal <A extends WindowsEDSL.Gen.ActivityType>(opts: { activityTemplate: ActivityTemplate<A>, specification: AST.CardinalityGoalArguments }): Goal {
     return Goal.new({
       kind: AST.NodeKind.ActivityCardinalityGoal,
       activityTemplate: opts.activityTemplate,
@@ -420,29 +428,33 @@ export type EndTimingConstraint = { endsAt: SingletonTimingConstraint | Singleto
  */
 export type CoexistenceGoalTimingConstraints = StartTimingConstraint | EndTimingConstraint | (StartTimingConstraint & EndTimingConstraint)
 
-export class ActivityExpression {
+export class ActivityExpression<T extends WindowsEDSL.Gen.ActivityType> {
   /** @internal **/
   public readonly __astNode: AST.ActivityExpression;
 
+  public readonly activityType: T;
+
   /** @internal **/
-  private constructor(__astNode: AST.ActivityExpression) {
+  private constructor(__astNode: AST.ActivityExpression, activityType: T ) {
     this.__astNode = __astNode;
+    this.activityType = activityType
   }
 
   /** @internal **/
-  private static new(__astNode: AST.ActivityExpression): ActivityExpression {
-    return new ActivityExpression(__astNode);
+  private static new<T extends WindowsEDSL.Gen.ActivityType>(__astNode: AST.ActivityExpression, activityType: T): ActivityExpression<T> {
+    return new ActivityExpression(__astNode, activityType);
   }
 
   /**
    * Creates an actvity expression of a type
    * @param activityType the type
    */
-  public static ofType(activityType: WindowsEDSL.Gen.ActivityType): ActivityExpression {
+  public static ofType<T extends WindowsEDSL.Gen.ActivityType>(activityType: T): ActivityExpression<T> {
     return ActivityExpression.new({
-      kind: AST.NodeKind.ActivityExpression,
-      type: activityType
-    })
+          kind: AST.NodeKind.ActivityExpression,
+          type: activityType
+        },
+        activityType)
   }
 }
 
@@ -613,15 +625,15 @@ declare global {
      * Creates an ActivityRecurrenceGoal
      * @param opts an object containing the activity template and the interval at which the activities must be placed
      */
-    public static ActivityRecurrenceGoal(opts: { activityTemplate: ActivityTemplate, interval: Temporal.Duration }): Goal
+    public static ActivityRecurrenceGoal <A extends WindowsEDSL.Gen.ActivityType>(opts: { activityTemplate: ActivityTemplate<A>, interval: Temporal.Duration }): Goal
 
     /**
      * The CoexistenceGoal places one activity (defined by activityTemplate) per window (defined by forEach).
      * The activity is placed such that it starts at (startsAt) or ends at (endsAt) a certain offset from the window
      */
-    public static CoexistenceGoal(opts: {
-      activityTemplate: ActivityTemplate,
-      forEach: WindowsEDSL.Windows | ActivityExpression,
+    public static CoexistenceGoal <T extends WindowsEDSL.Gen.ActivityType, S extends WindowsEDSL.Gen.ActivityType>(opts: {
+      activityTemplate: (( span: ActivityInstance<T> ) => ActivityTemplate<S>) | ActivityTemplate<S>,
+      forEach:  ActivityExpression<T> | WindowsEDSL.Windows,
     } & CoexistenceGoalTimingConstraints): Goal
 
     /**
@@ -629,14 +641,14 @@ declare global {
      * @param opts an object containing the activity template and a specification of what type of CardinalityGoal is required
      * @constructor
      */
-    public static CardinalityGoal(opts: { activityTemplate: ActivityTemplate, specification: AST.CardinalityGoalArguments }): Goal
+    public static CardinalityGoal <A extends WindowsEDSL.Gen.ActivityType>(opts: { activityTemplate: ActivityTemplate<A>, specification: AST.CardinalityGoalArguments }): Goal
   }
-  export class ActivityExpression {
+  export class ActivityExpression<T> {
     /**
      * Creates an actvity expression of a type
      * @param activityType the type
      */
-    public static ofType(activityType: WindowsEDSL.Gen.ActivityType): ActivityExpression
+    public static ofType<T extends WindowsEDSL.Gen.ActivityType>(activityType: T): ActivityExpression<T>
   }
   class TimingConstraint {
     /**
@@ -676,7 +688,7 @@ export interface ClosedOpenInterval extends AST.ClosedOpenInterval {}
  *  Activity templates are generated for each mission model. You can get the full list of activity templates by typing `ActivityTemplates.` (note the period) into the scheduling goal editor, and viewing the auto-complete options.
  *
  * If the activity has parameters, pass them into the constructor in a dictionary as key-value pairs (i.e. `ActivityTemplate.ParamActivity({ param:1 }))`. If the activity has no parameters, do not pass a dictionary (i.e. `ActivityTemplate.ParameterlessActivity()`). */
-export interface ActivityTemplate extends AST.ActivityTemplate {}
+export interface ActivityTemplate<A extends WindowsEDSL.Gen.ActivityType> extends AST.ActivityTemplate<A> {}
 
 // Make Goal available on the global object
-Object.assign(globalThis, { GlobalSchedulingCondition, Goal, ActivityExpression, TimingConstraint: TimingConstraint, WindowProperty: AST.WindowProperty, Operator: AST.TimingConstraintOperator, ActivityTypes: WindowsEDSL.Gen.ActivityType });
+Object.assign(globalThis, { GlobalSchedulingCondition, Goal, ActivityExpression, TimingConstraint: TimingConstraint, WindowProperty: AST.WindowProperty, Operator: AST.TimingConstraintOperator, ActivityTypes: WindowsEDSL.Gen.ActivityType});

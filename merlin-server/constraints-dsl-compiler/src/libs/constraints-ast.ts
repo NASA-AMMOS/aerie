@@ -2,6 +2,9 @@
 import type * as API from "./constraints-edsl-fluent-api";
 
 export enum NodeKind {
+  StructProfileExpression = 'StructProfileExpression',
+  ListProfileExpression = 'ListProfileExpression',
+  ValueAtExpression = 'ValueAtExpression',
   AssignGapsExpression = 'AssignGapsExpression',
   DiscreteProfileResource = 'DiscreteProfileResource',
   DiscreteProfileValue = 'DiscreteProfileValue',
@@ -252,6 +255,22 @@ export type RealProfileExpression =
   | RealProfileParameter
   | AssignGapsExpression<RealProfileExpression>;
 
+export interface StructProfileExpression {
+  kind: NodeKind.StructProfileExpression,
+  expressions: {[key:string]: DiscreteProfileExpression}
+}
+
+export interface ListProfileExpression {
+  kind: NodeKind.ListProfileExpression,
+  expressions: DiscreteProfileExpression[]
+}
+
+export interface ValueAtExpression{
+  kind: NodeKind.ValueAtExpression,
+  profile: ProfileExpression,
+  timepoint: SpansExpression
+}
+
 export interface RealProfileRate {
   kind: NodeKind.RealProfileRate;
   profile: RealProfileExpression;
@@ -289,7 +308,10 @@ export type DiscreteProfileExpression =
     | DiscreteProfileResource
     | DiscreteProfileValue
     | DiscreteProfileParameter
-    | AssignGapsExpression<DiscreteProfileExpression>;
+    | AssignGapsExpression<DiscreteProfileExpression>
+    | StructProfileExpression
+    | ListProfileExpression
+    | ValueAtExpression
 
 export interface DiscreteProfileResource {
   kind: NodeKind.DiscreteProfileResource;

@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.And;
+import gov.nasa.jpl.aerie.constraints.tree.AssignGaps;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
 import gov.nasa.jpl.aerie.constraints.tree.Equal;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
@@ -13,6 +14,8 @@ import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
+import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
+import gov.nasa.jpl.aerie.constraints.tree.WindowsValue;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -41,6 +44,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static com.google.common.truth.Truth.assertThat;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
@@ -128,12 +132,10 @@ public class SimulationFacadeTest {
     final var actTypeBite = problem.getActivityType("BiteBanana");
     final var actTypePeel = problem.getActivityType("PeelBanana");
 
-    var act1 = new ActivityInstance(actTypePeel, t1);
-    act1.setArguments(Map.of("peelDirection", SerializedValue.of("fromStem")));
+    var act1 = ActivityInstance.of(actTypePeel, t1, null, Map.of("peelDirection", SerializedValue.of("fromStem")));
     plan.add(act1);
 
-    var act2 = new ActivityInstance(actTypeBite, t2);
-    act2.setArguments(Map.of("biteSize", SerializedValue.of(0.1)));
+    var act2 = ActivityInstance.of(actTypeBite, t2, null, Map.of("biteSize", SerializedValue.of(0.1)));
     plan.add(act2);
 
     return plan;
@@ -145,8 +147,7 @@ public class SimulationFacadeTest {
     final var actTypePeel = problem.getActivityType("PeelBanana");
     final var actTypeBite = problem.getActivityType("BiteBanana");
 
-    var act1 = new ActivityInstance(actTypePeel, t1, t2);
-    act1.setArguments(Map.of("peelDirection", SerializedValue.of("fromStem")));
+    var act1 = ActivityInstance.of(actTypePeel, t1, t2, Map.of("peelDirection", SerializedValue.of("fromStem")));
     plan.add(act1);
 
     final var goal = new CoexistenceGoal.Builder()
@@ -269,10 +270,10 @@ public class SimulationFacadeTest {
      * fruit:|4.0-------|3.0-------|2.9------->
      * </pre>
      **/
-    final var constraint = new And(
+    final var constraint = new AssignGaps<>(new And(
         new LessThanOrEqual(new RealResource("/peel"), new RealValue(3.0)),
         new LessThanOrEqual(new RealResource("/fruit"), new RealValue(2.9))
-    );
+    ), new WindowsValue(false));
 
     final var actTypePeel = problem.getActivityType("PeelBanana");
 
@@ -282,7 +283,7 @@ public class SimulationFacadeTest {
                             .ofType(actTypePeel)
                             .withArgument("peelDirection", SerializedValue.of("fromStem"))
                             .build())
-        .forEach(constraint)
+        .forEach(new SpansFromWindows(constraint))
         .owned(ChildCustody.Jointly)
         .startsAt(TimeAnchor.START)
         .build();
@@ -305,10 +306,10 @@ public class SimulationFacadeTest {
 
     final var actTypePeel = problem.getActivityType("PeelBanana");
 
-    ActivityInstance act1 = new ActivityInstance(actTypePeel,
+    ActivityInstance act1 = ActivityInstance.of(actTypePeel,
                                                  t0, Duration.ZERO);
 
-    ActivityInstance act2 = new ActivityInstance(actTypePeel,
+    ActivityInstance act2 = ActivityInstance.of(actTypePeel,
                                                  t2, Duration.ZERO);
 
     //create an "external tool" that insists on a few fixed activities
@@ -346,10 +347,10 @@ public class SimulationFacadeTest {
     final var actTypePeel = problem.getActivityType("PeelBanana");
     actTypePeel.setResourceConstraint(constraint);
 
-    ActivityInstance act1 = new ActivityInstance(actTypePeel,
+    ActivityInstance act1 = ActivityInstance.of(actTypePeel,
                                                  t0, Duration.ZERO);
 
-    ActivityInstance act2 = new ActivityInstance(actTypePeel,
+    ActivityInstance act2 = ActivityInstance.of(actTypePeel,
                                                  t2, Duration.ZERO);
 
     //create an "external tool" that insists on a few fixed activities

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.conflicts;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 
@@ -14,7 +15,7 @@ public class UnsatisfiableGoalConflict extends Conflict {
    * @param  reason IN the reason why the goal issued the conflict
    */
   public UnsatisfiableGoalConflict(final Goal goal, final String reason) {
-    super(goal);
+    super(goal, new EvaluationEnvironment());
     this.reason = reason;
   }
 

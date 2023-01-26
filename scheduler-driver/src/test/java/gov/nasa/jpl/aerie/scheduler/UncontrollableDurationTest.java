@@ -146,7 +146,7 @@ public class UncontrollableDurationTest {
 
   @Test
   public void testBug(){
-    final var controllableDurationActivity = new ActivityInstance(problem.getActivityType("ControllableDurationActivity"),
+    final var controllableDurationActivity = ActivityInstance.of(problem.getActivityType("ControllableDurationActivity"),
                                                                    Duration.of(1, Duration.MICROSECONDS),
                                                                    Duration.of(3, Duration.MICROSECONDS));
 

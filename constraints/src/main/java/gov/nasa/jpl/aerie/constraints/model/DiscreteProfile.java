@@ -104,6 +104,11 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
     return new Windows(result.build());
   }
 
+  @Override
+  public boolean isConstant() {
+    return profilePieces.size() <= 1;
+  }
+
   /** Assigns a default value to all gaps in the profile. */
   @Override
   public DiscreteProfile assignGaps(final DiscreteProfile def) {
@@ -113,6 +118,16 @@ public final class DiscreteProfile implements Profile<DiscreteProfile>, Iterable
             (original, defaultSegment) -> original.isPresent() ? original : defaultSegment
         )
     );
+  }
+
+  @Override
+  public Optional<SerializedValue> valueAt(final Duration timepoint) {
+    final var matchPiece = profilePieces
+        .stream()
+        .filter($ -> $.interval().contains(timepoint))
+        .findFirst();
+    return matchPiece
+        .map(Segment::value);
   }
 
   public static DiscreteProfile fromSimulatedProfile(final List<ProfileSegment<SerializedValue>> simulatedProfile) {

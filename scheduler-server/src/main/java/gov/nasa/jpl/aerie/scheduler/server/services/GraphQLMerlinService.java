@@ -12,7 +12,6 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
@@ -382,13 +381,13 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
       if (idActFromInitialPlan != null) {
         //add duration to parameters if controllable
         if (activity.getType().getDurationType() instanceof DurationType.Controllable durationType){
-          if (!activity.getArguments().containsKey(durationType.parameterName())){
-            activity.addArgument(durationType.parameterName(), SerializedValue.of(activity.getDuration().in(Duration.MICROSECONDS)));
+          if (!activity.arguments().containsKey(durationType.parameterName())){
+            activity.addArgument(durationType.parameterName(), SerializedValue.of(activity.duration().in(Duration.MICROSECONDS)));
           }
         }
         final var actFromInitialPlan = initialPlan.getActivityById(idActFromInitialPlan);
         //if act was present in initial plan
-        final var schedulerActIntoMerlinAct = new MerlinActivityInstance(activity.getType().getName(), activity.getStartTime(), activity.getArguments());
+        final var schedulerActIntoMerlinAct = new MerlinActivityInstance(activity.getType().getName(), activity.startTime(), activity.arguments());
         final var activityInstanceId = idsFromInitialPlan.get(activity.getId());
         if (!schedulerActIntoMerlinAct.equals(actFromInitialPlan.get())) {
           throw new PlanServiceException("The scheduler should not be updating activity instances");
@@ -506,13 +505,13 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
           .createObjectBuilder()
           .add("plan_id", planId.id())
           .add("type", act.getType().getName())
-          .add("start_offset", act.getStartTime().toString());
+          .add("start_offset", act.startTime().toString());
 
       //add duration to parameters if controllable
       final var insertionObjectArguments = Json.createObjectBuilder();
       if(act.getType().getDurationType() instanceof DurationType.Controllable durationType){
-        if(!act.getArguments().containsKey(durationType.parameterName())){
-          insertionObjectArguments.add(durationType.parameterName(), act.getDuration().in(Duration.MICROSECOND));
+        if(!act.arguments().containsKey(durationType.parameterName())){
+          insertionObjectArguments.add(durationType.parameterName(), act.duration().in(Duration.MICROSECOND));
         }
       }
 
@@ -521,7 +520,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
         insertionObject.add("source_scheduling_goal_id", goalId.id());
       }
 
-      for (final var arg : act.getArguments().entrySet()) {
+      for (final var arg : act.arguments().entrySet()) {
         //serializedValueP is safe to use here because only unparsing. otherwise subject to int/double typing confusion
         insertionObjectArguments.add(arg.getKey(), serializedValueP.unparse(arg.getValue()));
       }

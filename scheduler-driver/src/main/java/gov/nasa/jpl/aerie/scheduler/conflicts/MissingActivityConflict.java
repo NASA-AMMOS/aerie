@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.conflicts;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityExistentialGoal;
 
@@ -16,9 +17,10 @@ public abstract class MissingActivityConflict extends Conflict {
    * @param goal IN STORED the dissatisfied goal that issued the conflict
    */
   public MissingActivityConflict(
-      ActivityExistentialGoal goal)
+      ActivityExistentialGoal goal,
+      EvaluationEnvironment environment)
   {
-    super(goal);
+    super(goal, environment);
   }
 
   /**

@@ -85,42 +85,32 @@ public class PrioritySolverTest {
   private static PlanInMemory makePlanA012(Problem problem) {
     final var plan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    plan.add(new ActivityInstance(actTypeA, t0, d1min));
-    plan.add(new ActivityInstance(actTypeA, t1hr, d1min));
-    plan.add(new ActivityInstance(actTypeA, t2hr, d1min));
+    plan.add(ActivityInstance.of(actTypeA, t0, d1min));
+    plan.add(ActivityInstance.of(actTypeA, t1hr, d1min));
+    plan.add(ActivityInstance.of(actTypeA, t2hr, d1min));
     return plan;
   }
 
   private static PlanInMemory makePlanA12(Problem problem) {
     final var plan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    plan.add(new ActivityInstance(actTypeA, t1hr, d1min));
-    plan.add(new ActivityInstance(actTypeA, t2hr, d1min));
+    plan.add(ActivityInstance.of(actTypeA, t1hr, d1min));
+    plan.add(ActivityInstance.of(actTypeA, t2hr, d1min));
     return plan;
   }
 
   private static PlanInMemory makePlanAB012(Problem problem) {
     final var plan = makePlanA012(problem);
     final var actTypeB = problem.getActivityType("OtherControllableDurationActivity");
-    plan.add(new ActivityInstance(actTypeB, t0, d1min));
-    plan.add(new ActivityInstance(actTypeB, t1hr, d1min));
-    plan.add(new ActivityInstance(actTypeB, t2hr, d1min));
+    plan.add(ActivityInstance.of(actTypeB, t0, d1min));
+    plan.add(ActivityInstance.of(actTypeB, t1hr, d1min));
+    plan.add(ActivityInstance.of(actTypeB, t2hr, d1min));
     return plan;
-  }
-
-  /** used to compare plan activities but ignore generated details like name **/
-  private static boolean equalsExceptInName(ActivityInstance a, ActivityInstance b) {
-    //REVIEW: maybe unify within ActivityInstance closer to data
-    return Objects.equals(a.getType(), b.getType())
-           && Objects.equals(a.getStartTime(), b.getStartTime())
-           && Objects.equals(a.getEndTime(), b.getEndTime())
-           && Objects.equals(a.getDuration(), b.getDuration())
-           && Objects.equals(a.getArguments(), b.getArguments());
   }
 
   /** matches activities if they agree in everything except the (possibly auto-generated) names **/
   private static final Correspondence<ActivityInstance, ActivityInstance> equalExceptInName = Correspondence.from(
-      PrioritySolverTest::equalsExceptInName, "matches");
+      ActivityInstance::equalsInProperties, "matches");
 
   @Test
   public void getNextSolution_initialPlanInOutput() {
@@ -200,7 +190,7 @@ public class PrioritySolverTest {
     //TODO: evaluation should have association of instances to goal
     //TODO: should ensure no other spurious acts yet need to ignore special interval activities
     //TODO: may want looser expectation (eg allow flexibility as long as right repeat pattern met)
-    assertThat(equalsExceptInName(plan.getActivitiesByTime().get(0), expectedPlan.getActivitiesByTime().get(0)))
+    assertThat(plan.getActivitiesByTime().get(0).equalsInProperties(expectedPlan.getActivitiesByTime().get(0)))
         .isTrue();
     assertThat(plan.getActivitiesByTime())
         .comparingElementsUsing(equalExceptInName)

@@ -9,7 +9,6 @@ import gov.nasa.jpl.aerie.constraints.time.IntervalContainer;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.*;
-import gov.nasa.jpl.aerie.json.BasicParsers;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -25,6 +24,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
@@ -73,13 +73,35 @@ public final class ConstraintParsers {
               untuple((kind, alias, name) -> new DiscreteParameter(alias, name)),
               $ -> tuple(Unit.UNIT, $.activityAlias, $.parameterName));
 
-  static final JsonParser<Expression<DiscreteProfile>> discreteProfileExprP =
-      recursiveP(selfP -> chooseP(
-          discreteResourceP,
-          discreteValueP,
-          discreteParameterP,
-          assignGapsF(selfP)
-      ));
+  public static JsonParser<Expression<DiscreteProfile>> discreteProfileExprF(JsonParser<ProfileExpression<?>> profileExpressionP, JsonParser<Expression<Spans>> spansExpressionP) {
+    return recursiveP(selfP -> chooseP(
+        discreteResourceP,
+        discreteValueP,
+        discreteParameterP,
+        assignGapsF(selfP),
+        valueAtExpressionF(profileExpressionP, spansExpressionP),
+        listExpressionF(profileExpressionP),
+        structExpressionF(profileExpressionP)
+    ));
+  }
+
+  public static JsonParser<StructExpressionAt> structExpressionF(JsonParser<ProfileExpression<?>> profileParser) {
+      return productP
+          .field("kind",literalP("StructProfileExpression"))
+          .field("expressions", mapP(profileParser))
+          .map(
+              untuple((kind, expressions) -> new StructExpressionAt(expressions)),
+              $ -> tuple(Unit.UNIT, $.fields()));
+  }
+
+  static JsonParser<ListExpressionAt> listExpressionF(JsonParser<ProfileExpression<?>> profileParser) {
+    return productP
+        .field("kind",literalP("ListProfileExpression"))
+        .field("expressions", listP(profileParser))
+        .map(
+            untuple((kind, expressions) -> new ListExpressionAt(expressions)),
+            $ -> tuple(Unit.UNIT, $.elements()));
+  }
 
   static final JsonParser<RealResource> realResourceP =
       productP
@@ -146,20 +168,22 @@ public final class ConstraintParsers {
           assignGapsF(selfP)
       ));
 
-  static final JsonParser<ProfileExpression<?>> profileExpressionP =
-      BasicParsers.<ProfileExpression<?>>chooseP(
-          linearProfileExprP.map(ProfileExpression::new, $ -> $.expression),
-          discreteProfileExprP.map(ProfileExpression::new, $ -> $.expression));
+  public static JsonParser<ProfileExpression<?>> profileExpressionF(JsonParser<Expression<Spans>> spansExpressionP) {
+    return recursiveP(selfP -> chooseP(
+        linearProfileExprP.map(ProfileExpression::new, $ -> $.expression),
+        discreteProfileExprF(selfP, spansExpressionP).map(ProfileExpression::new, $ -> $.expression)));
+  }
 
-  static final JsonParser<Transition> transitionP =
-      productP
-          .field("kind", literalP("DiscreteProfileTransition"))
-          .field("profile", discreteProfileExprP)
-          .field("from", serializedValueP)
-          .field("to", serializedValueP)
-          .map(
-              untuple((kind, profile, from, to) -> new Transition(profile, from, to)),
-              $ -> tuple(Unit.UNIT, $.profile, $.oldState, $.newState));
+  static JsonParser<Transition> transitionP(JsonParser<ProfileExpression<?>> profileExpressionP, JsonParser<Expression<Spans>> spansExpressionP) {
+    return productP
+        .field("kind", literalP("DiscreteProfileTransition"))
+        .field("profile", discreteProfileExprF(profileExpressionP, spansExpressionP))
+        .field("from", serializedValueP)
+        .field("to", serializedValueP)
+        .map(
+            untuple((kind, profile, from, to) -> new Transition(profile, from, to)),
+            $ -> tuple(Unit.UNIT, $.profile, $.oldState, $.newState));
+  }
 
   static final JsonParser<ActivityWindow> activityWindowP =
       productP
@@ -383,31 +407,42 @@ public final class ConstraintParsers {
             $ -> tuple(Unit.UNIT, $.activityType, $.alias, $.expression));
   }
 
-  static final JsonParser<Changes<?>> changesP =
-      productP
-          .field("kind", literalP("ProfileChanges"))
-          .field("expression", profileExpressionP)
-          .map(
-              untuple((kind, expression) -> new Changes<>(expression)),
-              $ -> tuple(Unit.UNIT, $.expression));
+  public static JsonParser<ValueAt<?>> valueAtExpressionF(JsonParser<ProfileExpression<?>> profileExpressionP, JsonParser<Expression<Spans>> spansExpressionP) {
+    return productP
+        .field("kind", literalP("ValueAtExpression"))
+        .field("profile", profileExpressionP)
+        .field("timepoint", spansExpressionP)
+        .map(
+            untuple((kind, profile, timepoint) -> new ValueAt<>(profile, timepoint)),
+            $ -> tuple(Unit.UNIT, $.profile(), $.timepoint()));
+  }
+
+  static JsonParser<Changes<?>> changesF(JsonParser<Expression<Spans>> spansExpressionP) {
+    return productP
+        .field("kind", literalP("ProfileChanges"))
+        .field("expression", profileExpressionF(spansExpressionP))
+        .map(
+            untuple((kind, expression) -> new Changes<>(expression)),
+            $ -> tuple(Unit.UNIT, $.expression));
+  }
 
   private static JsonParser<Expression<Windows>> windowsExpressionF(JsonParser<Expression<Spans>> spansP) {
     return recursiveP(selfP -> chooseP(
         windowsValueP,
         startOfP,
         endOfP,
-        changesP,
+        changesF(spansP),
         lessThanP,
         lessThanOrEqualP,
         longerThanP(selfP),
         shorterThanP(selfP),
         greaterThanOrEqualP,
         greaterThanP,
-        transitionP,
+        transitionP(profileExpressionF(spansP), spansP),
         equalF(linearProfileExprP),
-        equalF(discreteProfileExprP),
+        equalF(discreteProfileExprF(profileExpressionF(spansP), spansP)),
         notEqualF(linearProfileExprP),
-        notEqualF(discreteProfileExprP),
+        notEqualF(discreteProfileExprF(profileExpressionF(spansP), spansP)),
         andF(selfP),
         orF(selfP),
         notF(selfP),
@@ -441,9 +476,9 @@ public final class ConstraintParsers {
           ));
   }
 
-  public static final JsonParser<Expression<Windows>> windowsExpressionP = recursiveP(selfP -> windowsExpressionF(spansExpressionF(selfP)));
-
   public static final JsonParser<Expression<Spans>> spansExpressionP = recursiveP(selfP -> spansExpressionF(windowsExpressionF(selfP)));
+
+  public static final JsonParser<Expression<Windows>> windowsExpressionP = recursiveP(selfP -> windowsExpressionF(spansExpressionF(selfP)));
 
   static final JsonParser<ViolationsOfWindows> violationsOfP =
       productP

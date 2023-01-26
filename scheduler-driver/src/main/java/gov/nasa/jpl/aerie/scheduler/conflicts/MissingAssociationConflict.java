@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.conflicts;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
@@ -16,7 +17,7 @@ public class MissingAssociationConflict extends Conflict {
    * @param instancesToChooseFrom IN the list of instances to choose from to perform the association
    */
   public MissingAssociationConflict(final Goal goal, final Collection<ActivityInstance> instancesToChooseFrom) {
-    super(goal);
+    super(goal, new EvaluationEnvironment());
     this.instances = instancesToChooseFrom;
   }
 

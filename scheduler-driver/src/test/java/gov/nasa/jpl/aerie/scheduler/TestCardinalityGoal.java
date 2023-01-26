@@ -50,7 +50,7 @@ public class TestCardinalityGoal {
     var plan = solver.getNextSolution();
     assertTrue(plan.get().getActivitiesByTime().size() == 6);
     assertEquals(plan.get().getActivitiesByTime().stream()
-                     .map(ActivityInstance::getDuration)
+                     .map(ActivityInstance::duration)
                      .reduce(Duration.ZERO, Duration::plus), Duration.of(12, Duration.SECOND));
   }
 

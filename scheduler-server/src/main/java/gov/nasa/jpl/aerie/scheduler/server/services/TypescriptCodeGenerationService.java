@@ -19,9 +19,12 @@ public final class TypescriptCodeGenerationService {
     result.add("/** Start Codegen */");
     result.add("import type { ActivityTemplate } from './scheduler-edsl-fluent-api.js';");
     result.add("import type { Windows } from './constraints-edsl-fluent-api.js';");
+    result.add("import type * as ConstraintEDSL from './constraints-edsl-fluent-api.js'");
+
     for (final var activityTypeCode : activityTypeCodes) {
-      result.add("interface %s extends ActivityTemplate {}".formatted(activityTypeCode.activityTypeName()));
+      result.add("interface %s extends ActivityTemplate<ActivityType.%s> {}".formatted(activityTypeCode.activityTypeName(), activityTypeCode.activityTypeName()));
     }
+    result.add(getCastingMethod());
     result.add(generateActivityTemplateConstructors(activityTypeCodes));
     result.add(generateResourceTypes(missionModelTypes.resourceTypes()));
     result.add("declare global {");
@@ -48,6 +51,43 @@ public final class TypescriptCodeGenerationService {
     return joinLines(result);
   }
 
+  private static String getCastingMethod(){
+    return """
+export function makeAllDiscreteProfile (argument: any) : any{
+ if ((argument instanceof Discrete) || (argument instanceof Real) ){
+   return argument.__astNode
+ } else if(typeof(argument) === "number"){
+     if(Number.isInteger(argument)){
+       return Discrete.Value(argument).__astNode
+     } else{
+       return Real.Value(argument).__astNode
+     }
+   } else if(typeof(argument) === "string" || argument instanceof Temporal.Duration || typeof(argument) === "boolean"){
+     return Discrete.Value(argument).__astNode
+     }
+  else if(Array.isArray(argument)){
+   const arr: any[] = [];
+   argument.every((element) => { arr.push(makeAllDiscreteProfile(element))});
+   return Discrete.List(arr).__astNode;
+ } else if (typeof argument === "object" ){
+   const obj: { [k: string]: any } = {};
+   for(var key in (argument)){
+     // @ts-ignore
+     obj[key] = makeAllDiscreteProfile((<object>argument)[key])
+   }
+   return Discrete.Map(obj).__astNode;
+ } else{
+  throw new Error('[makeAllDiscreteProfile] Type not covered: ' + argument);
+ }
+}
+
+export function makeAll<T>(args : T):T{
+// @ts-ignore
+return (<T>makeAllDiscreteProfile(args))
+}
+""";
+  }
+
   private static String generateActivityTemplateConstructors(final Iterable<ActivityTypeCode> activityTypeCodes) {
     final var result = new ArrayList<String>();
     result.add("const ActivityTemplateConstructors = {");
@@ -61,12 +101,10 @@ public final class TypescriptCodeGenerationService {
         result.add(indent("},"));
       }
       else {
-        result.add(indent("%s: function %sConstructor(args: {".formatted(
-            activityTypeCode.activityTypeName(),
-            activityTypeCode.activityTypeName())));
-        result.add(indent(indent(generateActivityArgumentTypes(activityTypeCode.parameterTypes()))));
-        result.add(indent("}): %s {".formatted(activityTypeCode.activityTypeName())));
-        result.add(indent(indent("return { activityType: ActivityType.%s, args };".formatted(activityTypeCode.activityTypeName()))));
+        result.add(indent("%s: function %sConstructor(args:  ConstraintEDSL.Gen.ActivityTypeParameterMap[ActivityType.%s]".formatted(activityTypeCode.activityTypeName,activityTypeCode.activityTypeName,activityTypeCode.activityTypeName)));
+        result.add(indent("): %s {".formatted(activityTypeCode.activityTypeName())));
+        result.add(indent("// @ts-ignore"));
+        result.add(indent(indent("return { activityType: ActivityType.%s, args: makeAll(args) };".formatted(activityTypeCode.activityTypeName()))));
         result.add(indent("},"));
       }
     }
@@ -122,24 +160,30 @@ public final class TypescriptCodeGenerationService {
      */
     static String toString(final TypescriptType type) {
       if (type instanceof TSString) {
-        return "string";
+        return "(string | Discrete<string>)";
       } else if (type instanceof TSDouble) {
-        return "Double";
+        //return "(Double | Real)";
+        return "(number | Real)";
       } else if (type instanceof TSBoolean) {
-        return "boolean";
+        return "(boolean | Discrete<boolean>)";
       } else if (type instanceof TSInt) {
-        return "Integer";
+        return "(number | Real)";
       } else if (type instanceof TSDuration) {
-        return "Temporal.Duration";
+        return "(Temporal.Duration | Discrete<Temporal.Duration>)";
       } else if (type instanceof TSArray t) {
-        return "%s[]".formatted(toString(t.elementType()));
+        final var typeStr = toString(t.elementType());
+        return "((" +typeStr+ ")[] | Discrete<("+typeStr+")[]>)";
       } else if (type instanceof TSStruct t) {
-        return "{ " + t.keysAndTypes()
-                .stream()
-                .map($ -> "%s: %s, ".formatted($.getLeft(), toString($.getRight())))
-                .reduce("", (a, b) -> a + b) + "}";
+
+        var typeStr = "{ ";
+        for(final var keyAndType :  t.keysAndTypes()){
+          typeStr += keyAndType.getLeft() + ":"+ toString(keyAndType.getRight())+",";
+        }
+        typeStr+="}";
+        return "(%s | Discrete<%s>)".formatted(typeStr, typeStr);
       } else if (type instanceof TSEnum t) {
-        return "(" + String.join(" | ", t.values().stream().map(x -> "\"" + x + "\"").toList()) + ")";
+        final var typeStr = "(" + String.join(" | ", t.values().stream().map(x -> "\"" + x + "\"").toList()) + ")";
+        return "(%s | Discrete<%s>)".formatted(typeStr, typeStr);
       } else {
         throw new Error("Unhandled variant of TypescriptType: " + type);
       }

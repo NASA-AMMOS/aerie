@@ -16,7 +16,7 @@ export enum ActivityType {
   activity = 'activity',
 }
 
-export const ActivityTypeParameterMap = {
+export const ActivityTypeParameterInstantiationMap = {
   [ActivityType.activity]: (alias: string) => ({
     parameter: new Discrete<string>({
       kind: AST.NodeKind.DiscreteProfileParameter,
@@ -25,3 +25,10 @@ export const ActivityTypeParameterMap = {
     })
   }),
 }
+
+export type ParameterTypeactivity = {
+  parameter: string
+}
+export type ActivityTypeParameterMap = {
+  [ActivityType.activity]: ParameterTypeactivity
+};

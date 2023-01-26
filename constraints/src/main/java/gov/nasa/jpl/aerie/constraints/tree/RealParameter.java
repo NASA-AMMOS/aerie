@@ -1,17 +1,14 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.InputMismatchException;
-import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
-import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -35,7 +32,7 @@ public final class RealParameter implements Expression<LinearProfile> {
                           activity.parameters.get(parameterName).toString())));
 
     return new LinearProfile(
-        Segment.of(activity.interval, new LinearEquation(Duration.ZERO, value, 0.0))
+        Segment.of(Interval.FOREVER, new LinearEquation(Duration.ZERO, value, 0.0))
     );
   }
 

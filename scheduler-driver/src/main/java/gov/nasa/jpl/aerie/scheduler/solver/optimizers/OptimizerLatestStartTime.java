@@ -12,12 +12,12 @@ public class OptimizerLatestStartTime extends Optimizer {
   @Override
   public boolean isBetterThanCurrent(List<ActivityInstance> candidateGoalSolution) {
     ActivityInstance act = ActivityInstance.getActWithLatestStartTtime(candidateGoalSolution);
-    if(act == null || !act.hasEndTime()) {
+    if(act == null || act.getEndTime() == null) {
       throw new IllegalStateException("Cannot optimize on uninstantiated activities");
     }
-    if (currentLatestStartTime == null || act.getStartTime().longerThan(currentLatestStartTime)) {
+    if (currentLatestStartTime == null || act.startTime().longerThan(currentLatestStartTime)) {
       currentGoalSolution = candidateGoalSolution;
-      currentLatestStartTime = act.getStartTime();
+      currentLatestStartTime = act.startTime();
       return true;
     }
     return false;

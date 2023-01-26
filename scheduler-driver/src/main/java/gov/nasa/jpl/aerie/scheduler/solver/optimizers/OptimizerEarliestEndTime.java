@@ -12,7 +12,7 @@ public class OptimizerEarliestEndTime extends Optimizer {
   @Override
   public boolean isBetterThanCurrent(List<ActivityInstance> candidateGoalSolution) {
     ActivityInstance act = ActivityInstance.getActWithEarliestEndTtime(candidateGoalSolution);
-    if(act == null || !act.hasEndTime()) {
+    if(act == null || act.duration() != null) {
       throw new IllegalStateException("Cannot optimize on uninstantiated activities");
     }
     if (currentEarliestEndTime == null || act.getEndTime().shorterThan(currentEarliestEndTime)) {

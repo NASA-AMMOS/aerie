@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.conflicts;
 
+import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
@@ -22,9 +23,11 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
    */
   public MissingActivityTemplateConflict(
       ActivityTemplateGoal goal,
-      Windows temporalContext, ActivityCreationTemplate template)
+      Windows temporalContext,
+      ActivityCreationTemplate template,
+      EvaluationEnvironment evaluationEnvironment)
   {
-    super(goal);
+    super(goal, evaluationEnvironment);
 
     if (temporalContext == null) {
       throw new IllegalArgumentException(

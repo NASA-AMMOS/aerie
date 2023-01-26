@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.constraints.time;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Iterator;
@@ -465,10 +466,12 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
    * @throws InvalidGapsException if there are any gaps in the windows.
    */
   public Spans intoSpans(final Interval bounds) {
-    final var firstInterval = this.segments.get(0).interval();
-    final var lastInterval = this.segments.get(-1).interval();
     boolean boundsStartContained = false;
     boolean boundsEndContained = false;
+    if(this.segments.size() == 1){
+      if (segments.get(0).interval().contains(bounds.start)) boundsStartContained = true;
+      if (segments.get(0).interval().contains(bounds.end)) boundsEndContained = true;
+    }
     for (int i = 0; i < this.segments.size() - 1; i++) {
       final var leftInterval = this.segments.get(i).interval();
       final var rightInterval = this.segments.get(i+1).interval();
@@ -493,6 +496,11 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
         .toList());
   }
 
+  @Override
+  public boolean isConstant() {
+    return segments.size() <= 1;
+  }
+
   /** Assigns a default value to all gaps in the profile. */
   @Override
   public Windows assignGaps(final Windows def) {
@@ -502,6 +510,16 @@ public final class Windows implements Iterable<Segment<Boolean>>, IntervalContai
             (original, defaultSegment) -> original.isPresent() ? original : defaultSegment
         )
     );
+  }
+
+  @Override
+  public Optional<SerializedValue> valueAt(final Duration timepoint) {
+    final var matchPiece = segments
+        .stream()
+        .filter($ -> $.interval().contains(timepoint))
+        .findFirst();
+    return matchPiece
+        .map(a -> SerializedValue.of(a.value()));
   }
 
   @Override
