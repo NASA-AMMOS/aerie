@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
+import gov.nasa.jpl.aerie.stats.Timer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
@@ -614,6 +615,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
     @Override
     public void succeedWith(final SimulationResults results) {
+      Timer writeTimer = new Timer("write sim to DB");
       try (final var connection = dataSource.getConnection();
            final var transactionContext = new TransactionContext(connection)) {
         postSimulationResults(connection, datasetId, results);
@@ -624,6 +626,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         // A cell should only be created for a valid, existing dataset
         // A dataset should only be deleted by its cell
         throw new Error("Cell references nonexistent simulation dataset");
+      } finally {
+        writeTimer.stop();
       }
     }
 

@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
+import gov.nasa.jpl.aerie.stats.Timer;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.Plugin;
@@ -192,6 +193,8 @@ public final class MerlinBindings implements Plugin {
   }
 
   private void getSimulationResults(final Context ctx) {
+    Timer.reset(); // erase static memory of past stats
+    Timer timer = new Timer("server getSimulationResults()", true);
     try {
       final var body = parseJson(ctx.body(), hasuraPlanActionP);
       final var planId = body.input().planId();
@@ -207,6 +210,9 @@ public final class MerlinBindings implements Plugin {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchMissionModelException(ex).toString());
+    } finally {
+      timer.stop(true);
+      Timer.logStats();
     }
   }
 

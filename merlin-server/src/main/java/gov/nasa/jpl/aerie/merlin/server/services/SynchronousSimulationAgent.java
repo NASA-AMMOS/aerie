@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.stats.Timer;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -73,12 +74,14 @@ public record SynchronousSimulationAgent (
         }
       }
 
+      Timer simTimer = new Timer("sim without writing");
       results = this.missionModelService.runSimulation(new CreateSimulationMessage(
           plan.missionModelId,
           plan.startTimestamp.toInstant(),
           planDuration,
           serializeScheduledActivities(plan.startTimestamp.toInstant(), plan.activityInstances),
           plan.configuration));
+      simTimer.stop();
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       writer.failWith(b -> b
           .type("NO_SUCH_MISSION_MODEL")
@@ -95,6 +98,7 @@ public record SynchronousSimulationAgent (
       return;
     }
 
+    // write/publish sim results, for example, to a database
     writer.succeedWith(results);
   }
 
