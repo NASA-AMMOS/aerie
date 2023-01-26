@@ -473,8 +473,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   {
     try (
         final var insertSimulationTopicsAction = new InsertSimulationTopicsAction(connection);
+        final var transactionContext = new TransactionContext(connection);
     ) {
       insertSimulationTopicsAction.apply(datasetId, topics);
+      transactionContext.commit();
     }
   }
 
@@ -486,8 +488,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   {
     try (
         final var insertSimulationEventsAction = new InsertSimulationEventsAction(connection);
+        final var transactionContext = new TransactionContext(connection);
     ) {
         insertSimulationEventsAction.apply(datasetId, events, simulationStart);
+        transactionContext.commit();
     }
   }
 
@@ -500,7 +504,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   ) throws SQLException {
     try (
         final var postActivitiesAction = new PostSpansAction(connection);
-        final var updateSimulatedActivityParentsAction = new UpdateSimulatedActivityParentsAction(connection)
+        final var updateSimulatedActivityParentsAction = new UpdateSimulatedActivityParentsAction(connection);
+        final var transactionContext = new TransactionContext(connection)
     ) {
       final var simulatedActivityRecords = simulatedActivities.entrySet().stream()
           .collect(Collectors.toMap(
@@ -522,6 +527,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           datasetId,
           simulatedActivityRecords,
           simIdToPgId);
+      transactionContext.commit();
     }
   }
 
@@ -614,10 +620,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
     @Override
     public void succeedWith(final SimulationResults results) {
-      try (final var connection = dataSource.getConnection();
-           final var transactionContext = new TransactionContext(connection)) {
+      try (final var connection = dataSource.getConnection()) {
         postSimulationResults(connection, datasetId, results);
-        transactionContext.commit();
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to store simulation results", ex);
       } catch (final NoSuchSimulationDatasetException ex) {

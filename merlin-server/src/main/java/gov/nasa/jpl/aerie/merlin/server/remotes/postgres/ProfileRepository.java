@@ -109,16 +109,22 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
       final ProfileSet profileSet
   ) throws SQLException
   {
-    try (final var postProfilesAction = new PostProfilesAction(connection)) {
-      final var profileRecords = postProfilesAction.apply(
+    final Map<String, ProfileRecord> profileRecords;
+    try (final var postProfilesAction = new PostProfilesAction(connection);
+         final var transactionContext = new TransactionContext(connection)) {
+      profileRecords = postProfilesAction.apply(
           datasetId,
           profileSet.realProfiles(),
           profileSet.discreteProfiles());
+      transactionContext.commit();
+    }
+    try (final var transactionContext = new TransactionContext(connection)) {
       postProfileSegments(
           connection,
           datasetId,
           profileRecords,
           profileSet);
+      transactionContext.commit();
     }
   }
 
