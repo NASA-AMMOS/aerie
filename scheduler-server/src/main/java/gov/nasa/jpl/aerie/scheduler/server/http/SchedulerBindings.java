@@ -15,6 +15,7 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationExcepti
 import gov.nasa.jpl.aerie.scheduler.server.services.GenerateSchedulingLibAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.SchedulerService;
+import gov.nasa.jpl.aerie.stats.Timer;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.Plugin;
@@ -62,6 +63,8 @@ public record SchedulerBindings(
    * @param ctx the http context of the request from which to read input or post results
    */
   private void schedule(final Context ctx) {
+    Timer.reset();
+    Timer timer = new Timer("server schedule()", true);
     try {
       //TODO: is plan enough to locate goal set to use, or need more args in body?
       final var body = parseJson(ctx.body(), hasuraSpecificationActionP);
@@ -78,6 +81,9 @@ public record SchedulerBindings(
       ctx.status(400).result(serializeInvalidJsonException(ex).toString());
     } catch (final NoSuchSpecificationException ex) {
       ctx.status(404).result(serializeException(ex).toString());
+    } finally {
+      timer.stop(true);
+      //Timer.logStats();
     }
   }
 

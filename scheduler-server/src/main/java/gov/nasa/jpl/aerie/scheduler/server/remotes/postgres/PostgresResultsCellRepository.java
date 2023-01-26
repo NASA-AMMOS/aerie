@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.scheduler.server.remotes.ResultsCellRepository;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults.GoalResult;
+import gov.nasa.jpl.aerie.stats.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -324,10 +325,13 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
     @Override
     public void succeedWith(final ScheduleResults results) {
+      Timer dbWriteTimer = new Timer("write schedule to DB");
       try (final var connection = dataSource.getConnection()) {
         succeedRequest(connection, specId, specRevision, analysisId, results);
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to update scheduling request state", ex);
+      } finally {
+        dbWriteTimer.stop();
       }
     }
 
