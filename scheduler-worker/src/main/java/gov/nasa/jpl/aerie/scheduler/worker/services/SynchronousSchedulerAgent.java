@@ -61,6 +61,7 @@ import gov.nasa.jpl.aerie.scheduler.server.services.SpecificationService;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import gov.nasa.jpl.aerie.scheduler.solver.Solver;
+import gov.nasa.jpl.aerie.stats.Timer;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -103,6 +104,8 @@ public record SynchronousSchedulerAgent(
    */
   @Override
   public void schedule(final ScheduleRequest request, final ResultsProtocol.WriterRole writer) {
+    Timer.reset();
+    Timer schedulerTimer = new Timer("worker scheduling", true);
     try {
       //confirm requested plan to schedule from/into still exists at targeted version (request could be stale)
       //TODO: maybe some kind of high level db transaction wrapping entire read/update of target plan revision
@@ -215,8 +218,12 @@ public record SynchronousSchedulerAgent(
           activityToGoalId
       );
       //collect results and notify subscribers of success
+      Timer collectTimer = new Timer("collect scheduling results");
       final var results = collectResults(solutionPlan, instancesToIds, goals);
+      collectTimer.stop();
+      Timer writeTimer = new Timer("write scheduling results");
       writer.succeedWith(results);
+      writeTimer.stop();
     } catch (final SpecificationLoadException e) {
       writer.failWith(b -> b
           .type("SPECIFICATION_LOAD_EXCEPTION")
@@ -250,6 +257,9 @@ public record SynchronousSchedulerAgent(
           .type("IO_EXCEPTION")
           .message(e.toString())
           .trace(e));
+    } finally {
+      schedulerTimer.stop(true);
+      Timer.logStats();
     }
   }
 
