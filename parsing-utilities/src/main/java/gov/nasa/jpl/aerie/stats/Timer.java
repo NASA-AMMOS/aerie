@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
  * Individual instances of Timer capture a single time interval.
  * A resettable static map keeps statistics across multiple Timers,
  * which could be in separate threads.
+ * <p>
  * Users of Timer should be careful about threads.  A Timer instance
  * only measures time for the existing thread, excluding the CPU time
  * of spawned threads.  Timers must be instantiated separately for
@@ -30,28 +31,81 @@ import org.slf4j.LoggerFactory;
  */
 public class Timer {
 
+  /**
+   * These are the stats that are accumulated across multiple Timers.
+   */
+  public enum StatType {
+    start("start"), end("end"), cpuTime("cpu time"),
+    wallClockTime("wall clock time"), count("count");
+
+    public final String string;
+
+    StatType(String string) {
+      this.string = string;
+    }
+
+    @Override
+    public String toString() {
+      return string;
+    }
+  }
+
   // STATIC MEMBERS
 
   private static final Logger logger = LoggerFactory.getLogger(Timer.class);
 
   /**
-   * The stats recorded for multiple occurrences (Timer instantiations) -- since it's static and could be accessed
-   * by multiple threads, we use a ConcurrentMap for thread safety.
+   * Used to set {@linkplain #timeTasks}
    */
-  protected static ConcurrentSkipListMap<String, ConcurrentSkipListMap<String, Long>> stats = new ConcurrentSkipListMap<>();
+  private static String timeTasksProperty = System.getProperty("gov.nasa.jpl.aerie.timeTasks");
+  /**
+   * Calling code may use this flag to enable/disable the use of Timers.  This has no effect on the functionality
+   * of this Timer class.  It is merely kept here to keep the footprint light in calling code.  The default value
+   * is false.  It is set by a Java property, {@code gov.nasa.jpl.aerie.timeTasks}.  To set this flag to true,
+   * in the command line arguments to java, include {@code-Dgov.nasa.jpl.aerie.timeTasks=ON} or
+   * {@code -Dgov.nasa.jpl.aerie.timeTasks=TRUE}.
+   */
+  public static boolean timeTasks =
+      timeTasksProperty != null && (timeTasksProperty.equalsIgnoreCase("ON") ||
+                                    timeTasksProperty.equalsIgnoreCase("TRUE"));
 
   /**
-   *  A map from the start time so that we can write stats out in time order.
+   * System calls for the current time can be 30 ms or more, so we want to adjust wall clock time measurements
+   * for that system time so that it does not skew small-duration measurements.
+   */
+  private static long avgTimeOfSystemCall;
+  static {
+    // Compute avgTimeOfSystemCall
+    Instant t1 = Instant.now();
+    Instant t2 = null;
+    for (int i = 0; i < 10; ++i) {
+      t2 = Instant.now();
+    }
+    avgTimeOfSystemCall = (instantToNanos(t2) - instantToNanos(t1)) / 10;  // divide by 10, not 11
+  }
+
+  /**
+   * The stats recorded for multiple occurrences (Timer instantiations) -- since it's static and could be accessed
+   * by multiple threads, we use a ConcurrentMap for thread safety
+   */
+  protected static ConcurrentSkipListMap<String, ConcurrentSkipListMap<StatType, Long>> stats = new ConcurrentSkipListMap<>();
+
+  /**
+   *  A map from the start time so that we can write stats out in time order
    */
   protected static ConcurrentSkipListMap<Long, ConcurrentSkipListSet<String>> labelsByStartTime = new ConcurrentSkipListMap<>();
 
   /**
-   *
    *  @return the stats map for custom use
    */
-  public static ConcurrentSkipListMap<String, ConcurrentSkipListMap<String, Long>> getStats() {
+  public static ConcurrentSkipListMap<String, ConcurrentSkipListMap<StatType, Long>> getStats() {
     return stats;
   }
+
+  /**
+   * This is used to get CPU time measurements
+   */
+  protected static ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
 
   /**
    * Clear the existing statically recorded stats maps to start collect stats
@@ -63,12 +117,12 @@ public class Timer {
 
   /**
    * Utility for getting or creating a map nested in another map.
+   *
    * @param label key of the outer map
-   * @param stat key of the inner map
-   * @return
+   * @return the inner stat map for the label
    */
-  protected static ConcurrentSkipListMap<String, Long> getInnerMap(String label, String stat) {
-    ConcurrentSkipListMap<String, Long> innerMap;
+  protected static ConcurrentSkipListMap<StatType, Long> getInnerMap(String label) {
+    ConcurrentSkipListMap<StatType, Long> innerMap;
     if (stats.keySet().contains(label)) {
       innerMap = stats.get(label);
     } else {
@@ -80,18 +134,19 @@ public class Timer {
 
   /**
    * Add the value to the existing one for the stat and label.
+   *
    * @param label the thing for which the stat applies
    * @param stat the kind of stat (e.g. "cpu time")
    * @param value the increase in the stat value
    */
-  public static void addStat(String label, String stat, long value) {
+  public static void addStat(String label, StatType stat, long value) {
     // Don't add start or end time values.  Call putStat() to overwrite instead of add.
-    if (stat.startsWith("start") || stat.startsWith("end")) {
+    if (stat == StatType.start || stat == StatType.end) {
       putStat(label, stat, value);
       return;
     }
     // Make sure map entries exist before adding.
-    final ConcurrentSkipListMap<String, Long> innerMap = getInnerMap(label, stat);
+    final ConcurrentSkipListMap<StatType, Long> innerMap = getInnerMap(label);
     if (!innerMap.containsKey(stat)) {
       innerMap.put(stat, value);
     } else {
@@ -101,17 +156,18 @@ public class Timer {
 
   /**
    * Insert or overwrite the value of the stat for the label.
+   *
    * @param label the thing for which the stat applies
    * @param stat the kind of stat (e.g. "start")
    * @param value the increase in the stat value
    */
-  public static void putStat(String label, String stat, long value) {
+  public static void putStat(String label, StatType stat, long value) {
     // Make sure map entries exist before adding.
-    final ConcurrentSkipListMap<String, Long> innerMap = getInnerMap(label, stat);
+    final ConcurrentSkipListMap<StatType, Long> innerMap = getInnerMap(label);
     innerMap.put(stat, value);
 
     // If this is the start time, add to the labelsByStart map.
-    if (stat.startsWith("start")) {
+    if (stat == StatType.start) {
       final ConcurrentSkipListSet<String> timeList;
       if (labelsByStartTime.containsKey(value)) {
         timeList = labelsByStartTime.get(value);
@@ -123,7 +179,14 @@ public class Timer {
     }
   }
 
-
+  /**
+   * Wrap a Timer measurement around a function call
+   *
+   * @param label the category or name for the interval being timed
+   * @param r the Supplier function to be invoked and measured
+   * @return the return value of the Supplier when invoked
+   * @param <T> the type of the return value
+   */
   public static <T> T run(String label, Supplier<T> r) {
     Timer timer = new Timer(label);
     T t = r.get();
@@ -131,40 +194,21 @@ public class Timer {
     return t;
   }
 
+  /**
+   * Formats a time duration as a String
+   *
+   * @param nanoseconds the time duration to format
+   * @return the String rendering of the duration
+   */
   public static String formatDuration(Long nanoseconds) {
     return (nanoseconds / 1.0e9) + " seconds";
-  }
-
-  // Stole this from Duration.  Consider moving Duration to a different package
-  public static String formatDurationFancy(long nanoseconds) {
-    var rest = nanoseconds;
-
-    var sign = "";
-    if (rest < 0L) {
-      sign = "-";
-      rest  = -rest;
-    }
-
-    final long hours;
-    hours = rest / (3600L * 1_000_000_000L);
-    rest = rest % (3600L * 1_000_000_000L);
-
-    final long minutes = rest / (60L * 1_000_000_000L);
-    rest = rest % (60L * 1_000_000_000L);
-
-    final long seconds = rest / 1_000_000_000L;
-    rest = rest % 1_000_000_000L;
-
-    final long microseconds = rest / 1000L;
-
-    return String.format("%s%02d:%02d:%02d.%06d", sign, hours, minutes, seconds, microseconds);
   }
 
   /**
    * These stats are written out differently.
    */
-  protected static TreeSet<String> timeAndCountStats =
-      new TreeSet<>(Arrays.asList( "start", "end", "count"));
+  protected static TreeSet<StatType> timeAndCountStats =
+      new TreeSet<>(Arrays.asList( StatType.start, StatType.end, StatType.count));
 
   /**
    * Write out the stats for each label ordered by time.
@@ -180,18 +224,20 @@ public class Timer {
       // Write any passed end times before this start
       endTimesCopy = new TreeSet<>(labelsByEnd.keySet()); // copy so that we can remove entries--consider priority queue
       for (Long end : endTimesCopy) {  // nanoseconds
-        if ( end > start + 1000000 ) break;  // only end times before or roughly at the same time the start
+        if ( end > start + 1_000_000L ) break;  // only end times before or roughly at the same time the start
         for (String label: labelsByEnd.get(end)) {
-          sb.append(label + ": end = " + formatTimestamp(end) + "\n");
+          sb.append(label + ": " + StatType.end + " = " + formatTimestamp(end) + "\n");
         }
         labelsByEnd.remove(end);
       }
 
       // Write start, duration, and number of occurrences.
       for (String label: labelsByStartTime.get(start)) {
-        final ConcurrentSkipListMap<String, Long> statsForLabel = stats.get(label);
-        Long end = statsForLabel.get("end");
-        sb.append( label + ": start = " + formatTimestamp(start) + "\n");
+        Long count = 1L;
+        final ConcurrentSkipListMap<StatType, Long> statsForLabel = stats.get(label);
+        Long end = statsForLabel.get(StatType.end);
+        sb.append( label + ": " + StatType.start + " = " + formatTimestamp(start) + "\n");
+        // Save away the end time to write out later.
         if ( end != null ) {
           var labels = labelsByEnd.get(end);
           if (labels == null) {
@@ -201,8 +247,9 @@ public class Timer {
           labels.add(label);
           long duration = end - start;
           sb.append(label + ": duration = " + formatDuration(duration) + "\n");
-          Long count = statsForLabel.get("count");
-          if (count != null && count > 1) {
+          count = statsForLabel.get("count");
+          if (count == null) count = 1L;
+          if (count > 1) {
             sb.append(label + ": " + count + " occurrences\n");
             // Averaging the duration above doesn't make sense since the occurrences may have been sporadic.
             // The "other duration stats" below could be averaged but aren't just to keep output simple.
@@ -211,9 +258,12 @@ public class Timer {
         }
 
         // Write all other duration stats for the label.  (Note that the stats are assumed to all be nanoseconds!)
-        for (String stat : statsForLabel.keySet()) {
+        for (StatType stat : statsForLabel.keySet()) {
           if (!timeAndCountStats.contains(stat)) {
-            sb.append(label + ": " + stat + " = " + formatDuration(statsForLabel.get(stat)) + "\n");
+            // wall clock will be the same as duration if only one occurrence, so don't repeat the info
+            if (count > 1 || stat != StatType.wallClockTime) {
+              sb.append(label + ": " + stat + " = " + formatDuration(statsForLabel.get(stat)) + "\n");
+            }
           }
         }
       }
@@ -223,7 +273,7 @@ public class Timer {
     endTimesCopy = new TreeSet<>(labelsByEnd.keySet());
     for (Long end : endTimesCopy) {  // nanoseconds
       for (String label: labelsByEnd.get(end)) {
-        sb.append(label + ": end = " + formatTimestamp(end) + "\n");
+        sb.append(label + ": "+ StatType.end + " = " + formatTimestamp(end) + "\n");
       }
       labelsByEnd.remove(end);
     }
@@ -240,7 +290,10 @@ public class Timer {
     List.of(lines).forEach(x -> logger.info(" %% " + x ));
   }
 
-  // It would be nice to use the Timestamp class here.  Consider moving Timestamp to a more general package.
+  // It would be nice to use one of the two Timestamp classes below.  They are maybe
+  // identical: gov.nasa.jpl.aerie.merlin.server.models.Timestamp and
+  // gov.nasa.jpl.aerie.scheduler.server.models.Timestamp.
+  // TODO -- Consider moving the redundant Timestamp code to a more general package where it can be shared.
   /**
    * ISO timestamp format
    */
@@ -251,16 +304,19 @@ public class Timer {
           .toFormatter();
 
   /**
-   * Format nanoseconds from Instant into a date-timestamp.
-    * @param nanoseconds
+   * Format nanoseconds into a date-timestamp.
+   *
+   * @param nanoseconds since the Java epoch, Jan 1, 1970
    * @return formatted string
    */
   protected static String formatTimestamp(long nanoseconds) {
+    System.nanoTime();
     return formatTimestamp(Instant.ofEpochSecond(0L, nanoseconds));
   }
 
   /**
    * Format Instant into a date-timestamp.
+   *
    * @param instant
    * @return formatted string
    */
@@ -270,57 +326,66 @@ public class Timer {
 
   /**
    * Format the current system time into a date-timestamp
-    * @return
+   *
+   * @return formatted timestamp String
    */
   protected static String timestampNow() {
     return formatTimestamp(Instant.now());
   }
 
+  /**
+   * Get the number of nanoseconds from the Java epoch for this Instant.
+   * A 64-bit long is sufficient until year 2262.
+   *
+   * @param i the Instant representing a date-time
+   * @return nanoseconds as a long
+   */
+  protected static long instantToNanos(Instant i) {
+    return i.getEpochSecond() * 1_000_000_000L + (long)i.getNano();   // 64-bit long is good until year 2262
+  }
+
 
   // NON-STATIC MEMBERS
 
-  protected String label;  // The name of the thing for which the stats are recorded,
-  protected long initialWallClockTime; // nanoseconds
+  protected String label;  // The name of the thing for which the stats are recorded, like "writing to the DB"
+  //protected long initialWallClockTime; // nanoseconds
+  protected Instant initialInstant;
   protected long accumulatedWallClockTime = 0;  // nanoseconds
   protected long initialCpuTime;  // nanoseconds
   protected long accumulatedCpuTime = 0;  // nanoseconds
 
-  protected long threadId;  // TODO - consider getting rid of one or both of these
-  protected Thread thread;  // TODO - consider getting rid of one or both of these
-
-
 
   /**
    * Start a timer with a label and optionally log the start event.
+   *
    * @param label a name for a category in which stats are collected and summed
    * @param t the Thread from which stats are collected
    * @param writeToLog if true, logs the start of the timer if the first occurrence of this label since the last reset
    */
   public Timer(String label, Thread t, boolean writeToLog) {
     this.label = label;
-    this.thread = t;
-    this.threadId = t.threadId();
-
-    // Get the wall clock time in nanoseconds
-    Instant start = Instant.now();   // Some say that System.nanoTime() is more accurate.
-    initialWallClockTime = start.getEpochSecond() * 1_000_000_000L + start.getNano();  // 64-bit long is good until year 2262
 
     // Only record the start time stat the first time for the label to mark the start of all occurrences.
-    if (!stats.containsKey(label) || !stats.get(label).containsKey("start")) {
-      putStat(label, "start", initialWallClockTime);
+    ConcurrentSkipListMap<StatType, Long> statsForLabel = stats.get(label);
+    if (statsForLabel == null || !statsForLabel.containsKey(StatType.start)) {
+      initialInstant = Instant.now();
+      long initialWallClockTime = instantToNanos(initialInstant);
+      putStat(label, StatType.start, initialWallClockTime);
       if (writeToLog) {
-        logger.info(formatTimestamp(initialWallClockTime) + " -- " + label + " -- start");
+        logger.info(formatTimestamp(initialWallClockTime) + " -- " + label + " -- " + StatType.start);
       }
     }
 
-    ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
-    initialCpuTime = threadMXBean.getThreadCpuTime(threadId);
+    initialCpuTime = threadMXBean.getCurrentThreadCpuTime();
+    // We call Instant.now() again below to get a more accurate value to compute elapsed wall clock time
+    initialInstant = Instant.now();   // Some say that System.nanoTime() is more accurate.
   }
 
   /**
    * Start a timer with a label and optionally log the start event.
-   * @param label
-   * @param writeToLog
+   *
+   * @param label a name for a category in which stats are collected and summed
+   * @param writeToLog if true, logs the start of the timer if the first occurrence of this label since the last reset
    */
   public Timer(String label, boolean writeToLog) {
     this(label, Thread.currentThread(), writeToLog);
@@ -328,7 +393,8 @@ public class Timer {
 
   /**
    * Start a timer with a label.
-   * @param label
+   *
+   * @param label a name for a category in which stats are collected and summed
    */
   public Timer(String label) {
     this(label, false);  // default - don't log start time
@@ -336,22 +402,26 @@ public class Timer {
 
   /**
    * Stop the timer, get stats, combine with static stats (for multiple Timers), and optionally log the end time.
-   * @param writeToLog
+   *
+   * @param writeToLog if true, logs the end of the timer
    */
   public void stop(boolean writeToLog) {
     Instant end = Instant.now();
-    long endWallClockTime = end.getEpochSecond() * 1_000_000_000L + end.getNano();    // This is good until 2262-04-11
-    accumulatedWallClockTime = endWallClockTime - initialWallClockTime;
+    accumulatedCpuTime = threadMXBean.getCurrentThreadCpuTime() - initialCpuTime;
 
-    ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
-    accumulatedCpuTime = threadMXBean.getThreadCpuTime(threadId) - initialCpuTime;
+    long endWallClockTime = instantToNanos(end);
+    long initialWallClockTime = instantToNanos(initialInstant);
 
-    addStat(label, "wall clock time", accumulatedWallClockTime);
-    addStat(label, "cpu time", accumulatedCpuTime);
-    addStat(label, "count", 1);
-    putStat(label, "end", endWallClockTime);
+    // We adjust the time difference by subtracting off the overhead of getting the system time.
+    accumulatedWallClockTime = endWallClockTime - initialWallClockTime - avgTimeOfSystemCall;
+
+    addStat(label, StatType.wallClockTime, accumulatedWallClockTime);
+    addStat(label, StatType.cpuTime, accumulatedCpuTime);
+    addStat(label, StatType.count, 1);
+    putStat(label, StatType.end, endWallClockTime);
+
     if (writeToLog) {
-      logger.info(formatTimestamp(end) + " -- " + label + " -- end");
+      logger.info(formatTimestamp(end) + " -- " + label + " -- " + StatType.end);
     }
   }
 
@@ -360,21 +430,6 @@ public class Timer {
    */
   public void stop() {
     stop(false);  // don't log end time
-  }
-
-  /**
-   * @return a string reporting the cpu and wall clock time so far this Timer
-   * This is not being used -- consider removing
-   */
-  public String status() {
-    Instant now = Instant.now();
-    accumulatedWallClockTime = now.getEpochSecond() * 1_000_000_000L + now.getNano() - initialWallClockTime;    // 64-bit long is good until 2262-04-11
-
-    ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
-    accumulatedCpuTime = threadMXBean.getThreadCpuTime(threadId) - initialCpuTime;
-    String status = "Thread " + this.thread + " -- cpu time = " + formatDuration(accumulatedCpuTime) +
-                    "; wall clock time = " + formatDuration(accumulatedWallClockTime);
-    return status;
   }
 
 }
