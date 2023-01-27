@@ -247,7 +247,7 @@ public class Timer {
           labels.add(label);
           long duration = end - start;
           sb.append(label + ": duration = " + formatDuration(duration) + "\n");
-          count = statsForLabel.get("count");
+          count = statsForLabel.get(StatType.count);
           if (count == null) count = 1L;
           if (count > 1) {
             sb.append(label + ": " + count + " occurrences\n");
