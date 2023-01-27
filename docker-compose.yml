@@ -126,7 +126,7 @@ services:
         -Dorg.slf4j.simpleLogger.defaultLogLevel=DEBUG
         -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=INFO
         -Dorg.slf4j.simpleLogger.logFile=System.err
-        -Dgov.nasa.jpl.aerie.timeTasks=ON
+        -Dgov.nasa.jpl.aerie.timeTasks=OFF
       UNTRUE_PLAN_START: "2000-01-01T11:58:55.816Z"
     ports: ["5007:5005", "27187:8080"]
     restart: always
@@ -150,7 +150,7 @@ services:
         -Dorg.slf4j.simpleLogger.defaultLogLevel=DEBUG
         -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=INFO
         -Dorg.slf4j.simpleLogger.logFile=System.err
-        -Dgov.nasa.jpl.aerie.timeTasks=ON
+        -Dgov.nasa.jpl.aerie.timeTasks=OFF
       UNTRUE_PLAN_START: "2000-01-01T11:58:55.816Z"
     ports: ["5008:5005", "27188:8080"]
     restart: always
@@ -177,7 +177,7 @@ services:
         -Dorg.slf4j.simpleLogger.defaultLogLevel=DEBUG
         -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=INFO
         -Dorg.slf4j.simpleLogger.logFile=System.err
-        -Dgov.nasa.jpl.aerie.timeTasks=ON
+        -Dgov.nasa.jpl.aerie.timeTasks=OFF
     ports: ["5009:5005", "27189:8080"]
     restart: always
     volumes:
@@ -229,10 +229,6 @@ services:
       - ./deployment/hasura/metadata:/hasura-metadata
   postgres:
     container_name: aerie_postgres
-#    # Make Postgres log to a file.
-#    # More on logging with Postgres: https://www.postgresql.org/docs/current/static/runtime-config-logging.html
-#    # command: postgres -c logging_collector=on -c log_destination=csvlog -c log_directory=/var/log -c log_rotation_age=1d -c log_statement=all -c log_filename=postgresql-%Y-%m-%d.log
-#    command: postgres -c logging_collector=on -c log_destination=stderr -c log_directory=/var/log -c log_statement=all
     environment:
       POSTGRES_DB: postgres
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
@@ -244,11 +240,9 @@ services:
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
-#      - varlog:/var/log
       - ./deployment/postgres-init-db:/docker-entrypoint-initdb.d
 
 volumes:
   aerie_file_store:
   mission_file_store:
   postgres_data:
-#  varlog:
