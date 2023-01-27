@@ -82,6 +82,9 @@ public class Timer {
       t2 = Instant.now();
     }
     avgTimeOfSystemCall = (instantToNanos(t2) - instantToNanos(t1)) / 10;  // divide by 10, not 11
+    logger.info("timeTasksProperty = " + timeTasksProperty);
+    logger.info("timeTasks = " + timeTasks);
+    logger.info("avgTimeOfSystemCall = " + avgTimeOfSystemCall);
   }
 
   /**
@@ -286,8 +289,40 @@ public class Timer {
   public static void logStats() {
     logger.info(timestampNow() + " %% REPORTING TIMER STATS %%");
     String stats = summarizeStats();
-    final String[] lines = stats.split("\n");
+    String[] lines = stats.split("\n");
     List.of(lines).forEach(x -> logger.info(" %% " + x ));
+
+    String csvRows = csvStats();
+    lines = csvRows.split("\n");
+    List.of(lines).forEach(x -> logger.info(" %% " + x ));
+  }
+
+  public static String csvStats() {
+    StringBuilder sb = new StringBuilder();
+    // print header row
+    final List<String> headers = new ArrayList<>();
+    for (String label : stats.keySet()) {
+      final ConcurrentSkipListMap<StatType, Long> innerMap = getInnerMap(label);
+      for (StatType stat : innerMap.keySet()) {
+        headers.add(stat + " " + label);
+      }
+    }
+    String headerString = String.join(",", headers);
+    sb.append(headerString + "\n");
+
+    // print data row
+    final List<String> data = new ArrayList<>();
+    for (String label : stats.keySet()) {
+      final ConcurrentSkipListMap<StatType, Long> innerMap = getInnerMap(label);
+      for (StatType stat : innerMap.keySet()) {
+        data.add("" + innerMap.get(stat));
+      }
+    }
+    String dataString = String.join(",", data);
+    sb.append(dataString + "\n");
+
+    String twoRows = sb.toString();
+    return twoRows;
   }
 
   // It would be nice to use one of the two Timestamp classes below.  They are maybe
