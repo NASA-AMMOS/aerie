@@ -139,8 +139,12 @@ public final class ThreadedTask<Return> implements Task<Return> {
         final var context = new ThreadedReactionContext(ThreadedTask.this.rootContext, scheduler, this);
 
         try (final var restore = ThreadedTask.this.rootContext.set(context)) {
-          // This is where the adaptation is invoked.
-          return new TaskResponse.Success<>(TaskStatus.completed(Timer.run("adaptation", ThreadedTask.this.task)));
+          // The Timer.timeTasks flag is controlled by a Java property to determine whether to attempt to collect
+          // performance stats around user adaptation.  It is turned off by default since it could slow down simulation.
+          if (Timer.timeTasks) {
+            return new TaskResponse.Success<>(TaskStatus.completed(Timer.run("adaptation", ThreadedTask.this.task)));  // This is where the adaptation is invoked.
+          }
+          return new TaskResponse.Success<>(TaskStatus.completed(ThreadedTask.this.task.get()));  // This is where the adaptation is invoked.
         } catch (final TaskAbort ex) {
           return new TaskResponse.Success<>(TaskStatus.completed(null));
         } catch (final Throwable ex) {

@@ -29,8 +29,14 @@ public final class ReplayingTask<Return> implements Task<Return> {
     final var context = new ReplayingReactionContext(this.rootContext, this.memory, scheduler, handle);
 
     try (final var restore = this.rootContext.set(context)){
-      // This is where the adaptation is invoked.
-      final var returnValue = Timer.run("adaptation", this.task);
+      final Return returnValue;
+      // The Timer.timeTasks flag is controlled by a Java property to determine whether to attempt to collect
+      // performance stats around user adaptation.  It is turned off by default since it could slow down simulation.
+      if (Timer.timeTasks) {
+        returnValue = Timer.run("adaptation", this.task);  // This is where the adaptation is invoked.
+      } else {
+        returnValue = this.task.get();  // This is where the adaptation is invoked.
+      }
 
       // If we get here, the activity has completed normally.
       return TaskStatus.completed(returnValue);
