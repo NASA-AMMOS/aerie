@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.conflicts.UnsatisfiableGoalConflict;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -161,8 +162,8 @@ public class CardinalityGoal extends ActivityTemplateGoal {
 
     for(Interval subInterval : windows.iterateEqualTo(true)) {
       final var subIntervalWindows = new Windows(false).set(subInterval, true);
-      ActivityCreationTemplate actTB =
-          new ActivityCreationTemplate.Builder().basedOn(this.desiredActTemplate).startsOrEndsIn(subIntervalWindows).build();
+      final var actTB =
+          new ActivityExpression.Builder().basedOn(this.desiredActTemplate).startsOrEndsIn(subIntervalWindows).build();
 
       final var acts = new LinkedList<>(plan.find(actTB, simulationResults, new EvaluationEnvironment()));
       acts.sort(Comparator.comparing(ActivityInstance::startTime));
