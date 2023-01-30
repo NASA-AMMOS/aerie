@@ -59,11 +59,13 @@ public class SchedulingDSL {
     return productP
         .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
         .field("interval", durationP)
+        .field("shouldRollbackIfUnsatisfied", boolP)
         .map(
             untuple(GoalSpecifier.RecurrenceGoalDefinition::new),
             goalDefinition -> tuple(
                 goalDefinition.activityTemplate(),
-                goalDefinition.interval()));
+                goalDefinition.interval(),
+                goalDefinition.shouldRollbackIfUnsatisfied()));
   }
   private static final JsonObjectParser<ConstraintExpression.ActivityExpression> activityExpressionP =
       productP
@@ -104,6 +106,7 @@ public class SchedulingDSL {
             .field("forEach", constraintExpressionP)
             .optionalField("startConstraint", activityTimingConstraintP)
             .optionalField("endConstraint", activityTimingConstraintP)
+            .field("shouldRollbackIfUnsatisfied", boolP)
             .map(
                 untuple(GoalSpecifier.CoexistenceGoalDefinition::new),
                 goalDefinition -> tuple(
@@ -111,7 +114,8 @@ public class SchedulingDSL {
                     goalDefinition.alias(),
                     goalDefinition.forEach(),
                     goalDefinition.startConstraint(),
-                    goalDefinition.endConstraint()));
+                    goalDefinition.endConstraint(),
+                    goalDefinition.shouldRollbackIfUnsatisfied()));
   }
   private static final JsonObjectParser<GoalSpecifier.CardinalityGoalDefinition> cardinalityGoalDefinitionP(
       MissionModelService.MissionModelTypes activityTypes) {
@@ -119,25 +123,35 @@ public class SchedulingDSL {
         productP
             .field("activityTemplate", new ActivityTemplateJsonParser(activityTypes))
             .field("specification", cardinalitySpecificationJsonParser)
+            .field("shouldRollbackIfUnsatisfied", boolP)
             .map(
                 untuple(GoalSpecifier.CardinalityGoalDefinition::new),
                 goalDefinition -> tuple(
                     goalDefinition.activityTemplate(),
-                    goalDefinition.specification()));
+                    goalDefinition.specification(),
+                    goalDefinition.shouldRollbackIfUnsatisfied()));
   }
 
   private static JsonObjectParser<GoalSpecifier.GoalAnd> goalAndF(final JsonParser<GoalSpecifier> goalSpecifierP) {
     return productP
         .field("goals", listP(goalSpecifierP))
+        .field("shouldRollbackIfUnsatisfied", boolP)
         .map(untuple(GoalSpecifier.GoalAnd::new),
-            GoalSpecifier.GoalAnd::goals);
+             goalDefinition -> tuple(
+                 goalDefinition.goals,
+                 goalDefinition.shouldRollbackIfUnsatisfied
+             ));
   }
 
   private static JsonObjectParser<GoalSpecifier.GoalOr> goalOrF(final JsonParser<GoalSpecifier> goalSpecifierP) {
     return productP
         .field("goals", listP(goalSpecifierP))
+        .field("shouldRollbackIfUnsatisfied", boolP)
         .map(untuple(GoalSpecifier.GoalOr::new),
-            GoalSpecifier.GoalOr::goals);
+            goalDefinition -> tuple(
+                goalDefinition.goals,
+                goalDefinition.shouldRollbackIfUnsatisfied
+            ));
   }
 
   private static JsonObjectParser<GoalSpecifier.GoalApplyWhen> goalApplyWhenF(final JsonParser<GoalSpecifier> goalSpecifierP) {
@@ -217,21 +231,26 @@ public class SchedulingDSL {
   public sealed interface GoalSpecifier {
     record RecurrenceGoalDefinition(
         ActivityTemplate activityTemplate,
-        Duration interval
+        Duration interval,
+        boolean shouldRollbackIfUnsatisfied
     ) implements GoalSpecifier {}
     record CoexistenceGoalDefinition(
         ActivityTemplate activityTemplate,
         String alias,
         ConstraintExpression forEach,
         Optional<ActivityTimingConstraint> startConstraint,
-        Optional<ActivityTimingConstraint> endConstraint
+        Optional<ActivityTimingConstraint> endConstraint,
+        boolean shouldRollbackIfUnsatisfied
     ) implements GoalSpecifier {}
     record CardinalityGoalDefinition(
         ActivityTemplate activityTemplate,
-        CardinalitySpecification specification
+        CardinalitySpecification specification,
+        boolean shouldRollbackIfUnsatisfied
     ) implements GoalSpecifier {}
-    record GoalAnd(List<GoalSpecifier> goals) implements GoalSpecifier {}
-    record GoalOr(List<GoalSpecifier> goals) implements GoalSpecifier {}
+    record GoalAnd(List<GoalSpecifier> goals,
+                   boolean shouldRollbackIfUnsatisfied) implements GoalSpecifier {}
+    record GoalOr(List<GoalSpecifier> goals,
+                  boolean shouldRollbackIfUnsatisfied) implements GoalSpecifier {}
     record GoalApplyWhen(
         GoalSpecifier goal,
         Expression<Windows> windows

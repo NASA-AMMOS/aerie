@@ -43,6 +43,7 @@ public class GoalBuilder {
       return new RecurrenceGoal.Builder()
           .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)))
           .repeatingEvery(g.interval())
+          .shouldRollbackIfUnsatisfied(g.shouldRollbackIfUnsatisfied())
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
           .build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition g) {
@@ -51,6 +52,7 @@ public class GoalBuilder {
           .forEach(spansOfConstraintExpression(
               g.forEach()))
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
+          .shouldRollbackIfUnsatisfied(g.shouldRollbackIfUnsatisfied())
           .aliasForAnchors(g.alias());
       if (g.startConstraint().isPresent()) {
         final var startConstraint = g.startConstraint().get();
@@ -83,6 +85,7 @@ public class GoalBuilder {
                                                   lookupActivityType));
       }
       builder.forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)));
+      builder.shouldRollbackIfUnsatisfied(g.shouldRollbackIfUnsatisfied());
       return builder.build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalOr g) {
       var builder = new OptionGoal.Builder();
@@ -93,6 +96,7 @@ public class GoalBuilder {
                                                  lookupActivityType));
       }
       builder.forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)));
+      builder.shouldRollbackIfUnsatisfied(g.shouldRollbackIfUnsatisfied());
       return builder.build();
     }
 
@@ -105,7 +109,8 @@ public class GoalBuilder {
     else if(goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CardinalityGoalDefinition g){
       final var builder = new CardinalityGoal.Builder()
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
-           .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)));
+           .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)))
+          .shouldRollbackIfUnsatisfied(g.shouldRollbackIfUnsatisfied());
       if(g.specification().duration().isPresent()){
         builder.duration(Interval.between(g.specification().duration().get(), Duration.MAX_VALUE));
       }
