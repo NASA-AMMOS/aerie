@@ -82,9 +82,9 @@ public class Timer {
       t2 = Instant.now();
     }
     avgTimeOfSystemCall = (instantToNanos(t2) - instantToNanos(t1)) / 10;  // divide by 10, not 11
-    logger.info("timeTasksProperty = " + timeTasksProperty);
-    logger.info("timeTasks = " + timeTasks);
-    logger.info("avgTimeOfSystemCall = " + avgTimeOfSystemCall);
+    logger.info("property gov.nasa.jpl.aerie.timeTasks = " + timeTasksProperty);
+    logger.info("Timer.timeTasks = " + timeTasks);
+    logger.info("average time of system call = " + avgTimeOfSystemCall + " nanoseconds");
   }
 
   /**
