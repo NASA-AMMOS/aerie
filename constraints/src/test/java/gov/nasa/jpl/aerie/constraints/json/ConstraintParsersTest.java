@@ -50,6 +50,7 @@ import java.util.Optional;
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.absoluteIntervalP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.constraintP;
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.discreteProfileExprP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.discreteResourceP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.linearProfileExprP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.profileExpressionF;
@@ -100,7 +101,7 @@ public final class ConstraintParsersTest {
         .add("value", false)
         .add("interval", Json.createObjectBuilder())
         .build();
-    final var result = discreteProfileExprF(profileExpressionF(spansExpressionP), spansExpressionP).parse(json).getSuccessOrThrow();
+    final var result = discreteProfileExprP.parse(json).getSuccessOrThrow();
 
     final var expected =
         new DiscreteValue(SerializedValue.of(false), AbsoluteInterval.FOREVER);
@@ -341,7 +342,7 @@ public final class ConstraintParsersTest {
         .add("alias", "TEST")
         .add("name", "paramesan")
         .build();
-    final var result = discreteProfileExprF(profileExpressionF(spansExpressionP), spansExpressionP).parse(json).getSuccessOrThrow();
+    final var result = discreteProfileExprP.parse(json).getSuccessOrThrow();
 
     final var expected = new DiscreteParameter("TEST", "paramesan");
 
@@ -794,7 +795,7 @@ public final class ConstraintParsersTest {
             .add("name", "ResB"))
         .build();
 
-    final var resultProfile = discreteProfileExprF(profileExpressionF(spansExpressionP), spansExpressionP).parse(json).getSuccessOrThrow();
+    final var resultProfile = discreteProfileExprP.parse(json).getSuccessOrThrow();
 
     final var expectedProfile = new AssignGaps<>(
         new DiscreteResource("ResA"),

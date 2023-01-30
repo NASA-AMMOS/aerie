@@ -523,6 +523,8 @@ public final class ConstraintParsers {
   public static final JsonParser<Expression<Windows>> windowsExpressionP = recursiveP(selfP -> windowsExpressionF(spansExpressionF(selfP), linearProfileExprF(selfP, spansExpressionF(selfP))));
   public static final JsonParser<Expression<LinearProfile>> linearProfileExprP = recursiveP(selfP -> linearProfileExprF(windowsExpressionP, spansExpressionF(windowsExpressionP)));
   public static final JsonParser<Expression<Spans>> spansExpressionP = recursiveP(selfP -> spansExpressionF(windowsExpressionF(selfP, linearProfileExprP)));
+  public static final JsonParser<ProfileExpression<?>> profileExpressionP = profileExpressionF(spansExpressionP, linearProfileExprP);
+  public static final JsonParser<Expression<DiscreteProfile>> discreteProfileExprP = discreteProfileExprF(profileExpressionP, spansExpressionP);
 
   static final JsonParser<ViolationsOfWindows> violationsOfP =
       productP
