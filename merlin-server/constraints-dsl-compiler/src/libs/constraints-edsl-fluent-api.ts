@@ -327,14 +327,10 @@ export class Windows {
   }
 
   /**
-   * Counts the cumulative amount of time spent in an active Span, as a multiple of some unit of time.
+   * Counts the cumulative amount of time spent in an active Window, as a multiple of some unit of time.
    *
-   * WARNING: This method does not guarantee any particular zero point. Meaning, don't base behavior off of
-   * the total absolute time over the whole plan, because features such as temporal subset branches or
-   * simulation might change the zero point.
-   *
-   * Instead, use this for *relative* changes. Unfortunately, this requires subtraction, which is
-   * surprisingly difficult right now. We're working on it.
+   * The output profile always starts at 0 at the simulation start time. Initial conditions from before the simulation
+   * start time are not considered, even in the case of temporal-subset plan branches with later start times.
    *
    * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
    */
@@ -438,12 +434,8 @@ export class Spans {
    * Counts the cumulative amount of time spent in an active Span, as a multiple of some unit of time.
    * Overlapping spans are double-counted.
    *
-   * WARNING: This method does not guarantee any particular zero point. Meaning, don't base behavior off of
-   * the total absolute time over the whole plan, because features such as temporal subset branches or
-   * simulation might change the zero point.
-   *
-   * Instead, use this for *relative* changes. Unfortunately, this requires subtraction, which is
-   * surprisingly difficult right now. We're working on it.
+   * The output profile always starts at 0 at the simulation start time. Initial conditions from before the simulation
+   * start time are not considered, even in the case of temporal-subset plan branches with later start times.
    *
    * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
    */
@@ -1111,14 +1103,10 @@ declare global {
     public assignGaps(defaultProfile: Windows | boolean): Windows;
 
     /**
-     * Counts the cumulative amount of time spent in an active Span, as a multiple of some unit of time.
+     * Counts the cumulative amount of time spent in an active Window, as a multiple of some unit of time.
      *
-     * WARNING: This method does not guarantee any particular zero point. Meaning, don't base behavior off of
-     * the total absolute time over the whole plan, because features such as temporal subset branches or
-     * simulation might change the zero point.
-     *
-     * Instead, use this for *relative* changes. Unfortunately, this requires subtraction, which is
-     * surprisingly difficult right now. We're working on it.
+     * The output profile always starts at 0 at the simulation start time. Initial conditions from before the simulation
+     * start time are not considered, even in the case of temporal-subset plan branches with later start times.
      *
      * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
      */
@@ -1184,12 +1172,8 @@ declare global {
      * Counts the cumulative amount of time spent in an active Span, as a multiple of some unit of time.
      * Overlapping spans are double-counted.
      *
-     * WARNING: This method does not guarantee any particular zero point. Meaning, don't base behavior off of
-     * the total absolute time over the whole plan, because features such as temporal subset branches or
-     * simulation might change the zero point.
-     *
-     * Instead, use this for *relative* changes. Unfortunately, this requires subtraction, which is
-     * surprisingly difficult right now. We're working on it.
+     * The output profile always starts at 0 at the simulation start time. Initial conditions from before the simulation
+     * start time are not considered, even in the case of temporal-subset plan branches with later start times.
      *
      * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
      */
