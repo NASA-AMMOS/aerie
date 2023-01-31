@@ -12,8 +12,7 @@ import gov.nasa.jpl.aerie.json.SchemaCache;
 import gov.nasa.jpl.aerie.scheduler.server.models.SchedulingDSL;
 import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
 
-import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.profileExpressionF;
-import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.spansExpressionP;
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.profileExpressionP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.structExpressionF;
 
 public class ActivityTemplateJsonParser implements JsonParser<SchedulingDSL.ActivityTemplate> {
@@ -42,7 +41,7 @@ public class ActivityTemplateJsonParser implements JsonParser<SchedulingDSL.Acti
     if(args.isEmpty()){
       return JsonParseResult.success(new SchedulingDSL.ActivityTemplate(activityType, new StructExpressionAt(Map.of())));
     } else{
-      final var map = structExpressionF(profileExpressionF(spansExpressionP)).parse(args);
+      final var map = structExpressionF(profileExpressionP).parse(args);
       return JsonParseResult.success(new SchedulingDSL.ActivityTemplate(activityType,map.getSuccessOrThrow()));
     }
   }
@@ -52,7 +51,7 @@ public class ActivityTemplateJsonParser implements JsonParser<SchedulingDSL.Acti
   public JsonValue unparse(final SchedulingDSL.ActivityTemplate activityTemplate) {
     final var builder = Json.createObjectBuilder();
     builder.add("activityType", activityTemplate.activityType());
-    builder.add("args", structExpressionF(profileExpressionF(spansExpressionP))
+    builder.add("args", structExpressionF(profileExpressionP)
         .unparse(activityTemplate.arguments()));
     return builder.build();
   }
