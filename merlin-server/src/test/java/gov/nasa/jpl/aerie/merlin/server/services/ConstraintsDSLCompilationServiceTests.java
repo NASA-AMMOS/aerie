@@ -213,10 +213,11 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Resource("mode").valueAt(new ActivityInstance(ActivityType.activity, "alias1").span().starts()).notEqual("Option1")
             }
         """,
-        new ViolationsOfWindows(new NotEqual<DiscreteProfile>(new ValueAt(
-            new ProfileExpression<>(new DiscreteResource("mode")),
-            new Starts<Spans>(new ActivitySpan("alias1"))),
-                                      new DiscreteValue(SerializedValue.of("Option1")))));
+        new ViolationsOfWindows(new NotEqual<>(
+            new ValueAt<>(
+                new ProfileExpression<>(new DiscreteResource("mode")),
+                new Starts<>(new ActivitySpan("alias1"))),
+            new DiscreteValue(SerializedValue.of("Option1")))));
   }
 
 
