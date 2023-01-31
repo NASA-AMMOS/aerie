@@ -334,6 +334,7 @@ public class ActivityExpression implements Expression<Spans> {
       endsIn = template.endRange;
       durationIn = template.durationRange;
       startsOrEndsIn = template.startOrEndRange;
+      startsOrEndsInW = template.startOrEndRangeW;
       arguments = template.arguments;
       return getThis();
     }

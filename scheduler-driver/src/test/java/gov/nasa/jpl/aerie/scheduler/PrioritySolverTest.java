@@ -2,12 +2,15 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import com.google.common.testing.NullPointerTester;
 import com.google.common.truth.Correspondence;
+import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
+import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
+import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
@@ -227,5 +230,47 @@ public class PrioritySolverTest {
         .comparingElementsUsing(equalExceptInName)
         .containsAtLeastElementsIn(expectedPlan.getActivitiesByTime());
   }
+
+
+  @Test
+  public void testCardGoalWithApplyWhen(){
+    var planningHorizon = h;
+
+    final var fooMissionModel = SimulationUtility.getFooMissionModel();
+    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
+        planningHorizon,
+        fooMissionModel), SimulationUtility.getFooSchedulerModel());
+    final var activityType = problem.getActivityType("ControllableDurationActivity");
+
+    //act at t=1hr and at t=2hrs
+    problem.setInitialPlan(makePlanA12(problem));
+
+    //and the goal window in between [0, 50 min[ so the activities already present in the plan can't count towards satisfying the goal
+    final var goalWindow = new Windows(false).set(List.of(
+        Interval.between(Duration.of(0, Duration.SECONDS), Duration.of(50, Duration.MINUTE))
+    ), true);
+
+    CardinalityGoal cardGoal = new CardinalityGoal.Builder()
+        .duration(Interval.between(Duration.of(2, Duration.SECONDS), Duration.of(65, Duration.HOUR)))
+        .occurences(new Range<>(1, 3))
+        .thereExistsOne(new ActivityCreationTemplate.Builder()
+                            .ofType(problem.getActivityType("ControllableDurationActivity"))
+                            .duration(d1min)
+                            .build())
+        .named("TestCardGoal")
+        .forAllTimeIn(new WindowsWrapperExpression(goalWindow))
+        .owned(ChildCustody.Jointly)
+        .build();
+
+    TestUtility.createAutoMutexGlobalSchedulingCondition(activityType).forEach(problem::add);
+    problem.setGoals(List.of(cardGoal));
+    final var solver = new PrioritySolver(problem);
+
+    var plan = solver.getNextSolution().orElseThrow();
+    //will insert an activity at the beginning of the plan in addition of the two already-present activities
+    assertThat(plan.getActivities().size()).isEqualTo(3);
+  }
+
+
 
 }
