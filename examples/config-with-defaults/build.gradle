@@ -12,7 +12,7 @@ jar {
   from {
     configurations.runtimeClasspath.filter{ it.exists() }.collect{ it.isDirectory() ? it : zipTree(it) }
   } {
-    exclude 'META-INF/LICENSE.txt', 'META-INF/NOTICE.txt'
+    exclude 'META-INF/LICENSE.txt', 'META-INF/NOTICE.txt', 'META-INF/versions/**/*.class'
   }
 }
 
