@@ -4,12 +4,14 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.ForEachActivitySpans;
 import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.Range;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeFixed;
@@ -26,6 +28,7 @@ import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
 import gov.nasa.jpl.aerie.scheduler.server.services.UnexpectedSubtypeError;
 
 import java.util.function.Function;
+
 public class GoalBuilder {
   private GoalBuilder() {}
   public static Goal goalOfGoalSpecifier(
@@ -135,19 +138,19 @@ public class GoalBuilder {
       if(activityTemplate.arguments().fields().containsKey(durationType.parameterName())){
         final var argument = activityTemplate.arguments().fields().get(durationType.parameterName());
         if(argument != null){
-          final var profileValue = argument.evaluate(null, Interval.FOREVER, null);
-          if(!profileValue.isConstant()){
-            throw new Error("Controllable duration parameter is not a constant value");
+          final Duration duration;
+          if (argument.expression instanceof DiscreteValue v) {
+            final var optionalLong = v.value().asInt();
+            if (optionalLong.isPresent()) {
+              duration = Duration.of(optionalLong.get(), Duration.MICROSECOND);
+            } else {
+              throw new IllegalArgumentException("controllable duration parameter wasn't a duration");
+            }
+          } else {
+            throw new IllegalArgumentException("controllable duration parameter must be a single, constant, statically-known duration");
           }
-          final var validityTime = profileValue.changePoints().get(0).interval().start;
-          //assume the duration parameter is a discrete value
-          final var value = Duration.of(profileValue
-                                                .valueAt(validityTime)
-                                                .get()
-                                                .asInt()
-                                                .get(),
-                                        Duration.MICROSECOND);
-          builder.duration(value);
+
+          builder.duration(duration);
           activityTemplate.arguments().fields().remove(durationType.parameterName());
         } else {
           //nothing, other cases will be handled by below section
