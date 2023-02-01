@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
@@ -35,17 +35,16 @@ public final class StubPlanService implements PlanService {
   public static final ActivityDirective EXISTENT_ACTIVITY;
 
   static {
-    EXISTENT_ACTIVITY = new ActivityDirective();
-    EXISTENT_ACTIVITY.type = "existent activity";
-    EXISTENT_ACTIVITY.startOffset = Duration.ZERO;
-    EXISTENT_ACTIVITY.arguments = Map.of(
-        "abc", SerializedValue.of("test-param")
-    );
+    EXISTENT_ACTIVITY = new ActivityDirective(
+        Duration.ZERO,
+        "existent activity",
+        Map.of("abc", SerializedValue.of("test-param")
+    ));
 
     EXISTENT_PLAN = new Plan();
     EXISTENT_PLAN.name = "existent";
     EXISTENT_PLAN.missionModelId = "abc";
-    EXISTENT_PLAN.activityInstances = Map.of(EXISTENT_ACTIVITY_ID, EXISTENT_ACTIVITY);
+    EXISTENT_PLAN.activityDirectives = Map.of(EXISTENT_ACTIVITY_ID, EXISTENT_ACTIVITY);
   }
 
 

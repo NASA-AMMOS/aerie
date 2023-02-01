@@ -1,9 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryPlanRepository;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository.CreatedPlan;
@@ -65,9 +66,7 @@ public abstract class PlanRepositoryContractTest {
     // GIVEN
 
     // WHEN
-    final ActivityDirective activity = new ActivityDirective();
-    activity.type = "abc";
-    activity.arguments = Map.of("abc", SerializedValue.of(1));
+    final ActivityDirective activity = new ActivityDirective(Duration.ZERO, "abc", Map.of("abc", SerializedValue.of(1)));
 
     final NewPlan newPlan = new NewPlan();
     newPlan.name = "new-plan";
@@ -79,7 +78,7 @@ public abstract class PlanRepositoryContractTest {
     // THEN
     final Plan plan = this.planRepository.getPlan(ids.planId());
     assertThat(plan.name).isEqualTo("new-plan");
-    assertThat(plan.activityInstances.values()).containsExactly(activity);
+    assertThat(plan.activityDirectives.values()).containsExactly(activity);
   }
 
   @Test
@@ -92,7 +91,7 @@ public abstract class PlanRepositoryContractTest {
     final CreatedPlan ids = this.planRepository.createPlan(new NewPlan());
 
     // THEN
-    assertThat(this.planRepository.getPlan(ids.planId()).activityInstances).isNotNull().isEmpty();
+    assertThat(this.planRepository.getPlan(ids.planId()).activityDirectives).isNotNull().isEmpty();
   }
 
   @Test

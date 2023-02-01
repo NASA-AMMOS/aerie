@@ -59,8 +59,8 @@ public class SimulateMapSchedule {
     });
   }
 
-  private static Map<ActivityDirectiveId, Pair<Duration, SerializedActivity>> loadSchedule() {
-    final var schedule = new HashMap<ActivityDirectiveId, Pair<Duration, SerializedActivity>>();
+  private static Map<ActivityDirectiveId, ActivityDirective> loadSchedule() {
+    final var schedule = new HashMap<ActivityDirectiveId, ActivityDirective>();
     long counter = 0;
 
     final var planJson = Json.createReader(SimulateMapSchedule.class.getResourceAsStream("plan.json")).readValue();
@@ -75,7 +75,7 @@ public class SimulateMapSchedule {
 
       schedule.put(
           new ActivityDirectiveId(counter++),
-          Pair.of(
+          new ActivityDirective(
               duration(deferInMicroseconds, MICROSECONDS),
               new SerializedActivity(activityType, arguments)));
     }

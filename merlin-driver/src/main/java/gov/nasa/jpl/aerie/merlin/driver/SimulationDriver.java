@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
 import java.util.Map;
@@ -16,7 +15,7 @@ public final class SimulationDriver {
   public static <Model>
   SimulationResults simulate(
       final MissionModel<Model> missionModel,
-      final Map<ActivityDirectiveId, Pair<Duration, SerializedActivity>> schedule,
+      final Map<ActivityDirectiveId, ActivityDirective> schedule,
       final Instant startTime,
       final Duration simulationDuration
   ) {
@@ -49,8 +48,8 @@ public final class SimulationDriver {
       // Schedule all activities.
       for (final var entry : schedule.entrySet()) {
         final var directiveId = entry.getKey();
-        final var startOffset = entry.getValue().getLeft();
-        final var serializedDirective = entry.getValue().getRight();
+        final var startOffset = entry.getValue().startOffset();
+        final var serializedDirective = entry.getValue().serializedActivity();
 
         final TaskFactory<?> task;
         try {

@@ -21,7 +21,7 @@ public final class SimulationUtility {
   }
 
   public static SimulationResults
-  simulate(final Map<ActivityDirectiveId, Pair<Duration, SerializedActivity>> schedule, final Duration simulationDuration) {
+  simulate(final Map<ActivityDirectiveId, ActivityDirective> schedule, final Duration simulationDuration) {
     final var dataPath = Path.of(SimulationUtility.class.getResource("data/lorem_ipsum.txt").getPath());
     final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath);
     final var startTime = Instant.now();
@@ -35,14 +35,14 @@ public final class SimulationUtility {
   }
 
   @SafeVarargs
-  public static Map<ActivityDirectiveId, Pair<Duration, SerializedActivity>> buildSchedule(final Pair<Duration, SerializedActivity>... activitySpecs) {
-    final var schedule = new HashMap<ActivityDirectiveId, Pair<Duration, SerializedActivity>>();
+  public static Map<ActivityDirectiveId, ActivityDirective> buildSchedule(final Pair<Duration, SerializedActivity>... activitySpecs) {
+    final var schedule = new HashMap<ActivityDirectiveId, ActivityDirective>();
     long counter = 0;
 
     for (final var activitySpec : activitySpecs) {
       schedule.put(
           new ActivityDirectiveId(counter++),
-          activitySpec);
+          new ActivityDirective(activitySpec.getLeft(), activitySpec.getRight()));
     }
 
     return schedule;

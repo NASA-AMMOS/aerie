@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.ArrayList;
@@ -24,11 +25,9 @@ public final class NewPlan {
     this.startTimestamp = template.startTimestamp;
     this.endTimestamp = template.endTimestamp;
 
-    if (template.activityInstances != null) {
+    if (template.activityDirectives != null) {
       this.activityDirectives = new ArrayList<>();
-      for (final ActivityDirective activity : template.activityInstances.values()) {
-        this.activityDirectives.add(new ActivityDirective(activity));
-      }
+      this.activityDirectives.addAll(template.activityDirectives.values());
     }
 
     if (template.configuration != null) this.configuration = new HashMap<>(template.configuration);
@@ -39,14 +38,14 @@ public final class NewPlan {
       final String missionModelId,
       final Timestamp startTimestamp,
       final Timestamp endTimestamp,
-      final List<ActivityDirective> activityInstances,
+      final List<ActivityDirective> activityDirectives,
       final Map<String, SerializedValue> configuration
   ) {
     this.name = name;
     this.missionModelId = missionModelId;
     this.startTimestamp = startTimestamp;
     this.endTimestamp = endTimestamp;
-    this.activityDirectives = List.copyOf(activityInstances);
+    this.activityDirectives = List.copyOf(activityDirectives);
     if (configuration != null) this.configuration = new HashMap<>(configuration);
   }
 

@@ -1,28 +1,20 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
-import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import org.apache.commons.lang3.tuple.Pair;
 
-import javax.json.Json;
-import javax.json.JsonReader;
-import javax.json.stream.JsonParsingException;
 import javax.sql.DataSource;
-import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -31,16 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
-import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
-import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstanceIdP;
-import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 
 public final class PostgresPlanRepository implements PlanRepository {
   private final DataSource dataSource;
@@ -110,7 +92,7 @@ public final class PostgresPlanRepository implements PlanRepository {
   ) throws SQLException {
     try (
         final var getSimulationAction = new GetSimulationAction(connection);
-        final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection);
+        final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection)
     ) {
       final var arguments = new HashMap<String, SerializedValue> ();
       final var simRecord$ = getSimulationAction.get(planId.id());
@@ -277,8 +259,8 @@ public final class PostgresPlanRepository implements PlanRepository {
           .collect(Collectors.toMap(
               a -> new ActivityDirectiveId(a.id()),
               a -> new ActivityDirective(
-                  a.type(),
                   Duration.of(a.startOffsetInMicros(), Duration.MICROSECONDS),
+                  a.type(),
                   a.arguments())));
     }
   }

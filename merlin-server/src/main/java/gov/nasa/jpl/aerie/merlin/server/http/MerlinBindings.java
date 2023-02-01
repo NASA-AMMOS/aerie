@@ -294,9 +294,9 @@ public final class MerlinBindings implements Plugin {
       final var planId = parseJson(ctx.body(), hasuraPlanActionP).input().planId();
 
       final var plan = this.planService.getPlan(planId);
-      final var activities = plan.activityInstances.entrySet().stream().collect(Collectors.toMap(
+      final var activities = plan.activityDirectives.entrySet().stream().collect(Collectors.toMap(
           Map.Entry::getKey,
-          e -> new SerializedActivity(e.getValue().type, e.getValue().arguments)));
+          e -> e.getValue().serializedActivity()));
       final var failures = this.missionModelService.validateActivityInstantiations(plan.missionModelId, activities);
 
       ctx.result(ResponseSerializers.serializeUnconstructableActivityFailures(failures).toString());
