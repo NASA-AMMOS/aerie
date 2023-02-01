@@ -72,6 +72,7 @@ public record SynchronousSimulationAgent (
           plan.missionModelId,
           plan.startTimestamp.toInstant(),
           planDuration,
+          planDuration,
           plan.activityDirectives,
           plan.configuration));
     } catch (final MissionModelService.NoSuchMissionModelException ex) {

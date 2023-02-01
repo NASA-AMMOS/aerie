@@ -231,7 +231,8 @@ public final class LocalMissionModelService implements MissionModelService {
         loadAndInstantiateMissionModel(message.missionModelId(), message.startTime(), SerializedValue.of(config)),
         message.activityDirectives(),
         message.startTime(),
-        message.samplingDuration());
+        message.planDuration(),
+        message.simulationDuration());
   }
 
   @Override

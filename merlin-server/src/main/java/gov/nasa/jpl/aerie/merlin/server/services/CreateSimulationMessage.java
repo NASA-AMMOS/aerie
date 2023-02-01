@@ -12,7 +12,8 @@ import java.util.Objects;
 public record CreateSimulationMessage(
   String missionModelId,
   Instant startTime,
-  Duration samplingDuration,
+  Duration planDuration,
+  Duration simulationDuration,
   Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
   Map<String, SerializedValue> configuration
 )
@@ -20,7 +21,8 @@ public record CreateSimulationMessage(
   public CreateSimulationMessage {
     Objects.requireNonNull(missionModelId);
     Objects.requireNonNull(startTime);
-    Objects.requireNonNull(samplingDuration);
+    Objects.requireNonNull(planDuration);
+    Objects.requireNonNull(simulationDuration);
     Objects.requireNonNull(activityDirectives);
     Objects.requireNonNull(configuration);
   }
