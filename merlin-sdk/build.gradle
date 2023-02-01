@@ -17,7 +17,12 @@ test {
   useJUnitPlatform()
 }
 
-jacocoTestReport.dependsOn test
+jacocoTestReport {
+  dependsOn test
+  reports {
+    xml.required = true
+  }
+}
 
 javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 

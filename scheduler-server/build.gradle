@@ -4,6 +4,7 @@ plugins {
   id 'java'
   id 'java-test-fixtures'
   id 'application'
+  id 'jacoco'
 }
 
 java {
@@ -54,5 +55,12 @@ test {
   testLogging {
       events 'passed', 'skipped', 'failed'
       exceptionFormat 'full'
+  }
+}
+
+jacocoTestReport {
+  dependsOn test
+  reports {
+    xml.required = true
   }
 }

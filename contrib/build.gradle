@@ -1,6 +1,7 @@
 plugins {
   id 'java-library'
   id 'maven-publish'
+  id 'jacoco'
 }
 
 java {
@@ -14,6 +15,13 @@ java {
 
 test {
   useJUnitPlatform()
+}
+
+jacocoTestReport {
+  dependsOn test
+  reports {
+    xml.required = true
+  }
 }
 
 // Link references to standard Java classes to the official Java 11 documentation.

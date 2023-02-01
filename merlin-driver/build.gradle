@@ -19,7 +19,12 @@ test {
   }
 }
 
-jacocoTestReport.dependsOn test
+jacocoTestReport {
+  dependsOn test
+  reports {
+    xml.required = true
+  }
+}
 
 // Link references to standard Java classes to the official Java 11 documentation.
 javadoc.options.links 'https://docs.oracle.com/en/java/javase/11/docs/api/'

@@ -1,6 +1,7 @@
 plugins {
   id 'java-library'
   id 'maven-publish'
+  id 'jacoco'
 }
 
 java {
@@ -11,6 +12,13 @@ java {
 
 test {
   useJUnitPlatform()
+}
+
+jacocoTestReport {
+  dependsOn test
+  reports {
+    xml.required = true
+  }
 }
 
 // The runtime environment this JAR will be deployed to doesn't know what this model depends on.
