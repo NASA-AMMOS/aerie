@@ -4,21 +4,16 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.AbsoluteInterval;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.time.Spans;
 
-import java.util.Objects;
 import java.util.Set;
 
-public record WindowsValue(boolean value, AbsoluteInterval interval) implements Expression<Windows> {
-
-  public WindowsValue(boolean value) {
-    this(value, AbsoluteInterval.FOREVER);
-  }
+public record SpansInterval(AbsoluteInterval interval) implements Expression<Spans> {
 
   @Override
-  public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
+  public Spans evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     final Interval relativeInterval = interval.toRelative(results.planStart);
-    return new Windows(Interval.intersect(bounds, relativeInterval), value);
+    return new Spans(Interval.intersect(bounds, relativeInterval));
   }
 
   @Override
@@ -27,9 +22,9 @@ public record WindowsValue(boolean value, AbsoluteInterval interval) implements 
   @Override
   public String prettyPrint(final String prefix) {
     return String.format(
-        "\n%s(value %s)",
+        "\n%s(spans-interval %s)",
         prefix,
-        this.value
+        this.interval
     );
   }
 }

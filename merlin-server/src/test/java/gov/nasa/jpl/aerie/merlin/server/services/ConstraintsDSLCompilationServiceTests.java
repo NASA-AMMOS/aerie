@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.constraints.time.AbsoluteInterval;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
@@ -52,6 +53,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -180,6 +182,24 @@ class ConstraintsDSLCompilationServiceTests {
             }
         """,
         new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteValue(SerializedValue.of(5)))))
+    );
+  }
+
+  @Test
+  void testDiscreteValueInterval() {
+    checkSuccessfulCompilation(
+        """
+            export default () => {
+              return Discrete.Value(5, Interval.Between(
+                Temporal.Instant.fromEpochMilliseconds(1574074321816),
+                Temporal.Instant.fromEpochMilliseconds(1574074322816)
+              )).changes()
+            }
+        """,
+        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteValue(
+            SerializedValue.of(5),
+            new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")), Optional.empty(), Optional.empty())
+        ))))
     );
   }
 
@@ -346,6 +366,68 @@ class ConstraintsDSLCompilationServiceTests {
             }
         """,
         new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(5.0))))
+    );
+  }
+
+  @Test
+  void testRealValueInterval() {
+    checkSuccessfulCompilation(
+        """
+            export default () => {
+              return Real.Value(5, 3, Interval.Between(
+                Temporal.Instant.from("2019-11-18T10:52:01.816Z"),
+                Temporal.Instant.from("2019-11-18T10:52:02.816Z")
+              )).changes()
+            }
+        """,
+        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(
+            5, 3,
+            new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")), Optional.empty(), Optional.empty())
+        ))))
+    );
+
+    checkSuccessfulCompilation(
+        """
+            export default () => {
+              return Real.Value(5, 3, Interval.Between(
+                Temporal.Instant.from("2019-11-18T10:52:01.816Z"),
+                Temporal.Instant.from("2019-11-18T10:52:02.816Z"),
+                Inclusivity.Exclusive,
+                Inclusivity.Inclusive
+              )).changes()
+            }
+        """,
+        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(
+            5, 3,
+            new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")), Optional.of(
+                Interval.Inclusivity.Exclusive), Optional.of(Interval.Inclusivity.Inclusive))
+        ))))
+    );
+
+    checkSuccessfulCompilation(
+        """
+            export default () => {
+              return Real.Value(5, 3, Interval.At(
+                Temporal.Instant.from("2019-11-18T10:52:01.816Z")
+              )).changes()
+            }
+        """,
+        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(
+            5, 3,
+            new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.empty(), Optional.empty())
+        ))))
+    );
+
+    checkSuccessfulCompilation(
+        """
+            export default () => {
+              return Real.Value(5, 3, Interval.Horizon()).changes()
+            }
+        """,
+        new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(
+            5, 3,
+            new AbsoluteInterval(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty())
+        ))))
     );
   }
 

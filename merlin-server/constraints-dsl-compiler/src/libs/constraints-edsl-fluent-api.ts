@@ -83,14 +83,16 @@ export class Windows {
   }
 
   /**
-   * Produces a single window for all time.
+   * Produces a single window.
    *
-   * @param value value for all time
+   * @param value value of the window segment.
+   * @param interval interval of the window segment.
    */
-  public static Value(value: boolean): Windows {
+  public static Value(value: boolean, interval?: Interval): Windows {
     return new Windows({
       kind: AST.NodeKind.WindowsExpressionValue,
-      value
+      value,
+      interval: interval ?? {}
     });
   }
 
@@ -338,6 +340,19 @@ export class Spans {
   public constructor(expression: AST.SpansExpression) {
     this.__astNode = expression;
   }
+
+  /**
+   * Create a Spans object with a single span defined by an interval.
+   * @param interval interval for the span
+   * @constructor
+   */
+  public static FromInterval(interval: Interval): Spans {
+    return new Spans({
+      kind: AST.NodeKind.SpansExpressionInterval,
+      interval
+    });
+  }
+
   /**
    * Splits each span into equal sized sub-spans.
    *
@@ -450,14 +465,18 @@ export class Real {
   }
 
   /**
-   * Create a constant real profile for all time.
+   * Create a constant real profile.
    * @param value
+   * @param rate
+   * @param interval
    * @constructor
    */
-  public static Value(value: number): Real {
+  public static Value(value: number, rate?: number, interval?: Interval): Real {
     return new Real({
       kind: AST.NodeKind.RealProfileValue,
       value,
+      rate: rate ?? 0.0,
+      interval: interval ?? {}
     });
   }
 
@@ -693,12 +712,14 @@ export class Discrete<Schema> {
   /**
    * Create a constant discrete profile for all time.
    * @param value
+   * @param interval
    * @constructor
    */
-  public static Value<Schema>(value: Schema): Discrete<Schema> {
+  public static Value<Schema>(value: Schema, interval?: Interval): Discrete<Schema> {
     return new Discrete({
       kind: AST.NodeKind.DiscreteProfileValue,
       value,
+      interval: interval ?? {}
     });
   }
 
@@ -828,6 +849,36 @@ export enum Inclusivity {
   Exclusive = "Exclusive"
 }
 
+/** Represents an absolute time range, using Temporal.Instant. */
+export class Interval {
+  private readonly start?: Temporal.Instant;
+  private readonly end?: Temporal.Instant;
+  private readonly startInclusivity?: Inclusivity;
+  private readonly endInclusivity?: Inclusivity;
+
+  private constructor(start?: Temporal.Instant, end?: Temporal.Instant, startInclusivity?: Inclusivity | undefined, endInclusivity?: Inclusivity | undefined) {
+    if (start !== undefined) this.start = start;
+    if (end !== undefined) this.end = end;
+    if (startInclusivity !== undefined) this.startInclusivity = startInclusivity;
+    if (endInclusivity !== undefined) this.endInclusivity = endInclusivity;
+  }
+
+  /** Creates an instantaneous interval at a single time. */
+  public static At(time: Temporal.Instant): Interval {
+    return new Interval(time, time);
+  }
+
+  /** Creates an interval between two times, with optional bounds inclusivity (default inclusive). */
+  public static Between(start: Temporal.Instant, end: Temporal.Instant, startInclusivity?: Inclusivity | undefined, endInclusivity?: Inclusivity | undefined): Interval {
+    return new Interval(start, end, startInclusivity, endInclusivity);
+  }
+
+  /** Creates an interval for the whole planning horizon. */
+  public static Horizon(): Interval {
+    return new Interval();
+  }
+}
+
 declare global {
   /**
    * An expression that discriminates between valid and invalid states.
@@ -869,11 +920,13 @@ declare global {
     public readonly __astNode: AST.WindowsExpression;
 
     /**
-     * Produces a single window for all time.
+     * Creates a single window.
      *
-     * @param value value for all time
+     * @param value value for the window segment.
+     * @param interval interval for the window segment.
+     *
      */
-    public static Value(value: boolean): Windows;
+    public static Value(value: boolean, interval?: Interval): Windows;
 
     /**
      * Performs the boolean And operation on any number of Windows.
@@ -1013,6 +1066,13 @@ declare global {
     public readonly __astNode: AST.SpansExpression;
 
     /**
+     * Create a Spans object with a single span defined by an interval.
+     * @param interval interval for the span
+     * @constructor
+     */
+    public static FromInterval(interval: Interval): Spans;
+
+    /**
      * Returns the instantaneous start points of the these spans.
      */
     public starts(): Spans;
@@ -1076,10 +1136,12 @@ declare global {
 
     /**
      * Create a constant real profile for all time.
-     * @param value
+     * @param value value of the segment
+     * @param rate rate of change of the segment
+     * @param interval interval of the segment (default: plan horizon)
      * @constructor
      */
-    public static Value(value: number): Real;
+    public static Value(value: number, rate?: number, interval?: Interval): Real;
 
     /**
      * Create a real profile from this profile's derivative.
@@ -1196,10 +1258,11 @@ declare global {
 
     /**
      * Create a constant discrete profile for all time.
-     * @param value
+     * @param value value of the segment
+     * @param interval interval of the segment (default: plan horizon)
      * @constructor
      */
-    public static Value<Schema>(value: Schema): Discrete<Schema>;
+    public static Value<Schema>(value: Schema, interval?: Interval): Discrete<Schema>;
 
     /**
      * Produce an instantaneous window whenever this profile makes a specific transition.
@@ -1245,7 +1308,24 @@ declare global {
     Inclusive = "Inclusive",
     Exclusive = "Exclusive"
   }
+
+  /** Represents an absolute time range, using Temporal.Instant. */
+  export class Interval {
+    private readonly start?: Temporal.Instant;
+    private readonly end?: Temporal.Instant;
+    private readonly startInclusivity?: Inclusivity;
+    private readonly endInclusivity?: Inclusivity;
+
+    /** Creates an instantaneous interval at a single time. */
+    public static At(time: Temporal.Instant): Interval;
+
+    /** Creates an interval between two times, with optional bounds inclusivity (default inclusive). */
+    public static Between(start: Temporal.Instant, end: Temporal.Instant, startInclusivity?: Inclusivity | undefined, endInclusivity?: Inclusivity | undefined): Interval;
+
+    /** Creates an interval for the whole planning horizon. */
+    public static Horizon(): Interval;
+  }
 }
 
 // Make Constraint available on the global object
-Object.assign(globalThis, { ActivityInstance, Constraint, Windows, Spans, Real, Discrete, Inclusivity });
+Object.assign(globalThis, { Constraint, Windows, Spans, Real, Discrete, Inclusivity, Interval });

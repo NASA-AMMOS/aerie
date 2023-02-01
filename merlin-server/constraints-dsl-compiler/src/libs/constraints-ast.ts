@@ -27,6 +27,7 @@ export enum NodeKind {
   WindowsExpressionFromSpans = 'WindowsExpressionFromSpans',
   SpansExpressionFromWindows = 'SpansExpressionFromWindows',
   SpansExpressionSplit = 'SpansExpressionSplit',
+  SpansExpressionInterval = 'SpansExpressionInterval',
   ExpressionEqual = 'ExpressionEqual',
   ExpressionNotEqual = 'ExpressionNotEqual',
   RealProfileLessThan = 'RealProfileLessThan',
@@ -103,7 +104,8 @@ export type SpansExpression =
   | IntervalsExpressionStarts
   | IntervalsExpressionEnds
   | SpansExpressionFromWindows
-  | ForEachActivitySpans;
+  | ForEachActivitySpans
+  | SpansExpressionInterval;
 
 export type IntervalsExpression =
   | WindowsExpression
@@ -116,7 +118,8 @@ export interface ProfileChanges {
 
 export interface WindowsExpressionValue {
   kind: NodeKind.WindowsExpressionValue,
-  value: boolean
+  value: boolean,
+  interval: API.Interval
 }
 
 export interface WindowsExpressionNot {
@@ -217,6 +220,11 @@ export interface SpansExpressionSplit {
   internalEndInclusivity: API.Inclusivity
 }
 
+export interface SpansExpressionInterval {
+  kind: NodeKind.SpansExpressionInterval,
+  interval: API.Interval
+}
+
 export interface WindowsExpressionFromSpans {
   kind: NodeKind.WindowsExpressionFromSpans,
   spansExpression: SpansExpression
@@ -296,6 +304,8 @@ export interface RealProfileResource {
 export interface RealProfileValue {
   kind: NodeKind.RealProfileValue;
   value: number;
+  rate: number;
+  interval: API.Interval;
 }
 
 export interface RealProfileParameter {
@@ -321,6 +331,7 @@ export interface DiscreteProfileResource {
 export interface DiscreteProfileValue {
   kind: NodeKind.DiscreteProfileValue;
   value: any;
+  interval: API.Interval;
 }
 
 export interface DiscreteProfileParameter {

@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.time.AbsoluteInterval;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.IntervalMap;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
@@ -18,6 +19,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,6 +33,7 @@ import static gov.nasa.jpl.aerie.constraints.time.Interval.at;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.interval;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -40,6 +43,7 @@ public class ASTTests {
   @Test
   public void testAssignGaps() {
     final var simResults = new SimulationResults(
+        Instant.EPOCH,
         Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
@@ -69,13 +73,14 @@ public class ASTTests {
   @Test
   public void testWindowsValue() {
     final var simResults = new SimulationResults(
+        Instant.EPOCH,
         Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
     );
 
-    final var result = new WindowsValue(true).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new WindowsValue(true, AbsoluteInterval.FOREVER).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new Windows(Interval.between(0, 20, SECONDS), true);
 
@@ -85,6 +90,7 @@ public class ASTTests {
   @Test
   public void testNot() {
     final var simResults = new SimulationResults(
+        Instant.EPOCH,
         Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
@@ -109,6 +115,7 @@ public class ASTTests {
   @Test
   public void testWindowsStarts() {
     final var simResults = new SimulationResults(
+        Instant.EPOCH,
         Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
@@ -137,6 +144,7 @@ public class ASTTests {
   @Test
   public void testWindowsEnds() {
     final var simResults = new SimulationResults(
+        Instant.EPOCH,
         Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
@@ -165,7 +173,7 @@ public class ASTTests {
   @Test
   public void testSpansStarts() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -189,7 +197,7 @@ public class ASTTests {
   @Test
   public void testSpansEnds() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -213,7 +221,7 @@ public class ASTTests {
   @Test
   public void testSplitWindows() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -240,7 +248,7 @@ public class ASTTests {
   @Test
   public void testSplitSpans() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -267,7 +275,7 @@ public class ASTTests {
   @Test
   public void testUnsplittableInterval() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -283,7 +291,7 @@ public class ASTTests {
   @Test
   public void testAnd() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -315,7 +323,7 @@ public class ASTTests {
   @Test
   public void testOr() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 26, SECONDS),
+        Instant.EPOCH, Interval.between(0, 26, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -351,7 +359,7 @@ public class ASTTests {
   @Test
   public void testExpandBy() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -383,7 +391,7 @@ public class ASTTests {
   @Test
   public void testShrink() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -415,16 +423,16 @@ public class ASTTests {
   @Test
   public void testRealValue() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
     );
 
-    final var result = new RealValue(7).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new RealValue(7, 3.14, AbsoluteInterval.FOREVER).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new LinearProfile(
-        Segment.of(simResults.bounds, new LinearEquation(Duration.ZERO, 7, 0))
+        Segment.of(simResults.bounds, new LinearEquation(Duration.ZERO, 7, 3.14))
     );
 
     assertEquivalent(expected, result);
@@ -433,13 +441,13 @@ public class ASTTests {
   @Test
   public void testDiscreteValue() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
     );
 
-    final var result = new DiscreteValue(SerializedValue.of("IDLE")).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new DiscreteValue(SerializedValue.of("IDLE"), AbsoluteInterval.FOREVER).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new DiscreteProfile(
         Segment.of(simResults.bounds, SerializedValue.of("IDLE"))
@@ -457,7 +465,7 @@ public class ASTTests {
         Interval.between(0, 10, SECONDS));
 
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(act),
         Map.of(),
         Map.of()
@@ -476,7 +484,7 @@ public class ASTTests {
   @Test
   public void testDiscreteResource() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(
             "real1", new LinearProfile(Segment.of(Interval.at(1, SECONDS), new LinearEquation(Duration.of(1, SECONDS), 0, 1))),
@@ -497,9 +505,10 @@ public class ASTTests {
     assertEquivalent(expected, result);
   }
 
+  @Test
   public void testValueAt(){
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of(
@@ -511,21 +520,21 @@ public class ASTTests {
     );
 
     final var result = new ValueAt<>(
-        new ProfileExpression<>(new DiscreteResource("discrete2")),
-        new SpansFromWindows(new WindowsWrapperExpression(new Windows(Interval.at(Duration.of(5, SECONDS)), true))))
+        new ProfileExpression<>(new DiscreteResource("discrete1")),
+        new SpansFromWindows(new WindowsWrapperExpression(new Windows(false).set(Interval.at(Duration.of(3, SECONDS)), true))))
         .evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new DiscreteProfile(IntervalMap.<SerializedValue>builder()
                                                         .set(Segment.of(Interval.between(0, 20, SECONDS), SerializedValue.of("two")))
                                                         .build());
 
-    assertEquivalent(expected, result);
+    assertIterableEquals(expected, result);
   }
 
   @Test
   public void testRealResource() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(
             "real1", new LinearProfile(Segment.of(Interval.at(1, SECONDS), new LinearEquation(Duration.of(1, SECONDS), 0, 1))),
@@ -549,7 +558,7 @@ public class ASTTests {
   @Test
   public void testRealResourceOnDiscrete() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(
             "real1", new LinearProfile(Segment.of(Interval.at(1, SECONDS), new LinearEquation(Duration.of(1, SECONDS), 0, 1))),
@@ -573,7 +582,7 @@ public class ASTTests {
   @Test
   public void testRealResourceFailureOnDiscrete() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(
             "real1", new LinearProfile(Segment.of(Interval.at(1, SECONDS), new LinearEquation(Duration.of(1, SECONDS), 0, 1))),
@@ -598,7 +607,7 @@ public class ASTTests {
   @Test
   public void testRealResourceOnNonexistentResource() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -615,7 +624,7 @@ public class ASTTests {
   @Test
   public void testForEachActivity() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(
             new ActivityInstance(1, "TypeA", Map.of(), Interval.between(4, 6, SECONDS)),
             new ActivityInstance(2, "TypeB", Map.of(), Interval.between(5, 7, SECONDS)),
@@ -643,7 +652,7 @@ public class ASTTests {
   @Test
   public void testNestedForEachActivityViolations() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(
             new ActivityInstance(1, "TypeA", Map.of(), Interval.between(4, 6, SECONDS)),
             new ActivityInstance(2, "TypeB", Map.of(), Interval.between(5, 7, SECONDS)),
@@ -676,7 +685,7 @@ public class ASTTests {
   @Test
   public void testNestedForEachActivitySpans() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(
             new ActivityInstance(1, "TypeA", Map.of(), Interval.between(4, 6, SECONDS)),
             new ActivityInstance(2, "TypeB", Map.of(), Interval.between(5, 7, SECONDS)),
@@ -705,7 +714,7 @@ public class ASTTests {
   @Test
   public void testViolationsOf() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -736,7 +745,7 @@ public class ASTTests {
   @Test
   public void testDuring() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -770,7 +779,7 @@ public class ASTTests {
   @Test
   public void testStartOf() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -803,7 +812,7 @@ public class ASTTests {
   @Test
   public void testEndOf() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -836,7 +845,7 @@ public class ASTTests {
   @Test
   public void testLongerThan() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -869,7 +878,7 @@ public class ASTTests {
   @Test
   public void testShorterThan() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -902,7 +911,7 @@ public class ASTTests {
   @Test
   public void testExternalDiscreteResource() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -933,7 +942,7 @@ public class ASTTests {
   @Test
   public void testExternalRealResource() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -964,7 +973,7 @@ public class ASTTests {
   @Test
   public void testSpansAlias() {
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of()
@@ -984,6 +993,25 @@ public class ASTTests {
     final var result = new SpansAlias("my spans").evaluate(simResults, environment);
 
     assertEquivalent(spans, result);
+  }
+
+  @Test
+  public void testSpansFromInterval() {
+    final var simResults = new SimulationResults(
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    final var interval = new AbsoluteInterval(Optional.of(Instant.EPOCH), Optional.of(Instant.ofEpochSecond(10)), Optional.empty(), Optional.empty());
+    final var environment = new EvaluationEnvironment();
+
+    final var result = new SpansInterval(interval).evaluate(simResults, environment);
+
+    final var expected = new Spans(Interval.between(0, 10, SECONDS));
+
+    assertEquals(expected, result);
   }
 
   private static final class Supplier<T> implements Expression<T> {

@@ -6,7 +6,6 @@
   "scripts": {
     "build": "rm -rf build; tsc",
     "test": "npm run build && node build/main.js",
-    "generate-ast-schema": "npx typescript-json-schema src/libs/constraints-ast.ts \"*\" --aliasRefs --out ./build/constraints.schema.json",
     "reformat": "npx prettier --config ./.prettierrc -w ./src",
     "generate-doc": "rm -rf build/docs; npx typedoc --plugin typedoc-plugin-markdown src/libs/constraints-edsl-fluent-api.ts --excludePrivate --excludeInternal --out ./build/docs --name \"Constraints eDSL Documentation\" --readme none --gitRevision develop"
   },
@@ -16,8 +15,7 @@
     "@js-temporal/polyfill": "^0.4.0",
     "prettier": "^2.6.2",
     "source-map": "^0.7.3",
-    "typescript": "^4.5.5",
-    "typescript-json-schema": "0.53.0"
+    "typescript": "^4.5.5"
   },
   "devDependencies": {
     "@tsconfig/node16-strictest-esm": "^1.0.2",
