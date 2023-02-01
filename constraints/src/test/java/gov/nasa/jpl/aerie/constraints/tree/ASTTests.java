@@ -505,9 +505,10 @@ public class ASTTests {
     assertEquivalent(expected, result);
   }
 
+  @Test
   public void testValueAt(){
     final var simResults = new SimulationResults(
-        Interval.between(0, 20, SECONDS),
+        Instant.EPOCH, Interval.between(0, 20, SECONDS),
         List.of(),
         Map.of(),
         Map.of(
@@ -519,15 +520,15 @@ public class ASTTests {
     );
 
     final var result = new ValueAt<>(
-        new ProfileExpression<>(new DiscreteResource("discrete2")),
-        new SpansFromWindows(new WindowsWrapperExpression(new Windows(Interval.at(Duration.of(5, SECONDS)), true))))
+        new ProfileExpression<>(new DiscreteResource("discrete1")),
+        new SpansFromWindows(new WindowsWrapperExpression(new Windows(false).set(Interval.at(Duration.of(3, SECONDS)), true))))
         .evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new DiscreteProfile(IntervalMap.<SerializedValue>builder()
                                                         .set(Segment.of(Interval.between(0, 20, SECONDS), SerializedValue.of("two")))
                                                         .build());
 
-    assertEquivalent(expected, result);
+    assertIterableEquals(expected, result);
   }
 
   @Test
