@@ -25,12 +25,33 @@ jobs:
       - uses: gradle/gradle-build-action@v2
       - name: Build EDSL API Docs
         run: ./gradlew publishDocs
-      - name: Create Pages Build Directory
-        run: mkdir build
+      - name: Build Java Docs
+        run: ./gradlew javadoc
+      - name: Create Pages Build Directories
+        run: mkdir -p build/javadoc/examples
       - name: Copy EDSL API Docs to Build Directory
         run: |
           cp -a ./merlin-server/constraints-dsl-compiler/build/docs ./build/constraints-edsl-api
           cp -a ./scheduler-worker/scheduling-dsl-compiler/build/docs ./build/scheduling-edsl-api
+      - name: Copy Java Docs to Build Directory
+        run: |
+          cp -a ./constraints/build/docs/javadoc ./build/javadoc/constraints
+          cp -a ./contrib/build/docs/javadoc ./build/javadoc/contrib
+          cp -a ./examples/banananation/build/docs/javadoc ./build/javadoc/examples/banananation
+          cp -a ./examples/config-with-defaults/build/docs/javadoc ./build/javadoc/examples/config-with-defaults
+          cp -a ./examples/config-without-defaults/build/docs/javadoc ./build/javadoc/examples/config-without-defaults
+          cp -a ./examples/foo-missionmodel/build/docs/javadoc ./build/javadoc/examples/foo-missionmodel
+          cp -a ./merlin-driver/build/docs/javadoc ./build/javadoc/merlin-driver
+          cp -a ./merlin-framework/build/docs/javadoc ./build/javadoc/merlin-framework
+          cp -a ./merlin-framework-junit/build/docs/javadoc ./build/javadoc/merlin-framework-junit
+          cp -a ./merlin-framework-processor/build/docs/javadoc ./build/javadoc/merlin-framework-processor
+          cp -a ./merlin-sdk/build/docs/javadoc ./build/javadoc/merlin-sdk
+          cp -a ./merlin-server/build/docs/javadoc ./build/javadoc/merlin-server
+          cp -a ./merlin-worker/build/docs/javadoc ./build/javadoc/merlin-worker
+          cp -a ./parsing-utilities/build/docs/javadoc ./build/javadoc/parsing-utilities
+          cp -a ./scheduler-driver/build/docs/javadoc ./build/javadoc/scheduler-driver
+          cp -a ./scheduler-server/build/docs/javadoc ./build/javadoc/scheduler-server
+          cp -a ./scheduler-worker/build/docs/javadoc ./build/javadoc/scheduler-worker
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v1
         with:
