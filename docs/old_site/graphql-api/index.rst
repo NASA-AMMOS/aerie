@@ -1,6 +1,0 @@
-============
-GraphQL API
-============
-
-.. toctree::
-   overview
