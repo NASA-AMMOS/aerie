@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * @param id unique id
  * @param type the descriptor for the behavior invoked by this activity instance
- * @param startTime the time at which this activity instance is scheduled to start
+ * @param startOffset the time at which this activity instance is scheduled to start
  * @param duration the length of time this activity instances lasts for after its start
  * @param arguments arguments are stored in a String/SerializedValue hashmap.
  * @param topParent the parent activity if any
@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public record SchedulingActivityDirective(
     SchedulingActivityDirectiveId id,
     ActivityType type,
-    Duration startTime,
+    Duration startOffset,
     Duration duration,
     Map<String, SerializedValue> arguments,
     SchedulingActivityDirectiveId topParent
@@ -62,11 +62,11 @@ public record SchedulingActivityDirective(
    *
    * @param type IN the datatype signature of and behavior descriptor invoked
    *     by this activity instance
-   * @param start IN the time at which the activity is scheduled
+   * @param startOffset IN the time at which the activity is scheduled
    */
-  public static SchedulingActivityDirective of(ActivityType type, Duration start) {
+  public static SchedulingActivityDirective of(ActivityType type, Duration startOffset) {
     return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
-                                start,
+                                startOffset,
                                 Duration.ZERO,
                                 Map.of(), null);
   }
@@ -76,35 +76,35 @@ public record SchedulingActivityDirective(
    *
    * @param type IN the datatype signature of and behavior descriptor invoked
    *     by this activity instance
-   * @param start IN the time at which the activity is scheduled
+   * @param startOffset IN the time at which the activity is scheduled
    * @param duration IN the duration that the activity lasts for
    */
-  public static SchedulingActivityDirective of(ActivityType type, Duration start, Duration duration) {
+  public static SchedulingActivityDirective of(ActivityType type, Duration startOffset, Duration duration) {
     return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
-                                start,
+                                startOffset,
                                 duration,
                                 Map.of(), null);
 
   }
 
-  public static SchedulingActivityDirective of(ActivityType type, Duration start, Duration duration, Map<String, SerializedValue> parameters) {
+  public static SchedulingActivityDirective of(ActivityType type, Duration startOffset, Duration duration, Map<String, SerializedValue> parameters) {
     return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
-                                start,
+                                startOffset,
                                 duration,
                                 parameters, null);
   }
 
-  public static SchedulingActivityDirective of(ActivityType type, Duration start, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityDirectiveId topParent) {
+  public static SchedulingActivityDirective of(ActivityType type, Duration startOffset, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityDirectiveId topParent) {
     return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
-                                start,
+                                startOffset,
                                 duration,
                                 parameters, topParent);
   }
 
-  private static SchedulingActivityDirective of(SchedulingActivityDirectiveId id, ActivityType type, Duration start, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityDirectiveId topParent) {
+  private static SchedulingActivityDirective of(SchedulingActivityDirectiveId id, ActivityType type, Duration startOffset, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityDirectiveId topParent) {
     return new SchedulingActivityDirective(id,
                                 type,
-                                start,
+                                startOffset,
                                 duration,
                                 parameters,
                                 topParent);
@@ -113,7 +113,7 @@ public record SchedulingActivityDirective(
   public static SchedulingActivityDirective copyOf(SchedulingActivityDirective activityInstance, Duration duration){
     return SchedulingActivityDirective.of(activityInstance.id,
             activityInstance.type,
-            activityInstance.startTime,
+            activityInstance.startOffset,
             duration,
             new HashMap<>(activityInstance.arguments),
             activityInstance.topParent);
@@ -128,7 +128,7 @@ public record SchedulingActivityDirective(
     return new SchedulingActivityDirective(
         new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()),
         o.type,
-        o.startTime, o.duration,
+        o.startOffset, o.duration,
         Map.copyOf(o.arguments),
         o.topParent
     );
@@ -142,7 +142,7 @@ public record SchedulingActivityDirective(
   }
 
   public Duration getEndTime(){
-    return startTime.plus(duration);
+    return startOffset.plus(duration);
   }
 
   /**
@@ -180,7 +180,7 @@ public record SchedulingActivityDirective(
    */
   public static SchedulingActivityDirective getActWithEarliestStartTime(List<SchedulingActivityDirective> acts) {
     if (acts.size() > 0) {
-      acts.sort(Comparator.comparing(SchedulingActivityDirective::startTime));
+      acts.sort(Comparator.comparing(SchedulingActivityDirective::startOffset));
 
       return acts.get(0);
     }
@@ -194,7 +194,7 @@ public record SchedulingActivityDirective(
    */
   public static SchedulingActivityDirective getActWithLatestStartTime(List<SchedulingActivityDirective> acts) {
     if (acts.size() > 0) {
-      acts.sort(Comparator.comparing(SchedulingActivityDirective::startTime));
+      acts.sort(Comparator.comparing(SchedulingActivityDirective::startOffset));
 
       return acts.get(acts.size() - 1);
     }
@@ -222,7 +222,7 @@ public record SchedulingActivityDirective(
   }
 
   public String toString() {
-    return "[" + this.type.getName() + ","+ this.id + "," + startTime + "," + ((duration != null) ? getEndTime() : "no duration") + "]";
+    return "[" + this.type.getName() + ","+ this.id + "," + startOffset + "," + ((duration != null) ? getEndTime() : "no duration") + "]";
   }
 
   /**
@@ -233,7 +233,7 @@ public record SchedulingActivityDirective(
   public boolean equalsInProperties(final SchedulingActivityDirective that){
     return type.equals(that.type)
            && duration.isEqualTo(that.duration)
-           && startTime.isEqualTo(that.startTime)
+           && startOffset.isEqualTo(that.startOffset)
            && arguments.equals(that.arguments);
   }
 

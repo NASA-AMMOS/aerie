@@ -208,8 +208,8 @@ public class PrioritySolver implements Solver {
     final var prevCheckFlag = this.checkSimBeforeInsertingActivities;
     this.checkSimBeforeInsertingActivities = false;
     problem.getInitialPlan().getActivitiesByTime().stream()
-      .filter( act -> (act.startTime()==null)
-               || problem.getPlanningHorizon().contains( act.startTime() ) )
+      .filter( act -> (act.startOffset()==null)
+               || problem.getPlanningHorizon().contains( act.startOffset() ) )
       .forEach(this::checkAndInsertAct);
     this.checkSimBeforeInsertingActivities = prevCheckFlag;
 
@@ -530,7 +530,7 @@ public class PrioritySolver implements Solver {
           //no global constraint for the same reason above mentioned
           //only the target goal state constraints to consider
           for(var act : actToChooseFrom){
-            var actWindow = new Windows(false).set(Interval.between(act.startTime(), act.getEndTime()), true);
+            var actWindow = new Windows(false).set(Interval.between(act.startOffset(), act.getEndTime()), true);
             var stateConstraints = goal.getResourceConstraints();
             var narrowed = actWindow;
             if(stateConstraints!= null) {

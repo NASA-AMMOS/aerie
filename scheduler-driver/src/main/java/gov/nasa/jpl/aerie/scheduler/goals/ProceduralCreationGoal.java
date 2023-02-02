@@ -210,8 +210,8 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
     //filter out acts that don't have a start time within the goal purview
     final var evaluatedGoalContext = getTemporalContext().evaluate(simulationResults);
     final var filteredActs = allActs.stream().filter(
-        act -> ((act.startTime() != null)
-                && evaluatedGoalContext.includes(Interval.at(0, act.startTime())))
+        act -> ((act.startOffset() != null)
+                && evaluatedGoalContext.includes(Interval.at(0, act.startOffset())))
     ).collect(java.util.stream.Collectors.toList());
 
     return filteredActs;

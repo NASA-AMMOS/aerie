@@ -55,7 +55,7 @@ public class LongDurationPlanTest {
   private static boolean equalsExceptInName(SchedulingActivityDirective a, SchedulingActivityDirective b) {
     //REVIEW: maybe unify within ActivityInstance closer to data
     return Objects.equals(a.getType(), b.getType())
-           && Objects.equals(a.startTime(), b.startTime())
+           && Objects.equals(a.startOffset(), b.startOffset())
            && Objects.equals(a.getEndTime(), b.getEndTime())
            && Objects.equals(a.duration(), b.duration())
            && Objects.equals(a.arguments(), b.arguments());

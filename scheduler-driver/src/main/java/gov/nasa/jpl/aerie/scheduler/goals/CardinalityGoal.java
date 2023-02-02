@@ -166,7 +166,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
           new ActivityExpression.Builder().basedOn(this.desiredActTemplate).startsOrEndsIn(subIntervalWindows).build();
 
       final var acts = new LinkedList<>(plan.find(actTB, simulationResults, new EvaluationEnvironment()));
-      acts.sort(Comparator.comparing(SchedulingActivityDirective::startTime));
+      acts.sort(Comparator.comparing(SchedulingActivityDirective::startOffset));
 
       int nbActs = 0;
       Duration total = Duration.ZERO;

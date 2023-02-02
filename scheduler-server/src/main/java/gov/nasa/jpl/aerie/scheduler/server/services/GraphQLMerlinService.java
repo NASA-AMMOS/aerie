@@ -384,7 +384,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
         }
         final var actFromInitialPlan = initialPlan.getActivityById(idActFromInitialPlan);
         //if act was present in initial plan
-        final var schedulerActIntoMerlinAct = new MerlinActivityInstance(activity.getType().getName(), activity.startTime(), activity.arguments());
+        final var schedulerActIntoMerlinAct = new MerlinActivityInstance(activity.getType().getName(), activity.startOffset(), activity.arguments());
         final var activityInstanceId = idsFromInitialPlan.get(activity.getId());
         if (!schedulerActIntoMerlinAct.equals(actFromInitialPlan.get())) {
           throw new PlanServiceException("The scheduler should not be updating activity instances");
@@ -502,7 +502,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
           .createObjectBuilder()
           .add("plan_id", planId.id())
           .add("type", act.getType().getName())
-          .add("start_offset", act.startTime().toString());
+          .add("start_offset", act.startOffset().toString());
 
       //add duration to parameters if controllable
       final var insertionObjectArguments = Json.createObjectBuilder();

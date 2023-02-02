@@ -21,7 +21,7 @@ public class TestUtility {
   public static boolean activityStartingAtTime(Plan plan, Duration time, ActivityType activityType) {
     List<SchedulingActivityDirective> acts = plan.getActivitiesByTime();
     for (SchedulingActivityDirective act : acts) {
-      if (act.getType().equals(activityType) && act.startTime().compareTo(time) == 0) {
+      if (act.getType().equals(activityType) && act.startOffset().compareTo(time) == 0) {
         return true;
       }
     }
@@ -32,7 +32,7 @@ public class TestUtility {
     List<SchedulingActivityDirective> acts = plan.getActivitiesByTime();
     for (SchedulingActivityDirective act : acts) {
       if (act.getType().equals(activityType) &&
-          act.startTime().compareTo(startTime) == 0 &&
+          act.startOffset().compareTo(startTime) == 0 &&
           act.getEndTime().compareTo(endTime) == 0) {
         return true;
       }
@@ -59,7 +59,7 @@ public class TestUtility {
     List<SchedulingActivityDirective> acts = plan.getActivitiesByTime();
     for (SchedulingActivityDirective act : acts) {
       if (act.getType().equals(activityType)
-          && act.startTime().compareTo(interval.start) >= 0
+          && act.startOffset().compareTo(interval.start) >= 0
           && act.getEndTime().compareTo(interval.end) <= 0) {
         return true;
       }

@@ -139,7 +139,7 @@ public class SimulationFacade {
    */
   public void replaceActivityFromSimulation(final SchedulingActivityDirective toBeReplaced, final SchedulingActivityDirective replacement){
     if(toBeReplaced.type() != replacement.type()||
-       toBeReplaced.startTime() != replacement.startTime()||
+       toBeReplaced.startOffset() != replacement.startOffset()||
        !(toBeReplaced.arguments().equals(replacement.arguments()))) {
       throw new IllegalArgumentException("When replacing an activity, you can only update the duration");
     }
@@ -157,7 +157,7 @@ public class SimulationFacade {
   public void simulateActivities(final Collection<SchedulingActivityDirective> activities)
   throws SimulationException {
     final var activitiesSortedByStartTime =
-        activities.stream().sorted(Comparator.comparing(SchedulingActivityDirective::startTime)).toList();
+        activities.stream().sorted(Comparator.comparing(SchedulingActivityDirective::startOffset)).toList();
     for (final var activityInstance : activitiesSortedByStartTime) {
       try {
         simulateActivity(activityInstance);
@@ -199,7 +199,7 @@ public class SimulationFacade {
     final var serializedActivity = new SerializedActivity(activity.getType().getName(), arguments);
 
     try {
-      driver.simulateActivity(serializedActivity, activity.startTime(), activityIdSim);
+      driver.simulateActivity(serializedActivity, activity.startOffset(), activityIdSim);
     } catch (InstantiationException e) {
       throw new SimulationException("Failed to simulate " + activity + ", possibly because it has invalid arguments", e);
     }

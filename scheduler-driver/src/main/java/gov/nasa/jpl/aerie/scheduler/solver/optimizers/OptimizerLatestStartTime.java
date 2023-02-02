@@ -15,9 +15,9 @@ public class OptimizerLatestStartTime extends Optimizer {
     if(act == null || act.getEndTime() == null) {
       throw new IllegalStateException("Cannot optimize on uninstantiated activities");
     }
-    if (currentLatestStartTime == null || act.startTime().longerThan(currentLatestStartTime)) {
+    if (currentLatestStartTime == null || act.startOffset().longerThan(currentLatestStartTime)) {
       currentGoalSolution = candidateGoalSolution;
-      currentLatestStartTime = act.startTime();
+      currentLatestStartTime = act.startOffset();
       return true;
     }
     return false;

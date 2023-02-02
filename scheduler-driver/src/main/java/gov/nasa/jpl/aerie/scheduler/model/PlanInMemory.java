@@ -82,7 +82,7 @@ public class PlanInMemory implements Plan {
       throw new IllegalArgumentException(
           "adding null activity to plan");
     }
-    final var startT = act.startTime();
+    final var startT = act.startOffset();
     if (startT == null) {
       throw new IllegalArgumentException(
           "adding activity with null start time to plan");
@@ -116,7 +116,7 @@ public class PlanInMemory implements Plan {
   public void remove(SchedulingActivityDirective act) {
     //TODO: handle ownership. Constraint propagation ?
     actsById.remove(act.getId());
-    var acts = actsByTime.get(act.startTime());
+    var acts = actsByTime.get(act.startOffset());
     if (acts != null) acts.remove(act);
     acts = actsByType.get(act.getType());
     if (acts != null) acts.remove(act);

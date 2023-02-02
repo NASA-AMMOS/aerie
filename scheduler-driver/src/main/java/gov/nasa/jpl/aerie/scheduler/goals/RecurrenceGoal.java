@@ -125,7 +125,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
           .startsIn(subInterval)
           .build();
       final var acts = new java.util.LinkedList<>(plan.find(satisfyingActSearch, simulationResults, new EvaluationEnvironment()));
-      acts.sort(java.util.Comparator.comparing(SchedulingActivityDirective::startTime));
+      acts.sort(java.util.Comparator.comparing(SchedulingActivityDirective::startOffset));
 
       //walk through existing matching activities to find too-large gaps,
       //starting from the goal's own start time
@@ -135,7 +135,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
       var prevStartT = subInterval.start;
       while (actI.hasNext() && prevStartT.compareTo(lastStartT) < 0) {
         final var act = actI.next();
-        final var actStartT = act.startTime();
+        final var actStartT = act.startOffset();
 
         //check if the inter-activity gap is too large
         //REVIEW: should do any check based on min gap duration?

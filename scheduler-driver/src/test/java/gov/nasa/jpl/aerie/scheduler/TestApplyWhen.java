@@ -66,7 +66,7 @@ public class TestApplyWhen {
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivityDirective a : plan.getActivitiesByTime()){
-      logger.debug(a.startTime().toString());
+      logger.debug(a.startOffset().toString());
     }
 
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
@@ -100,7 +100,7 @@ public class TestApplyWhen {
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivityDirective a : plan.getActivitiesByTime()){
-      logger.debug(a.startTime().toString());
+      logger.debug(a.startOffset().toString());
     }
 
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
@@ -134,7 +134,7 @@ public class TestApplyWhen {
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivityDirective a : plan.getActivitiesByTime()){
-      logger.debug(a.startTime().toString());
+      logger.debug(a.startOffset().toString());
     }
 
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
@@ -168,7 +168,7 @@ public class TestApplyWhen {
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivityDirective a : plan.getActivitiesByTime()){
-      logger.debug(a.startTime().toString());
+      logger.debug(a.startOffset().toString());
     }
 
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
@@ -202,7 +202,7 @@ public class TestApplyWhen {
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivityDirective a : plan.getActivitiesByTime()){
-      logger.debug(a.startTime().toString());
+      logger.debug(a.startOffset().toString());
     }
 
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
@@ -246,7 +246,7 @@ public class TestApplyWhen {
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivityDirective a : plan.getActivitiesByTime()){
-      logger.debug(a.startTime().toString());
+      logger.debug(a.startOffset().toString());
     }
 
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
@@ -291,7 +291,7 @@ public class TestApplyWhen {
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivityDirective a : plan.getActivitiesByTime()){
-      logger.debug(a.startTime().toString());
+      logger.debug(a.startOffset().toString());
     }
 
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType)); //cutting off mid interval should fail, i.e. no scheduling
@@ -337,7 +337,7 @@ public class TestApplyWhen {
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivityDirective a : plan.getActivitiesByTime()){
-      logger.debug(a.startTime().toString());
+      logger.debug(a.startOffset().toString());
     }
 
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
@@ -383,7 +383,7 @@ public class TestApplyWhen {
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivityDirective a : plan.getActivitiesByTime()){
-      logger.debug(a.startTime().toString());
+      logger.debug(a.startOffset().toString());
     }
 
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
@@ -416,7 +416,7 @@ public class TestApplyWhen {
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivityDirective a : plan.getActivitiesByTime()){
-      logger.debug(a.startTime().toString());
+      logger.debug(a.startOffset().toString());
     }
 
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
@@ -458,7 +458,7 @@ public class TestApplyWhen {
     final var solver = new PrioritySolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
-      logger.debug(a.startTime().toString());
+      logger.debug(a.startOffset().toString());
     }
 
     assertTrue(plan.get().getActivitiesByTime().size() == 2);
@@ -506,7 +506,7 @@ public class TestApplyWhen {
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivityDirective a : plan.getActivitiesByTime()){
-      logger.debug(a.startTime().toString());
+      logger.debug(a.startOffset().toString());
     }
 
     assertTrue(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
@@ -556,7 +556,7 @@ public class TestApplyWhen {
 
     var plan = solver.getNextSolution().orElseThrow();
     for(SchedulingActivityDirective a : plan.getActivitiesByTime()){
-      logger.debug(a.startTime().toString());
+      logger.debug(a.startOffset().toString());
     }
 
     assertFalse(TestUtility.activityStartingAtTime(plan,Duration.of(1, Duration.SECONDS), activityType));
@@ -598,7 +598,7 @@ public class TestApplyWhen {
     final var solver = new PrioritySolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
-      logger.debug(a.startTime().toString());
+      logger.debug(a.startOffset().toString());
     }
 
     var size = plan.get().getActivitiesByTime().size();
@@ -655,7 +655,7 @@ public class TestApplyWhen {
     final var solver = new PrioritySolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
-      logger.debug(a.startTime().toString() + ", " + a.duration().toString());
+      logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
     assertTrue(plan.get().getActivitiesByTime().size() == 4);
 
@@ -708,7 +708,7 @@ public class TestApplyWhen {
     final var solver = new PrioritySolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
-      logger.debug(a.startTime().toString() + ", " + a.duration().toString());
+      logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
     assertTrue(plan.get().getActivitiesByTime().size() == 5);
 
@@ -768,7 +768,7 @@ public class TestApplyWhen {
     final var solver = new PrioritySolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
-      logger.debug(a.startTime().toString() + ", " + a.duration().toString());
+      logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
     assertTrue(plan.get().getActivitiesByTime()
                    .stream().filter($ -> $.duration().dividedBy(Duration.SECOND) == 2).collect(Collectors.toList())
@@ -831,7 +831,7 @@ public class TestApplyWhen {
     final var solver = new PrioritySolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
-      logger.debug(a.startTime().toString() + ", " + a.duration().toString());
+      logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
 
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(1, Duration.SECONDS), actTypeA));
@@ -902,7 +902,7 @@ public class TestApplyWhen {
 
 
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
-      logger.debug(a.startTime().toString() + ", " + a.duration().toString());
+      logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
 
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(2, Duration.SECONDS), actTypeB));
@@ -969,7 +969,7 @@ public class TestApplyWhen {
     final var solver = new PrioritySolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
-      logger.debug(a.startTime().toString() + ", " + a.duration().toString());
+      logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
 
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(1, Duration.SECONDS), actTypeA));
@@ -1033,7 +1033,7 @@ public class TestApplyWhen {
     final var solver = new PrioritySolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
-      logger.debug(a.startTime().toString() + ", " + a.duration().toString());
+      logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
 
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(1, Duration.SECONDS), actTypeA));
@@ -1089,7 +1089,7 @@ public class TestApplyWhen {
     final var solver = new PrioritySolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
-      logger.debug(a.startTime().toString() + ", " + a.duration().toString());
+      logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
     assertTrue(plan.get().getActivitiesByTime().size() == 5);
 
@@ -1152,7 +1152,7 @@ public class TestApplyWhen {
     final var solver = new PrioritySolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
-      logger.debug(a.startTime().toString() + ", " + a.duration().toString() + " -> "+ a.getType().toString());
+      logger.debug(a.startOffset().toString() + ", " + a.duration().toString() + " -> "+ a.getType().toString());
     }
 
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(0, Duration.SECONDS), activityTypeIndependent));
@@ -1227,7 +1227,7 @@ public class TestApplyWhen {
     final var solver = new PrioritySolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
-      logger.debug(a.startTime().toString() + ", " + a.duration().toString() + " -> "+ a.getType().toString());
+      logger.debug(a.startOffset().toString() + ", " + a.duration().toString() + " -> "+ a.getType().toString());
     }
 
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(0, Duration.SECONDS), activityTypeIndependent));
@@ -1310,7 +1310,7 @@ public class TestApplyWhen {
     final var solver = new PrioritySolver(problem);
     var plan = solver.getNextSolution();
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
-      logger.debug(a.startTime().toString() + ", " + a.duration().toString() + " -> "+ a.getType().toString());
+      logger.debug(a.startOffset().toString() + ", " + a.duration().toString() + " -> "+ a.getType().toString());
     }
 
     assertTrue(TestUtility.activityStartingAtTime(plan.get(), Duration.of(0, Duration.SECONDS), activityTypeIndependent));

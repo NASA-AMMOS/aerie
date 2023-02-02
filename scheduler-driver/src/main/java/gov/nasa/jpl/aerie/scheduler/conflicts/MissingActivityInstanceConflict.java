@@ -59,7 +59,7 @@ public class MissingActivityInstanceConflict extends MissingActivityConflict {
    */
   @Override
   public Windows getTemporalContext() {
-    return new Windows(false).set(Interval.between(instance.startTime(), instance.getEndTime()), true);
+    return new Windows(false).set(Interval.between(instance.startOffset(), instance.getEndTime()), true);
   }
 
   /**

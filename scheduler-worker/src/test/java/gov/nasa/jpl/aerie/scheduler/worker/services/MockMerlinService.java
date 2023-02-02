@@ -190,7 +190,7 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
       plannedActivityInstances.add(new PlannedActivityInstance(
           activity.getType().getName(),
           arguments,
-          activity.startTime()));
+          activity.startOffset()));
     }
     return plannedActivityInstances;
   }

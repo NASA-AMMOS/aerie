@@ -259,8 +259,8 @@ public class ActivityExpression implements Expression<Spans> {
     B basedOn(@NotNull SchedulingActivityDirective existingAct) {
       type = existingAct.getType();
 
-      if (existingAct.startTime() != null) {
-        startsIn = Interval.at(existingAct.startTime());
+      if (existingAct.startOffset() != null) {
+        startsIn = Interval.at(existingAct.startOffset());
       }
 
       if (existingAct.duration() != null) {
@@ -492,19 +492,19 @@ public class ActivityExpression implements Expression<Spans> {
     match = match && (type == null || type == act.getType());
 
     if (match && startRange != null) {
-      final var startT = act.startTime();
+      final var startT = act.startOffset();
       match = (startT != null) && startRange.contains(startT);
     }
 
     if (match && startOrEndRange != null) {
-      final var startT = act.startTime();
+      final var startT = act.startOffset();
       final var endT = act.getEndTime();
       match =
           ((startT != null) && startOrEndRange.contains(startT)) || (endT != null) && startOrEndRange.contains(endT);
     }
 
     if (match && startOrEndRangeW != null) {
-      final var startT = act.startTime();
+      final var startT = act.startOffset();
       final var endT = act.getEndTime();
       match = ((startT != null) && startOrEndRangeW.includes(Interval.at(startT))
               || (endT != null) && startOrEndRangeW.includes(Interval.at(endT)));
@@ -523,7 +523,7 @@ public class ActivityExpression implements Expression<Spans> {
     //activity must have all instantiated arguments of template to be compatible
     if (match && arguments != null) {
       Map<String, SerializedValue> actInstanceArguments = act.arguments();
-      final var instantiatedArguments = SchedulingActivityDirective.instantiateArguments(arguments, act.startTime(), simulationResults, evaluationEnvironment, type);
+      final var instantiatedArguments = SchedulingActivityDirective.instantiateArguments(arguments, act.startOffset(), simulationResults, evaluationEnvironment, type);
       for (var param : instantiatedArguments.entrySet()) {
         if (actInstanceArguments.containsKey(param.getKey())) {
           match = actInstanceArguments.get(param.getKey()).equals(param.getValue());
