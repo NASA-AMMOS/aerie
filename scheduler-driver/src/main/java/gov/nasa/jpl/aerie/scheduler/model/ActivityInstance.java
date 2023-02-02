@@ -101,6 +101,24 @@ public record ActivityInstance(
                                 parameters, topParent);
   }
 
+  private static ActivityInstance of(SchedulingActivityInstanceId id, ActivityType type, Duration start, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityInstanceId topParent) {
+    return new ActivityInstance(id,
+                                type,
+                                start,
+                                duration,
+                                parameters,
+                                topParent);
+  }
+
+  public static ActivityInstance copyOf(ActivityInstance activityInstance, Duration duration){
+    return ActivityInstance.of(activityInstance.id,
+            activityInstance.type,
+            activityInstance.startTime,
+            duration,
+            new HashMap<>(activityInstance.arguments),
+            activityInstance.topParent);
+  }
+
   /**
    * create an activity instance based on the provided one (but adifferent id)
    *

@@ -1348,6 +1348,35 @@ public class SchedulingIntegrationTests {
     assertEquals(96, results.updatedPlan().size());
   }
 
+  /**
+   * If you passed activities without duration to the scheduler in an initial plan, it would fail
+   */
+  @Test
+  public void testBugDurationInMicroseconds(){
+    final var results = runScheduler(
+        BANANANATION,
+        List.of(),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+            export default (): Goal =>
+              Goal.ActivityRecurrenceGoal({
+                activityTemplate: ActivityTemplates.BakeBananaBread({ temperature: 325.0, tbSugar: 2, glutenFree: false }),
+                interval: Temporal.Duration.from({ hours: 12 }),
+              });
+            """, true)),
+        PLANNING_HORIZON);
+    final var results2 = runScheduler(
+        BANANANATION,
+        results.updatedPlan.stream().toList(),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+            export default (): Goal =>
+              Goal.ActivityRecurrenceGoal({
+                activityTemplate: ActivityTemplates.BakeBananaBread({ temperature: 325.0, tbSugar: 2, glutenFree: false }),
+                interval: Temporal.Duration.from({ hours: 12 }),
+              });
+            """, true)),
+        PLANNING_HORIZON);
+    assertEquals(8, results.updatedPlan().size());
+  }
 
   @Test
   void test_inf_loop(){

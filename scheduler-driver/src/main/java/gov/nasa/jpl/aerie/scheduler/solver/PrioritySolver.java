@@ -188,6 +188,7 @@ public class PrioritySolver implements Solver {
       }
       final var allGeneratedActivities = simulationFacade.getAllGeneratedActivities(simulationFacade.getCurrentSimulationEndTime());
       processNewGeneratedActivities(allGeneratedActivities);
+      pullActivityDurationsIfNecessary();
     } else{
       //update simulation with regard to plan
       try {
@@ -223,7 +224,36 @@ public class PrioritySolver implements Solver {
       simulationFacade.simulateActivities(plan.getActivities());
       final var allGeneratedActivities = simulationFacade.getAllGeneratedActivities(problem.getPlanningHorizon().getEndAerie());
       processNewGeneratedActivities(allGeneratedActivities);
+      pullActivityDurationsIfNecessary();
     }
+  }
+
+  /**
+   * For activities that have a null duration (in an initial plan for example) and that have been simulated, we pull the duration and
+   * replace the original instance with a new instance that includes the duraiton, both in the plan and the simulation facade
+   */
+  public void pullActivityDurationsIfNecessary() {
+    final var toRemoveFromPlan = new ArrayList<ActivityInstance>();
+    final var toAddToPlan = new ArrayList<ActivityInstance>();
+    for (final var activity : plan.getActivities()) {
+      if (activity.duration() == null) {
+        final var duration = simulationFacade.getActivityDuration(activity);
+        if (duration.isPresent()) {
+          final var replacementAct = ActivityInstance.copyOf(
+              activity,
+              duration.get()
+              );
+          simulationFacade.replaceActivityFromSimulation(activity, replacementAct);
+          toAddToPlan.add(replacementAct);
+          toRemoveFromPlan.add(activity);
+          generatedActivityInstances = generatedActivityInstances.stream().map(pair -> pair.getLeft().equals(activity) ? Pair.of(replacementAct, pair.getRight()): pair).collect(Collectors.toList());
+          generatedActivityInstances = generatedActivityInstances.stream().map(pair -> pair.getRight().equals(activity) ? Pair.of(pair.getLeft(), replacementAct): pair).collect(Collectors.toList());
+        }
+      }
+    }
+
+    plan.remove(toRemoveFromPlan);
+    plan.add(toAddToPlan);
   }
 
   /**
