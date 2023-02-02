@@ -72,7 +72,7 @@ public interface Plan {
    *
    * @return map of all activities in the plan by id
    */
-  Map<SchedulingActivityInstanceId, SchedulingActivityDirective> getActivitiesById();
+  Map<SchedulingActivityDirectiveId, SchedulingActivityDirective> getActivitiesById();
 
   /**
    * fetches activities in the plan

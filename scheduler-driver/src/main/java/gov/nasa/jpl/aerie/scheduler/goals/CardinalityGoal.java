@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.conflicts.UnsatisfiableGoalConflict;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
@@ -46,7 +46,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
   /**
    * Activities inserted so far to satisfy this goal
    */
-  private final Set<SchedulingActivityInstanceId> insertedSoFar = new HashSet<>();
+  private final Set<SchedulingActivityDirectiveId> insertedSoFar = new HashSet<>();
   /**
    * Current number of steps without inserting an activity with non-zero duration
    */

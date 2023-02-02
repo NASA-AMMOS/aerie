@@ -32,12 +32,12 @@ import java.util.concurrent.atomic.AtomicLong;
  * @param topParent the parent activity if any
  */
 public record SchedulingActivityDirective(
-    SchedulingActivityInstanceId id,
+    SchedulingActivityDirectiveId id,
     ActivityType type,
     Duration startTime,
     Duration duration,
     Map<String, SerializedValue> arguments,
-    SchedulingActivityInstanceId topParent
+    SchedulingActivityDirectiveId topParent
     ){
 
   private static final AtomicLong uniqueId = new AtomicLong();
@@ -51,7 +51,7 @@ public record SchedulingActivityDirective(
    */
   //TODO: reconsider unscheduled activity instances
   public static SchedulingActivityDirective of(ActivityType type) {
-    return new SchedulingActivityDirective(new SchedulingActivityInstanceId(uniqueId.getAndIncrement()), type,
+    return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
                                 Duration.ZERO,
                                 Duration.ZERO,
                                 Map.of(), null);
@@ -65,7 +65,7 @@ public record SchedulingActivityDirective(
    * @param start IN the time at which the activity is scheduled
    */
   public static SchedulingActivityDirective of(ActivityType type, Duration start) {
-    return new SchedulingActivityDirective(new SchedulingActivityInstanceId(uniqueId.getAndIncrement()), type,
+    return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
                                 start,
                                 Duration.ZERO,
                                 Map.of(), null);
@@ -80,7 +80,7 @@ public record SchedulingActivityDirective(
    * @param duration IN the duration that the activity lasts for
    */
   public static SchedulingActivityDirective of(ActivityType type, Duration start, Duration duration) {
-    return new SchedulingActivityDirective(new SchedulingActivityInstanceId(uniqueId.getAndIncrement()), type,
+    return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
                                 start,
                                 duration,
                                 Map.of(), null);
@@ -88,20 +88,20 @@ public record SchedulingActivityDirective(
   }
 
   public static SchedulingActivityDirective of(ActivityType type, Duration start, Duration duration, Map<String, SerializedValue> parameters) {
-    return new SchedulingActivityDirective(new SchedulingActivityInstanceId(uniqueId.getAndIncrement()), type,
+    return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
                                 start,
                                 duration,
                                 parameters, null);
   }
 
-  public static SchedulingActivityDirective of(ActivityType type, Duration start, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityInstanceId topParent) {
-    return new SchedulingActivityDirective(new SchedulingActivityInstanceId(uniqueId.getAndIncrement()), type,
+  public static SchedulingActivityDirective of(ActivityType type, Duration start, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityDirectiveId topParent) {
+    return new SchedulingActivityDirective(new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()), type,
                                 start,
                                 duration,
                                 parameters, topParent);
   }
 
-  private static SchedulingActivityDirective of(SchedulingActivityInstanceId id, ActivityType type, Duration start, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityInstanceId topParent) {
+  private static SchedulingActivityDirective of(SchedulingActivityDirectiveId id, ActivityType type, Duration start, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityDirectiveId topParent) {
     return new SchedulingActivityDirective(id,
                                 type,
                                 start,
@@ -126,7 +126,7 @@ public record SchedulingActivityDirective(
    */
   public static SchedulingActivityDirective of(SchedulingActivityDirective o) {
     return new SchedulingActivityDirective(
-        new SchedulingActivityInstanceId(uniqueId.getAndIncrement()),
+        new SchedulingActivityDirectiveId(uniqueId.getAndIncrement()),
         o.type,
         o.startTime, o.duration,
         Map.copyOf(o.arguments),
@@ -137,7 +137,7 @@ public record SchedulingActivityDirective(
   /**
    * Returns the id of parent activity if this activity is generated.
    */
-  public Optional<SchedulingActivityInstanceId> getParentActivity(){
+  public Optional<SchedulingActivityDirectiveId> getParentActivity(){
     return Optional.ofNullable(topParent);
   }
 
@@ -208,7 +208,7 @@ public record SchedulingActivityDirective(
    *
    * @return a human-legible identifier for this activity instance
    */
-  public SchedulingActivityInstanceId getId() {
+  public SchedulingActivityDirectiveId getId() {
     return this.id;
   }
 

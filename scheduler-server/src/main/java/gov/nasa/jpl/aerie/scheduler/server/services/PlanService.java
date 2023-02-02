@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
@@ -119,7 +119,7 @@ public interface PlanService {
      */
     Map<SchedulingActivityDirective, ActivityDirectiveId> updatePlanActivityDirectives(
         PlanId planId,
-        Map<SchedulingActivityInstanceId, ActivityDirectiveId> idsFromInitialPlan,
+        Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
         MerlinPlan initialPlan,
         Plan plan,
         Map<SchedulingActivityDirective, GoalId> activityToGoalId

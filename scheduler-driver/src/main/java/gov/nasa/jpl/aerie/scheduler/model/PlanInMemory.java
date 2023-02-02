@@ -34,7 +34,7 @@ public class PlanInMemory implements Plan {
   /**
    * container of all activity instances in plan, indexed by name
    */
-  private final HashMap<SchedulingActivityInstanceId, SchedulingActivityDirective> actsById
+  private final HashMap<SchedulingActivityDirectiveId, SchedulingActivityDirective> actsById
       = new HashMap<>();
 
   /**
@@ -149,7 +149,7 @@ public class PlanInMemory implements Plan {
   }
 
   @Override
-  public Map<SchedulingActivityInstanceId, SchedulingActivityDirective> getActivitiesById() {
+  public Map<SchedulingActivityDirectiveId, SchedulingActivityDirective> getActivitiesById() {
     return Collections.unmodifiableMap(actsById);
   }
 

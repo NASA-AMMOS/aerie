@@ -257,7 +257,7 @@ public class PrioritySolver implements Solver {
    * Filters generated activities and makes sure that simulations are only adding activities and not removing them
    * @param allNewGeneratedActivities all the generated activities from the last simulation results.
    */
-  private void processNewGeneratedActivities(Map<SchedulingActivityDirective, SchedulingActivityInstanceId> allNewGeneratedActivities) {
+  private void processNewGeneratedActivities(Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> allNewGeneratedActivities) {
     final var activitiesById = plan.getActivitiesById();
     final var formattedNewGeneratedActivities = new ArrayList<Pair<SchedulingActivityDirective, SchedulingActivityDirective>>();
     allNewGeneratedActivities.entrySet().forEach(entry -> formattedNewGeneratedActivities.add(Pair.of(entry.getKey(), activitiesById.get(entry.getValue()))));

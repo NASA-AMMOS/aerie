@@ -362,7 +362,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
   @Override
   public Map<SchedulingActivityDirective, ActivityDirectiveId> updatePlanActivityDirectives(
       final PlanId planId,
-      final Map<SchedulingActivityInstanceId, ActivityDirectiveId> idsFromInitialPlan,
+      final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
       final MerlinPlan initialPlan,
       final Plan plan,
       final Map<SchedulingActivityDirective, GoalId> activityToGoalId

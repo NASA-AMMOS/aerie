@@ -12,7 +12,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +43,7 @@ public class SimulationFacade {
   //simulation results from the last simulation, as output directly by simulation driver
   private SimulationResults lastSimDriverResults;
   private gov.nasa.jpl.aerie.constraints.model.SimulationResults lastSimConstraintResults;
-  private final Map<SchedulingActivityInstanceId, ActivityDirectiveId> planActInstanceIdToSimulationActivityDirectiveId = new HashMap<>();
+  private final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> planActInstanceIdToSimulationActivityDirectiveId = new HashMap<>();
   private final Map<SchedulingActivityDirective, SerializedActivity> insertedActivities;
   private static final Duration MARGIN = Duration.of(5, MICROSECONDS);
 
@@ -94,9 +94,9 @@ public class SimulationFacade {
     }
   }
 
-  public Map<SchedulingActivityDirective, SchedulingActivityInstanceId> getAllChildActivities(final Duration endTime){
+  public Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> getAllChildActivities(final Duration endTime){
     computeSimulationResultsUntil(endTime);
-    final Map<SchedulingActivityDirective, SchedulingActivityInstanceId> childActivities = new HashMap<>();
+    final Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> childActivities = new HashMap<>();
     this.lastSimDriverResults.simulatedActivities.forEach( (activityInstanceId, activity) -> {
       if (activity.parentId() == null) return;
       final var rootParent = getIdOfRootParent(this.lastSimDriverResults, activityInstanceId);

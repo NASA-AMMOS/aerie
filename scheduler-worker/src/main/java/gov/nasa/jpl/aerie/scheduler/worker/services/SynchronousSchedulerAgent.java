@@ -33,7 +33,7 @@ import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingCondition;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
@@ -343,7 +343,7 @@ public record SynchronousSchedulerAgent(
     //TODO: maybe paranoid check if plan rev has changed since original metadata?
     try {
       final var merlinPlan =  planService.getPlanActivityDirectives(planMetadata, problem);
-      final Map<SchedulingActivityInstanceId, ActivityDirectiveId> schedulingIdToMerlinId = new HashMap<>();
+      final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> schedulingIdToMerlinId = new HashMap<>();
       final var plan = new PlanInMemory();
       final var activityTypes = problem.getActivityTypes().stream().collect(Collectors.toMap(ActivityType::getName, at -> at));
       for(final var elem : merlinPlan.getActivitiesById().entrySet()){
@@ -380,7 +380,7 @@ public record SynchronousSchedulerAgent(
     }
   }
 
-  record PlanComponents(Plan schedulerPlan, MerlinPlan merlinPlan, Map<SchedulingActivityInstanceId, ActivityDirectiveId> idMap) {}
+  record PlanComponents(Plan schedulerPlan, MerlinPlan merlinPlan, Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idMap) {}
   record SchedulerMissionModel(MissionModel<?> missionModel, SchedulerModel schedulerModel) {}
 
   /**
@@ -492,7 +492,7 @@ public record SynchronousSchedulerAgent(
    */
   private Map<SchedulingActivityDirective, ActivityDirectiveId> storeFinalPlan(
     final PlanMetadata planMetadata,
-    final Map<SchedulingActivityInstanceId, ActivityDirectiveId> idsFromInitialPlan,
+    final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
     final MerlinPlan initialPlan,
     final Plan newPlan,
     final Map<SchedulingActivityDirective, GoalId> goalToActivity
