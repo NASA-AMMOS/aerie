@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class IncrementalSimulationDriver<Model> {
+public class ResumableSimulationDriver<Model> {
 
   private Duration curTime = Duration.ZERO;
   private SimulationEngine engine = new SimulationEngine();
@@ -45,7 +45,7 @@ public class IncrementalSimulationDriver<Model> {
 
   record SimulatedActivity(Duration start, SerializedActivity activity, ActivityDirectiveId id) {}
 
-  public IncrementalSimulationDriver(MissionModel<Model> missionModel){
+  public ResumableSimulationDriver(MissionModel<Model> missionModel){
     this.missionModel = missionModel;
     plannedDirectiveToTask = new HashMap<>();
     initSimulation();

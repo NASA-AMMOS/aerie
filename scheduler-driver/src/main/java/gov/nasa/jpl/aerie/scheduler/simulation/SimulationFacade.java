@@ -37,7 +37,7 @@ public class SimulationFacade {
   // planning horizon
   private final PlanningHorizon planningHorizon;
   private Map<String, ActivityType> activityTypes;
-  private IncrementalSimulationDriver<?> driver;
+  private ResumableSimulationDriver<?> driver;
   private int itSimActivityId;
 
   //simulation results from the last simulation, as output directly by simulation driver
@@ -54,7 +54,7 @@ public class SimulationFacade {
   public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel) {
     this.missionModel = missionModel;
     this.planningHorizon = planningHorizon;
-    this.driver = new IncrementalSimulationDriver<>(missionModel);
+    this.driver = new ResumableSimulationDriver<>(missionModel);
     this.itSimActivityId = 0;
     this.insertedActivities = new HashMap<>();
     this.activityTypes = new HashMap<>();
@@ -78,7 +78,7 @@ public class SimulationFacade {
     }
     final var duration = driver.getActivityDuration(planActInstanceIdToSimulationActivityDirectiveId.get(activityInstance.getId()));
     if(duration.isEmpty()){
-      logger.error("Incremental simulation is probably outdated, check that no activity is removed between simulation and querying");
+      logger.error("Simulation is probably outdated, check that no activity is removed between simulation and querying");
     }
     return duration;
   }
@@ -121,12 +121,12 @@ public class SimulationFacade {
         insertedActivities.remove(act);
       }
     }
-    //reset incremental simulation
+    //reset resumable simulation
     if(atLeastOne){
       final var oldInsertedActivities = new HashMap<>(insertedActivities);
       insertedActivities.clear();
       planActInstanceIdToSimulationActivityDirectiveId.clear();
-      driver = new IncrementalSimulationDriver<>(missionModel);
+      driver = new ResumableSimulationDriver<>(missionModel);
       simulateActivities(oldInsertedActivities.keySet());
     }
   }
