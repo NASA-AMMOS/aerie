@@ -52,6 +52,26 @@ export interface CommandSeqJson<A extends ArgType[] = ArgType[]> {
 export type ArgType = boolean | string | number;
 export type Arrayable<T> = T | Arrayable<T>[];
 
+export interface SequenceOptions {
+  seqId: string;
+  // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+  locals?: [VariableDeclaration, ...VariableDeclaration[]];
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  metadata: Metadata;
+  // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+  parameters?: [VariableDeclaration, ...VariableDeclaration[]];
+  // @ts-ignore : 'Step' found in JSON Spec
+  steps?: Step[];
+  // @ts-ignore : 'Request' found in JSON Spec
+  requests?: Request[];
+  // @ts-ignore : 'ImmediateCommand' found in JSON Spec
+  immediate_commands?: ImmediateCommand[];
+  // @ts-ignore : 'HardwareCommand' found in JSON Spec
+  hardware_commands?: HardwareCommand[];
+  commands: CommandStem[];
+}
+
+//TODO : Remove this interface and use SeqJson from the spec
 export interface SequenceSeqJson {
   id: string;
   metadata: Record<string, any>;
@@ -67,15 +87,48 @@ declare global {
 
     public toSeqJson(): CommandSeqJson;
   }
+  // @ts-ignore : 'SeqJson' found in JSON Spec
+  class Sequence implements SeqJson {
+    public readonly id: string;
+    // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+    public readonly locals?: [VariableDeclaration, ...VariableDeclaration[]];
+    // @ts-ignore : 'Metadata' found in JSON Spec
+    public readonly metadata: Metadata;
+    // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+    public readonly parameters?: [VariableDeclaration, ...VariableDeclaration[]];
+    // @ts-ignore : 'Step' found in JSON Spec
+    public readonly steps?: Step[];
+    // @ts-ignore : 'Request' found in JSON Spec
+    public readonly requests?: Request[];
+    // @ts-ignore : 'ImmediateCommand' found in JSON Spec
+    public readonly immediate_commands?: ImmediateCommand[];
+    // @ts-ignore : 'HardwareCommand' found in JSON Spec
+    public readonly hardware_commands?: HardwareCommand[];
+    [k: string]: unknown;
 
-  class Sequence {
-    public readonly seqId: string;
-    public readonly metadata: Record<string, any>;
-    public readonly commands: CommandStem[];
+    public readonly commands: CommandStem[]; //  TODO: remove later for Step[]
 
-    public static new(opts: { seqId: string; metadata: Record<string, any>; commands: CommandStem[] }): Sequence;
+    public static new(opts: {
+      seqId: string;
+      // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+      locals?: [VariableDeclaration, ...VariableDeclaration[]];
+      // @ts-ignore : 'Metadata' found in JSON Spec
+      metadata: Metadata;
+      // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+      parameters?: [VariableDeclaration, ...VariableDeclaration[]];
+      // @ts-ignore : 'Step' found in JSON Spec
+      steps?: Step[];
+      // @ts-ignore : 'Request' found in JSON Spec
+      requests?: Request[];
+      // @ts-ignore : 'ImmediateCommand' found in JSON Spec
+      immediate_commands?: ImmediateCommand[];
+      // @ts-ignore : 'HardwareCommand' found in JSON Spec
+      hardware_commands?: HardwareCommand[];
+      commands: CommandStem[];
+    }): Sequence;
 
-    public toSeqJson(): SequenceSeqJson;
+    // @ts-ignore : 'SeqJson' found in JSON Spec
+    public toSeqJson(): SeqJson;
   }
 
   type Context = {};
@@ -265,30 +318,58 @@ export class CommandStem<
   }
 }
 
-export interface SequenceOptions {
-  seqId: string;
-  metadata: Record<string, any>;
-  commands: CommandStem[];
-}
-
-export class Sequence {
-  public readonly seqId: string;
-  public readonly metadata: Record<string, any>;
-  public readonly commands: CommandStem[];
+// @ts-ignore : 'SeqJson' found in JSON Spec
+export class Sequence implements SeqJson {
+  public readonly id: string;
+  // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+  public readonly locals?: [VariableDeclaration, ...VariableDeclaration[]];
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  public readonly metadata: Metadata;
+  // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+  public readonly parameters?: [VariableDeclaration, ...VariableDeclaration[]];
+  // @ts-ignore : 'Step' found in JSON Spec
+  public readonly steps?: Step[];
+  // @ts-ignore : 'Request' found in JSON Spec
+  public readonly requests?: Request[];
+  // @ts-ignore : 'ImmediateCommand' found in JSON Spec
+  public readonly immediate_commands?: ImmediateCommand[];
+  // @ts-ignore : 'HardwareCommand' found in JSON Spec
+  public readonly hardware_commands?: HardwareCommand[];
+  [k: string]: unknown;
+  public readonly commands: CommandStem[]; //  TODO: remove later for Stepp[]
 
   private constructor(opts: SequenceOptions) {
-    this.seqId = opts.seqId;
+    this.id = opts.seqId;
     this.metadata = opts.metadata;
     this.commands = opts.commands;
-  }
 
+    if (opts.locals) {
+      this.locals = opts.locals;
+    }
+    if (opts.parameters) {
+      this.parameters = opts.parameters;
+    }
+    if (opts.steps) {
+      this.steps = opts.steps;
+    }
+    if (opts.requests) {
+      this.requests = opts.requests;
+    }
+    if (opts.immediate_commands) {
+      this.immediate_commands = opts.immediate_commands;
+    }
+    if (opts.hardware_commands) {
+      this.hardware_commands = opts.hardware_commands;
+    }
+  }
   public static new(opts: SequenceOptions): Sequence {
     return new Sequence(opts);
   }
 
-  public toSeqJson(): SequenceSeqJson {
+  // @ts-ignore : 'SeqJson' found in JSON Spec
+  public toSeqJson(): SeqJson {
     return {
-      id: this.seqId,
+      id: this.id,
       metadata: this.metadata,
       steps: this.commands.map(c => c.toSeqJson()),
     };
@@ -300,7 +381,7 @@ export class Sequence {
 
     return `export default () =>
   Sequence.new({
-    seqId: '${this.seqId}',
+    seqId: '${this.id}',
     metadata: ${JSON.stringify(this.metadata)},
     commands: [${commandsString}
     ],
