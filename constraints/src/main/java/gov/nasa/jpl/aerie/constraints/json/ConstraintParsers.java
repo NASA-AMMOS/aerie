@@ -173,18 +173,31 @@ public final class ConstraintParsers {
             $ -> tuple(Unit.UNIT, $.profile));
   }
 
-  static final JsonParser<Expression<LinearProfile>> linearProfileExprP =
-      recursiveP(selfP -> chooseP(
-          realResourceP,
-          realValueP,
-          realParameterP,
-          plusF(selfP),
-          timesF(selfP),
-          rateF(selfP),
-          assignGapsF(selfP)
-      ));
+  static <I extends IntervalContainer<I>> JsonParser<AccumulatedDuration<I>> accumulatedDurationF(final JsonParser<Expression<I>> intervalExpressionP) {
+    return productP
+        .field("kind", literalP("RealProfileAccumulatedDuration"))
+        .field("intervalsExpression", intervalExpressionP)
+        .field("unit", durationP)
+        .map(
+            untuple((kind, intervals, unit) -> new AccumulatedDuration<>(intervals, unit)),
+            $ -> tuple(Unit.UNIT, $.intervals(), $.unit())
+        );
+  }
 
-  public static JsonParser<ProfileExpression<?>> profileExpressionF(JsonParser<Expression<Spans>> spansExpressionP) {
+  private static JsonParser<Expression<LinearProfile>> linearProfileExprF(JsonParser<Expression<Windows>> windowsP, JsonParser<Expression<Spans>> spansP) {
+    return recursiveP(selfP -> chooseP(
+        realResourceP,
+        realValueP,
+        realParameterP,
+        plusF(selfP),
+        timesF(selfP),
+        rateF(selfP),
+        assignGapsF(selfP),
+        accumulatedDurationF(windowsP),
+        accumulatedDurationF(spansP)
+    ));
+  }
+  public static JsonParser<ProfileExpression<?>> profileExpressionF(JsonParser<Expression<Spans>> spansExpressionP, JsonParser<Expression<LinearProfile>> linearProfileExprP) {
     return recursiveP(selfP -> chooseP(
         linearProfileExprP.map(ProfileExpression::new, $ -> $.expression),
         discreteProfileExprF(selfP, spansExpressionP).map(ProfileExpression::new, $ -> $.expression)));
@@ -278,14 +291,15 @@ public final class ConstraintParsers {
             $ -> tuple(Unit.UNIT, $.left, $.right));
   }
 
-  static final JsonParser<LessThan> lessThanP =
-      productP
-          .field("kind", literalP("RealProfileLessThan"))
-          .field("left", linearProfileExprP)
-          .field("right", linearProfileExprP)
-          .map(
-              untuple((kind, left, right) -> new LessThan(left, right)),
-              $ -> tuple(Unit.UNIT, $.left, $.right));
+  static JsonParser<LessThan> lessThanF(final JsonParser<Expression<LinearProfile>> linearProfileExpressionP) {
+    return productP
+        .field("kind", literalP("RealProfileLessThan"))
+        .field("left", linearProfileExpressionP)
+        .field("right", linearProfileExpressionP)
+        .map(
+            untuple((kind, left, right) -> new LessThan(left, right)),
+            $ -> tuple(Unit.UNIT, $.left, $.right));
+  }
 
   static JsonParser<LongerThan> longerThanP(JsonParser<Expression<Windows>> windowsExpressionP) {
     return productP
@@ -307,32 +321,35 @@ public final class ConstraintParsers {
             $ -> tuple(Unit.UNIT, $.windows, $.duration));
   }
 
-  static final JsonParser<LessThanOrEqual> lessThanOrEqualP =
-      productP
-          .field("kind", literalP("RealProfileLessThanOrEqual"))
-          .field("left", linearProfileExprP)
-          .field("right", linearProfileExprP)
-          .map(
-              untuple((kind, left, right) -> new LessThanOrEqual(left, right)),
-              $ -> tuple(Unit.UNIT, $.left, $.right));
+  static JsonParser<LessThanOrEqual> lessThanOrEqualF(final JsonParser<Expression<LinearProfile>> linearProfileExpressionP) {
+    return productP
+        .field("kind", literalP("RealProfileLessThanOrEqual"))
+        .field("left", linearProfileExpressionP)
+        .field("right", linearProfileExpressionP)
+        .map(
+            untuple((kind, left, right) -> new LessThanOrEqual(left, right)),
+            $ -> tuple(Unit.UNIT, $.left, $.right));
+  }
 
-  static final JsonParser<GreaterThan> greaterThanP =
-      productP
-          .field("kind", literalP("RealProfileGreaterThan"))
-          .field("left", linearProfileExprP)
-          .field("right", linearProfileExprP)
-          .map(
-              untuple((kind, left, right) -> new GreaterThan(left, right)),
-              $ -> tuple(Unit.UNIT, $.left, $.right));
+  static JsonParser<GreaterThan> greaterThanF(final JsonParser<Expression<LinearProfile>> linearProfileExpressionP) {
+    return productP
+        .field("kind", literalP("RealProfileGreaterThan"))
+        .field("left", linearProfileExpressionP)
+        .field("right", linearProfileExpressionP)
+        .map(
+            untuple((kind, left, right) -> new GreaterThan(left, right)),
+            $ -> tuple(Unit.UNIT, $.left, $.right));
+  }
 
-  static final JsonParser<GreaterThanOrEqual> greaterThanOrEqualP =
-      productP
-          .field("kind", literalP("RealProfileGreaterThanOrEqual"))
-          .field("left", linearProfileExprP)
-          .field("right", linearProfileExprP)
-          .map(
-              untuple((kind, left, right) -> new GreaterThanOrEqual(left, right)),
-              $ -> tuple(Unit.UNIT, $.left, $.right));
+  static JsonParser<GreaterThanOrEqual> greaterThanOrEqualF(final JsonParser<Expression<LinearProfile>> linearProfileExpressionP) {
+    return productP
+        .field("kind", literalP("RealProfileGreaterThanOrEqual"))
+        .field("left", linearProfileExpressionP)
+        .field("right", linearProfileExpressionP)
+        .map(
+            untuple((kind, left, right) -> new GreaterThanOrEqual(left, right)),
+            $ -> tuple(Unit.UNIT, $.left, $.right));
+  }
 
   static JsonParser<And> andF(final JsonParser<Expression<Windows>> windowsExpressionP) {
     return productP
@@ -434,32 +451,32 @@ public final class ConstraintParsers {
             $ -> tuple(Unit.UNIT, $.profile(), $.timepoint()));
   }
 
-  static JsonParser<Changes<?>> changesF(JsonParser<Expression<Spans>> spansExpressionP) {
+  static JsonParser<Changes<?>> changesF(JsonParser<Expression<Spans>> spansExpressionP, JsonParser<Expression<LinearProfile>> linearProfileExprP) {
     return productP
         .field("kind", literalP("ProfileChanges"))
-        .field("expression", profileExpressionF(spansExpressionP))
+        .field("expression", profileExpressionF(spansExpressionP, linearProfileExprP))
         .map(
             untuple((kind, expression) -> new Changes<>(expression)),
             $ -> tuple(Unit.UNIT, $.expression));
   }
 
-  private static JsonParser<Expression<Windows>> windowsExpressionF(JsonParser<Expression<Spans>> spansP) {
+  private static JsonParser<Expression<Windows>> windowsExpressionF(JsonParser<Expression<Spans>> spansP, JsonParser<Expression<LinearProfile>> linearProfileExprP) {
     return recursiveP(selfP -> chooseP(
         windowsValueP,
         startOfP,
         endOfP,
-        changesF(spansP),
-        lessThanP,
-        lessThanOrEqualP,
+        changesF(spansP, linearProfileExprP),
+        lessThanF(linearProfileExprP),
+        lessThanOrEqualF(linearProfileExprP),
+        greaterThanF(linearProfileExprP),
+        greaterThanOrEqualF(linearProfileExprP),
         longerThanP(selfP),
         shorterThanP(selfP),
-        greaterThanOrEqualP,
-        greaterThanP,
-        transitionP(profileExpressionF(spansP), spansP),
+        transitionP(profileExpressionF(spansP, linearProfileExprP), spansP),
         equalF(linearProfileExprP),
-        equalF(discreteProfileExprF(profileExpressionF(spansP), spansP)),
+        equalF(discreteProfileExprF(profileExpressionF(spansP, linearProfileExprP), spansP)),
         notEqualF(linearProfileExprP),
-        notEqualF(discreteProfileExprF(profileExpressionF(spansP), spansP)),
+        notEqualF(discreteProfileExprF(profileExpressionF(spansP, linearProfileExprP), spansP)),
         andF(selfP),
         orF(selfP),
         notF(selfP),
@@ -503,9 +520,11 @@ public final class ConstraintParsers {
           ));
   }
 
-  public static final JsonParser<Expression<Spans>> spansExpressionP = recursiveP(selfP -> spansExpressionF(windowsExpressionF(selfP)));
-
-  public static final JsonParser<Expression<Windows>> windowsExpressionP = recursiveP(selfP -> windowsExpressionF(spansExpressionF(selfP)));
+  public static final JsonParser<Expression<Windows>> windowsExpressionP = recursiveP(selfP -> windowsExpressionF(spansExpressionF(selfP), linearProfileExprF(selfP, spansExpressionF(selfP))));
+  public static final JsonParser<Expression<LinearProfile>> linearProfileExprP = recursiveP(selfP -> linearProfileExprF(windowsExpressionP, spansExpressionF(windowsExpressionP)));
+  public static final JsonParser<Expression<Spans>> spansExpressionP = recursiveP(selfP -> spansExpressionF(windowsExpressionF(selfP, linearProfileExprP)));
+  public static final JsonParser<ProfileExpression<?>> profileExpressionP = profileExpressionF(spansExpressionP, linearProfileExprP);
+  public static final JsonParser<Expression<DiscreteProfile>> discreteProfileExprP = discreteProfileExprF(profileExpressionP, spansExpressionP);
 
   static final JsonParser<ViolationsOfWindows> violationsOfP =
       productP

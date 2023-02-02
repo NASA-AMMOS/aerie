@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.constraints.time.AbsoluteInterval;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.tree.AccumulatedDuration;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
 import gov.nasa.jpl.aerie.constraints.tree.ActivityWindow;
@@ -212,10 +213,11 @@ class ConstraintsDSLCompilationServiceTests {
               return Discrete.Resource("mode").valueAt(new ActivityInstance(ActivityType.activity, "alias1").span().starts()).notEqual("Option1")
             }
         """,
-        new ViolationsOfWindows(new NotEqual<DiscreteProfile>(new ValueAt(
-            new ProfileExpression<>(new DiscreteResource("mode")),
-            new Starts<Spans>(new ActivitySpan("alias1"))),
-                                      new DiscreteValue(SerializedValue.of("Option1")))));
+        new ViolationsOfWindows(new NotEqual<>(
+            new ValueAt<>(
+                new ProfileExpression<>(new DiscreteResource("mode")),
+                new Starts<>(new ActivitySpan("alias1"))),
+            new DiscreteValue(SerializedValue.of("Option1")))));
   }
 
 
@@ -924,6 +926,25 @@ class ConstraintsDSLCompilationServiceTests {
           }
         """,
         ".split numberOfSubSpans cannot be less than 1, but was: -2"
+    );
+  }
+
+  @Test
+  void testAccumulatedDuration() {
+    checkSuccessfulCompilation(
+        """
+          export default () => {
+            return Real.Resource("state of charge").equal(4)
+              .accumulatedDuration(Temporal.Duration.from({minutes: 1}))
+              .lessThan(5);
+          }
+        """,
+        new ViolationsOfWindows(
+            new LessThan(
+                new AccumulatedDuration<>(new Equal<>(new RealResource("state of charge"), new RealValue(4.0)), Duration.MINUTE),
+                new RealValue(5.0)
+            )
+        )
     );
   }
 

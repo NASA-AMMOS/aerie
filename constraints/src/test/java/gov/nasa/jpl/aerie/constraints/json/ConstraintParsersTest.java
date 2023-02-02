@@ -2,6 +2,8 @@ package gov.nasa.jpl.aerie.constraints.json;
 
 import gov.nasa.jpl.aerie.constraints.time.AbsoluteInterval;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.AccumulatedDuration;
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
 import gov.nasa.jpl.aerie.constraints.tree.ActivityWindow;
 import gov.nasa.jpl.aerie.constraints.tree.And;
@@ -36,6 +38,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Transition;
 import gov.nasa.jpl.aerie.constraints.tree.ViolationsOfWindows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsFromSpans;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Test;
 
@@ -47,6 +50,7 @@ import java.util.Optional;
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.absoluteIntervalP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.constraintP;
+import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.discreteProfileExprP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.discreteResourceP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.linearProfileExprP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.profileExpressionF;
@@ -97,7 +101,7 @@ public final class ConstraintParsersTest {
         .add("value", false)
         .add("interval", Json.createObjectBuilder())
         .build();
-    final var result = discreteProfileExprF(profileExpressionF(spansExpressionP), spansExpressionP).parse(json).getSuccessOrThrow();
+    final var result = discreteProfileExprP.parse(json).getSuccessOrThrow();
 
     final var expected =
         new DiscreteValue(SerializedValue.of(false), AbsoluteInterval.FOREVER);
@@ -338,7 +342,7 @@ public final class ConstraintParsersTest {
         .add("alias", "TEST")
         .add("name", "paramesan")
         .build();
-    final var result = discreteProfileExprF(profileExpressionF(spansExpressionP), spansExpressionP).parse(json).getSuccessOrThrow();
+    final var result = discreteProfileExprP.parse(json).getSuccessOrThrow();
 
     final var expected = new DiscreteParameter("TEST", "paramesan");
 
@@ -634,7 +638,7 @@ public final class ConstraintParsersTest {
         .add("kind", "SpansExpressionSplit")
         .add("intervals", Json
             .createObjectBuilder()
-            .add("kind", "SpansExpressionActivitySpan")
+            .add("kind", "WindowsExpressionActivityWindow")
             .add("alias", "A"))
         .add("numberOfSubIntervals", 3)
         .add("internalStartInclusivity", "Exclusive")
@@ -645,7 +649,7 @@ public final class ConstraintParsersTest {
 
     final var expected =
         new Split<>(
-            new ActivitySpan("A"),
+            new ActivityWindow("A"),
             3,
             Interval.Inclusivity.Exclusive,
             Interval.Inclusivity.Exclusive
@@ -661,7 +665,7 @@ public final class ConstraintParsersTest {
         .add("kind", "SpansExpressionSplit")
         .add("intervals", Json
             .createObjectBuilder()
-            .add("kind", "WindowsExpressionActivityWindow")
+            .add("kind", "SpansExpressionActivitySpan")
             .add("alias", "A")
         )
         .add("numberOfSubIntervals", 3)
@@ -673,10 +677,56 @@ public final class ConstraintParsersTest {
 
     final var expected =
         new Split<>(
-            new ActivityWindow("A"),
+            new ActivitySpan("A"),
             3,
             Interval.Inclusivity.Inclusive,
             Interval.Inclusivity.Exclusive
+        );
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testParseAccumulatedDurationWindows() {
+    final var json = Json
+        .createObjectBuilder()
+        .add("kind", "RealProfileAccumulatedDuration")
+        .add("intervalsExpression", Json
+            .createObjectBuilder()
+            .add("kind", "WindowsExpressionActivityWindow")
+            .add("alias", "A"))
+        .add("unit", 101)
+        .build();
+
+    final var result = linearProfileExprP.parse(json).getSuccessOrThrow();
+
+    final var expected =
+        new AccumulatedDuration<>(
+            new ActivityWindow("A"),
+            Duration.of(101, Duration.MICROSECOND)
+        );
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testParseAccumulatedDurationSpans() {
+    final var json = Json
+        .createObjectBuilder()
+        .add("kind", "RealProfileAccumulatedDuration")
+        .add("intervalsExpression", Json
+            .createObjectBuilder()
+            .add("kind", "SpansExpressionActivitySpan")
+            .add("alias", "A"))
+        .add("unit", 101)
+        .build();
+
+    final var result = linearProfileExprP.parse(json).getSuccessOrThrow();
+
+    final var expected =
+        new AccumulatedDuration<>(
+            new ActivitySpan("A"),
+            Duration.of(101, Duration.MICROSECOND)
         );
 
     assertEquivalent(expected, result);
@@ -745,7 +795,7 @@ public final class ConstraintParsersTest {
             .add("name", "ResB"))
         .build();
 
-    final var resultProfile = discreteProfileExprF(profileExpressionF(spansExpressionP), spansExpressionP).parse(json).getSuccessOrThrow();
+    final var resultProfile = discreteProfileExprP.parse(json).getSuccessOrThrow();
 
     final var expectedProfile = new AssignGaps<>(
         new DiscreteResource("ResA"),

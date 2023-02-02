@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
+import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.Test;
 
@@ -168,5 +170,27 @@ public class SpansTest {
     );
 
     assertIterableEquals(expected, intervals);
+  }
+
+  @Test
+  public void accumulatedDuration() {
+    final var acc = new Spans(
+        interval(0, 2, SECONDS),
+        interval(1, 3, SECONDS),
+        at(4, SECONDS),
+        interval(5, Exclusive, 6, Inclusive, SECONDS)
+    ).accumulatedDuration(Duration.SECOND);
+
+    final var expected = new LinearProfile(
+        Segment.of(interval(Duration.MIN_VALUE, Inclusive, Duration.ZERO, Exclusive), new LinearEquation(Duration.ZERO, 0, 0)),
+        Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), new LinearEquation(Duration.ZERO, 0, 1)),
+        Segment.of(interval(1, 2, SECONDS), new LinearEquation(Duration.SECOND, 1, 2)),
+        Segment.of(interval(2, Exclusive, 3, Inclusive, SECONDS), new LinearEquation(Duration.of(2, SECOND), 3, 1)),
+        Segment.of(interval(3, Exclusive, 5, Inclusive, SECONDS), new LinearEquation(Duration.ZERO, 4, 0)),
+        Segment.of(interval(5, Exclusive, 6, Inclusive, SECONDS), new LinearEquation(Duration.of(5, SECOND), 4, 1)),
+        Segment.of(interval(Duration.of(6, SECOND), Exclusive, Duration.MAX_VALUE, Inclusive), new LinearEquation(Duration.ZERO, 5, 0))
+    );
+
+    assertIterableEquals(expected, acc);
   }
 }

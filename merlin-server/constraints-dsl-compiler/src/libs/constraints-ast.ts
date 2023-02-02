@@ -15,6 +15,7 @@ export enum NodeKind {
   RealProfilePlus = 'RealProfilePlus',
   RealProfileTimes = 'RealProfileTimes',
   RealProfileRate = 'RealProfileRate',
+  RealProfileAccumulatedDuration = 'RealProfileAccumulatedDuration',
   DiscreteProfileTransition = 'DiscreteProfileTransition',
   WindowsExpressionActivityWindow = 'WindowsExpressionActivityWindow',
   SpansExpressionActivitySpan = 'SpansExpressionActivitySpan',
@@ -261,7 +262,8 @@ export type RealProfileExpression =
   | RealProfileResource
   | RealProfileValue
   | RealProfileParameter
-  | AssignGapsExpression<RealProfileExpression>;
+  | AssignGapsExpression<RealProfileExpression>
+  | RealProfileAccumulatedDuration;
 
 export interface StructProfileExpression {
   kind: NodeKind.StructProfileExpression,
@@ -312,6 +314,12 @@ export interface RealProfileParameter {
   kind: NodeKind.RealProfileParameter;
   alias: string;
   name: string;
+}
+
+export interface RealProfileAccumulatedDuration {
+  kind: NodeKind.RealProfileAccumulatedDuration,
+  intervalsExpression: IntervalsExpression,
+  unit: Temporal.Duration
 }
 
 export type DiscreteProfileExpression =

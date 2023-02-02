@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
+import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
@@ -175,6 +177,33 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optiona
     this.intervals.forEach(x -> windows.iterator().forEachRemaining(y -> ret.add(Interval.intersect(y.interval(), x.interval()), x.value())));
     return ret;
   }
+
+  @Override
+  public LinearProfile accumulatedDuration(final Duration unit) {
+    final var profiles = new ArrayList<LinearProfile>(this.intervals.size() + 1);
+
+    final var zero = new LinearEquation(Duration.ZERO, 0, 0);
+
+    for (final var segment: this.intervals) {
+      final var interval = segment.interval();
+      if (interval.isPoint()) continue; // ignore instantaneous point spans
+      final var rate = Duration.SECOND.ratioOver(unit);
+      final var total = interval.duration().ratioOver(unit);
+      final var slopedLine = new LinearEquation(
+          interval.start,
+          0.0,
+          rate
+      );
+      profiles.add(new LinearProfile(
+          Segment.of(Interval.between(Duration.MIN_VALUE, Inclusivity.Inclusive, interval.start, interval.startInclusivity.opposite()), zero),
+          Segment.of(interval, slopedLine),
+          Segment.of(Interval.between(interval.end, interval.endInclusivity.opposite(), Duration.MAX_VALUE, Inclusivity.Inclusive), new LinearEquation(Duration.ZERO, total, 0))
+      ));
+    }
+
+    return profiles.stream().reduce(new LinearProfile(Segment.of(Interval.FOREVER, zero)), LinearProfile::plus);
+  }
+
 
   @Override
   public Spans starts() {

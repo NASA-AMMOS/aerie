@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
+import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
@@ -12,6 +14,8 @@ import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Inclusive
 import static gov.nasa.jpl.aerie.constraints.time.Interval.at;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.interval;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MILLISECOND;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -354,6 +358,30 @@ public class WindowsTest {
         Segment.of(interval(Duration.MAX_VALUE.minus(Duration.of(1, SECONDS)), Duration.MAX_VALUE), true)
     );
     assertIterableEquals(expected, result);
+  }
+
+  @Test
+  public void accumulatedDuration() {
+    final var acc = new Windows(false)
+        .set(interval(0, 1, SECONDS), true)
+        .set(interval(2, Inclusive, 3, Exclusive, SECONDS), true)
+        .set(interval(4, Exclusive, 5, Inclusive, SECONDS), true)
+        .set(at(6, SECONDS), true)
+        .unset(interval(8, 9, SECONDS))
+        .accumulatedDuration(MILLISECOND);
+
+    final var expected = new LinearProfile(
+        Segment.of(interval(Duration.MIN_VALUE, Inclusive, Duration.ZERO, Exclusive), new LinearEquation(Duration.ZERO, 0, 0)),
+        Segment.of(interval(0, Inclusive, 1, Inclusive, SECOND), new LinearEquation(Duration.ZERO, 0, 1000)),
+        Segment.of(interval(1, Exclusive, 2, Exclusive, SECOND), new LinearEquation(SECOND, 1000, 0)),
+        Segment.of(interval(2, Inclusive, 3, Exclusive, SECOND), new LinearEquation(Duration.of(2, SECOND), 1000, 1000)),
+        Segment.of(interval(3, 4, SECOND), new LinearEquation(Duration.ZERO, 2000, 0)),
+        Segment.of(interval(4, Exclusive, 5, Inclusive, SECOND), new LinearEquation(Duration.of(4, SECOND), 2000, 1000)),
+        Segment.of(interval(5, Exclusive, 8, Exclusive, SECOND), new LinearEquation(Duration.ZERO, 3000, 0)),
+        Segment.of(interval(Duration.of(9, SECOND), Exclusive, Duration.MAX_VALUE, Inclusive), new LinearEquation(Duration.ZERO, 3000, 0))
+    );
+
+    assertIterableEquals(expected, acc);
   }
 
   @Test

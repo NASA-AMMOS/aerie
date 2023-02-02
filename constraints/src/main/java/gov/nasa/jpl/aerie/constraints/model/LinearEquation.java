@@ -27,7 +27,8 @@ public final class LinearEquation {
   }
 
   public double valueAt(final Duration time) {
-    return this.initialValue + this.rate*(time.minus(this.initialTime)).ratioOver(Duration.SECOND);
+    final var change = this.rate*time.ratioOver(Duration.SECOND) - this.rate*this.initialTime.ratioOver(Duration.SECOND);
+    return this.initialValue + change;
   }
 
   public LinearEquation shiftInitialTime(final Duration newInitialTime) {

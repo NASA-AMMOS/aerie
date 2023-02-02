@@ -325,6 +325,22 @@ export class Windows {
       defaultProfile: defaultProfile.__astNode
     });
   }
+
+  /**
+   * Counts the cumulative amount of time spent in an active Window, as a multiple of some unit of time.
+   *
+   * The output profile always starts at 0 at the simulation start time. Initial conditions from before the simulation
+   * start time are not considered, even in the case of temporal-subset plan branches with later start times.
+   *
+   * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
+   */
+  public accumulatedDuration(unit: Temporal.Duration): Real {
+    return new Real({
+      kind: AST.NodeKind.RealProfileAccumulatedDuration,
+      intervalsExpression: this.__astNode,
+      unit
+    });
+  }
 }
 
 /**
@@ -412,6 +428,23 @@ export class Spans {
       kind: AST.NodeKind.WindowsExpressionFromSpans,
       spansExpression: this.__astNode
     })
+  }
+
+  /**
+   * Counts the cumulative amount of time spent in an active Span, as a multiple of some unit of time.
+   * Overlapping spans are double-counted.
+   *
+   * The output profile always starts at 0 at the simulation start time. Initial conditions from before the simulation
+   * start time are not considered, even in the case of temporal-subset plan branches with later start times.
+   *
+   * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
+   */
+  public accumulatedDuration(unit: Temporal.Duration): Real {
+    return new Real({
+      kind: AST.NodeKind.RealProfileAccumulatedDuration,
+      intervalsExpression: this.__astNode,
+      unit
+    });
   }
 
 
@@ -638,7 +671,7 @@ export class Real {
    * @param timepoint
    */
   public valueAt(timepoint: Spans) : Discrete<number> {
-    return new Discrete({
+    return new Discrete<number>({
       kind: AST.NodeKind.ValueAtExpression,
       profile: this.__astNode,
       timepoint : timepoint.__astNode
@@ -655,6 +688,17 @@ export class Real {
 export class Discrete<Schema> {
   /** @internal **/
   public readonly __astNode: AST.DiscreteProfileExpression;
+
+  /**
+   * @internal
+   *
+   * Field of the schema type, used to ensure that `Discrete<A>` cannot be assigned to `Discrete<B>` if `A` cannot be assigned to `B`.
+   * The `!` indicates "I swear to initialize this outside the constructor". We don't, but it doesn't actually matter that the
+   * schema "instance" is never actually instantiated. What matters is that Typescript *thinks* it will be instantiated, because the TS
+   * workflow is all about tricking the compiler into doing the primary thing it was designed to do out of the box:
+   * check types in Javascript.
+   */
+  public readonly __schemaInstance!: Schema;
 
   /** @internal **/
   public constructor(profile: AST.DiscreteProfileExpression) {
@@ -690,7 +734,7 @@ export class Discrete<Schema> {
    * @param timepoint
    */
   public valueAt(timepoint: Spans) : Discrete<Schema> {
-    return new Discrete({
+    return new Discrete<Schema>({
       kind: AST.NodeKind.ValueAtExpression,
       profile: this.__astNode,
       timepoint : timepoint.__astNode
@@ -1057,6 +1101,16 @@ declare global {
      * @param defaultProfile boolean or windows to take default values from
      */
     public assignGaps(defaultProfile: Windows | boolean): Windows;
+
+    /**
+     * Counts the cumulative amount of time spent in an active Window, as a multiple of some unit of time.
+     *
+     * The output profile always starts at 0 at the simulation start time. Initial conditions from before the simulation
+     * start time are not considered, even in the case of temporal-subset plan branches with later start times.
+     *
+     * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
+     */
+    public accumulatedDuration(unit: Temporal.Duration): Real;
   }
 
   /**
@@ -1102,7 +1156,6 @@ declare global {
      */
     public windows(): Windows;
 
-
     /**
      * Applies an expression producing spans for each instance of an activity type and returns the aggregated set of spans.
      *
@@ -1115,6 +1168,16 @@ declare global {
         expression: (instance: ActivityInstance<A>) => Spans,
     ): Spans;
 
+    /**
+     * Counts the cumulative amount of time spent in an active Span, as a multiple of some unit of time.
+     * Overlapping spans are double-counted.
+     *
+     * The output profile always starts at 0 at the simulation start time. Initial conditions from before the simulation
+     * start time are not considered, even in the case of temporal-subset plan branches with later start times.
+     *
+     * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
+     */
+    public accumulatedDuration(unit: Temporal.Duration): Real;
   }
 
   /**
@@ -1226,16 +1289,16 @@ declare global {
     public readonly __astNode: AST.DiscreteProfileExpression;
 
     /**
+     * @internal
+     *
      * Internal instance of the Schema type, for type checking.
      *
      * It is never assigned or accessed, and is discarded by the end.
      * This field should remain `undefined` for the full runtime.
-     * It does not even exist in this class' implementation.
      *
      * Don't remove it though, it'll break the tests.
-     * @private
      */
-    private readonly __schemaInstance: Schema;
+    public readonly __schemaInstance: Schema;
 
     /**
      * Returns a discrete profile producing an object.
