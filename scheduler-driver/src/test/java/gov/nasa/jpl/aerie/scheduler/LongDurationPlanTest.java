@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
@@ -44,15 +44,15 @@ public class LongDurationPlanTest {
   private static PlanInMemory makePlanA012(Problem problem) {
     final var plan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("GrowBanana");
-    plan.add(ActivityInstance.of(actTypeA, t0, d1min));
-    plan.add(ActivityInstance.of(actTypeA, t1year, d1min));
-    plan.add(ActivityInstance.of(actTypeA, t2year, d1min));
-    plan.add(ActivityInstance.of(actTypeA, t3year, d1min));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t0, d1min));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t1year, d1min));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t2year, d1min));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t3year, d1min));
     return plan;
   }
 
   /** used to compare plan activities but ignore generated details like name **/
-  private static boolean equalsExceptInName(ActivityInstance a, ActivityInstance b) {
+  private static boolean equalsExceptInName(SchedulingActivityDirective a, SchedulingActivityDirective b) {
     //REVIEW: maybe unify within ActivityInstance closer to data
     return Objects.equals(a.getType(), b.getType())
            && Objects.equals(a.startTime(), b.startTime())
@@ -62,7 +62,7 @@ public class LongDurationPlanTest {
   }
 
   /** matches activities if they agree in everything except the (possibly auto-generated) names **/
-  private static final Correspondence<ActivityInstance, ActivityInstance> equalExceptInName = Correspondence.from(
+  private static final Correspondence<SchedulingActivityDirective, SchedulingActivityDirective> equalExceptInName = Correspondence.from(
       LongDurationPlanTest::equalsExceptInName, "matches");
 
   @Test

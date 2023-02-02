@@ -11,7 +11,7 @@ import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.Range;
@@ -166,7 +166,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
           new ActivityExpression.Builder().basedOn(this.desiredActTemplate).startsOrEndsIn(subIntervalWindows).build();
 
       final var acts = new LinkedList<>(plan.find(actTB, simulationResults, new EvaluationEnvironment()));
-      acts.sort(Comparator.comparing(ActivityInstance::startTime));
+      acts.sort(Comparator.comparing(SchedulingActivityDirective::startTime));
 
       int nbActs = 0;
       Duration total = Duration.ZERO;

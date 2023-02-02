@@ -16,11 +16,8 @@ import gov.nasa.jpl.aerie.scheduler.goals.ActivityTemplateGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CompositeAndGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
 import gov.nasa.jpl.aerie.scheduler.goals.OptionGoal;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
-import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
-import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
+import gov.nasa.jpl.aerie.scheduler.model.*;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.simulation.SimulationFacade;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -68,7 +65,7 @@ public class PrioritySolver implements Solver {
    */
   Plan plan;
 
-  List<Pair<ActivityInstance, ActivityInstance>> generatedActivityInstances = new ArrayList<>();
+  List<Pair<SchedulingActivityDirective, SchedulingActivityDirective>> generatedActivityInstances = new ArrayList<>();
 
   /**
    * tracks how well this solver thinks it has satisfied goals
@@ -136,7 +133,7 @@ public class PrioritySolver implements Solver {
     }
   }
 
-  private boolean checkAndInsertAct(ActivityInstance act){
+  private boolean checkAndInsertAct(SchedulingActivityDirective act){
     return checkAndInsertActs(List.of(act));
   }
 
@@ -146,7 +143,7 @@ public class PrioritySolver implements Solver {
    * @param acts the activities to insert in the plan
    * @return false if at least one activity has a simulated duration not equal to the expected duration, true otherwise
    */
-  private boolean checkAndInsertActs(Collection<ActivityInstance> acts){
+  private boolean checkAndInsertActs(Collection<SchedulingActivityDirective> acts){
     boolean allGood = true;
 
     for(var act: acts){
@@ -233,13 +230,13 @@ public class PrioritySolver implements Solver {
    * replace the original instance with a new instance that includes the duraiton, both in the plan and the simulation facade
    */
   public void pullActivityDurationsIfNecessary() {
-    final var toRemoveFromPlan = new ArrayList<ActivityInstance>();
-    final var toAddToPlan = new ArrayList<ActivityInstance>();
+    final var toRemoveFromPlan = new ArrayList<SchedulingActivityDirective>();
+    final var toAddToPlan = new ArrayList<SchedulingActivityDirective>();
     for (final var activity : plan.getActivities()) {
       if (activity.duration() == null) {
         final var duration = simulationFacade.getActivityDuration(activity);
         if (duration.isPresent()) {
-          final var replacementAct = ActivityInstance.copyOf(
+          final var replacementAct = SchedulingActivityDirective.copyOf(
               activity,
               duration.get()
               );
@@ -260,9 +257,9 @@ public class PrioritySolver implements Solver {
    * Filters generated activities and makes sure that simulations are only adding activities and not removing them
    * @param allNewGeneratedActivities all the generated activities from the last simulation results.
    */
-  private void processNewGeneratedActivities(Map<ActivityInstance, SchedulingActivityInstanceId> allNewGeneratedActivities) {
+  private void processNewGeneratedActivities(Map<SchedulingActivityDirective, SchedulingActivityInstanceId> allNewGeneratedActivities) {
     final var activitiesById = plan.getActivitiesById();
-    final var formattedNewGeneratedActivities = new ArrayList<Pair<ActivityInstance, ActivityInstance>>();
+    final var formattedNewGeneratedActivities = new ArrayList<Pair<SchedulingActivityDirective, SchedulingActivityDirective>>();
     allNewGeneratedActivities.entrySet().forEach(entry -> formattedNewGeneratedActivities.add(Pair.of(entry.getKey(), activitiesById.get(entry.getValue()))));
 
     final var copyOld = new ArrayList<>(this.generatedActivityInstances);
@@ -368,14 +365,14 @@ public class PrioritySolver implements Solver {
       if (goal.hasOptimizer()) {
         //try to satisfy all and see what is best
         Goal currentSatisfiedGoal = null;
-        Collection<ActivityInstance> actsToInsert = null;
-        Collection<ActivityInstance> actsToAssociateWith = null;
+        Collection<SchedulingActivityDirective> actsToInsert = null;
+        Collection<SchedulingActivityDirective> actsToAssociateWith = null;
         for (var subgoal : goal.getSubgoals()) {
           satisfyGoal(subgoal);
           if(evaluation.forGoal(subgoal).getScore() == 0 || subgoal.isPartiallySatisfiable()) {
             var associatedActivities = evaluation.forGoal(subgoal).getAssociatedActivities();
             var insertedActivities = evaluation.forGoal(subgoal).getInsertedActivities();
-            var aggregatedActivities = new ArrayList<ActivityInstance>();
+            var aggregatedActivities = new ArrayList<SchedulingActivityDirective>();
             aggregatedActivities.addAll(associatedActivities);
             aggregatedActivities.addAll(insertedActivities);
             if (!aggregatedActivities.isEmpty() &&
@@ -618,11 +615,11 @@ public class PrioritySolver implements Solver {
    *     added to the plan to best satisfy the conflict without disrupting
    *     the rest of the plan, or null if there are no such suggestions
    */
-  private Collection<ActivityInstance>
+  private Collection<SchedulingActivityDirective>
   getBestNewActivities(MissingActivityConflict missing)
   {
     assert missing != null;
-    var newActs = new LinkedList<ActivityInstance>();
+    var newActs = new LinkedList<SchedulingActivityDirective>();
 
     //REVIEW: maybe push into polymorphic method of conflict/goal? (picking best act
     //may depend on the source goal)
@@ -674,7 +671,7 @@ public class PrioritySolver implements Solver {
       if (missing instanceof final MissingActivityInstanceConflict missingInstance) {
         //FINISH: clean this up code dupl re windows etc
         final var act = missingInstance.getInstance();
-        newActs.add(ActivityInstance.of(act));
+        newActs.add(SchedulingActivityDirective.of(act));
 
       } else if (missing instanceof final MissingActivityTemplateConflict missingTemplate) {
         //select the "best" time among the possibilities, and latest among ties
@@ -768,9 +765,9 @@ public class PrioritySolver implements Solver {
     logger.warn("Remaining conflicts for goals ");
     for (var goalEval : evaluation.getGoals()) {
       logger.warn(goalEval.getName() + " -> " + evaluation.forGoal(goalEval).score);
-      logger.warn("Activities created by this goal:"+  evaluation.forGoal(goalEval).getInsertedActivities().stream().map(ActivityInstance::toString).collect(
+      logger.warn("Activities created by this goal:"+  evaluation.forGoal(goalEval).getInsertedActivities().stream().map(SchedulingActivityDirective::toString).collect(
           Collectors.joining(" ")));
-      logger.warn("Activities associated to this goal:"+  evaluation.forGoal(goalEval).getAssociatedActivities().stream().map(ActivityInstance::toString).collect(
+      logger.warn("Activities associated to this goal:"+  evaluation.forGoal(goalEval).getAssociatedActivities().stream().map(SchedulingActivityDirective::toString).collect(
           Collectors.joining(" ")));
     }
   }

@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityExistentialGoal;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 
 /**
  * describes an issue in a plan caused by a specific activity instance missing
@@ -24,7 +24,7 @@ public class MissingActivityInstanceConflict extends MissingActivityConflict {
    */
   public MissingActivityInstanceConflict(
       ActivityExistentialGoal goal,
-      ActivityInstance instance,
+      SchedulingActivityDirective instance,
       EvaluationEnvironment evaluationEnvironment)
   {
     super(goal, evaluationEnvironment);
@@ -77,13 +77,13 @@ public class MissingActivityInstanceConflict extends MissingActivityConflict {
    *
    * @return the specifically requested instance that is desired
    */
-  public ActivityInstance getInstance() {
+  public SchedulingActivityDirective getInstance() {
     return instance;
   }
 
   /**
    * the specific activity instance that is desired in the plan
    */
-  protected ActivityInstance instance;
+  protected SchedulingActivityDirective instance;
 
 }

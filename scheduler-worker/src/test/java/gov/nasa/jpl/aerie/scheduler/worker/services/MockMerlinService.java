@@ -14,11 +14,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
-import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
+import gov.nasa.jpl.aerie.scheduler.model.*;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
@@ -96,10 +93,10 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   }
 
   @Override
-  public Pair<PlanId, Map<ActivityInstance, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
+  public Pair<PlanId, Map<SchedulingActivityDirective, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
       final PlanMetadata planMetadata,
       final Plan plan,
-      final Map<ActivityInstance, GoalId> activityToGoal
+      final Map<SchedulingActivityDirective, GoalId> activityToGoal
   ) throws IOException, NoSuchPlanException, PlanServiceException
   {
     return null;
@@ -120,17 +117,17 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   }
 
   @Override
-  public Map<ActivityInstance, ActivityDirectiveId> updatePlanActivityDirectives(
+  public Map<SchedulingActivityDirective, ActivityDirectiveId> updatePlanActivityDirectives(
       final PlanId planId,
       final Map<SchedulingActivityInstanceId, ActivityDirectiveId> idsFromInitialPlan,
       final MerlinPlan initialPlan,
       final Plan plan,
-      final Map<ActivityInstance, GoalId> activityToGoal
+      final Map<SchedulingActivityDirective, GoalId> activityToGoal
   )
   throws IOException, NoSuchPlanException, PlanServiceException, NoSuchActivityInstanceException
   {
     this.updatedPlan = extractPlannedActivityInstances(plan);
-    final var res = new HashMap<ActivityInstance, ActivityDirectiveId>();
+    final var res = new HashMap<SchedulingActivityDirective, ActivityDirectiveId>();
     var id = 0L;
     for (final var activity : plan.getActivities()) {
       res.put(activity, new ActivityDirectiveId(id++));
@@ -151,10 +148,10 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   }
 
   @Override
-  public Map<ActivityInstance, ActivityDirectiveId> createAllPlanActivityDirectives(
+  public Map<SchedulingActivityDirective, ActivityDirectiveId> createAllPlanActivityDirectives(
       final PlanId planId,
       final Plan plan,
-      final Map<ActivityInstance, GoalId> activityToGoalId
+      final Map<SchedulingActivityDirective, GoalId> activityToGoalId
   )
   throws IOException, NoSuchPlanException, PlanServiceException
   {

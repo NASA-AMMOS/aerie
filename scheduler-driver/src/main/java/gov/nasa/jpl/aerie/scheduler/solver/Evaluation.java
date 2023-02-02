@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.solver;
 
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
 import gov.nasa.jpl.aerie.scheduler.goals.ActivityExistentialGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
@@ -33,7 +33,7 @@ public class Evaluation {
     /**
      * a map associating each activity that contributed to the goal to a boolean stating whether the goal created it or not
      */
-    protected final java.util.Map<ActivityInstance, Boolean> acts = new java.util.HashMap<>();
+    protected final java.util.Map<SchedulingActivityDirective, Boolean> acts = new java.util.HashMap<>();
 
     /**
      * the numeric evaluation score for the goal
@@ -81,7 +81,7 @@ public class Evaluation {
      *     evaluation
      * @param createdByThisGoal IN a boolean stating whether the instance has been created by this goal or not
      */
-    public void associate(ActivityInstance act, boolean createdByThisGoal) { acts.put(act, createdByThisGoal);}
+    public void associate(SchedulingActivityDirective act, boolean createdByThisGoal) { acts.put(act, createdByThisGoal);}
 
     /**
      * flags all given activities as contributing to the goal's (dis)satisfaction
@@ -90,11 +90,11 @@ public class Evaluation {
      *     evaluation
      * @param createdByThisGoal IN a boolean stating whether the instance has been created by this goal or not
      */
-    public void associate(java.util.Collection<ActivityInstance> acts, boolean createdByThisGoal) {
+    public void associate(java.util.Collection<SchedulingActivityDirective> acts, boolean createdByThisGoal) {
       acts.forEach(a ->this.acts.put(a, createdByThisGoal));
     }
 
-    public void removeAssociation(java.util.Collection<ActivityInstance> acts){
+    public void removeAssociation(java.util.Collection<SchedulingActivityDirective> acts){
       this.acts.entrySet().removeIf(act -> acts.contains(act.getKey()));
     }
 
@@ -103,7 +103,7 @@ public class Evaluation {
      *
      * @return the set of all activities that contributed to the evaluation
      */
-    public java.util.Collection<ActivityInstance> getAssociatedActivities() {
+    public java.util.Collection<SchedulingActivityDirective> getAssociatedActivities() {
       return java.util.Collections.unmodifiableSet(acts.keySet());
     }
     /**
@@ -111,7 +111,7 @@ public class Evaluation {
      *
      * @return the set of all activities that this goal inserted in the plan
      */
-    public java.util.Collection<ActivityInstance> getInsertedActivities() {
+    public java.util.Collection<SchedulingActivityDirective> getInsertedActivities() {
       return java.util.Collections.unmodifiableSet(acts.entrySet().stream().filter((a)-> a.getValue().equals(true)).map(
           Map.Entry::getKey).collect(
           Collectors.toSet()));
@@ -161,7 +161,7 @@ public class Evaluation {
     return Objects.hash(goalEvals);
   }
 
-  public boolean canAssociateMoreToCreatorOf(final ActivityInstance instance){
+  public boolean canAssociateMoreToCreatorOf(final SchedulingActivityDirective instance){
     final var creator$ = getGoalCreator(instance);
     // for now: all existing activities in the plan are allowed to be associated with any goal
     if (creator$.isEmpty()) return true;
@@ -174,7 +174,7 @@ public class Evaluation {
   /**
    * If an activity instance was already in the plan prior to this run of the scheduler, this method will return Optional.empty()
    */
-  Optional<Goal> getGoalCreator(final ActivityInstance instance){
+  Optional<Goal> getGoalCreator(final SchedulingActivityDirective instance){
     for(final var goalEval : goalEvals.entrySet()){
       if(goalEval.getValue().getInsertedActivities().contains(instance)){
         return Optional.of(goalEval.getKey());

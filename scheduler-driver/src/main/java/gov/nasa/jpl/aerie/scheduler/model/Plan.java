@@ -25,7 +25,7 @@ public interface Plan {
    *
    * @param acts IN the set of activity instances to schedule into the plan
    */
-  void add(Collection<ActivityInstance> acts);
+  void add(Collection<SchedulingActivityDirective> acts);
 
   /**
    * adds the given activity instance to the scheduled plan solution
@@ -34,7 +34,7 @@ public interface Plan {
    *
    * @param act IN activity instance to schedule into the plan
    */
-  void add(ActivityInstance act);
+  void add(SchedulingActivityDirective act);
   /**
    * adds the given activity instances to the scheduled plan solution
    *
@@ -42,7 +42,7 @@ public interface Plan {
    *
    * @param acts IN the set of activity instances to remove from the plan
    */
-  void remove(Collection<ActivityInstance> acts);
+  void remove(Collection<SchedulingActivityDirective> acts);
 
   /**
    * removes the given activity instance to the scheduled plan solution
@@ -51,35 +51,35 @@ public interface Plan {
    *
    * @param act IN activity instance to remove from the plan
    */
-  void remove(ActivityInstance act);
+  void remove(SchedulingActivityDirective act);
 
   /**
    * fetches activities in the plan ordered by start time
    *
    * @return set of all activities in the plan ordered by start time
    */
-  List<ActivityInstance> getActivitiesByTime();
+  List<SchedulingActivityDirective> getActivitiesByTime();
 
   /**
    * fetches activities in the plan by type
    *
    * @return map of all activities in the plan by type
    */
-  Map<ActivityType, List<ActivityInstance>> getActivitiesByType();
+  Map<ActivityType, List<SchedulingActivityDirective>> getActivitiesByType();
 
   /**
    * fetches activities in the plan by id
    *
    * @return map of all activities in the plan by id
    */
-  Map<SchedulingActivityInstanceId, ActivityInstance> getActivitiesById();
+  Map<SchedulingActivityInstanceId, SchedulingActivityDirective> getActivitiesById();
 
   /**
    * fetches activities in the plan
    *
    * @return set of all activities in the plan
    */
-  Set<ActivityInstance> getActivities();
+  Set<SchedulingActivityDirective> getActivities();
 
   /**
    * finds activity instances in the plan that meet the given criteria
@@ -87,7 +87,7 @@ public interface Plan {
    * @param template IN the matching criteria to use on activity instances
    * @return collection of instances that match the given template
    */
-  Collection<ActivityInstance> find(
+  Collection<SchedulingActivityDirective> find(
       ActivityExpression template, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment);
   /**
    * adds a new evaluation to the plan

@@ -9,7 +9,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.scheduler.EquationSolvingAlgorithms;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
@@ -197,7 +197,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
    * @return the instance of the activity (if successful; else, an empty object) wrapped as an Optional.
    */
   public @NotNull
-  Optional<ActivityInstance> createActivity(String name, Windows windows, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
+  Optional<SchedulingActivityDirective> createActivity(String name, Windows windows, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
     //REVIEW: how to properly export any flexibility to instance?
     for (var window : windows.iterateEqualTo(true)) {
       var act = createInstanceForReal(name, window, facade, plan, planningHorizon, evaluationEnvironment);
@@ -209,7 +209,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
   }
 
 
-  private Optional<ActivityInstance> createInstanceForReal(final String name, final Interval interval, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
+  private Optional<SchedulingActivityDirective> createInstanceForReal(final String name, final Interval interval, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
     final var tnw = new TaskNetworkAdapter(new TaskNetwork());
     tnw.addAct(name);
     if (interval != null) {
@@ -245,15 +245,17 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
 
         @Override
         public Duration valueAt(final Duration start) {
-          final var actToSim = ActivityInstance.of(type,
-                                                   start,
-                                                   null,
-                                                   ActivityInstance.instantiateArguments(arguments,
-                                                                                         start,
-                                                                                         facade.getLatestConstraintSimulationResults(),
-                                                                                         evaluationEnvironment,
-                                                                                         type),
-                                                   null);
+          final var actToSim = SchedulingActivityDirective.of(
+              type,
+              start,
+              null,
+              SchedulingActivityDirective.instantiateArguments(
+                  arguments,
+                  start,
+                  facade.getLatestConstraintSimulationResults(),
+                  evaluationEnvironment,
+                  type),
+              null);
           try {
             facade.simulateActivity(actToSim);
             final var dur = facade.getActivityDuration(actToSim);
@@ -286,14 +288,16 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
           //f is calling simulation -> we do not need to resimulate this activity later
           dur = result.fx().minus(result.x());
         }
-        return Optional.of(ActivityInstance.of(type,
-                                               result.x(),
-                                               dur,
-                                               ActivityInstance.instantiateArguments(this.arguments, result.x(),
-                                                                                     facade.getLatestConstraintSimulationResults(),
-                                                                                     evaluationEnvironment,
-                                                                                     type),
-                                               null));
+        return Optional.of(SchedulingActivityDirective.of(
+            type,
+            result.x(),
+            dur,
+            SchedulingActivityDirective.instantiateArguments(
+                this.arguments, result.x(),
+                facade.getLatestConstraintSimulationResults(),
+                evaluationEnvironment,
+                type),
+            null));
       } catch (EquationSolvingAlgorithms.ZeroDerivativeException zeroOrInfiniteDerivativeException) {
         logger.debug("Rootfinding encountered a zero-derivative");
       } catch (EquationSolvingAlgorithms.InfiniteDerivativeException infiniteDerivativeException) {
@@ -312,11 +316,12 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
     } else if (this.type.getDurationType() instanceof DurationType.Controllable dt) {
       //select earliest start time, STN guarantees satisfiability
       final var earliestStart = solved.start().start;
-      final var instantiatedArguments = ActivityInstance.instantiateArguments(this.arguments,
-                                                                              earliestStart,
-                                                                              facade.getLatestConstraintSimulationResults(),
-                                                                              evaluationEnvironment,
-                                                                              type);
+      final var instantiatedArguments = SchedulingActivityDirective.instantiateArguments(
+          this.arguments,
+          earliestStart,
+          facade.getLatestConstraintSimulationResults(),
+          evaluationEnvironment,
+          type);
 
       final var durationParameterName = dt.parameterName();
         //handle variable duration parameter here
@@ -333,15 +338,17 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
         //REVIEW: should take default duration of activity type maybe ?
         setActivityDuration = solved.end().start.minus(solved.start().start);
       }
-      return Optional.of(ActivityInstance.of(type,
-                                             earliestStart,
-                                             setActivityDuration,
-                                             ActivityInstance.instantiateArguments(this.arguments,
-                                                                                   earliestStart,
-                                                                                   facade.getLatestConstraintSimulationResults(),
-                                                                                   evaluationEnvironment,
-                                                                                   type),
-                                             null));
+      return Optional.of(SchedulingActivityDirective.of(
+          type,
+          earliestStart,
+          setActivityDuration,
+          SchedulingActivityDirective.instantiateArguments(
+              this.arguments,
+              earliestStart,
+              facade.getLatestConstraintSimulationResults(),
+              evaluationEnvironment,
+              type),
+          null));
     } else{
      throw new UnsupportedOperationException("Duration type other than Uncontrollable and Controllable are not suppoerted");
     }
@@ -363,7 +370,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
    *     according to any specified template criteria
    */
   public @NotNull
-  Optional<ActivityInstance> createActivity(String name, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
+  Optional<SchedulingActivityDirective> createActivity(String name, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
     return createInstanceForReal(name,null, facade, plan, planningHorizon, evaluationEnvironment);
   }
 

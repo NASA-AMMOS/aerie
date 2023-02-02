@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @param arguments arguments are stored in a String/SerializedValue hashmap.
  * @param topParent the parent activity if any
  */
-public record ActivityInstance(
+public record SchedulingActivityDirective(
     SchedulingActivityInstanceId id,
     ActivityType type,
     Duration startTime,
@@ -50,8 +50,8 @@ public record ActivityInstance(
    *     by this activity instance
    */
   //TODO: reconsider unscheduled activity instances
-  public static ActivityInstance of(ActivityType type) {
-    return new ActivityInstance(new SchedulingActivityInstanceId(uniqueId.getAndIncrement()), type,
+  public static SchedulingActivityDirective of(ActivityType type) {
+    return new SchedulingActivityDirective(new SchedulingActivityInstanceId(uniqueId.getAndIncrement()), type,
                                 Duration.ZERO,
                                 Duration.ZERO,
                                 Map.of(), null);
@@ -64,8 +64,8 @@ public record ActivityInstance(
    *     by this activity instance
    * @param start IN the time at which the activity is scheduled
    */
-  public static ActivityInstance of(ActivityType type, Duration start) {
-    return new ActivityInstance(new SchedulingActivityInstanceId(uniqueId.getAndIncrement()), type,
+  public static SchedulingActivityDirective of(ActivityType type, Duration start) {
+    return new SchedulingActivityDirective(new SchedulingActivityInstanceId(uniqueId.getAndIncrement()), type,
                                 start,
                                 Duration.ZERO,
                                 Map.of(), null);
@@ -79,30 +79,30 @@ public record ActivityInstance(
    * @param start IN the time at which the activity is scheduled
    * @param duration IN the duration that the activity lasts for
    */
-  public static ActivityInstance of(ActivityType type, Duration start, Duration duration) {
-    return new ActivityInstance(new SchedulingActivityInstanceId(uniqueId.getAndIncrement()), type,
+  public static SchedulingActivityDirective of(ActivityType type, Duration start, Duration duration) {
+    return new SchedulingActivityDirective(new SchedulingActivityInstanceId(uniqueId.getAndIncrement()), type,
                                 start,
                                 duration,
                                 Map.of(), null);
 
   }
 
-  public static ActivityInstance of(ActivityType type, Duration start, Duration duration, Map<String, SerializedValue> parameters) {
-    return new ActivityInstance(new SchedulingActivityInstanceId(uniqueId.getAndIncrement()), type,
+  public static SchedulingActivityDirective of(ActivityType type, Duration start, Duration duration, Map<String, SerializedValue> parameters) {
+    return new SchedulingActivityDirective(new SchedulingActivityInstanceId(uniqueId.getAndIncrement()), type,
                                 start,
                                 duration,
                                 parameters, null);
   }
 
-  public static ActivityInstance of(ActivityType type, Duration start, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityInstanceId topParent) {
-    return new ActivityInstance(new SchedulingActivityInstanceId(uniqueId.getAndIncrement()), type,
+  public static SchedulingActivityDirective of(ActivityType type, Duration start, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityInstanceId topParent) {
+    return new SchedulingActivityDirective(new SchedulingActivityInstanceId(uniqueId.getAndIncrement()), type,
                                 start,
                                 duration,
                                 parameters, topParent);
   }
 
-  private static ActivityInstance of(SchedulingActivityInstanceId id, ActivityType type, Duration start, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityInstanceId topParent) {
-    return new ActivityInstance(id,
+  private static SchedulingActivityDirective of(SchedulingActivityInstanceId id, ActivityType type, Duration start, Duration duration, Map<String, SerializedValue> parameters, SchedulingActivityInstanceId topParent) {
+    return new SchedulingActivityDirective(id,
                                 type,
                                 start,
                                 duration,
@@ -110,8 +110,8 @@ public record ActivityInstance(
                                 topParent);
   }
 
-  public static ActivityInstance copyOf(ActivityInstance activityInstance, Duration duration){
-    return ActivityInstance.of(activityInstance.id,
+  public static SchedulingActivityDirective copyOf(SchedulingActivityDirective activityInstance, Duration duration){
+    return SchedulingActivityDirective.of(activityInstance.id,
             activityInstance.type,
             activityInstance.startTime,
             duration,
@@ -120,16 +120,16 @@ public record ActivityInstance(
   }
 
   /**
-   * create an activity instance based on the provided one (but adifferent id)
+   * create an activity instance based on the provided one (but a different id)
    *
    * @param o IN the activity instance to copy from
    */
-  public static ActivityInstance of(ActivityInstance o) {
-    return new ActivityInstance(
+  public static SchedulingActivityDirective of(SchedulingActivityDirective o) {
+    return new SchedulingActivityDirective(
         new SchedulingActivityInstanceId(uniqueId.getAndIncrement()),
         o.type,
         o.startTime, o.duration,
-        o.arguments,
+        Map.copyOf(o.arguments),
         o.topParent
     );
   }
@@ -150,9 +150,9 @@ public record ActivityInstance(
    *
    * @return the activity
    */
-  public static ActivityInstance getActWithEarliestEndTtime(List<ActivityInstance> acts) {
+  public static SchedulingActivityDirective getActWithEarliestEndTime(List<SchedulingActivityDirective> acts) {
     if (acts.size() > 0) {
-      acts.sort(Comparator.comparing(ActivityInstance::getEndTime));
+      acts.sort(Comparator.comparing(SchedulingActivityDirective::getEndTime));
 
       return acts.get(0);
     }
@@ -164,9 +164,9 @@ public record ActivityInstance(
    *
    * @return the activity
    */
-  public static ActivityInstance getActWithLatestEndTtime(List<ActivityInstance> acts) {
+  public static SchedulingActivityDirective getActWithLatestEndTime(List<SchedulingActivityDirective> acts) {
     if (acts.size() > 0) {
-      acts.sort(Comparator.comparing(ActivityInstance::getEndTime));
+      acts.sort(Comparator.comparing(SchedulingActivityDirective::getEndTime));
 
       return acts.get(acts.size() - 1);
     }
@@ -178,9 +178,9 @@ public record ActivityInstance(
    *
    * @return the activity
    */
-  public static ActivityInstance getActWithEarliestStartTtime(List<ActivityInstance> acts) {
+  public static SchedulingActivityDirective getActWithEarliestStartTime(List<SchedulingActivityDirective> acts) {
     if (acts.size() > 0) {
-      acts.sort(Comparator.comparing(ActivityInstance::startTime));
+      acts.sort(Comparator.comparing(SchedulingActivityDirective::startTime));
 
       return acts.get(0);
     }
@@ -192,9 +192,9 @@ public record ActivityInstance(
    *
    * @return the activity
    */
-  public static ActivityInstance getActWithLatestStartTtime(List<ActivityInstance> acts) {
+  public static SchedulingActivityDirective getActWithLatestStartTime(List<SchedulingActivityDirective> acts) {
     if (acts.size() > 0) {
-      acts.sort(Comparator.comparing(ActivityInstance::startTime));
+      acts.sort(Comparator.comparing(SchedulingActivityDirective::startTime));
 
       return acts.get(acts.size() - 1);
     }
@@ -230,7 +230,7 @@ public record ActivityInstance(
    * @param that the other activity instance to compare to
    * @return true if they are equal in properties, false otherwise
    */
-  public boolean equalsInProperties(final ActivityInstance that){
+  public boolean equalsInProperties(final SchedulingActivityDirective that){
     return type.equals(that.type)
            && duration.isEqualTo(that.duration)
            && startTime.isEqualTo(that.startTime)

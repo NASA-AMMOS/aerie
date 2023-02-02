@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ public class ActivityExpressionDisjunction extends ActivityExpression {
    * @return true if the act instance matches one of the activity expression of the disjunction
    */
   @Override
-  public boolean matches(@NotNull ActivityInstance act, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment) {
+  public boolean matches(@NotNull SchedulingActivityDirective act, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment) {
     for (var expr : actExpressions) {
       if (expr.matches(act, simulationResults, evaluationEnvironment)) {
         return true;

@@ -9,7 +9,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
@@ -44,7 +44,7 @@ public class SimulationFacade {
   private SimulationResults lastSimDriverResults;
   private gov.nasa.jpl.aerie.constraints.model.SimulationResults lastSimConstraintResults;
   private final Map<SchedulingActivityInstanceId, ActivityDirectiveId> planActInstanceIdToSimulationActivityDirectiveId = new HashMap<>();
-  private final Map<ActivityInstance, SerializedActivity> insertedActivities;
+  private final Map<SchedulingActivityDirective, SerializedActivity> insertedActivities;
   private static final Duration MARGIN = Duration.of(5, MICROSECONDS);
 
   public gov.nasa.jpl.aerie.constraints.model.SimulationResults getLatestConstraintSimulationResults(){
@@ -68,15 +68,16 @@ public class SimulationFacade {
   /**
    * Fetches activity instance durations from last simulation
    *
-   * @param activityInstance the activity instance we want the duration for
+   * @param schedulingActivityDirective the activity instance we want the duration for
    * @return the duration if found in the last simulation, null otherwise
    */
-  public Optional<Duration> getActivityDuration(final ActivityInstance activityInstance) {
-    if(!planActInstanceIdToSimulationActivityDirectiveId.containsKey(activityInstance.getId())){
+  public Optional<Duration> getActivityDuration(final SchedulingActivityDirective schedulingActivityDirective) {
+    if(!planActInstanceIdToSimulationActivityDirectiveId.containsKey(schedulingActivityDirective.getId())){
       logger.error("You need to simulate before requesting activity duration");
       return Optional.empty();
     }
-    final var duration = driver.getActivityDuration(planActInstanceIdToSimulationActivityDirectiveId.get(activityInstance.getId()));
+    final var duration = driver.getActivityDuration(planActInstanceIdToSimulationActivityDirectiveId.get(
+        schedulingActivityDirective.getId()));
     if(duration.isEmpty()){
       logger.error("Simulation is probably outdated, check that no activity is removed between simulation and querying");
     }
@@ -93,16 +94,16 @@ public class SimulationFacade {
     }
   }
 
-  public Map<ActivityInstance, SchedulingActivityInstanceId> getAllChildActivities(final Duration endTime){
+  public Map<SchedulingActivityDirective, SchedulingActivityInstanceId> getAllChildActivities(final Duration endTime){
     computeSimulationResultsUntil(endTime);
-    final Map<ActivityInstance, SchedulingActivityInstanceId> childActivities = new HashMap<>();
+    final Map<SchedulingActivityDirective, SchedulingActivityInstanceId> childActivities = new HashMap<>();
     this.lastSimDriverResults.simulatedActivities.forEach( (activityInstanceId, activity) -> {
       if (activity.parentId() == null) return;
       final var rootParent = getIdOfRootParent(this.lastSimDriverResults, activityInstanceId);
       final var schedulingActId = planActInstanceIdToSimulationActivityDirectiveId.entrySet().stream().filter(
           entry -> entry.getValue().equals(rootParent)
       ).findFirst().get().getKey();
-      final var activityInstance = ActivityInstance.of(
+      final var activityInstance = SchedulingActivityDirective.of(
           activityTypes.get(activity.type()),
           this.planningHorizon.toDur(activity.start()),
           activity.duration(),
@@ -113,7 +114,7 @@ public class SimulationFacade {
     return childActivities;
   }
 
-  public void removeActivitiesFromSimulation(final Collection<ActivityInstance> activities) throws SimulationException {
+  public void removeActivitiesFromSimulation(final Collection<SchedulingActivityDirective> activities) throws SimulationException {
     var atLeastOne = false;
     for(final var act: activities){
       if(insertedActivities.containsKey(act)){
@@ -136,7 +137,7 @@ public class SimulationFacade {
    * @param toBeReplaced the activity to be replaced
    * @param replacement the replacement activity
    */
-  public void replaceActivityFromSimulation(final ActivityInstance toBeReplaced, final ActivityInstance replacement){
+  public void replaceActivityFromSimulation(final SchedulingActivityDirective toBeReplaced, final SchedulingActivityDirective replacement){
     if(toBeReplaced.type() != replacement.type()||
        toBeReplaced.startTime() != replacement.startTime()||
        !(toBeReplaced.arguments().equals(replacement.arguments()))) {
@@ -153,10 +154,10 @@ public class SimulationFacade {
     this.planActInstanceIdToSimulationActivityDirectiveId.put(replacement.id(), simulationId);
   }
 
-  public void simulateActivities(final Collection<ActivityInstance> activities)
+  public void simulateActivities(final Collection<SchedulingActivityDirective> activities)
   throws SimulationException {
     final var activitiesSortedByStartTime =
-        activities.stream().sorted(Comparator.comparing(ActivityInstance::startTime)).toList();
+        activities.stream().sorted(Comparator.comparing(SchedulingActivityDirective::startTime)).toList();
     for (final var activityInstance : activitiesSortedByStartTime) {
       try {
         simulateActivity(activityInstance);
@@ -175,7 +176,7 @@ public class SimulationFacade {
     }
   }
 
-  public void simulateActivity(final ActivityInstance activity) throws SimulationException {
+  public void simulateActivity(final SchedulingActivityDirective activity) throws SimulationException {
     if(activity.getParentActivity().isPresent()) {
       throw new Error("This method should not be called with a generated activity but with its top-level parent.");
     }

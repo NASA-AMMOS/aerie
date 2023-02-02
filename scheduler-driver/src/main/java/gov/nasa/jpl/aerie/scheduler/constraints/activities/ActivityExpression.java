@@ -11,7 +11,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.Nullable;
@@ -256,7 +256,7 @@ public class ActivityExpression implements Expression<Spans> {
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B basedOn(@NotNull ActivityInstance existingAct) {
+    B basedOn(@NotNull SchedulingActivityDirective existingAct) {
       type = existingAct.getType();
 
       if (existingAct.startTime() != null) {
@@ -485,7 +485,7 @@ public class ActivityExpression implements Expression<Spans> {
    *     by this template, or false if it does not meet one or more of
    *     the template criteria
    */
-  public boolean matches(@NotNull ActivityInstance act, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment) {
+  public boolean matches(@NotNull SchedulingActivityDirective act, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment) {
     boolean match = true;
 
     //REVIEW: literal object equality is probably correct for type
@@ -523,7 +523,7 @@ public class ActivityExpression implements Expression<Spans> {
     //activity must have all instantiated arguments of template to be compatible
     if (match && arguments != null) {
       Map<String, SerializedValue> actInstanceArguments = act.arguments();
-      final var instantiatedArguments = ActivityInstance.instantiateArguments(arguments, act.startTime(), simulationResults, evaluationEnvironment, type);
+      final var instantiatedArguments = SchedulingActivityDirective.instantiateArguments(arguments, act.startTime(), simulationResults, evaluationEnvironment, type);
       for (var param : instantiatedArguments.entrySet()) {
         if (actInstanceArguments.containsKey(param.getKey())) {
           match = actInstanceArguments.get(param.getKey()).equals(param.getValue());
@@ -574,7 +574,8 @@ public class ActivityExpression implements Expression<Spans> {
     //activity must have all instantiated arguments of template to be compatible
     if (match && arguments != null) {
       Map<String, SerializedValue> actInstanceArguments = act.parameters;
-      final var instantiatedArguments = ActivityInstance.instantiateArguments(arguments, act.interval.start, simulationResults, evaluationEnvironment, type);
+      final var instantiatedArguments = SchedulingActivityDirective
+                .instantiateArguments(arguments, act.interval.start, simulationResults, evaluationEnvironment, type);
       for (var param : instantiatedArguments.entrySet()) {
         if (actInstanceArguments.containsKey(param.getKey())) {
           match = actInstanceArguments.get(param.getKey()).equals(param.getValue());

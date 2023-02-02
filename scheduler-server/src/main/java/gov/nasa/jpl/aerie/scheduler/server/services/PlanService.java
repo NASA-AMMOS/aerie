@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
@@ -75,10 +75,10 @@ public interface PlanService {
      * @return the database id of the newly created aerie plan container
      * @throws NoSuchPlanException when the plan container could not be found in aerie after creation
      */
-    Pair<PlanId, Map<ActivityInstance, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
+    Pair<PlanId, Map<SchedulingActivityDirective, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
         final PlanMetadata planMetadata,
         final Plan plan,
-        final Map<ActivityInstance, GoalId> activityToGoalId
+        final Map<SchedulingActivityDirective, GoalId> activityToGoalId
     )
     throws IOException, NoSuchPlanException, PlanServiceException;
 
@@ -117,12 +117,12 @@ public interface PlanService {
      * @return
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
-    Map<ActivityInstance, ActivityDirectiveId> updatePlanActivityDirectives(
+    Map<SchedulingActivityDirective, ActivityDirectiveId> updatePlanActivityDirectives(
         PlanId planId,
         Map<SchedulingActivityInstanceId, ActivityDirectiveId> idsFromInitialPlan,
         MerlinPlan initialPlan,
         Plan plan,
-        Map<ActivityInstance, GoalId> activityToGoalId
+        Map<SchedulingActivityDirective, GoalId> activityToGoalId
     )
     throws IOException, NoSuchPlanException, PlanServiceException, NoSuchActivityInstanceException;
 
@@ -149,10 +149,10 @@ public interface PlanService {
      * @return
      * @throws NoSuchPlanException when the plan container does not exist in aerie
      */
-    Map<ActivityInstance, ActivityDirectiveId> createAllPlanActivityDirectives(
+    Map<SchedulingActivityDirective, ActivityDirectiveId> createAllPlanActivityDirectives(
         final PlanId planId,
         final Plan plan,
-        final Map<ActivityInstance, GoalId> activityToGoalId
+        final Map<SchedulingActivityDirective, GoalId> activityToGoalId
     )
     throws IOException, NoSuchPlanException, PlanServiceException;
   }
