@@ -23,16 +23,16 @@ jobs:
           distribution: temurin
           java-version: 19
       - uses: gradle/gradle-build-action@v2
-      - name: Build EDSL API Docs
-        run: ./gradlew publishDocs
-      - name: Build Java Docs
-        run: ./gradlew javadoc
       - name: Create Pages Build Directories
         run: mkdir -p build/javadoc/examples
+      - name: Build EDSL API Docs
+        run: ./gradlew publishDocs
       - name: Copy EDSL API Docs to Build Directory
         run: |
           cp -a ./merlin-server/constraints-dsl-compiler/build/docs ./build/constraints-edsl-api
           cp -a ./scheduler-worker/scheduling-dsl-compiler/build/docs ./build/scheduling-edsl-api
+      - name: Build Java Docs
+        run: ./gradlew javadoc
       - name: Copy Java Docs to Build Directory
         run: |
           cp -a ./constraints/build/docs/javadoc ./build/javadoc/constraints
