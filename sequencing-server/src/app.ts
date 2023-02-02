@@ -64,11 +64,13 @@ app.use(async (_: Request, res: Response, next: NextFunction) => {
 
   const activitySchemaDataLoader = new DataLoader(activitySchemaBatchLoader({ graphqlClient }), {
     cacheKeyFn: objectCacheKeyFunction,
+    name: null,
   });
 
   res.locals['context'] = {
     commandTypescriptDataLoader: new DataLoader(commandDictionaryTypescriptBatchLoader({ graphqlClient }), {
       cacheKeyFn: objectCacheKeyFunction,
+      name: null,
     }),
     activitySchemaDataLoader,
     simulatedActivitiesDataLoader: new DataLoader(
@@ -78,6 +80,7 @@ app.use(async (_: Request, res: Response, next: NextFunction) => {
       }),
       {
         cacheKeyFn: objectCacheKeyFunction,
+        name: null,
       },
     ),
     simulatedActivityInstanceBySimulatedActivityIdDataLoader: new DataLoader(
@@ -87,13 +90,16 @@ app.use(async (_: Request, res: Response, next: NextFunction) => {
       }),
       {
         cacheKeyFn: objectCacheKeyFunction,
+        name: null,
       },
     ),
     expansionSetDataLoader: new DataLoader(expansionSetBatchLoader({ graphqlClient }), {
       cacheKeyFn: objectCacheKeyFunction,
+      name: null,
     }),
     expansionDataLoader: new DataLoader(expansionBatchLoader({ graphqlClient }), {
       cacheKeyFn: objectCacheKeyFunction,
+      name: null,
     }),
   } as Context;
   return next();
