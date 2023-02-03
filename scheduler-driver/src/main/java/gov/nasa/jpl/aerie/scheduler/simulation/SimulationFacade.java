@@ -130,6 +130,28 @@ public class SimulationFacade {
     }
   }
 
+  /**
+   * Replaces an activity instance with another, strictly when they have the same id
+   * @param toBeReplaced the activity to be replaced
+   * @param replacement the replacement activity
+   */
+  public void replaceActivityFromSimulation(final ActivityInstance toBeReplaced, final ActivityInstance replacement){
+    if(toBeReplaced.type() != replacement.type()||
+       toBeReplaced.startTime() != replacement.startTime()||
+       !(toBeReplaced.arguments().equals(replacement.arguments()))) {
+      throw new IllegalArgumentException("When replacing an activity, you can only update the duration");
+    }
+    if(!insertedActivities.containsKey(toBeReplaced)){
+      throw new IllegalArgumentException("Trying to replace an activity that has not been previously simulated");
+    }
+    final var associated = insertedActivities.get(toBeReplaced);
+    insertedActivities.remove(toBeReplaced);
+    insertedActivities.put(replacement, associated);
+    final var simulationId = this.planActInstanceIdToSimulationActInstanceId.get(toBeReplaced.id());
+    this.planActInstanceIdToSimulationActInstanceId.remove(toBeReplaced.id());
+    this.planActInstanceIdToSimulationActInstanceId.put(replacement.id(), simulationId);
+  }
+
   public void simulateActivities(final Collection<ActivityInstance> activities)
   throws SimulationException {
     final var activitiesSortedByStartTime =
