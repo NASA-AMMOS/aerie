@@ -1,6 +1,6 @@
 <br>
 <div align="center">
-  <img alt="Aerie" height="85" src="docs/sphinx_scylladb_theme/static/img/logos/aerie-wordmark-with-background.svg">
+  <img alt="Aerie" height="85" src="docs/img/aerie-wordmark-with-background.svg">
 </div>
 <br>
 
