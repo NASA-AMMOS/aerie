@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler.worker.services;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -16,9 +15,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.*;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchActivityInstanceException;
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
@@ -27,12 +23,11 @@ import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.scheduler.server.services.PlanService;
-import gov.nasa.jpl.aerie.scheduler.server.services.PlanServiceException;
 import org.apache.commons.lang3.tuple.Pair;
 
 class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
 
-  private Optional<PlanningHorizon> planningHorizon = Optional.empty();
+  private Optional<PlanningHorizon> planningHorizon;
 
   record MissionModelInfo(Path libPath, Path modelPath, String modelName, MissionModelTypes types, Map<String, SerializedValue> config) {}
 
@@ -66,7 +61,6 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
 
   @Override
   public PlanMetadata getPlanMetadata(final PlanId planId)
-  throws IOException, NoSuchPlanException, PlanServiceException
   {
     if (this.missionModelInfo.isEmpty()) throw new RuntimeException("Make sure to call setMissionModel before running a test");
     if (this.planningHorizon.isEmpty()) throw new RuntimeException("Make sure to call setPlanningHorizon before running a test");
@@ -97,21 +91,19 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
       final PlanMetadata planMetadata,
       final Plan plan,
       final Map<SchedulingActivityDirective, GoalId> activityToGoal
-  ) throws IOException, NoSuchPlanException, PlanServiceException
+  )
   {
     return null;
   }
 
   @Override
   public PlanId createEmptyPlan(final String name, final long modelId, final Instant startTime, final Duration duration)
-  throws IOException, NoSuchPlanException, PlanServiceException
   {
     return null;
   }
 
   @Override
   public void createSimulationForPlan(final PlanId planId)
-  throws IOException, NoSuchPlanException, PlanServiceException
   {
 
   }
@@ -124,7 +116,6 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
       final Plan plan,
       final Map<SchedulingActivityDirective, GoalId> activityToGoal
   )
-  throws IOException, NoSuchPlanException, PlanServiceException, NoSuchActivityInstanceException
   {
     this.updatedPlan = extractPlannedActivityInstances(plan);
     final var res = new HashMap<SchedulingActivityDirective, ActivityDirectiveId>();
@@ -136,13 +127,12 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   }
 
   @Override
-  public void ensurePlanExists(final PlanId planId) throws IOException, NoSuchPlanException, PlanServiceException {
+  public void ensurePlanExists(final PlanId planId) {
 
   }
 
   @Override
   public void clearPlanActivityDirectives(final PlanId planId)
-  throws IOException, NoSuchPlanException, PlanServiceException
   {
 
   }
@@ -153,14 +143,12 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
       final Plan plan,
       final Map<SchedulingActivityDirective, GoalId> activityToGoalId
   )
-  throws IOException, NoSuchPlanException, PlanServiceException
   {
     return null;
   }
 
   @Override
   public MissionModelTypes getMissionModelTypes(final PlanId planId)
-  throws IOException, MissionModelServiceException
   {
     if (this.missionModelInfo.isEmpty()) throw new RuntimeException("Make sure to call setMissionModel before running a test");
     return this.missionModelInfo.get().types();
@@ -168,7 +156,6 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
 
   @Override
   public MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
-  throws IOException, MissionModelServiceException, NoSuchMissionModelException
   {
     if (this.missionModelInfo.isEmpty()) throw new RuntimeException("Make sure to call setMissionModel before running a test");
     return this.missionModelInfo.get().types();
