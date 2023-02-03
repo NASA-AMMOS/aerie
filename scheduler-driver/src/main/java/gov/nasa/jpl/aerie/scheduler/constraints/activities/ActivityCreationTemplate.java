@@ -138,7 +138,6 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
       template.endRange = this.endsIn;
       template.startOrEndRange = this.startsOrEndsIn;
 
-
       if (this.type.getDurationType() instanceof DurationType.Uncontrollable) {
         if(this.acceptableAbsoluteTimingError.isZero()){
           //TODO: uncomment when precision can be set by user
@@ -176,8 +175,6 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
      *     specified or else creates new instances with given defaults
      */
     public ActivityCreationTemplate build() {
-
-
       if (type == null) {
         throw new IllegalArgumentException(
             "activity creation template requires non-null activity type");
@@ -186,7 +183,6 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
       fill(template);
       return template;
     }
-
   }
 
   /**
@@ -207,7 +203,6 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
     }
     return Optional.empty();
   }
-
 
   private Optional<SchedulingActivityDirective> createInstanceForReal(final String name, final Interval interval, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
     final var tnw = new TaskNetworkAdapter(new TaskNetwork());
@@ -255,7 +250,9 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
                   facade.getLatestConstraintSimulationResults(),
                   evaluationEnvironment,
                   type),
-              null);
+              null,
+              null,
+              true);
           try {
             facade.simulateActivity(actToSim);
             final var dur = facade.getActivityDuration(actToSim);
@@ -273,21 +270,25 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
 
         final var durationHalfEndInterval = endInterval.duration().dividedBy(2);
 
-        final var result = new EquationSolvingAlgorithms.SecantDurationAlgorithm().findRoot(f,
-                                                                                            startInterval.start,
-                                                                                            startInterval.end,
-                                                                                            endInterval.start.plus(durationHalfEndInterval),
-                                                                                            durationHalfEndInterval,
-                                                                                            durationHalfEndInterval,
-                                                                                            startInterval.start,
-                                                                                            startInterval.end,
-                                                                                            20);
+        final var result = new EquationSolvingAlgorithms
+            .SecantDurationAlgorithm()
+            .findRoot(
+                f,
+                startInterval.start,
+                startInterval.end,
+                endInterval.start.plus(durationHalfEndInterval),
+                durationHalfEndInterval,
+                durationHalfEndInterval,
+                startInterval.start,
+                startInterval.end,
+                20);
 
         Duration dur = null;
         if(!f.isApproximation()){
           //f is calling simulation -> we do not need to resimulate this activity later
           dur = result.fx().minus(result.x());
         }
+        // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
         return Optional.of(SchedulingActivityDirective.of(
             type,
             result.x(),
@@ -297,7 +298,9 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
                 facade.getLatestConstraintSimulationResults(),
                 evaluationEnvironment,
                 type),
-            null));
+            null,
+            null,
+            true));
       } catch (EquationSolvingAlgorithms.ZeroDerivativeException zeroOrInfiniteDerivativeException) {
         logger.debug("Rootfinding encountered a zero-derivative");
       } catch (EquationSolvingAlgorithms.InfiniteDerivativeException infiniteDerivativeException) {
@@ -338,6 +341,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
         //REVIEW: should take default duration of activity type maybe ?
         setActivityDuration = solved.end().start.minus(solved.start().start);
       }
+      // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
       return Optional.of(SchedulingActivityDirective.of(
           type,
           earliestStart,
@@ -348,7 +352,9 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
               facade.getLatestConstraintSimulationResults(),
               evaluationEnvironment,
               type),
-          null));
+          null,
+          null,
+          true));
     } else{
      throw new UnsupportedOperationException("Duration type other than Uncontrollable and Controllable are not suppoerted");
     }

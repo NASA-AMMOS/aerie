@@ -20,17 +20,18 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ResumableSimulationTest {
-
   ResumableSimulationDriver<?> resumableSimulationDriver;
   Duration endOfLastAct;
 
+  private final Duration tenHours = Duration.of(10, Duration.HOURS);
+
   @BeforeEach
-  public void init() throws InstantiationException {
+  public void init() {
     final var acts = getActivities();
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel);
+    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel,tenHours);
     for (var act : acts) {
-      resumableSimulationDriver.simulateActivity(act.activity, act.start, act.id);
+      resumableSimulationDriver.simulateActivity(act.start, act.activity, null, true, act.id);
     }
   }
   @Test
@@ -76,18 +77,23 @@ public class ResumableSimulationTest {
   }
 
   @Test
-  public void testThreadsReleased() throws InstantiationException {
+  public void testThreadsReleased() {
     final var activity = new TestSimulatedActivity(
         Duration.of(0, SECONDS),
         new SerializedActivity("BasicActivity", Map.of()),
         new ActivityDirectiveId(1));
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel);
-    final var executor = unsafeGetExecutor(resumableSimulationDriver);
-    for (var i = 0; i < 20000; i++) {
-      resumableSimulationDriver.initSimulation();
-      resumableSimulationDriver.simulateActivity(activity.activity, activity.start, activity.id);
-      assertTrue(executor.getActiveCount() < 100, "Threads are not being cleaned up properly - this test shouldn't need more than 2 threads, but it used at least 100");
+    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, tenHours);
+    try (final var executor = unsafeGetExecutor(resumableSimulationDriver)) {
+      for (var i = 0; i < 20000; i++) {
+        resumableSimulationDriver.initSimulation();
+        // TODO: add a clear activityDirectives here
+        resumableSimulationDriver.clearActivitiesInserted();
+        resumableSimulationDriver.simulateActivity(activity.start, activity.activity, null, true, activity.id);
+        assertTrue(
+            executor.getActiveCount() < 100,
+            "Threads are not being cleaned up properly - this test shouldn't need more than 2 threads, but it used at least 100");
+      }
     }
   }
 
@@ -122,8 +128,5 @@ public class ResumableSimulationTest {
     return acts;
   }
 
-
   record TestSimulatedActivity(Duration start, SerializedActivity activity, ActivityDirectiveId id){}
-
-
 }

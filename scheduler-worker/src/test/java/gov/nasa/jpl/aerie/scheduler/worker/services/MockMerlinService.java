@@ -5,9 +5,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
@@ -16,7 +17,6 @@ import gov.nasa.jpl.aerie.scheduler.TimeUtility;
 import gov.nasa.jpl.aerie.scheduler.model.*;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
-import gov.nasa.jpl.aerie.scheduler.server.models.MerlinActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
@@ -32,8 +32,8 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   record MissionModelInfo(Path libPath, Path modelPath, String modelName, MissionModelTypes types, Map<String, SerializedValue> config) {}
 
   private Optional<MissionModelInfo> missionModelInfo = Optional.empty();
-  private List<PlannedActivityInstance> initialPlan;
-  Collection<PlannedActivityInstance> updatedPlan;
+  private List<ActivityDirective> initialPlan;
+  Collection<ActivityDirective> updatedPlan;
 
   MockMerlinService() {
     this.initialPlan = List.of();
@@ -42,7 +42,7 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
         TimeUtility.fromDOY("2021-005T00:00:00")));
   }
 
-  void setInitialPlan(final List<PlannedActivityInstance> initialPlan) {
+  void setInitialPlan(final List<ActivityDirective> initialPlan) {
     this.initialPlan = initialPlan;
   }
 
@@ -117,11 +117,10 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
       final Map<SchedulingActivityDirective, GoalId> activityToGoal
   )
   {
-    this.updatedPlan = extractPlannedActivityInstances(plan);
+    this.updatedPlan = extractActivityDirectives(plan);
     final var res = new HashMap<SchedulingActivityDirective, ActivityDirectiveId>();
-    var id = 0L;
     for (final var activity : plan.getActivities()) {
-      res.put(activity, new ActivityDirectiveId(id++));
+      res.put(activity, new ActivityDirectiveId(activity.id().id()));
     }
     return res;
   }
@@ -161,10 +160,9 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
     return this.missionModelInfo.get().types();
   }
 
-  record PlannedActivityInstance(String type, Map<String, SerializedValue> args, Duration startTime) {}
 
-  private static Collection<PlannedActivityInstance> extractPlannedActivityInstances(final Plan plan) {
-    final var plannedActivityInstances = new ArrayList<PlannedActivityInstance>();
+  private static Collection<ActivityDirective> extractActivityDirectives(final Plan plan) {
+    final var activityDirectives = new ArrayList<ActivityDirective>();
     for (final var activity : plan.getActivities()) {
       final var type = activity.getType();
       final var arguments = new HashMap<>(activity.arguments());
@@ -174,21 +172,22 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
           arguments.put(durationType.parameterName(), SerializedValue.of(activity.duration().in(Duration.MICROSECONDS)));
         }
       }
-      plannedActivityInstances.add(new PlannedActivityInstance(
+      activityDirectives.add(new ActivityDirective(
+          activity.startOffset(),
           activity.getType().getName(),
           arguments,
-          activity.startOffset()));
+          (activity.anchorId() != null ? new ActivityDirectiveId(-activity.anchorId().id()) : null),
+          activity.anchoredToStart()));
     }
-    return plannedActivityInstances;
+    return activityDirectives;
   }
 
-  private static MerlinPlan makePlan(final Iterable<MockMerlinService.PlannedActivityInstance> activities, final Problem problem) {
+  private static MerlinPlan makePlan(final Iterable<ActivityDirective> activities, final Problem problem) {
     final var initialPlan = new MerlinPlan();
 
     var id = 0L;
     for (final var activity : activities) {
-      final var activityInstance = new MerlinActivityInstance(activity.type(), activity.startTime(), activity.args());
-      initialPlan.addActivity(new ActivityDirectiveId(id++), activityInstance);
+      initialPlan.addActivity(new ActivityDirectiveId(id++), activity);
     }
     return initialPlan;
   }

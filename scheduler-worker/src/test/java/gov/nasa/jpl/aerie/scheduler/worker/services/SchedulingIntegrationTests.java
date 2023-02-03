@@ -17,6 +17,8 @@ import java.util.stream.Stream;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOURS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
 import static org.junit.jupiter.api.Assertions.*;
+
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.protocol.model.DirectiveType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
@@ -52,7 +54,7 @@ public class SchedulingIntegrationTests {
 
   private record MissionModelDescription(String name, Map<String, SerializedValue> config, Path libPath) {}
 
-  private record SchedulingGoal(GoalId goalId, String definition, boolean enabled) {};
+  private record SchedulingGoal(GoalId goalId, String definition, boolean enabled) {}
 
   private static final MissionModelDescription BANANANATION = new MissionModelDescription(
       "bananantion",
@@ -94,8 +96,8 @@ public class SchedulingIntegrationTests {
     }
     final var updatedPlan = results.updatedPlan();
     for (final var activity : updatedPlan) {
-      final var arguments = activity.args();
-      assertEquals("PeelBanana", activity.type());
+      final var arguments = activity.serializedActivity().getArguments();
+      assertEquals("PeelBanana", activity.serializedActivity().getTypeName());
       assertEquals(SerializedValue.of("fromStem"), arguments.get("peelDirection"));
     }
   }
@@ -103,7 +105,7 @@ public class SchedulingIntegrationTests {
   @Test
   void testRecurrenceGoalNegative() {
     try {
-      final var results = runScheduler(BANANANATION, List.of(), List.of(new SchedulingGoal(new GoalId(0L), """
+      runScheduler(BANANANATION, List.of(), List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.ActivityRecurrenceGoal({
             activityTemplate: ActivityTemplates.PeelBanana({
               peelDirection: "fromStem",
@@ -111,6 +113,7 @@ public class SchedulingIntegrationTests {
             interval: Temporal.Duration.from({ hours : -4})
           })
           """, true)), PLANNING_HORIZON);
+      fail();
     }
     catch (IllegalArgumentException e) {
       assertTrue(e.getMessage().contains("Duration passed to RecurrenceGoal as the goal's minimum recurrence interval cannot be negative!"));
@@ -154,8 +157,8 @@ public class SchedulingIntegrationTests {
                                               .of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
                                               .map(x -> Duration.of(x, Duration.SECOND)).toList());
     for (final var growBanana : growBananas) {
-      assertTrue(setStartTimes.remove(growBanana.startTime()));
-      assertEquals(SerializedValue.of(1), growBanana.args().get("quantity"));
+      assertTrue(setStartTimes.remove(growBanana.startOffset()));
+      assertEquals(SerializedValue.of(1), growBanana.serializedActivity().getArguments().get("quantity"));
     }
   }
 
@@ -196,8 +199,8 @@ public class SchedulingIntegrationTests {
                                               .of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
                                               .map(x -> Duration.of(x, Duration.SECOND)).toList());
     for (final var growBanana : growBananas) {
-      assertTrue(setStartTimes.remove(growBanana.startTime()));
-      assertEquals(SerializedValue.of(1), growBanana.args().get("quantity"));
+      assertTrue(setStartTimes.remove(growBanana.startOffset()));
+      assertEquals(SerializedValue.of(1), growBanana.serializedActivity().getArguments().get("quantity"));
     }
   }
 
@@ -206,9 +209,13 @@ public class SchedulingIntegrationTests {
   void testSingleActivityPlanSimpleRecurrenceGoal() {
     final var results = runScheduler(
         BANANANATION,
-        List.of(new MockMerlinService.PlannedActivityInstance("BiteBanana",
-                                                              Map.of("biteSize", SerializedValue.of(1)),
-                                                              Duration.ZERO)),
+        List.of(
+            new ActivityDirective(
+                Duration.ZERO,
+                "BiteBanana",
+                Map.of("biteSize", SerializedValue.of(1)),
+                null,
+                true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
             export default () => Goal.ActivityRecurrenceGoal({
               activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
@@ -234,13 +241,13 @@ public class SchedulingIntegrationTests {
     assertEquals(1, biteBananas.size());
 
     final var biteBanana = biteBananas.iterator().next();
-    assertEquals(SerializedValue.of(1), biteBanana.args().get("biteSize"));
+    assertEquals(SerializedValue.of(1), biteBanana.serializedActivity().getArguments().get("biteSize"));
 
     final var peelBananas = activitiesByType.get("PeelBanana");
     assertEquals(4, peelBananas.size());
 
     for (final var peelBanana : peelBananas) {
-      assertEquals(SerializedValue.of("fromStem"), peelBanana.args().get("peelDirection"));
+      assertEquals(SerializedValue.of("fromStem"), peelBanana.serializedActivity().getArguments().get("peelDirection"));
     }
   }
   @Test
@@ -248,12 +255,14 @@ public class SchedulingIntegrationTests {
     final var growBananaDuration = Duration.of(1, Duration.HOUR);
     final var results = runScheduler(
         BANANANATION,
-        List.of(new MockMerlinService.PlannedActivityInstance(
+        List.of(new ActivityDirective(
+            Duration.ZERO,
             "GrowBanana",
             Map.of(
                 "quantity", SerializedValue.of(3),
                 "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-            Duration.ZERO)),
+            null,
+            true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.CoexistenceGoal({
             forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
@@ -283,9 +292,9 @@ public class SchedulingIntegrationTests {
     final var peelBanana = changeProducers.iterator().next();
     final var growBanana = growBananas.iterator().next();
 
-    assertEquals(SerializedValue.of("Chiquita"), peelBanana.args().get("producer"));
+    assertEquals(SerializedValue.of("Chiquita"), peelBanana.serializedActivity().getArguments().get("producer"));
 
-    assertEquals(growBanana.startTime().plus(growBananaDuration).plus(Duration.of(5, Duration.MINUTES)), peelBanana.startTime());
+    assertEquals(growBanana.startOffset().plus(growBananaDuration).plus(Duration.of(5, Duration.MINUTES)), peelBanana.startOffset());
   }
 
 
@@ -294,12 +303,14 @@ public class SchedulingIntegrationTests {
     final var growBananaDuration = Duration.of(1, Duration.HOUR);
     final var results = runScheduler(
         BANANANATION,
-        List.of(new MockMerlinService.PlannedActivityInstance(
+        List.of(new ActivityDirective(
+            Duration.ZERO,
             "GrowBanana",
             Map.of(
                 "quantity", SerializedValue.of(3),
                 "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-            Duration.ZERO)),
+            null,
+            true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.CoexistenceGoal({
             forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
@@ -329,9 +340,9 @@ public class SchedulingIntegrationTests {
     final var peelBanana = peelBananas.iterator().next();
     final var growBanana = growBananas.iterator().next();
 
-    assertEquals(SerializedValue.of(3), peelBanana.args().get("quantity"));
+    assertEquals(SerializedValue.of(3), peelBanana.serializedActivity().getArguments().get("quantity"));
 
-    assertEquals(growBanana.startTime().plus(growBananaDuration).plus(Duration.of(5, Duration.MINUTES)), peelBanana.startTime());
+    assertEquals(growBanana.startOffset().plus(growBananaDuration).plus(Duration.of(5, Duration.MINUTES)), peelBanana.startOffset());
   }
 
   @Test
@@ -339,12 +350,15 @@ public class SchedulingIntegrationTests {
     final var growBananaDuration = Duration.of(1, Duration.HOUR);
     final var results = runScheduler(
         BANANANATION,
-        List.of(new MockMerlinService.PlannedActivityInstance(
-            "GrowBanana",
-            Map.of(
-                "quantity", SerializedValue.of(1),
-                "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-            Duration.ZERO)),
+        List.of(
+            new ActivityDirective(
+                Duration.ZERO,
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(1),
+                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                null,
+                true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.CoexistenceGoal({
             forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
@@ -374,10 +388,10 @@ public class SchedulingIntegrationTests {
     final var peelBanana = peelBananas.iterator().next();
     final var growBanana = growBananas.iterator().next();
 
-    assertEquals(SerializedValue.of("fromStem"), peelBanana.args().get("peelDirection"));
-    assertEquals(SerializedValue.of(1), growBanana.args().get("quantity"));
+    assertEquals(SerializedValue.of("fromStem"), peelBanana.serializedActivity().getArguments().get("peelDirection"));
+    assertEquals(SerializedValue.of(1), growBanana.serializedActivity().getArguments().get("quantity"));
 
-    assertEquals(growBanana.startTime().plus(growBananaDuration).plus(Duration.of(5, Duration.MINUTES)), peelBanana.startTime());
+    assertEquals(growBanana.startOffset().plus(growBananaDuration).plus(Duration.of(5, Duration.MINUTES)), peelBanana.startOffset());
   }
 
   @Test
@@ -385,12 +399,15 @@ public class SchedulingIntegrationTests {
     final var growBananaDuration = Duration.of(1, Duration.HOUR);
     final var results = runScheduler(
         BANANANATION,
-        List.of(new MockMerlinService.PlannedActivityInstance(
-            "GrowBanana",
-            Map.of(
-                "quantity", SerializedValue.of(1),
-                "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-            Duration.of(5, Duration.MINUTES))),
+        List.of(
+            new ActivityDirective(
+                Duration.of(5, Duration.MINUTES),
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(1),
+                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                null,
+                true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.CoexistenceGoal({
             forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
@@ -420,11 +437,11 @@ public class SchedulingIntegrationTests {
     final var peelBanana = peelBananas.iterator().next();
     final var growBanana = growBananas.iterator().next();
 
-    assertEquals(SerializedValue.of("fromStem"), peelBanana.args().get("peelDirection"));
-    assertEquals(SerializedValue.of(1), growBanana.args().get("quantity"));
+    assertEquals(SerializedValue.of("fromStem"), peelBanana.serializedActivity().getArguments().get("peelDirection"));
+    assertEquals(SerializedValue.of(1), growBanana.serializedActivity().getArguments().get("quantity"));
 
-    assertTrue(growBanana.startTime().plus(growBananaDuration).plus(Duration.of(5, Duration.MINUTES)).noShorterThan(peelBanana.startTime()));
-    assertTrue(growBanana.startTime().plus(growBananaDuration).noLongerThan(peelBanana.startTime()));
+    assertTrue(growBanana.startOffset().plus(growBananaDuration).plus(Duration.of(5, Duration.MINUTES)).noShorterThan(peelBanana.startOffset()));
+    assertTrue(growBanana.startOffset().plus(growBananaDuration).noLongerThan(peelBanana.startOffset()));
   }
 
   @Test
@@ -435,16 +452,20 @@ public class SchedulingIntegrationTests {
     // Between the end of the GrowBanana, and the beginning of the PickBanana, the StateConstraint is satisfied
     final var growBananaDuration = Duration.of(1, Duration.HOUR);
     final var results = runScheduler(BANANANATION, List.of(
-        new MockMerlinService.PlannedActivityInstance(
+        new ActivityDirective(
+            Duration.of(2, HOURS),
             "GrowBanana",
             Map.of(
                 "quantity", SerializedValue.of(100),
                 "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-            Duration.of(2, HOURS)),
-        new MockMerlinService.PlannedActivityInstance(
+            null,
+            true),
+        new ActivityDirective(
+            Duration.of(4, HOURS),
             "PickBanana",
             Map.of("quantity", SerializedValue.of(100)),
-            Duration.of(4, HOURS))), List.of(new SchedulingGoal(new GoalId(0L), """
+            null,
+            true)), List.of(new SchedulingGoal(new GoalId(0L), """
          export default (): Goal => {
           return Goal.CoexistenceGoal({
             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
@@ -459,9 +480,9 @@ public class SchedulingIntegrationTests {
     final var growBanana = planByActivityType.get("GrowBanana").iterator().next();
     final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
     final var pickBanana = planByActivityType.get("PickBanana").iterator().next();
-    assertTrue(peelBanana.startTime().noShorterThan(growBanana.startTime().plus(growBananaDuration)));
-    assertTrue(peelBanana.startTime().noLongerThan(pickBanana.startTime()));
-    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.args());
+    assertTrue(peelBanana.startOffset().noShorterThan(growBanana.startOffset().plus(growBananaDuration)));
+    assertTrue(peelBanana.startOffset().noLongerThan(pickBanana.startOffset()));
+    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.serializedActivity().getArguments());
   }
 
   @Test
@@ -474,16 +495,20 @@ public class SchedulingIntegrationTests {
     final var results = runScheduler(
         BANANANATION,
         List.of(
-            new MockMerlinService.PlannedActivityInstance(
+            new ActivityDirective(
+                Duration.of(2, HOURS),
                 "PickBanana",
                 Map.of("quantity", SerializedValue.of(100)),
-                Duration.of(2, HOURS)),
-            new MockMerlinService.PlannedActivityInstance(
-                    "GrowBanana",
-                    Map.of(
-                        "quantity", SerializedValue.of(100),
-                        "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-                    Duration.of(4, HOURS))),
+                null,
+                true),
+            new ActivityDirective(
+                Duration.of(4, HOURS),
+                "GrowBanana",
+                Map.of(
+                    "quantity", SerializedValue.of(100),
+                    "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
+                null,
+                true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
@@ -500,9 +525,9 @@ public class SchedulingIntegrationTests {
     final var growBanana = planByActivityType.get("GrowBanana").iterator().next();
     final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
     final var pickBanana = planByActivityType.get("PickBanana").iterator().next();
-    assertTrue(peelBanana.startTime().noShorterThan(pickBanana.startTime()), "PeelBanana was placed at %s which is before the start/end of PickBanana at %s".formatted(peelBanana.startTime(), pickBanana.startTime()));
-    assertTrue(peelBanana.startTime().noLongerThan(growBanana.startTime().plus(growBananaDuration)), "PeelBanana was placed at %s which is after the end of GrowBanana at %s".formatted(peelBanana.startTime(), growBanana.startTime()));
-    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.args());
+    assertTrue(peelBanana.startOffset().noShorterThan(pickBanana.startOffset()), "PeelBanana was placed at %s which is before the start/end of PickBanana at %s".formatted(peelBanana.startOffset(), pickBanana.startOffset()));
+    assertTrue(peelBanana.startOffset().noLongerThan(growBanana.startOffset().plus(growBananaDuration)), "PeelBanana was placed at %s which is after the end of GrowBanana at %s".formatted(peelBanana.startOffset(), growBanana.startOffset()));
+    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.serializedActivity().getArguments());
   }
 
   @Test
@@ -511,14 +536,18 @@ public class SchedulingIntegrationTests {
     // BiteBanana takes away 1.0
     // The constraint should be satisfied between the two BiteBananaActivities
     final var results = runScheduler(BANANANATION, List.of(
-        new MockMerlinService.PlannedActivityInstance(
+        new ActivityDirective(
+            Duration.of(2, HOURS),
             "BiteBanana",
             Map.of("biteSize", SerializedValue.of(1.0)),
-            Duration.of(2, HOURS)),
-        new MockMerlinService.PlannedActivityInstance(
+            null,
+            true),
+        new ActivityDirective(
+            Duration.of(4, HOURS),
             "BiteBanana",
             Map.of("biteSize", SerializedValue.of(1.0)),
-            Duration.of(4, HOURS))
+            null,
+            true)
     ), List.of(new SchedulingGoal(new GoalId(0L), """
          export default (): Goal => {
           return Goal.CoexistenceGoal({
@@ -535,9 +564,9 @@ public class SchedulingIntegrationTests {
     assertEquals(3, results.updatedPlan().size());
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
-    assertTrue(peelBanana.startTime().noShorterThan(Duration.of(2, HOURS)), "PeelBanana was placed at %s which is before the start/end of BiteBanana at %s".formatted(peelBanana.startTime(), Duration.of(2, HOURS)));
-    assertTrue(peelBanana.startTime().noLongerThan(Duration.of(4, HOURS)), "PeelBanana was placed at %s which is before the start/end of BiteBanana at %s".formatted(peelBanana.startTime(), Duration.of(4, HOURS)));
-    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.args());
+    assertTrue(peelBanana.startOffset().noShorterThan(Duration.of(2, HOURS)), "PeelBanana was placed at %s which is before the start/end of BiteBanana at %s".formatted(peelBanana.startOffset(), Duration.of(2, HOURS)));
+    assertTrue(peelBanana.startOffset().noLongerThan(Duration.of(4, HOURS)), "PeelBanana was placed at %s which is before the start/end of BiteBanana at %s".formatted(peelBanana.startOffset(), Duration.of(4, HOURS)));
+    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.serializedActivity().getArguments());
   }
 
   @Test
@@ -548,11 +577,13 @@ public class SchedulingIntegrationTests {
     final var results = runScheduler(
         BANANANATION,
         List.of(
-            new MockMerlinService.PlannedActivityInstance(
+            new ActivityDirective(
+                Duration.of(1, HOURS),
                 "GrowBanana",
                 Map.of("quantity", SerializedValue.of(3.0),
                        "growingDuration", SerializedValue.of(Duration.of(3, HOURS).in(Duration.MICROSECONDS))),
-                Duration.of(1, HOURS))),
+                null,
+                true)),
 
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
@@ -571,9 +602,9 @@ public class SchedulingIntegrationTests {
     assertEquals(2, results.updatedPlan().size());
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
-    assertTrue(peelBanana.startTime().noShorterThan(Duration.of(2, HOURS)), "PeelBanana was placed at %s which is before the start/end of GrowBanana at %s".formatted(peelBanana.startTime(), Duration.of(2, HOURS)));
-    assertTrue(peelBanana.startTime().noLongerThan(Duration.of(3, HOURS)), "PeelBanana was placed at %s which is before the start/end of GrowBanana at %s".formatted(peelBanana.startTime(), Duration.of(3, HOURS)));
-    assertEquals(Map.of("peelDirection", SerializedValue.of("fromTip")), peelBanana.args());
+    assertTrue(peelBanana.startOffset().noShorterThan(Duration.of(2, HOURS)), "PeelBanana was placed at %s which is before the start/end of GrowBanana at %s".formatted(peelBanana.startOffset(), Duration.of(2, HOURS)));
+    assertTrue(peelBanana.startOffset().noLongerThan(Duration.of(3, HOURS)), "PeelBanana was placed at %s which is before the start/end of GrowBanana at %s".formatted(peelBanana.startOffset(), Duration.of(3, HOURS)));
+    assertEquals(Map.of("peelDirection", SerializedValue.of("fromTip")), peelBanana.serializedActivity().getArguments());
   }
 
   @Test
@@ -586,16 +617,20 @@ public class SchedulingIntegrationTests {
     final var results = runScheduler(
         BANANANATION,
         List.of(
-            new MockMerlinService.PlannedActivityInstance(
+            new ActivityDirective(
+                Duration.of(2, HOURS),
                 "PickBanana",
                 Map.of("quantity", SerializedValue.of(100)),
-                Duration.of(2, HOURS)),
-            new MockMerlinService.PlannedActivityInstance(
+                null,
+                true),
+            new ActivityDirective(
+                Duration.of(4, HOURS),
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
                     "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-                Duration.of(4, HOURS))),
+                null,
+                true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
@@ -612,9 +647,9 @@ public class SchedulingIntegrationTests {
     final var growBanana = planByActivityType.get("GrowBanana").iterator().next();
     final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
     final var pickBanana = planByActivityType.get("PickBanana").iterator().next();
-    assertTrue(peelBanana.startTime().noShorterThan(pickBanana.startTime()), "PeelBanana was placed at %s which is before the start/end of PickBanana at %s".formatted(peelBanana.startTime(), pickBanana.startTime()));
-    assertTrue(peelBanana.startTime().noLongerThan(growBanana.startTime().plus(growBananaDuration)), "PeelBanana was placed at %s which is after the end of GrowBanana at %s".formatted(peelBanana.startTime(), growBanana.startTime()));
-    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.args());
+    assertTrue(peelBanana.startOffset().noShorterThan(pickBanana.startOffset()), "PeelBanana was placed at %s which is before the start/end of PickBanana at %s".formatted(peelBanana.startOffset(), pickBanana.startOffset()));
+    assertTrue(peelBanana.startOffset().noLongerThan(growBanana.startOffset().plus(growBananaDuration)), "PeelBanana was placed at %s which is after the end of GrowBanana at %s".formatted(peelBanana.startOffset(), growBanana.startOffset()));
+    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.serializedActivity().getArguments());
   }
 
   @Test
@@ -627,16 +662,20 @@ public class SchedulingIntegrationTests {
     final var results = runScheduler(
         BANANANATION,
         List.of(
-            new MockMerlinService.PlannedActivityInstance(
+            new ActivityDirective(
+                Duration.of(2, HOURS),
                 "PickBanana",
                 Map.of("quantity", SerializedValue.of(99)),
-                Duration.of(2, HOURS)),
-            new MockMerlinService.PlannedActivityInstance(
+                null,
+                true),
+            new ActivityDirective(
+                Duration.of(4, HOURS),
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
                     "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-                Duration.of(4, HOURS))),
+                null,
+                true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
@@ -652,8 +691,8 @@ public class SchedulingIntegrationTests {
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var pickBanana = planByActivityType.get("PickBanana").iterator().next();
     final var growBanana = planByActivityType.get("GrowBanana").iterator().next();
-    assertEquals(Duration.of(2, HOURS), pickBanana.startTime());
-    assertEquals(Duration.of(4, HOURS), growBanana.startTime());
+    assertEquals(Duration.of(2, HOURS), pickBanana.startOffset());
+    assertEquals(Duration.of(4, HOURS), growBanana.startOffset());
   }
 
   @Test
@@ -666,16 +705,20 @@ public class SchedulingIntegrationTests {
     final var results = runScheduler(
         BANANANATION,
         List.of(
-            new MockMerlinService.PlannedActivityInstance(
+            new ActivityDirective(
+                Duration.of(2, HOURS),
                 "PickBanana",
                 Map.of("quantity", SerializedValue.of(100)),
-                Duration.of(2, HOURS)),
-            new MockMerlinService.PlannedActivityInstance(
+                null,
+                true),
+            new ActivityDirective(
+                Duration.of(4, HOURS),
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
                     "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-                Duration.of(4, HOURS))),
+                null,
+                true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
@@ -692,9 +735,9 @@ public class SchedulingIntegrationTests {
     final var growBanana = planByActivityType.get("GrowBanana").iterator().next();
     final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
     final var pickBanana = planByActivityType.get("PickBanana").iterator().next();
-    assertTrue(peelBanana.startTime().noShorterThan(pickBanana.startTime()), "PeelBanana was placed at %s which is before the start/end of PickBanana at %s".formatted(peelBanana.startTime(), pickBanana.startTime()));
-    assertTrue(peelBanana.startTime().noLongerThan(growBanana.startTime().plus(growBananaDuration)), "PeelBanana was placed at %s which is after the end of GrowBanana at %s".formatted(peelBanana.startTime(), growBanana.startTime()));
-    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.args());
+    assertTrue(peelBanana.startOffset().noShorterThan(pickBanana.startOffset()), "PeelBanana was placed at %s which is before the start/end of PickBanana at %s".formatted(peelBanana.startOffset(), pickBanana.startOffset()));
+    assertTrue(peelBanana.startOffset().noLongerThan(growBanana.startOffset().plus(growBananaDuration)), "PeelBanana was placed at %s which is after the end of GrowBanana at %s".formatted(peelBanana.startOffset(), growBanana.startOffset()));
+    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.serializedActivity().getArguments());
   }
 
   @Test
@@ -707,16 +750,20 @@ public class SchedulingIntegrationTests {
     final var results = runScheduler(
         BANANANATION,
         List.of(
-            new MockMerlinService.PlannedActivityInstance(
+            new ActivityDirective(
+                Duration.of(2, HOURS),
                 "PickBanana",
                 Map.of("quantity", SerializedValue.of(100)),
-                Duration.of(2, HOURS)),
-            new MockMerlinService.PlannedActivityInstance(
+                null,
+                true),
+            new ActivityDirective(
+                Duration.of(4, HOURS),
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
                     "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-                Duration.of(4, HOURS))),
+                null,
+                true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
@@ -736,9 +783,9 @@ public class SchedulingIntegrationTests {
     final var growBanana = planByActivityType.get("GrowBanana").iterator().next();
     final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
     final var pickBanana = planByActivityType.get("PickBanana").iterator().next();
-    assertTrue(peelBanana.startTime().noShorterThan(pickBanana.startTime()), "PeelBanana was placed at %s which is before the start/end of PickBanana at %s".formatted(peelBanana.startTime(), pickBanana.startTime()));
-    assertTrue(peelBanana.startTime().noLongerThan(growBanana.startTime().plus(growBananaDuration)), "PeelBanana was placed at %s which is after the end of GrowBanana at %s".formatted(peelBanana.startTime(), growBanana.startTime()));
-    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.args());
+    assertTrue(peelBanana.startOffset().noShorterThan(pickBanana.startOffset()), "PeelBanana was placed at %s which is before the start/end of PickBanana at %s".formatted(peelBanana.startOffset(), pickBanana.startOffset()));
+    assertTrue(peelBanana.startOffset().noLongerThan(growBanana.startOffset().plus(growBananaDuration)), "PeelBanana was placed at %s which is after the end of GrowBanana at %s".formatted(peelBanana.startOffset(), growBanana.startOffset()));
+    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.serializedActivity().getArguments());
   }
 
   @Test
@@ -751,16 +798,20 @@ public class SchedulingIntegrationTests {
     final var results = runScheduler(
         BANANANATION,
         List.of(
-            new MockMerlinService.PlannedActivityInstance(
+            new ActivityDirective(
+                Duration.of(2, HOURS),
                 "PickBanana",
                 Map.of("quantity", SerializedValue.of(100)),
-                Duration.of(2, HOURS)),
-            new MockMerlinService.PlannedActivityInstance(
+                null,
+                true),
+            new ActivityDirective(
+                Duration.of(4, HOURS),
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
                     "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-                Duration.of(4, HOURS))),
+                null,
+                true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
@@ -780,9 +831,9 @@ public class SchedulingIntegrationTests {
     final var growBanana = planByActivityType.get("GrowBanana").iterator().next();
     final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
     final var pickBanana = planByActivityType.get("PickBanana").iterator().next();
-    assertTrue(peelBanana.startTime().noShorterThan(pickBanana.startTime()), "PeelBanana was placed at %s which is before the start/end of PickBanana at %s".formatted(peelBanana.startTime(), pickBanana.startTime()));
-    assertTrue(peelBanana.startTime().noLongerThan(growBanana.startTime().plus(growBananaDuration)), "PeelBanana was placed at %s which is after the end of GrowBanana at %s".formatted(peelBanana.startTime(), growBanana.startTime()));
-    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.args());
+    assertTrue(peelBanana.startOffset().noShorterThan(pickBanana.startOffset()), "PeelBanana was placed at %s which is before the start/end of PickBanana at %s".formatted(peelBanana.startOffset(), pickBanana.startOffset()));
+    assertTrue(peelBanana.startOffset().noLongerThan(growBanana.startOffset().plus(growBananaDuration)), "PeelBanana was placed at %s which is after the end of GrowBanana at %s".formatted(peelBanana.startOffset(), growBanana.startOffset()));
+    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.serializedActivity().getArguments());
   }
 
   @Test
@@ -791,10 +842,12 @@ public class SchedulingIntegrationTests {
     // ChangeProducer sets producer to "Dole"
     // The PeelBanana should be placed at the same time as the ChangeProducer
     final var results = runScheduler(BANANANATION, List.of(
-        new MockMerlinService.PlannedActivityInstance(
+        new ActivityDirective(
+            Duration.of(2, HOURS),
             "ChangeProducer",
             Map.of(),
-            Duration.of(2, HOURS))), List.of(new SchedulingGoal(new GoalId(0L), """
+            null,
+            true)), List.of(new SchedulingGoal(new GoalId(0L), """
          export default (): Goal => {
           return Goal.CoexistenceGoal({
             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
@@ -808,8 +861,8 @@ public class SchedulingIntegrationTests {
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var changeProducer = planByActivityType.get("ChangeProducer").iterator().next();
     final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
-    assertEquals(changeProducer.startTime(), peelBanana.startTime());
-    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.args());
+    assertEquals(changeProducer.startOffset(), peelBanana.startOffset());
+    assertEquals(Map.of("peelDirection", SerializedValue.of("fromStem")), peelBanana.serializedActivity().getArguments());
   }
 
   @Test
@@ -818,10 +871,12 @@ public class SchedulingIntegrationTests {
     // ChangeProducer sets producer to "Dole"
     // The PeelBanana should be placed at the same time as the ChangeProducer
     final var results = runScheduler(BANANANATION, List.of(
-        new MockMerlinService.PlannedActivityInstance(
+        new ActivityDirective(
+            Duration.of(2, HOURS),
             "ChangeProducer",
             Map.of("producer", SerializedValue.of("Fyffes")),
-            Duration.of(2, HOURS))), List.of(new SchedulingGoal(new GoalId(0L), """
+            null,
+            true)), List.of(new SchedulingGoal(new GoalId(0L), """
          export default (): Goal => {
           return Goal.CoexistenceGoal({
             activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
@@ -834,7 +889,7 @@ public class SchedulingIntegrationTests {
     assertEquals(1, results.updatedPlan().size());
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var changeProducer = planByActivityType.get("ChangeProducer").iterator().next();
-    assertEquals("Fyffes", changeProducer.args().get("producer").asString().get());
+    assertEquals("Fyffes", changeProducer.serializedActivity().getArguments().get("producer").asString().get());
   }
 
   @Test
@@ -844,30 +899,38 @@ public class SchedulingIntegrationTests {
     final var results = runScheduler(
         BANANANATION,
         List.of(
-            new MockMerlinService.PlannedActivityInstance(
+            new ActivityDirective(
+                Duration.of(1, Duration.SECONDS),
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
                     "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-                Duration.of(1, Duration.SECONDS)),
-            new MockMerlinService.PlannedActivityInstance(
+                null,
+                true),
+            new ActivityDirective(
+                Duration.of(2, Duration.SECONDS),
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
                     "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-                Duration.of(2, Duration.SECONDS)),
-            new MockMerlinService.PlannedActivityInstance(
+                null,
+                true),
+            new ActivityDirective(
+                Duration.of(3, Duration.SECONDS),
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
                     "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-                Duration.of(3, Duration.SECONDS)),
-            new MockMerlinService.PlannedActivityInstance(
+                null,
+                true),
+            new ActivityDirective(
+                Duration.of(48, HOURS),
                 "PickBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100000)
                 ),
-                Duration.of(48, HOURS))
+                null,
+                true)
         ),
         List.of(new SchedulingGoal(new GoalId(0L), """
                   export default () => Goal.ActivityRecurrenceGoal({
@@ -878,8 +941,8 @@ public class SchedulingIntegrationTests {
         PLANNING_HORIZON
     );
 
-    for (MockMerlinService.PlannedActivityInstance i : results.updatedPlan().stream().toList()) {
-      System.out.println(i.type().toString() + ": " + i.startTime().toString());
+    for (ActivityDirective i : results.updatedPlan().stream().toList()) {
+      System.out.println(i.serializedActivity().getTypeName() + ": " + i.startOffset().toString());
     }
 
     assertEquals(1, results.scheduleResults.goalResults().size()); //starts an instant before 12:00 (when there is more than 1 plant - the interval is about 00:00-24:00 because the plant gets created early, then the interval is subdivided, and then a interval is picked, seemingly arbitrarily, as this is uncontrollable duration (see line 304 of ActivityCreationTemplate), after which cadence is maintained) then schedules 4, as expected. 7 total then.
@@ -887,7 +950,7 @@ public class SchedulingIntegrationTests {
 
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var changeProducer = planByActivityType.get("ChangeProducer").iterator().next();
-    assertEquals("Morpheus", changeProducer.args().get("producer").asString().get());
+    assertEquals("Morpheus", changeProducer.serializedActivity().getArguments().get("producer").asString().get());
   }
 
   @Test
@@ -942,10 +1005,12 @@ public class SchedulingIntegrationTests {
     final var results = runScheduler(
         BANANANATION,
         List.of(
-            new MockMerlinService.PlannedActivityInstance(
+            new ActivityDirective(
+                Duration.of(24, HOURS).minus(MICROSECOND),
                 "BiteBanana",
                 Map.of("biteSize", SerializedValue.of(1)),
-                Duration.of(24, HOURS).minus(MICROSECOND))
+                null,
+                true)
         ),
         List.of(new SchedulingGoal(new GoalId(0L), """
           export default () => Goal.ActivityRecurrenceGoal({
@@ -964,12 +1029,12 @@ public class SchedulingIntegrationTests {
     assertEquals(2, results.updatedPlan().size());
   }
 
-  private static Map<String, Collection<MockMerlinService.PlannedActivityInstance>>
-  partitionByActivityType(final Iterable<MockMerlinService.PlannedActivityInstance> activities) {
-    final var result = new HashMap<String, Collection<MockMerlinService.PlannedActivityInstance>>();
+  private static Map<String, Collection<ActivityDirective>>
+  partitionByActivityType(final Iterable<ActivityDirective> activities) {
+    final var result = new HashMap<String, Collection<ActivityDirective>>();
     for (final var activity : activities) {
       result
-          .computeIfAbsent(activity.type(), key -> new ArrayList<>())
+          .computeIfAbsent(activity.serializedActivity().getTypeName(), key -> new ArrayList<>())
           .add(activity);
     }
     return result;
@@ -1009,7 +1074,7 @@ public class SchedulingIntegrationTests {
 
   private SchedulingRunResults runScheduler(
       final MissionModelDescription desc,
-      final List<MockMerlinService.PlannedActivityInstance> plannedActivities,
+      final List<ActivityDirective> plannedActivities,
       final Iterable<SchedulingGoal> goals,
       final PlanningHorizon planningHorizon
   )
@@ -1019,7 +1084,7 @@ public class SchedulingIntegrationTests {
 
   private SchedulingRunResults runScheduler(
       final MissionModelDescription desc,
-      final List<MockMerlinService.PlannedActivityInstance> plannedActivities,
+      final List<ActivityDirective> plannedActivities,
       final Iterable<SchedulingGoal> goals,
       final List<GlobalSchedulingConditionRecord> globalSchedulingConditions,
       final PlanningHorizon planningHorizon
@@ -1064,7 +1129,7 @@ public class SchedulingIntegrationTests {
     return new SchedulingRunResults(((MockResultsProtocolWriter.Result.Success) result).results(), mockMerlinService.updatedPlan);
   }
 
-  record SchedulingRunResults(ScheduleResults scheduleResults, Collection<MockMerlinService.PlannedActivityInstance> updatedPlan) {}
+  record SchedulingRunResults(ScheduleResults scheduleResults, Collection<ActivityDirective> updatedPlan) {}
 
   static MissionModelService.MissionModelTypes loadMissionModelTypesFromJar(
       final String jarPath,
@@ -1111,16 +1176,20 @@ public class SchedulingIntegrationTests {
     final var results = runScheduler(
         BANANANATION,
         List.of(
-            new MockMerlinService.PlannedActivityInstance(
+            new ActivityDirective(
+                Duration.of(1, Duration.MINUTES),
                 "PickBanana",
                 Map.of("quantity", SerializedValue.of(99)),
-                Duration.of(1, Duration.MINUTES)),
-            new MockMerlinService.PlannedActivityInstance(
+                null,
+                true),
+            new ActivityDirective(
+                Duration.of(15, Duration.MINUTES),
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
                     "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-                Duration.of(15, Duration.MINUTES))),
+                null,
+                true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CardinalityGoal({
@@ -1149,12 +1218,11 @@ public class SchedulingIntegrationTests {
     assertFalse(results.scheduleResults.goalResults().entrySet().iterator().next().getValue().satisfied());
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var pickBanana = planByActivityType.get("PickBanana").iterator().next();
-    final var itGrowBanana = planByActivityType.get("GrowBanana").iterator();
     final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
     final var growStartTimes = new HashSet<Duration>();
-    planByActivityType.get("GrowBanana").forEach(activity -> growStartTimes.add(activity.startTime()));
-    assertEquals(Duration.of(1, Duration.MINUTES), pickBanana.startTime());
-    assertEquals(Duration.of(1, Duration.MINUTES), peelBanana.startTime());
+    planByActivityType.get("GrowBanana").forEach(activity -> growStartTimes.add(activity.startOffset()));
+    assertEquals(Duration.of(1, Duration.MINUTES), pickBanana.startOffset());
+    assertEquals(Duration.of(1, Duration.MINUTES), peelBanana.startOffset());
     assertTrue(growStartTimes.contains(Duration.of(15, Duration.MINUTES)));
     assertTrue(growStartTimes.contains(Duration.of(16, Duration.MINUTES)));
   }
@@ -1169,16 +1237,20 @@ public class SchedulingIntegrationTests {
     final var results = runScheduler(
         BANANANATION,
         List.of(
-            new MockMerlinService.PlannedActivityInstance(
+            new ActivityDirective(
+                Duration.of(2, Duration.MINUTES),
                 "PickBanana",
                 Map.of("quantity", SerializedValue.of(99)),
-                Duration.of(2, Duration.MINUTES)),
-            new MockMerlinService.PlannedActivityInstance(
+                null,
+                true),
+            new ActivityDirective(
+                Duration.of(4, Duration.MINUTES),
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
                     "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-                Duration.of(4, Duration.MINUTES))),
+                null,
+                true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CardinalityGoal({
@@ -1217,16 +1289,20 @@ public class SchedulingIntegrationTests {
     final var results = runScheduler(
         BANANANATION,
         List.of(
-            new MockMerlinService.PlannedActivityInstance(
+            new ActivityDirective(
+                Duration.of(2, HOURS),
                 "PickBanana",
                 Map.of("quantity", SerializedValue.of(99)),
-                Duration.of(2, HOURS)),
-            new MockMerlinService.PlannedActivityInstance(
+                null,
+                true),
+            new ActivityDirective(
+                Duration.of(4, HOURS),
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(100),
                     "growingDuration", SerializedValue.of(growBananaDuration.in(Duration.MICROSECONDS))),
-                Duration.of(4, HOURS))),
+                null,
+                true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
                 export default (): Goal => {
                  return Goal.CoexistenceGoal({
@@ -1255,9 +1331,9 @@ public class SchedulingIntegrationTests {
     final var pickBanana = planByActivityType.get("PickBanana").iterator().next();
     final var growBanana = planByActivityType.get("GrowBanana").iterator().next();
     final var peelBanana = planByActivityType.get("PeelBanana").iterator().next();
-    assertEquals(Duration.of(2, HOURS), pickBanana.startTime());
-    assertEquals(Duration.of(4, HOURS), peelBanana.startTime());
-    assertEquals(Duration.of(4, HOURS), growBanana.startTime());
+    assertEquals(Duration.of(2, HOURS), pickBanana.startOffset());
+    assertEquals(Duration.of(4, HOURS), peelBanana.startOffset());
+    assertEquals(Duration.of(4, HOURS), growBanana.startOffset());
   }
 
   @Test
@@ -1277,19 +1353,21 @@ public class SchedulingIntegrationTests {
                                                     TimeUtility.fromDOY("2021-200T01:00:00"));
     final var results = runScheduler(BANANANATION,
                  List.of(
-                     new MockMerlinService.PlannedActivityInstance(
+                     new ActivityDirective(
+                         Duration.of(1, HOURS),
                          "parent",
                          Map.of(),
-                         Duration.of(1, HOURS))),
+                         null,
+                         true)),
                  List.of(new SchedulingGoal(new GoalId(0L), goalDefinition, true)),
                  planningHorizon);
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
-    final var biteBanana = planByActivityType.get("BiteBanana").stream().map((bb) -> bb.startTime()).toList();
+    final var biteBanana = planByActivityType.get("BiteBanana").stream().map((bb) -> bb.startOffset()).toList();
     final var childs = planByActivityType.get("child");
     assertEquals(childs.size(), biteBanana.size());
     assertEquals(childs.size(), 2);
     for(final var childAct: childs){
-      assertTrue(biteBanana.contains(childAct.startTime()));
+      assertTrue(biteBanana.contains(childAct.startOffset()));
     }
   }
 
@@ -1310,22 +1388,24 @@ public class SchedulingIntegrationTests {
                                                     TimeUtility.fromDOY("2021-200T01:00:00"));
     final var results = runScheduler(BANANANATION,
                                      List.of(
-                                         new MockMerlinService.PlannedActivityInstance(
+                                         new ActivityDirective(
+                                             Duration.of(1, HOURS),
                                              "parent",
                                              Map.of(),
-                                             Duration.of(1, HOURS))),
+                                             null,
+                                             true)),
                                      List.of(new SchedulingGoal(new GoalId(0L), goalDefinition, true)),
                                      List.of(createAutoMutex("child")),
                                      planningHorizon);
     final var planByActivityType = partitionByActivityType(results.updatedPlan());
     final var parentActs = planByActivityType.get("parent");
-    final var childActs = planByActivityType.get("child").stream().map((bb) -> bb.startTime()).toList();
+    final var childActs = planByActivityType.get("child").stream().map((bb) -> bb.startOffset()).toList();
     //ensure no new child activity has been inserted
     assertEquals(childActs.size(), 2);
     //ensure no new parent activity has been inserted
     assertEquals(parentActs.size(), 1);
     for(final var parentAct: parentActs){
-      assertTrue(childActs.contains(parentAct.startTime()));
+      assertTrue(childActs.contains(parentAct.startOffset()));
     }
   }
 
@@ -1364,7 +1444,7 @@ public class SchedulingIntegrationTests {
               });
             """, true)),
         PLANNING_HORIZON);
-    final var results2 = runScheduler(
+    runScheduler(
         BANANANATION,
         results.updatedPlan.stream().toList(),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -1382,10 +1462,12 @@ public class SchedulingIntegrationTests {
   void test_inf_loop(){
     final var results = runScheduler(
         BANANANATION,
-        List.of(new MockMerlinService.PlannedActivityInstance(
+        List.of(new ActivityDirective(
+            Duration.of(23, HOURS),
             "BiteBanana",
             Map.of("biteSize", SerializedValue.of(10)),
-            Duration.of(23, HOURS))),
+            null,
+            true)),
         List.of(new SchedulingGoal(new GoalId(0L), """
               export default (): Goal =>
                  Goal.ActivityRecurrenceGoal({

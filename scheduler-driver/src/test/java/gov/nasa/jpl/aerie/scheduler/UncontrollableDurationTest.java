@@ -148,7 +148,7 @@ public class UncontrollableDurationTest {
   public void testBug(){
     final var controllableDurationActivity = SchedulingActivityDirective.of(problem.getActivityType("ControllableDurationActivity"),
                                                                    Duration.of(1, Duration.MICROSECONDS),
-                                                                   Duration.of(3, Duration.MICROSECONDS));
+                                                                   Duration.of(3, Duration.MICROSECONDS), null, true);
 
     final var zeroDurationUncontrollableActivity = new ActivityCreationTemplate.Builder()
         .ofType(problem.getActivityType("ZeroDurationUncontrollableActivity"))

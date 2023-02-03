@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.json.BasicParsers;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
@@ -15,7 +16,6 @@ import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.scheduler.server.http.SerializedValueJsonParser;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
-import gov.nasa.jpl.aerie.scheduler.server.models.MerlinActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
@@ -241,7 +241,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
   {
     final var merlinPlan = new MerlinPlan();
     final var request =
-        "query { plan_by_pk(id:%d) { activity_directives { id start_offset type arguments } duration start_time }} ".formatted(
+        "query { plan_by_pk(id:%d) { activity_directives { id start_offset type arguments anchor_id anchored_to_start } duration start_time }} ".formatted(
             planMetadata.planId().id());
     final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(planMetadata.planId()));
     final var jsonplan = response.getJsonObject("data").getJsonObject("plan_by_pk");
@@ -250,6 +250,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
       final var jsonActivity = activityDirectives.getJsonObject(i);
       final var type = activityDirectives.getJsonObject(i).getString("type");
       final var start = jsonActivity.getString("start_offset");
+      final Integer anchorId = jsonActivity.isNull("anchor_id") ? null : jsonActivity.getInt("anchor_id");
+      final boolean anchoredToStart = jsonActivity.getBoolean("anchored_to_start");
       final var arguments = jsonActivity.getJsonObject("arguments");
       final var deserializedArguments = BasicParsers
           .mapP(new SerializedValueJsonParser())
@@ -260,10 +262,12 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
           .getSpecType()
           .getInputType()
           .getEffectiveArguments(deserializedArguments);
-      final var merlinActivity = new MerlinActivityInstance(
-          type,
+      final var merlinActivity = new ActivityDirective(
           Duration.of(parseGraphQLInterval(start).getDuration().toNanos() / 1000, Duration.MICROSECONDS),
-          effectiveArguments);
+          type,
+          effectiveArguments,
+          (anchorId != null) ? new ActivityDirectiveId(anchorId) : null,
+          anchoredToStart);
       final var actPK = new ActivityDirectiveId(jsonActivity.getJsonNumber("id").longValue());
       merlinPlan.addActivity(actPK, merlinActivity);
     }
@@ -384,13 +388,19 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
         }
         final var actFromInitialPlan = initialPlan.getActivityById(idActFromInitialPlan);
         //if act was present in initial plan
-        final var schedulerActIntoMerlinAct = new MerlinActivityInstance(activity.getType().getName(), activity.startOffset(), activity.arguments());
-        final var activityInstanceId = idsFromInitialPlan.get(activity.getId());
-        if (!schedulerActIntoMerlinAct.equals(actFromInitialPlan.get())) {
+        final var activityDirectiveFromSchedulingDirective = new ActivityDirective(
+            activity.startOffset(),
+            activity.type().getName(),
+            activity.arguments(),
+            (activity.anchorId() != null ? new ActivityDirectiveId(-activity.anchorId().id()) : null),
+            activity.anchoredToStart()
+        );
+        final var activityDirectiveId = idsFromInitialPlan.get(activity.getId());
+        if (!activityDirectiveFromSchedulingDirective.equals(actFromInitialPlan.get())) {
           throw new PlanServiceException("The scheduler should not be updating activity instances");
-          //updateActivityDirective(planId, schedulerActIntoMerlinAct, activityInstanceId, activityToGoalId.get(activity));
+          //updateActivityDirective(planId, schedulerActIntoMerlinAct, activityDirectiveId, activityToGoalId.get(activity));
         }
-        ids.put(activity, activityInstanceId);
+        ids.put(activity, activityDirectiveId);
       } else {
         //act was not present in initial plan, create new activity
         toAdd.add(activity);

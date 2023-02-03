@@ -144,6 +144,7 @@ public class PrioritySolver implements Solver {
    * @return false if at least one activity has a simulated duration not equal to the expected duration, true otherwise
    */
   private boolean checkAndInsertActs(Collection<SchedulingActivityDirective> acts){
+    // TODO: When anchors are allowed to be added by Scheduling goals, inserting the new activities one at a time should be reconsidered
     boolean allGood = true;
 
     for(var act: acts){
@@ -227,7 +228,7 @@ public class PrioritySolver implements Solver {
 
   /**
    * For activities that have a null duration (in an initial plan for example) and that have been simulated, we pull the duration and
-   * replace the original instance with a new instance that includes the duraiton, both in the plan and the simulation facade
+   * replace the original instance with a new instance that includes the duration, both in the plan and the simulation facade
    */
   public void pullActivityDurationsIfNecessary() {
     final var toRemoveFromPlan = new ArrayList<SchedulingActivityDirective>();

@@ -343,21 +343,21 @@ public record SynchronousSchedulerAgent(
     //TODO: maybe paranoid check if plan rev has changed since original metadata?
     try {
       final var merlinPlan =  planService.getPlanActivityDirectives(planMetadata, problem);
-      final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> schedulingIdToMerlinId = new HashMap<>();
+      final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> schedulingIdToDirectiveId = new HashMap<>();
       final var plan = new PlanInMemory();
       final var activityTypes = problem.getActivityTypes().stream().collect(Collectors.toMap(ActivityType::getName, at -> at));
       for(final var elem : merlinPlan.getActivitiesById().entrySet()){
         final var activity = elem.getValue();
-        if(!activityTypes.containsKey(activity.type())){
+        if(!activityTypes.containsKey(activity.serializedActivity().getTypeName())){
           throw new IllegalArgumentException("Activity type found in JSON object after request to merlin server has "
                                              + "not been found in types extracted from mission model. Probable "
                                              + "inconsistency between mission model used by scheduler server and "
                                              + "merlin server.");
         }
-        final var schedulerActType = activityTypes.get(activity.type());
+        final var schedulerActType = activityTypes.get(activity.serializedActivity().getTypeName());
         Duration actDuration = null;
         if (schedulerActType.getDurationType() instanceof DurationType.Controllable s) {
-          final var serializedDuration = activity.arguments().get(s.parameterName());
+          final var serializedDuration = activity.serializedActivity().getArguments().get(s.parameterName());
           if (serializedDuration != null) {
             actDuration = Duration.of(
                 serializedDuration
@@ -370,11 +370,12 @@ public record SynchronousSchedulerAgent(
         } else {
           throw new Error("Unhandled variant of DurationType:" + schedulerActType.getDurationType());
         }
-        final var act = SchedulingActivityDirective.of(schedulerActType, activity.startTimestamp(), actDuration, activity.arguments());
-        schedulingIdToMerlinId.put(act.getId(), elem.getKey());
+        final var act = SchedulingActivityDirective.fromActivityDirective(elem.getKey(), activity, schedulerActType, actDuration);
+
+        schedulingIdToDirectiveId.put(act.getId(), elem.getKey());
         plan.add(act);
       }
-      return new PlanComponents(plan, merlinPlan, schedulingIdToMerlinId);
+      return new PlanComponents(plan, merlinPlan, schedulingIdToDirectiveId);
     } catch (Exception e) {
       throw new ResultsProtocolFailure(e);
     }

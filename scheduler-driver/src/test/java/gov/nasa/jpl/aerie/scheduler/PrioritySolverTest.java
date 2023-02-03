@@ -88,26 +88,26 @@ public class PrioritySolverTest {
   private static PlanInMemory makePlanA012(Problem problem) {
     final var plan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    plan.add(SchedulingActivityDirective.of(actTypeA, t0, d1min));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t1hr, d1min));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t2hr, d1min));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t0, d1min, null, true));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t1hr, d1min, null, true));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t2hr, d1min, null, true));
     return plan;
   }
 
   private static PlanInMemory makePlanA12(Problem problem) {
     final var plan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    plan.add(SchedulingActivityDirective.of(actTypeA, t1hr, d1min));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t2hr, d1min));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t1hr, d1min, null, true));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t2hr, d1min, null, true));
     return plan;
   }
 
   private static PlanInMemory makePlanAB012(Problem problem) {
     final var plan = makePlanA012(problem);
     final var actTypeB = problem.getActivityType("OtherControllableDurationActivity");
-    plan.add(SchedulingActivityDirective.of(actTypeB, t0, d1min));
-    plan.add(SchedulingActivityDirective.of(actTypeB, t1hr, d1min));
-    plan.add(SchedulingActivityDirective.of(actTypeB, t2hr, d1min));
+    plan.add(SchedulingActivityDirective.of(actTypeB, t0, d1min, null, true));
+    plan.add(SchedulingActivityDirective.of(actTypeB, t1hr, d1min, null, true));
+    plan.add(SchedulingActivityDirective.of(actTypeB, t2hr, d1min, null, true));
     return plan;
   }
 

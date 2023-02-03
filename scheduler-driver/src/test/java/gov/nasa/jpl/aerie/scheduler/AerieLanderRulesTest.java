@@ -51,7 +51,7 @@
 //  public void secondRuleAnalysis(){
 //    final var goals = new ArrayList<>(rules.getSecondRuleGoals().values());
 //    smallProblem.setGoals(goals);
-//    final var activityInstancePresent = new ActivityInstance(rules.getActivityType("IDAMoveArm"), planningHorizon.fromStart("P1D"), Duration.of(20, Duration.MINUTE));
+//    final var activityInstancePresent = new ActivityInstance(rules.getActivityType("IDAMoveArm"), planningHorizon.fromStart("P1D"), Duration.of(20, Duration.MINUTE), null, true);
 //    plan.add(activityInstancePresent);
 //    schedule(true);
 //    //assert than the procedural goal has a score equal to 0, that the association has been performed

@@ -44,10 +44,10 @@ public class LongDurationPlanTest {
   private static PlanInMemory makePlanA012(Problem problem) {
     final var plan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("GrowBanana");
-    plan.add(SchedulingActivityDirective.of(actTypeA, t0, d1min));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t1year, d1min));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t2year, d1min));
-    plan.add(SchedulingActivityDirective.of(actTypeA, t3year, d1min));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t0, d1min, null, true));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t1year, d1min, null, true));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t2year, d1min, null, true));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t3year, d1min, null, true));
     return plan;
   }
 

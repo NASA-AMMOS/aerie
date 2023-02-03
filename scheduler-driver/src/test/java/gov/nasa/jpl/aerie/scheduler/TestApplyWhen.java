@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -461,7 +460,7 @@ public class TestApplyWhen {
       logger.debug(a.startOffset().toString());
     }
 
-    assertTrue(plan.get().getActivitiesByTime().size() == 2);
+    assertEquals(2, plan.get().getActivitiesByTime().size());
     assertEquals(plan.get().getActivitiesByTime().stream()
                      .map(SchedulingActivityDirective::duration)
                      .reduce(Duration.ZERO, Duration::plus), Duration.of(4, Duration.SECOND)); //1 gets added, then throws 4 warnings meaning it tried to schedule 5 in total, not the expected 8...
@@ -627,9 +626,9 @@ public class TestApplyWhen {
     //  create a PlanInMemory, add ActivityInstances
     PlanInMemory partialPlan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie(), Duration.of(5, Duration.SECONDS))); //create an activity that's 5 seconds long, start at start
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(11, Duration.SECONDS)), Duration.of(5, Duration.SECONDS))); //create an activity that's 5 seconds long, 11s after start
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(16, Duration.SECONDS)), Duration.of(5, Duration.SECONDS))); //create an activity that's 5 seconds long, 16s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie(), Duration.of(5, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, start at start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(11, Duration.SECONDS)), Duration.of(5, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 11s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(16, Duration.SECONDS)), Duration.of(5, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 16s after start
 
     //  pass this plan as initialPlan to Problem object
     problem.setInitialPlan(partialPlan);
@@ -657,7 +656,7 @@ public class TestApplyWhen {
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
-    assertTrue(plan.get().getActivitiesByTime().size() == 4);
+    assertEquals(4, plan.get().getActivitiesByTime().size());
 
   }
 
@@ -680,9 +679,9 @@ public class TestApplyWhen {
     //  create a PlanInMemory, add ActivityInstances
     PlanInMemory partialPlan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie(), Duration.of(5, Duration.SECONDS))); //create an activity that's 5 seconds long, start at start
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(11, Duration.SECONDS)), Duration.of(5, Duration.SECONDS))); //create an activity that's 5 seconds long, 11s after start
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(16, Duration.SECONDS)), Duration.of(5, Duration.SECONDS))); //create an activity that's 5 seconds long, 16s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie(), Duration.of(5, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, start at start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(11, Duration.SECONDS)), Duration.of(5, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 11s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(16, Duration.SECONDS)), Duration.of(5, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 16s after start
 
     //  pass this plan as initialPlan to Problem object
     problem.setInitialPlan(partialPlan);
@@ -710,7 +709,7 @@ public class TestApplyWhen {
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
-    assertTrue(plan.get().getActivitiesByTime().size() == 5);
+    assertEquals(5, plan.get().getActivitiesByTime().size());
 
   }
 
@@ -740,9 +739,9 @@ public class TestApplyWhen {
     //  create a PlanInMemory, add ActivityInstances
     PlanInMemory partialPlan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie(), Duration.of(5, Duration.SECONDS))); //create an activity that's 5 seconds long, start at start
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(11, Duration.SECONDS)), Duration.of(5, Duration.SECONDS))); //create an activity that's 5 seconds long, 11s after start
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(16, Duration.SECONDS)), Duration.of(5, Duration.SECONDS))); //create an activity that's 5 seconds long, 16s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie(), Duration.of(5, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, start at start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(11, Duration.SECONDS)), Duration.of(5, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 11s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(16, Duration.SECONDS)), Duration.of(5, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 16s after start
 
     //  pass this plan as initialPlan to Problem object
     problem.setInitialPlan(partialPlan);
@@ -770,9 +769,9 @@ public class TestApplyWhen {
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
-    assertTrue(plan.get().getActivitiesByTime()
-                   .stream().filter($ -> $.duration().dividedBy(Duration.SECOND) == 2).collect(Collectors.toList())
-                   .size() == 2);
+    assertEquals(2, plan.get().getActivitiesByTime()
+                        .stream().filter($ -> $.duration().dividedBy(Duration.SECOND) == 2).toList()
+                        .size());
   }
 
   @Test
@@ -794,10 +793,10 @@ public class TestApplyWhen {
     //  create a PlanInMemory, add ActivityInstances
     PlanInMemory partialPlan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(1, Duration.SECONDS)), Duration.of(4, Duration.SECONDS))); //create an activity that's 5 seconds long, start at start. NOTE: must start at time=1, not time=0, else test fails.
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(8, Duration.SECONDS)), Duration.of(4, Duration.SECONDS))); //create an activity that's 5 seconds long, 11s after start
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(14, Duration.SECONDS)), Duration.of(4, Duration.SECONDS))); //create an activity that's 5 seconds long, 16s after start
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(19, Duration.SECONDS)), Duration.of(4, Duration.SECONDS))); //create an activity that's 5 seconds long, 16s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(1, Duration.SECONDS)), Duration.of(4, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, start at start. NOTE: must start at time=1, not time=0, else test fails.
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(8, Duration.SECONDS)), Duration.of(4, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 11s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(14, Duration.SECONDS)), Duration.of(4, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 16s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(19, Duration.SECONDS)), Duration.of(4, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 16s after start
 
 
     //  pass this plan as initialPlan to Problem object
@@ -858,11 +857,11 @@ public class TestApplyWhen {
     //  create a PlanInMemory, add ActivityInstances
     PlanInMemory partialPlan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(1, Duration.SECONDS)), Duration.of(4, Duration.SECONDS))); //create an activity that's 5 seconds long, start at start
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(7, Duration.SECONDS)), Duration.of(4, Duration.SECONDS))); //create an activity that's 5 seconds long, 11s after start
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(14, Duration.SECONDS)), Duration.of(4, Duration.SECONDS))); //create an activity that's 5 seconds long, 16s after start
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(19, Duration.SECONDS)), Duration.of(4, Duration.SECONDS))); //create an activity that's 5 seconds long, 16s after start
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(25, Duration.SECONDS)), Duration.of(4, Duration.SECONDS))); //create an activity that's 5 seconds long, 16s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(1, Duration.SECONDS)), Duration.of(4, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, start at start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(7, Duration.SECONDS)), Duration.of(4, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 11s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(14, Duration.SECONDS)), Duration.of(4, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 16s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(19, Duration.SECONDS)), Duration.of(4, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 16s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(25, Duration.SECONDS)), Duration.of(4, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 16s after start
 
 
     //  pass this plan as initialPlan to Problem object
@@ -933,8 +932,8 @@ public class TestApplyWhen {
     //  create a PlanInMemory, add ActivityInstances
     PlanInMemory partialPlan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie(), Duration.of(4, Duration.SECONDS))); //create an activity that's 5 seconds long, start at start
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(8, Duration.SECONDS)), Duration.of(5, Duration.SECONDS))); //create an activity that's 5 seconds long, 11s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie(), Duration.of(4, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, start at start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(8, Duration.SECONDS)), Duration.of(5, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 11s after start
 
     //  pass this plan as initialPlan to Problem object
     problem.setInitialPlan(partialPlan);
@@ -998,7 +997,7 @@ public class TestApplyWhen {
     //  create a PlanInMemory, add ActivityInstances
     PlanInMemory partialPlan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie(), Duration.of(13, Duration.SECONDS))); //create an activity that's 5 seconds long, start at start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie(), Duration.of(13, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, start at start
 
     //  pass this plan as initialPlan to Problem object
     problem.setInitialPlan(partialPlan);
@@ -1061,9 +1060,9 @@ public class TestApplyWhen {
     //  create a PlanInMemory, add ActivityInstances
     PlanInMemory partialPlan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie(), Duration.of(5, Duration.SECONDS))); //create an activity that's 5 seconds long, start at start
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(11, Duration.SECONDS)), Duration.of(5, Duration.SECONDS))); //create an activity that's 5 seconds long, 11s after start
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(16, Duration.SECONDS)), Duration.of(5, Duration.SECONDS))); //create an activity that's 5 seconds long, 16s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie(), Duration.of(5, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, start at start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(11, Duration.SECONDS)), Duration.of(5, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 11s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(16, Duration.SECONDS)), Duration.of(5, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 16s after start
 
     //  pass this plan as initialPlan to Problem object
     problem.setInitialPlan(partialPlan);
@@ -1091,8 +1090,7 @@ public class TestApplyWhen {
     for(SchedulingActivityDirective a : plan.get().getActivitiesByTime()){
       logger.debug(a.startOffset().toString() + ", " + a.duration().toString());
     }
-    assertTrue(plan.get().getActivitiesByTime().size() == 5);
-
+    assertEquals(5, plan.get().getActivitiesByTime().size());
   }
 
   @Test
