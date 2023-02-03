@@ -32,18 +32,22 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   record MissionModelInfo(Path libPath, Path modelPath, String modelName, MissionModelTypes types, Map<String, SerializedValue> config) {}
 
   private Optional<MissionModelInfo> missionModelInfo = Optional.empty();
-  private List<ActivityDirective> initialPlan;
+  private MerlinPlan initialPlan;
   Collection<ActivityDirective> updatedPlan;
 
   MockMerlinService() {
-    this.initialPlan = List.of();
+    this.initialPlan = new MerlinPlan();
     this.planningHorizon = Optional.of(new PlanningHorizon(
         TimeUtility.fromDOY("2021-001T00:00:00"),
         TimeUtility.fromDOY("2021-005T00:00:00")));
   }
 
-  void setInitialPlan(final List<ActivityDirective> initialPlan) {
-    this.initialPlan = initialPlan;
+  void setInitialPlan(final Map<ActivityDirectiveId, ActivityDirective> initialActivities) {
+    final var newInitialPlan = new MerlinPlan();
+    for (final var activity : initialActivities.entrySet()) {
+      newInitialPlan.addActivity(activity.getKey(), activity.getValue());
+    }
+    this.initialPlan = newInitialPlan;
   }
 
   void setMissionModel(final MissionModelInfo value) {
@@ -82,8 +86,7 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   public MerlinPlan getPlanActivityDirectives(final PlanMetadata planMetadata, final Problem mission)
   {
     // TODO this gets the planMetadata from above
-
-    return makePlan(initialPlan, mission);
+    return this.initialPlan;
   }
 
   @Override
@@ -180,15 +183,5 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
           activity.anchoredToStart()));
     }
     return activityDirectives;
-  }
-
-  private static MerlinPlan makePlan(final Iterable<ActivityDirective> activities, final Problem problem) {
-    final var initialPlan = new MerlinPlan();
-
-    var id = 0L;
-    for (final var activity : activities) {
-      initialPlan.addActivity(new ActivityDirectiveId(id++), activity);
-    }
-    return initialPlan;
   }
 }
