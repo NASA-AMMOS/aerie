@@ -1,3 +1,5 @@
+[![slack](https://img.shields.io/badge/slack-aerie-brightgreen?logo=slack)](https://join.slack.com/t/nasa-ammos/shared_invite/zt-1mlgmk5c2-MgqVSyKzVRUWrXy87FNqPw)
+
 <br>
 <div align="center">
   <img alt="Aerie" height="85" src="docs/img/aerie-wordmark-with-background.svg">
@@ -61,7 +63,7 @@ Want to file a bug, contribute some code, or improve documentation? Excellent! R
 
 The scripts and documentation in this project are released under the [MIT License](LICENSE).
 
-[contributing]: ./CONTRIBUTING.md
+[contributing]: ./docs/CONTRIBUTING.md
 [deployment]: ./deployment
 [dev]: ./docs/DEVELOPER.md
 [fast-track]: https://nasa-ammos.github.io/aerie-docs/introduction/#fast-track

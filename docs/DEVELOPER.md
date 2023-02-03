@@ -3,6 +3,7 @@
 This document describes how to set up your development environment to build and develop Aerie.
 
 - [Prerequisite Software](#prerequisite-software)
+- [Code Editor](#code-editor)
 - [Getting the Sources](#getting-the-sources)
 - [Building](#building)
 - [Testing](#testing)
@@ -45,6 +46,10 @@ Before you can run Aerie you must install and configure the following products o
   ```sh
   brew install postgresql
   ```
+
+## Code Editor
+
+If you use [IntelliJ IDEA](https://www.jetbrains.com/idea/), you can import the Aerie repository into IntelliJ as a Gradle project. No additional configuration is required.
 
 ## Getting the Sources
 
