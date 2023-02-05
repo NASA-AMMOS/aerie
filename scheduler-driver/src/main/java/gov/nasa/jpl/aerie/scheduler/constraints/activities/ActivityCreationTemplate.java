@@ -255,9 +255,11 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
                                                                                          type),
                                                    null);
           try {
-            facade.simulateActivity(actToSim);
+            plan.add(actToSim);
+            facade.simulateActivity(plan, actToSim);
+            plan.remove(actToSim);
             final var dur = facade.getActivityDuration(actToSim);
-            facade.removeActivitiesFromSimulation(List.of(actToSim));
+            facade.removeActivitiesFromSimulation(plan, List.of(actToSim));
             return dur.map(start::plus).orElse(Duration.MAX_VALUE);
           } catch (SimulationFacade.SimulationException e) {
             return Duration.MAX_VALUE;

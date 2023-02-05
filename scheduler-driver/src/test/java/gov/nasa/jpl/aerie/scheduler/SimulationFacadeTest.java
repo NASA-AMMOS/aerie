@@ -22,11 +22,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
+import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateQueryParam;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeAnchor;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionConstant;
-import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
-import gov.nasa.jpl.aerie.scheduler.constraints.resources.StateQueryParam;
 import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
+import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -44,7 +44,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static com.google.common.truth.Truth.assertThat;
 import static gov.nasa.jpl.aerie.constraints.time.Interval.Inclusivity.Exclusive;
@@ -178,8 +177,9 @@ public class SimulationFacadeTest {
 
   @Test
   public void getValueAtTimeDoubleOnSimplePlanMidpoint() throws SimulationFacade.SimulationException {
-    facade.simulateActivities(makeTestPlanP0B1().getActivities());
-    facade.computeSimulationResultsUntil(tEnd);
+    final var plan = makeTestPlanP0B1();
+    facade.simulateActivities(plan, plan.getActivities());
+    facade.computeSimulationResultsUntil(plan, tEnd);
     final var stateQuery = new StateQueryParam(getFruitRes().name, new TimeExpressionConstant(t1_5));
     final var actual = stateQuery.getValue(facade.getLatestConstraintSimulationResults(), null, horizon.getHor());
     assertThat(actual).isEqualTo(SerializedValue.of(3.0));
@@ -187,8 +187,9 @@ public class SimulationFacadeTest {
 
   @Test
   public void getValueAtTimeDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
-    facade.simulateActivities(makeTestPlanP0B1().getActivities());
-    facade.computeSimulationResultsUntil(tEnd);
+    final var plan = makeTestPlanP0B1();
+    facade.simulateActivities(plan, plan.getActivities());
+    facade.computeSimulationResultsUntil(plan, tEnd);
     final var stateQuery = new StateQueryParam(getFruitRes().name, new TimeExpressionConstant(t2));
     final var actual = stateQuery.getValue(facade.getLatestConstraintSimulationResults(), null, horizon.getHor());
     assertThat(actual).isEqualTo(SerializedValue.of(2.9));
@@ -196,8 +197,9 @@ public class SimulationFacadeTest {
 
   @Test
   public void whenValueAboveDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
-    facade.simulateActivities(makeTestPlanP0B1().getActivities());
-    facade.computeSimulationResultsUntil(tEnd);
+    final var plan = makeTestPlanP0B1();
+    facade.simulateActivities(plan, plan.getActivities());
+    facade.computeSimulationResultsUntil(plan, tEnd);
     var actual = new GreaterThan(getFruitRes(), new RealValue(2.9)).evaluate(facade.getLatestConstraintSimulationResults());
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 2, Exclusive, SECONDS), true),
@@ -208,8 +210,9 @@ public class SimulationFacadeTest {
 
   @Test
   public void whenValueBelowDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
-    facade.simulateActivities(makeTestPlanP0B1().getActivities());
-    facade.computeSimulationResultsUntil(tEnd);
+    final var plan = makeTestPlanP0B1();
+    facade.simulateActivities(plan, plan.getActivities());
+    facade.computeSimulationResultsUntil(plan, tEnd);
     var actual = new LessThan(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 2, Exclusive, SECONDS), false),
@@ -220,8 +223,9 @@ public class SimulationFacadeTest {
 
   @Test
   public void whenValueBetweenDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
-    facade.simulateActivities(makeTestPlanP0B1().getActivities());
-    facade.computeSimulationResultsUntil(tEnd);
+    final var plan = makeTestPlanP0B1();
+    facade.simulateActivities(plan, plan.getActivities());
+    facade.computeSimulationResultsUntil(plan, tEnd);
     var actual = new And(new GreaterThanOrEqual(getFruitRes(), new RealValue(3.0)), new LessThanOrEqual(getFruitRes(), new RealValue(3.99))).evaluate(facade.getLatestConstraintSimulationResults());
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
@@ -233,8 +237,9 @@ public class SimulationFacadeTest {
 
   @Test
   public void whenValueEqualDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
-    facade.simulateActivities(makeTestPlanP0B1().getActivities());
-    facade.computeSimulationResultsUntil(tEnd);
+    final var plan = makeTestPlanP0B1();
+    facade.simulateActivities(plan, plan.getActivities());
+    facade.computeSimulationResultsUntil(plan, tEnd);
     var actual = new Equal<>(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), false),
@@ -246,8 +251,9 @@ public class SimulationFacadeTest {
 
   @Test
   public void whenValueNotEqualDoubleOnSimplePlan() throws SimulationFacade.SimulationException {
-    facade.simulateActivities(makeTestPlanP0B1().getActivities());
-    facade.computeSimulationResultsUntil(tEnd);
+    final var plan = makeTestPlanP0B1();
+    facade.simulateActivities(plan, plan.getActivities());
+    facade.computeSimulationResultsUntil(plan, tEnd);
     var actual = new NotEqual<>(getFruitRes(), new RealValue(3.0)).evaluate(facade.getLatestConstraintSimulationResults());
     var expected = new Windows(
         Segment.of(interval(0, Inclusive, 1, Exclusive, SECONDS), true),
@@ -259,7 +265,8 @@ public class SimulationFacadeTest {
 
   @Test
   public void testCoexistenceGoalWithResourceConstraint() throws SimulationFacade.SimulationException {
-    facade.simulateActivities(makeTestPlanP0B1().getActivities());
+    final var plan = makeTestPlanP0B1();
+    facade.simulateActivities(plan, plan.getActivities());
 
     /**
     * reminder for PB1
@@ -288,16 +295,18 @@ public class SimulationFacadeTest {
         .startsAt(TimeAnchor.START)
         .build();
 
+    problem.setInitialPlan(plan);
     problem.setGoals(List.of(cg));
     final var solver = new PrioritySolver(this.problem);
-    final var plan = solver.getNextSolution().orElseThrow();
-    assertTrue(TestUtility.containsActivity(plan, t2, t2, actTypePeel));
+    final var resultPlan = solver.getNextSolution().orElseThrow();
+    assertTrue(TestUtility.containsActivity(resultPlan, t2, t2, actTypePeel));
   }
 
 
   @Test
   public void testProceduralGoalWithResourceConstraint() throws SimulationFacade.SimulationException {
-    facade.simulateActivities(makeTestPlanP0B1().getActivities());
+    final var plan = makeTestPlanP0B1();
+    facade.simulateActivities(plan, plan.getActivities());
 
     final var constraint = new And(
         new LessThanOrEqual(new RealResource("/peel"), new RealValue(3.0)),
@@ -329,15 +338,16 @@ public class SimulationFacadeTest {
 
     problem.setGoals(List.of(proceduralGoalWithConstraints));
     final var solver = new PrioritySolver(this.problem);
-    final var plan = solver.getNextSolution().orElseThrow();
+    final var resultPlan = solver.getNextSolution().orElseThrow();
 
-    assertTrue(TestUtility.containsExactlyActivity(plan, act2));
-    assertTrue(TestUtility.doesNotContainActivity(plan, act1));
+    assertTrue(TestUtility.containsExactlyActivity(resultPlan, act2));
+    assertTrue(TestUtility.doesNotContainActivity(resultPlan, act1));
   }
 
   @Test
   public void testActivityTypeWithResourceConstraint() throws SimulationFacade.SimulationException {
-    facade.simulateActivities(makeTestPlanP0B1().getActivities());
+    final var plan = makeTestPlanP0B1();
+    facade.simulateActivities(plan, plan.getActivities());
 
     final var constraint = new And(
         new LessThanOrEqual(new RealResource("/peel"), new RealValue(3.0)),
@@ -370,8 +380,8 @@ public class SimulationFacadeTest {
 
     problem.setGoals(List.of(proceduralgoalwithoutconstraints));
     final var solver = new PrioritySolver(problem);
-    final var plan = solver.getNextSolution().orElseThrow();
-    assertTrue(TestUtility.containsExactlyActivity(plan, act2));
-    assertTrue(TestUtility.doesNotContainActivity(plan, act1));
+    final var resultPlan = solver.getNextSolution().orElseThrow();
+    assertTrue(TestUtility.containsExactlyActivity(resultPlan, act2));
+    assertTrue(TestUtility.doesNotContainActivity(resultPlan, act1));
   }
 }

@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
+import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
 import org.slf4j.Logger;
@@ -45,6 +46,7 @@ public class SimulationFacade {
   private final Map<SchedulingActivityInstanceId, ActivityInstanceId> planActInstanceIdToSimulationActInstanceId = new HashMap<>();
   private final Map<ActivityInstance, SerializedActivity> insertedActivities;
   private static final Duration MARGIN = Duration.of(5, MICROSECONDS);
+  private Schedule previousSchedule;
 
   public gov.nasa.jpl.aerie.constraints.model.SimulationResults getLatestConstraintSimulationResults(){
     return lastSimConstraintResults;
@@ -91,8 +93,8 @@ public class SimulationFacade {
     }
   }
 
-  public Map<ActivityInstance, SchedulingActivityInstanceId> getAllGeneratedActivities(Duration endTime){
-    computeSimulationResultsUntil(endTime);
+  public Map<ActivityInstance, SchedulingActivityInstanceId> getAllGeneratedActivities(final Plan plan, final Duration endTime){
+    computeSimulationResultsUntil(plan, endTime);
     Map<ActivityInstance, SchedulingActivityInstanceId> generatedActivities = new HashMap<>();
     this.lastSimDriverResults.simulatedActivities.forEach( (activityInstanceId, activity) -> {
       final var rootParent = getIdOfRootParent(this.lastSimDriverResults, activityInstanceId);
@@ -112,22 +114,20 @@ public class SimulationFacade {
     return generatedActivities;
   }
 
-  public void removeActivitiesFromSimulation(final Collection<ActivityInstance> activities) throws SimulationException {
-    var atLeastOne = false;
-    for(var act: activities){
+  public void removeActivitiesFromSimulation(final Plan plan, final Collection<ActivityInstance> activities) throws SimulationException {
+    for(final var act: activities){
       if(insertedActivities.containsKey(act)){
-        atLeastOne = true;
         insertedActivities.remove(act);
+      } else {
+        throw new AssertionError("Cannot remove activities if they were never added! " + activities + " " + insertedActivities);
       }
     }
     //reset incremental simulation
-    if(atLeastOne){
-      final var oldInsertedActivities = new HashMap<>(insertedActivities);
-      insertedActivities.clear();
-      planActInstanceIdToSimulationActInstanceId.clear();
-      driver = new IncrementalSimulationDriver<>(missionModel);
-      simulateActivities(oldInsertedActivities.keySet());
-    }
+    final var oldInsertedActivities = new HashMap<>(insertedActivities);
+    insertedActivities.clear();
+    planActInstanceIdToSimulationActInstanceId.clear();
+    driver.initSimulation();
+    simulateActivities(plan, oldInsertedActivities.keySet());
   }
 
   /**
@@ -152,13 +152,22 @@ public class SimulationFacade {
     this.planActInstanceIdToSimulationActInstanceId.put(replacement.id(), simulationId);
   }
 
-  public void simulateActivities(final Collection<ActivityInstance> activities)
+  public void simulateActivities(final Plan plan, final Collection<ActivityInstance> activities)
   throws SimulationException {
+    for (final var act : plan.getActivitiesById().entrySet()) {
+      planActInstanceIdToSimulationActInstanceId.computeIfAbsent(act.getKey(), $ -> new ActivityInstanceId(itSimActivityId++));
+    }
+    final var newSchedule = Schedule.of(planActInstanceIdToSimulationActInstanceId, plan);
+    for (final var activity : activities) {
+      if (!newSchedule.contains(new StartTime.OffsetFromPlanStart(activity.startTime()), new SerializedActivity(activity.getType().getName(), activity.arguments()))) {
+        throw new AssertionError("Plan must contain all activities:" + activity + " " + newSchedule);
+      }
+    }
     final var activitiesSortedByStartTime =
         activities.stream().sorted(Comparator.comparing(ActivityInstance::startTime)).toList();
     for (final var activityInstance : activitiesSortedByStartTime) {
       try {
-        simulateActivity(activityInstance);
+        simulateActivity(plan, activityInstance);
       } catch (SimulationException e) {
         throw new SimulationException("Failed to instantiate "
                                       + activityInstance
@@ -174,7 +183,7 @@ public class SimulationFacade {
     }
   }
 
-  public void simulateActivity(final ActivityInstance activity) throws SimulationException {
+  public void simulateActivity(final Plan plan, final ActivityInstance activity) throws SimulationException {
     if(activity.getParentActivity().isPresent()) {
       throw new Error("This method should not be called with a generated activity but with its top-level parent.");
     }
@@ -196,20 +205,25 @@ public class SimulationFacade {
 
     var serializedActivity = new SerializedActivity(activity.getType().getName(), arguments);
 
+    var newSchedule = Schedule.of(planActInstanceIdToSimulationActInstanceId, plan);
+    newSchedule = newSchedule.replace(planActInstanceIdToSimulationActInstanceId.get(activity.getId()), new StartTime.OffsetFromPlanStart(activity.startTime()), serializedActivity);
     try {
-      driver.simulateActivity(serializedActivity, activity.startTime(), activityIdSim);
+      driver.simulateActivity(newSchedule, serializedActivity, activity.startTime(), activityIdSim);
     } catch (InstantiationException e) {
       throw new SimulationException("Failed to simulate " + activity + ", possibly because it has invalid arguments", e);
     }
     insertedActivities.put(activity, serializedActivity);
   }
 
-  public void computeSimulationResultsUntil(Duration endTime) {
+  public void computeSimulationResultsUntil(final Plan plan, final Duration endTime) {
     var endTimeWithMargin = endTime;
     if(endTime.noLongerThan(Duration.MAX_VALUE.minus(MARGIN))){
       endTimeWithMargin = endTime.plus(MARGIN);
     }
-    var results = driver.getSimulationResultsUpTo(this.planningHorizon.getStartInstant(), endTimeWithMargin);
+    for (final var act : plan.getActivitiesById().entrySet()) {
+      planActInstanceIdToSimulationActInstanceId.computeIfAbsent(act.getKey(), $ -> new ActivityInstanceId(itSimActivityId++));
+    }
+    final var results = driver.getSimulationResultsUpTo(Schedule.of(planActInstanceIdToSimulationActInstanceId, plan), this.planningHorizon.getStartInstant(), endTimeWithMargin);
     //compare references
     if(results != lastSimDriverResults) {
       //simulation results from the last simulation, as converted for use by the constraint evaluation engine

@@ -160,7 +160,9 @@ public class PrioritySolver implements Solver {
       }
       if(checkSimBeforeInsertingActivities) {
         try {
-          simulationFacade.simulateActivity(act);
+          plan.add(act);
+          simulationFacade.simulateActivity(plan, act);
+          plan.remove(act);
         } catch (SimulationFacade.SimulationException e) {
           allGood = false;
           logger.error("Tried to simulate {} but the activity could not be instantiated", act, e);
@@ -186,13 +188,13 @@ public class PrioritySolver implements Solver {
       for(var act: acts) {
         plan.add(act);
       }
-      final var allGeneratedActivities = simulationFacade.getAllGeneratedActivities(simulationFacade.getCurrentSimulationEndTime());
+      final var allGeneratedActivities = simulationFacade.getAllGeneratedActivities(plan, simulationFacade.getCurrentSimulationEndTime());
       processNewGeneratedActivities(allGeneratedActivities);
       pullActivityDurationsIfNecessary();
     } else{
       //update simulation with regard to plan
       try {
-        simulationFacade.removeActivitiesFromSimulation(acts);
+        simulationFacade.removeActivitiesFromSimulation(plan, acts);
       } catch (SimulationFacade.SimulationException e) {
         // We do not expect to get SimulationExceptions from re-simulating activities that have been simulated before
         throw new Error("Simulation failed after removing activities");
@@ -221,8 +223,8 @@ public class PrioritySolver implements Solver {
 
     //if backed by real models, initialize the simulation states/resources/profiles for the plan so state queries work
     if (problem.getMissionModel() != null) {
-      simulationFacade.simulateActivities(plan.getActivities());
-      final var allGeneratedActivities = simulationFacade.getAllGeneratedActivities(problem.getPlanningHorizon().getEndAerie());
+      simulationFacade.simulateActivities(plan, plan.getActivities());
+      final var allGeneratedActivities = simulationFacade.getAllGeneratedActivities(plan, problem.getPlanningHorizon().getEndAerie());
       processNewGeneratedActivities(allGeneratedActivities);
       pullActivityDurationsIfNecessary();
     }
@@ -576,7 +578,7 @@ public class PrioritySolver implements Solver {
     assert goal != null;
     assert plan != null;
     //REVIEW: maybe should have way to request only certain kinds of conflicts
-    this.simulationFacade.computeSimulationResultsUntil(this.problem.getPlanningHorizon().getEndAerie());
+    this.simulationFacade.computeSimulationResultsUntil(plan, this.problem.getPlanningHorizon().getEndAerie());
     final var rawConflicts = goal.getConflicts(plan, this.simulationFacade.getLatestConstraintSimulationResults());
     assert rawConflicts != null;
     return rawConflicts;
@@ -726,7 +728,7 @@ public class PrioritySolver implements Solver {
 
     final var totalDomain = Interval.between(windows.minTrueTimePoint().get().getKey(), windows.maxTrueTimePoint().get().getKey());
     //make sure the simulation results cover the domain
-    simulationFacade.computeSimulationResultsUntil(totalDomain.end);
+    simulationFacade.computeSimulationResultsUntil(plan, totalDomain.end);
 
     //iteratively narrow the windows from each constraint
     //REVIEW: could be some optimization in constraint ordering (smallest domain first to fail fast)
@@ -753,7 +755,7 @@ public class PrioritySolver implements Solver {
       return tmp;
     }
     //make sure the simulation results cover the domain
-    simulationFacade.computeSimulationResultsUntil(tmp.maxTrueTimePoint().get().getKey());
+    simulationFacade.computeSimulationResultsUntil(plan, tmp.maxTrueTimePoint().get().getKey());
     for (GlobalConstraint gc : constraints) {
       if (gc instanceof GlobalConstraintWithIntrospection c) {
         tmp = c.findWindows(plan, tmp, mac, simulationFacade.getLatestConstraintSimulationResults(), evaluationEnvironment);

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -23,36 +24,41 @@ public class IncrementalSimulationTest {
 
   IncrementalSimulationDriver<?> incrementalSimulationDriver;
   Duration endOfLastAct;
+  private Schedule schedule;
 
   @BeforeEach
   public void init() throws InstantiationException {
     final var acts = getActivities();
+    final var scheduleBuilder = new HashMap<ActivityInstanceId, Schedule.Directive>();
+    for (final var act : acts) {
+      scheduleBuilder.put(act.id, new Schedule.Directive(new StartTime.OffsetFromPlanStart(act.start()), act.activity));
+    }
+    schedule = new Schedule(scheduleBuilder);
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
     incrementalSimulationDriver = new IncrementalSimulationDriver<>(fooMissionModel);
-    int id = 0;
-    for (var act : acts) {
+    for (final var act : acts) {
       final var start = System.nanoTime();
-      incrementalSimulationDriver.simulateActivity(act.activity, act.start, act.id);
+      incrementalSimulationDriver.simulateActivity(schedule, act.activity, act.start, act.id);
     }
   }
   @Test
   public void simulationResultsTest(){
     final var now = Instant.now();
     //ensures that simulation results are generated until the end of the last act;
-    var simResults = incrementalSimulationDriver.getSimulationResults(now);
+    var simResults = incrementalSimulationDriver.getSimulationResults(schedule, now);
     assert(simResults.realProfiles.get("/utcClock").getRight().get(0).extent().isEqualTo(endOfLastAct));
     /* ensures that when current simulation results cover more than the asked period and that nothing has happened
     between two requests, the same results are returned */
-    var simResults2 = incrementalSimulationDriver.getSimulationResultsUpTo(now, Duration.of(7, SECONDS));
+    var simResults2 = incrementalSimulationDriver.getSimulationResultsUpTo(schedule, now, Duration.of(7, SECONDS));
     assertEquals(simResults, simResults2);
   }
 
   @Test
   public void simulationResultsTest2(){
     /* ensures that when the passed start epoch is not equal to the one used for previously computed results, the results are re-computed */
-    var simResults = incrementalSimulationDriver.getSimulationResults(Instant.now());
+    var simResults = incrementalSimulationDriver.getSimulationResults(schedule, Instant.now());
     assert(simResults.realProfiles.get("/utcClock").getRight().get(0).extent().isEqualTo(endOfLastAct));
-    var simResults2 = incrementalSimulationDriver.getSimulationResultsUpTo(Instant.now(), Duration.of(7, SECONDS));
+    var simResults2 = incrementalSimulationDriver.getSimulationResultsUpTo(schedule, Instant.now(), Duration.of(7, SECONDS));
     assertNotEquals(simResults, simResults2);
   }
 
@@ -61,8 +67,8 @@ public class IncrementalSimulationTest {
      /* ensures that when current simulation results cover less than the asked period and that nothing has happened
     between two requests, the results are re-computed */
     final var now = Instant.now();
-    var simResults2 = incrementalSimulationDriver.getSimulationResultsUpTo(now, Duration.of(7, SECONDS));
-    var simResults = incrementalSimulationDriver.getSimulationResults(now);
+    var simResults2 = incrementalSimulationDriver.getSimulationResultsUpTo(schedule, now, Duration.of(7, SECONDS));
+    var simResults = incrementalSimulationDriver.getSimulationResults(schedule, now);
     assert(simResults.realProfiles.get("/utcClock").getRight().get(0).extent().isEqualTo(endOfLastAct));
     assertNotEquals(simResults, simResults2);
   }
@@ -88,7 +94,7 @@ public class IncrementalSimulationTest {
     final var executor = unsafeGetExecutor(incrementalSimulationDriver);
     for (var i = 0; i < 20000; i++) {
       incrementalSimulationDriver.initSimulation();
-      incrementalSimulationDriver.simulateActivity(activity.activity, activity.start, activity.id);
+      incrementalSimulationDriver.simulateActivity(schedule, activity.activity, activity.start, activity.id);
       assertTrue(executor.getActiveCount() < 100, "Threads are not being cleaned up properly - this test shouldn't need more than 2 threads, but it used at least 100");
     }
   }

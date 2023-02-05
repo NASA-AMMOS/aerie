@@ -616,7 +616,8 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   public Optional<Duration> getTaskDuration(TaskId taskId){
-    final var state = tasks.get(taskId);
+    Objects.requireNonNull(taskId);
+    final var state = Objects.requireNonNull(tasks.get(taskId), "No task with id ");
     if (state instanceof ExecutionState.Terminated e) {
       return Optional.of(e.joinOffset().minus(e.startOffset()));
     }
@@ -816,5 +817,9 @@ public final class SimulationEngine implements AutoCloseable {
         Duration endOffset,
         Duration joinOffset
     ) implements ExecutionState<Return> {}
+  }
+
+  public Duration peekNextBatch(final Duration maximumTime) {
+    return scheduledJobs.peekNext(maximumTime);
   }
 }

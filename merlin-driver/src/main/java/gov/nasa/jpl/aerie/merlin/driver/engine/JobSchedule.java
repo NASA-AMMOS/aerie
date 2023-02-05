@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
 
@@ -59,6 +60,10 @@ public final class JobSchedule<JobRef, TimeRef extends DurationLike & Comparable
   public void clear() {
     this.scheduledJobs.clear();
     this.queue.clear();
+  }
+
+  public Duration peekNext(final Duration maximumTime) {
+    return Optional.ofNullable(this.queue.peek()).map($ -> $.getLeft().project()).orElse(maximumTime);
   }
 
   public record Batch<JobRef>(Duration offsetFromStart, Set<JobRef> jobs) {}
