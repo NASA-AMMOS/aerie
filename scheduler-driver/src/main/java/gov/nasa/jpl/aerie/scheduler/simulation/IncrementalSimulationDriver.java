@@ -18,11 +18,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class IncrementalSimulationDriver<Model> {
 
@@ -114,31 +114,34 @@ public class IncrementalSimulationDriver<Model> {
 
     final var activityToSimulate = new SimulatedActivity(startTime, activity, activityId);
     if (firstDifference.get().noLongerThan(curTime)){
-      activitiesInserted.removeIf($ -> !newSchedule.activitiesById().containsKey($.id()));
       final var toBeInserted = new ArrayList<>(activitiesInserted);
       toBeInserted.add(activityToSimulate);
       initSimulation();
-      simulateNewSchedule(newSchedule, new HashSet<>(toBeInserted.stream().map(SimulatedActivity::id).toList()));
+      final var schedule = toBeInserted
+          .stream()
+          .collect(Collectors.toMap( e -> e.id, e->Pair.of(e.start, e.activity)));
+      simulateNewSchedule(newSchedule, schedule);
       activitiesInserted.addAll(toBeInserted);
     } else {
       final var schedule = Map.of(activityToSimulate.id,
                                   Pair.of(activityToSimulate.start, activityToSimulate.activity));
-      extendExistingSchedule(newSchedule, schedule.keySet());
+      extendExistingSchedule(newSchedule, schedule);
       activitiesInserted.add(activityToSimulate);
     }
   }
 
   private void extendExistingSchedule(
-      final Schedule newSchedule, final Set<ActivityInstanceId> activities) throws InstantiationException
+      final Schedule newSchedule,
+      final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule) throws InstantiationException
   {
-    simulateSchedule(newSchedule, new StopCondition.ActivityCompletion(activities));
+    simulateSchedule(newSchedule, schedule, new StopCondition.ActivityCompletion(schedule.keySet()));
   }
 
   private void simulateNewSchedule(
       final Schedule newSchedule,
-      final Set<ActivityInstanceId> activities) throws InstantiationException
+      final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule) throws InstantiationException
   {
-    simulateSchedule(newSchedule, new StopCondition.ActivityCompletion(activities));
+    simulateSchedule(newSchedule, schedule, new StopCondition.ActivityCompletion(schedule.keySet()));
   }
 
   public void simulateActivities(final Schedule schedule, final Set<ActivityInstanceId> activities) {
@@ -178,22 +181,17 @@ public class IncrementalSimulationDriver<Model> {
    * @return the simulation results
    */
   public SimulationResults getSimulationResultsUpTo(final Schedule schedule, Instant startTimestamp, Duration endTime){
-    for (final var id : activityStatus.entrySet().stream().filter($ -> $.getValue() != ActivityStatus.NOT_STARTED).map(Map.Entry::getKey).toList()) {
-      if (!schedule.activitiesById().containsKey(id)) {
-        final var activitiesInsertedCopy = new ArrayList<>(activitiesInserted);
-        activitiesInsertedCopy.removeIf($ -> !schedule.activitiesById().containsKey($.id()));
-        initSimulation();
-        activitiesInserted.addAll(activitiesInsertedCopy);
-        break;
-      }
-    }
-
     //if previous results cover a bigger period, we return do not regenerate
     if(endTime.longerThan(curTime)){
       try {
         simulateSchedule(
             schedule,
-            new StopCondition.ElapsedTime(endTime));
+            schedule
+                .activitiesById()
+                .entrySet()
+                .stream()
+                .map($ -> Pair.of($.getKey(), Pair.of(((StartTime.OffsetFromPlanStart) $.getValue().startTime()).offset(), $.getValue().serializedActivity())))
+                .collect(Collectors.toMap(Pair::getKey, Pair::getRight)), new StopCondition.ElapsedTime(endTime));
       } catch (InstantiationException e) {
         throw new RuntimeException(e);
       }
@@ -210,15 +208,11 @@ public class IncrementalSimulationDriver<Model> {
       lastSimResultsEnd = endTime;
       //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
     }
-    for (final var id : lastSimResults.simulatedActivities.keySet()) {
-      if (!schedule.activitiesById().containsKey(id)) {
-        throw new IllegalStateException("Results contain activity " + id + " but it isn't in the schedule " + schedule);
-      }
-    }
+
     return lastSimResults;
   }
 
-  private void simulateSchedule(final Schedule wholeSchedule, final StopCondition stopCondition)
+  private void simulateSchedule(final Schedule wholeSchedule, final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule, final StopCondition stopCondition)
   throws InstantiationException
   {
     if (stopCondition instanceof final StopCondition.ElapsedTime s) {
@@ -226,20 +220,10 @@ public class IncrementalSimulationDriver<Model> {
                                                                         + s.endTime()
                                                                         + " <= "
                                                                         + curTime);
-    } else if (stopCondition instanceof StopCondition.ActivityCompletion s) {
-      for (final var id : s.activities()) {
-        if (!wholeSchedule.activitiesById().containsKey(id)) {
-          throw new IllegalArgumentException("Activity with id " + id + " not present in schedule: " + wholeSchedule);
-        }
-      }
-    }
-
-    for (final var activityId : wholeSchedule.activitiesById().keySet()) {
-      activityStatus.putIfAbsent(activityId, ActivityStatus.NOT_STARTED);
     }
 
     var allTaskFinished = false;
-    var nextTaskStart = wholeSchedule.activitiesById().values().stream().map($ -> ((StartTime.OffsetFromPlanStart) $.startTime()).offset()).min(Comparator.comparing($ -> $)).orElse(Duration.MAX_VALUE);
+    var nextTaskStart = schedule.values().stream().map(Pair::getLeft).min(Comparator.comparing($ -> $)).orElse(Duration.MAX_VALUE);
     while (true) {
       final var nextBatchStart = engine.peekNextBatch(Duration.MAX_VALUE);
 
@@ -259,9 +243,11 @@ public class IncrementalSimulationDriver<Model> {
 
       if (nextTaskStart.shorterThan(Duration.MAX_VALUE) && nextBatchStart.noShorterThan(nextTaskStart)) {
         nextTaskStart = Duration.MAX_VALUE;
-        for (final var entry : wholeSchedule.activitiesById().entrySet()) {
-          final var startOffset = ((StartTime.OffsetFromPlanStart) entry.getValue().startTime()).offset();
+        for (final var entry : schedule.entrySet()) {
+          final var startOffset = entry.getValue().getLeft();
           final var directiveId = entry.getKey();
+
+          activityStatus.putIfAbsent(directiveId, ActivityStatus.NOT_STARTED);
           final var status = activityStatus.get(directiveId);
 
           if (status != ActivityStatus.NOT_STARTED) continue;
@@ -270,7 +256,7 @@ public class IncrementalSimulationDriver<Model> {
             continue;
           }
 
-          final var serializedDirective = entry.getValue().serializedActivity();
+          final var serializedDirective = entry.getValue().getRight();
 
           final var task = missionModel.getTaskFactory(serializedDirective);
           final var taskId = engine.scheduleTask(startOffset, emitAndThen(directiveId, this.activityTopic, task));
@@ -291,16 +277,19 @@ public class IncrementalSimulationDriver<Model> {
       final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
       timeline.add(commit);
 
-      for (final var entry : plannedDirectiveToTask.entrySet()) {
-        final var activityId = entry.getKey();
-        if (engine.isTaskComplete(entry.getValue())) {
-          activityStatus.put(activityId, ActivityStatus.FINISHED);
+      for (final var activityId : schedule.keySet()) {
+        if (plannedDirectiveToTask.containsKey(activityId)) {
+          if (engine.isTaskComplete(plannedDirectiveToTask.get(activityId))) {
+            activityStatus.put(activityId, ActivityStatus.FINISHED);
+          }
         }
       }
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time
-      if (stopCondition instanceof StopCondition.ActivityCompletion s
-          && s.activities().stream().allMatch($ -> activityStatus.get($) == ActivityStatus.FINISHED)) {
+      if (stopCondition instanceof StopCondition.ActivityCompletion s && s.activities().stream().allMatch($ -> {
+        activityStatus.putIfAbsent($, ActivityStatus.NOT_STARTED);
+        return activityStatus.get($) == ActivityStatus.FINISHED;
+      })) {
         allTaskFinished = true;
       }
 

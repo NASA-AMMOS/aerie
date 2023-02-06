@@ -1238,7 +1238,7 @@ public class SchedulingIntegrationTests {
                  return Goal.CoexistenceGoal({
                              activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
                              forEach: ActivityExpression.ofType(ActivityTypes.GrowBanana),
-                             startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes: 1 }))
+                             startsAt: TimingConstraint.singleton(WindowProperty.START)
                            })
                         .or(
                            Goal.CoexistenceGoal({
