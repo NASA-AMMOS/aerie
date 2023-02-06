@@ -35,13 +35,7 @@ Before you can run Aerie you must install and configure the following products o
   export JAVA_HOME="/Library/Java/JavaVirtualMachines/temurin-19.jdk/Contents/Home"
   ```
 
-- [Gradle](https://gradle.org) which is used to build Aerie. If you're on OSX you can use brew:
-
-  ```sh
-  brew install gradle
-  ```
-
-- [PostgreSQL](https://www.postgresql.org) which is used for testing the database. You do not need this normally since Aerie runs Postgres in a Docker container for development, and you only need it for the [psql](https://www.postgresql.org/docs/current/app-psql.html) command-line tool. **Do not** run the Postgres service locally or it will clash with the Docker container version. If you're on OSX you can use brew:
+- [PostgreSQL](https://www.postgresql.org) which is used for testing the database. You do not need this normally since Aerie runs Postgres in a Docker container for development, and you only need it for the [psql](https://www.postgresql.org/docs/current/app-psql.html) command-line tool. **Do not run the Postgres service locally** or it will clash with the Aerie Postgres Docker container. If you're on OSX you can use brew:
 
   ```sh
   brew install postgresql
@@ -109,6 +103,8 @@ The [docker-compose.yml](../docker-compose.yml) in the root directory deploys Ae
 cd aerie
 docker-compose up --build --detach
 ```
+
+Once Aerie is started you can visit [http://localhost](http://localhost) to view the [Aerie UI](https://github.com/NASA-AMMOS/aerie-ui). You can visit [http://localhost:8080](http://localhost:8080) to view the [Hasura Console](https://hasura.io/).
 
 ## Stop Aerie
 
