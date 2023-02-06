@@ -224,7 +224,7 @@ public class SimulationFacade {
     var newSchedule = Schedule.of(planActInstanceIdToSimulationActInstanceId, plan);
     newSchedule = newSchedule.replace(planActInstanceIdToSimulationActInstanceId.get(activity.getId()), new StartTime.OffsetFromPlanStart(activity.startTime()), serializedActivity);
     try {
-      driver.simulateActivity(newSchedule, serializedActivity, activity.startTime(), activityIdSim);
+      driver.simulateActivity(newSchedule, activityIdSim);
     } catch (InstantiationException e) {
       throw new SimulationException("Failed to simulate " + activity + ", possibly because it has invalid arguments", e);
     }

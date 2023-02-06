@@ -90,43 +90,40 @@ public class IncrementalSimulationDriver<Model> {
 
   /**
    * Simulate an activity
-   * @param activity the activity to simulate
-   * @param startTime the start time of the activity
+   * @param schedule the full schedule, including the activity to simulate
    * @param activityId the activity id for the activity to simulate
    * @throws InstantiationException
    */
-  public void simulateActivity(Schedule newSchedule, SerializedActivity activity, Duration startTime, ActivityInstanceId activityId)
+  public void simulateActivity(final Schedule schedule, final ActivityInstanceId activityId)
   throws InstantiationException
   {
-    if (!newSchedule.contains(new StartTime.OffsetFromPlanStart(startTime), activity)) {
-      throw new AssertionError("Nope! don't do that. " + activity + " " + newSchedule);
-    }
-    var firstDifference = Schedule.firstDifference(previousSchedule, newSchedule);
-    previousSchedule = newSchedule;
+    final var directive = schedule.activitiesById().get(activityId);
+    var firstDifference = Schedule.firstDifference(previousSchedule, schedule);
+    previousSchedule = schedule;
     if (firstDifference.isEmpty()) {
       if (activityStatus.containsKey(activityId) && activityStatus.get(activityId) == ActivityStatus.FINISHED) {
         // TODO: Check if the given activity has finished, or if we should roll the simulation forward
         return;
       } else {
-        firstDifference = Optional.of(startTime);
+        firstDifference = Optional.of(((StartTime.OffsetFromPlanStart) directive.startTime()).offset());
       }
     }
 
-    final var activityToSimulate = new SimulatedActivity(startTime, activity, activityId);
-    activitiesInserted.removeIf($ -> !newSchedule.activitiesById().containsKey($.id()));
+    final var activityToSimulate = new SimulatedActivity(((StartTime.OffsetFromPlanStart) directive.startTime()).offset(), directive.serializedActivity(), activityId);
+    activitiesInserted.removeIf($ -> !schedule.activitiesById().containsKey($.id()));
     if (firstDifference.get().noLongerThan(curTime)){
       final var toBeInserted = new ArrayList<>(activitiesInserted);
       toBeInserted.add(activityToSimulate);
       initSimulation();
-      final var schedule = toBeInserted
+      final var schedule2 = toBeInserted
           .stream()
           .collect(Collectors.toMap( e -> e.id, e->Pair.of(e.start, e.activity)));
-      simulateNewSchedule(newSchedule, schedule);
+      simulateNewSchedule(schedule, schedule2);
       activitiesInserted.addAll(toBeInserted);
     } else {
-      final var schedule = Map.of(activityToSimulate.id,
+      final var schedule2 = Map.of(activityToSimulate.id,
                                   Pair.of(activityToSimulate.start, activityToSimulate.activity));
-      extendExistingSchedule(newSchedule, schedule);
+      extendExistingSchedule(schedule, schedule2);
       activitiesInserted.add(activityToSimulate);
     }
   }
@@ -135,14 +132,14 @@ public class IncrementalSimulationDriver<Model> {
       final Schedule newSchedule,
       final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule) throws InstantiationException
   {
-    simulateSchedule(newSchedule, schedule, new StopCondition.ActivityCompletion(schedule.keySet()));
+    simulateSchedule(newSchedule, new StopCondition.ActivityCompletion(schedule.keySet()));
   }
 
   private void simulateNewSchedule(
       final Schedule newSchedule,
       final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule) throws InstantiationException
   {
-    simulateSchedule(newSchedule, schedule, new StopCondition.ActivityCompletion(schedule.keySet()));
+    simulateSchedule(newSchedule, new StopCondition.ActivityCompletion(schedule.keySet()));
   }
 
   public void simulateActivities(final Schedule schedule, final Set<ActivityInstanceId> activities) {
@@ -194,12 +191,7 @@ public class IncrementalSimulationDriver<Model> {
       try {
         simulateSchedule(
             schedule,
-            schedule
-                .activitiesById()
-                .entrySet()
-                .stream()
-                .map($ -> Pair.of($.getKey(), Pair.of(((StartTime.OffsetFromPlanStart) $.getValue().startTime()).offset(), $.getValue().serializedActivity())))
-                .collect(Collectors.toMap(Pair::getKey, Pair::getRight)), new StopCondition.ElapsedTime(endTime));
+            new StopCondition.ElapsedTime(endTime));
       } catch (InstantiationException e) {
         throw new RuntimeException(e);
       }
@@ -232,19 +224,9 @@ public class IncrementalSimulationDriver<Model> {
     return lastSimResults;
   }
 
-  private void simulateSchedule(final Schedule wholeSchedule, final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule, final StopCondition stopCondition)
+  private void simulateSchedule(final Schedule wholeSchedule, final StopCondition stopCondition)
   throws InstantiationException
   {
-    for (final var entry : schedule.entrySet()) {
-      final var other = wholeSchedule.activitiesById().get(entry.getKey());
-      if (!entry.getValue().getLeft().isEqualTo(((StartTime.OffsetFromPlanStart) other.startTime()).offset())) {
-        throw new AssertionError("Start time mismatch: " + entry + ", " + other);
-      }
-      if (!entry.getValue().getRight().equals(other.serializedActivity())) {
-        throw new AssertionError("Serialized Activity mismatch: " + entry + ", " + other);
-      }
-    }
-
     for (final var entry : activityStatus.entrySet()) {
       if (entry.getValue() != ActivityStatus.NOT_STARTED && !wholeSchedule.activitiesById().containsKey(entry.getKey())) {
         throw new IllegalStateException("We've already started simulating " + entry.getKey() + " but it's missing from the schedule " + wholeSchedule);
@@ -256,14 +238,10 @@ public class IncrementalSimulationDriver<Model> {
                                                                         + s.endTime()
                                                                         + " <= "
                                                                         + curTime);
-    } else if (stopCondition instanceof final StopCondition.ActivityCompletion s) {
-      if (!schedule.keySet().equals(s.activities())) {
-        throw new AssertionError("Mismatch: " + schedule.keySet() + " != " + s.activities());
-      }
     }
 
     var allTaskFinished = false;
-    var nextTaskStart = schedule.values().stream().map(Pair::getLeft).min(Comparator.comparing($ -> $)).orElse(Duration.MAX_VALUE);
+    var nextTaskStart = wholeSchedule.activitiesById().values().stream().map($ -> ((StartTime.OffsetFromPlanStart) $.startTime()).offset()).min(Comparator.comparing($ -> $)).orElse(Duration.MAX_VALUE);
     while (true) {
       final var nextBatchStart = engine.peekNextBatch(Duration.MAX_VALUE);
 
@@ -283,8 +261,8 @@ public class IncrementalSimulationDriver<Model> {
 
       if (nextTaskStart.shorterThan(Duration.MAX_VALUE) && nextBatchStart.noShorterThan(nextTaskStart)) {
         nextTaskStart = Duration.MAX_VALUE;
-        for (final var entry : schedule.entrySet()) {
-          final var startOffset = entry.getValue().getLeft();
+        for (final var entry : wholeSchedule.activitiesById().entrySet()) {
+          final var startOffset = ((StartTime.OffsetFromPlanStart) entry.getValue().startTime()).offset();
           final var directiveId = entry.getKey();
 
           activityStatus.putIfAbsent(directiveId, ActivityStatus.NOT_STARTED);
@@ -296,7 +274,9 @@ public class IncrementalSimulationDriver<Model> {
             continue;
           }
 
-          final var serializedDirective = entry.getValue().getRight();
+          if (stopCondition instanceof StopCondition.ActivityCompletion s && !s.activities().contains(entry.getKey())) continue;
+
+          final var serializedDirective = entry.getValue().serializedActivity();
 
           final var task = missionModel.getTaskFactory(serializedDirective);
           final var taskId = engine.scheduleTask(startOffset, emitAndThen(directiveId, this.activityTopic, task));
@@ -317,7 +297,7 @@ public class IncrementalSimulationDriver<Model> {
       final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
       timeline.add(commit);
 
-      for (final var activityId : schedule.keySet()) {
+      for (final var activityId : wholeSchedule.activitiesById().keySet()) {
         if (plannedDirectiveToTask.containsKey(activityId)) {
           if (engine.isTaskComplete(plannedDirectiveToTask.get(activityId))) {
             activityStatus.put(activityId, ActivityStatus.FINISHED);

@@ -38,7 +38,7 @@ public class IncrementalSimulationTest {
     incrementalSimulationDriver = new IncrementalSimulationDriver<>(fooMissionModel);
     for (final var act : acts) {
       final var start = System.nanoTime();
-      incrementalSimulationDriver.simulateActivity(schedule, act.activity, act.start, act.id);
+      incrementalSimulationDriver.simulateActivity(schedule, act.id);
     }
   }
   @Test
@@ -94,7 +94,7 @@ public class IncrementalSimulationTest {
     final var executor = unsafeGetExecutor(incrementalSimulationDriver);
     for (var i = 0; i < 20000; i++) {
       incrementalSimulationDriver.initSimulation();
-      incrementalSimulationDriver.simulateActivity(schedule, activity.activity, activity.start, activity.id);
+      incrementalSimulationDriver.simulateActivity(schedule, activity.id);
       assertTrue(executor.getActiveCount() < 100, "Threads are not being cleaned up properly - this test shouldn't need more than 2 threads, but it used at least 100");
     }
   }
