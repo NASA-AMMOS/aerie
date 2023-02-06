@@ -209,6 +209,11 @@ public class IncrementalSimulationDriver<Model> {
       //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
     }
 
+    for (final var id : lastSimResults.simulatedActivities.keySet()) {
+      if (!schedule.activitiesById().containsKey(id)) {
+        throw new IllegalStateException("Results contain " + id + " but schedule does not " + schedule);
+      }
+    }
     return lastSimResults;
   }
 
