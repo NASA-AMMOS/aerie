@@ -183,18 +183,15 @@ public class IncrementalSimulationDriver<Model> {
     previousSchedule = schedule;
 
     if (firstDifference.isPresent() && firstDifference.get().noLongerThan(curTime)) {
-      initSimulation();
-    }
-
-    //if previous results cover a bigger period, we return do not regenerate
-    if(endTime.longerThan(curTime)){
-      try {
-        simulateSchedule(
-            schedule,
-            new StopCondition.ElapsedTime(endTime));
-      } catch (InstantiationException e) {
-        throw new RuntimeException(e);
+      if (endTime.longerThan(firstDifference.get())) {
+        getSimulationResultsUpToRestartLonger(schedule, endTime);
+      } else if (endTime.isEqualTo(firstDifference.get())) {
+        getSimulationResultsUpToRestartEqual(schedule, endTime);
+      } else {
+        getSimulationResultsUpToExtend(schedule, endTime);
       }
+    } else {
+      getSimulationResultsUpToExtend(schedule, endTime);
     }
 
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.startTime) != 0) {
@@ -222,6 +219,41 @@ public class IncrementalSimulationDriver<Model> {
     }
 
     return lastSimResults;
+  }
+
+  private void getSimulationResultsUpToRestartEqual(final Schedule schedule, final Duration endTime) {
+    getSimulationResultsUpToRestart(schedule, endTime);
+  }
+
+  private void getSimulationResultsUpToRestartLonger(final Schedule schedule, final Duration endTime) {
+    getSimulationResultsUpToRestart(schedule, endTime);
+  }
+
+  private void getSimulationResultsUpToExtend(final Schedule schedule, final Duration endTime) {
+    //if previous results cover a bigger period, we return do not regenerate
+    if(endTime.longerThan(curTime)){
+      try {
+        simulateSchedule(
+            schedule,
+            new StopCondition.ElapsedTime(endTime));
+      } catch (InstantiationException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
+  private void getSimulationResultsUpToRestart(final Schedule schedule, final Duration endTime) {
+    initSimulation();
+    //if previous results cover a bigger period, we return do not regenerate
+    if(endTime.longerThan(curTime)){
+      try {
+        simulateSchedule(
+            schedule,
+            new StopCondition.ElapsedTime(endTime));
+      } catch (InstantiationException e) {
+        throw new RuntimeException(e);
+      }
+    }
   }
 
   private void simulateSchedule(final Schedule wholeSchedule, final StopCondition stopCondition)
