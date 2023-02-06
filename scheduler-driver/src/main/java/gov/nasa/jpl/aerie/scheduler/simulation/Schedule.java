@@ -11,7 +11,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -28,7 +27,7 @@ import java.util.stream.Collectors;
             .entrySet()
             .stream()
             .map($ -> Pair.of(
-                Objects.requireNonNull(planActInstanceIdToSimulationActInstanceId.get($.getKey()), "No entry for " + $.getKey() + " in map: " + planActInstanceIdToSimulationActInstanceId),
+                planActInstanceIdToSimulationActInstanceId.get($.getKey()),
                 new Directive(new StartTime.OffsetFromPlanStart($.getValue().startTime()),
                         new SerializedActivity(
                             $.getValue().getType().getName(),

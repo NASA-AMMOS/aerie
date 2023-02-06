@@ -19,7 +19,6 @@ import gov.nasa.jpl.aerie.scheduler.solver.stn.TaskNetworkAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -245,6 +244,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
 
         @Override
         public Duration valueAt(final Duration start) {
+          facade.computeSimulationResultsUntil(plan, start);
           final var actToSim = ActivityInstance.of(type,
                                                    start,
                                                    null,
@@ -259,7 +259,9 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
             facade.simulateActivity(plan, actToSim);
             plan.remove(actToSim);
             final var dur = facade.getActivityDuration(actToSim);
-            facade.removeActivitiesFromSimulation(plan, List.of(actToSim));
+            facade.invalidateResultsAfter(start);
+//            facade.removeActivitiesFromSimulation(plan, List.of(actToSim));
+//            facade.simulateActivities(plan, plan.getActivities());
             return dur.map(start::plus).orElse(Duration.MAX_VALUE);
           } catch (SimulationFacade.SimulationException e) {
             return Duration.MAX_VALUE;
@@ -288,6 +290,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
           //f is calling simulation -> we do not need to resimulate this activity later
           dur = result.fx().minus(result.x());
         }
+        facade.computeSimulationResultsUntil(plan, result.x());
         return Optional.of(ActivityInstance.of(type,
                                                result.x(),
                                                dur,

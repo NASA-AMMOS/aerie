@@ -18,11 +18,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class IncrementalSimulationDriver<Model> {
 
@@ -88,26 +88,6 @@ public class IncrementalSimulationDriver<Model> {
     }
   }
 
-  //
-  private void simulateUntil(Duration endTime){
-    if (!endTime.noShorterThan(curTime)) throw new AssertionError("endTime <= curTime: " + endTime + " <= " + curTime);
-    while (true) {
-      final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-      // Increment real time, if necessary.
-      if(batch.offsetFromStart().longerThan(endTime) || endTime.isEqualTo(Duration.MAX_VALUE)){
-        break;
-      }
-      final var delta = batch.offsetFromStart().minus(curTime);
-      curTime = batch.offsetFromStart();
-      timeline.add(delta);
-      // Run the jobs in this batch.
-      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
-      timeline.add(commit);
-    }
-    lastSimResults = null;
-  }
-
-
   /**
    * Simulate an activity
    * @param activity the activity to simulate
@@ -134,20 +114,31 @@ public class IncrementalSimulationDriver<Model> {
 
     final var activityToSimulate = new SimulatedActivity(startTime, activity, activityId);
     if (firstDifference.get().noLongerThan(curTime)){
+      activitiesInserted.removeIf($ -> !newSchedule.activitiesById().containsKey($.id()));
       final var toBeInserted = new ArrayList<>(activitiesInserted);
       toBeInserted.add(activityToSimulate);
       initSimulation();
-      final var schedule = toBeInserted
-          .stream()
-          .collect(Collectors.toMap( e -> e.id, e->Pair.of(e.start, e.activity)));
-      simulateSchedule(schedule);
+      simulateNewSchedule(newSchedule, new HashSet<>(toBeInserted.stream().map(SimulatedActivity::id).toList()));
       activitiesInserted.addAll(toBeInserted);
     } else {
       final var schedule = Map.of(activityToSimulate.id,
                                   Pair.of(activityToSimulate.start, activityToSimulate.activity));
-      simulateSchedule(schedule);
+      extendExistingSchedule(newSchedule, schedule.keySet());
       activitiesInserted.add(activityToSimulate);
     }
+  }
+
+  private void extendExistingSchedule(
+      final Schedule newSchedule, final Set<ActivityInstanceId> activities) throws InstantiationException
+  {
+    simulateSchedule(newSchedule, new StopCondition.ActivityCompletion(activities));
+  }
+
+  private void simulateNewSchedule(
+      final Schedule newSchedule,
+      final Set<ActivityInstanceId> activities) throws InstantiationException
+  {
+    simulateSchedule(newSchedule, new StopCondition.ActivityCompletion(activities));
   }
 
   public void simulateActivities(final Schedule schedule, final Set<ActivityInstanceId> activities) {
@@ -187,9 +178,25 @@ public class IncrementalSimulationDriver<Model> {
    * @return the simulation results
    */
   public SimulationResults getSimulationResultsUpTo(final Schedule schedule, Instant startTimestamp, Duration endTime){
+    for (final var id : activityStatus.entrySet().stream().filter($ -> $.getValue() != ActivityStatus.NOT_STARTED).map(Map.Entry::getKey).toList()) {
+      if (!schedule.activitiesById().containsKey(id)) {
+        final var activitiesInsertedCopy = new ArrayList<>(activitiesInserted);
+        activitiesInsertedCopy.removeIf($ -> !schedule.activitiesById().containsKey($.id()));
+        initSimulation();
+        activitiesInserted.addAll(activitiesInsertedCopy);
+        break;
+      }
+    }
+
     //if previous results cover a bigger period, we return do not regenerate
     if(endTime.longerThan(curTime)){
-      simulateUntil(endTime);
+      try {
+        simulateSchedule(
+            schedule,
+            new StopCondition.ElapsedTime(endTime));
+      } catch (InstantiationException e) {
+        throw new RuntimeException(e);
+      }
     }
 
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.startTime) != 0) {
@@ -203,28 +210,58 @@ public class IncrementalSimulationDriver<Model> {
       lastSimResultsEnd = endTime;
       //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
     }
+    for (final var id : lastSimResults.simulatedActivities.keySet()) {
+      if (!schedule.activitiesById().containsKey(id)) {
+        throw new IllegalStateException("Results contain activity " + id + " but it isn't in the schedule " + schedule);
+      }
+    }
     return lastSimResults;
   }
 
-  private void simulateSchedule(final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule)
+  private void simulateSchedule(final Schedule wholeSchedule, final StopCondition stopCondition)
   throws InstantiationException
   {
+    if (stopCondition instanceof final StopCondition.ElapsedTime s) {
+      if (!s.endTime().noShorterThan(curTime)) throw new AssertionError("endTime <= curTime: "
+                                                                        + s.endTime()
+                                                                        + " <= "
+                                                                        + curTime);
+    } else if (stopCondition instanceof StopCondition.ActivityCompletion s) {
+      for (final var id : s.activities()) {
+        if (!wholeSchedule.activitiesById().containsKey(id)) {
+          throw new IllegalArgumentException("Activity with id " + id + " not present in schedule: " + wholeSchedule);
+        }
+      }
+    }
 
-    if(schedule.isEmpty()){
-      throw new IllegalArgumentException("simulateSchedule() called with empty schedule, use simulateUntil() instead");
+    for (final var activityId : wholeSchedule.activitiesById().keySet()) {
+      activityStatus.putIfAbsent(activityId, ActivityStatus.NOT_STARTED);
     }
 
     var allTaskFinished = false;
-    var nextTaskStart = schedule.values().stream().map(Pair::getLeft).min(Comparator.comparing($ -> $)).get();
+    var nextTaskStart = wholeSchedule.activitiesById().values().stream().map($ -> ((StartTime.OffsetFromPlanStart) $.startTime()).offset()).min(Comparator.comparing($ -> $)).orElse(Duration.MAX_VALUE);
     while (true) {
-      var nextBatchStart = engine.peekNextBatch(Duration.MAX_VALUE);
+      final var nextBatchStart = engine.peekNextBatch(Duration.MAX_VALUE);
+
+      //once all tasks are finished, we need to wait for events triggered at the same time
+      if (stopCondition instanceof StopCondition.ActivityCompletion s) {
+        if (allTaskFinished
+            && !nextBatchStart.minus(curTime).isZero()) { // TODO: Does this drop the batch on the floor? If we try to resume the simulation, will those jobs be lost? Answer: Yes, but that batch is always empty.
+          break;
+        }
+      } else if (stopCondition instanceof StopCondition.ElapsedTime s) {
+        if (engine.peekNextBatch(Duration.MAX_VALUE).longerThan(s.endTime()) || s.endTime().isEqualTo(Duration.MAX_VALUE)) {
+          break;
+        }
+      } else {
+        throw new Error("Unhandled variant of StopCondition: " + stopCondition);
+      }
+
       if (nextTaskStart.shorterThan(Duration.MAX_VALUE) && nextBatchStart.noShorterThan(nextTaskStart)) {
         nextTaskStart = Duration.MAX_VALUE;
-        for (final var entry : schedule.entrySet()) {
-          final var startOffset = entry.getValue().getLeft();
+        for (final var entry : wholeSchedule.activitiesById().entrySet()) {
+          final var startOffset = ((StartTime.OffsetFromPlanStart) entry.getValue().startTime()).offset();
           final var directiveId = entry.getKey();
-
-          activityStatus.putIfAbsent(directiveId, ActivityStatus.NOT_STARTED);
           final var status = activityStatus.get(directiveId);
 
           if (status != ActivityStatus.NOT_STARTED) continue;
@@ -233,7 +270,7 @@ public class IncrementalSimulationDriver<Model> {
             continue;
           }
 
-          final var serializedDirective = entry.getValue().getRight();
+          final var serializedDirective = entry.getValue().serializedActivity();
 
           final var task = missionModel.getTaskFactory(serializedDirective);
           final var taskId = engine.scheduleTask(startOffset, emitAndThen(directiveId, this.activityTopic, task));
@@ -243,15 +280,8 @@ public class IncrementalSimulationDriver<Model> {
         }
       }
 
-
-      // Increment real time, if necessary.
-      final var delta = engine.peekNextBatch(Duration.MAX_VALUE).minus(curTime);
-      //once all tasks are finished, we need to wait for events triggered at the same time
-      if(allTaskFinished && !delta.isZero()) { // TODO: Does this drop the batch on the floor? If we try to resume the simulation, will those jobs be lost? Answer: Yes, but that batch is always empty.
-        break;
-      }
-
       final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
+      final var delta = batch.offsetFromStart().minus(curTime);
       curTime = batch.offsetFromStart();
       timeline.add(delta);
       // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
@@ -261,19 +291,16 @@ public class IncrementalSimulationDriver<Model> {
       final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
       timeline.add(commit);
 
-      for (final var activityId : schedule.keySet()) {
-        if (plannedDirectiveToTask.containsKey(activityId)) {
-          if (engine.isTaskComplete(plannedDirectiveToTask.get(activityId))) {
-            activityStatus.put(activityId, ActivityStatus.FINISHED);
-          }
+      for (final var entry : plannedDirectiveToTask.entrySet()) {
+        final var activityId = entry.getKey();
+        if (engine.isTaskComplete(entry.getValue())) {
+          activityStatus.put(activityId, ActivityStatus.FINISHED);
         }
       }
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time
-      if (schedule.keySet().stream().allMatch($ -> {
-        activityStatus.putIfAbsent($, ActivityStatus.NOT_STARTED);
-        return activityStatus.get($) == ActivityStatus.FINISHED;
-      })) {
+      if (stopCondition instanceof StopCondition.ActivityCompletion s
+          && s.activities().stream().allMatch($ -> activityStatus.get($) == ActivityStatus.FINISHED)) {
         allTaskFinished = true;
       }
 
@@ -304,5 +331,10 @@ public class IncrementalSimulationDriver<Model> {
     NOT_STARTED,
     STARTED,
     FINISHED
+  }
+
+  sealed interface StopCondition {
+    record ActivityCompletion(Set<ActivityInstanceId> activities) implements StopCondition {}
+    record ElapsedTime(Duration endTime) implements StopCondition {}
   }
 }

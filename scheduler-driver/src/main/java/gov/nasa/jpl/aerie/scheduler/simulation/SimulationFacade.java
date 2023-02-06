@@ -73,6 +73,7 @@ public class SimulationFacade {
    * @return the duration if found in the last simulation, null otherwise
    */
   public Optional<Duration> getActivityDuration(ActivityInstance activityInstance) {
+    if (!insertedActivities.containsKey(activityInstance)) return Optional.empty();
     if(!planActInstanceIdToSimulationActInstanceId.containsKey(activityInstance.getId())){
       logger.error("You need to simulate before requesting activity duration");
       return Optional.empty();
@@ -112,6 +113,11 @@ public class SimulationFacade {
       }
     });
     return generatedActivities;
+  }
+
+  public void invalidateResultsAfter(final Duration cutoff) {
+    this.lastSimDriverResults = null;
+    this.lastSimConstraintResults = null;
   }
 
   public void removeActivitiesFromSimulation(final Plan plan, final Collection<ActivityInstance> activities) throws SimulationException {
