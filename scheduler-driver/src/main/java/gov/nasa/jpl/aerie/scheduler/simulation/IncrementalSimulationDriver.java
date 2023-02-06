@@ -252,7 +252,7 @@ public class IncrementalSimulationDriver<Model> {
           break;
         }
       } else if (stopCondition instanceof StopCondition.ElapsedTime s) {
-        if (nextTaskStart.longerThan(s.endTime()) && (engine.peekNextBatch(Duration.MAX_VALUE).longerThan(s.endTime()) || s.endTime().isEqualTo(Duration.MAX_VALUE))) {
+        if ((nextTaskStart.longerThan(s.endTime()) && engine.peekNextBatch(Duration.MAX_VALUE).longerThan(s.endTime()) || s.endTime().isEqualTo(Duration.MAX_VALUE))) {
           break;
         }
       } else {

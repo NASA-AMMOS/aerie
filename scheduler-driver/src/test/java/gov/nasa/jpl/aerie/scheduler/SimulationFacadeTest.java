@@ -307,6 +307,7 @@ public class SimulationFacadeTest {
   public void testProceduralGoalWithResourceConstraint() throws SimulationFacade.SimulationException {
     final var plan = makeTestPlanP0B1();
     facade.simulateActivities(plan, plan.getActivities());
+    problem.setInitialPlan(plan);
 
     final var constraint = new And(
         new LessThanOrEqual(new RealResource("/peel"), new RealValue(3.0)),
@@ -348,6 +349,7 @@ public class SimulationFacadeTest {
   public void testActivityTypeWithResourceConstraint() throws SimulationFacade.SimulationException {
     final var plan = makeTestPlanP0B1();
     facade.simulateActivities(plan, plan.getActivities());
+    problem.setInitialPlan(plan);
 
     final var constraint = new And(
         new LessThanOrEqual(new RealResource("/peel"), new RealValue(3.0)),

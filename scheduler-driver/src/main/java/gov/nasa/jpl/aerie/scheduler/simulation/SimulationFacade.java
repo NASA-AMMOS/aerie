@@ -175,7 +175,15 @@ public class SimulationFacade {
     }
     final var newSchedule = Schedule.of(planActInstanceIdToSimulationActInstanceId, plan);
     for (final var activity : activities) {
-      if (!newSchedule.contains(new StartTime.OffsetFromPlanStart(activity.startTime()), new SerializedActivity(activity.getType().getName(), activity.arguments()))) {
+      final Map<String, SerializedValue> newArgs;
+      if (activity.duration() != null && activity.getType().getDurationType() instanceof DurationType.Controllable dt) {
+        newArgs = new HashMap<>(activity.arguments());
+        newArgs.put(dt.parameterName(), SerializedValue.of(activity.duration().in(Duration.MICROSECONDS)));
+      } else {
+        newArgs = activity.arguments();
+      }
+      final var serializedActivity = new SerializedActivity(activity.getType().getName(), newArgs);
+      if (!newSchedule.contains(new StartTime.OffsetFromPlanStart(activity.startTime()), serializedActivity)) {
         throw new AssertionError("Plan must contain all activities:" + activity + " " + newSchedule);
       }
     }
