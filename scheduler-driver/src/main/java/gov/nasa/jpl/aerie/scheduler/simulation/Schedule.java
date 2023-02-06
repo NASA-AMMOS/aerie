@@ -3,6 +3,8 @@ package gov.nasa.jpl.aerie.scheduler.simulation;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
 import org.apache.commons.lang3.tuple.Pair;
@@ -26,12 +28,22 @@ import java.util.stream.Collectors;
         Map.copyOf(plan.getActivitiesById()
             .entrySet()
             .stream()
-            .map($ -> Pair.of(
-                planActInstanceIdToSimulationActInstanceId.get($.getKey()),
-                new Directive(new StartTime.OffsetFromPlanStart($.getValue().startTime()),
-                        new SerializedActivity(
-                            $.getValue().getType().getName(),
-                            $.getValue().arguments()))))
+            .map($ -> {
+              final Map<String, SerializedValue> newArgs;
+              if ($.getValue().duration() != null && $.getValue().getType().getDurationType() instanceof DurationType.Controllable dt) {
+                newArgs = new HashMap<>($.getValue().arguments());
+                newArgs.put(dt.parameterName(), SerializedValue.of($.getValue().duration().in(Duration.MICROSECONDS)));
+              } else {
+                newArgs = $.getValue().arguments();
+              }
+              return Pair.of(
+                  planActInstanceIdToSimulationActInstanceId.get($.getKey()),
+                  new Directive(
+                      new StartTime.OffsetFromPlanStart($.getValue().startTime()),
+                      new SerializedActivity(
+                          $.getValue().getType().getName(),
+                          newArgs)));
+            })
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))));
   }
 

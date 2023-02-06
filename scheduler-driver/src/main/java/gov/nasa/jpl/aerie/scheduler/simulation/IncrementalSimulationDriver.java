@@ -113,6 +113,7 @@ public class IncrementalSimulationDriver<Model> {
     }
 
     final var activityToSimulate = new SimulatedActivity(startTime, activity, activityId);
+    activitiesInserted.removeIf($ -> !newSchedule.activitiesById().containsKey($.id()));
     if (firstDifference.get().noLongerThan(curTime)){
       final var toBeInserted = new ArrayList<>(activitiesInserted);
       toBeInserted.add(activityToSimulate);
@@ -209,22 +210,36 @@ public class IncrementalSimulationDriver<Model> {
       //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
     }
 
-    for (final var id : lastSimResults.simulatedActivities.keySet()) {
-      if (!schedule.activitiesById().containsKey(id)) {
-        throw new IllegalStateException("Results contain " + id + " but schedule does not " + schedule);
-      }
-    }
+//    for (final var id : lastSimResults.simulatedActivities.keySet()) {
+//      if (!schedule.activitiesById().containsKey(id)) {
+//        throw new IllegalStateException("Results contain " + id + " but schedule does not " + schedule);
+//      }
+//    }
     return lastSimResults;
   }
 
   private void simulateSchedule(final Schedule wholeSchedule, final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule, final StopCondition stopCondition)
   throws InstantiationException
   {
+    for (final var entry : schedule.entrySet()) {
+      final var other = wholeSchedule.activitiesById().get(entry.getKey());
+      if (!entry.getValue().getLeft().isEqualTo(((StartTime.OffsetFromPlanStart) other.startTime()).offset())) {
+        throw new AssertionError("Start time mismatch: " + entry + ", " + other);
+      }
+      if (!entry.getValue().getRight().equals(other.serializedActivity())) {
+        throw new AssertionError("Serialized Activity mismatch: " + entry + ", " + other);
+      }
+    }
+
     if (stopCondition instanceof final StopCondition.ElapsedTime s) {
       if (!s.endTime().noShorterThan(curTime)) throw new AssertionError("endTime <= curTime: "
                                                                         + s.endTime()
                                                                         + " <= "
                                                                         + curTime);
+    } else if (stopCondition instanceof final StopCondition.ActivityCompletion s) {
+      if (!schedule.keySet().equals(s.activities())) {
+        throw new AssertionError("Mismatch: " + schedule.keySet() + " != " + s.activities());
+      }
     }
 
     var allTaskFinished = false;
