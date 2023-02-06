@@ -16,7 +16,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/* package-private */ record Schedule(Map<ActivityInstanceId, Directive> activitiesById) {
+/* package-private */ class Schedule {
+  private final Map<ActivityInstanceId, Directive> activitiesById;
+
+  public Map<ActivityInstanceId, Directive> activitiesById() {
+    return Map.copyOf(activitiesById);
+  }
+
+  public Schedule(final Map<ActivityInstanceId, Directive> activitiesById) {
+    this.activitiesById = Map.copyOf(activitiesById);
+  }
+
   public static Schedule empty() {
     return new Schedule(Map.of());
   }
@@ -28,6 +38,7 @@ import java.util.stream.Collectors;
         Map.copyOf(plan.getActivitiesById()
             .entrySet()
             .stream()
+            .filter($ -> $.getValue().getParentActivity().isEmpty())
             .map($ -> {
               final Map<String, SerializedValue> newArgs;
               if ($.getValue().duration() != null && $.getValue().getType().getDurationType() instanceof DurationType.Controllable dt) {
@@ -70,7 +81,7 @@ import java.util.stream.Collectors;
         .min(Comparator.comparing(o -> ((StartTime.OffsetFromPlanStart) o.getValue().startTime).offset())).map($ -> ((StartTime.OffsetFromPlanStart) $.getValue().startTime).offset());
 
     if (minRemoved.isEmpty()) return minAdded;
-    if (minAdded.isEmpty()) return Optional.empty();
+    if (minAdded.isEmpty()) return minRemoved;
 
     return Optional.of(Duration.min(minRemoved.get(), minAdded.get()));
   }
@@ -92,4 +103,26 @@ import java.util.stream.Collectors;
   }
 
   public record Directive(StartTime startTime, SerializedActivity serializedActivity) {}
+
+  @Override
+  public boolean equals(final Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    final Schedule schedule = (Schedule) o;
+
+    return activitiesById.equals(schedule.activitiesById);
+  }
+
+  @Override
+  public int hashCode() {
+    return activitiesById.hashCode();
+  }
+
+  @Override
+  public String toString() {
+    return "Schedule{" +
+           "activitiesById=" + activitiesById +
+           '}';
+  }
 }

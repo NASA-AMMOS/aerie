@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
@@ -46,7 +47,7 @@ public class SimulationFacade {
   private final Map<SchedulingActivityInstanceId, ActivityInstanceId> planActInstanceIdToSimulationActInstanceId = new HashMap<>();
   private final Map<ActivityInstance, SerializedActivity> insertedActivities;
   private static final Duration MARGIN = Duration.of(5, MICROSECONDS);
-  private Schedule previousSchedule;
+
 
   public gov.nasa.jpl.aerie.constraints.model.SimulationResults getLatestConstraintSimulationResults(){
     return lastSimConstraintResults;
@@ -87,10 +88,19 @@ public class SimulationFacade {
 
   private ActivityInstanceId getIdOfRootParent(SimulationResults results, ActivityInstanceId instanceId){
     final var act = results.simulatedActivities.get(instanceId);
-    if(act.parentId() == null){
-      return instanceId;
+    if (act != null) {
+      if (act.parentId() == null) {
+        return instanceId;
+      } else {
+        return getIdOfRootParent(results, act.parentId());
+      }
     } else {
-      return getIdOfRootParent(results, act.parentId());
+      final var unfinishedAct = Objects.requireNonNull(results.unfinishedActivities.get(instanceId));
+      if (unfinishedAct.parentId() == null) {
+        return instanceId;
+      } else {
+        return getIdOfRootParent(results, unfinishedAct.parentId());
+      }
     }
   }
 

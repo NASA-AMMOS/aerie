@@ -182,6 +182,13 @@ public class IncrementalSimulationDriver<Model> {
    * @return the simulation results
    */
   public SimulationResults getSimulationResultsUpTo(final Schedule schedule, Instant startTimestamp, Duration endTime){
+    final var firstDifference = Schedule.firstDifference(previousSchedule, schedule);
+    previousSchedule = schedule;
+
+    if (firstDifference.isPresent() && firstDifference.get().noLongerThan(curTime)) {
+      initSimulation();
+    }
+
     //if previous results cover a bigger period, we return do not regenerate
     if(endTime.longerThan(curTime)){
       try {
@@ -208,13 +215,20 @@ public class IncrementalSimulationDriver<Model> {
           missionModel.getTopics());
       lastSimResultsEnd = endTime;
       //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
+
+      for (final var entry : lastSimResults.simulatedActivities.entrySet()) {
+        if (!schedule.activitiesById().containsKey(entry.getKey())) {
+          if (entry.getValue().parentId() == null) {
+            throw new IllegalStateException("Results contain " + entry.getKey() + " but schedule does not " + schedule);
+          }
+        }
+      }
+    } else {
+      if (firstDifference.isPresent() && lastSimResultsEnd != null) {
+        lastSimResultsEnd = Duration.min(lastSimResultsEnd, firstDifference.get());
+      }
     }
 
-//    for (final var id : lastSimResults.simulatedActivities.keySet()) {
-//      if (!schedule.activitiesById().containsKey(id)) {
-//        throw new IllegalStateException("Results contain " + id + " but schedule does not " + schedule);
-//      }
-//    }
     return lastSimResults;
   }
 
@@ -228,6 +242,12 @@ public class IncrementalSimulationDriver<Model> {
       }
       if (!entry.getValue().getRight().equals(other.serializedActivity())) {
         throw new AssertionError("Serialized Activity mismatch: " + entry + ", " + other);
+      }
+    }
+
+    for (final var entry : activityStatus.entrySet()) {
+      if (entry.getValue() != ActivityStatus.NOT_STARTED && !wholeSchedule.activitiesById().containsKey(entry.getKey())) {
+        throw new IllegalStateException("We've already started simulating " + entry.getKey() + " but it's missing from the schedule " + wholeSchedule);
       }
     }
 
@@ -254,7 +274,7 @@ public class IncrementalSimulationDriver<Model> {
           break;
         }
       } else if (stopCondition instanceof StopCondition.ElapsedTime s) {
-        if (engine.peekNextBatch(Duration.MAX_VALUE).longerThan(s.endTime()) || s.endTime().isEqualTo(Duration.MAX_VALUE)) {
+        if (nextTaskStart.longerThan(s.endTime()) && (engine.peekNextBatch(Duration.MAX_VALUE).longerThan(s.endTime()) || s.endTime().isEqualTo(Duration.MAX_VALUE))) {
           break;
         }
       } else {
