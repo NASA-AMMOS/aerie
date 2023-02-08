@@ -32,6 +32,7 @@ public final class ForEachActivitySpans implements Expression<Spans> {
         final var newEnvironment = new EvaluationEnvironment(
             new HashMap<>(environment.activityInstances()),
             environment.spansInstances(),
+            environment.intervals(),
             environment.realExternalProfiles(),
             environment.discreteExternalProfiles()
         );

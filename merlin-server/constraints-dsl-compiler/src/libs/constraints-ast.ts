@@ -23,7 +23,7 @@ export enum NodeKind {
   WindowsExpressionStartOf = 'WindowsExpressionStartOf',
   WindowsExpressionEndOf = 'WindowsExpressionEndOf',
   WindowsExpressionLongerThan = 'WindowsExpressionLongerThan',
-  WindowsExpressionShorterhan = 'WindowsExpressionShorterThan',
+  WindowsExpressionShorterThan = 'WindowsExpressionShorterThan',
   WindowsExpressionShiftBy = 'WindowsExpressionShiftBy',
   WindowsExpressionFromSpans = 'WindowsExpressionFromSpans',
   SpansExpressionFromWindows = 'SpansExpressionFromWindows',
@@ -44,6 +44,9 @@ export enum NodeKind {
   ForEachActivityViolations = 'ForEachActivityViolations',
   ProfileChanges = 'ProfileChanges',
   ViolationsOf = 'ViolationsOf',
+  AbsoluteInterval = 'AbsoluteInterval',
+  IntervalAlias = 'IntervalAlias',
+  IntervalDuration = 'IntervalDuration'
 }
 
 export type Constraint = ViolationsOf | WindowsExpression | SpansExpression | ForEachActivityConstraints;
@@ -120,7 +123,7 @@ export interface ProfileChanges {
 export interface WindowsExpressionValue {
   kind: NodeKind.WindowsExpressionValue,
   value: boolean,
-  interval: API.Interval
+  interval?: IntervalExpression
 }
 
 export interface WindowsExpressionNot {
@@ -131,8 +134,8 @@ export interface WindowsExpressionNot {
 export interface WindowsExpressionShiftBy {
   kind: NodeKind.WindowsExpressionShiftBy,
   windowExpression: WindowsExpression,
-  fromStart: Temporal.Duration,
-  fromEnd: Temporal.Duration,
+  fromStart: Duration,
+  fromEnd: Duration,
 }
 
 export interface WindowsExpressionOr {
@@ -202,15 +205,15 @@ export interface SpansExpressionActivitySpan {
 }
 
 export interface WindowsExpressionShorterThan {
-  kind: NodeKind.WindowsExpressionShorterhan,
+  kind: NodeKind.WindowsExpressionShorterThan,
   windowExpression: WindowsExpression,
-  duration: Temporal.Duration
+  duration: Duration
 }
 
 export interface WindowsExpressionLongerThan {
   kind: NodeKind.WindowsExpressionLongerThan,
   windowExpression: WindowsExpression,
-  duration: Temporal.Duration
+  duration: Duration
 }
 
 export interface SpansExpressionSplit {
@@ -223,7 +226,7 @@ export interface SpansExpressionSplit {
 
 export interface SpansExpressionInterval {
   kind: NodeKind.SpansExpressionInterval,
-  interval: API.Interval
+  interval: IntervalExpression
 }
 
 export interface WindowsExpressionFromSpans {
@@ -307,7 +310,7 @@ export interface RealProfileValue {
   kind: NodeKind.RealProfileValue;
   value: number;
   rate: number;
-  interval: API.Interval;
+  interval?: IntervalExpression;
 }
 
 export interface RealProfileParameter {
@@ -319,7 +322,7 @@ export interface RealProfileParameter {
 export interface RealProfileAccumulatedDuration {
   kind: NodeKind.RealProfileAccumulatedDuration,
   intervalsExpression: IntervalsExpression,
-  unit: Temporal.Duration
+  unit: Duration
 }
 
 export type DiscreteProfileExpression =
@@ -330,6 +333,7 @@ export type DiscreteProfileExpression =
     | StructProfileExpression
     | ListProfileExpression
     | ValueAtExpression
+    | IntervalDuration;
 
 export interface DiscreteProfileResource {
   kind: NodeKind.DiscreteProfileResource;
@@ -339,11 +343,37 @@ export interface DiscreteProfileResource {
 export interface DiscreteProfileValue {
   kind: NodeKind.DiscreteProfileValue;
   value: any;
-  interval: API.Interval;
+  interval?: IntervalExpression;
 }
 
 export interface DiscreteProfileParameter {
   kind: NodeKind.DiscreteProfileParameter;
   alias: string;
   name: string;
+}
+
+export type IntervalExpression =
+  | AbsoluteInterval
+  | IntervalAlias;
+
+export interface AbsoluteInterval {
+  kind: NodeKind.AbsoluteInterval;
+  start?: Temporal.Instant;
+  end?: Temporal.Instant;
+  startInclusivity?: API.Inclusivity;
+  endInclusivity?: API.Inclusivity;
+}
+
+export interface IntervalAlias {
+  kind: NodeKind.IntervalAlias;
+  alias: string;
+}
+
+export type Duration =
+  | Temporal.Duration
+  | IntervalDuration;
+
+export interface IntervalDuration {
+  kind: NodeKind.IntervalDuration;
+  interval: IntervalExpression
 }
