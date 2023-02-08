@@ -54,8 +54,10 @@ public final class TypescriptCodeGenerationService {
   private static String getCastingMethod(){
     return """
 export function makeAllDiscreteProfile (argument: any) : any{
- if ((argument instanceof Discrete) || (argument instanceof Real) ){
+ if ((argument instanceof Discrete) || (argument instanceof Real)) {
    return argument.__astNode
+ } else if ((argument instanceof Temporal.Duration) || (argument.kind === 'IntervalDuration')) {
+   return argument;
  } else if(typeof(argument) === "number"){
      if(Number.isInteger(argument)){
        return Discrete.Value(argument).__astNode

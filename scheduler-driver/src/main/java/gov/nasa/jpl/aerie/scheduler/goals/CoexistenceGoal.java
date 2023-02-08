@@ -231,7 +231,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       /* this will override whatever might be already present in the template */
       if(durExpr!=null){
         var durRange = this.durExpr.compute(window.interval(), simulationResults);
-        actTB.durationIn(Interval.between(durRange, durRange));
+        actTB.durationIn(durRange);
       }
 
       ActivityCreationTemplate temp;
@@ -278,12 +278,22 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
   private EvaluationEnvironment createEvaluationEnvironmentFromAnchor(Segment<Optional<Spans.Metadata>> span){
     if(span.value().isPresent()){
       final var metadata = span.value().get();
-      return new EvaluationEnvironment(Map.of(this.alias, metadata.activityInstance()),
-                                       Map.of(),
-                                       Map.of(),
-                                       Map.of());
+      return new EvaluationEnvironment(
+          Map.of(this.alias, metadata.activityInstance()),
+          Map.of(),
+          Map.of(),
+          Map.of(),
+          Map.of()
+      );
     } else{
-      return new EvaluationEnvironment();
+      assert this.alias != null;
+      return new EvaluationEnvironment(
+          Map.of(),
+          Map.of(),
+          Map.of(this.alias, span.interval()),
+          Map.of(),
+          Map.of()
+      );
     }
   }
 

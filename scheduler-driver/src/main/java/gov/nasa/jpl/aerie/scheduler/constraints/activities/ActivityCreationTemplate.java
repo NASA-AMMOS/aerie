@@ -1,12 +1,17 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
+import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
+import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteProfileFromDuration;
+import gov.nasa.jpl.aerie.constraints.tree.DurationLiteral;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.EquationSolvingAlgorithms;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
@@ -98,12 +103,12 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
      */
     public @NotNull
     Builder duration(@NotNull Duration duration) {
-      this.durationIn = Interval.between(duration, duration);
+      this.durationIn = new DiscreteProfileFromDuration(new DurationLiteral(duration));
       return getThis();
     }
 
     public @NotNull
-    Builder duration(@NotNull Interval duration) {
+    Builder duration(@NotNull Expression<? extends Profile<?>> duration) {
       this.durationIn = duration;
       return getThis();
     }
@@ -119,7 +124,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
       type = template.type;
       startsIn = template.startRange;
       endsIn = template.endRange;
-      durationIn = template.durationRange;
+      durationIn = template.duration;
       startsOrEndsIn = template.startOrEndRange;
       arguments = template.arguments;
       return getThis();
@@ -150,7 +155,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
       template.type = this.type;
 
       if (this.durationIn != null) {
-        template.durationRange = this.durationIn;
+        template.duration = this.durationIn;
       }
       //REVIEW: probably want to store permissible rane separate from creation
       //        default value
@@ -217,8 +222,17 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
     if (this.endRange != null) {
       tnw.addEndInterval(name, this.endRange.start, this.endRange.end);
     }
-    if (this.durationRange != null) {
-      tnw.addDurationInterval(name, this.durationRange.start, this.durationRange.end);
+    if (this.duration != null) {
+      final Optional<Duration> duration;
+      try {
+        duration = this.duration
+            .evaluate(null, planningHorizon.getHor(), evaluationEnvironment)
+            .valueAt(Duration.ZERO)
+            .flatMap($ -> $.asInt().map(i -> Duration.of(i, Duration.MICROSECOND)));
+      } catch (NullPointerException e) {
+        throw new UnsupportedOperationException("Activity creation duration arguments cannot depend on simulation results.", e);
+      }
+      duration.ifPresent(d -> tnw.addDurationInterval(name, d, d));
     }
     final var success = tnw.solveConstraints();
     if (!success) {

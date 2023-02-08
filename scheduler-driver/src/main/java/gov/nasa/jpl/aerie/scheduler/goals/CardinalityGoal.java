@@ -107,32 +107,8 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       if (occurrenceRange != null) {
         goal.occurrenceRange = occurrenceRange;
       }
-      if(isUnsatisfiableDurationType()){
-        throw new IllegalArgumentException("Goal is incorrectly parametrized: activity creation template has zero-duration while duration objective is non-zero");
-      }
-      if(isUnsatisfiable()){
-        throw new IllegalArgumentException("Goal is incorrectly parametrized: minimum duration x minimum occurence > maximum duration");
-      }
       return goal;
     }
-
-    public boolean isUnsatisfiableDurationType(){
-      return (thereExists.getDurationRange() != null &&
-              thereExists.getDurationRange().isSingleton() &&
-              thereExists.getDurationRange().start.isZero() &&
-              durationRange.start.longerThan(Duration.ZERO)
-      );
-    }
-
-    public boolean isUnsatisfiable(){
-      return this.durationRange != null &&
-             occurrenceRange != null &&
-             this.thereExists.getDurationRange() != null &&
-             this.thereExists.getDurationRange().start
-                 .times(occurrenceRange.getMinimum())
-                 .longerThan(durationRange.end);
-    }
-
   }//Builder
 
 

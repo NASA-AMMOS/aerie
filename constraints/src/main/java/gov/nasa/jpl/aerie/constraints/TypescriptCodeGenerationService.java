@@ -154,7 +154,7 @@ public final class TypescriptCodeGenerationService {
       @Override
       public String onDuration() {
         final var res = valueSchemaToTypescript(valueSchema);
-        return "(%s | Discrete<%s>)".formatted(res, res);
+        return "(AST.Duration | Discrete<%s>)".formatted(res);
       }
 
       @Override
