@@ -79,6 +79,7 @@ public class UncontrollableDurationTest {
         .forEach(solarPanelActivityTriangle)
         .endsAt(TimeAnchor.START)
         .named("UncontrollableCoexistenceGoal")
+        .aliasForAnchors("Bond. James Bond")
         .build();
 
 
@@ -128,6 +129,7 @@ public class UncontrollableDurationTest {
         .forEach(solarPanelActivityTriangle)
         .endsAt(start)
         .named("UncontrollableCoexistenceGoal")
+        .aliasForAnchors("its a me")
         .build();
 
 
@@ -164,6 +166,7 @@ public class UncontrollableDurationTest {
         .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
         .forEach(ActivityExpression.ofType(problem.getActivityType("ControllableDurationActivity")))
         .startsAt(intervalStartTimeExpression)
+        .aliasForAnchors("its a me")
         .build();
 
     problem.setGoals(List.of(coexistenceControllable));

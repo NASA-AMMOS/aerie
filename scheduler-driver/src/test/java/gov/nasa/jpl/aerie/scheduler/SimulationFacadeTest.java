@@ -155,6 +155,7 @@ public class SimulationFacadeTest {
                            .withArgument("biteSize", SerializedValue.of(0.1))
                            .build())
         .startsAt(TimeAnchor.END)
+        .aliasForAnchors("its a me")
         .build();
 
     problem.setGoals(List.of(goal));
@@ -283,6 +284,7 @@ public class SimulationFacadeTest {
         .forEach(new SpansFromWindows(constraint))
         .owned(ChildCustody.Jointly)
         .startsAt(TimeAnchor.START)
+        .aliasForAnchors("its a me")
         .build();
 
     problem.setGoals(List.of(cg));
