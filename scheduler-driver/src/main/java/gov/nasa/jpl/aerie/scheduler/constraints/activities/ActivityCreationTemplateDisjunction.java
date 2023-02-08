@@ -112,7 +112,7 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
       type = template.type;
       startsIn = template.startRange;
       endsIn = template.endRange;
-      durationIn = template.durationRange;
+      durationIn = template.duration;
       startsOrEndsIn = template.startOrEndRange;
       arguments = template.arguments;
       activityCreationTemplates = template.activityCreationTemplates;
@@ -133,7 +133,7 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
           expr.endRange = endsIn;
         }
         if (durationIn != null) {
-          expr.durationRange = durationIn;
+          expr.duration = durationIn;
         }
         if (startsOrEndsIn != null) {
           expr.startOrEndRange = startsOrEndsIn;

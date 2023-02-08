@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.worker.services;
 
+import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteProfileFromDuration;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
 import gov.nasa.jpl.aerie.constraints.tree.ForEachActivitySpans;
@@ -14,9 +16,12 @@ import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
 import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
+import gov.nasa.jpl.aerie.constraints.tree.DurationLiteral;
 import gov.nasa.jpl.aerie.constraints.tree.Starts;
 import gov.nasa.jpl.aerie.constraints.tree.StructExpressionAt;
 import gov.nasa.jpl.aerie.constraints.tree.ValueAt;
+import gov.nasa.jpl.aerie.constraints.tree.IntervalDuration;
+import gov.nasa.jpl.aerie.constraints.tree.IntervalAlias;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsFromSpans;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -118,7 +123,7 @@ class SchedulingDSLCompilationServiceTests {
     }
   }
 
-  private static StructExpressionAt getSampleActivity1Parameters(){
+  private static StructExpressionAt getSampleActivity1Parameters() {
     return new StructExpressionAt(Map.ofEntries(
         Map.entry("variant", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("option2")))),
         Map.entry("fancy", new ProfileExpression<>(new StructExpressionAt(Map.ofEntries(
@@ -127,8 +132,21 @@ class SchedulingDSLCompilationServiceTests {
                                                                                                         new ProfileExpression<>(new DiscreteValue(SerializedValue.of(2 )))))))))))
                   ))
         ),
-        Map.entry("duration", new ProfileExpression<>(new DiscreteValue(SerializedValue.of(Duration.of(1, HOUR).in(MICROSECONDS))))))
-    );
+        Map.entry("duration", new ProfileExpression<>(new DiscreteProfileFromDuration(new DurationLiteral(Duration.of(1, HOUR)))))
+    ));
+  }
+
+  private static StructExpressionAt getSampleActivity1ParametersWithDurationReference() {
+    return new StructExpressionAt(Map.ofEntries(
+        Map.entry("variant", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("option2")))),
+        Map.entry("fancy", new ProfileExpression<>(new StructExpressionAt(Map.ofEntries(
+                      Map.entry("subfield1", new ProfileExpression<>(new DiscreteValue(SerializedValue.of("value1")))),
+                      Map.entry("subfield2", new ProfileExpression<>(new ListExpressionAt(List.of(new ProfileExpression<>(new StructExpressionAt(Map.of("subsubfield1",
+                                                                                                                                                        new ProfileExpression<>(new DiscreteValue(SerializedValue.of(2 )))))))))))
+                  ))
+        ),
+        Map.entry("duration", new ProfileExpression<>(new DiscreteProfileFromDuration(new IntervalDuration(new IntervalAlias("coexistence interval alias 0")))))
+    ));
   }
 
   @Test
@@ -404,8 +422,8 @@ class SchedulingDSLCompilationServiceTests {
                                                                                                                                                                       new ProfileExpression<>(new RealParameter("coexistence activity alias 0", "quantity"))))))))))
                                 ))
                       ),
-                      Map.entry("duration", new ProfileExpression<>(new DiscreteValue(SerializedValue.of(Duration.of(1, HOUR).in(MICROSECONDS))))))
-                  )
+                      Map.entry("duration", new ProfileExpression<>(new DiscreteProfileFromDuration(new DurationLiteral(Duration.of(1, HOUR)))))
+                  ))
               ),
               "coexistence activity alias 0",
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2"),
@@ -449,8 +467,8 @@ class SchedulingDSLCompilationServiceTests {
                                                                                                                                                                                                      new ProfileExpression<>(new DiscreteValue(SerializedValue.of(2)))))))))))
                                                                ))
                                                      ),
-                                                     Map.entry("duration", new ProfileExpression<>(new DiscreteValue(SerializedValue.of(Duration.of(1, HOUR).in(MICROSECONDS))))))
-                                                 )
+                                                     Map.entry("duration", new ProfileExpression<>(new DiscreteProfileFromDuration(new DurationLiteral(Duration.of(1, HOUR)))))
+                                                 ))
               ),
               "coexistence activity alias 0",
               new SchedulingDSL.ConstraintExpression.ActivityExpression("SampleActivity2"),
@@ -603,8 +621,46 @@ class SchedulingDSLCompilationServiceTests {
               new SchedulingDSL.ActivityTemplate("SampleActivity1",
                                                  getSampleActivity1Parameters()
               ),
-              "coexistence activity alias 0",
-              new SchedulingDSL.ConstraintExpression.WindowsExpression(new LongerThan(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)), Duration.of(10, Duration.MICROSECOND))),
+              "coexistence interval alias 0",
+              new SchedulingDSL.ConstraintExpression.WindowsExpression(new LongerThan(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)), new DurationLiteral(Duration.of(10, Duration.MICROSECOND)))),
+              Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.END, TimeUtility.Operator.PLUS, Duration.ZERO, true)),
+              Optional.empty()
+          ),
+          r.value()
+      );
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
+      fail(r.toString());
+    }
+  }
+
+  @Test
+  void testCoexistenceGoalReferenceWindowDuration() {
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
+        PLAN_ID,
+        """
+          const micro = (m: number) => Temporal.Duration.from({microseconds: m});
+          export default function() {
+            return Goal.CoexistenceGoal({
+              activityTemplate: (i: Interval) => ActivityTemplates.SampleActivity1({
+                variant: 'option2',
+                fancy: { subfield1: 'value1', subfield2: [{subsubfield1: 2}]},
+                duration: i.duration()
+              }),
+              forEach: Real.Resource(Resources["/sample/resource/1"]).greaterThan(50.0).longerThan(micro(10)),
+              startsAt: TimingConstraint.singleton(WindowProperty.END)
+            })
+          }
+        """);
+
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<?> r) {
+      assertEquals(
+          new SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition(
+              new SchedulingDSL.ActivityTemplate("SampleActivity1",
+                                                 getSampleActivity1ParametersWithDurationReference()
+              ),
+              "coexistence interval alias 0",
+              new SchedulingDSL.ConstraintExpression.WindowsExpression(new LongerThan(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)), new DurationLiteral(Duration.of(10, Duration.MICROSECOND)))),
               Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.END, TimeUtility.Operator.PLUS, Duration.ZERO, true)),
               Optional.empty()
           ),

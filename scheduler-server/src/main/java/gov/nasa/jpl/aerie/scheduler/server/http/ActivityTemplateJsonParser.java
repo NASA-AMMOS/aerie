@@ -46,7 +46,6 @@ public class ActivityTemplateJsonParser implements JsonParser<SchedulingDSL.Acti
     }
   }
 
-
   @Override
   public JsonValue unparse(final SchedulingDSL.ActivityTemplate activityTemplate) {
     final var builder = Json.createObjectBuilder();

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
@@ -7,6 +8,7 @@ import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.ForEachActivitySpans;
+import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
 import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -138,19 +140,7 @@ public class GoalBuilder {
       if(activityTemplate.arguments().fields().containsKey(durationType.parameterName())){
         final var argument = activityTemplate.arguments().fields().get(durationType.parameterName());
         if(argument != null){
-          final Duration duration;
-          if (argument.expression instanceof DiscreteValue v) {
-            final var optionalLong = v.value().asInt();
-            if (optionalLong.isPresent()) {
-              duration = Duration.of(optionalLong.get(), Duration.MICROSECOND);
-            } else {
-              throw new IllegalArgumentException("controllable duration parameter wasn't a duration");
-            }
-          } else {
-            throw new IllegalArgumentException("controllable duration parameter must be a single, constant, statically-known duration");
-          }
-
-          builder.duration(duration);
+          builder.duration(argument.expression);
           activityTemplate.arguments().fields().remove(durationType.parameterName());
         } else {
           //nothing, other cases will be handled by below section
