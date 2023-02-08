@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
-import gov.nasa.jpl.aerie.constraints.time.AbsoluteInterval;
+import gov.nasa.jpl.aerie.constraints.tree.AbsoluteInterval;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.IntervalContainer;
 import gov.nasa.jpl.aerie.constraints.time.Spans;
@@ -39,16 +39,29 @@ public final class ConstraintParsers {
   static final JsonParser<Interval.Inclusivity> inclusivityP =
       enumP(Interval.Inclusivity.class, Enum::name);
 
+  static final JsonParser<IntervalAlias> intervalAliasP =
+      productP
+          .field("kind", literalP("IntervalAlias"))
+          .field("alias", stringP)
+          .map(
+              untuple((kind, alias) -> new IntervalAlias(alias)),
+              $ -> tuple(Unit.UNIT, $.alias())
+          );
+
   static final JsonParser<AbsoluteInterval> absoluteIntervalP =
       productP
+          .field("kind", literalP("AbsoluteInterval"))
           .optionalField("start", instantP)
           .optionalField("end", instantP)
           .optionalField("startInclusivity", inclusivityP)
           .optionalField("endInclusivity", inclusivityP)
           .map(
-              untuple(AbsoluteInterval::new),
-              $ -> tuple($.start(), $.end(), $.startInclusivity(), $.endInclusivity())
+              untuple((kind, start, end, startInclusivity, endInclusivity) -> new AbsoluteInterval(start, end, startInclusivity, endInclusivity)),
+              $ -> tuple(Unit.UNIT, $.start(), $.end(), $.startInclusivity(), $.endInclusivity())
           );
+
+  static final JsonParser<Expression<Interval>> intervalExpressionP =
+      chooseP(intervalAliasP, absoluteIntervalP);
 
   static <P extends Profile<P>> JsonParser<AssignGaps<P>> assignGapsF(final JsonParser<Expression<P>> profileParser) {
     return productP
@@ -73,7 +86,7 @@ public final class ConstraintParsers {
       productP
           .field("kind", literalP("DiscreteProfileValue"))
           .field("value", serializedValueP)
-          .field("interval", absoluteIntervalP)
+          .optionalField("interval", intervalExpressionP)
           .map(
               untuple((kind, value, interval) -> new DiscreteValue(value, interval)),
               $ -> tuple(Unit.UNIT, $.value(), $.interval()));
@@ -130,7 +143,7 @@ public final class ConstraintParsers {
           .field("kind", literalP("RealProfileValue"))
           .field("value", doubleP)
           .field("rate", doubleP)
-          .field("interval", absoluteIntervalP)
+          .optionalField("interval", intervalExpressionP)
           .map(
               untuple((kind, value, rate, interval) -> new RealValue(value, rate, interval)),
               $ -> tuple(Unit.UNIT, $.value(), $.rate(), $.interval()));
@@ -177,7 +190,7 @@ public final class ConstraintParsers {
     return productP
         .field("kind", literalP("RealProfileAccumulatedDuration"))
         .field("intervalsExpression", intervalExpressionP)
-        .field("unit", durationP)
+        .field("unit", durationExprP)
         .map(
             untuple((kind, intervals, unit) -> new AccumulatedDuration<>(intervals, unit)),
             $ -> tuple(Unit.UNIT, $.intervals(), $.unit())
@@ -197,10 +210,14 @@ public final class ConstraintParsers {
         accumulatedDurationF(spansP)
     ));
   }
+
   public static JsonParser<ProfileExpression<?>> profileExpressionF(JsonParser<Expression<Spans>> spansExpressionP, JsonParser<Expression<LinearProfile>> linearProfileExprP) {
     return recursiveP(selfP -> chooseP(
+
         linearProfileExprP.map(ProfileExpression::new, $ -> $.expression),
-        discreteProfileExprF(selfP, spansExpressionP).map(ProfileExpression::new, $ -> $.expression)));
+        discreteProfileExprF(selfP, spansExpressionP).map(ProfileExpression::new, $ -> $.expression),
+        durationExprP.map($ -> new ProfileExpression<>(new DiscreteProfileFromDuration($)), $ -> ((DiscreteProfileFromDuration) $.expression).duration())
+    ));
   }
 
   static JsonParser<Transition> transitionP(JsonParser<ProfileExpression<?>> profileExpressionP, JsonParser<Expression<Spans>> spansExpressionP) {
@@ -243,11 +260,29 @@ public final class ConstraintParsers {
               microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
               duration -> duration.in(Duration.MICROSECONDS));
 
+  static final JsonParser<IntervalDuration> intervalDurationP =
+      productP
+          .field("kind", literalP("IntervalDuration"))
+          .field("interval", intervalExpressionP)
+          .map(
+              untuple((kind, interval) -> new IntervalDuration(interval)),
+              $ -> tuple(Unit.UNIT, $.interval())
+          );
+
+  static final JsonParser<DurationLiteral> durationLiteralP =
+      durationP.map(
+          DurationLiteral::new,
+          DurationLiteral::duration
+      );
+
+  static final JsonParser<Expression<Duration>> durationExprP =
+      chooseP(intervalDurationP, durationLiteralP);
+
   static final JsonParser<WindowsValue> windowsValueP =
       productP
           .field("kind", literalP("WindowsExpressionValue"))
           .field("value", boolP)
-          .field("interval", absoluteIntervalP)
+          .optionalField("interval", intervalExpressionP)
           .map(
               untuple((kind, value, interval) -> new WindowsValue(value, interval)),
               $ -> tuple(Unit.UNIT, $.value(), $.interval())
@@ -257,8 +292,8 @@ public final class ConstraintParsers {
     return productP
         .field("kind", literalP("WindowsExpressionShiftBy"))
         .field("windowExpression", windowsExpressionP)
-        .field("fromStart", durationP)
-        .field("fromEnd", durationP)
+        .field("fromStart", durationExprP)
+        .field("fromEnd", durationExprP)
         .map(
             untuple((kind, windowsExpression, fromStart, fromEnd) -> new ShiftBy(windowsExpression, fromStart, fromEnd)),
             $ -> tuple(Unit.UNIT, $.windows, $.fromStart, $.fromEnd));
@@ -305,7 +340,7 @@ public final class ConstraintParsers {
     return productP
             .field("kind", literalP("WindowsExpressionLongerThan"))
             .field("windowExpression", windowsExpressionP)
-            .field("duration", durationP)
+            .field("duration", durationExprP)
             .map(
                 untuple((kind, windowsExpression, duration) -> new LongerThan(windowsExpression, duration)),
                 $ -> tuple(Unit.UNIT, $.windows, $.duration));
@@ -315,7 +350,7 @@ public final class ConstraintParsers {
     return productP
         .field("kind", literalP("WindowsExpressionShorterThan"))
         .field("windowExpression", windowsExpressionP)
-        .field("duration", durationP)
+        .field("duration", durationExprP)
         .map(
             untuple((kind, windowsExpression, duration) -> new ShorterThan(windowsExpression, duration)),
             $ -> tuple(Unit.UNIT, $.windows, $.duration));
@@ -501,7 +536,7 @@ public final class ConstraintParsers {
   private static final JsonParser<SpansInterval> spansIntervalP =
       productP
           .field("kind", literalP("SpansExpressionInterval"))
-          .field("interval", absoluteIntervalP)
+          .field("interval", intervalExpressionP)
           .map(
               untuple((kind, interval) -> new SpansInterval(interval)),
               $ -> tuple(Unit.UNIT, $.interval())

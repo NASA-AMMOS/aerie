@@ -11,10 +11,10 @@ import java.util.Set;
 
 public final class ShiftBy implements Expression<Windows> {
   public final Expression<Windows> windows;
-  public final Duration fromStart;
-  public final Duration fromEnd;
+  public final Expression<Duration> fromStart;
+  public final Expression<Duration> fromEnd;
 
-  public ShiftBy(final Expression<Windows> left, final Duration fromStart, final Duration fromEnd) {
+  public ShiftBy(final Expression<Windows> left, final Expression<Duration> fromStart, final Expression<Duration> fromEnd) {
     this.windows = left;
     this.fromStart = fromStart;
     this.fromEnd = fromEnd;
@@ -23,7 +23,7 @@ public final class ShiftBy implements Expression<Windows> {
   @Override
   public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     final var windows = this.windows.evaluate(results, bounds, environment);
-    return windows.shiftBy(this.fromStart, this.fromEnd);
+    return windows.shiftBy(this.fromStart.evaluate(results, bounds, environment), this.fromEnd.evaluate(results, bounds, environment));
   }
 
   @Override
