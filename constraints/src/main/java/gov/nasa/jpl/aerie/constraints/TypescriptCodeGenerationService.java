@@ -107,7 +107,7 @@ public final class TypescriptCodeGenerationService {
 
   public static String activityTypeToInterface(String typeName, TypescriptCodeGenerationService.ActivityType activityType){
     final var result = new ArrayList<String>();
-    result.add("export type %s = {".formatted(typeName));
+    result.add("type %s = {".formatted(typeName));
     for (final var parameter: activityType.parameters()) {
       var parameterProfile = valueSchemaToTypescriptAdditional(parameter.schema());
       result.add(indent(parameter.name() + ": " + parameterProfile + ","));
