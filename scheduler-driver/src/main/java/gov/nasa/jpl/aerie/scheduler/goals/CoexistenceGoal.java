@@ -147,6 +147,10 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         throw new IllegalArgumentException(
             "creating coexistence goal requires non-null \"forEach\" anchor template");
       }
+      if (alias == null) {
+        throw new IllegalArgumentException(
+            "creating coexistence goal requires non-null \"alias\" name");
+      }
       goal.expr = forEach;
 
       goal.startExpr = startExpr;
