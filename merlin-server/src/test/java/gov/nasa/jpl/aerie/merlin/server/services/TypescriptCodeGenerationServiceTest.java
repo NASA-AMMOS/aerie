@@ -54,10 +54,10 @@ class TypescriptCodeGenerationServiceTest {
                 }),
               }),
             };
-            export type ParameterTypeactivity2 = {
+            type ParameterTypeactivity2 = {
               Param: (( | "hello" | "there") | Discrete<( | "hello" | "there")>),
             }
-            export type ParameterTypeactivity = {
+            type ParameterTypeactivity = {
               Param: (string | Discrete<string>),
               AnotherParam: (number | Real),
             }
