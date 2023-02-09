@@ -31,27 +31,11 @@ public class PlanCollaborationTests {
   private Connection connection;
   int fileId;
   int missionModelId;
-  int planId;
-  int activityId;
-  int simulationTemplateId;
-  int simulationWithTemplateId;
-  int simulationWithoutTemplateId;
-  int datasetId;
-  gov.nasa.jpl.aerie.database.SimulationDatasetRecord simulationDatasetRecord;
-  gov.nasa.jpl.aerie.database.PlanDatasetRecord planDatasetRecord;
 
   @BeforeEach
   void beforeEach() throws SQLException {
     fileId = insertFileUpload();
     missionModelId = insertMissionModel(fileId);
-    planId = insertPlan(missionModelId);
-    activityId = insertActivity(planId);
-    simulationTemplateId = insertSimulationTemplate(missionModelId);
-    simulationWithTemplateId = insertSimulationWithTemplateId(simulationTemplateId, planId);
-    simulationWithoutTemplateId = insertSimulationWithoutTemplateId(planId);
-    planDatasetRecord = insertPlanDataset(planId);
-    datasetId = insertDataset();
-    simulationDatasetRecord = insertSimulationDataset(simulationWithTemplateId, datasetId);
   }
 
   @AfterEach
@@ -124,10 +108,6 @@ public class PlanCollaborationTests {
   }
 
   int insertPlan(final int missionModelId) throws SQLException {
-    return insertPlan(missionModelId, "2020-1-1 00:00:00");
-  }
-
-  int insertPlan(final int missionModelId, final String start_time) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
           .executeQuery(
@@ -135,7 +115,7 @@ public class PlanCollaborationTests {
                   INSERT INTO plan (name, model_id, duration, start_time)
                   VALUES ('test-plan-%s', '%s', '0', '%s')
                   RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), missionModelId, start_time)
+                  .formatted(UUID.randomUUID().toString(), missionModelId, "2020-1-1 00:00:00")
           );
       res.next();
       return res.getInt("id");
@@ -161,108 +141,17 @@ public class PlanCollaborationTests {
       return res.getInt("id");
     }
   }
-
-  int insertSimulationTemplate(final int modelId) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO simulation_template (model_id, description, arguments)
-                  VALUES ('%s', 'test-description', '{}')
-                  RETURNING id;"""
-                  .formatted(modelId)
-          );
-      res.next();
-      return res.getInt("id");
-    }
-  }
-
-  int insertSimulationWithTemplateId(final int simulationTemplateId, final int planId) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO simulation (simulation_template_id, plan_id, arguments)
-                  VALUES ('%s', '%s', '{}')
-                  RETURNING id;"""
-                  .formatted(simulationTemplateId, planId)
-          );
-      res.next();
-      return res.getInt("id");
-    }
-  }
-
-  int insertSimulationWithoutTemplateId(final int planId) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO simulation (plan_id, arguments)
-                  VALUES ('%s', '{}')
-                  RETURNING id;"""
-                  .formatted(planId)
-          );
-      res.next();
-      return res.getInt("id");
-    }
-  }
-
-  int insertDataset() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                    INSERT INTO dataset
-                    DEFAULT VALUES
-                    RETURNING id;"""
-          );
-      res.next();
-      return res.getInt("id");
-    }
-  }
-
-  gov.nasa.jpl.aerie.database.PlanDatasetRecord insertPlanDataset(final int planId) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO plan_dataset (plan_id, offset_from_plan_start)
-                  VALUES ('%s', '0')
-                  RETURNING plan_id, dataset_id;"""
-                  .formatted(planId)
-          );
-      res.next();
-      return new gov.nasa.jpl.aerie.database.PlanDatasetRecord(res.getInt("plan_id"), res.getInt("dataset_id"));
-    }
-  }
-
-  gov.nasa.jpl.aerie.database.SimulationDatasetRecord insertSimulationDataset(final int simulationId, final int datasetId) throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var res = statement
-          .executeQuery(
-              """
-                  INSERT INTO simulation_dataset (simulation_id, dataset_id, offset_from_plan_start)
-                  VALUES ('%s', '%s', '0')
-                  RETURNING simulation_id, dataset_id;"""
-                  .formatted(simulationId, datasetId)
-          );
-      res.next();
-      return new gov.nasa.jpl.aerie.database.SimulationDatasetRecord(
-          res.getInt("simulation_id"),
-          res.getInt("dataset_id"));
-    }
-  }
   //endregion
 
   //region Helper Methods
-  private boolean updateActivityName(String newName, int activityId, int planId) throws SQLException {
+  private void updateActivityName(String newName, int activityId, int planId) throws SQLException {
     try(final var statement = connection.createStatement()) {
-      return statement.execute(
-          """
-          update activity_directive
-          set name = '%s'
-          where id = %d and plan_id = %d;
-          """.formatted(newName, activityId, planId));
+      statement.execute(
+        """
+        update activity_directive
+        set name = '%s'
+        where id = %d and plan_id = %d;
+        """.formatted(newName, activityId, planId));
     }
   }
 
@@ -486,7 +375,9 @@ public class PlanCollaborationTests {
           res.getString("type"),
           res.getString("arguments"),
           res.getString("last_modified_arguments_at"),
-          res.getString("metadata")
+          res.getString("metadata"),
+          res.getString("anchor_id"),
+          res.getBoolean("anchored_to_start")
       );
     }
   }
@@ -514,7 +405,9 @@ public class PlanCollaborationTests {
             res.getString("type"),
             res.getString("arguments"),
             res.getString("last_modified_arguments_at"),
-            res.getString("metadata")
+            res.getString("metadata"),
+            res.getString("anchor_id"),
+            res.getBoolean("anchored_to_start")
         ));
       }
       return activities;
@@ -544,7 +437,9 @@ public class PlanCollaborationTests {
             res.getString("type"),
             res.getString("arguments"),
             res.getString("last_modified_arguments_at"),
-            res.getString("metadata")
+            res.getString("metadata"),
+            res.getString("anchor_id"),
+            res.getBoolean("anchored_to_start")
         ));
       }
       return activities;
@@ -590,6 +485,8 @@ public class PlanCollaborationTests {
     assertEquals(expected.type, actual.type);
     assertEquals(expected.arguments, actual.arguments);
     assertEquals(expected.metadata, actual.metadata);
+    assertEquals(expected.anchorId, actual.anchorId);
+    assertEquals(expected.anchoredToStart, actual.anchoredToStart);
     assertEquals(expected.tags.length, actual.tags.length);
     for(int j = 0; j < expected.tags.length; ++j)
     {
@@ -611,7 +508,9 @@ public class PlanCollaborationTests {
       String type,
       String arguments,
       String lastModifiedArgumentsAt,
-      String metadata
+      String metadata,
+      String anchorId,  // Since anchor_id allows for null values, this is a String to avoid confusion over what the number means.
+      boolean anchoredToStart
   ) {}
   private record SnapshotActivity(
       int activityId,
@@ -625,7 +524,9 @@ public class PlanCollaborationTests {
       String type,
       String arguments,
       String lastModifiedArgumentsAt,
-      String metadata
+      String metadata,
+      String anchorId,  // Since anchor_id allows for null values, this is a String to avoid confusion over what the number means.
+      boolean anchoredToStart
   ) {}
   record ConflictingActivity(int activityId, String changeTypeSupplying, String changeTypeReceiving) {}
   record StagingAreaActivity(int activityId, String changeType) {} //only relevant fields
@@ -669,6 +570,8 @@ public class PlanCollaborationTests {
         assertEquals(planActivities.get(i).arguments, snapshotActivities.get(i).arguments);
         assertEquals(planActivities.get(i).lastModifiedArgumentsAt, snapshotActivities.get(i).lastModifiedArgumentsAt);
         assertEquals(planActivities.get(i).metadata, snapshotActivities.get(i).metadata);
+        assertEquals(planActivities.get(i).anchorId, snapshotActivities.get(i).anchorId);
+        assertEquals(planActivities.get(i).anchoredToStart, snapshotActivities.get(i).anchoredToStart);
 
         assertEquals(planActivities.get(i).tags.length, snapshotActivities.get(i).tags.length);
         for(int j = 0; j < planActivities.get(i).tags.length; ++j)
@@ -796,6 +699,9 @@ public class PlanCollaborationTests {
         assertEquals(planActivities.get(i).arguments, childActivities.get(i).arguments);
         assertEquals(planActivities.get(i).lastModifiedArgumentsAt, childActivities.get(i).lastModifiedArgumentsAt);
         assertEquals(planActivities.get(i).metadata, childActivities.get(i).metadata);
+
+        assertEquals(planActivities.get(i).anchorId, childActivities.get(i).anchorId);
+        assertEquals(planActivities.get(i).anchoredToStart, childActivities.get(i).anchoredToStart);
 
         assertEquals(planActivities.get(i).tags.length, childActivities.get(i).tags.length);
         for(int j = 0; j < planActivities.get(i).tags.length; ++j)
@@ -1027,16 +933,14 @@ public class PlanCollaborationTests {
         unlockPlan(planId);
       }
 
-      try (final var statement = connection.createStatement()) {
-        //Assert that there is one activity and it is the one that was added earlier.
-        final var activitiesBefore = getActivities(planId);
-        assertEquals(1, activitiesBefore.size());
-        assertEquals(activityId, activitiesBefore.get(0).activityId);
+      //Assert that there is one activity and it is the one that was added earlier.
+      final var activitiesBefore = getActivities(planId);
+      assertEquals(1, activitiesBefore.size());
+      assertEquals(activityId, activitiesBefore.get(0).activityId);
 
-        deleteActivityDirective(planId, activityId);
-        final var activitiesAfter = getActivities(planId);
-        assertTrue(activitiesAfter.isEmpty());
-      }
+      deleteActivityDirective(planId, activityId);
+      final var activitiesAfter = getActivities(planId);
+      assertTrue(activitiesAfter.isEmpty());
     }
 
     @Test
@@ -1053,17 +957,15 @@ public class PlanCollaborationTests {
         unlockPlan(planId);
       }
 
-      try (final var statement = connection.createStatement()) {
-        //Assert that there are no activities for this plan.
-        final var activitiesBefore = getActivities(planId);
-        assertTrue(activitiesBefore.isEmpty());
+      //Assert that there are no activities for this plan.
+      final var activitiesBefore = getActivities(planId);
+      assertTrue(activitiesBefore.isEmpty());
 
-        final int insertedId = insertActivity(planId);
+      final int insertedId = insertActivity(planId);
 
-        final var activitiesAfter = getActivities(planId);
-        assertEquals(1, activitiesAfter.size());
-        assertEquals(insertedId, activitiesAfter.get(0).activityId);
-      }
+      final var activitiesAfter = getActivities(planId);
+      assertEquals(1, activitiesAfter.size());
+      assertEquals(insertedId, activitiesAfter.get(0).activityId);
     }
 
     @Test
@@ -1116,10 +1018,7 @@ public class PlanCollaborationTests {
       final int unrelatedPlanId = insertPlan(missionModelId);
       final int unrelatedActivityId = insertActivity(unrelatedPlanId);
 
-
-      try (final var statementRelated = connection.createStatement();
-           final var statementUnrelated = connection.createStatement()
-      ) {
+      try {
         lockPlan(planId);
 
         //Update the activity in the unlocked plans
@@ -2011,8 +1910,8 @@ public class PlanCollaborationTests {
        */
       for(int i = 50;  i < 75;  ++i) { deleteActivityDirective(basePlan, baseActivities[i]); }
       for(int i = 75;  i < 100; ++i) { deleteActivityDirective(childPlan, baseActivities[i]); }
-      for(int i = 100; i < 150; ++i) { updateActivityName("Renamed Activity " + i, activityId, basePlan); }
-      for(int i = 150; i < 200; ++i) { updateActivityName("Renamed Activity " + i, activityId, childPlan); }
+      for(int i = 100; i < 150; ++i) { updateActivityName("Renamed Activity " + i, baseActivities[i], basePlan); }
+      for(int i = 150; i < 200; ++i) { updateActivityName("Renamed Activity " + i, baseActivities[i], childPlan); }
       for(int i = 0;   i < 25;  ++i) { insertActivity(basePlan); }
 
       final int mergeRQ = createMergeRequest(basePlan, childPlan);
@@ -2661,6 +2560,157 @@ public class PlanCollaborationTests {
         assertTrue(res.first());
         assertTrue(res.getBoolean(1));
       }
+    }
+  }
+
+  @Nested
+  class AnchorMergeTests{
+
+    // Method is taken from AnchorTests
+    private void setAnchor(int anchorId, boolean anchoredToStart, int activityId, int planId) throws SQLException {
+      try(final var statement = connection.createStatement()) {
+        if (anchorId == -1) {
+          statement.execute(
+              """
+                  update activity_directive
+                  set anchor_id = null,
+                      anchored_to_start = %b
+                  where id = %d and plan_id = %d;
+                  """.formatted(anchoredToStart, activityId, planId));
+        } else {
+          statement.execute(
+              """
+                  update activity_directive
+                  set anchor_id = %d,
+                      anchored_to_start = %b
+                  where id = %d and plan_id = %d;
+                  """.formatted(anchorId, anchoredToStart, activityId, planId));
+        }
+      }
+    }
+
+    @Test
+    void cantMergeCycle() throws SQLException{
+      final int planId = insertPlan(missionModelId);
+      final int activityA = insertActivity(planId);
+      final int activityB = insertActivity(planId);
+
+      final int childPlan = duplicatePlan(planId, "Cycle Test Plan");
+
+      // Plan chain: B -> A
+      setAnchor(activityA, true, activityB, planId);
+      // ChildPlan chain: A -> B
+      setAnchor(activityB, true, activityA, childPlan);
+
+      // Merge fails as it would establish B -> A -> B cycle
+      final int mergeRQ = createMergeRequest(planId, childPlan);
+      beginMerge(mergeRQ);
+      try {
+        commitMerge(mergeRQ);
+        fail();
+      } catch (SQLException ex) {
+        if(!ex.getMessage().contains("Cycle detected. Cannot apply changes.")){
+          throw ex;
+        }
+      }
+    }
+
+    @Test
+    void anchorMustBeInTargetPlanAtEndOfMerge() throws SQLException{
+      // Can't merge in a version of an activity that is anchored to an activity that is deleted from the target plan.
+      final int planId = insertPlan(missionModelId);
+      final int activityA = insertActivity(planId);
+      final int activityB = insertActivity(planId);
+
+      final int childPlan = duplicatePlan(planId, "Anchor Delete Test");
+      setAnchor(activityA, true, activityB, childPlan);
+
+      deleteActivityDirective(planId, activityA);
+
+      final int mergeRQ = createMergeRequest(planId, childPlan);
+      beginMerge(mergeRQ);
+      try{
+        commitMerge(mergeRQ);
+        fail();
+      } catch (SQLException ex){
+        if(!ex.getMessage().contains(
+            "insert or update on table \"activity_directive\" violates foreign key constraint \"anchor_in_plan\"")){
+          throw ex;
+        }
+      }
+
+    }
+
+    @Test
+    void deleteSubtreeDoesNotImpactRelatedPlans() throws SQLException{
+      final int planId = insertPlan(missionModelId);
+      final int activityAId = insertActivity(planId);
+      final int activityBId = insertActivity(planId);
+      setAnchor(activityAId, true, activityBId, planId);
+      final int childPlanId = duplicatePlan(planId, "Delete Chain Test");
+
+      final Activity activityABefore = getActivity(childPlanId, activityAId);
+      final Activity activityBBefore = getActivity(childPlanId, activityBId);
+
+      try(final var statement = connection.createStatement()) {
+        statement.execute(
+            """
+             select hasura_functions.delete_activity_by_pk_delete_subtree(%d, %d)
+             """.formatted(activityAId, planId));
+      }
+      assertEquals(0, getActivities(planId).size());
+      assertEquals(2, getActivities(childPlanId).size());
+      assertActivityEquals(activityABefore, getActivity(childPlanId, activityAId));
+      assertActivityEquals(activityBBefore, getActivity(childPlanId, activityBId));
+    }
+
+    @Test
+    void deletePlanReanchorDoesNotImpactRelatedPlans() throws SQLException{
+      final int planId = insertPlan(missionModelId);
+      final int activityAId = insertActivity(planId);
+      final int activityBId = insertActivity(planId);
+      setAnchor(activityAId, true, activityBId, planId);
+      final int childPlanId = duplicatePlan(planId, "Delete Chain Test");
+
+      final Activity activityABefore = getActivity(childPlanId, activityAId);
+      final Activity activityBBefore = getActivity(childPlanId, activityBId);
+
+      try(final var statement = connection.createStatement()) {
+        statement.execute(
+            """
+             select hasura_functions.delete_activity_by_pk_reanchor_plan_start(%d, %d)
+             """.formatted(activityAId, planId));
+      }
+      assertEquals(1, getActivities(planId).size());
+      assertEquals(2, getActivities(childPlanId).size());
+      assertActivityEquals(activityABefore, getActivity(childPlanId, activityAId));
+      assertActivityEquals(activityBBefore, getActivity(childPlanId, activityBId));
+    }
+    @Test
+    void deleteActivityReanchorDoesNotImpactRelatedPlans() throws SQLException{
+      final int planId = insertPlan(missionModelId);
+      final int activityAId = insertActivity(planId);
+      final int activityBId = insertActivity(planId);
+      final int activityCId = insertActivity(planId);
+      setAnchor(activityAId, true, activityBId, planId);
+      setAnchor(activityCId, true, activityAId, planId);
+      final int childPlanId = duplicatePlan(planId, "Delete Chain Test");
+
+      final Activity activityABefore = getActivity(childPlanId, activityAId);
+      final Activity activityBBefore = getActivity(childPlanId, activityBId);
+      final Activity activityCBefore = getActivity(childPlanId, activityCId);
+
+      try(final var statement = connection.createStatement()) {
+        statement.execute(
+            """
+             select hasura_functions.delete_activity_by_pk_reanchor_to_anchor(%d, %d)
+             """.formatted(activityAId, planId));
+      }
+      assertEquals(2, getActivities(planId).size());
+      assertEquals(3, getActivities(childPlanId).size());
+      assertActivityEquals(activityABefore, getActivity(childPlanId, activityAId));
+      assertActivityEquals(activityBBefore, getActivity(childPlanId, activityBId));
+      assertActivityEquals(activityCBefore, getActivity(childPlanId, activityCId));
     }
   }
 }

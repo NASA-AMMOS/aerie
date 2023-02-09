@@ -13,6 +13,8 @@ create table activity_directive (
   last_modified_arguments_at timestamptz not null default now(),
   metadata merlin_activity_directive_metadata_set default '{}'::jsonb,
 
+  anchor_id integer default null,
+  anchored_to_start boolean default true not null,
   constraint activity_directive_natural_key
     primary key (id, plan_id),
   constraint activity_directive_owned_by_plan
@@ -20,8 +22,12 @@ create table activity_directive (
     references plan
     on update cascade
     on delete cascade,
-  constraint activity_directive_start_offset_is_nonnegative
-    check (start_offset >= '0')
+  -- An activity cannot anchor to an activity in another plan
+  constraint anchor_in_plan
+    foreign key (anchor_id, plan_id)
+      references activity_directive
+      on update cascade
+      on delete restrict
 );
 
 create index activity_directive_plan_id_index on activity_directive (plan_id);
@@ -55,6 +61,12 @@ comment on column activity_directive.arguments is e''
   'The set of arguments to this activity_directive, corresponding to the parameters of the associated activity type.';
 comment on column activity_directive.metadata is e''
   'The metadata associated with this activity_directive.';
+comment on column activity_directive.anchor_id is e''
+  'The id of the activity_directive this activity_directive is anchored to. '
+  'The value null indicates that this activity_directive is anchored to the plan.';
+comment on column activity_directive.anchored_to_start is e''
+  'If true, this activity_directive is anchored to the start time of its anchor. '
+  'If false, this activity_directive is anchored to the end time of its anchor.';
 
 create procedure plan_locked_exception(plan_id integer)
 language plpgsql as $$
@@ -248,3 +260,80 @@ create trigger check_locked_on_delete_trigger
 before delete on activity_directive
 for each row
 execute procedure check_locked_on_delete();
+
+create function anchor_direct_descendents_to_plan(_activity_id int, _plan_id int)
+  returns setof activity_directive
+  language plpgsql as $$
+  declare
+    _total_offset interval;
+  begin
+    if _plan_id is null then
+      raise exception 'Plan ID cannot be null.';
+    end if;
+    if _activity_id is null then
+      raise exception 'Activity ID cannot be null.';
+    end if;
+    if not exists(select id from activity_directive where (id, plan_id) = (_activity_id, _plan_id)) then
+      raise exception 'Activity Directive % does not exist in Plan %', _activity_id, _plan_id;
+    end if;
+
+    with recursive history(activity_id, anchor_id, total_offset) as (
+      select ad.id, ad.anchor_id, ad.start_offset
+      from activity_directive ad
+      where (ad.id, ad.plan_id) = (_activity_id, _plan_id)
+      union
+      select ad.id, ad.anchor_id, h.total_offset + ad.start_offset
+      from activity_directive ad, history h
+      where (ad.id, ad.plan_id) = (h.anchor_id, _plan_id)
+        and h.anchor_id is not null
+    ) select total_offset
+    from history
+    where history.anchor_id is null
+    into _total_offset;
+
+    return query update activity_directive
+      set start_offset = start_offset + _total_offset,
+          anchor_id = null,
+          anchored_to_start = true
+      where (anchor_id, plan_id) = (_activity_id, _plan_id)
+      returning *;
+  end
+  $$;
+comment on function anchor_direct_descendents_to_plan(_activity_id integer, _plan_id integer) is e''
+'Given the primary key of an activity, reanchor all anchor chains attached to the activity to the plan.\n'
+'In the event of an end-time anchor, this function assumes all simulated activities have a duration of 0.';
+
+create function anchor_direct_descendents_to_ancestor(_activity_id int, _plan_id int)
+  returns setof activity_directive
+  language plpgsql as $$
+declare
+  _current_offset interval;
+  _current_anchor_id int;
+begin
+  if _plan_id is null then
+    raise exception 'Plan ID cannot be null.';
+  end if;
+  if _activity_id is null then
+    raise exception 'Activity ID cannot be null.';
+  end if;
+  if not exists(select id from activity_directive where (id, plan_id) = (_activity_id, _plan_id)) then
+    raise exception 'Activity Directive % does not exist in Plan %', _activity_id, _plan_id;
+  end if;
+
+  select start_offset, anchor_id
+  from activity_directive
+  where (id, plan_id) = (_activity_id, _plan_id)
+  into _current_offset, _current_anchor_id;
+
+  return query
+    update activity_directive
+    set start_offset = start_offset + _current_offset,
+      anchor_id = _current_anchor_id
+    where (anchor_id, plan_id) = (_activity_id, _plan_id)
+    returning *;
+end
+$$;
+comment on function anchor_direct_descendents_to_ancestor(_activity_id integer, _plan_id integer) is e''
+  'Given the primary key of an activity, reanchor all anchor chains attached to the activity to the anchor of said activity.\n'
+  'In the event of an end-time anchor, this function assumes all simulated activities have a duration of 0.';
+
