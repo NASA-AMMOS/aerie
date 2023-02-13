@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
@@ -35,11 +37,14 @@ public final class SimulationDriver {
         engine.trackResource(name, resource, elapsedTime);
       }
 
+      // Specify a topic to track queries
+      final var queryTopic = new Topic<Topic<?>>();
+
       // Start daemon task(s) immediately, before anything else happens.
       engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
+        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE, queryTopic);
         timeline.add(commit);
       }
 
@@ -81,9 +86,27 @@ public final class SimulationDriver {
         }
 
         // Run the jobs in this batch.
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration);
+        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration, queryTopic);
         timeline.add(commit);
       }
+
+      var combinedGraph = EventGraph.<Event>empty();
+      for (final var timePoint : timeline) {
+        if (!(timePoint instanceof TemporalEventSource.TimePoint.Commit t)) continue;
+        combinedGraph = EventGraph.sequentially(combinedGraph, t.events());
+      }
+
+      // A query depends on an event if
+      // - that event has the same topic as the query
+      // - that event occurs causally before the query
+
+      // Let A be an event or query issued by task X, and B be either an event or query issued by task Y
+      // A flows to B if B is causally after A and
+      // - X = Y
+      // - X spawned Y causally after A
+      // - Y called X, and emitted B after X terminated
+      // - Transitively: if A flows to C and C flows to B, A flows to B
+      // tstill not enough...?
 
       final var topics = missionModel.getTopics();
       return SimulationEngine.computeResults(engine, startTime, elapsedTime, activityTopic, timeline, topics);
@@ -107,11 +130,14 @@ public final class SimulationDriver {
         engine.trackResource(name, resource, elapsedTime);
       }
 
+      // Specify a topic to track queries
+      final var queryTopic = new Topic<Topic<?>>();
+
       // Start daemon task(s) immediately, before anything else happens.
       engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
+        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE, queryTopic);
         timeline.add(commit);
       }
 
@@ -131,7 +157,7 @@ public final class SimulationDriver {
         //   even if they occur at the same real time.
 
         // Run the jobs in this batch.
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
+        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE, queryTopic);
         timeline.add(commit);
       }
     }

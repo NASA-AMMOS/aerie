@@ -156,12 +156,12 @@ public final class SimulationEngine implements AutoCloseable {
       final Collection<JobId> jobs,
       final LiveCells context,
       final Duration currentTime,
-      final Duration maximumTime
-  ) {
+      final Duration maximumTime,
+      final Topic<Topic<?>> queryTopic) {
     var tip = EventGraph.<Event>empty();
     for (final var job$ : jobs) {
       tip = EventGraph.concurrently(tip, TaskFrame.run(job$, context, (job, frame) -> {
-        this.performJob(job, frame, currentTime, maximumTime);
+        this.performJob(job, frame, currentTime, maximumTime, queryTopic);
       }));
     }
 
@@ -173,14 +173,14 @@ public final class SimulationEngine implements AutoCloseable {
       final JobId job,
       final TaskFrame<JobId> frame,
       final Duration currentTime,
-      final Duration maximumTime
-  ) {
+      final Duration maximumTime,
+      final Topic<Topic<?>> queryTopic) {
     if (job instanceof JobId.TaskJobId j) {
-      this.stepTask(j.id(), frame, currentTime);
+      this.stepTask(j.id(), frame, currentTime, queryTopic);
     } else if (job instanceof JobId.SignalJobId j) {
       this.stepSignalledTasks(j.id(), frame);
     } else if (job instanceof JobId.ConditionJobId j) {
-      this.updateCondition(j.id(), frame, currentTime, maximumTime);
+      this.updateCondition(j.id(), frame, currentTime, maximumTime, queryTopic);
     } else if (job instanceof JobId.ResourceJobId j) {
       this.updateResource(j.id(), frame, currentTime);
     } else {
@@ -189,23 +189,24 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Perform the next step of a modeled task. */
-  public void stepTask(final TaskId task, final TaskFrame<JobId> frame, final Duration currentTime) {
+  public void stepTask(final TaskId task, final TaskFrame<JobId> frame, final Duration currentTime,
+                       final Topic<Topic<?>> queryTopic) {
     // The handler for each individual task stage is responsible
     //   for putting an updated lifecycle back into the task set.
     var lifecycle = this.tasks.remove(task);
 
-    stepTaskHelper(task, frame, currentTime, lifecycle);
+    stepTaskHelper(task, frame, currentTime, lifecycle, queryTopic);
   }
 
   private <Return> void stepTaskHelper(
       final TaskId task,
       final TaskFrame<JobId> frame,
       final Duration currentTime,
-      final ExecutionState<Return> lifecycle)
+      final ExecutionState<Return> lifecycle, final Topic<Topic<?>> queryTopic)
   {
     // Extract the current modeling state.
     if (lifecycle instanceof ExecutionState.InProgress<Return> e) {
-      stepEffectModel(task, e, frame, currentTime);
+      stepEffectModel(task, e, frame, currentTime, queryTopic);
     } else if (lifecycle instanceof ExecutionState.AwaitingChildren<Return> e) {
       stepWaitingTask(task, e, frame, currentTime);
     } else {
@@ -219,10 +220,10 @@ public final class SimulationEngine implements AutoCloseable {
       final TaskId task,
       final ExecutionState.InProgress<Return> progress,
       final TaskFrame<JobId> frame,
-      final Duration currentTime
-  ) {
+      final Duration currentTime,
+      final Topic<Topic<?>> queryTopic) {
     // Step the modeling state forward.
-    final var scheduler = new EngineScheduler(currentTime, task, frame);
+    final var scheduler = new EngineScheduler(currentTime, task, frame, queryTopic);
     final var status = progress.state().step(scheduler);
 
     // TODO: Report which topics this activity wrote to at this point in time. This is useful insight for any user.
@@ -258,7 +259,7 @@ public final class SimulationEngine implements AutoCloseable {
         this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(target)));
       }
     } else if (status instanceof TaskStatus.AwaitingCondition<Return> s) {
-      final var condition = ConditionId.generate();
+      final var condition = ConditionId.generate(task);
       this.conditions.put(condition, s.condition());
       this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(currentTime));
 
@@ -308,9 +309,9 @@ public final class SimulationEngine implements AutoCloseable {
       final ConditionId condition,
       final TaskFrame<JobId> frame,
       final Duration currentTime,
-      final Duration horizonTime
-  ) {
-    final var querier = new EngineQuerier(frame);
+      final Duration horizonTime,
+      final Topic<Topic<?>> queryTopic) {
+    final var querier = new EngineQuerier(frame, queryTopic, condition.sourceTask());
     final var prediction = this.conditions
         .get(condition)
         .nextSatisfied(querier, horizonTime.minus(currentTime))
@@ -679,10 +680,17 @@ public final class SimulationEngine implements AutoCloseable {
   private static final class EngineQuerier implements Querier {
     private final TaskFrame<JobId> frame;
     private final Set<Topic<?>> referencedTopics = new HashSet<>();
+    private final Optional<Pair<Topic<Topic<?>>, TaskId>> queryTrackingInfo;
     private Optional<Duration> expiry = Optional.empty();
+
+    public EngineQuerier(final TaskFrame<JobId> frame, final Topic<Topic<?>> queryTopic, final TaskId associatedTask) {
+      this.frame = Objects.requireNonNull(frame);
+      this.queryTrackingInfo = Optional.of(Pair.of(Objects.requireNonNull(queryTopic), associatedTask));
+    }
 
     public EngineQuerier(final TaskFrame<JobId> frame) {
       this.frame = Objects.requireNonNull(frame);
+      this.queryTrackingInfo = Optional.empty();
     }
 
     @Override
@@ -690,6 +698,8 @@ public final class SimulationEngine implements AutoCloseable {
       // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
       final var query = ((EngineCellId<?, State>) token);
+
+      this.queryTrackingInfo.ifPresent(info -> this.frame.emit(Event.create(info.getLeft(), query.topic(), info.getRight())));
 
       this.expiry = min(this.expiry, this.frame.getExpiry(query.query()));
       this.referencedTopics.add(query.topic());
@@ -713,11 +723,13 @@ public final class SimulationEngine implements AutoCloseable {
     private final Duration currentTime;
     private final TaskId activeTask;
     private final TaskFrame<JobId> frame;
+    private final Topic<Topic<?>> queryTopic;
 
-    public EngineScheduler(final Duration currentTime, final TaskId activeTask, final TaskFrame<JobId> frame) {
+    public EngineScheduler(final Duration currentTime, final TaskId activeTask, final TaskFrame<JobId> frame, final Topic<Topic<?>> queryTopic) {
       this.currentTime = Objects.requireNonNull(currentTime);
       this.activeTask = Objects.requireNonNull(activeTask);
       this.frame = Objects.requireNonNull(frame);
+      this.queryTopic = Objects.requireNonNull(queryTopic);
     }
 
     @Override
@@ -725,6 +737,8 @@ public final class SimulationEngine implements AutoCloseable {
       // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
       final var query = ((EngineCellId<?, State>) token);
+
+      this.frame.emit(Event.create(queryTopic, query.topic(), activeTask));
 
       // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
       //  if the same state is requested multiple times in a row.
