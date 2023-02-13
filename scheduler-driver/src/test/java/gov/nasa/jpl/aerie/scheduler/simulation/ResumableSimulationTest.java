@@ -87,7 +87,6 @@ public class ResumableSimulationTest {
     try (final var executor = unsafeGetExecutor(resumableSimulationDriver)) {
       for (var i = 0; i < 20000; i++) {
         resumableSimulationDriver.initSimulation();
-        // TODO: add a clear activityDirectives here
         resumableSimulationDriver.clearActivitiesInserted();
         resumableSimulationDriver.simulateActivity(activity.start, activity.activity, null, true, activity.id);
         assertTrue(

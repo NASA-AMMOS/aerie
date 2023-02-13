@@ -56,6 +56,7 @@ public class ResumableSimulationDriver<Model> {
     initSimulation();
   }
 
+  // This method is currently only used in one test.
   /*package-private*/ void clearActivitiesInserted() {activitiesInserted.clear();}
 
   /*package-private*/ void initSimulation(){
