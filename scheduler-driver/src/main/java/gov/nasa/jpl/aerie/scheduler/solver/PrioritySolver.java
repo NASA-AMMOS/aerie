@@ -186,7 +186,7 @@ public class PrioritySolver implements Solver {
       for(var act: acts) {
         plan.add(act);
       }
-      final var allGeneratedActivities = simulationFacade.getAllGeneratedActivities(simulationFacade.getCurrentSimulationEndTime());
+      final var allGeneratedActivities = simulationFacade.getAllChildActivities(simulationFacade.getCurrentSimulationEndTime());
       processNewGeneratedActivities(allGeneratedActivities);
       pullActivityDurationsIfNecessary();
     } else{
@@ -222,7 +222,7 @@ public class PrioritySolver implements Solver {
     //if backed by real models, initialize the simulation states/resources/profiles for the plan so state queries work
     if (problem.getMissionModel() != null) {
       simulationFacade.simulateActivities(plan.getActivities());
-      final var allGeneratedActivities = simulationFacade.getAllGeneratedActivities(problem.getPlanningHorizon().getEndAerie());
+      final var allGeneratedActivities = simulationFacade.getAllChildActivities(problem.getPlanningHorizon().getEndAerie());
       processNewGeneratedActivities(allGeneratedActivities);
       pullActivityDurationsIfNecessary();
     }

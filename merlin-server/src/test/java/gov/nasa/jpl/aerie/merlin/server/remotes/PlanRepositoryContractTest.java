@@ -1,9 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryPlanRepository;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository.CreatedPlan;
@@ -42,7 +43,7 @@ public abstract class PlanRepositoryContractTest {
 
   @Test
   public void testUnsavedPlanTransactionHasNoEffect()
-  throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException
+  throws NoSuchPlanException
   {
     // GIVEN
     final NewPlan newPlan = new NewPlan();
@@ -61,17 +62,15 @@ public abstract class PlanRepositoryContractTest {
   }
 
   @Test
-  public void testCreatePlanWithActivity() throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException {
+  public void testCreatePlanWithActivity() throws NoSuchPlanException {
     // GIVEN
 
     // WHEN
-    final ActivityInstance activity = new ActivityInstance();
-    activity.type = "abc";
-    activity.arguments = Map.of("abc", SerializedValue.of(1));
+    final ActivityDirective activity = new ActivityDirective(Duration.ZERO, "abc", Map.of("abc", SerializedValue.of(1)), null, true);
 
     final NewPlan newPlan = new NewPlan();
     newPlan.name = "new-plan";
-    newPlan.activityInstances = List.of();
+    newPlan.activityDirectives = List.of();
 
     final CreatedPlan ids = this.planRepository.createPlan(newPlan);
     this.planRepository.createActivity(ids.planId(), activity);
@@ -79,12 +78,12 @@ public abstract class PlanRepositoryContractTest {
     // THEN
     final Plan plan = this.planRepository.getPlan(ids.planId());
     assertThat(plan.name).isEqualTo("new-plan");
-    assertThat(plan.activityInstances.values()).containsExactly(activity);
+    assertThat(plan.activityDirectives.values()).containsExactly(activity);
   }
 
   @Test
   public void testCreatePlanWithNullActivitiesList()
-  throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException
+  throws NoSuchPlanException
   {
     // GIVEN
 
@@ -92,11 +91,11 @@ public abstract class PlanRepositoryContractTest {
     final CreatedPlan ids = this.planRepository.createPlan(new NewPlan());
 
     // THEN
-    assertThat(this.planRepository.getPlan(ids.planId()).activityInstances).isNotNull().isEmpty();
+    assertThat(this.planRepository.getPlan(ids.planId()).activityDirectives).isNotNull().isEmpty();
   }
 
   @Test
-  public void testCanDeletePlan() throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException {
+  public void testCanDeletePlan() throws NoSuchPlanException {
     // GIVEN
     this.planRepository.createPlan(new NewPlan());
     final CreatedPlan ids = this.planRepository.createPlan(new NewPlan());

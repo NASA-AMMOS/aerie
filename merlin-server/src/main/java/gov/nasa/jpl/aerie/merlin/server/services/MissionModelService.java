@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
@@ -9,7 +9,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
@@ -39,9 +39,9 @@ public interface MissionModelService {
   List<ValidationNotice> validateActivityArguments(String missionModelId, SerializedActivity activity)
   throws NoSuchMissionModelException, InstantiationException;
 
-  Map<ActivityInstanceId, ActivityInstantiationFailure> validateActivityInstantiations(
+  Map<ActivityDirectiveId, ActivityInstantiationFailure> validateActivityInstantiations(
       String missionModelId,
-      Map<ActivityInstanceId,
+      Map<ActivityDirectiveId,
       SerializedActivity> activities
   ) throws NoSuchMissionModelException, LocalMissionModelService.MissionModelLoadException;
 
@@ -68,7 +68,7 @@ public interface MissionModelService {
 
   void refreshModelParameters(String missionModelId) throws NoSuchMissionModelException;
   void refreshActivityTypes(String missionModelId) throws NoSuchMissionModelException;
-  void refreshActivityValidations(String missionModelId, ActivityDirective directive)
+  void refreshActivityValidations(String missionModelId, ActivityDirectiveForValidation directive)
   throws NoSuchMissionModelException, InstantiationException;
 
   sealed interface ActivityInstantiationFailure {

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import org.intellij.lang.annotations.Language;
 
@@ -25,7 +25,7 @@ import java.util.Map;
 
   public void apply(
       final long analysisId,
-      final Map<GoalId, Collection<ActivityInstanceId>> createdActivities
+      final Map<GoalId, Collection<ActivityDirectiveId>> createdActivities
   ) throws SQLException {
     for (final var entry : createdActivities.entrySet()) {
       final var goalId = entry.getKey().id();

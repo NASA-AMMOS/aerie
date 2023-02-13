@@ -1,8 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
@@ -16,8 +17,8 @@ public final class Fixtures {
   public final String EXISTENT_MISSION_MODEL_ID;
   public final PlanId EXISTENT_PLAN_ID;
   public final String EXISTENT_ACTIVITY_TYPE_ID;
-  public final ActivityInstanceId EXISTENT_ACTIVITY_INSTANCE_ID;
-  public final ActivityInstance EXISTENT_ACTIVITY_INSTANCE;
+  public final ActivityDirectiveId EXISTENT_ACTIVITY_INSTANCE_ID;
+  public final ActivityDirective EXISTENT_ACTIVITY_INSTANCE;
   public final String NONEXISTENT_MISSION_MODEL_ID;
   public final String NONEXISTENT_PLAN_ID;
   public final String NONEXISTENT_ACTIVITY_TYPE_ID;
@@ -41,7 +42,7 @@ public final class Fixtures {
       this.planRepository.createPlan(createValidNewPlan("plan 3"));
 
       {
-        final ActivityInstance activity = createValidActivityInstance();
+        final ActivityDirective activity = createValidActivityInstance();
 
         this.EXISTENT_ACTIVITY_INSTANCE = activity;
         this.EXISTENT_ACTIVITY_INSTANCE_ID = this.planRepository.createActivity(this.EXISTENT_PLAN_ID, activity);
@@ -59,18 +60,18 @@ public final class Fixtures {
     plan.name = name;
     plan.startTimestamp = Timestamp.fromString("0000-111T22:33:44");
     plan.endTimestamp = Timestamp.fromString("1111-222T00:44:55");
-    plan.activityInstances = new ArrayList<>();
+    plan.activityDirectives = new ArrayList<>();
 
     return plan;
   }
 
-  public ActivityInstance createValidActivityInstance() {
-    final ActivityInstance activityInstance = new ActivityInstance();
-
-    activityInstance.type = this.EXISTENT_ACTIVITY_TYPE_ID;
-    activityInstance.startTimestamp = Timestamp.fromString("0000-111T22:33:44");
-    activityInstance.arguments = StubMissionModelService.VALID_ACTIVITY_INSTANCE.getArguments();
-
-    return activityInstance;
+  public ActivityDirective createValidActivityInstance() {
+    return new ActivityDirective(
+        Duration.ZERO,
+        this.EXISTENT_ACTIVITY_TYPE_ID,
+        StubMissionModelService.VALID_ACTIVITY_INSTANCE.getArguments(),
+        null,
+        true
+    );
   }
 }
