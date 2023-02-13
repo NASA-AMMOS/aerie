@@ -271,7 +271,7 @@ public record SchedulingActivityDirective(
     final var results = new HashMap<String, SerializedValue>();
     arguments.forEach((key, value) ->
                           results.put(key,
-                                      value.evaluate(simulationResults, Interval.FOREVER, environment)
+                                      value.evaluate(simulationResults, Interval.between(startTime, startTime), environment)
                                            .valueAt(startTime)
                                            .orElseThrow(() -> new Error("Profile for argument " + key + " has no value at time " + startTime)))
     );
