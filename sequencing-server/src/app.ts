@@ -365,6 +365,15 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
 
   const settledExpansionResults = await Promise.allSettled(
     simulatedActivities.map(async simulatedActivity => {
+      // The simulatedActivity's duration and endTime will be null if the effect model reaches across the plan end boundaries.
+      if (!simulatedActivity.duration && !simulatedActivity.endTime) {
+        return {
+          activityInstance: simulatedActivity,
+          commands: null,
+          errors: [{ message: 'Duration is null' }],
+        };
+      }
+
       const activitySchema = await context.activitySchemaDataLoader.load({
         missionModelId: expansionSet.missionModel.id,
         activityTypeName: simulatedActivity.activityTypeName,
@@ -674,7 +683,7 @@ app.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, res, next)
     return next();
   }
 
-  const sortedActivityInstances = (simulatedActivities as Exclude<typeof simulatedActivities[number], Error>[]).sort(
+  const sortedActivityInstances = (simulatedActivities as Exclude<(typeof simulatedActivities)[number], Error>[]).sort(
     (a, b) => Temporal.Duration.compare(a.startOffset, b.startOffset),
   );
 
@@ -834,7 +843,7 @@ app.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (req, res, 
       }
 
       const sortedActivityInstances = (
-        simulatedActivitiesForSeqId as Exclude<typeof simulatedActivitiesLoadErrors[number], Error>[]
+        simulatedActivitiesForSeqId as Exclude<(typeof simulatedActivitiesLoadErrors)[number], Error>[]
       ).sort((a, b) => Temporal.Instant.compare(a.startTime, b.startTime));
 
       const sortedSimulatedActivitiesWithCommands = sortedActivityInstances.map(ai => {

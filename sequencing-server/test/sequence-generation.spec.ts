@@ -1971,7 +1971,69 @@ describe('sequence generation', () => {
   }, 30000);
 });
 
-describe('expansion regressions', () => {
+describe('expansion', () => {
+  test.only('should throw an error is an activity instance goes beyond the plan duration', async () => {
+    /** Begin Setup*/
+    const activityId = await insertActivityDirective(graphqlClient, planId, 'GrowBanana', '1 days');
+    const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
+    const expansionId = await insertExpansion(
+      graphqlClient,
+      'GrowBanana',
+      `
+    export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+      return [
+        R(props.activityInstance.startOffset).PREHEAT_OVEN({temperature: 70}),
+        R(props.activityInstance.duration).PREHEAT_OVEN({temperature: 70}),
+      ];
+    }
+    `,
+    );
+    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
+    const expansionRunId = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
+
+    const simulatedActivityId = await convertActivityDirectiveIdToSimulatedActivityId(
+      graphqlClient,
+      simulationArtifactPk.simulationDatasetId,
+      activityId,
+    );
+    /** End Setup*/
+
+    const { activity_instance_commands } = await graphqlClient.request<{
+      activity_instance_commands: { commands: ReturnType<CommandStem['toSeqJson']>; errors: string[] }[];
+    }>(
+      gql`
+        query getExpandedCommands($expansionRunId: Int!, $simulatedActivityId: Int!) {
+          activity_instance_commands(
+            where: {
+              _and: { expansion_run_id: { _eq: $expansionRunId }, activity_instance_id: { _eq: $simulatedActivityId } }
+            }
+          ) {
+            commands
+            errors
+          }
+        }
+      `,
+      {
+        expansionRunId,
+        simulatedActivityId,
+      },
+    );
+
+    expect(activity_instance_commands.length).toBe(1);
+    expect(activity_instance_commands[0]?.errors).toEqual([
+      {
+        message: 'Duration is null',
+      },
+    ]);
+
+    // Cleanup
+    await removeActivityDirective(graphqlClient, activityId, planId);
+    await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
+    await removeExpansion(graphqlClient, expansionId);
+    await removeExpansionSet(graphqlClient, expansionSetId);
+    await removeExpansionRun(graphqlClient, expansionRunId);
+  });
+
   test('start_offset undefined regression', async () => {
     /** Begin Setup*/
     const activityId = await insertActivityDirective(graphqlClient, planId, 'GrowBanana', '1 hours');
@@ -1988,6 +2050,7 @@ describe('expansion regressions', () => {
     }
     `,
     );
+
     const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
     const expansionRunId = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
 
