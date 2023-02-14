@@ -34,25 +34,25 @@ public class PlanInMemory implements Plan {
   /**
    * container of all activity instances in plan, indexed by name
    */
-  private final HashMap<SchedulingActivityInstanceId, ActivityInstance> actsById
+  private final HashMap<SchedulingActivityDirectiveId, SchedulingActivityDirective> actsById
       = new HashMap<>();
 
   /**
    * container of all activity instances in plan, indexed by type
    */
-  private final HashMap<ActivityType, List<ActivityInstance>> actsByType
+  private final HashMap<ActivityType, List<SchedulingActivityDirective>> actsByType
       = new HashMap<>();
 
   /**
    * container of all activity instances in plan, indexed by start time
    */
-  private final TreeMap<Duration, List<ActivityInstance>> actsByTime
+  private final TreeMap<Duration, List<SchedulingActivityDirective>> actsByTime
       = new TreeMap<>();
 
   /**
    * container of all activity instances in plan
    */
-  private final HashSet<ActivityInstance> actsSet
+  private final HashSet<SchedulingActivityDirective> actsSet
       = new HashSet<>();
 
   /**
@@ -66,7 +66,7 @@ public class PlanInMemory implements Plan {
    * {@inheritDoc}
    */
   @Override
-  public void add(Collection<ActivityInstance> acts) {
+  public void add(Collection<SchedulingActivityDirective> acts) {
     for (final var act : acts) {
       add(act);
     }
@@ -77,12 +77,12 @@ public class PlanInMemory implements Plan {
    * {@inheritDoc}
    */
   @Override
-  public void add(ActivityInstance act) {
+  public void add(SchedulingActivityDirective act) {
     if (act == null) {
       throw new IllegalArgumentException(
           "adding null activity to plan");
     }
-    final var startT = act.startTime();
+    final var startT = act.startOffset();
     if (startT == null) {
       throw new IllegalArgumentException(
           "adding activity with null start time to plan");
@@ -106,17 +106,17 @@ public class PlanInMemory implements Plan {
   }
 
   @Override
-  public void remove(Collection<ActivityInstance> acts) {
+  public void remove(Collection<SchedulingActivityDirective> acts) {
     for (var act : acts) {
       remove(act);
     }
   }
 
   @Override
-  public void remove(ActivityInstance act) {
+  public void remove(SchedulingActivityDirective act) {
     //TODO: handle ownership. Constraint propagation ?
     actsById.remove(act.getId());
-    var acts = actsByTime.get(act.startTime());
+    var acts = actsByTime.get(act.startOffset());
     if (acts != null) acts.remove(act);
     acts = actsByType.get(act.getType());
     if (acts != null) acts.remove(act);
@@ -127,9 +127,9 @@ public class PlanInMemory implements Plan {
    * {@inheritDoc}
    */
   @Override
-  public List<ActivityInstance> getActivitiesByTime() {
+  public List<SchedulingActivityDirective> getActivitiesByTime() {
     //REVIEW: could probably do something tricky with streams to avoid new
-    final var orderedActs = new LinkedList<ActivityInstance>();
+    final var orderedActs = new LinkedList<SchedulingActivityDirective>();
 
     //NB: tree map ensures that values are in key order, but still need to flatten
     for (final var actsAtT : actsByTime.values()) {
@@ -144,12 +144,12 @@ public class PlanInMemory implements Plan {
    * {@inheritDoc}
    */
   @Override
-  public Map<ActivityType, List<ActivityInstance>> getActivitiesByType() {
+  public Map<ActivityType, List<SchedulingActivityDirective>> getActivitiesByType() {
     return Collections.unmodifiableMap(actsByType);
   }
 
   @Override
-  public Map<SchedulingActivityInstanceId, ActivityInstance> getActivitiesById() {
+  public Map<SchedulingActivityDirectiveId, SchedulingActivityDirective> getActivitiesById() {
     return Collections.unmodifiableMap(actsById);
   }
 
@@ -157,7 +157,7 @@ public class PlanInMemory implements Plan {
    * {@inheritDoc}
    */
   @Override
-  public Set<ActivityInstance> getActivities() {
+  public Set<SchedulingActivityDirective> getActivities() {
     return Collections.unmodifiableSet(actsSet);
   }
 
@@ -165,13 +165,13 @@ public class PlanInMemory implements Plan {
    * {@inheritDoc}
    */
   @Override
-  public Collection<ActivityInstance> find(
+  public Collection<SchedulingActivityDirective> find(
       ActivityExpression template, SimulationResults simulationResults,
       EvaluationEnvironment evaluationEnvironment)
   {
     //REVIEW: could do something clever with returning streams to prevent wasted work
     //REVIEW: something more clever for time-based queries using time index
-    LinkedList<ActivityInstance> matched = new LinkedList<>();
+    LinkedList<SchedulingActivityDirective> matched = new LinkedList<>();
     for (final var actsAtTime : actsByTime.values()) {
       for (final var act : actsAtTime) {
         if (template.matches(act, simulationResults, evaluationEnvironment)) {

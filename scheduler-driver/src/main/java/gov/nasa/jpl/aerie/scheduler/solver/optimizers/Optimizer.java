@@ -1,15 +1,15 @@
 package gov.nasa.jpl.aerie.scheduler.solver.optimizers;
 
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 
 import java.util.List;
 
 public abstract class Optimizer {
 
-  List<ActivityInstance> currentGoalSolution = null;
+  List<SchedulingActivityDirective> currentGoalSolution = null;
 
 
   //incremental call
-  public abstract boolean isBetterThanCurrent(List<ActivityInstance> candidateGoalSolution);
+  public abstract boolean isBetterThanCurrent(List<SchedulingActivityDirective> candidateGoalSolution);
 
 }

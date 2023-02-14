@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.server.models;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 
 import java.util.Collections;
@@ -9,24 +10,24 @@ import java.util.Optional;
 
 public class MerlinPlan {
 
-  private final Map<ActivityDirectiveId, MerlinActivityInstance> activities;
+  private final Map<ActivityDirectiveId, ActivityDirective> activities;
 
   public MerlinPlan(){
     activities = new HashMap<>();
   }
 
-  public void addActivity(final ActivityDirectiveId id, final MerlinActivityInstance activity){
+  public void addActivity(final ActivityDirectiveId id, final ActivityDirective activity){
     if(activities.containsKey(id)){
       throw new IllegalArgumentException("Activity with same id is already in the plan");
     }
     activities.put(id, activity);
   }
 
-  public Map<ActivityDirectiveId, MerlinActivityInstance> getActivitiesById(){
+  public Map<ActivityDirectiveId, ActivityDirective> getActivitiesById(){
     return Collections.unmodifiableMap(activities);
   }
 
-  public Optional<MerlinActivityInstance> getActivityById(final ActivityDirectiveId id){
+  public Optional<ActivityDirective> getActivityById(final ActivityDirectiveId id){
     return Optional.ofNullable(activities.get(id));
   }
 

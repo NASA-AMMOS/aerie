@@ -72,7 +72,7 @@
 //    while(time.shorterThan(DEFAULT_PLANNING_HORIZON.getHor().end)){
 //      var curStation = values[index];
 //
-//      var actInstance = ActivityInstance.of(actType2, time, Duration.min(DEFAULT_PLANNING_HORIZON.getHor().end.minus(time), period));
+//      var actInstance = ActivityInstance.of(actType2, time, Duration.min(DEFAULT_PLANNING_HORIZON.getHor().end.minus(time), period), null, true);
 //      actInstance.addArgument("dsnStation", SerializedValue.of(curStation));
 //      actList.add(actInstance);
 //      index +=1;
@@ -83,7 +83,7 @@
 //      curAlloc +=1;
 //      if(curAlloc == ratioAlloc){
 //        //allocate this to insight
-//        var actInstanceAlloc = ActivityInstance.of(actType1, time, Duration.min(DEFAULT_PLANNING_HORIZON.getHor().end.minus(time), period));
+//        var actInstanceAlloc = ActivityInstance.of(actType1, time, Duration.min(DEFAULT_PLANNING_HORIZON.getHor().end.minus(time), period), null, true);
 //        actInstanceAlloc.addArgument("dsnStation", SerializedValue.of(curStation));
 //        actList.add(actInstanceAlloc);
 //        curAlloc = 1;
@@ -129,7 +129,7 @@
 //    List<ActivityInstance> turnONFFMonitoring = List.of(
 //        ActivityInstance.of(actT1, DEFAULT_PLANNING_HORIZON.getStartAerie()
 //                                                            .plus(Duration.of(1,Duration.MINUTE)),
-//                             Duration.of(1,Duration.MINUTE)));
+//                             Duration.of(1,Duration.MINUTE), null, true));
 //    ProceduralCreationGoal pro = new ProceduralCreationGoal.Builder()
 //        .named("TurnOnAndOFFMonitoring")
 //        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
@@ -210,7 +210,7 @@
 //  ProceduralCreationGoal goal2a = new ProceduralCreationGoal.Builder()
 //      .named("SchedIDAMoveArm")
 //      .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(planningHorizon.getHor(), true)))
-//      .generateWith((plan) -> List.of(ActivityInstance.of(actTypeIDAMoveArm,stMoveArm, duroveArm)))
+//      .generateWith((plan) -> List.of(ActivityInstance.of(actTypeIDAMoveArm,stMoveArm, duroveArm, null, true)))
 //      .build();
 //
 //  goals.put(30, goal2a);

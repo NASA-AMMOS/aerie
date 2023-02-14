@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityConflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
@@ -125,7 +125,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
           .startsIn(subInterval)
           .build();
       final var acts = new java.util.LinkedList<>(plan.find(satisfyingActSearch, simulationResults, new EvaluationEnvironment()));
-      acts.sort(java.util.Comparator.comparing(ActivityInstance::startTime));
+      acts.sort(java.util.Comparator.comparing(SchedulingActivityDirective::startOffset));
 
       //walk through existing matching activities to find too-large gaps,
       //starting from the goal's own start time
@@ -135,7 +135,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
       var prevStartT = subInterval.start;
       while (actI.hasNext() && prevStartT.compareTo(lastStartT) < 0) {
         final var act = actI.next();
-        final var actStartT = act.startTime();
+        final var actStartT = act.startOffset();
 
         //check if the inter-activity gap is too large
         //REVIEW: should do any check based on min gap duration?

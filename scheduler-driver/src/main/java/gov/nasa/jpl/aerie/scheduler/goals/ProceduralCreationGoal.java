@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.conflicts.Conflict;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.conflicts.MissingActivityInstanceConflict;
@@ -55,12 +55,12 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
      *     function. may be called out of order from different contexts.
      * @return this builder, ready for additional specification
      */
-    public Builder generateWith(Function<Plan, Collection<ActivityInstance>> generator) {
+    public Builder generateWith(Function<Plan, Collection<SchedulingActivityDirective>> generator) {
       this.generateWith = generator;
       return this;
     }
 
-    protected Function<Plan, Collection<ActivityInstance>> generateWith;
+    protected Function<Plan, Collection<SchedulingActivityDirective>> generateWith;
 
     /**
      * {@inheritDoc}
@@ -126,7 +126,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
           .build();
       final var matchingActs = plan.find(satisfyingActSearch, simulationResults, new EvaluationEnvironment());
 
-      var missingActAssociations = new ArrayList<ActivityInstance>();
+      var missingActAssociations = new ArrayList<SchedulingActivityDirective>();
       var planEvaluation = plan.getEvaluation();
       var associatedActivitiesToThisGoal = planEvaluation.forGoal(this).getAssociatedActivities();
       var alreadyOneActivityAssociated = false;
@@ -187,7 +187,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
    * internal state that could produce variant results on re-invocation
    * with different hypothetical inputs
    */
-  protected Function<Plan, Collection<ActivityInstance>> generator;
+  protected Function<Plan, Collection<SchedulingActivityDirective>> generator;
 
   /**
    * use the generator to determine the set of relevant activity requests
@@ -202,7 +202,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
    *     are deemed relevant to this goal (eg within the temporal context
    *     of this goal)
    */
-  private Collection<ActivityInstance> getRelevantGeneratedActivities(Plan plan, SimulationResults simulationResults) {
+  private Collection<SchedulingActivityDirective> getRelevantGeneratedActivities(Plan plan, SimulationResults simulationResults) {
 
     //run the generator in the plan context
     final var allActs = generator.apply(plan);
@@ -210,8 +210,8 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
     //filter out acts that don't have a start time within the goal purview
     final var evaluatedGoalContext = getTemporalContext().evaluate(simulationResults);
     final var filteredActs = allActs.stream().filter(
-        act -> ((act.startTime() != null)
-                && evaluatedGoalContext.includes(Interval.at(0, act.startTime())))
+        act -> ((act.startOffset() != null)
+                && evaluatedGoalContext.includes(Interval.at(0, act.startOffset())))
     ).collect(java.util.stream.Collectors.toList());
 
     return filteredActs;
