@@ -1,5 +1,5 @@
 import { gql, GraphQLClient } from 'graphql-request';
-import type { SequenceSeqJson } from '../../src/lib/codegen/CommandEDSLPreface.js';
+import type { SeqJson } from '@nasa-jpl/seq-json-schema/types';
 import { FallibleStatus } from '../../src/types.js';
 import { convertActivityDirectiveIdToSimulatedActivityId } from './ActivityDirective.js';
 
@@ -37,12 +37,12 @@ export async function getSequenceSeqJson(graphqlClient: GraphQLClient, seqId: st
     getSequenceSeqJson:
       | {
           status: FallibleStatus.FAILURE;
-          seqJson?: SequenceSeqJson;
+          seqJson?: SeqJson;
           errors: { message: string; stack: string }[];
         }
       | {
           status: FallibleStatus.SUCCESS;
-          seqJson: SequenceSeqJson;
+          seqJson: SeqJson;
           errors: { message: string; stack: string }[];
         };
   }>(
@@ -91,12 +91,12 @@ export async function getSequenceSeqJsonBulk(
     getSequenceSeqJsonBulk: (
       | {
           status: FallibleStatus.FAILURE;
-          seqJson?: SequenceSeqJson;
+          seqJson?: SeqJson;
           errors: { message: string; stack: string }[];
         }
       | {
           status: FallibleStatus.SUCCESS;
-          seqJson: SequenceSeqJson;
+          seqJson: SeqJson;
           errors: { message: string; stack: string }[];
         }
     )[];
@@ -138,17 +138,17 @@ export async function generateSequenceEDSL(
   graphqlClient: GraphQLClient,
   commandDictionaryID: number,
   edslBody: string,
-): Promise<SequenceSeqJson> {
+): Promise<SeqJson> {
   const res = await graphqlClient.request<{
     getUserSequenceSeqJson:
       | {
           status: FallibleStatus.FAILURE;
-          seqJson?: SequenceSeqJson;
+          seqJson?: SeqJson;
           errors: { message: string; stack: string }[];
         }
       | {
           status: FallibleStatus.SUCCESS;
-          seqJson: SequenceSeqJson;
+          seqJson: SeqJson;
           errors: { message: string; stack: string }[];
         };
   }>(
@@ -196,17 +196,17 @@ export async function generateSequenceEDSLBulk(
     commandDictionaryId: number;
     edslBody: string;
   }[],
-): Promise<SequenceSeqJson[]> {
+): Promise<SeqJson[]> {
   const res = await graphqlClient.request<{
     getUserSequenceSeqJsonBulk: (
       | {
           status: FallibleStatus.FAILURE;
-          seqJson?: SequenceSeqJson;
+          seqJson?: SeqJson;
           errors: { message: string; stack: string }[];
         }
       | {
           status: FallibleStatus.SUCCESS;
-          seqJson: SequenceSeqJson;
+          seqJson: SeqJson;
           errors: { message: string; stack: string }[];
         }
     )[];
@@ -225,6 +225,8 @@ export async function generateSequenceEDSLBulk(
             steps {
               args
               metadata
+              models
+              description
               stem
               time {
                 tag

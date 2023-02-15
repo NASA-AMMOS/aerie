@@ -22,10 +22,7 @@ export const defaultSeqBuilder: SeqBuilder = (
         CommandStem.new({
           stem: '$$ERROR$$',
           arguments: [e.message],
-          metadata: {
-            simulatedActivityId: ai.id,
-          },
-        }),
+        }).METADATA({ simulatedActivityId: ai.id }),
       );
     }
     // Typeguard only
@@ -42,6 +39,6 @@ export const defaultSeqBuilder: SeqBuilder = (
       planId,
       simulationDatasetId,
     },
-    commands,
+    steps: commands,
   });
 };

@@ -291,20 +291,22 @@ type ExpandedActivityInstance {
 type SequenceSeqJson {
   id: String!
   metadata: Any!
-  steps: [CommandSeqJson!]!
+  steps: [CommandSeqJson!]
 }
 
 input SequenceSeqJsonInput {
   id: String!
   metadata: Any!
-  steps: [CommandSeqJsonInput!]!
+  steps: [CommandSeqJsonInput!]
 }
 
 type CommandSeqJson {
   stem: String!,
   time: CommandSeqJsonTime!,
   type: CommandSeqJsonType!,
-  metadata: Any!
+  metadata: Any,
+  description : String,
+  models: [Any!],
   args: [Any!]!
 }
 
@@ -312,8 +314,10 @@ input CommandSeqJsonInput {
   stem: String!,
   time: CommandSeqJsonTimeInput!,
   type: CommandSeqJsonType!,
-  metadata: Any!
-  args: [Any!]!
+  metadata: Any,
+  description : String,
+  models: [Any!],
+  args: [Any!]
 }
 
 type CommandSeqJsonTime {

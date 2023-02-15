@@ -99,7 +99,7 @@ describe('sequence generation', () => {
             },
             {
               bundle_name: "Dole",
-              number_of_bananas: 12 
+              number_of_bananas: 12
             }
           ]
         }),
@@ -112,7 +112,7 @@ describe('sequence generation', () => {
             },
             {
               bundle_name: "Blue",
-              number_of_bananas: 12 
+              number_of_bananas: 12
             }
           ]
         })
@@ -2141,7 +2141,7 @@ describe('user sequence to seqjson', () => {
       Sequence.new({
         seqId: "test00001",
         metadata: {},
-        commands: [
+        steps: [
             C.BAKE_BREAD,
             A\`2020-060T03:45:19\`.PREHEAT_OVEN({ temperature: 100 }),
             E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PACKAGE_BANANA({
@@ -2153,7 +2153,7 @@ describe('user sequence to seqjson', () => {
                 },
                 {
                   bundle_name: "Dole",
-                  number_of_bananas: 12 
+                  number_of_bananas: 12
                 }
               ]
             }),
@@ -2170,7 +2170,6 @@ describe('user sequence to seqjson', () => {
         stem: 'BAKE_BREAD',
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [],
-        metadata: {},
       },
       {
         type: 'command',
@@ -2180,7 +2179,6 @@ describe('user sequence to seqjson', () => {
           type: 'ABSOLUTE',
         },
         args: [100],
-        metadata: {},
       },
       {
         type: 'command',
@@ -2190,7 +2188,6 @@ describe('user sequence to seqjson', () => {
           type: 'EPOCH_RELATIVE',
         },
         args: [1093, 'Chiquita', 43, 'Dole', 12],
-        metadata: {},
       },
     ]);
   }, 30000);
@@ -2204,8 +2201,8 @@ describe('user sequence to seqjson', () => {
             Sequence.new({
               seqId: "test00001",
               metadata: {},
-              commands: [
-                  C.BAKE_BREAD,
+              steps: [
+                  C.BAKE_BREAD.DESCRIPTION("Bake bread"),
                   A\`2020-060T03:45:19\`.PREHEAT_OVEN({ temperature: 100 }),
                   E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PACKAGE_BANANA({
                     lot_number: 1093,
@@ -2216,7 +2213,7 @@ describe('user sequence to seqjson', () => {
                       },
                       {
                         bundle_name: "Dole",
-                        number_of_bananas: 12 
+                        number_of_bananas: 12
                       }
                     ]
                 }),
@@ -2231,7 +2228,7 @@ describe('user sequence to seqjson', () => {
             Sequence.new({
               seqId: "test00002",
               metadata: {},
-              commands: [
+              steps: [
                   C.BAKE_BREAD,
                   A\`2020-061T03:45:19\`.PREHEAT_OVEN({ temperature: 100 }),
                   E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PACKAGE_BANANA({
@@ -2243,10 +2240,22 @@ describe('user sequence to seqjson', () => {
                       },
                       {
                         bundle_name: "Dole",
-                        number_of_bananas: 12 
+                        number_of_bananas: 12
                       }
                     ]
-                  }),
+                  }).MODELS([{
+                    offset: '00:00:00.000',
+                    value: 1.234,
+                    variable: 'model_var_float',
+                  },{
+                    offset: '00:00:00.001',
+                    value: '-1234',
+                    variable: 'model_var_int',
+                  },{
+                    offset: '00:10:00.001',
+                    value: true,
+                    variable: 'model_var_boolean',
+                  }]),
               ],
             });
           `,
@@ -2259,9 +2268,9 @@ describe('user sequence to seqjson', () => {
       {
         type: 'command',
         stem: 'BAKE_BREAD',
+        description: 'Bake bread',
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [],
-        metadata: {},
       },
       {
         type: 'command',
@@ -2271,7 +2280,6 @@ describe('user sequence to seqjson', () => {
           type: 'ABSOLUTE',
         },
         args: [100],
-        metadata: {},
       },
       {
         type: 'command',
@@ -2281,7 +2289,6 @@ describe('user sequence to seqjson', () => {
           type: 'EPOCH_RELATIVE',
         },
         args: [1093, 'Chiquita', 43, 'Dole', 12],
-        metadata: {},
       },
     ]);
 
@@ -2293,7 +2300,6 @@ describe('user sequence to seqjson', () => {
         stem: 'BAKE_BREAD',
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [],
-        metadata: {},
       },
       {
         type: 'command',
@@ -2303,7 +2309,6 @@ describe('user sequence to seqjson', () => {
           type: 'ABSOLUTE',
         },
         args: [100],
-        metadata: {},
       },
       {
         type: 'command',
@@ -2313,7 +2318,23 @@ describe('user sequence to seqjson', () => {
           type: 'EPOCH_RELATIVE',
         },
         args: [1093, 'Chiquita', 43, 'Dole', 12],
-        metadata: {},
+        models: [
+          {
+            offset: '00:00:00.000',
+            value: 1.234,
+            variable: 'model_var_float',
+          },
+          {
+            offset: '00:00:00.001',
+            value: '-1234',
+            variable: 'model_var_int',
+          },
+          {
+            offset: '00:10:00.001',
+            value: true,
+            variable: 'model_var_boolean',
+          },
+        ],
       },
     ]);
   }, 30000);

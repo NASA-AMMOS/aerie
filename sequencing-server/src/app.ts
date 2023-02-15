@@ -22,7 +22,9 @@ import {
   simulatedActivityInstanceBySimulatedActivityIdBatchLoader,
 } from './lib/batchLoaders/simulatedActivityBatchLoader.js';
 import { generateTypescriptForGraphQLActivitySchema } from './lib/codegen/ActivityTypescriptCodegen.js';
-import { CommandStem, CommandSeqJson, Sequence, SequenceSeqJson } from './lib/codegen/CommandEDSLPreface.js';
+import { CommandStem, Sequence } from './lib/codegen/CommandEDSLPreface.js';
+import type { Command, SeqJson } from '@nasa-jpl/seq-json-schema/types';
+
 import { processDictionary } from './lib/codegen/CommandTypeCodegen.js';
 import './polyfills.js';
 import { FallibleStatus } from './types.js';
@@ -605,7 +607,7 @@ app.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, res, next)
   const [{ rows: activityInstanceCommandRows }, { rows: seqRows }] = await Promise.all([
     db.query<{
       metadata: Record<string, unknown>;
-      commands: CommandSeqJson[];
+      commands: Command[];
       activity_instance_id: number;
       errors: ReturnType<UserCodeError['toJSON']>[] | null;
     }>(
@@ -735,7 +737,7 @@ app.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (req, res, 
   const [{ rows: activityInstanceCommandRows }, { rows: seqRows }] = await Promise.all([
     db.query<{
       metadata: Record<string, unknown>;
-      commands: CommandSeqJson[];
+      commands: Command[];
       activity_instance_id: number;
       errors: ReturnType<UserCodeError['toJSON']>[] | null;
       seq_id: string;
@@ -899,7 +901,7 @@ app.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (req, res, 
  * @deprecated Use `/bulk-get-edsl-for-seqjson` instead
  */
 app.post('/get-edsl-for-seqjson', async (req, res, next) => {
-  const seqJson = req.body.input.seqJson as SequenceSeqJson;
+  const seqJson = req.body.input.seqJson as SeqJson;
 
   res.json(Sequence.fromSeqJson(seqJson).toEDSLString());
   return next();
@@ -907,7 +909,7 @@ app.post('/get-edsl-for-seqjson', async (req, res, next) => {
 
 // Generate Sequence EDSL from many sequence JSONs
 app.post('/bulk-get-edsl-for-seqjson', async (req, res, next) => {
-  const seqJsons = req.body.input.seqJsons as SequenceSeqJson[];
+  const seqJsons = req.body.input.seqJsons as SeqJson[];
 
   res.json(seqJsons.map(seqJson => Sequence.fromSeqJson(seqJson).toEDSLString()));
   return next();
