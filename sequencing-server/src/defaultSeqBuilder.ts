@@ -21,7 +21,7 @@ export const defaultSeqBuilder: SeqBuilder = (
       return ai.errors.map(e =>
         CommandStem.new({
           stem: '$$ERROR$$',
-          arguments: [e.message],
+          arguments: [{ message: e.message }],
         }).METADATA({ simulatedActivityId: ai.id }),
       );
     }
