@@ -130,7 +130,11 @@ describe('Sequence', () => {
             metadata: {
               author: 'Mission Operation Engineer',
             },
-            args: ['string', 0, true],
+            args: [
+              { value: 'test_string', type: 'string', name: 'parameter1' },
+              { value: 0, type: 'number', name: 'parameter2' },
+              { value: true, type: 'boolean', name: 'parameter3' },
+            ],
             time: { type: TimingTypes.ABSOLUTE, tag: '2020-001T00:00:00.000' as DOY_STRING },
           },
         ],
@@ -153,7 +157,7 @@ describe('Sequence', () => {
         expect(sequence.steps[1]!.GET_METADATA()).toEqual({
           author: 'Mission Operation Engineer',
         });
-        expect(sequence.steps[1]!.arguments).toEqual(['string', 0, true]);
+        expect(sequence.steps[1]!.arguments).toEqual({ parameter1: 'test_string', parameter2: 0, parameter3: true });
       }
     });
   });
@@ -168,8 +172,8 @@ describe('Sequence', () => {
 
       expect(sequence.toEDSLString()).toEqual(`export default () =>
   Sequence.new({
-    seqId: 'test',
-    metadata: {},
+\t  seqId: 'test',
+\t  metadata: {},
   });`);
     });
 
@@ -199,8 +203,8 @@ describe('Sequence', () => {
 
       expect(sequence.toEDSLString()).toEqual(`export default () =>
   Sequence.new({
-    seqId: 'test',
-    metadata: {},
+\t  seqId: 'test',
+\t  metadata: {},
     steps: [
       A\`2020-001T00:00:00.000\`.TEST('string', 0, true),
       A\`2020-001T00:00:00.000\`.TEST({
