@@ -1,0 +1,1467 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should return command types 1`] = `
+"/** START Preface */
+
+export enum TimingTypes {
+  ABSOLUTE = 'ABSOLUTE',
+  COMMAND_RELATIVE = 'COMMAND_RELATIVE',
+  EPOCH_RELATIVE = 'EPOCH_RELATIVE',
+  COMMAND_COMPLETE = 'COMMAND_COMPLETE',
+}
+
+// @ts-ignore : 'Args' found in JSON Spec
+export type CommandOptions<A extends Args[] | { [argName: string]: any } = [] | {}> = {
+  stem: string;
+  arguments: A;
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  metadata?: Metadata | undefined;
+  // @ts-ignore : 'Description' found in JSON Spec
+  description?: Description | undefined;
+  // @ts-ignore : 'Model' found in JSON Spec
+  models?: Model[] | undefined;
+} & (
+  | {
+      absoluteTime: Temporal.Instant;
+    }
+  | {
+      epochTime: Temporal.Duration;
+    }
+  | {
+      relativeTime: Temporal.Duration;
+    }
+  // CommandComplete
+  | {}
+);
+
+export type Arrayable<T> = T | Arrayable<T>[];
+
+export interface SequenceOptions {
+  seqId: string;
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  metadata: Metadata;
+
+  // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+  locals?: [VariableDeclaration, ...VariableDeclaration[]];
+  // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+  parameters?: [VariableDeclaration, ...VariableDeclaration[]];
+  // @ts-ignore : 'Step' found in JSON Spec
+  steps?: Step[];
+  // @ts-ignore : 'Request' found in JSON Spec
+  requests?: Request[];
+  // @ts-ignore : 'ImmediateCommand' found in JSON Spec
+  immediate_commands?: ImmediateCommand[];
+  // @ts-ignore : 'HardwareCommand' found in JSON Spec
+  hardware_commands?: HardwareCommand[];
+}
+
+declare global {
+  // @ts-ignore : 'Args' found in JSON Spec
+  class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}> implements Command {
+    // @ts-ignore : 'Args' found in JSON Spec
+    args: Args;
+    stem: string;
+    // @ts-ignore : 'TIME' found in JSON Spec
+    time: Time;
+    type: 'command';
+
+    public static new<A extends any[] | { [argName: string]: any }>(opts: CommandOptions<A>): CommandStem<A>;
+
+    // @ts-ignore : 'Command' found in JSON Spec
+    public toSeqJson(): Command;
+
+    // @ts-ignore : 'Model' found in JSON Spec
+    public MODELS(models: Model[]): CommandStem<A>;
+    // @ts-ignore : 'Model' found in JSON Spec
+    public GET_MODELS(): Model[] | undefined;
+
+    // @ts-ignore : 'Metadata' found in JSON Spec
+    public METADATA(metadata: Metadata): CommandStem<A>;
+    // @ts-ignore : 'Metadata' found in JSON Spec
+    public GET_METADATA(): Metadata | undefined;
+
+    // @ts-ignore : 'Description' found in JSON Spec
+    public DESCRIPTION(description: Description): CommandStem<A>;
+    // @ts-ignore : 'Description' found in JSON Spec
+    public GET_DESCRIPTION(): Description | undefined;
+  }
+  // @ts-ignore : 'SeqJson' found in JSON Spec
+  class Sequence implements SeqJson {
+    public readonly id: string;
+    // @ts-ignore : 'Metadata' found in JSON Spec
+    public readonly metadata: Metadata;
+
+    // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+    public readonly locals?: [VariableDeclaration, ...VariableDeclaration[]];
+    // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+    public readonly parameters?: [VariableDeclaration, ...VariableDeclaration[]];
+    // @ts-ignore : 'Step' found in JSON Spec
+    public readonly steps?: Step[];
+    // @ts-ignore : 'Request' found in JSON Spec
+    public readonly requests?: Request[];
+    // @ts-ignore : 'ImmediateCommand' found in JSON Spec
+    public readonly immediate_commands?: ImmediateCommand[];
+    // @ts-ignore : 'HardwareCommand' found in JSON Spec
+    public readonly hardware_commands?: HardwareCommand[];
+    [k: string]: unknown;
+
+    public static new(
+      opts:
+        | {
+            seqId: string;
+            // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+            locals?: [VariableDeclaration, ...VariableDeclaration[]];
+            // @ts-ignore : 'Metadata' found in JSON Spec
+            metadata: Metadata;
+            // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+            parameters?: [VariableDeclaration, ...VariableDeclaration[]];
+            // @ts-ignore : 'Step' found in JSON Spec
+            steps?: Step[];
+            // @ts-ignore : 'Request' found in JSON Spec
+            requests?: Request[];
+            // @ts-ignore : 'ImmediateCommand' found in JSON Spec
+            immediate_commands?: ImmediateCommand[];
+            // @ts-ignore : 'HardwareCommand' found in JSON Spec
+            hardware_commands?: HardwareCommand[];
+          }
+        // @ts-ignore : 'SeqJson' found in JSON Spec
+        | SeqJson,
+    ): Sequence;
+
+    // @ts-ignore : 'SeqJson' found in JSON Spec
+    public toSeqJson(): SeqJson;
+  }
+
+  type Context = {};
+  type ExpansionReturn = Arrayable<CommandStem>;
+
+  type U<BitLength extends 8 | 16 | 32 | 64> = number;
+  type U8 = U<8>;
+  type U16 = U<16>;
+  type U32 = U<32>;
+  type U64 = U<64>;
+  type I<BitLength extends 8 | 16 | 32 | 64> = number;
+  type I8 = I<8>;
+  type I16 = I<16>;
+  type I32 = I<32>;
+  type I64 = I<64>;
+  type VarString<PrefixBitLength extends number, MaxBitLength extends number> = string;
+  type FixedString = string;
+  type F<BitLength extends 32 | 64> = number;
+  type F32 = F<32>;
+  type F64 = F<64>;
+
+  // @ts-ignore : 'Commands' found in generated code
+  function A(...args: [TemplateStringsArray, ...string[]]): typeof Commands;
+  // @ts-ignore : 'Commands' found in generated code
+  function A(absoluteTime: Temporal.Instant): typeof Commands;
+  // @ts-ignore : 'Commands' found in generated code
+  function A(timeDOYString: string): typeof Commands;
+
+  // @ts-ignore : 'Commands' found in generated code
+  function R(...args: [TemplateStringsArray, ...string[]]): typeof Commands;
+  // @ts-ignore : 'Commands' found in generated code
+  function R(duration: Temporal.Duration): typeof Commands;
+  // @ts-ignore : 'Commands' found in generated code
+  function R(timeHMSString: string): typeof Commands;
+
+  // @ts-ignore : 'Commands' found in generated code
+  function E(...args: [TemplateStringsArray, ...string[]]): typeof Commands;
+  // @ts-ignore : 'Commands' found in generated code
+  function E(duration: Temporal.Duration): typeof Commands;
+  // @ts-ignore : 'Commands' found in generated code
+  function E(timeHMSString: string): typeof Commands;
+
+  // @ts-ignore : 'Commands' found in generated code
+  const C: typeof Commands;
+}
+
+// @ts-ignore : 'Args' found in JSON Spec
+export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}> implements Command {
+  public readonly arguments: A;
+  public readonly absoluteTime: Temporal.Instant | null = null;
+  public readonly epochTime: Temporal.Duration | null = null;
+  public readonly relativeTime: Temporal.Duration | null = null;
+
+  public readonly stem: string;
+  // @ts-ignore : 'Args' found in JSON Spec
+  public readonly args!: Args;
+  // @ts-ignore : 'Time' found in JSON Spec
+  public readonly time!: Time;
+  // @ts-ignore : 'Model' found in JSON Spec
+  private readonly _models?: Model[] | undefined;
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  private readonly _metadata?: Metadata | undefined;
+  // @ts-ignore : 'Description' found in JSON Spec
+  private readonly _description?: Description | undefined;
+  public readonly type: 'command' = 'command';
+
+  private constructor(opts: CommandOptions<A>) {
+    this.stem = opts.stem;
+    this.arguments = opts.arguments;
+
+    if ('absoluteTime' in opts) {
+      this.absoluteTime = opts.absoluteTime;
+    } else if ('epochTime' in opts) {
+      this.epochTime = opts.epochTime;
+    } else if ('relativeTime' in opts) {
+      this.relativeTime = opts.relativeTime;
+    }
+    this._metadata = opts.metadata;
+    this._description = opts.description;
+    this._models = opts.models;
+  }
+
+  public static new<A extends any[] | { [argName: string]: any }>(opts: CommandOptions<A>): CommandStem<A> {
+    if ('absoluteTime' in opts) {
+      return new CommandStem<A>({
+        ...opts,
+        absoluteTime: opts.absoluteTime,
+      });
+    } else if ('epochTime' in opts) {
+      return new CommandStem<A>({
+        ...opts,
+        epochTime: opts.epochTime,
+      });
+    } else if ('relativeTime' in opts) {
+      return new CommandStem<A>({
+        ...opts,
+        relativeTime: opts.relativeTime,
+      });
+    } else {
+      return new CommandStem<A>(opts);
+    }
+  }
+
+  // @ts-ignore : 'Model' found in JSON Spec
+  public MODELS(models: Model[]): CommandStem {
+    return CommandStem.new({
+      stem: this.stem,
+      arguments: this.arguments,
+      models: models,
+      metadata: this._metadata,
+      description: this._description,
+      ...(this.absoluteTime && { absoluteTime: this.absoluteTime }),
+      ...(this.epochTime && { epochTime: this.epochTime }),
+      ...(this.relativeTime && { relativeTime: this.relativeTime }),
+    });
+  }
+
+  // @ts-ignore : 'Model' found in JSON Spec
+  public GET_MODELS(): Model[] | undefined {
+    return this._models;
+  }
+
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  public METADATA(metadata: Metadata): CommandStem {
+    return CommandStem.new({
+      stem: this.stem,
+      arguments: this.arguments,
+      models: this._models,
+      metadata: metadata,
+      description: this._description,
+      ...(this.absoluteTime && { absoluteTime: this.absoluteTime }),
+      ...(this.epochTime && { epochTime: this.epochTime }),
+      ...(this.relativeTime && { relativeTime: this.relativeTime }),
+    });
+  }
+
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  public GET_METADATA(): Metadata | undefined {
+    return this._metadata;
+  }
+
+  // @ts-ignore : 'Description' found in JSON Spec
+  public DESCRIPTION(description: Description): CommandStem {
+    return CommandStem.new({
+      stem: this.stem,
+      arguments: this.arguments,
+      models: this._models,
+      metadata: this._metadata,
+      description: description,
+      ...(this.absoluteTime && { absoluteTime: this.absoluteTime }),
+      ...(this.epochTime && { epochTime: this.epochTime }),
+      ...(this.relativeTime && { relativeTime: this.relativeTime }),
+    });
+  }
+  // @ts-ignore : 'Description' found in JSON Spec
+  public GET_DESCRIPTION(): Description | undefined {
+    return this._description;
+  }
+
+  // @ts-ignore : 'Command' found in JSON Spec
+  public toSeqJson(): Command {
+    return {
+      args: CommandStem.convertArgsToInterfaces(this.arguments),
+      stem: this.stem,
+      time:
+        this.absoluteTime !== null
+          ? { type: TimingTypes.ABSOLUTE, tag: instantToDoy(this.absoluteTime) }
+          : this.epochTime !== null
+          ? { type: TimingTypes.EPOCH_RELATIVE, tag: durationToHms(this.epochTime) }
+          : this.relativeTime !== null
+          ? { type: TimingTypes.COMMAND_RELATIVE, tag: durationToHms(this.relativeTime) }
+          : { type: TimingTypes.COMMAND_COMPLETE },
+      type: this.type,
+      ...(this._metadata ? { metadata: this._metadata } : {}),
+      ...(this._models ? { models: this._models } : {}),
+      ...(this._description ? { description: this._description } : {}),
+    };
+  }
+
+  // @ts-ignore : 'Command' found in JSON Spec
+  public static fromSeqJson(json: Command): CommandStem {
+    const timeValue =
+      json.time.type === TimingTypes.ABSOLUTE
+        ? { absoluteTime: doyToInstant(json.time.tag as DOY_STRING) }
+        : json.time.type === TimingTypes.COMMAND_RELATIVE
+        ? { relativeTime: hmsToDuration(json.time.tag as HMS_STRING) }
+        : json.time.type === TimingTypes.EPOCH_RELATIVE
+        ? { epochTime: hmsToDuration(json.time.tag as HMS_STRING) }
+        : {};
+
+    return CommandStem.new({
+      stem: json.stem,
+      arguments: CommandStem.convertInterfacesToArgs(json.args),
+      metadata: json.metadata,
+      models: json.models,
+      description: json.description,
+      ...timeValue,
+    });
+  }
+
+  public absoluteTiming(absoluteTime: Temporal.Instant): CommandStem<A> {
+    return CommandStem.new({
+      stem: this.stem,
+      arguments: this.arguments,
+      absoluteTime: absoluteTime,
+    });
+  }
+
+  public epochTiming(epochTime: Temporal.Duration): CommandStem<A> {
+    return CommandStem.new({
+      stem: this.stem,
+      arguments: this.arguments,
+      epochTime: epochTime,
+    });
+  }
+
+  public relativeTiming(relativeTime: Temporal.Duration): CommandStem<A> {
+    return CommandStem.new({
+      stem: this.stem,
+      arguments: this.arguments,
+      relativeTime: relativeTime,
+    });
+  }
+
+  public toEDSLString(): string {
+    const timeString = this.absoluteTime
+      ? \`A\\\`\${instantToDoy(this.absoluteTime)}\\\`\`
+      : this.epochTime
+      ? \`E\\\`\${durationToHms(this.epochTime)}\\\`\`
+      : this.relativeTime
+      ? \`R\\\`\${durationToHms(this.relativeTime)}\\\`\`
+      : 'C';
+
+    const argsString =
+      Object.keys(this.arguments).length === 0 ? '' : \`(\${CommandStem.argumentsToString(this.arguments)})\`;
+
+    const metadata =
+      this._metadata && Object.keys(this._metadata).length !== 0
+        ? \`\\n.METADATA(\${objectToString(this._metadata)})\`
+        : '';
+    const description =
+      this._description && this._description.length !== 0 ? \`\\n.DESCRIPTION('\${this._description}')\` : '';
+    const models =
+      this._models && Object.keys(this._models).length !== 0
+        ? \`\\n.MODELS([\\n\${this._models.map(m => indent(objectToString(m))).join(',\\n')}\\n])\`
+        : '';
+    return \`\${timeString}.\${this.stem}\${argsString}\${description}\${metadata}\${models}\`;
+  }
+
+  // @ts-ignore : 'Args' found in JSON Spec
+  private static argumentsToString<A extends Args[] | { [argName: string]: any } = [] | {}>(args: A): string {
+    if (Array.isArray(args)) {
+      const argStrings = args.map(arg => {
+        if (typeof arg === 'string') {
+          return \`'\${arg}'\`;
+        }
+        return arg.toString();
+      });
+
+      return argStrings.join(', ');
+    } else {
+      return objectToString(args);
+    }
+  }
+
+  // This function takes an array of Args interfaces and converts it into an object or an array depending on whether
+  // the repeat argument is true or false. The interfaces array contains objects matching the ARGS interface.
+  // Depending on the type property of each object, a corresponding object with the name and value properties is created
+  // and added to the output. If an object's type property is "repeat", then the value property is recursively passed
+  // through the function with repeat set to true.Additionally, the function includes a validation function that prevents
+  // remote property injection attacks.
+  // @ts-ignore : 'Args' found in JSON Spec
+  private static convertInterfacesToArgs(interfaces: Args, repeat = false): {} | [] {
+    const args = interfaces.length === 0 ? [] : !repeat ? {} : [];
+
+    //use to prevent a Remote property injection attack
+    const validate = (input: string): boolean => {
+      const pattern = /^[a-zA-Z0-9_-]+$/;
+      const isValid = pattern.test(input);
+      return isValid;
+    };
+
+    const convertedArgs = interfaces.map(
+      (
+        // @ts-ignore : found in JSON Spec
+        arg: StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument | RepeatArgument,
+      ) => {
+        // @ts-ignore : 'RepeatArgument' found in JSON Spec
+        if (arg.type === 'repeat') {
+          if (validate(arg.name)) {
+            // @ts-ignore : 'RepeatArgument' found in JSON Spec
+            return { [arg.name]: this.convertInterfacesToArgs(arg.value, true) };
+          }
+          return { repeat_error: 'Remote property injection detected...' };
+        } else if (arg.type === 'symbol') {
+          if (validate(arg.name)) {
+            // @ts-ignore : 'SymbolArgument' found in JSON Spec
+            return { [arg.name]: { symbol: arg.value } };
+          }
+          return { symbol_error: 'Remote property injection detected...' };
+          // @ts-ignore : 'HexArgument' found in JSON Spec
+        } else if (arg.type === 'hex') {
+          if (validate(arg.name)) {
+            // @ts-ignore : 'HexArgument' found in JSON Spec
+            return { [arg.name]: { hex: arg.value } };
+          }
+          return { hex_error: 'Remote property injection detected...' };
+        } else {
+          if (validate(arg.name)) {
+            return { [arg.name]: arg.value };
+          }
+          return { error: 'Remote property injection detected...' };
+        }
+      },
+    );
+
+    if (repeat) {
+      let obj = {};
+      for (const i in convertedArgs) {
+        for (const key in convertedArgs[i]) {
+          if (key in obj) {
+            (args as any[]).push(obj);
+            obj = {};
+          }
+          Object.assign(obj, convertedArgs[i]);
+        }
+      }
+      (args as any[]).push(obj);
+    } else {
+      for (const i in convertedArgs) {
+        Object.assign(args, convertedArgs[i]);
+      }
+    }
+
+    return args;
+  }
+
+  //The function takes an object of arguments and converts them into the Args type. It does this by looping through the
+  // values and pushing a new argument type to the result array depending on the type of the value.
+  // If the value is an array, it will create a RepeatArgument type and recursively call on the values of the array.
+  // the function returns the result array of argument types -
+  // StringArgument, NumberArgument, BooleanArgument, SymbolArgument, HexArgument, and RepeatArgument.
+  // @ts-ignore : 'Args' found in JSON Spec
+  private static convertArgsToInterfaces(args: { [argName: string]: any }): Args {
+    // @ts-ignore : 'Args' found in JSON Spec
+    let result: Args = [];
+    if (args['length'] === 0) {
+      return result;
+    }
+
+    const values = Array.isArray(args) ? args[0] : args;
+
+    for (let key in values) {
+      let value = values[key];
+      if (Array.isArray(value)) {
+        // @ts-ignore : 'RepeatArgument' found in JSON Spec
+        let repeatArg: RepeatArgument = {
+          value: value
+            .map(arg => {
+              return this.convertArgsToInterfaces(arg);
+            })
+            .flat(),
+          type: 'repeat',
+          name: key,
+        };
+        result.push(repeatArg);
+      } else {
+        switch (typeof value) {
+          case 'string':
+            result.push({ type: 'string', value: value, name: key });
+            break;
+          case 'number':
+            result.push({ type: 'number', value: value, name: key });
+            break;
+          case 'boolean':
+            result.push({ type: 'boolean', value: value, name: key });
+            break;
+          default:
+            if (value instanceof Object && value.symbol && value.symbol === 'string') {
+              result.push({ type: 'symbol', value: value, name: key });
+            } else if (
+              value instanceof Object &&
+              value.hex &&
+              value.hex === 'string' &&
+              new RegExp('^0x([0-9A-F])+$').test(value.hex)
+            ) {
+              result.push({ type: 'hex', value: value, name: key });
+            }
+            break;
+        }
+      }
+    }
+    return result;
+  }
+}
+
+// @ts-ignore : 'SeqJson' found in JSON Spec
+export class Sequence implements SeqJson {
+  public readonly id: string;
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  public readonly metadata: Metadata;
+
+  // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+  public readonly locals?: [VariableDeclaration, ...VariableDeclaration[]];
+  // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+  public readonly parameters?: [VariableDeclaration, ...VariableDeclaration[]];
+  // @ts-ignore : 'Step' found in JSON Spec
+  public readonly steps?: Step[];
+  // @ts-ignore : 'Request' found in JSON Spec
+  public readonly requests?: Request[];
+  // @ts-ignore : 'ImmediateCommand' found in JSON Spec
+  public readonly immediate_commands?: ImmediateCommand[];
+  // @ts-ignore : 'HardwareCommand' found in JSON Spec
+  public readonly hardware_commands?: HardwareCommand[];
+  [k: string]: unknown;
+
+  // @ts-ignore : 'SeqJson' found in JSON Spec
+  private constructor(opts: SequenceOptions | SeqJson) {
+    if ('id' in opts) {
+      this.id = opts.id;
+    } else {
+      this.id = opts.seqId;
+    }
+    this.metadata = opts.metadata;
+
+    this.locals = opts.locals ?? undefined;
+    this.parameters = opts.parameters ?? undefined;
+    this.steps = opts.steps ?? undefined;
+    this.requests = opts.requests ?? undefined;
+    this.immediate_commands = opts.immediate_commands ?? undefined;
+    this.hardware_commands = opts.hardware_commands ?? undefined;
+  }
+  public static new(opts: SequenceOptions): Sequence {
+    return new Sequence(opts);
+  }
+
+  // @ts-ignore : 'SeqJson' found in JSON Spec
+  public toSeqJson(): SeqJson {
+    return {
+      id: this.id,
+      metadata: this.metadata,
+      ...(this.steps
+        ? {
+            steps: this.steps.map(step => {
+              if (step instanceof CommandStem) return step.toSeqJson();
+              return step;
+            }),
+          }
+        : {}),
+    };
+  }
+
+  public toEDSLString(): string {
+    const commandsString =
+      this.steps && this.steps.length > 0
+        ? '\\n' +
+          indent(
+            this.steps
+              .map(step => {
+                return (step as CommandStem).toEDSLString() + ',';
+              })
+              .join('\\n'),
+            1,
+          )
+        : '';
+
+    return \`export default () =>
+  Sequence.new({
+	  seqId: '\${this.id}',
+	  metadata: \${JSON.stringify(this.metadata)},\${
+      commandsString.length > 0 ? \`\\n\${indent(\`steps: [\${commandsString}\`, 2)}\\n\${indent('],', 2)}\` : ''
+    }
+  });\`;
+  }
+
+  // @ts-ignore : 'Args' found in JSON Spec
+  public static fromSeqJson(json: SeqJson): Sequence {
+    return Sequence.new({
+      seqId: json.id,
+      metadata: json.metadata,
+      // @ts-ignore : 'Step' found in JSON Spec
+      ...(json.steps ? { steps: json.steps.map((c: Step) => CommandStem.fromSeqJson(c as CommandStem)) } : {}),
+      ...(json.locals ? { locals: json.locals } : {}),
+      ...(json.parameters ? { parameters: json.parameters } : {}),
+      ...(json.requests ? { requests: json.requests } : {}),
+      ...(json.immediate_commands ? { immediate_commands: json.immediate_commands } : {}),
+      ...(json.hardware_commands ? { hardware_commands: json.hardware_commands } : {}),
+    });
+  }
+}
+
+/** Time utilities */
+
+export type DOY_STRING = string & { __brand: 'DOY_STRING' };
+export type HMS_STRING = string & { __brand: 'HMS_STRING' };
+
+const DOY_REGEX = /(\\d{4})-(\\d{3})T(\\d{2}):(\\d{2}):(\\d{2})(?:\\.(\\d{3}))?/;
+const HMS_REGEX = /(\\d{2}):(\\d{2}):(\\d{2})(?:\\.(\\d{3}))?/;
+
+/** YYYY-DOYTHH:MM:SS.sss */
+export function instantToDoy(time: Temporal.Instant): DOY_STRING {
+  const utcZonedDate = time.toZonedDateTimeISO('UTC');
+  const YYYY = formatNumber(utcZonedDate.year, 4);
+  const DOY = formatNumber(utcZonedDate.dayOfYear, 3);
+  const HH = formatNumber(utcZonedDate.hour, 2);
+  const MM = formatNumber(utcZonedDate.minute, 2);
+  const SS = formatNumber(utcZonedDate.second, 2);
+  const sss = formatNumber(utcZonedDate.millisecond, 3);
+  return \`\${YYYY}-\${DOY}T\${HH}:\${MM}:\${SS}.\${sss}\` as DOY_STRING;
+}
+
+export function doyToInstant(doy: DOY_STRING): Temporal.Instant {
+  const match = doy.match(DOY_REGEX);
+  if (match === null) {
+    throw new Error(\`Invalid DOY string: \${doy}\`);
+  }
+  const [, year, doyStr, hour, minute, second, millisecond] = match as [
+    unknown,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string | undefined,
+  ];
+
+  //use to convert doy to month and day
+  const doyDate = new Date(parseInt(year, 10), 0, parseInt(doyStr, 10));
+  // convert to UTC Date
+  const utcDoyDate = new Date(
+    Date.UTC(
+      doyDate.getUTCFullYear(),
+      doyDate.getUTCMonth(),
+      doyDate.getUTCDate(),
+      doyDate.getUTCHours(),
+      doyDate.getUTCMinutes(),
+      doyDate.getUTCSeconds(),
+      doyDate.getUTCMilliseconds(),
+    ),
+  );
+
+  return Temporal.ZonedDateTime.from({
+    year: parseInt(year, 10),
+    month: utcDoyDate.getUTCMonth() + 1,
+    day: utcDoyDate.getUTCDate(),
+    hour: parseInt(hour, 10),
+    minute: parseInt(minute, 10),
+    second: parseInt(second, 10),
+    millisecond: parseInt(millisecond ?? '0', 10),
+    timeZone: 'UTC',
+  }).toInstant();
+}
+
+/** HH:MM:SS.sss */
+export function durationToHms(time: Temporal.Duration): HMS_STRING {
+  const HH = formatNumber(time.hours, 2);
+  const MM = formatNumber(time.minutes, 2);
+  const SS = formatNumber(time.seconds, 2);
+  const sss = formatNumber(time.milliseconds, 3);
+
+  return \`\${HH}:\${MM}:\${SS}.\${sss}\` as HMS_STRING;
+}
+
+export function hmsToDuration(hms: HMS_STRING): Temporal.Duration {
+  const match = hms.match(HMS_REGEX);
+  if (match === null) {
+    throw new Error(\`Invalid HMS string: \${hms}\`);
+  }
+  const [, hours, minutes, seconds, milliseconds] = match as [unknown, string, string, string, string | undefined];
+  return Temporal.Duration.from({
+    hours: parseInt(hours, 10),
+    minutes: parseInt(minutes, 10),
+    seconds: parseInt(seconds, 10),
+    milliseconds: parseInt(milliseconds ?? '0', 10),
+  });
+}
+
+function formatNumber(number: number, size: number): string {
+  return number.toString().padStart(size, '0');
+}
+
+// @ts-ignore : Used in generated code
+function A(...args: [TemplateStringsArray, ...string[]] | [Temporal.Instant] | [string]): typeof Commands {
+  let time: Temporal.Instant;
+  if (Array.isArray(args[0])) {
+    time = doyToInstant(String.raw(...(args as [TemplateStringsArray, ...string[]])) as DOY_STRING);
+  } else if (typeof args[0] === 'string') {
+    time = doyToInstant(args[0] as DOY_STRING);
+  } else {
+    time = args[0] as Temporal.Instant;
+  }
+
+  return commandsWithTimeValue(time, TimingTypes.ABSOLUTE);
+}
+
+// @ts-ignore : Used in generated code
+function R(...args: [TemplateStringsArray, ...string[]] | [Temporal.Duration] | [string]): typeof Commands {
+  let duration: Temporal.Duration;
+  if (Array.isArray(args[0])) {
+    duration = hmsToDuration(String.raw(...(args as [TemplateStringsArray, ...string[]])) as HMS_STRING);
+  } else if (typeof args[0] === 'string') {
+    duration = hmsToDuration(args[0] as HMS_STRING);
+  } else {
+    duration = args[0] as Temporal.Duration;
+  }
+
+  return commandsWithTimeValue(duration, TimingTypes.COMMAND_RELATIVE);
+}
+
+// @ts-ignore : Used in generated code
+function E(...args: [TemplateStringsArray, ...string[]] | [Temporal.Duration] | [string]): typeof Commands {
+  let duration: Temporal.Duration;
+  if (Array.isArray(args[0])) {
+    duration = hmsToDuration(String.raw(...(args as [TemplateStringsArray, ...string[]])) as HMS_STRING);
+  } else if (typeof args[0] === 'string') {
+    duration = hmsToDuration(args[0] as HMS_STRING);
+  } else {
+    duration = args[0] as Temporal.Duration;
+  }
+  return commandsWithTimeValue(duration, TimingTypes.EPOCH_RELATIVE);
+}
+
+function commandsWithTimeValue<T extends TimingTypes>(
+  timeValue: Temporal.Instant | Temporal.Duration,
+  timeType: T,
+  // @ts-ignore : 'Commands' found in generated code
+): typeof Commands {
+  // @ts-ignore : 'Commands' found in generated code
+  return Object.keys(Commands).reduce((accum, key) => {
+    // @ts-ignore : 'Commands' found in generated code
+    const command = Commands[key as keyof Commands];
+    if (typeof command === 'function') {
+      if (timeType === TimingTypes.ABSOLUTE) {
+        accum[key] = (...args: Parameters<typeof command>): typeof command => {
+          return command(...args).absoluteTiming(timeValue);
+        };
+      } else if (timeType === TimingTypes.COMMAND_RELATIVE) {
+        accum[key] = (...args: Parameters<typeof command>): typeof command => {
+          return command(...args).relativeTiming(timeValue);
+        };
+      } else {
+        accum[key] = (...args: Parameters<typeof command>): typeof command => {
+          return command(...args).epochTiming(timeValue);
+        };
+      }
+    } else {
+      if (timeType === TimingTypes.ABSOLUTE) {
+        accum[key] = command.absoluteTiming(timeValue);
+      } else if (timeType === TimingTypes.COMMAND_RELATIVE) {
+        accum[key] = command.relativeTiming(timeValue);
+      } else {
+        accum[key] = command.epochTiming(timeValue);
+      }
+    }
+    return accum;
+    // @ts-ignore : 'Commands' found in generated code
+  }, {} as typeof Commands);
+}
+
+function indent(text: string, numTimes: number = 1, char: string = '  '): string {
+  return text
+    .split('\\n')
+    .map(line => char.repeat(numTimes) + line)
+    .join('\\n');
+}
+
+// This method takes an object and converts it to a string representation, with each key-value pair on a new line
+// and nested objects/arrays indented. The indentLevel parameter specifies the initial indentation level,
+// used to prettify the generated eDSL from SeqJSON
+function objectToString(obj: any, indentLevel: number = 1): string {
+  let output = '';
+
+  const print = (obj: any) => {
+    Object.keys(obj).forEach(key => {
+      const value = obj[key];
+
+      if (Array.isArray(value)) {
+        output += indent(\`\${key}: [\`, indentLevel) + '\\n';
+        indentLevel++;
+        value.forEach((item: any) => {
+          output += indent(\`{\`, indentLevel) + '\\n';
+          indentLevel++;
+          print(item);
+          indentLevel--;
+          output += indent(\`},\`, indentLevel) + '\\n';
+        });
+        indentLevel--;
+        output += indent(\`],\`, indentLevel) + '\\n';
+      } else if (typeof value === 'object') {
+        output += indent(\`\${key}:{\`, indentLevel) + '\\n';
+        indentLevel++;
+        print(value);
+        indentLevel--;
+        output += indent(\`},\`, indentLevel) + '\\n';
+      } else {
+        output += indent(\`\${key}: \${typeof value === 'string' ? \`'\${value}'\` : value},\`, indentLevel) + '\\n';
+      }
+    });
+  };
+
+  output += '{\\n';
+  print(obj);
+  output += \`}\`;
+
+  return output;
+}
+
+/** END Preface */
+/** START Sequence JSON Spec */
+  //https://github.com/NASA-AMMOS/seq-json-schema/blob/develop/types.ts
+
+  /* eslint-disable */
+/**
+ * This file was automatically generated by json-schema-to-typescript.
+ * DO NOT MODIFY IT BY HAND. Instead, modify the source JSONSchema file,
+ * and run json-schema-to-typescript to regenerate this file.
+ */
+
+export type VariableDeclaration = {
+  /**
+   * Variable type. Allowed types: FLOAT, INT, STRING, UINT, ENUM.
+   */
+  type: 'FLOAT' | 'INT' | 'STRING' | 'UINT' | 'ENUM';
+  /**
+   * User-friendly variable names that will be mapped to FSW variable names. Must begin with a letter and contain only letters, numbers, and underscores.
+   */
+  name: string;
+  /**
+   * For enumerated type variables, the name of the corresponding FSW-defined ENUM.
+   */
+  enum_name?: string;
+  /**
+   * A list of allowable values for this variable.
+   */
+  allowable_values?: unknown[];
+  /**
+   * One or more allowable ranges of values, for FLOAT, INT, or UINT variable types.
+   */
+  allowable_ranges?: VariableRange[];
+  /**
+   * The FSW-specified name for this variable that should be used in the translated sequence, in case this must be specified. Used for variables which are specially-handled onboard such as LCS (Last Command Status)
+   */
+  sc_name?: string;
+} & {
+  [k: string]: unknown;
+} & {
+  [k: string]: unknown;
+};
+/**
+ * Sequence steps can be grouped into a request, which can then be shifted or adjusted altogether as part of the request.
+ */
+export type Request = {
+  description?: Description;
+  ground_epoch?: GroundEpoch;
+  metadata?: Metadata;
+  /**
+   * Request Name, used for tracking commands back to the original request after ground expansion. Must be unique.
+   */
+  name: string;
+  /**
+   * Sequence steps that are part of this request.
+   *
+   * @minItems 1
+   */
+  steps: [Step, ...Step[]];
+  time?: Time;
+  type: 'request';
+} & Request1;
+/**
+ * Description. Can be attached to any sequence step.
+ */
+export type Description = string;
+export type Step = Activate | Command | GroundBlock | GroundEvent | Load;
+/**
+ * Array of command arguments
+ */
+export type Args = (
+  | StringArgument
+  | NumberArgument
+  | BooleanArgument
+  | SymbolArgument
+  | HexArgument
+  | RepeatArgument
+)[];
+export type Request1 =
+  | {
+      [k: string]: unknown;
+    }
+  | {
+      [k: string]: unknown;
+    };
+
+export interface SeqJson {
+  /**
+   * Unique identifier
+   */
+  id: string;
+  /**
+   * Local variable declarations.
+   *
+   * @minItems 1
+   */
+  locals?: [VariableDeclaration, ...VariableDeclaration[]];
+  metadata: Metadata;
+  /**
+   * Parameter variable declarations.
+   *
+   * @minItems 1
+   */
+  parameters?: [VariableDeclaration, ...VariableDeclaration[]];
+  /**
+   * Commands groups into requests
+   */
+  requests?: Request[];
+  /**
+   * Sequence steps
+   */
+  steps?: Step[];
+  /**
+   * Immediate commands which are interpreted by FSW and not part of any sequence.
+   */
+  immediate_commands?: ImmediateCommand[];
+  /**
+   * Hardware commands which are not interpreted by FSW and not part of any sequence.
+   */
+  hardware_commands?: HardwareCommand[];
+  [k: string]: unknown;
+}
+/**
+ * A range of allowable variable values between a defined min and max, inclusive. min and max must be numbers
+ */
+export interface VariableRange {
+  /**
+   * Minimum value of the variable, inclusive
+   */
+  min: number;
+  /**
+   * Maximum value of the variable, inclusive
+   */
+  max: number;
+}
+/**
+ * Flexible sequence metadata for any key-value pairs.
+ */
+export interface Metadata {
+  [k: string]: unknown;
+}
+/**
+ * Ground epoch object
+ */
+export interface GroundEpoch {
+  /**
+   * Epoch delta given as a duration, start time will be epoch+delta.
+   */
+  delta?: string;
+  /**
+   * Name of ground-defined epoch.
+   */
+  name?: string;
+  [k: string]: unknown;
+}
+/**
+ * Activate object
+ */
+export interface Activate {
+  args?: Args;
+  description?: Description;
+  /**
+   * Sequence target engine.
+   */
+  engine?: number;
+  /**
+   * Onboard epoch to pass to the sequence for derivation of epoch-relative timetags
+   */
+  epoch?: string;
+  metadata?: Metadata;
+  models?: Model[];
+  /**
+   * Onboard path and filename of sequence to be loaded.
+   */
+  sequence: string;
+  time: Time;
+  type: 'activate';
+}
+/**
+ * A step argument containing a string.
+ */
+export interface StringArgument {
+  /**
+   * An optional string argument name.
+   */
+  name?: string;
+  /**
+   * The string type.
+   */
+  type: 'string';
+  /**
+   * A valid string value.
+   */
+  value: string;
+}
+/**
+ * A step argument containing a number.
+ */
+export interface NumberArgument {
+  /**
+   * An optional number argument name.
+   */
+  name?: string;
+  /**
+   * The number type.
+   */
+  type: 'number';
+  /**
+   * The number value. The number must be valid.
+   */
+  value: number;
+}
+/**
+ * A step argument containing a boolean.
+ */
+export interface BooleanArgument {
+  /**
+   * An optional boolean argument name.
+   */
+  name?: string;
+  /**
+   * The boolean type.
+   */
+  type: 'boolean';
+  /**
+   * The boolean value. The value must be all lowercase.
+   */
+  value: boolean;
+}
+/**
+ * A step argument referencing a local or global variable, or some other symbolic name known to downstream modeling software (such as CONDITION in SEQGEN)
+ */
+export interface SymbolArgument {
+  /**
+   * An optional symbol argument name.
+   */
+  name?: string;
+  /**
+   * The symbol argument type.
+   */
+  type: 'symbol';
+  /**
+   * The symbolic name being referenced.
+   */
+  value: string;
+}
+/**
+ * A step argument containing an unsigned integer in hexadecimal format.
+ */
+export interface HexArgument {
+  /**
+   * An optional hex argument name.
+   */
+  name?: string;
+  /**
+   * The hex type.
+   */
+  type: 'hex';
+  /**
+   * The hexadecimal integer value, as a string prefixed with 0x. Digits A-F must be uppercase.
+   */
+  value: string;
+}
+/**
+ * An argument that can be repeated.
+ */
+export interface RepeatArgument {
+  /**
+   * An optional repeat argument name.
+   */
+  name?: string;
+  /**
+   * The repeat argument type.
+   */
+  type: 'repeat';
+  /**
+   * A repeat argument value, there can be a nested repeat arguments inside.
+   */
+  value: (StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument | RepeatArgument)[];
+}
+/**
+ * Model object that be included with commands to set variables for modeling purposes only, usually to direct sequence execution down a particular branch during modeling.
+ */
+export interface Model {
+  /**
+   * Duration to wait after step time to trigger model change
+   */
+  offset: string;
+  /**
+   * Value to set in variable.
+   */
+  value: string | number | boolean;
+  /**
+   * Variable to be set in the model
+   */
+  variable: string;
+}
+/**
+ * Time object
+ */
+export interface Time {
+  /**
+   * Relative or absolute time. Required for ABSOLUTE, COMMAND_RELATIVE, and EPOCH_RELATIVE time tags but not COMMAND_COMPLETE.
+   */
+  tag?: string;
+  /**
+   * Allowed time types: ABSOLUTE, COMMAND_RELATIVE, EPOCH_RELATIVE, or COMMAND_COMPLETE.
+   */
+  type: 'ABSOLUTE' | 'COMMAND_RELATIVE' | 'EPOCH_RELATIVE' | 'COMMAND_COMPLETE';
+}
+/**
+ * Command object
+ */
+export interface Command {
+  args: Args;
+  description?: Description;
+  metadata?: Metadata;
+  models?: Model[];
+  /**
+   * Command stem
+   */
+  stem: string;
+  time: Time;
+  type: 'command';
+  /**
+   * Name of a defined local variable to which the exit status of this command should be written to. For this to work, that local variable must have been defined with the 'SC_Name' property set to LCS
+   */
+  return_assign_to?: string;
+}
+/**
+ * Ground blocks
+ */
+export interface GroundBlock {
+  args?: Args;
+  description?: Description;
+  metadata?: Metadata;
+  models?: Model[];
+  /**
+   * Ground block name
+   */
+  name: string;
+  time: Time;
+  type: 'ground_block';
+}
+/**
+ * Ground events
+ */
+export interface GroundEvent {
+  args?: Args;
+  description?: Description;
+  metadata?: Metadata;
+  models?: Model[];
+  /**
+   * Ground event name
+   */
+  name: string;
+  time: Time;
+  type: 'ground_event';
+}
+/**
+ * Load object
+ */
+export interface Load {
+  args?: Args;
+  description?: Description;
+  /**
+   * Sequence target engine.
+   */
+  engine?: number;
+  /**
+   * Onboard epoch to pass to the sequence for derivation of epoch-relative timetags
+   */
+  epoch?: string;
+  metadata?: Metadata;
+  models?: Model[];
+  /**
+   * Onboard path and filename of sequence to be loaded.
+   */
+  sequence: string;
+  time: Time;
+  type: 'load';
+}
+/**
+ * Object representing a single Immediate Command
+ */
+export interface ImmediateCommand {
+  args: Args;
+  description?: Description;
+  metadata?: Metadata;
+  /**
+   * Command stem
+   */
+  stem: string;
+}
+/**
+ * Object representing a single Hardware Command
+ */
+export interface HardwareCommand {
+  description?: Description;
+  metadata?: Metadata;
+  /**
+   * Command stem
+   */
+  stem: string;
+}
+
+  
+/** END Sequence JSON Spec */
+declare global {
+
+	interface ECHO extends CommandStem<[ [{ 'echo_string': VarString<8, 1024> }] ]> {}
+
+	interface PREHEAT_OVEN extends CommandStem<[ [{ 'temperature': U8 }] ]> {}
+
+	interface THROW_BANANA extends CommandStem<[ [{ 'distance': U8 }] ]> {}
+
+	interface GROW_BANANA extends CommandStem<[ [{ 'quantity': U8,'durationSecs': U8 }] ]> {}
+
+	interface GrowBanana extends CommandStem<[ [{ 'quantity': U8,'durationSecs': U8 }] ]> {}
+
+	interface PREPARE_LOAF extends CommandStem<[ [{ 'tb_sugar': U8,'gluten_free': boolean }] ]> {}
+
+	interface PEEL_BANANA extends CommandStem<[ [{ 'peelDirection': ('fromStem' | 'fromTip') }] ]> {}
+
+
+/**
+* This command bakes a banana bread
+*
+*/
+	interface BAKE_BREAD extends CommandStem<[]> {}
+
+
+
+/**
+* This command waters the banana tree
+*
+*/
+	interface ADD_WATER extends CommandStem<[]> {}
+
+
+	interface PACKAGE_BANANA extends CommandStem<[ [{ 'lot_number': U16,'bundle': Array<{ 'bundle_name': VarString<8, 1024>, 'number_of_bananas': U8 }> }] ]> {}
+
+
+/**
+* Pick a banana
+*
+*/
+	interface PICK_BANANA extends CommandStem<[]> {}
+
+
+
+/**
+* Eat a banana
+*
+*/
+	interface EAT_BANANA extends CommandStem<[]> {}
+
+	const Commands: {
+		ECHO: typeof ECHO,
+		PREHEAT_OVEN: typeof PREHEAT_OVEN,
+		THROW_BANANA: typeof THROW_BANANA,
+		GROW_BANANA: typeof GROW_BANANA,
+		GrowBanana: typeof GrowBanana,
+		PREPARE_LOAF: typeof PREPARE_LOAF,
+		PEEL_BANANA: typeof PEEL_BANANA,
+		BAKE_BREAD: typeof BAKE_BREAD,
+		ADD_WATER: typeof ADD_WATER,
+		PACKAGE_BANANA: typeof PACKAGE_BANANA,
+		PICK_BANANA: typeof PICK_BANANA,
+		EAT_BANANA: typeof EAT_BANANA,
+	};
+}
+
+
+/**
+* This command will echo back a string
+* @param echo_string String to echo back
+*/
+function ECHO(...args: [{ 'echo_string': VarString<8, 1024> }]) {
+  return CommandStem.new({
+    stem: 'ECHO',
+    arguments: args
+  }) as ECHO;
+}
+
+
+/**
+* This command will turn on the oven
+* @param temperature Set the oven temperature
+*/
+function PREHEAT_OVEN(...args: [{ 'temperature': U8 }]) {
+  return CommandStem.new({
+    stem: 'PREHEAT_OVEN',
+    arguments: args
+  }) as PREHEAT_OVEN;
+}
+
+
+/**
+* This command will throw a banana
+* @param distance The distance you throw the bananan
+*/
+function THROW_BANANA(...args: [{ 'distance': U8 }]) {
+  return CommandStem.new({
+    stem: 'THROW_BANANA',
+    arguments: args
+  }) as THROW_BANANA;
+}
+
+
+/**
+* This command will grow bananas
+* @param quantity Number of bananas to grow
+* @param durationSecs How many seconds will it take to grow
+*/
+function GROW_BANANA(...args: [{ 'quantity': U8,'durationSecs': U8 }]) {
+  return CommandStem.new({
+    stem: 'GROW_BANANA',
+    arguments: args
+  }) as GROW_BANANA;
+}
+
+
+/**
+* This command will grow bananas, it's a duplicate to clash with an activity type of the same name
+* @param quantity Number of bananas to grow
+* @param durationSecs How many seconds will it take to grow
+*/
+function GrowBanana(...args: [{ 'quantity': U8,'durationSecs': U8 }]) {
+  return CommandStem.new({
+    stem: 'GrowBanana',
+    arguments: args
+  }) as GrowBanana;
+}
+
+
+/**
+* This command make the banana bread dough
+* @param tb_sugar How much sugar is needed
+* @param gluten_free Do you hate flavor
+*/
+function PREPARE_LOAF(...args: [{ 'tb_sugar': U8,'gluten_free': boolean }]) {
+  return CommandStem.new({
+    stem: 'PREPARE_LOAF',
+    arguments: args
+  }) as PREPARE_LOAF;
+}
+
+
+/**
+* This command peels a single banana
+* @param peelDirection Which way do you peel the banana
+*/
+function PEEL_BANANA(...args: [{ 'peelDirection': ('fromStem' | 'fromTip') }]) {
+  return CommandStem.new({
+    stem: 'PEEL_BANANA',
+    arguments: args
+  }) as PEEL_BANANA;
+}
+
+
+/**
+* This command bakes a banana bread
+*
+*/
+const BAKE_BREAD: BAKE_BREAD = CommandStem.new({
+	stem: 'BAKE_BREAD',
+	arguments: [],
+})
+
+
+/**
+* This command waters the banana tree
+*
+*/
+const ADD_WATER: ADD_WATER = CommandStem.new({
+	stem: 'ADD_WATER',
+	arguments: [],
+})
+
+
+/**
+* Dynamically bundle bananas into lots
+* @param lot_number Identification number assigned to a particular quantity
+* @param bundle A repeated set of strings and integer containing the arguments to the lot
+*/
+function PACKAGE_BANANA(...args: [{ 'lot_number': U16,'bundle': Array<{ 'bundle_name': VarString<8, 1024>, 'number_of_bananas': U8 }> }]) {
+  return CommandStem.new({
+    stem: 'PACKAGE_BANANA',
+    arguments: args
+  }) as PACKAGE_BANANA;
+}
+
+
+/**
+* Pick a banana
+*
+*/
+const PICK_BANANA: PICK_BANANA = CommandStem.new({
+	stem: 'PICK_BANANA',
+	arguments: [],
+})
+
+
+/**
+* Eat a banana
+*
+*/
+const EAT_BANANA: EAT_BANANA = CommandStem.new({
+	stem: 'EAT_BANANA',
+	arguments: [],
+})
+export const Commands = {		ECHO: ECHO,
+		PREHEAT_OVEN: PREHEAT_OVEN,
+		THROW_BANANA: THROW_BANANA,
+		GROW_BANANA: GROW_BANANA,
+		GrowBanana: GrowBanana,
+		PREPARE_LOAF: PREPARE_LOAF,
+		PEEL_BANANA: PEEL_BANANA,
+		BAKE_BREAD: BAKE_BREAD,
+		ADD_WATER: ADD_WATER,
+		PACKAGE_BANANA: PACKAGE_BANANA,
+		PICK_BANANA: PICK_BANANA,
+		EAT_BANANA: EAT_BANANA,
+};
+
+Object.assign(globalThis, { A:A, R:R, E:E, C:Commands, Sequence});
+"
+`;
