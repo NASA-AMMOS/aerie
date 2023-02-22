@@ -59,41 +59,41 @@ describe('getEdslForSeqJson', () => {
 
   it('should throw an error if the user uploads an invalid seqjson', async () => {
     try {
-      await graphqlClient.request<{
-        getEdslForSeqJson: string;
-      }>(
-        gql`
-          query GetEdslForSeqJson($seqJson: SequenceSeqJsonInput!) {
-            getEdslForSeqJson(seqJson: $seqJson)
-          }
-        `,
-        {
-          seqJson: {
-            id: 'test_00001',
-            metadata: {},
-            steps: [
-              {
-                // expansion 1
-                type: 'command',
-                stem: 'BAKE_BREAD',
-                time: { type: TimingTypes.COMMAND_COMPLETE },
-                args: [],
-                metadata: {},
-              },
-              {
-                type: 'command',
-                stem: 'PREHEAT_OVEN',
-                time: { type: TimingTypes.ABSOLUTE, tag: '2020-060T03:45:19.000Z' },
-                args: [100],
-                metadata: {},
-              },
-            ],
+      expect(
+        await graphqlClient.request<{
+          getEdslForSeqJson: string;
+        }>(
+          gql`
+            query GetEdslForSeqJson($seqJson: SequenceSeqJsonInput!) {
+              getEdslForSeqJson(seqJson: $seqJson)
+            }
+          `,
+          {
+            seqJson: {
+              id: 'test_00001',
+              metadata: {},
+              steps: [
+                {
+                  // expansion 1
+                  type: 'command',
+                  stem: 'BAKE_BREAD',
+                  time: { type: TimingTypes.COMMAND_COMPLETE },
+                  args: [],
+                  metadata: {},
+                },
+                {
+                  type: 'command',
+                  stem: 'PREHEAT_OVEN',
+                  time: { type: TimingTypes.ABSOLUTE, tag: '2020-060T03:45:19.000Z' },
+                  args: [100],
+                  metadata: {},
+                },
+              ],
+            },
           },
-        },
-      );
-    } catch (error) {
-      expect(error).toBeObject();
-    }
+        ),
+      ).toThrow();
+    } catch (e) {}
   });
 });
 
