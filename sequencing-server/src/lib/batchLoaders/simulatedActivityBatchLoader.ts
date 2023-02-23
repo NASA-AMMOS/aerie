@@ -166,10 +166,10 @@ export interface SimulatedActivity<
     };
   };
   attributes: SimulatedActivityAttributes<ActivityArguments, ActivityComputedAttributes>;
-  duration: Temporal.Duration;
+  duration: Temporal.Duration | null;
   startOffset: Temporal.Duration;
   startTime: Temporal.Instant;
-  endTime: Temporal.Instant;
+  endTime: Temporal.Instant | null;
   activityTypeName: string;
 }
 
@@ -206,10 +206,10 @@ export function mapGraphQLActivityInstance(
       },
     },
     id: activityInstance.id,
-    duration: Temporal.Duration.from(parse(activityInstance.duration).toISOString()),
+    duration: activityInstance.duration ? Temporal.Duration.from(parse(activityInstance.duration).toISOString()) : null,
     startOffset: Temporal.Duration.from(parse(activityInstance.start_offset).toISOString()),
     startTime: Temporal.Instant.from(activityInstance.start_time),
-    endTime: Temporal.Instant.from(activityInstance.end_time),
+    endTime: activityInstance.end_time ? Temporal.Instant.from(activityInstance.end_time) : null,
     simulationDatasetId: activityInstance.simulation_dataset.id,
     activityTypeName: activityInstance.activity_type_name,
     attributes: {
