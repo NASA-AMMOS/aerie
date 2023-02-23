@@ -17,6 +17,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.datasetIdP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.planIdP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.timestampP;
 import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.profileSetP;
@@ -130,4 +131,13 @@ public abstract class HasuraParsers {
             .map(
                 untuple(HasuraAction.UploadExternalDatasetInput::new),
                 $ -> tuple($.planId(), $.datasetStart(), $.profileSet())));
+
+  public static final JsonParser<HasuraAction<HasuraAction.ExtendExternalDatasetInput>> hasuraExtendExternalDatasetActionP
+      = hasuraActionF(
+          productP
+            .field("datasetId", datasetIdP)
+            .field("profileSet", profileSetP)
+            .map(
+                untuple(HasuraAction.ExtendExternalDatasetInput::new),
+                $ -> tuple($.datasetId(), $.profileSet())));
 }

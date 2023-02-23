@@ -21,6 +21,8 @@ public record HasuraAction<I extends HasuraAction.Input>(String name, I input, S
   public record UploadExternalDatasetInput(PlanId planId,
                                            Timestamp datasetStart,
                                            ProfileSet profileSet) implements Input {}
+  public record ExtendExternalDatasetInput(DatasetId datasetId,
+                                           ProfileSet profileSet) implements Input {}
 
   public record ConstraintsInput(String missionModelId, Optional<PlanId> planId) implements Input {}
 }

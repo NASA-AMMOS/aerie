@@ -220,6 +220,14 @@ const req = {
     return datasetId;
   },
 
+  async extendExternalDataset(request: APIRequestContext, input: ExternalDatasetExtendInput): Promise<number> {
+    const data = await req.hasura(request, gql.EXTEND_EXTERNAL_DATASET, input);
+    const { extendExternalDataset } = data;
+    const { datasetId } = extendExternalDataset;
+
+    return datasetId;
+  },
+
   async getExternalDataset(request: APIRequestContext, input: ExternalDatasetQueryInput) {
     return await req.hasura(request, gql.GET_EXTERNAL_DATASET, input);
   },

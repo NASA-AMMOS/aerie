@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.realDynamicsP;
@@ -122,6 +123,58 @@ import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.realDynamicsP
     }
   }
 
+  static void appendResourceProfiles(
+      final Connection connection,
+      final long datasetId,
+      final ProfileSet profileSet
+  ) throws SQLException
+  {
+    final Map<String, ProfileRecord> profileRecords;
+    try (final var getProfilesAction = new GetProfilesAction(connection)) {
+      profileRecords = getProfilesAction.get(datasetId)
+                                        .stream()
+                                        .collect(Collectors.toMap(ProfileRecord::name, $ -> $));
+    }
+    final var newProfiles = new ProfileSet(new HashMap<>(), new HashMap<>());
+    final var oldProfiles = new ProfileSet(new HashMap<>(), new HashMap<>());
+    for (final var entry : profileSet.realProfiles().entrySet()) {
+      final var profileName = entry.getKey();
+      final var profileRecord = Optional.ofNullable(profileRecords.get(profileName));
+      if (profileRecord.isPresent()) {
+        oldProfiles.realProfiles().put(profileName, entry.getValue());
+      } else {
+        newProfiles.realProfiles().put(profileName, entry.getValue());
+      }
+    }
+    for (final var entry : profileSet.discreteProfiles().entrySet()) {
+      final var profileName = entry.getKey();
+      final var profileRecord = Optional.ofNullable(profileRecords.get(profileName));
+      if (profileRecord.isPresent()) {
+        oldProfiles.discreteProfiles().put(profileName, entry.getValue());
+      } else {
+        newProfiles.discreteProfiles().put(profileName, entry.getValue());
+      }
+    }
+
+    try (final var postProfilesAction = new PostProfilesAction(connection)) {
+      final var newProfileRecords = postProfilesAction.apply(
+          datasetId,
+          newProfiles.realProfiles(),
+          newProfiles.discreteProfiles());
+      postProfileSegments(
+          connection,
+          datasetId,
+          newProfileRecords,
+          profileSet);
+    }
+
+    appendProfileSegments(
+        connection,
+        datasetId,
+        profileRecords,
+        oldProfiles);
+  }
+
   private static void postProfileSegments(
       final Connection connection,
       final long datasetId,
@@ -145,6 +198,44 @@ import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.realDynamicsP
             record,
             discreteProfiles.get(resource).getRight());
         default -> throw new Error("Unrecognized profile type " + record.type().getLeft());
+      }
+    }
+  }
+
+  private static void appendProfileSegments(
+      final Connection connection,
+      final long datasetId,
+      final Map<String, ProfileRecord> records,
+      final ProfileSet profileSet
+  ) throws SQLException {
+    final var realProfiles = profileSet.realProfiles();
+    final var discreteProfiles = profileSet.discreteProfiles();
+    for (final var entry : profileSet.realProfiles().entrySet()) {
+      final var resource = entry.getKey();
+      final var record = records.get(resource);
+      try (
+          final var appendProfileSegmentsAction = new AppendProfileSegmentsAction(connection);
+          final var updateProfileDurationAction = new UpdateProfileDurationAction(connection)) {
+        final var newProfileDuration = appendProfileSegmentsAction.apply(
+            datasetId,
+            record,
+            realProfiles.get(resource).getRight(),
+            realDynamicsP);
+        updateProfileDurationAction.apply(datasetId, record.id(), newProfileDuration);
+      }
+    }
+    for (final var entry : profileSet.discreteProfiles().entrySet()) {
+      final var resource = entry.getKey();
+      final var record = records.get(resource);
+      try (
+          final var appendProfileSegmentsAction = new AppendProfileSegmentsAction(connection);
+          final var updateProfileDurationAction = new UpdateProfileDurationAction(connection)) {
+        final var newProfileDuration = appendProfileSegmentsAction.apply(
+            datasetId,
+            record,
+            discreteProfiles.get(resource).getRight(),
+            serializedValueP);
+        updateProfileDurationAction.apply(datasetId, record.id(), newProfileDuration);
       }
     }
   }
