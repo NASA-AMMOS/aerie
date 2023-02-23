@@ -56,6 +56,10 @@ public class PlanCollaborationTests {
     helper.clearTable("merge_request");
     helper.clearTable("merge_staging_area");
     helper.clearTable("conflicting_activities");
+    helper.clearTable("anchor_validation_status");
+    helper.clearTable("activity_presets");
+    helper.clearTable("preset_to_directive");
+    helper.clearTable("preset_to_snapshot_directive");
   }
 
   @BeforeAll
@@ -2711,6 +2715,81 @@ public class PlanCollaborationTests {
       assertActivityEquals(activityABefore, getActivity(childPlanId, activityAId));
       assertActivityEquals(activityBBefore, getActivity(childPlanId, activityBId));
       assertActivityEquals(activityCBefore, getActivity(childPlanId, activityCId));
+    }
+  }
+
+  @Nested
+  class PresetTests{
+    private final gov.nasa.jpl.aerie.database.PresetTests presetTests = new gov.nasa.jpl.aerie.database.PresetTests();
+
+    // Activities added in branches keep their preset information when merged
+    @Test
+    void presetPersistsWithAdd() throws SQLException{
+      presetTests.setConnection(helper);
+      presetTests.insertActivityType(missionModelId, "test-activity");
+      final int planId = insertPlan(missionModelId);
+      final int branchId = duplicatePlan(planId, "Add Preset Branch");
+      final int presetId = presetTests.insertPreset(missionModelId, "Demo Preset", "test-activity");
+      final int activityId = insertActivity(branchId);
+      presetTests.assignPreset(presetId, activityId, branchId);
+
+      // Merge
+      final int mergeRQId = createMergeRequest(planId, branchId);
+      beginMerge(mergeRQId);
+      commitMerge(mergeRQId);
+
+      // Assertions
+      final var presetActivities = presetTests.getActivitiesWithPreset(presetId);
+      assertEquals(2, presetActivities.size());
+      assertEquals(presetId, presetTests.getPresetAssignedToActivity(activityId, planId).id());
+      assertEquals(presetId, presetTests.getPresetAssignedToActivity(activityId, branchId).id());
+    }
+
+    // The preset set in the supplying activity persists
+    @Test
+    void presetPersistsWithModify() throws SQLException{
+      presetTests.setConnection(helper);
+      presetTests.insertActivityType(missionModelId, "test-activity");
+      final int planId = insertPlan(missionModelId);
+      final int activityId = insertActivity(planId);
+      final int branchId = duplicatePlan(planId, "Modify Preset Branch");
+      final int presetId = presetTests.insertPreset(missionModelId, "Demo Preset", "test-activity", "{\"destination\": \"Mars\"}");
+      presetTests.assignPreset(presetId, activityId, branchId);
+
+      // Merge
+      final int mergeRQId = createMergeRequest(planId, branchId);
+      beginMerge(mergeRQId);
+      commitMerge(mergeRQId);
+
+      // Assertions
+      final var presetActivities = presetTests.getActivitiesWithPreset(presetId);
+      assertEquals(2, presetActivities.size());
+      assertEquals(presetId, presetTests.getPresetAssignedToActivity(activityId, planId).id());
+      assertEquals(presetId, presetTests.getPresetAssignedToActivity(activityId, branchId).id());
+    }
+
+    // If the preset used in a snapshot is deleted during the merge, the activity does not have a preset after the merge.
+    @Test
+    void postMergeNoPresetIfPresetDeleted() throws SQLException{
+      presetTests.setConnection(helper);
+      presetTests.insertActivityType(missionModelId, "test-activity");
+      final int planId = insertPlan(missionModelId);
+      final int branchId = duplicatePlan(planId, "Delete Preset Branch");
+      final int presetId = presetTests.insertPreset(missionModelId, "Demo Preset", "test-activity");
+      final int activityId = insertActivity(branchId);
+      presetTests.assignPreset(presetId, activityId, branchId);
+
+      // Merge
+      final int mergeRQId = createMergeRequest(planId, branchId);
+      beginMerge(mergeRQId);
+      presetTests.deletePreset(presetId);
+      commitMerge(mergeRQId);
+
+      // Assertions
+      final var presetActivities = presetTests.getActivitiesWithPreset(presetId);
+      assertTrue(presetActivities.isEmpty());
+      assertNull(presetTests.getPresetAssignedToActivity(activityId, planId));
+      assertNull(presetTests.getPresetAssignedToActivity(activityId, branchId));
     }
   }
 }
