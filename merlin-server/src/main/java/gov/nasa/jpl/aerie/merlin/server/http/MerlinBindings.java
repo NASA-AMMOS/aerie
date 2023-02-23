@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityDirectiveEventTriggerP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraConstraintsCodeAction;
-import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraExternalDatasetActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraUploadExternalDatasetActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelArgumentsActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelEventTriggerP;
@@ -359,7 +359,7 @@ public final class MerlinBindings implements Plugin {
 
   private void addExternalDataset(final Context ctx) {
     try {
-      final var input = parseJson(ctx.body(), hasuraExternalDatasetActionP).input();
+      final var input = parseJson(ctx.body(), hasuraUploadExternalDatasetActionP).input();
 
       final var planId = input.planId();
       final var datasetStart = input.datasetStart();
