@@ -1,6 +1,17 @@
 table:
   name: activity_type
   schema: public
+array_relationships:
+  - name: presets
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: activity_presets
+        insertion_order: null
+        column_mapping:
+          model_id: model_id
+          name: associated_activity_type
 remote_relationships:
 - name: expansion_rules
   definition:

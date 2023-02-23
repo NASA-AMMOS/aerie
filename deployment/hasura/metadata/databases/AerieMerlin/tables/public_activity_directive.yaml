@@ -23,6 +23,15 @@ object_relationships:
       table:
         name: anchor_validation_status
         schema: public
+- name: applied_preset
+  using:
+    foreign_key_constraint_on:
+      columns:
+        - activity_id
+        - plan_id
+      table:
+        name: preset_to_directive
+        schema: public
 array_relationships:
 - name: simulated_activities
   using:
