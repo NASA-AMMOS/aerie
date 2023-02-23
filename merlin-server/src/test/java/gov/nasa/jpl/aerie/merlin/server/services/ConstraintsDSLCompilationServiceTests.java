@@ -1,10 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.constraints.time.AbsoluteInterval;
-import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.AccumulatedDuration;
-import gov.nasa.jpl.aerie.constraints.time.Spans;
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
 import gov.nasa.jpl.aerie.constraints.tree.ActivityWindow;
 import gov.nasa.jpl.aerie.constraints.tree.And;
@@ -523,6 +521,18 @@ class ConstraintsDSLCompilationServiceTests {
             }
         """,
         new ViolationsOfWindows(new Equal<>(new Plus(new RealResource("state of charge"), new RealValue(2.0)), new RealValue(4.0)))
+    );
+  }
+
+  @Test
+  void testNegate() {
+    checkSuccessfulCompilation(
+        """
+            export default() => {
+              return Real.Resource("state of charge").negate().equal(Real.Value(4.0))
+            }
+        """,
+        new ViolationsOfWindows(new Equal<>(new Times(new RealResource("state of charge"), -1.0), new RealValue(4.0)))
     );
   }
 
