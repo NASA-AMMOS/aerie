@@ -28,7 +28,12 @@ import java.sql.SQLException;
         );
         alter table span
           attach partition span_%d for values in (%d);
-        """.formatted(datasetId, datasetId, datasetId, datasetId);
+        alter table span_%d add constraint span_has_parent_span
+          foreign key (dataset_id, parent_id)
+          references span_%d
+          on update cascade
+          on delete cascade;
+        """.formatted(datasetId, datasetId, datasetId, datasetId, datasetId, datasetId, datasetId);
     return sql;
   }
 

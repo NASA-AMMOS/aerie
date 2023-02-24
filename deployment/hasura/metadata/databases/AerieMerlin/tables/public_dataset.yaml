@@ -18,9 +18,11 @@ array_relationships:
         schema: public
 - name: spans
   using:
-    foreign_key_constraint_on:
-      column: dataset_id
-      table:
+    manual_configuration:
+      column_mapping:
+        id: dataset_id
+      insertion_order: null
+      remote_table:
         name: span
         schema: public
 - name: topics
