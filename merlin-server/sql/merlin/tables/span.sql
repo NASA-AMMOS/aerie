@@ -54,3 +54,17 @@ create constraint trigger insert_update_span_trigger
   after insert or update on span
   for each row
 execute function span_integrity_function();
+
+create procedure span_add_foreign_key_to_partition(table_name varchar)
+  security invoker
+  language plpgsql as $$begin
+  execute 'alter table ' || table_name || ' add constraint span_has_parent_span
+    foreign key (dataset_id, parent_id)
+    references ' || table_name || '
+    on update cascade
+    on delete cascade;';
+end$$;
+
+comment on procedure span_add_foreign_key_to_partition is e''
+  'Creates a self-referencing foreign key on a particular partition of the span table. This should be called'
+  'on every partition as soon as it is created';

@@ -21,6 +21,8 @@ alter table event
       on delete cascade;
 
 -- span
+drop procedure span_add_foreign_key_to_partition;
+
 do $$
   declare
     dataset_id integer;

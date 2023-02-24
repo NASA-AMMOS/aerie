@@ -87,11 +87,7 @@ begin
 
   -- Create a self-referencing foreign key on the span partition table. We avoid referring to the top level span table
   -- in order to avoid lock contention with concurrent inserts
-  execute 'alter table span_' || dataset_id || ' add constraint span_has_parent_span
-    foreign key (dataset_id, parent_id)
-    references span_' || dataset_id || '
-    on update cascade
-    on delete cascade;';
+  call span_add_foreign_key_to_partition('span_' || dataset_id);
   return dataset_ref;
 end$$;
 
