@@ -66,6 +66,7 @@ drop trigger update_topic_trigger on topic;
 drop function update_topic_cascade;
 
 -- dataset
+drop function allocate_dataset_partitions;
 drop trigger delete_dataset_trigger on dataset;
 drop function delete_dataset_cascade;
 
