@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.StartOffsetReducer;
+import gov.nasa.jpl.aerie.merlin.driver.engine.JobSchedule;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
@@ -35,6 +36,7 @@ public class ResumableSimulationDriver<Model> {
   private TemporalEventSource timeline = new TemporalEventSource();
   private final MissionModel<Model> missionModel;
   private final Duration planDuration;
+  private JobSchedule.Batch<SimulationEngine.JobId> batch;
 
   private final Topic<ActivityDirectiveId> activityTopic = new Topic<>();
 
@@ -54,6 +56,7 @@ public class ResumableSimulationDriver<Model> {
     plannedDirectiveToTask = new HashMap<>();
     this.planDuration = planDuration;
     initSimulation();
+    batch = null;
   }
 
   // This method is currently only used in one test.
@@ -83,7 +86,7 @@ public class ResumableSimulationDriver<Model> {
     {
       engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
 
-      final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
+      batch = engine.extractNextJobs(Duration.MAX_VALUE);
       final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
       timeline.add(commit);
     }
@@ -91,20 +94,20 @@ public class ResumableSimulationDriver<Model> {
 
   private void simulateUntil(Duration endTime){
     assert(endTime.noShorterThan(curTime));
-    while (true) {
-      final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-      // Increment real time, if necessary.
-      if(batch.offsetFromStart().longerThan(endTime) || endTime.isEqualTo(Duration.MAX_VALUE)){
-        break;
+      if(batch == null){
+        batch = engine.extractNextJobs(Duration.MAX_VALUE);
       }
-      final var delta = batch.offsetFromStart().minus(curTime);
-      curTime = batch.offsetFromStart();
-      timeline.add(delta);
-      // Run the jobs in this batch.
-      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
-      timeline.add(commit);
+      // Increment real time, if necessary.
+      while(!batch.offsetFromStart().longerThan(endTime) && !endTime.isEqualTo(Duration.MAX_VALUE)) {
+        final var delta = batch.offsetFromStart().minus(curTime);
+        curTime = batch.offsetFromStart();
+        timeline.add(delta);
+        // Run the jobs in this batch.
+        final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
+        timeline.add(commit);
 
-    }
+        batch = engine.extractNextJobs(Duration.MAX_VALUE);
+      }
     lastSimResults = null;
   }
 
@@ -197,14 +200,16 @@ public class ResumableSimulationDriver<Model> {
 
   private void simulateSchedule(final Map<ActivityDirectiveId, ActivityDirective> schedule)
   {
-    if(schedule.isEmpty()){
+    if (schedule.isEmpty()) {
       throw new IllegalArgumentException("simulateSchedule() called with empty schedule, use simulateUntil() instead");
     }
 
     // Get all activities as close as possible to absolute time, then schedule all activities.
     // Using HashMap explicitly because it allows `null` as a key.
     // `null` key means that an activity is not waiting on another activity to finish to know its start time
-    final HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(planDuration, schedule).compute();
+    final HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(
+        planDuration,
+        schedule).compute();
 
     scheduleActivities(
         schedule,
@@ -215,14 +220,15 @@ public class ResumableSimulationDriver<Model> {
     );
 
     var allTaskFinished = false;
-    while (true) {
-      final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-      // Increment real time, if necessary.
-      final var delta = batch.offsetFromStart().minus(curTime);
-      //once all tasks are finished, we need to wait for events triggered at the same time
-      if(allTaskFinished && !delta.isZero()){
-        break;
-      }
+
+    if (batch == null) {
+      batch = engine.extractNextJobs(Duration.MAX_VALUE);
+    }
+    // Increment real time, if necessary.
+    Duration delta = batch.offsetFromStart().minus(curTime);
+
+    //once all tasks are finished, we need to wait for events triggered at the same time
+    while (!allTaskFinished || delta.isZero()) {
       curTime = batch.offsetFromStart();
       timeline.add(delta);
       // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
@@ -233,10 +239,16 @@ public class ResumableSimulationDriver<Model> {
       timeline.add(commit);
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time
-      if (!plannedDirectiveToTask.isEmpty() && plannedDirectiveToTask.values().stream().allMatch(engine::isTaskComplete)) {
+      if (!plannedDirectiveToTask.isEmpty() && plannedDirectiveToTask
+          .values()
+          .stream()
+          .allMatch(engine::isTaskComplete)) {
         allTaskFinished = true;
       }
 
+      // Update batch and increment real time, if necessary.
+      batch = engine.extractNextJobs(Duration.MAX_VALUE);
+      delta = batch.offsetFromStart().minus(curTime);
     }
     lastSimResults = null;
   }

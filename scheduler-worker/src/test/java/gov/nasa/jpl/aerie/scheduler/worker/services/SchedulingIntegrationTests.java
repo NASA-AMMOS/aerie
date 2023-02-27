@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOURS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MINUTES;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 import static org.junit.jupiter.api.Assertions.*;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
@@ -1679,5 +1680,60 @@ public class SchedulingIntegrationTests {
     assertEquals(SerializedValue.of(1), growBanana.serializedActivity().getArguments().get("quantity"));
     assertEquals(SerializedValue.of("fromStem"), peelBanana.serializedActivity().getArguments().get("peelDirection"));
     assertEquals(Duration.of(65, Duration.MINUTES), peelBanana.startOffset());
+  }
+
+  private static final MissionModelDescription FOO = new MissionModelDescription(
+      "foo",
+      Map.of(),
+      Path.of(System.getenv("AERIE_ROOT"), "examples", "foo-missionmodel", "build", "libs")
+  );
+
+  /**
+   * Test that the daemon task did not get dropped.
+   * If the daemon was dropped, then DaemonCheckerActivity will throw a RuntimeException when simulated.
+   */
+  @Test
+  void daemonTaskTest(){
+    final PlanningHorizon PLANNING_HORIZON = new PlanningHorizon(
+        TimeUtility.fromDOY("2030-001T00:00:00"),
+        TimeUtility.fromDOY("2030-001T02:00:00"));
+    final var results = runScheduler(
+        FOO,
+        List.of(
+            new ActivityDirective(
+                Duration.of(5, MINUTES),
+                "ZeroDurationUncontrollableActivity",
+                Map.of(),
+                null,
+                true)
+        ),
+        List.of(new SchedulingGoal(new GoalId(0L), """
+      export default () => Goal.CoexistenceGoal({
+        forEach: ActivityExpression.ofType(ActivityTypes.ZeroDurationUncontrollableActivity),
+        activityTemplate: ActivityTemplates.DaemonCheckerActivity({
+          "minutesElapsed": 10
+        }),
+        startsAt: TimingConstraint.singleton(WindowProperty.START).plus(Temporal.Duration.from({ minutes: 5, seconds: 1 })),
+        });
+      """, true)), PLANNING_HORIZON);
+
+    assertEquals(1, results.scheduleResults.goalResults().size());
+    assertTrue(results.scheduleResults.goalResults().get(new GoalId(0L)).satisfied());
+
+    assertEquals(2, results.updatedPlan.size());
+
+    final var planByActivityType = partitionByActivityType(results.updatedPlan());
+    assertEquals(2, planByActivityType.size());
+
+    final var zeroDurations = planByActivityType.get("ZeroDurationUncontrollableActivity");
+    final var daemonCheckers = planByActivityType.get("DaemonCheckerActivity");
+    assertEquals(1, zeroDurations.size());
+    assertEquals(1, daemonCheckers.size());
+
+    final var zeroDuration = zeroDurations.iterator().next();
+    final var daemonChecker = daemonCheckers.iterator().next();
+
+    assertEquals(Duration.of(5, MINUTES), zeroDuration.startOffset());
+    assertEquals(Duration.of(10, MINUTES).plus(Duration.of(1, SECOND)), daemonChecker.startOffset());
   }
 }
