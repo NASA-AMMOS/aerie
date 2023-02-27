@@ -64,7 +64,8 @@ execute function event_integrity_function();
 create function delete_profile_cascade()
   returns trigger
   security invoker
-  language plpgsql as $$begin
+  language plpgsql as
+$$begin
   delete from profile_segment
   where profile_segment.dataset_id = old.dataset_id and profile_segment.profile_id = old.id;
   return old;
@@ -217,7 +218,8 @@ $$;
 create function delete_dataset_cascade()
   returns trigger
   security definer
-  language plpgsql as $$begin
+  language plpgsql as
+$$begin
   delete from span where span.dataset_id = old.id;
   return old;
 end$$;

@@ -31,9 +31,10 @@ comment on column profile.duration is e''
 create function delete_profile_cascade()
   returns trigger
   security invoker
-  language plpgsql as $$begin
-    delete from profile_segment
-    where profile_segment.dataset_id = old.dataset_id and profile_segment.profile_id = old.id;
+  language plpgsql as
+$$begin
+  delete from profile_segment
+  where profile_segment.dataset_id = old.dataset_id and profile_segment.profile_id = old.id;
   return old;
 end$$;
 

@@ -36,15 +36,16 @@ end $$;
 create function delete_dataset_cascade()
   returns trigger
   security definer
-  language plpgsql as $$begin
-    delete from span where span.dataset_id = old.id;
-    return old;
+  language plpgsql as
+$$begin
+  delete from span where span.dataset_id = old.id;
+  return old;
 end$$;
 
 create trigger delete_dataset_trigger
   after delete on dataset
   for each row
-  execute function delete_dataset_cascade();
+execute function delete_dataset_cascade();
 
 comment on trigger delete_dataset_trigger on dataset is e''
   'Trigger to simulate an ON DELETE CASCADE foreign key constraint between span and dataset. The reason to'
