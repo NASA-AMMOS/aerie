@@ -352,18 +352,22 @@ public class SchedulingIntegrationTests {
     final var results = runScheduler(
         BANANANATION,
         List.of(
-            new MockMerlinService.PlannedActivityInstance(
+            new ActivityDirective(
+                Duration.ZERO,
                 "BiteBanana",
                 Map.of("biteSize", SerializedValue.of(1)),
-                Duration.ZERO
+                null,
+                true
             ),
-            new MockMerlinService.PlannedActivityInstance(
+            new ActivityDirective(
+                Duration.MINUTE,
                 "GrowBanana",
                 Map.of(
                     "quantity", SerializedValue.of(1),
                     "growingDuration", SerializedValue.of(Duration.MINUTE.in(MICROSECOND))
                 ),
-                Duration.MINUTE
+                null,
+                true
             )
         ),
         List.of(new SchedulingGoal(new GoalId(0L), """
@@ -396,9 +400,9 @@ public class SchedulingIntegrationTests {
     iterator.next();
     final var created = iterator.next();
 
-    assertEquals(SerializedValue.of(10), created.args().get("quantity"));
-    assertEquals(SerializedValue.of(Duration.of(2, Duration.MINUTES).in(MICROSECOND)), created.args().get("growingDuration"));
-    assertEquals(Duration.of(7, Duration.MINUTES), created.startTime());
+    assertEquals(SerializedValue.of(10), created.serializedActivity().getArguments().get("quantity"));
+    assertEquals(SerializedValue.of(Duration.of(2, Duration.MINUTES).in(MICROSECOND)), created.serializedActivity().getArguments().get("growingDuration"));
+    assertEquals(Duration.of(7, Duration.MINUTES), created.startOffset());
   }
 
   @Test
