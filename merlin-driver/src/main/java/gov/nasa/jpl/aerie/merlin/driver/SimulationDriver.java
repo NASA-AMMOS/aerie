@@ -90,12 +90,6 @@ public final class SimulationDriver {
         timeline.add(commit);
       }
 
-      var combinedGraph = EventGraph.<Event>empty();
-      for (final var timePoint : timeline) {
-        if (!(timePoint instanceof TemporalEventSource.TimePoint.Commit t)) continue;
-        combinedGraph = EventGraph.sequentially(combinedGraph, t.events());
-      }
-
       // A query depends on an event if
       // - that event has the same topic as the query
       // - that event occurs causally before the query

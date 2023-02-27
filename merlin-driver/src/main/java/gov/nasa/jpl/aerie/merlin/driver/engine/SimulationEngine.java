@@ -59,6 +59,9 @@ public final class SimulationEngine implements AutoCloseable {
   /** The set of queries depending on a given set of topics. */
   private final Subscriptions<Topic<?>, ResourceId> waitingResources = new Subscriptions<>();
 
+  /** The history of when tasks read cells */
+  private final Profile<Pair<TaskId, Topic<?>>> cellReadHistory = new Profile<>();
+
   /** The execution state for every task. */
   private final Map<TaskId, ExecutionState<?>> tasks = new HashMap<>();
   /** The getter for each tracked condition. */
@@ -311,7 +314,7 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration currentTime,
       final Duration horizonTime,
       final Topic<Topic<?>> queryTopic) {
-    final var querier = new EngineQuerier(frame, queryTopic, condition.sourceTask());
+    final var querier = new EngineQuerier(currentTime, frame, queryTopic, condition.sourceTask());
     final var prediction = this.conditions
         .get(condition)
         .nextSatisfied(querier, horizonTime.minus(currentTime))
@@ -335,7 +338,7 @@ public final class SimulationEngine implements AutoCloseable {
       final TaskFrame<JobId> frame,
       final Duration currentTime
   ) {
-    final var querier = new EngineQuerier(frame);
+    final var querier = new EngineQuerier(currentTime, frame);
     this.resources.get(resource).append(currentTime, querier);
 
     this.waitingResources.subscribeQuery(resource, querier.referencedTopics);
@@ -677,18 +680,22 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** A handle for processing requests from a modeled resource or condition. */
-  private static final class EngineQuerier implements Querier {
+  private final class EngineQuerier implements Querier {
+    private final Duration currentTime;
     private final TaskFrame<JobId> frame;
     private final Set<Topic<?>> referencedTopics = new HashSet<>();
     private final Optional<Pair<Topic<Topic<?>>, TaskId>> queryTrackingInfo;
     private Optional<Duration> expiry = Optional.empty();
 
-    public EngineQuerier(final TaskFrame<JobId> frame, final Topic<Topic<?>> queryTopic, final TaskId associatedTask) {
+    public EngineQuerier(final Duration currentTime, final TaskFrame<JobId> frame, final Topic<Topic<?>> queryTopic,
+                         final TaskId associatedTask) {
+      this.currentTime = currentTime;
       this.frame = Objects.requireNonNull(frame);
       this.queryTrackingInfo = Optional.of(Pair.of(Objects.requireNonNull(queryTopic), associatedTask));
     }
 
-    public EngineQuerier(final TaskFrame<JobId> frame) {
+    public EngineQuerier(final Duration currentTime, final TaskFrame<JobId> frame) {
+      this.currentTime = currentTime;
       this.frame = Objects.requireNonNull(frame);
       this.queryTrackingInfo = Optional.empty();
     }
@@ -699,7 +706,8 @@ public final class SimulationEngine implements AutoCloseable {
       @SuppressWarnings("unchecked")
       final var query = ((EngineCellId<?, State>) token);
 
-      this.queryTrackingInfo.ifPresent(info -> this.frame.emit(Event.create(info.getLeft(), query.topic(), info.getRight())));
+      this.queryTrackingInfo.ifPresent(info -> cellReadHistory.append(currentTime, Pair.of(info.getRight(), query.topic())));
+
 
       this.expiry = min(this.expiry, this.frame.getExpiry(query.query()));
       this.referencedTopics.add(query.topic());
@@ -738,7 +746,7 @@ public final class SimulationEngine implements AutoCloseable {
       @SuppressWarnings("unchecked")
       final var query = ((EngineCellId<?, State>) token);
 
-      this.frame.emit(Event.create(queryTopic, query.topic(), activeTask));
+      cellReadHistory.append(currentTime, Pair.of(activeTask, query.topic()));
 
       // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
       //  if the same state is requested multiple times in a row.
