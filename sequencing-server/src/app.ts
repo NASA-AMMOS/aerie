@@ -1,4 +1,6 @@
 import * as ampcs from '@nasa-jpl/aerie-ampcs';
+import Ajv from 'ajv/dist/2020.js';
+import schema from '@nasa-jpl/seq-json-schema/schema.json' assert { type: 'json' };
 import type { CacheItem, UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
 import { Result } from '@nasa-jpl/aerie-ts-user-code-runner/build/utils/monads.js';
 import bodyParser from 'body-parser';
@@ -911,16 +913,36 @@ app.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (req, res, 
  */
 app.post('/get-edsl-for-seqjson', async (req, res, next) => {
   const seqJson = req.body.input.seqJson as SeqJson;
+  const validate = new Ajv({ strict: false }).compile(schema);
+
+  if (!validate(Sequence.fromSeqJson(seqJson))) {
+    throw new Error(
+      `POST /bulk-get-edsl-for-seqjson: Uploaded sequence JSON is invalid and does not match the current spec`,
+    );
+  }
 
   res.json(Sequence.fromSeqJson(seqJson).toEDSLString());
+
   return next();
 });
 
 // Generate Sequence EDSL from many sequence JSONs
 app.post('/bulk-get-edsl-for-seqjson', async (req, res, next) => {
   const seqJsons = req.body.input.seqJsons as SeqJson[];
+  const validate = new Ajv({ strict: false }).compile(schema);
 
-  res.json(seqJsons.map(seqJson => Sequence.fromSeqJson(seqJson).toEDSLString()));
+  res.json(
+    seqJsons.map(seqJson => {
+      if (!validate(Sequence.fromSeqJson(seqJson))) {
+        throw new Error(
+          `POST /bulk-get-edsl-for-seqjson: Uploaded sequence JSON is invalid and does not match the current spec`,
+        );
+      }
+
+      return Sequence.fromSeqJson(seqJson).toEDSLString();
+    }),
+  );
+
   return next();
 });
 
