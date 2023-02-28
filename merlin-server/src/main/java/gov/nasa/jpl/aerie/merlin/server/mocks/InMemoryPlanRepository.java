@@ -8,7 +8,6 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
-import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
@@ -16,7 +15,6 @@ import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,32 +83,14 @@ public final class InMemoryPlanRepository implements PlanRepository {
     return new HashMap<>(plan.activityDirectives);
   }
 
-  public CreatedPlan createPlan(final NewPlan newPlan) {
+  public CreatedPlan storePlan(final Plan other) {
     final PlanId planId = new PlanId(this.nextPlanId++);
-
-    final Plan plan = new Plan();
-    plan.name = newPlan.name;
-    plan.startTimestamp = newPlan.startTimestamp;
-    plan.endTimestamp = newPlan.endTimestamp;
-    plan.configuration = newPlan.configuration;
-    plan.missionModelId = newPlan.missionModelId;
-    plan.activityDirectives = new HashMap<>();
-
-    final List<ActivityDirectiveId> activityIds;
-    if (newPlan.activityDirectives == null) {
-      activityIds = new ArrayList<>();
-    } else {
-      activityIds = new ArrayList<>(newPlan.activityDirectives.size());
-      for (final var activity : newPlan.activityDirectives) {
-        final ActivityDirectiveId activityId = new ActivityDirectiveId(this.nextActivityId++);
-
-        activityIds.add(activityId);
-        plan.activityDirectives.put(activityId, activity);
-      }
-    }
+    final Plan plan = new Plan(other);
+    final List<ActivityDirectiveId> activityIds =
+        other.activityDirectives != null ? List.copyOf(plan.activityDirectives.keySet()) : List.of();
+    if (other.activityDirectives == null) plan.activityDirectives = new HashMap<>();
 
     this.plans.put(planId, Pair.of(0L, plan));
-
     return new CreatedPlan(planId, activityIds);
   }
 

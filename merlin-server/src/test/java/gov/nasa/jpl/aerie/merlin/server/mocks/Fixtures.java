@@ -4,11 +4,11 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
-import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
+import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 
 public final class Fixtures {
   public final InMemoryPlanRepository planRepository;
@@ -35,11 +35,11 @@ public final class Fixtures {
       this.NONEXISTENT_MISSION_MODEL_ID = StubMissionModelService.NONEXISTENT_MISSION_MODEL_ID;
       this.EXISTENT_MISSION_MODEL_ID = StubMissionModelService.EXISTENT_MISSION_MODEL_ID;
 
-      this.EXISTENT_PLAN_ID = this.planRepository.createPlan(createValidNewPlan("plan 1")).planId();
+      this.EXISTENT_PLAN_ID = this.planRepository.storePlan(createValidNewPlan("plan 1")).planId();
       this.NONEXISTENT_PLAN_ID = "nonexistent plan";
 
-      this.planRepository.createPlan(createValidNewPlan("plan 2"));
-      this.planRepository.createPlan(createValidNewPlan("plan 3"));
+      this.planRepository.storePlan(createValidNewPlan("plan 2"));
+      this.planRepository.storePlan(createValidNewPlan("plan 3"));
 
       {
         final ActivityDirective activity = createValidActivityInstance();
@@ -53,14 +53,14 @@ public final class Fixtures {
     }
   }
 
-  public NewPlan createValidNewPlan(final String name) {
-    final NewPlan plan = new NewPlan();
+  public Plan createValidNewPlan(final String name) {
+    final Plan plan = new Plan();
 
     plan.missionModelId = this.EXISTENT_MISSION_MODEL_ID;
     plan.name = name;
     plan.startTimestamp = Timestamp.fromString("0000-111T22:33:44");
     plan.endTimestamp = Timestamp.fromString("1111-222T00:44:55");
-    plan.activityDirectives = new ArrayList<>();
+    plan.activityDirectives = new HashMap<>();
 
     return plan;
   }
