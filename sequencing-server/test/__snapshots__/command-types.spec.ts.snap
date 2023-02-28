@@ -1054,6 +1054,8 @@ declare global {
 
 	interface GROW_BANANA extends CommandStem<[ [{ 'quantity': U8,'durationSecs': U8 }] ]> {}
 
+	interface GrowBanana extends CommandStem<[ [{ 'quantity': U8,'durationSecs': U8 }] ]> {}
+
 	interface PREPARE_LOAF extends CommandStem<[ [{ 'tb_sugar': U8,'gluten_free': boolean }] ]> {}
 
 	interface PEEL_BANANA extends CommandStem<[ [{ 'peelDirection': ('fromStem' | 'fromTip') }] ]> {}
@@ -1096,6 +1098,7 @@ declare global {
 		PREHEAT_OVEN: typeof PREHEAT_OVEN,
 		THROW_BANANA: typeof THROW_BANANA,
 		GROW_BANANA: typeof GROW_BANANA,
+		GrowBanana: typeof GrowBanana,
 		PREPARE_LOAF: typeof PREPARE_LOAF,
 		PEEL_BANANA: typeof PEEL_BANANA,
 		BAKE_BREAD: typeof BAKE_BREAD,
@@ -1153,6 +1156,19 @@ function GROW_BANANA(...args: [{ 'quantity': U8,'durationSecs': U8 }]) {
     stem: 'GROW_BANANA',
     arguments: args
   }) as GROW_BANANA;
+}
+
+
+/**
+* This command will grow bananas, it's a duplicate to clash with an activity type of the same name
+* @param quantity Number of bananas to grow
+* @param durationSecs How many seconds will it take to grow
+*/
+function GrowBanana(...args: [{ 'quantity': U8,'durationSecs': U8 }]) {
+  return CommandStem.new({
+    stem: 'GrowBanana',
+    arguments: args
+  }) as GrowBanana;
 }
 
 
@@ -1236,6 +1252,7 @@ export const Commands = {		ECHO: ECHO,
 		PREHEAT_OVEN: PREHEAT_OVEN,
 		THROW_BANANA: THROW_BANANA,
 		GROW_BANANA: GROW_BANANA,
+		GrowBanana: GrowBanana,
 		PREPARE_LOAF: PREPARE_LOAF,
 		PEEL_BANANA: PEEL_BANANA,
 		BAKE_BREAD: BAKE_BREAD,

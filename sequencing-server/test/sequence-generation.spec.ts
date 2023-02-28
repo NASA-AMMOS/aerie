@@ -50,6 +50,7 @@ describe('sequence generation', () => {
   let expansionId1: number;
   let expansionId2: number;
   let expansionId3: number;
+  let expansionId4: number;
 
   beforeEach(async () => {
     expansionId1 = await insertExpansion(
@@ -120,12 +121,42 @@ describe('sequence generation', () => {
     }
     `,
     );
+    expansionId4 = await insertExpansion(
+      graphqlClient,
+      'GrowBanana',
+      `
+    export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+      return [
+        C.GrowBanana({ quantity: 1, durationSecs: 10 })
+      ];
+    }
+    `,
+    );
   });
 
   afterEach(async () => {
     await removeExpansion(graphqlClient, expansionId1);
     await removeExpansion(graphqlClient, expansionId2);
     await removeExpansion(graphqlClient, expansionId3);
+  });
+
+  it('should allow an activity type and command to have the same name', async () => {
+    const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId4]);
+
+    await insertActivityDirective(graphqlClient, planId, 'GrowBanana');
+
+    // Simulate Plan
+    const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
+
+    // Expand Plan
+    const expansionRunPk = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
+
+    expect(expansionSetId).toBeGreaterThan(0);
+    expect(expansionRunPk).toBeGreaterThan(0);
+
+    await removeExpansionRun(graphqlClient, expansionRunPk);
+    await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
+    await removeExpansionSet(graphqlClient, expansionSetId);
   });
 
   it('should return sequence seqjson', async () => {
