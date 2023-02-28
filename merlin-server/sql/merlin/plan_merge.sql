@@ -567,6 +567,17 @@ begin
       anchor_id = excluded.anchor_id,
       anchored_to_start = excluded.anchored_to_start;
 
+  -- Presets
+  insert into preset_to_directive(preset_id, activity_id, plan_id)
+  select pts.preset_id, pts.activity_id, plan_id_R
+  from merge_staging_area msa, preset_to_snapshot_directive pts
+  where msa.activity_id = pts.activity_id
+    and msa.change_type = 'add'
+     or msa.change_type = 'modify'
+  on conflict (activity_id, plan_id)
+    do update
+    set preset_id = excluded.preset_id;
+
   -- Delete
   delete from activity_directive ad
   using merge_staging_area msa

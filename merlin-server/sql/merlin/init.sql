@@ -52,4 +52,7 @@ begin;
   \ir merge_comments.sql
   \ir plan_merge.sql
   \ir hasura_functions.sql
+
+  -- Presets
+  \ir tables/activity_presets.sql
 end;

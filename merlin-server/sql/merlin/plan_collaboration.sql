@@ -1,8 +1,5 @@
 -- TODO list:
 --   - duplicate temporal subset of plan
---   - merge request table
---   - diff function
---   - merge base function
 
 -- Snapshot is a collection of the state of all the activities as they were at the time of the snapshot
 -- as well as any other properties of the plan that can change
@@ -96,6 +93,10 @@ begin
       id, name, tags,source_scheduling_goal_id, created_at,   -- these are the rest of the data for an activity row
       last_modified_at, start_offset, type, arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start
     from activity_directive where activity_directive.plan_id = create_snapshot.plan_id;
+  insert into preset_to_snapshot_directive(preset_id, activity_id, snapshot_id)
+  select ptd.preset_id, ptd.activity_id, inserted_snapshot_id
+    from preset_to_directive ptd
+    where ptd.plan_id = create_snapshot.plan_id;
 
   --all snapshots in plan_latest_snapshot for plan plan_id become the parent of the current snapshot
   insert into plan_snapshot_parent(snapshot_id, parent_snapshot_id)
@@ -115,7 +116,7 @@ $$;
   When duplicating a plan, a snapshot is created of the original plan.
   Additionally, that snapshot becomes the latest snapshot of the new plan.
 */
-  create function duplicate_plan(plan_id integer, new_plan_name text)
+create function duplicate_plan(plan_id integer, new_plan_name text)
   returns integer -- plan_id of the new plan
   security definer
   language plpgsql as $$
@@ -148,6 +149,10 @@ begin
     select 0, simulation_template_id, new_plan_id, arguments
     from simulation
     where simulation.plan_id = duplicate_plan.plan_id;
+
+  insert into preset_to_directive(preset_id, activity_id, plan_id)
+  select preset_id, activity_id, new_plan_id
+  from preset_to_directive ptd where ptd.plan_id = duplicate_plan.plan_id;
 
   insert into plan_latest_snapshot(plan_id, snapshot_id) values(new_plan_id, created_snapshot_id);
   return new_plan_id;

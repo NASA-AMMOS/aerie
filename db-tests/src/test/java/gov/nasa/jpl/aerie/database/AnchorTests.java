@@ -292,11 +292,6 @@ public class AnchorTests {
   private record AnchorValidationStatus(int activityId, int planId, String reasonInvalid) {}
   //endregion
 
-  /*
-    Tests left to write:
-      Reanchor function updates the offset as expected
-  */
-
   @Nested
   class AnchorCreationAndExceptions {
     @Test
@@ -1207,13 +1202,4 @@ public class AnchorTests {
       assertActivityEquals(parentActivity, remainingActivities.get(1));
     }
   }
-
-
-
-
-
-
-
-
-
 }
