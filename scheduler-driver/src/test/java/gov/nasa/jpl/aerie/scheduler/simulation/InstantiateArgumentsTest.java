@@ -56,6 +56,7 @@ public class InstantiateArgumentsTest {
         Map.of("Faux", activityInstance),
         Map.of(),
         Map.of(),
+        Map.of(),
         Map.of());
     final SimulationResults simulationResults = new SimulationResults(
         Instant.EPOCH,
