@@ -54,12 +54,4 @@ public interface PlanRepository {
     PlanTransaction setEndTimestamp(Timestamp timestamp);
     PlanTransaction setConfiguration(Map<String, SerializedValue> configuration);
   }
-
-  interface ActivityTransaction {
-    void commit() throws NoSuchPlanException, NoSuchActivityInstanceException;
-
-    ActivityTransaction setType(String type);
-    ActivityTransaction setStartOffset(Duration offset);
-    ActivityTransaction setParameters(Map<String, SerializedValue> parameters);
-  }
 }
