@@ -268,9 +268,9 @@ public final class PostgresPlanRepository implements PlanRepository {
       final Timestamp datasetStart
   ) throws SQLException {
     try (final var createPlanDatasetAction = new CreatePlanDatasetAction(connection);
-         final var createProfileSegmentPartitionAction = new CreateProfileSegmentPartitionAction(connection)) {
+         final var createDatasetPartitionsAction = new CreateDatasetPartitionsAction(connection)) {
       final var pdr = createPlanDatasetAction.apply(planId.id(), planStart, datasetStart);
-      createProfileSegmentPartitionAction.apply(pdr.datasetId());
+      createDatasetPartitionsAction.apply(pdr.datasetId());
       return pdr;
     }
   }

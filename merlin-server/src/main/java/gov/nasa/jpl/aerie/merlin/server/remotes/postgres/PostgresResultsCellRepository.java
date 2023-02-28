@@ -235,14 +235,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         claimSimulationAction.apply(datasetId);
     }
 
-    try (final var transactionContext = new TransactionContext(connection)) {
-      final var createSimulationDatasetPartitionsAction = new CreateProfileSegmentPartitionAction(connection);
-      final var createSpanPartitionAction = new CreateSpanPartitionAction(connection);
-      final var createEventPartitionAction = new CreateEventPartitionAction(connection);
-
-      createSimulationDatasetPartitionsAction.apply(datasetId);
-      createSpanPartitionAction.apply(datasetId);
-      createEventPartitionAction.apply(datasetId);
+    try (final var transactionContext = new TransactionContext(connection);
+         final var createDatasetPartitionsAction = new CreateDatasetPartitionsAction(connection)) {
+      createDatasetPartitionsAction.apply(datasetId);
       transactionContext.commit();
     } catch (final SQLException ex) {
       throw new DatabaseException(String.format("Failed to create partitions for simulation dataset id %s", datasetId), ex);

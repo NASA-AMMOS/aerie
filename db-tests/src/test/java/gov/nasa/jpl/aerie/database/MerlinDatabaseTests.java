@@ -12,11 +12,13 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.Duration;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 record SimulationDatasetRecord(int simulation_id, int dataset_id){}
@@ -867,5 +869,326 @@ class MerlinDatabaseTests {
         }
       }
     }
+  }
+
+  @Test
+  void shouldRejectInsertProfileSegmentWithNonExistentProfile() throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var datasetId = allocateDataset(statement);
+      try {
+        statement
+            .executeUpdate(
+              """
+              INSERT INTO profile_segment (dataset_id, profile_id, start_offset, dynamics, is_gap)
+              VALUES (%d, 1256, '0 seconds', '{}', false);
+              """.formatted(datasetId)
+          );
+      } catch (SQLException e) {
+        if (!e.getMessage().contains("foreign key violation: there is no profile with id 1256 in dataset %d".formatted(datasetId))) {
+          throw e;
+        }
+      }
+    }
+  }
+
+  @Test
+  void shouldRejectInsertEventWithNonExistentTopic() throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var datasetId = allocateDataset(statement);
+      try {
+        statement
+            .executeUpdate(
+                """
+                INSERT INTO event (dataset_id, real_time, transaction_index, causal_time, value, topic_index)
+                VALUES (%d, '0 seconds', 0, '.1', '{}', 1234);
+                """.formatted(datasetId)
+            );
+      } catch (SQLException e) {
+        if (!e.getMessage().contains("foreign key violation: there is no topic with topic_index 1234 in dataset %d".formatted(datasetId))) {
+          throw e;
+        }
+      }
+    }
+  }
+
+  @Test
+  void shouldRejectUpdateProfileSegmentToNonExistentProfile() throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var datasetId = allocateDataset(statement);
+
+      final int profileId;
+      try (final var res = statement
+          .executeQuery(
+              """
+              INSERT INTO profile (dataset_id, name, type, duration)
+              VALUES (%d, 'fred', '{}', '0 seconds')
+              RETURNING id
+              """.formatted(datasetId)
+          )
+      ) {
+        res.next();
+        profileId = res.getInt("id");
+      }
+
+      statement
+          .executeUpdate(
+              """
+              INSERT INTO profile_segment (dataset_id, profile_id, start_offset, dynamics, is_gap)
+              VALUES (%d, %d, '0 seconds', '{}', false);
+              """.formatted(datasetId, profileId)
+          );
+
+      try {
+        statement
+            .executeUpdate(
+                """
+                UPDATE profile_segment
+                 set profile_id=%d
+                 where dataset_id=%d and profile_id=%d;
+                """.formatted(profileId + 1, datasetId, profileId)
+            );
+      } catch (SQLException e) {
+        assertTrue(e.getMessage().contains("foreign key violation: there is no profile with id %d in dataset %d".formatted(profileId + 1, datasetId)), e.getMessage());
+      }
+    }
+  }
+
+  @Test
+  void shouldRejectUpdateEventToNonExistentTopic() throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var datasetId = allocateDataset(statement);
+      final var topicIndex = 42;
+
+      statement
+          .executeUpdate(
+              """
+              INSERT INTO topic (dataset_id, topic_index, name, value_schema)
+              VALUES (%d, %d, 'fred', '{}');
+              """.formatted(datasetId, topicIndex));
+
+      statement
+          .executeUpdate(
+              """
+              INSERT INTO event (dataset_id, real_time, transaction_index, causal_time, value, topic_index)
+              VALUES (%d, '0 seconds', 0, '.1', '{}', %d);
+              """.formatted(datasetId, topicIndex)
+          );
+
+      try {
+        statement
+            .executeUpdate(
+                """
+                UPDATE event
+                 set topic_index=%d
+                 where dataset_id=%d and topic_index=%d;
+                """.formatted(topicIndex + 1, datasetId, topicIndex)
+            );
+      } catch (SQLException e) {
+        assertTrue(e.getMessage().contains("foreign key violation: there is no topic with topic_index %d in dataset %d".formatted(topicIndex + 1, datasetId)), e.getMessage());
+      }
+    }
+  }
+
+  @Test
+  void shouldCascadeWhenDeletingProfile() throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var datasetId = allocateDataset(statement);
+
+      final int profileId;
+      try (final var res = statement
+          .executeQuery(
+              """
+              INSERT INTO profile (dataset_id, name, type, duration)
+              VALUES (%d, 'fred', '{}', '0 seconds')
+              RETURNING id
+              """.formatted(datasetId)
+          )
+      ) {
+        res.next();
+        profileId = res.getInt("id");
+      }
+
+      statement
+          .executeUpdate(
+              """
+              INSERT INTO profile_segment (dataset_id, profile_id, start_offset, dynamics, is_gap)
+              VALUES (%d, %d, '0 seconds', '{}', false);
+              """.formatted(datasetId, profileId)
+          );
+
+      statement
+          .executeUpdate(
+              """
+              DELETE FROM profile
+              WHERE dataset_id=%d and id=%d
+              """.formatted(datasetId, profileId)
+          );
+
+      try (final var res = statement.executeQuery(
+          """
+          SELECT count(1) FROM profile_segment WHERE dataset_id=%d and profile_id=%d
+          """.formatted(datasetId, profileId)
+      )) {
+        res.next();
+        assertEquals(0, res.getInt("count"));
+      }
+    }
+  }
+
+  @Test
+  void shouldCascadeWhenDeletingTopic() throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var datasetId = allocateDataset(statement);
+      final var topicIndex = 42;
+
+      statement
+          .executeUpdate(
+              """
+              INSERT INTO topic (dataset_id, topic_index, name, value_schema)
+              VALUES (%d, %d, 'fred', '{}');
+              """.formatted(datasetId, topicIndex));
+
+      statement
+          .executeUpdate(
+              """
+              INSERT INTO event (dataset_id, real_time, transaction_index, causal_time, value, topic_index)
+              VALUES (%d, '0 seconds', 0, '.1', '{}', %d);
+              """.formatted(datasetId, topicIndex)
+          );
+
+      statement
+          .executeUpdate(
+              """
+              DELETE FROM topic
+              WHERE dataset_id=%d and topic_index=%d
+              """.formatted(datasetId, topicIndex)
+          );
+
+      try (final var res = statement.executeQuery(
+          """
+          SELECT count(1) FROM event WHERE dataset_id=%d and topic_index=%d
+          """.formatted(datasetId, topicIndex)
+      )) {
+        res.next();
+        assertEquals(0, res.getInt("count"));
+      }
+    }
+  }
+
+  @Test
+  void shouldCascadeWhenUpdatingProfile() throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var datasetId = allocateDataset(statement);
+      final int profileId;
+      try (final var res = statement
+          .executeQuery(
+              """
+              INSERT INTO profile (dataset_id, name, type, duration)
+              VALUES (%d, 'fred', '{}', '0 seconds')
+              RETURNING id
+              """.formatted(datasetId)
+          )
+      ) {
+        res.next();
+        profileId = res.getInt("id");
+      }
+
+      statement
+          .executeUpdate(
+              """
+              INSERT INTO profile_segment (dataset_id, profile_id, start_offset, dynamics, is_gap)
+              VALUES (%d, %d, '0 seconds', '{}', false);
+              """.formatted(datasetId, profileId)
+          );
+
+      final int newProfileId;
+      try (final var res = statement
+          .executeQuery(
+              """
+              UPDATE profile
+              SET id=default
+              WHERE dataset_id=%d and id=%d
+              RETURNING id;
+              """.formatted(datasetId, profileId)
+          )
+      ) {
+        res.next();
+        newProfileId = res.getInt("id");
+      }
+
+      assertNotEquals(profileId, newProfileId);
+
+      try (final var res = statement.executeQuery(
+          """
+          SELECT count(1) FROM profile_segment WHERE dataset_id=%d and profile_id=%d
+          """.formatted(datasetId, newProfileId)
+      )) {
+        res.next();
+        assertEquals(1, res.getInt("count"));
+      }
+    }
+  }
+
+  @Test
+  void shouldCascadeWhenUpdatingTopicIndex() throws SQLException {
+    try (final var statement = connection.createStatement()) {
+
+      final var datasetId = allocateDataset(statement);
+      final var topicIndex = 42;
+      statement
+          .executeUpdate(
+              """
+              INSERT INTO topic (dataset_id, topic_index, name, value_schema)
+              VALUES (%d, %d, 'fred', '{}');
+              """.formatted(datasetId, topicIndex));
+
+      statement
+          .executeUpdate(
+              """
+              INSERT INTO event (dataset_id, real_time, transaction_index, causal_time, value, topic_index)
+              VALUES (%d, '0 seconds', 0, '.1', '{}', %d);
+              """.formatted(datasetId, topicIndex)
+          );
+
+      statement
+          .executeUpdate(
+              """
+              UPDATE topic
+              SET topic_index=%d
+              WHERE dataset_id=%d and topic_index=%d
+              """.formatted(topicIndex + 1, datasetId, topicIndex)
+          );
+
+      try (final var res = statement.executeQuery(
+          """
+          SELECT count(1) FROM event WHERE dataset_id=%d and topic_index=%d
+          """.formatted(datasetId, topicIndex + 1)
+      )) {
+        res.next();
+        assertEquals(1, res.getInt("count"));
+      }
+    }
+  }
+
+  private static int allocateDataset(final Statement statement) throws SQLException {
+    final int datasetId;
+    try (final var res = statement.executeQuery(
+        """
+            INSERT INTO dataset
+            DEFAULT VALUES
+            RETURNING id;
+            """
+    )) {
+      res.next();
+      datasetId = res.getInt("id");
+    }
+
+    statement
+        .executeUpdate(
+            """
+            SELECT FROM allocate_dataset_partitions(%d)
+            """.formatted(datasetId)
+        );
+    return datasetId;
   }
 }

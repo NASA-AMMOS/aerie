@@ -7,12 +7,7 @@ create table profile_segment (
   is_gap bool not null default false,
 
   constraint profile_segment_natural_key
-    unique (dataset_id, profile_id, start_offset),
-  constraint profile_segment_owned_by_profile
-    foreign key (profile_id)
-    references profile
-    on update cascade
-    on delete cascade
+    unique (dataset_id, profile_id, start_offset)
 )
 partition by list (dataset_id);
 
@@ -42,3 +37,31 @@ comment on column profile_segment.dynamics is e''
   'May be NULL if no behavior is known, thereby canceling any prior behavior.';
 comment on column profile_segment.is_gap is e''
   'Whether this segment has a value. If not, the value is not used, and is treated as unknown.';
+
+create function profile_segment_integrity_function()
+  returns trigger
+  security invoker
+  language plpgsql as $$begin
+  if not exists(
+    select from profile
+      where profile.dataset_id = new.dataset_id
+      and profile.id = new.profile_id
+    for key share of profile)
+    -- for key share is important: it makes sure that concurrent transactions cannot update
+    -- the columns that compose the profile's key until after this transaction commits.
+  then
+    raise exception 'foreign key violation: there is no profile with id % in dataset %', new.profile_id, new.dataset_id;
+  end if;
+  return new;
+end$$;
+
+comment on function profile_segment_integrity_function is e''
+  'Used to simulate a foreign key constraint between profile_segment and profile, to avoid acquiring a lock on the'
+  'profile table when creating a new partition of profile_segment. This function checks that a corresponding profile'
+  'exists for every inserted or updated profile_segment. A trigger that calls this function is added separately to each'
+  'new partition of profile_segment.';
+
+create constraint trigger insert_update_profile_segment_trigger
+  after insert or update on profile_segment
+  for each row
+execute function profile_segment_integrity_function();
