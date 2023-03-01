@@ -35,7 +35,7 @@ describe('getEdslForSeqJson', () => {
               type: 'command',
               stem: 'PREHEAT_OVEN',
               time: { type: TimingTypes.ABSOLUTE, tag: '2020-060T03:45:19.000Z' },
-              args: [100],
+              args: [{ value: 100, name: 'temperature', type: 'number' }],
               metadata: {},
             },
           ],
@@ -46,11 +46,13 @@ describe('getEdslForSeqJson', () => {
     expect(res.getEdslForSeqJson).toEqual(
       `export default () =>
   Sequence.new({
-    seqId: 'test_00001',
-    metadata: {},
+\t  seqId: 'test_00001',
+\t  metadata: {},
     steps: [
       C.BAKE_BREAD,
-      A\`2020-060T03:45:19.000\`.PREHEAT_OVEN(100),
+      A\`2020-060T03:45:19.000\`.PREHEAT_OVEN({
+        temperature: 100,
+      }),
     ],
   });`,
     );
@@ -126,7 +128,7 @@ describe('getEdslForSeqJsonBulk', () => {
                 type: 'command',
                 stem: 'PREHEAT_OVEN',
                 time: { type: TimingTypes.ABSOLUTE, tag: '2020-060T03:45:19.000Z' },
-                args: [100],
+                args: [{ value: 100, name: 'temperature', type: 'number' }],
                 metadata: {},
               },
             ],
@@ -147,7 +149,7 @@ describe('getEdslForSeqJsonBulk', () => {
                 type: 'command',
                 stem: 'PREHEAT_OVEN',
                 time: { type: TimingTypes.ABSOLUTE, tag: '2020-060T03:45:19.000Z' },
-                args: [100],
+                args: [{ value: 100, name: 'temperature', type: 'number' }],
                 metadata: {},
               },
             ],
@@ -159,20 +161,24 @@ describe('getEdslForSeqJsonBulk', () => {
     expect(res.getEdslForSeqJsonBulk).toEqual([
       `export default () =>
   Sequence.new({
-    seqId: 'test_00001',
-    metadata: {},
+\t  seqId: 'test_00001',
+\t  metadata: {},
     steps: [
       C.BAKE_BREAD,
-      A\`2020-060T03:45:19.000\`.PREHEAT_OVEN(100),
+      A\`2020-060T03:45:19.000\`.PREHEAT_OVEN({
+        temperature: 100,
+      }),
     ],
   });`,
       `export default () =>
   Sequence.new({
-    seqId: 'test_00002',
-    metadata: {},
+\t  seqId: 'test_00002',
+\t  metadata: {},
     steps: [
       C.BAKE_BREAD,
-      A\`2020-060T03:45:19.000\`.PREHEAT_OVEN(100),
+      A\`2020-060T03:45:19.000\`.PREHEAT_OVEN({
+        temperature: 100,
+      }),
     ],
   });`,
     ]);

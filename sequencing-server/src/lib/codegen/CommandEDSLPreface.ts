@@ -289,7 +289,7 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
   // @ts-ignore : 'Command' found in JSON Spec
   public toSeqJson(): Command {
     return {
-      args: flatten(this.arguments),
+      args: CommandStem.convertArgsToInterfaces(this.arguments),
       stem: this.stem,
       time:
         this.absoluteTime !== null
@@ -319,7 +319,7 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
 
     return CommandStem.new({
       stem: json.stem,
-      arguments: json.args,
+      arguments: CommandStem.convertInterfacesToArgs(json.args),
       metadata: json.metadata,
       models: json.models,
       description: json.description,
@@ -371,7 +371,7 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
       this._description && this._description.length !== 0 ? `\n.DESCRIPTION('${this._description}')` : '';
     const models =
       this._models && Object.keys(this._models).length !== 0
-        ? `\n.MODELS([${this._models.map(m => objectToString(m))}])`
+        ? `\n.MODELS([\n${this._models.map(m => indent(objectToString(m))).join(',\n')}\n])`
         : '';
     return `${timeString}.${this.stem}${argsString}${description}${metadata}${models}`;
   }
@@ -388,16 +388,138 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
 
       return argStrings.join(', ');
     } else {
-      const argStrings = Object.keys(args).reduce((accum, key) => {
-        if (typeof args[key] === 'string') {
-          accum.push(`${key}: '${args[key]}'`);
-        } else {
-          accum.push(`${key}: ${args[key]}`);
-        }
-        return accum;
-      }, [] as string[]);
-      return '{\n' + indent(argStrings.map(argString => argString + ',').join('\n')) + '\n}';
+      return objectToString(args);
     }
+  }
+
+  // This function takes an array of Args interfaces and converts it into an object or an array depending on whether
+  // the repeat argument is true or false. The interfaces array contains objects matching the ARGS interface.
+  // Depending on the type property of each object, a corresponding object with the name and value properties is created
+  // and added to the output. If an object's type property is "repeat", then the value property is recursively passed
+  // through the function with repeat set to true.Additionally, the function includes a validation function that prevents
+  // remote property injection attacks.
+  // @ts-ignore : 'Args' found in JSON Spec
+  private static convertInterfacesToArgs(interfaces: Args, repeat = false): {} | [] {
+    const args = interfaces.length === 0 ? [] : !repeat ? {} : [];
+
+    //use to prevent a Remote property injection attack
+    const validate = (input: string): boolean => {
+      const pattern = /^[a-zA-Z0-9_-]+$/;
+      const isValid = pattern.test(input);
+      return isValid;
+    };
+
+    const convertedArgs = interfaces.map(
+      (
+        // @ts-ignore : found in JSON Spec
+        arg: StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument | RepeatArgument,
+      ) => {
+        // @ts-ignore : 'RepeatArgument' found in JSON Spec
+        if (arg.type === 'repeat') {
+          if (validate(arg.name)) {
+            // @ts-ignore : 'RepeatArgument' found in JSON Spec
+            return { [arg.name]: this.convertInterfacesToArgs(arg.value, true) };
+          }
+          return { repeat_error: 'Remote property injection detected...' };
+        } else if (arg.type === 'symbol') {
+          if (validate(arg.name)) {
+            // @ts-ignore : 'SymbolArgument' found in JSON Spec
+            return { [arg.name]: { symbol: arg.value } };
+          }
+          return { symbol_error: 'Remote property injection detected...' };
+          // @ts-ignore : 'HexArgument' found in JSON Spec
+        } else if (arg.type === 'hex') {
+          if (validate(arg.name)) {
+            // @ts-ignore : 'HexArgument' found in JSON Spec
+            return { [arg.name]: { hex: arg.value } };
+          }
+          return { hex_error: 'Remote property injection detected...' };
+        } else {
+          if (validate(arg.name)) {
+            return { [arg.name]: arg.value };
+          }
+          return { error: 'Remote property injection detected...' };
+        }
+      },
+    );
+
+    if (repeat) {
+      let obj = {};
+      for (const i in convertedArgs) {
+        for (const key in convertedArgs[i]) {
+          if (key in obj) {
+            (args as any[]).push(obj);
+            obj = {};
+          }
+          Object.assign(obj, convertedArgs[i]);
+        }
+      }
+      (args as any[]).push(obj);
+    } else {
+      for (const i in convertedArgs) {
+        Object.assign(args, convertedArgs[i]);
+      }
+    }
+
+    return args;
+  }
+
+  //The function takes an object of arguments and converts them into the Args type. It does this by looping through the
+  // values and pushing a new argument type to the result array depending on the type of the value.
+  // If the value is an array, it will create a RepeatArgument type and recursively call on the values of the array.
+  // the function returns the result array of argument types -
+  // StringArgument, NumberArgument, BooleanArgument, SymbolArgument, HexArgument, and RepeatArgument.
+  // @ts-ignore : 'Args' found in JSON Spec
+  private static convertArgsToInterfaces(args: { [argName: string]: any }): Args {
+    // @ts-ignore : 'Args' found in JSON Spec
+    let result: Args = [];
+    if (args['length'] === 0) {
+      return result;
+    }
+
+    const values = Array.isArray(args) ? args[0] : args;
+
+    for (let key in values) {
+      let value = values[key];
+      if (Array.isArray(value)) {
+        // @ts-ignore : 'RepeatArgument' found in JSON Spec
+        let repeatArg: RepeatArgument = {
+          value: value
+            .map(arg => {
+              return this.convertArgsToInterfaces(arg);
+            })
+            .flat(),
+          type: 'repeat',
+          name: key,
+        };
+        result.push(repeatArg);
+      } else {
+        switch (typeof value) {
+          case 'string':
+            result.push({ type: 'string', value: value, name: key });
+            break;
+          case 'number':
+            result.push({ type: 'number', value: value, name: key });
+            break;
+          case 'boolean':
+            result.push({ type: 'boolean', value: value, name: key });
+            break;
+          default:
+            if (value instanceof Object && value.symbol && value.symbol === 'string') {
+              result.push({ type: 'symbol', value: value, name: key });
+            } else if (
+              value instanceof Object &&
+              value.hex &&
+              value.hex === 'string' &&
+              new RegExp('^0x([0-9A-F])+$').test(value.hex)
+            ) {
+              result.push({ type: 'hex', value: value, name: key });
+            }
+            break;
+        }
+      }
+    }
+    return result;
   }
 }
 
@@ -467,15 +589,15 @@ export class Sequence implements SeqJson {
                 return (step as CommandStem).toEDSLString() + ',';
               })
               .join('\n'),
-            2,
+            1,
           )
         : '';
 
     return `export default () =>
   Sequence.new({
-    seqId: '${this.id}',
-    metadata: ${JSON.stringify(this.metadata)},${
-      commandsString.length > 0 ? `\n${indent(`  steps: [${commandsString}`)}\n${indent('],', 2)}` : ''
+	  seqId: '${this.id}',
+	  metadata: ${JSON.stringify(this.metadata)},${
+      commandsString.length > 0 ? `\n${indent(`steps: [${commandsString}`, 2)}\n${indent('],', 2)}` : ''
     }
   });`;
   }
@@ -664,63 +786,50 @@ function commandsWithTimeValue<T extends TimingTypes>(
   }, {} as typeof Commands);
 }
 
-function flatten(input: { [argName: string]: any }): any {
-  let flatList: any[] = [];
-
-  for (const element of Object.values(input)) {
-    // If our input was already flattened, don't try and flatten it again.
-    if (typeof element !== 'object') {
-      return input;
-    }
-
-    const values = Object.values(element);
-
-    for (const value of values) {
-      if (Array.isArray(value)) {
-        // We've come across a repeat arg so we need to extract its values.
-        for (const repeat of value) {
-          flatList = flatList.concat([...Object.values(repeat)]);
-        }
-      } else {
-        flatList.push(value);
-      }
-    }
-  }
-
-  return flatList;
-}
-
 function indent(text: string, numTimes: number = 1, char: string = '  '): string {
   return text
     .split('\n')
     .map(line => char.repeat(numTimes) + line)
     .join('\n');
 }
-// @ts-ignore : 'Metadata' found in JSON Spec
-function objectToString(obj: any): string {
+
+// This method takes an object and converts it to a string representation, with each key-value pair on a new line
+// and nested objects/arrays indented. The indentLevel parameter specifies the initial indentation level,
+// used to prettify the generated eDSL from SeqJSON
+function objectToString(obj: any, indentLevel: number = 1): string {
   let output = '';
-  let indentLevel = 1;
 
   const print = (obj: any) => {
     Object.keys(obj).forEach(key => {
       const value = obj[key];
-      const indent = '  '.repeat(indentLevel);
 
-      if (typeof value === 'object') {
-        output += `${indent}${key}:{\n`;
+      if (Array.isArray(value)) {
+        output += indent(`${key}: [`, indentLevel) + '\n';
+        indentLevel++;
+        value.forEach((item: any) => {
+          output += indent(`{`, indentLevel) + '\n';
+          indentLevel++;
+          print(item);
+          indentLevel--;
+          output += indent(`},`, indentLevel) + '\n';
+        });
+        indentLevel--;
+        output += indent(`],`, indentLevel) + '\n';
+      } else if (typeof value === 'object') {
+        output += indent(`${key}:{`, indentLevel) + '\n';
         indentLevel++;
         print(value);
         indentLevel--;
-        output += `${indent}},\n`;
+        output += indent(`},`, indentLevel) + '\n';
       } else {
-        output += `${indent}${key}: ${typeof value === 'string' ? `'${value}'` : value},\n`;
+        output += indent(`${key}: ${typeof value === 'string' ? `'${value}'` : value},`, indentLevel) + '\n';
       }
     });
   };
 
   output += '{\n';
   print(obj);
-  output += '}';
+  output += `}`;
 
   return output;
 }

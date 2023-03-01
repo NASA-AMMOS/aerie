@@ -685,7 +685,7 @@ app.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, res, next)
     return next();
   }
 
-  const sortedActivityInstances = (simulatedActivities as Exclude<(typeof simulatedActivities)[number], Error>[]).sort(
+  const sortedActivityInstances = (simulatedActivities as Exclude<typeof simulatedActivities[number], Error>[]).sort(
     (a, b) => Temporal.Duration.compare(a.startOffset, b.startOffset),
   );
 
@@ -845,7 +845,7 @@ app.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (req, res, 
       }
 
       const sortedActivityInstances = (
-        simulatedActivitiesForSeqId as Exclude<(typeof simulatedActivitiesLoadErrors)[number], Error>[]
+        simulatedActivitiesForSeqId as Exclude<typeof simulatedActivitiesLoadErrors[number], Error>[]
       ).sort((a, b) => Temporal.Instant.compare(a.startTime, b.startTime));
 
       const sortedSimulatedActivitiesWithCommands = sortedActivityInstances.map(ai => {
@@ -915,7 +915,7 @@ app.post('/get-edsl-for-seqjson', async (req, res, next) => {
   const seqJson = req.body.input.seqJson as SeqJson;
   const validate = new Ajv({ strict: false }).compile(schema);
 
-  if (!validate(Sequence.fromSeqJson(seqJson))) {
+  if (!validate(seqJson)) {
     throw new Error(
       `POST /bulk-get-edsl-for-seqjson: Uploaded sequence JSON is invalid and does not match the current spec`,
     );
@@ -933,7 +933,7 @@ app.post('/bulk-get-edsl-for-seqjson', async (req, res, next) => {
 
   res.json(
     seqJsons.map(seqJson => {
-      if (!validate(Sequence.fromSeqJson(seqJson))) {
+      if (!validate(seqJson)) {
         throw new Error(
           `POST /bulk-get-edsl-for-seqjson: Uploaded sequence JSON is invalid and does not match the current spec`,
         );

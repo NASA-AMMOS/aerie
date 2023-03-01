@@ -92,7 +92,7 @@ describe('sequence generation', () => {
         E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PREPARE_LOAF({ tb_sugar: 50, gluten_free: false }),
         E\`04:56:54\`.EAT_BANANA,
         C.PACKAGE_BANANA({
-          lot_number: 1093,
+          lot_number:  1093,
           bundle: [
             {
               bundle_name: "Chiquita",
@@ -233,14 +233,17 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
@@ -255,7 +258,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
@@ -269,7 +272,10 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
@@ -290,7 +296,7 @@ describe('sequence generation', () => {
           tag: '2025-358T12:01:59.000',
           type: 'ABSOLUTE',
         },
-        args: [360],
+        args: [{ value: 360, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -300,7 +306,7 @@ describe('sequence generation', () => {
           tag: '00:15:30.000',
           type: 'COMMAND_RELATIVE',
         },
-        args: [425],
+        args: [{ value: 425, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -320,7 +326,10 @@ describe('sequence generation', () => {
           tag: '12:06:54.000',
           type: 'EPOCH_RELATIVE',
         },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -337,14 +346,70 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Dole', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Dole',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Blue', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Blue',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
     ]);
@@ -478,14 +543,17 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
@@ -500,7 +568,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
@@ -514,7 +582,10 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
@@ -535,7 +606,7 @@ describe('sequence generation', () => {
           tag: '2025-358T12:01:59.000',
           type: 'ABSOLUTE',
         },
-        args: [360],
+        args: [{ value: 360, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -545,7 +616,7 @@ describe('sequence generation', () => {
           tag: '00:15:30.000',
           type: 'COMMAND_RELATIVE',
         },
-        args: [425],
+        args: [{ value: 425, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -565,7 +636,10 @@ describe('sequence generation', () => {
           tag: '12:06:54.000',
           type: 'EPOCH_RELATIVE',
         },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -582,14 +656,70 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Dole', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Dole',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Blue', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Blue',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
     ]);
@@ -611,14 +741,17 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId4 },
       },
       {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId4 },
       },
       {
@@ -633,7 +766,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId5 },
       },
       {
@@ -647,7 +780,10 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId5 },
       },
       {
@@ -668,7 +804,7 @@ describe('sequence generation', () => {
           tag: '2025-358T12:01:59.000',
           type: 'ABSOLUTE',
         },
-        args: [360],
+        args: [{ value: 360, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId6 },
       },
       {
@@ -678,7 +814,7 @@ describe('sequence generation', () => {
           tag: '00:15:30.000',
           type: 'COMMAND_RELATIVE',
         },
-        args: [425],
+        args: [{ value: 425, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId6 },
       },
       {
@@ -698,7 +834,10 @@ describe('sequence generation', () => {
           tag: '12:06:54.000',
           type: 'EPOCH_RELATIVE',
         },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId6 },
       },
       {
@@ -715,14 +854,70 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Dole', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Dole',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId6 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Blue', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Blue',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId6 },
       },
     ]);
@@ -837,14 +1032,17 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
@@ -859,7 +1057,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
@@ -873,7 +1071,10 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
@@ -894,7 +1095,7 @@ describe('sequence generation', () => {
           tag: '2025-358T12:01:59.000',
           type: 'ABSOLUTE',
         },
-        args: [360],
+        args: [{ value: 360, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -904,7 +1105,7 @@ describe('sequence generation', () => {
           tag: '00:15:30.000',
           type: 'COMMAND_RELATIVE',
         },
-        args: [425],
+        args: [{ value: 425, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -924,7 +1125,10 @@ describe('sequence generation', () => {
           tag: '12:06:54.000',
           type: 'EPOCH_RELATIVE',
         },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -941,21 +1145,77 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Dole', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Dole',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Blue', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Blue',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: '$$ERROR$$',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Error: Unimplemented'],
+        args: [{ name: 'message', type: 'string', value: 'Error: Unimplemented' }],
         metadata: { simulatedActivityId: simulatedActivityId4 },
       },
     ]);
@@ -1113,14 +1373,17 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
@@ -1135,7 +1398,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
@@ -1149,7 +1412,10 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
@@ -1170,7 +1436,7 @@ describe('sequence generation', () => {
           tag: '2025-358T12:01:59.000',
           type: 'ABSOLUTE',
         },
-        args: [360],
+        args: [{ value: 360, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -1180,7 +1446,7 @@ describe('sequence generation', () => {
           tag: '00:15:30.000',
           type: 'COMMAND_RELATIVE',
         },
-        args: [425],
+        args: [{ value: 425, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -1200,7 +1466,10 @@ describe('sequence generation', () => {
           tag: '12:06:54.000',
           type: 'EPOCH_RELATIVE',
         },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -1217,21 +1486,77 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Dole', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Dole',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Blue', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Blue',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: '$$ERROR$$',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Error: Unimplemented'],
+        args: [{ name: 'message', type: 'string', value: 'Error: Unimplemented' }],
         metadata: { simulatedActivityId: simulatedActivityId4 },
       },
     ]);
@@ -1249,14 +1574,17 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId5 },
       },
       {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId5 },
       },
       {
@@ -1271,7 +1599,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId6 },
       },
       {
@@ -1285,7 +1613,10 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId6 },
       },
       {
@@ -1306,7 +1637,7 @@ describe('sequence generation', () => {
           tag: '2025-358T12:01:59.000',
           type: 'ABSOLUTE',
         },
-        args: [360],
+        args: [{ value: 360, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId7 },
       },
       {
@@ -1316,7 +1647,7 @@ describe('sequence generation', () => {
           tag: '00:15:30.000',
           type: 'COMMAND_RELATIVE',
         },
-        args: [425],
+        args: [{ value: 425, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId7 },
       },
       {
@@ -1336,7 +1667,10 @@ describe('sequence generation', () => {
           tag: '12:06:54.000',
           type: 'EPOCH_RELATIVE',
         },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId7 },
       },
       {
@@ -1353,21 +1687,77 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Dole', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Dole',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId7 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Blue', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Blue',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId7 },
       },
       {
         type: 'command',
         stem: '$$ERROR$$',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: ['Error: Unimplemented'],
+        args: [{ name: 'message', type: 'string', value: 'Error: Unimplemented' }],
         metadata: { simulatedActivityId: simulatedActivityId8 },
       },
     ]);
@@ -1478,14 +1868,17 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
@@ -1500,7 +1893,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
@@ -1514,7 +1907,10 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
@@ -1535,7 +1931,7 @@ describe('sequence generation', () => {
           tag: '2025-358T12:01:59.000',
           type: 'ABSOLUTE',
         },
-        args: [360],
+        args: [{ value: 360, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -1545,7 +1941,7 @@ describe('sequence generation', () => {
           tag: '00:15:30.000',
           type: 'COMMAND_RELATIVE',
         },
-        args: [425],
+        args: [{ value: 425, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -1565,7 +1961,10 @@ describe('sequence generation', () => {
           tag: '12:06:54.000',
           type: 'EPOCH_RELATIVE',
         },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -1582,14 +1981,70 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Dole', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Dole',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Blue', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Blue',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
     ]);
@@ -1734,14 +2189,17 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
       {
@@ -1756,7 +2214,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
@@ -1770,7 +2228,10 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
       {
@@ -1791,7 +2252,7 @@ describe('sequence generation', () => {
           tag: '2025-358T12:01:59.000',
           type: 'ABSOLUTE',
         },
-        args: [360],
+        args: [{ value: 360, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -1801,7 +2262,7 @@ describe('sequence generation', () => {
           tag: '00:15:30.000',
           type: 'COMMAND_RELATIVE',
         },
-        args: [425],
+        args: [{ value: 425, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -1821,7 +2282,10 @@ describe('sequence generation', () => {
           tag: '12:06:54.000',
           type: 'EPOCH_RELATIVE',
         },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
@@ -1838,14 +2302,70 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Dole', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Dole',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Blue', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Blue',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
     ]);
@@ -1867,14 +2387,17 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId5 },
       },
       {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId5 },
       },
       {
@@ -1889,7 +2412,7 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREHEAT_OVEN',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId6 },
       },
       {
@@ -1903,7 +2426,10 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PREPARE_LOAF',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId6 },
       },
       {
@@ -1924,7 +2450,7 @@ describe('sequence generation', () => {
           tag: '2025-358T12:01:59.000',
           type: 'ABSOLUTE',
         },
-        args: [360],
+        args: [{ value: 360, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId7 },
       },
       {
@@ -1934,7 +2460,7 @@ describe('sequence generation', () => {
           tag: '00:15:30.000',
           type: 'COMMAND_RELATIVE',
         },
-        args: [425],
+        args: [{ value: 425, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId: simulatedActivityId7 },
       },
       {
@@ -1954,7 +2480,10 @@ describe('sequence generation', () => {
           tag: '12:06:54.000',
           type: 'EPOCH_RELATIVE',
         },
-        args: [50, false],
+        args: [
+          { value: 50, name: 'tb_sugar', type: 'number' },
+          { value: false, name: 'gluten_free', type: 'boolean' },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId7 },
       },
       {
@@ -1971,14 +2500,70 @@ describe('sequence generation', () => {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Dole', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Dole',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId7 },
       },
       {
         type: 'command',
         stem: 'PACKAGE_BANANA',
         time: { type: TimingTypes.COMMAND_COMPLETE },
-        args: [1093, 'Chiquita', 43, 'Blue', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Blue',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         metadata: { simulatedActivityId: simulatedActivityId7 },
       },
     ]);
@@ -2119,14 +2704,14 @@ describe('expansion', () => {
     }
     expect(activity_instance_commands[0]?.commands).toEqual([
       {
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId },
         stem: 'PREHEAT_OVEN',
         time: { tag: '01:00:00.000', type: TimingTypes.COMMAND_RELATIVE },
         type: 'command',
       },
       {
-        args: [70],
+        args: [{ value: 70, name: 'temperature', type: 'number' }],
         metadata: { simulatedActivityId },
         stem: 'PREHEAT_OVEN',
         time: { tag: '01:00:00.000', type: TimingTypes.COMMAND_RELATIVE },
@@ -2214,7 +2799,7 @@ it('should provide start, end, and computed attributes on activities', async () 
       type: 'command',
       stem: 'ECHO',
       time: { type: 'COMMAND_COMPLETE' },
-      args: ['Computed attributes: 198'],
+      args: [{ name: 'echo_string', type: 'string', value: 'Computed attributes: 198' }],
       metadata: { simulatedActivityId: simulatedActivityId3 },
     },
   ]);
@@ -2272,7 +2857,7 @@ describe('user sequence to seqjson', () => {
           tag: '2020-060T03:45:19.000',
           type: 'ABSOLUTE',
         },
-        args: [100],
+        args: [{ name: 'temperature', type: 'number', value: 100 }],
       },
       {
         type: 'command',
@@ -2281,7 +2866,35 @@ describe('user sequence to seqjson', () => {
           tag: '12:06:54.000',
           type: 'EPOCH_RELATIVE',
         },
-        args: [1093, 'Chiquita', 43, 'Dole', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Dole',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
       },
     ]);
   }, 30000);
@@ -2373,7 +2986,7 @@ describe('user sequence to seqjson', () => {
           tag: '2020-060T03:45:19.000',
           type: 'ABSOLUTE',
         },
-        args: [100],
+        args: [{ value: 100, name: 'temperature', type: 'number' }],
       },
       {
         type: 'command',
@@ -2382,7 +2995,35 @@ describe('user sequence to seqjson', () => {
           tag: '12:06:54.000',
           type: 'EPOCH_RELATIVE',
         },
-        args: [1093, 'Chiquita', 43, 'Dole', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Dole',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
       },
     ]);
 
@@ -2402,7 +3043,7 @@ describe('user sequence to seqjson', () => {
           tag: '2020-061T03:45:19.000',
           type: 'ABSOLUTE',
         },
-        args: [100],
+        args: [{ value: 100, name: 'temperature', type: 'number' }],
       },
       {
         type: 'command',
@@ -2411,7 +3052,35 @@ describe('user sequence to seqjson', () => {
           tag: '12:06:54.000',
           type: 'EPOCH_RELATIVE',
         },
-        args: [1093, 'Chiquita', 43, 'Dole', 12],
+        args: [
+          { name: 'lot_number', type: 'number', value: 1093 },
+          {
+            name: 'bundle',
+            type: 'repeat',
+            value: [
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Chiquita',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 43,
+              },
+              {
+                name: 'bundle_name',
+                type: 'string',
+                value: 'Dole',
+              },
+              {
+                name: 'number_of_bananas',
+                type: 'number',
+                value: 12,
+              },
+            ],
+          },
+        ],
         models: [
           {
             offset: '00:00:00.000',
