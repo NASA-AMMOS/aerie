@@ -32,6 +32,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
+
 public final class ResponseSerializers {
   public static <T> JsonValue serializeNullable(final Function<T, JsonValue> serializer, final T value) {
     if (value != null) return serializer.apply(value);
@@ -102,7 +104,7 @@ public final class ResponseSerializers {
 
   public static JsonValue serializeArgument(final SerializedValue parameter) {
     if (parameter == null) return JsonValue.NULL;
-    return parameter.match(new ArgumentSerializationVisitor());
+    return serializedValueP.unparse(parameter);
   }
 
   public static JsonValue serializeArgumentMap(final Map<String, SerializedValue> fields) {
@@ -493,43 +495,6 @@ public final class ResponseSerializers {
                   .build(),
               variants))
           .build();
-    }
-  }
-
-  private static final class ArgumentSerializationVisitor implements SerializedValue.Visitor<JsonValue> {
-    @Override
-    public JsonValue onNull() {
-      return JsonValue.NULL;
-    }
-
-    @Override
-    public JsonValue onReal(final double value) {
-      return Json.createValue(value);
-    }
-
-    @Override
-    public JsonValue onInt(final long value) {
-      return Json.createValue(value);
-    }
-
-    @Override
-    public JsonValue onBoolean(final boolean value) {
-      return (value) ? JsonValue.TRUE : JsonValue.FALSE;
-    }
-
-    @Override
-    public JsonValue onString(final String value) {
-      return Json.createValue(value);
-    }
-
-    @Override
-    public JsonValue onMap(final Map<String, SerializedValue> fields) {
-      return serializeMap(x -> x.match(this), fields);
-    }
-
-    @Override
-    public JsonValue onList(final List<SerializedValue> elements) {
-      return serializeIterable(x -> x.match(this), elements);
     }
   }
 }

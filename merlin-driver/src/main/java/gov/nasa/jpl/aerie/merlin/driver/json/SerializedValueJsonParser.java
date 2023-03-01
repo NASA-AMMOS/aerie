@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.scheduler.server.http;
+package gov.nasa.jpl.aerie.merlin.driver.json;
 
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
@@ -11,6 +11,7 @@ import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonValue;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,12 +36,7 @@ public final class SerializedValueJsonParser implements JsonParser<SerializedVal
       case TRUE -> SerializedValue.of(true);
       case FALSE -> SerializedValue.of(false);
       case STRING -> SerializedValue.of(((JsonString) value).getString());
-      case NUMBER -> {
-        final var num = (JsonNumber) value;
-        yield (num.isIntegral())
-            ? SerializedValue.of(num.longValue())
-            : SerializedValue.of(num.doubleValue());
-      }
+      case NUMBER -> SerializedValue.of(((JsonNumber) value).bigDecimalValue());
       case ARRAY -> {
         final var arr = (JsonArray) value;
         final var list = new ArrayList<SerializedValue>(arr.size());
@@ -70,12 +66,7 @@ public final class SerializedValueJsonParser implements JsonParser<SerializedVal
       }
 
       @Override
-      public JsonValue onReal(final double value) {
-        return Json.createValue(value);
-      }
-
-      @Override
-      public JsonValue onInt(final long value) {
+      public JsonValue onNumeric(final BigDecimal value) {
         return Json.createValue(value);
       }
 

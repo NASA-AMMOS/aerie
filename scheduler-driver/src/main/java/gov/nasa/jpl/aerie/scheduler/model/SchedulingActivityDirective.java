@@ -9,9 +9,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -275,78 +273,7 @@ public record SchedulingActivityDirective(
                                            .valueAt(startTime)
                                            .orElseThrow(() -> new Error("Profile for argument " + key + " has no value at time " + startTime)))
     );
-    return castCorrectToInt(results, activityType);
-  }
-
-
-  public static Map<String, SerializedValue> castCorrectToInt(Map<String, SerializedValue> arguments, ActivityType activityType){
-    final var ret = new HashMap<String, SerializedValue>();
-    final var parameters = activityType.getSpecType().getInputType().getParameters();
-    for(final var arg: arguments.entrySet()){
-      for(final var param : parameters) {
-       if(param.name().equals(arg.getKey())) {
-         ret.put(arg.getKey(),castCorrectly(arg.getValue(), param.schema()));
-        break;
-       }
-      }
-    }
-    return ret;
-  }
-
-  static SerializedValue castCorrectly(final SerializedValue value, final ValueSchema correctValueSchema){
-    return value.match(new SerializedValue.Visitor<>() {
-      @Override
-      public SerializedValue onNull() {
-        return SerializedValue.NULL;
-      }
-
-      @Override
-      public SerializedValue onReal(final double value) {
-        if(correctValueSchema.asReal().isPresent()){
-          return SerializedValue.of(value);
-        } else if(correctValueSchema.asInt().isPresent()){
-          return SerializedValue.of((int)value);
-        }
-        throw new IllegalArgumentException();      }
-
-      @Override
-      public SerializedValue onInt(final long value) {
-        if(correctValueSchema.asInt().isPresent() || correctValueSchema.asDuration().isPresent()){
-          return SerializedValue.of(value);
-        } else if(correctValueSchema.asReal().isPresent()){
-          return SerializedValue.of((double)(value));
-        }
-        throw new IllegalArgumentException();      }
-
-      @Override
-      public SerializedValue onBoolean(final boolean value) {
-        return SerializedValue.of(value);
-      }
-
-      @Override
-      public SerializedValue onString(final String value) {
-        return SerializedValue.of(value);
-      }
-
-      @Override
-      public SerializedValue onMap(final Map<String, SerializedValue> value) {
-        final var lsit = new HashMap<String, SerializedValue>();
-        for(final var val : value.entrySet()) {
-          lsit.put(val.getKey(), castCorrectly(val.getValue(), correctValueSchema.asStruct().get().get(val.getKey())));
-        }
-        return SerializedValue.of(lsit);
-      }
-
-      @Override
-      public SerializedValue onList(final List<SerializedValue> value) {
-        final var lsit = new ArrayList<SerializedValue>();
-        for(final var val : value) {
-          lsit.add(castCorrectly(val, correctValueSchema.asSeries().get()));
-        }
-        return SerializedValue.of(lsit);
-      }
-
-    });
+    return results;
   }
 
   /**

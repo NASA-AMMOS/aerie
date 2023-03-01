@@ -14,7 +14,6 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelExceptio
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
-import gov.nasa.jpl.aerie.scheduler.server.http.SerializedValueJsonParser;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
@@ -43,12 +42,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
+import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLInterval;
 import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLTimestamp;
-import static gov.nasa.jpl.aerie.scheduler.server.http.SerializedValueJsonParser.serializedValueP;
 
 /**
  * {@inheritDoc}
@@ -209,7 +207,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
       if (!sims.isEmpty()) {
         final var args = sims.getJsonObject(0).getJsonObject("arguments");
         modelConfiguration = BasicParsers
-            .mapP(new SerializedValueJsonParser()).parse(args)
+            .mapP(serializedValueP).parse(args)
             .getSuccessOrThrow((reason) -> new InvalidJsonException(new InvalidEntityException(List.of(reason))));
       }
 
@@ -254,7 +252,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
       final boolean anchoredToStart = jsonActivity.getBoolean("anchored_to_start");
       final var arguments = jsonActivity.getJsonObject("arguments");
       final var deserializedArguments = BasicParsers
-          .mapP(new SerializedValueJsonParser())
+          .mapP(serializedValueP)
           .parse(arguments)
           .getSuccessOrThrow((reason) -> new InvalidJsonException(new InvalidEntityException(List.of(reason))));
       final var effectiveArguments = problem
@@ -693,46 +691,5 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     //TODO: (defensive) should escape contents of bare strings, eg internal quotes
     //NB: Time::toString will format correctly as HH:MM:SS.sss, just need to quote it here
     return "\"" + s + "\"";
-  }
-
-  public String serializeForGql(final SerializedValue value) {
-    return value.match(new SerializedValue.Visitor<>() {
-      @Override
-      public String onNull() {
-        return "null";
-      }
-
-      @Override
-      public String onReal(final double value) {
-        return String.valueOf(value);
-      }
-
-      @Override
-      public String onInt(final long value) {
-        return String.valueOf(value);
-      }
-
-      @Override
-      public String onBoolean(final boolean value) {
-        return value ? "true" : "false";
-      }
-
-      @Override
-      public String onString(final String value) {
-        return serializeForGql(value);
-      }
-
-      @Override
-      public String onMap(final Map<String, SerializedValue> value) {
-        return "{%s}".formatted(value.entrySet().stream()
-            .map(e -> "\"%s\": %s".formatted( //TODO: (defensive) should escape contents of bare strings, eg internal quotes
-                e.getKey(), serializeForGql(e.getValue()))).collect(Collectors.joining(",")));
-      }
-
-      @Override
-      public String onList(final List<SerializedValue> value) {
-        return "[%s]".formatted(value.stream().map(v -> serializeForGql(v)).collect(Collectors.joining(",")));
-      }
-    });
   }
 }
