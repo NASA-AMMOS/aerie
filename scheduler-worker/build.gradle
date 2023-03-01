@@ -3,6 +3,7 @@ plugins {
   id 'application'
   id 'com.github.node-gradle.node' version '3.5.0'
   id 'jacoco'
+  id 'maven-publish'
 }
 
 java {
@@ -131,4 +132,26 @@ dependencies {
   testImplementation 'junit:junit:4.12'
   testImplementation 'javax.json.bind:javax.json.bind-api:1.0'
   testImplementation 'org.glassfish:javax.json:1.1.4'
+}
+
+publishing {
+  publications {
+    library(MavenPublication) {
+      version = findProperty('publishing.version')
+      from components.java
+    }
+  }
+
+  publishing {
+    repositories {
+      maven {
+        name = findProperty("publishing.name")
+        url = findProperty("publishing.url")
+        credentials {
+          username = System.getenv(findProperty("publishing.usernameEnvironmentVariable"))
+          password = System.getenv(findProperty("publishing.passwordEnvironmentVariable"))
+        }
+      }
+    }
+  }
 }
