@@ -150,7 +150,7 @@ public class PrioritySolver implements Solver {
     for(var act: acts){
       //if some parameters are left uninstantiated, this is the last moment to do it
       var duration = act.duration();
-      if(duration != null && duration.longerThan(this.problem.getPlanningHorizon().getEndAerie())){
+      if(duration != null && act.startOffset().plus(duration).longerThan(this.problem.getPlanningHorizon().getEndAerie())) {
         logger.warn("Activity " + act
                            + " is planned to finish after the end of the planning horizon, not simulating. Extend the planning horizon.");
         allGood = false;
