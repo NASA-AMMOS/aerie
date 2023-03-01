@@ -88,3 +88,9 @@
   configuration:
     custom_root_fields:
       function: delete_activity_by_pk_delete_subtree
+- function:
+    name: apply_preset_to_activity
+    schema: hasura_functions
+  configuration:
+    custom_root_fields:
+      function: apply_preset_to_activity
