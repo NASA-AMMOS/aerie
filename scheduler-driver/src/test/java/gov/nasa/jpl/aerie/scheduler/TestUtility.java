@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.constraints.tree.ForEachActivitySpans;
 import gov.nasa.jpl.aerie.constraints.tree.Not;
 import gov.nasa.jpl.aerie.constraints.tree.Or;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsFromSpans;
+import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
@@ -65,6 +66,14 @@ public class TestUtility {
       }
     }
     return false;
+  }
+
+  public static SchedulingCondition createExclusionSchedulingZone(final ActivityType activityType, final Windows exclusionZone){
+    return new SchedulingCondition(
+        new Not(
+            new WindowsWrapperExpression(exclusionZone)
+        ),
+        List.of(activityType));
   }
 
   public static List<SchedulingCondition> createAutoMutexGlobalSchedulingCondition(final ActivityType activityType) {

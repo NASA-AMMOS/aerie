@@ -17,12 +17,26 @@ import java.util.List;
  * describes some criteria that is desired in the solution plans
  */
 public class Goal {
+  /**
+   * the human-legible identifier of the goal
+   * never null
+   */
+  protected String name;
 
+  /**
+   * the contiguous range of time over which the goal applies
+   */
+  protected Expression<Windows> temporalContext;
+
+  /**
+   * state constraints applying to the goal
+   */
+  protected Expression<Windows> resourceConstraints;
   /** Set to true if partial satisfaction is ok, the scheduler will try to do its best */
-  private boolean partialSatisfaction = false;
+  private boolean shouldRollbackIfUnsatisfied = false;
 
-  public boolean isPartiallySatisfiable() {
-    return partialSatisfaction;
+  public boolean shouldRollbackIfUnsatisfied() {
+    return shouldRollbackIfUnsatisfied;
   }
 
   /**
@@ -127,12 +141,12 @@ public class Goal {
 
     protected  final List<Expression<Windows>> resourceConstraints = new LinkedList<>();
 
-    public T partialSatisfaction() {
-      this.partialSatisfaction = true;
+    public T shouldRollbackIfUnsatisfied(final boolean shouldRollbackIfUnsatisfied) {
+      this.shouldRollbackIfUnsatisfied = shouldRollbackIfUnsatisfied;
       return getThis();
     }
 
-    boolean partialSatisfaction;
+    boolean shouldRollbackIfUnsatisfied;
 
     /**
      * uses all pending specifications to construct a matching new goal object
@@ -168,7 +182,7 @@ public class Goal {
     protected Goal fill(Goal goal) {
       goal.name = name;
 
-      goal.partialSatisfaction = true;
+      goal.shouldRollbackIfUnsatisfied = this.shouldRollbackIfUnsatisfied;
 
       goal.resourceConstraints = null;
       if (this.resourceConstraints.size() > 0) {
@@ -260,22 +274,4 @@ public class Goal {
     }
     this.name = name;
   }
-
-  /**
-   * the human-legible identifier of the goal
-   *
-   * never null
-   */
-  protected String name;
-
-  /**
-   * the contiguous range of time over which the goal applies
-   */
-  protected Expression<Windows> temporalContext;
-
-  /**
-   * state constraints applying to the goal
-   */
-  protected Expression<Windows> resourceConstraints;
-
 }

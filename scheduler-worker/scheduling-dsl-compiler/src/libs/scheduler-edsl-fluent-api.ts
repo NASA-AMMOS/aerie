@@ -136,6 +136,7 @@ export class Goal {
         this.__astNode,
         ...others.map(other => other.__astNode),
       ],
+      shouldRollbackIfUnsatisfied: false
     });
   }
 
@@ -182,6 +183,7 @@ export class Goal {
         this.__astNode,
         ...others.map(other => other.__astNode),
       ],
+      shouldRollbackIfUnsatisfied: false
     });
   }
 
@@ -270,7 +272,20 @@ export class Goal {
       kind: AST.NodeKind.ActivityRecurrenceGoal,
       activityTemplate: opts.activityTemplate,
       interval: opts.interval,
+      shouldRollbackIfUnsatisfied: false
     });
+  }
+
+  /**
+   * Specifies whether the scheduler should rollback or not if the goal is only partially satisfied.
+   * Rolling back is removing all inserted activities to satisfy the goal as well as removing associations to existing activities
+   * @param shouldRollbackIfUnsatisfied boolean specifying the behavior of the scheduler in terms of rollback
+   */
+  public shouldRollbackIfUnsatisfied(shouldRollbackIfUnsatisfied: boolean): Goal{
+    if('shouldRollbackIfUnsatisfied' in this.__astNode){
+      this.__astNode['shouldRollbackIfUnsatisfied'] = shouldRollbackIfUnsatisfied
+    }
+    return this
   }
 
   /**
@@ -345,6 +360,7 @@ export class Goal {
       forEach: opts.forEach.__astNode,
       startConstraint: (("startsAt" in opts) ? opts.startsAt.__astNode : ("startsWithin" in opts) ? opts.startsWithin.__astNode : undefined),
       endConstraint: (("endsAt" in opts) ? opts.endsAt.__astNode : ("endsWithin" in opts) ? opts.endsWithin.__astNode : undefined),
+      shouldRollbackIfUnsatisfied: false
     });
   }
 
@@ -410,7 +426,8 @@ export class Goal {
     return Goal.new({
       kind: AST.NodeKind.ActivityCardinalityGoal,
       activityTemplate: opts.activityTemplate,
-      specification: opts.specification
+      specification: opts.specification,
+      shouldRollbackIfUnsatisfied: false
     });
   }
 }
@@ -596,7 +613,9 @@ declare global {
   class Goal {
     public readonly __astNode: AST.GoalSpecifier;
 
-    /**
+    public shouldRollbackIfUnsatisfied(shouldRollbackIfUnsatisfied: boolean): Goal;
+
+      /**
      * Aggregates the goal with another list of goals to form a conjunction of goals
      *
      * All goals in the conjunction must be satisfied in order for the conjunction to be satisfied

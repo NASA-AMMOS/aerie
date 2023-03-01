@@ -58,12 +58,14 @@ export interface ActivityRecurrenceGoal {
   kind: NodeKind.ActivityRecurrenceGoal,
   activityTemplate: ActivityTemplate<any>,
   interval: Temporal.Duration,
+  shouldRollbackIfUnsatisfied: boolean
 }
 
 export interface ActivityCardinalityGoal {
   kind: NodeKind.ActivityCardinalityGoal,
   activityTemplate: ActivityTemplate<any>,
-  specification: CardinalityGoalArguments
+  specification: CardinalityGoalArguments,
+  shouldRollbackIfUnsatisfied: boolean
 }
 
 export interface ActivityCoexistenceGoal {
@@ -73,6 +75,7 @@ export interface ActivityCoexistenceGoal {
   forEach: WindowsExpressions.WindowsExpression | ActivityExpression,
   startConstraint: ActivityTimingConstraintSingleton | ActivityTimingConstraintRange | undefined,
   endConstraint: ActivityTimingConstraintSingleton | ActivityTimingConstraintRange | undefined,
+  shouldRollbackIfUnsatisfied: boolean
 }
 
 export interface ActivityExpression {
@@ -151,11 +154,13 @@ export type GoalComposition =
 export interface GoalAnd {
   kind: NodeKind.GoalAnd,
   goals: GoalSpecifier[],
+  shouldRollbackIfUnsatisfied: boolean
 }
 
 export interface GoalOr {
   kind: NodeKind.GoalOr,
   goals: GoalSpecifier[],
+  shouldRollbackIfUnsatisfied: boolean
 }
 
 /**

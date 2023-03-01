@@ -370,7 +370,7 @@ public class PrioritySolver implements Solver {
         Collection<SchedulingActivityDirective> actsToAssociateWith = null;
         for (var subgoal : goal.getSubgoals()) {
           satisfyGoal(subgoal);
-          if(evaluation.forGoal(subgoal).getScore() == 0 || subgoal.isPartiallySatisfiable()) {
+          if(evaluation.forGoal(subgoal).getScore() == 0 || !subgoal.shouldRollbackIfUnsatisfied()) {
             var associatedActivities = evaluation.forGoal(subgoal).getAssociatedActivities();
             var insertedActivities = evaluation.forGoal(subgoal).getInsertedActivities();
             var aggregatedActivities = new ArrayList<SchedulingActivityDirective>();
@@ -411,9 +411,6 @@ public class PrioritySolver implements Solver {
         for (var subgoal : goal.getSubgoals()) {
           satisfyGoal(subgoal);
           final var subgoalIsSatisfied = (evaluation.forGoal(subgoal).getScore() == 0);
-          if(!subgoalIsSatisfied && !(goal.isPartiallySatisfiable())){
-            rollback(subgoal);
-          }
           evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false);
           evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), true);
           if(subgoalIsSatisfied){
@@ -425,6 +422,11 @@ public class PrioritySolver implements Solver {
           evaluation.forGoal(goal).setScore(0);
         } else {
           evaluation.forGoal(goal).setScore(-1);
+          if(goal.shouldRollbackIfUnsatisfied()) {
+            for (var subgoal : goal.getSubgoals()) {
+              rollback(subgoal);
+            }
+          }
         }
       }
   }
@@ -457,11 +459,12 @@ public class PrioritySolver implements Solver {
       evaluation.forGoal(goal).setScore(-1);
     }
 
-    if (!goalIsSatisfied && !goal.isPartiallySatisfiable()) {
+    if(!goalIsSatisfied && goal.shouldRollbackIfUnsatisfied()){
       for (var subgoal : goal.getSubgoals()) {
         rollback(subgoal);
       }
-    } else {
+    }
+    if(goalIsSatisfied) {
       for (var subgoal : goal.getSubgoals()) {
         evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getAssociatedActivities(), false);
         evaluation.forGoal(goal).associate(evaluation.forGoal(subgoal).getInsertedActivities(), true);
@@ -552,11 +555,10 @@ public class PrioritySolver implements Solver {
       }
     }//while(missingConflicts&&madeProgress)
 
-    if(!missingConflicts.isEmpty() && !goal.isPartiallySatisfiable()){
+    if(!missingConflicts.isEmpty() && goal.shouldRollbackIfUnsatisfied()){
       rollback(goal);
-    } else{
-      evaluation.forGoal(goal).setScore(-missingConflicts.size());
     }
+    evaluation.forGoal(goal).setScore(-missingConflicts.size());
   }
 
   /**
