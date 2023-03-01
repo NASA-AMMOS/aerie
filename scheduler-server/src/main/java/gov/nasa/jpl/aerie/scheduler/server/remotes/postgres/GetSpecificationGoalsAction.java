@@ -10,28 +10,16 @@ import java.util.List;
 
 /*package-local*/ final class GetSpecificationGoalsAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-    with
-      goals as
-        ( select
-            s.specification_id,
+    select
             s.goal_id,
-            s.priority,
-            s.enabled,
             g.name,
             g.definition,
-            g.revision
-          from scheduling_specification_goals as s
-            left join scheduling_goal as g
-            on s.goal_id = g.id )
-    select
-      g.goal_id,
-      g.name,
-      g.definition,
       g.revision,
-      g.enabled
-    from goals as g
-      where g.specification_id = ?
-      order by g.priority asc
+      s.enabled,
+          from scheduling_specification_goals as s
+    left join scheduling_goal as g on s.goal_id = g.id
+    where s.specification_id = ?
+    order by s.priority;
     """;
 
   private final PreparedStatement statement;
