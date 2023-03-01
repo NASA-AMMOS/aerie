@@ -71,7 +71,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
    * @param gqlStr the graphQL query or mutation to send to aerie
    * @return the json response returned by aerie, or an empty optional in case of io errors
    */
-  private Optional<JsonObject> postRequest(final String gqlStr) throws IOException, PlanServiceException {
+  protected Optional<JsonObject> postRequest(final String gqlStr) throws IOException, PlanServiceException {
     try {
       //TODO: (mem optimization) use streams here to avoid several copies of strings
       final var reqBody = Json.createObjectBuilder().add("query", gqlStr).build();
@@ -102,7 +102,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     }
   }
 
-  private Optional<JsonObject> postRequest(final String query, final JsonObject variables) throws IOException, PlanServiceException {
+  protected Optional<JsonObject> postRequest(final String query, final JsonObject variables) throws IOException, PlanServiceException {
     try {
       //TODO: (mem optimization) use streams here to avoid several copies of strings
       final var reqBody = Json
@@ -481,7 +481,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     return createActivityDirectives(planId, plan.getActivitiesByTime(), activityToGoalId);
   }
 
-  private Map<SchedulingActivityDirective, ActivityDirectiveId> createActivityDirectives(
+  public Map<SchedulingActivityDirective, ActivityDirectiveId> createActivityDirectives(
       final PlanId planId,
       final List<SchedulingActivityDirective> orderedActivities,
       final Map<SchedulingActivityDirective, GoalId> activityToGoalId
@@ -648,7 +648,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     return new MissionModelTypes(activityTypes, getResourceTypes(missionModelId));
   }
 
-  private Collection<ResourceType> getResourceTypes(final MissionModelId missionModelId)
+  public Collection<ResourceType> getResourceTypes(final MissionModelId missionModelId)
   throws IOException, MissionModelServiceException
   {
     final var request = """
