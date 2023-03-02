@@ -174,7 +174,7 @@ public class Spans implements IntervalContainer<Spans>, Iterable<Segment<Optiona
 
   public Spans intersectWith(final Windows windows){
     final var ret = new Spans();
-    this.intervals.forEach(x -> windows.iterator().forEachRemaining(y -> ret.add(Interval.intersect(y.interval(), x.interval()), x.value())));
+    this.intervals.forEach(x -> windows.iterateEqualTo(true).iterator().forEachRemaining(y -> ret.add(Interval.intersect(x.interval(), y), x.value())));
     return ret;
   }
 
