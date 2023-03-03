@@ -17,7 +17,7 @@ import java.util.List;
       c.definition,
       c.revision
     from scheduling_specification_conditions as s
-      left join scheduling_condition as c
+      join scheduling_condition as c
       on s.specification_id = ?
       and s.condition_id = c.id
     """;
