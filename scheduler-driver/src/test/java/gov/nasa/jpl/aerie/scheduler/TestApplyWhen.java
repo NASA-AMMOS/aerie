@@ -861,7 +861,7 @@ public class TestApplyWhen {
     partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(7, Duration.SECONDS)), Duration.of(4, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 11s after start
     partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(14, Duration.SECONDS)), Duration.of(4, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 16s after start
     partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(19, Duration.SECONDS)), Duration.of(4, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 16s after start
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(25, Duration.SECONDS)), Duration.of(4, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 16s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(25, Duration.SECONDS)), Duration.of(2, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 16s after start
 
 
     //  pass this plan as initialPlan to Problem object
@@ -933,7 +933,7 @@ public class TestApplyWhen {
     PlanInMemory partialPlan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
     partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie(), Duration.of(4, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, start at start
-    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(8, Duration.SECONDS)), Duration.of(5, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 11s after start
+    partialPlan.add(SchedulingActivityDirective.of(actTypeA, planningHorizon.getStartAerie().plus(Duration.of(8, Duration.SECONDS)), Duration.of(3, Duration.SECONDS), null, true)); //create an activity that's 5 seconds long, 11s after start
 
     //  pass this plan as initialPlan to Problem object
     problem.setInitialPlan(partialPlan);
