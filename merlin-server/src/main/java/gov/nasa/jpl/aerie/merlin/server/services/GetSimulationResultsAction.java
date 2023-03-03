@@ -9,12 +9,16 @@ import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
+import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -164,17 +168,9 @@ public final class GetSimulationResultsAction {
     final var _discreteProfiles = results$
         .map(r -> r.discreteProfiles)
         .orElseGet(Collections::emptyMap);
-    final var discreteProfiles = new HashMap<String, DiscreteProfile>(_discreteProfiles.size());
-    for (final var entry : _discreteProfiles.entrySet()) {
-      discreteProfiles.put(entry.getKey(), DiscreteProfile.fromSimulatedProfile(entry.getValue().getRight()));
-    }
     final var _realProfiles = results$
         .map(r -> r.realProfiles)
         .orElseGet(Collections::emptyMap);
-    final var realProfiles = new HashMap<String, LinearProfile>();
-    for (final var entry : _realProfiles.entrySet()) {
-      realProfiles.put(entry.getKey(), LinearProfile.fromSimulatedProfile(entry.getValue().getRight()));
-    }
 
     final var externalDatasets = this.planService.getExternalDatasets(planId);
     final var realExternalProfiles = new HashMap<String, LinearProfile>();
@@ -194,12 +190,8 @@ public final class GetSimulationResultsAction {
 
     final var environment = new EvaluationEnvironment(realExternalProfiles, discreteExternalProfiles);
 
-    final var preparedResults = new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
-        simStartTime,
-        Interval.between(Duration.ZERO, simDuration),
-        activities,
-        realProfiles,
-        discreteProfiles);
+    final var realProfiles = new HashMap<String, LinearProfile>();
+    final var discreteProfiles = new HashMap<String, DiscreteProfile>(_discreteProfiles.size());
 
     final var violations = new ArrayList<Violation>();
     for (final var entry : constraintCode.entrySet()) {
@@ -225,6 +217,39 @@ public final class GetSimulationResultsAction {
         throw new Error("Unhandled variant of ConstraintsDSLCompilationResult: " + constraintCompilationResult);
       }
 
+      final var names = new HashSet<String>();
+      expression.extractResources(names);
+
+      final var newNames = new HashSet<String>();
+      for (final var name : names) {
+        if (!realProfiles.containsKey(name) && !discreteProfiles.containsKey(name)) {
+          newNames.add(name);
+        }
+      }
+
+      if (!newNames.isEmpty()) {
+        final var newProfiles = getProfiles(results$.get(), newNames);
+
+        for (final var _entry : ProfileSet.unwrapOptional(newProfiles.realProfiles()).entrySet()) {
+          if (!realProfiles.containsKey(_entry.getKey())) {
+            realProfiles.put(_entry.getKey(), LinearProfile.fromSimulatedProfile(_entry.getValue().getRight()));
+          }
+        }
+
+        for (final var _entry : ProfileSet.unwrapOptional(newProfiles.discreteProfiles()).entrySet()) {
+          if (!discreteProfiles.containsKey(_entry.getKey())) {
+            discreteProfiles.put(_entry.getKey(), DiscreteProfile.fromSimulatedProfile(_entry.getValue().getRight()));
+          }
+        }
+      }
+
+      final var preparedResults = new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
+          simStartTime,
+          Interval.between(Duration.ZERO, simDuration),
+          activities,
+          realProfiles,
+          discreteProfiles);
+
       final var violationEvents = new ArrayList<Violation>();
       try {
         violationEvents.addAll(expression.evaluate(preparedResults, environment));
@@ -241,20 +266,29 @@ public final class GetSimulationResultsAction {
           created to account for refactoring and removing the need for this condition. */
       if (violationEvents.size() == 1 && violationEvents.get(0).violationWindows.isEmpty()) continue;
 
-      final var names = new HashSet<String>();
-      expression.extractResources(names);
-      final var resourceNames = new ArrayList<>(names);
-
       violationEvents.forEach(violation -> violations.add(new Violation(
           entry.getValue().name(),
           entry.getKey(),
           entry.getValue().type(),
           violation.activityInstanceIds,
-          resourceNames,
+          new ArrayList<>(names),
           violation.violationWindows,
           violation.gaps)));
     }
 
     return violations;
+  }
+
+  public ProfileSet getProfiles(final gov.nasa.jpl.aerie.merlin.driver.SimulationResults simulationResults, final Iterable<String> profileNames) {
+    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
+    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
+    for (final var profileName : profileNames) {
+      if (simulationResults.realProfiles.containsKey(profileName)) {
+        realProfiles.put(profileName, simulationResults.realProfiles.get(profileName));
+      } else if (simulationResults.discreteProfiles.containsKey(profileName)) {
+        discreteProfiles.put(profileName, simulationResults.discreteProfiles.get(profileName));
+      }
+    }
+    return ProfileSet.of(realProfiles, discreteProfiles);
   }
 }
