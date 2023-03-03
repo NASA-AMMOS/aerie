@@ -49,41 +49,41 @@ comment on column activity_directive.anchored_to_start is e''
 create function anchor_direct_descendents_to_plan(_activity_id int, _plan_id int)
   returns setof activity_directive
   language plpgsql as $$
-declare
-  _total_offset interval;
-begin
-  if _plan_id is null then
-    raise exception 'Plan ID cannot be null.';
-  end if;
-  if _activity_id is null then
-    raise exception 'Activity ID cannot be null.';
-  end if;
-  if not exists(select id from activity_directive where (id, plan_id) = (_activity_id, _plan_id)) then
-    raise exception 'Activity Directive % does not exist in Plan %', _activity_id, _plan_id;
-  end if;
+  declare
+    _total_offset interval;
+  begin
+    if _plan_id is null then
+      raise exception 'Plan ID cannot be null.';
+    end if;
+    if _activity_id is null then
+      raise exception 'Activity ID cannot be null.';
+    end if;
+    if not exists(select id from activity_directive where (id, plan_id) = (_activity_id, _plan_id)) then
+      raise exception 'Activity Directive % does not exist in Plan %', _activity_id, _plan_id;
+    end if;
 
-  with recursive history(activity_id, anchor_id, total_offset) as (
-    select ad.id, ad.anchor_id, ad.start_offset
-    from activity_directive ad
-    where (ad.id, ad.plan_id) = (_activity_id, _plan_id)
-    union
-    select ad.id, ad.anchor_id, h.total_offset + ad.start_offset
-    from activity_directive ad, history h
-    where (ad.id, ad.plan_id) = (h.anchor_id, _plan_id)
-      and h.anchor_id is not null
-  ) select total_offset
-  from history
-  where history.anchor_id is null
-  into _total_offset;
+    with recursive history(activity_id, anchor_id, total_offset) as (
+      select ad.id, ad.anchor_id, ad.start_offset
+      from activity_directive ad
+      where (ad.id, ad.plan_id) = (_activity_id, _plan_id)
+      union
+      select ad.id, ad.anchor_id, h.total_offset + ad.start_offset
+      from activity_directive ad, history h
+      where (ad.id, ad.plan_id) = (h.anchor_id, _plan_id)
+        and h.anchor_id is not null
+    ) select total_offset
+    from history
+    where history.anchor_id is null
+    into _total_offset;
 
-  return query update activity_directive
-    set start_offset = start_offset + _total_offset,
-      anchor_id = null,
-      anchored_to_start = true
-    where (anchor_id, plan_id) = (_activity_id, _plan_id)
-    returning *;
-end
-$$;
+    return query update activity_directive
+      set start_offset = start_offset + _total_offset,
+          anchor_id = null,
+          anchored_to_start = true
+      where (anchor_id, plan_id) = (_activity_id, _plan_id)
+      returning *;
+  end
+  $$;
 comment on function anchor_direct_descendents_to_plan(_activity_id integer, _plan_id integer) is e''
   'Given the primary key of an activity, reanchor all anchor chains attached to the activity to the plan.\n'
   'In the event of an end-time anchor, this function assumes all simulated activities have a duration of 0.';
@@ -112,10 +112,10 @@ begin
 
   return query
     update activity_directive
-      set start_offset = start_offset + _current_offset,
-        anchor_id = _current_anchor_id
-      where (anchor_id, plan_id) = (_activity_id, _plan_id)
-      returning *;
+    set start_offset = start_offset + _current_offset,
+      anchor_id = _current_anchor_id
+    where (anchor_id, plan_id) = (_activity_id, _plan_id)
+    returning *;
 end
 $$;
 comment on function anchor_direct_descendents_to_ancestor(_activity_id integer, _plan_id integer) is e''
@@ -219,19 +219,19 @@ comment on column merge_staging_area.anchored_to_start is e''
 -- Modify Begin_Merge and Commit_Merge
 create or replace procedure begin_merge(_merge_request_id integer, review_username text)
   language plpgsql as $$
-declare
-  validate_id integer;
-  validate_status merge_request_status;
-  validate_non_no_op_status activity_change_type;
-  snapshot_id_supplying integer;
-  plan_id_receiving integer;
-  merge_base_id integer;
+  declare
+    validate_id integer;
+    validate_status merge_request_status;
+    validate_non_no_op_status activity_change_type;
+    snapshot_id_supplying integer;
+    plan_id_receiving integer;
+    merge_base_id integer;
 begin
   -- validate id and status
   select id, status
-  from merge_request
-  where _merge_request_id = id
-  into validate_id, validate_status;
+    from merge_request
+    where _merge_request_id = id
+    into validate_id, validate_status;
 
   if validate_id is null then
     raise exception 'Request ID % is not present in merge_request table.', _merge_request_id;
@@ -243,9 +243,9 @@ begin
 
   -- select from merge-request the snapshot_sc (s_sc) and plan_rc (p_rc) ids
   select plan_id_receiving_changes, snapshot_id_supplying_changes
-  from merge_request
-  where id = _merge_request_id
-  into plan_id_receiving, snapshot_id_supplying;
+    from merge_request
+    where id = _merge_request_id
+    into plan_id_receiving, snapshot_id_supplying;
 
   -- ensure the plan receiving changes isn't locked
   if (select is_locked from plan where plan.id=plan_id_receiving) then
@@ -254,78 +254,78 @@ begin
 
   -- lock plan_rc
   update plan
-  set is_locked = true
-  where plan.id = plan_id_receiving;
+    set is_locked = true
+    where plan.id = plan_id_receiving;
 
   -- get merge base (mb)
   select get_merge_base(plan_id_receiving, snapshot_id_supplying)
-  into merge_base_id;
+    into merge_base_id;
 
   -- update the status to "in progress"
   update merge_request
-  set status = 'in-progress',
-      merge_base_snapshot_id = merge_base_id,
-      reviewer_username = review_username
-  where id = _merge_request_id;
+    set status = 'in-progress',
+    merge_base_snapshot_id = merge_base_id,
+    reviewer_username = review_username
+    where id = _merge_request_id;
 
 
   -- perform diff between mb and s_sc (s_diff)
-  -- delete is B minus A on key
-  -- add is A minus B on key
-  -- A intersect B is no op
-  -- A minus B on everything except everything currently in the table is modify
+    -- delete is B minus A on key
+    -- add is A minus B on key
+    -- A intersect B is no op
+    -- A minus B on everything except everything currently in the table is modify
   create temp table supplying_diff(
-                                    activity_id integer,
-                                    change_type activity_change_type not null
+    activity_id integer,
+    change_type activity_change_type not null
   );
 
   insert into supplying_diff (activity_id, change_type)
   select activity_id, 'delete'
   from(
-        select id as activity_id
-        from plan_snapshot_activities
-        where snapshot_id = merge_base_id
-        except
-        select id as activity_id
-        from plan_snapshot_activities
-        where snapshot_id = snapshot_id_supplying) a;
+    select id as activity_id
+    from plan_snapshot_activities
+      where snapshot_id = merge_base_id
+    except
+    select id as activity_id
+    from plan_snapshot_activities
+      where snapshot_id = snapshot_id_supplying) a;
 
   insert into supplying_diff (activity_id, change_type)
   select activity_id, 'add'
   from(
-        select id as activity_id
-        from plan_snapshot_activities
-        where snapshot_id = snapshot_id_supplying
-        except
-        select id as activity_id
-        from plan_snapshot_activities
-        where snapshot_id = merge_base_id) a;
+    select id as activity_id
+    from plan_snapshot_activities
+      where snapshot_id = snapshot_id_supplying
+    except
+    select id as activity_id
+    from plan_snapshot_activities
+      where snapshot_id = merge_base_id) a;
 
   insert into supplying_diff (activity_id, change_type)
-  select activity_id, 'none'
-  from(
+    select activity_id, 'none'
+      from(
         select id as activity_id, name, tags, source_scheduling_goal_id, created_at, last_modified_at,
-               start_offset, type, arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start
+            start_offset, type, arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start
         from plan_snapshot_activities
         where snapshot_id = merge_base_id
-        intersect
-        select id as activity_id, name, tags, source_scheduling_goal_id, created_at, last_modified_at,
-               start_offset, type, arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start
+    intersect
+      select id as activity_id, name, tags, source_scheduling_goal_id, created_at, last_modified_at,
+            start_offset, type, arguments, last_modified_arguments_at, metadata, anchor_id, anchored_to_start
         from plan_snapshot_activities
         where snapshot_id = snapshot_id_supplying) a;
 
   insert into supplying_diff (activity_id, change_type)
-  select activity_id, 'modify'
-  from(
-        select id as activity_id from plan_snapshot_activities
+    select activity_id, 'modify'
+    from(
+      select id as activity_id from plan_snapshot_activities
         where snapshot_id = merge_base_id or snapshot_id = snapshot_id_supplying
-        except
-        select activity_id from supplying_diff) a;
+      except
+      select activity_id from supplying_diff) a;
 
   -- perform diff between mb and p_rc (r_diff)
   create temp table receiving_diff(
-                                    activity_id integer,
-                                    change_type activity_change_type not null
+     activity_id integer,
+     change_type activity_change_type not null
   );
 
   insert into receiving_diff (activity_id, change_type)
@@ -366,25 +366,25 @@ begin
   insert into receiving_diff (activity_id, change_type)
   select activity_id, 'modify'
   from (
-         (select id as activity_id
-          from plan_snapshot_activities
-          where snapshot_id = merge_base_id
-          union
-          select id as activity_id
-          from activity_directive
-          where plan_id = plan_id_receiving)
-         except
-         select activity_id
-         from receiving_diff) a;
+        (select id as activity_id
+         from plan_snapshot_activities
+         where snapshot_id = merge_base_id
+         union
+         select id as activity_id
+         from activity_directive
+         where plan_id = plan_id_receiving)
+        except
+        select activity_id
+        from receiving_diff) a;
 
 
   -- perform diff between s_diff and r_diff
-  -- upload the non-conflicts into merge_staging_area
-  -- upload conflict into conflicting_activities
+      -- upload the non-conflicts into merge_staging_area
+      -- upload conflict into conflicting_activities
   create temp table diff_diff(
-                               activity_id integer,
-                               change_type_supplying activity_change_type not null,
-                               change_type_receiving activity_change_type not null
+    activity_id integer,
+    change_type_supplying activity_change_type not null,
+    change_type_receiving activity_change_type not null
   );
 
   -- this is going to require us to do the "none" operation again on the remaining modifies
@@ -396,87 +396,87 @@ begin
   insert into merge_staging_area (
     merge_request_id, activity_id, name, tags, source_scheduling_goal_id, created_at,
     start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type
-  )
-    -- 'adds' can go directly into the merge staging area table
+         )
+  -- 'adds' can go directly into the merge staging area table
   select _merge_request_id, activity_id, name, tags,  source_scheduling_goal_id, created_at,
          start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type
-  from supplying_diff as  s_diff
-         join plan_snapshot_activities psa
-              on s_diff.activity_id = psa.id
-  where snapshot_id = snapshot_id_supplying and change_type = 'add'
+    from supplying_diff as  s_diff
+    join plan_snapshot_activities psa
+      on s_diff.activity_id = psa.id
+    where snapshot_id = snapshot_id_supplying and change_type = 'add'
   union
   -- an 'add' between the receiving plan and merge base is actually a 'none'
   select _merge_request_id, activity_id, name, tags,  source_scheduling_goal_id, created_at,
          start_offset, type, arguments, metadata, anchor_id, anchored_to_start, 'none'::activity_change_type
-  from receiving_diff as r_diff
-         join activity_directive ad
-              on r_diff.activity_id = ad.id
-  where plan_id = plan_id_receiving and change_type = 'add';
+    from receiving_diff as r_diff
+    join activity_directive ad
+      on r_diff.activity_id = ad.id
+    where plan_id = plan_id_receiving and change_type = 'add';
 
   -- put the rest in diff_diff
   insert into diff_diff (activity_id, change_type_supplying, change_type_receiving)
   select activity_id, supplying_diff.change_type as change_type_supplying, receiving_diff.change_type as change_type_receiving
-  from receiving_diff
-         join supplying_diff using (activity_id)
+    from receiving_diff
+    join supplying_diff using (activity_id)
   where receiving_diff.change_type != 'add' or supplying_diff.change_type != 'add';
 
   -- ...except for that which is not recorded
   delete from diff_diff
-  where (change_type_receiving = 'delete' and  change_type_supplying = 'delete')
-     or (change_type_receiving = 'delete' and change_type_supplying = 'none');
+    where (change_type_receiving = 'delete' and  change_type_supplying = 'delete')
+       or (change_type_receiving = 'delete' and change_type_supplying = 'none');
 
   insert into merge_staging_area (
     merge_request_id, activity_id, name, tags, source_scheduling_goal_id, created_at,
     start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type
   )
-    -- receiving 'none' and 'modify' against 'none' in the supplying side go into the merge staging area as 'none'
+  -- receiving 'none' and 'modify' against 'none' in the supplying side go into the merge staging area as 'none'
   select _merge_request_id, activity_id, name, tags,  source_scheduling_goal_id, created_at,
          start_offset, type, arguments, metadata, anchor_id, anchored_to_start, 'none'
-  from diff_diff
-         join activity_directive
-              on activity_id=id
-  where plan_id = plan_id_receiving
-    and change_type_supplying = 'none'
-    and (change_type_receiving = 'modify' or change_type_receiving = 'none')
+    from diff_diff
+    join activity_directive
+      on activity_id=id
+    where plan_id = plan_id_receiving
+      and change_type_supplying = 'none'
+      and (change_type_receiving = 'modify' or change_type_receiving = 'none')
   union
   -- supplying 'modify' against receiving 'none' go into the merge staging area as 'modify'
   select _merge_request_id, activity_id, name, tags,  source_scheduling_goal_id, created_at,
          start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type_supplying
-  from diff_diff
-         join plan_snapshot_activities p
-              on diff_diff.activity_id = p.id
-  where snapshot_id = snapshot_id_supplying
-    and (change_type_receiving = 'none' and diff_diff.change_type_supplying = 'modify')
+    from diff_diff
+    join plan_snapshot_activities p
+      on diff_diff.activity_id = p.id
+    where snapshot_id = snapshot_id_supplying
+      and (change_type_receiving = 'none' and diff_diff.change_type_supplying = 'modify')
   union
   -- supplying 'delete' against receiving 'none' go into the merge staging area as 'delete'
-  select _merge_request_id, activity_id, name, tags,  source_scheduling_goal_id, created_at,
+    select _merge_request_id, activity_id, name, tags,  source_scheduling_goal_id, created_at,
          start_offset, type, arguments, metadata, anchor_id, anchored_to_start, change_type_supplying
-  from diff_diff
-         join activity_directive p
-              on diff_diff.activity_id = p.id
-  where plan_id = plan_id_receiving
-    and (change_type_receiving = 'none' and diff_diff.change_type_supplying = 'delete')
+    from diff_diff
+    join activity_directive p
+      on diff_diff.activity_id = p.id
+    where plan_id = plan_id_receiving
+      and (change_type_receiving = 'none' and diff_diff.change_type_supplying = 'delete')
   union
   -- 'modify' against a 'modify' must be checked for equality first.
   select _merge_request_id, activity_id, name, tags,  source_scheduling_goal_id, created_at,
          start_offset, type, arguments, metadata, anchor_id, anchored_to_start, 'none'
   from (
-         select activity_id, name, tags,  source_scheduling_goal_id, created_at,
-                start_offset, type, arguments, metadata, anchor_id, anchored_to_start
-         from plan_snapshot_activities psa
-                join diff_diff dd
-                     on dd.activity_id = psa.id
-         where psa.snapshot_id = snapshot_id_supplying
-           and (dd.change_type_receiving = 'modify' and dd.change_type_supplying = 'modify')
-         intersect
-         select activity_id, name, tags,  source_scheduling_goal_id, created_at,
-                start_offset, type, arguments, metadata, anchor_id, anchored_to_start
-         from diff_diff dd
-                join activity_directive ad
-                     on dd.activity_id = ad.id
-         where ad.plan_id = plan_id_receiving
-           and (dd.change_type_supplying = 'modify' and dd.change_type_receiving = 'modify')
-       ) a;
+    select activity_id, name, tags,  source_scheduling_goal_id, created_at,
+           start_offset, type, arguments, metadata, anchor_id, anchored_to_start
+      from plan_snapshot_activities psa
+      join diff_diff dd
+        on dd.activity_id = psa.id
+      where psa.snapshot_id = snapshot_id_supplying
+        and (dd.change_type_receiving = 'modify' and dd.change_type_supplying = 'modify')
+    intersect
+    select activity_id, name, tags,  source_scheduling_goal_id, created_at,
+           start_offset, type, arguments, metadata, anchor_id, anchored_to_start
+      from diff_diff dd
+      join activity_directive ad
+        on dd.activity_id = ad.id
+      where ad.plan_id = plan_id_receiving
+        and (dd.change_type_supplying = 'modify' and dd.change_type_receiving = 'modify')
+  ) a;
 
   -- 'modify' against 'delete' and inequal 'modify' against 'modify' goes into conflict table (aka everything left in diff_diff)
   insert into conflicting_activities (merge_request_id, activity_id, change_type_supplying, change_type_receiving)
@@ -486,7 +486,7 @@ begin
         except
         select msa.merge_request_id, activity_id
         from merge_staging_area msa) a
-         join diff_diff using (activity_id);
+  join diff_diff using (activity_id);
 
   -- Fail if there are no differences between the snapshot and the plan getting merged
   validate_non_no_op_status := null;
@@ -500,7 +500,7 @@ begin
     select change_type
     from merge_staging_area msa
     where merge_request_id = _merge_request_id
-      and msa.change_type != 'none'
+    and msa.change_type != 'none'
     limit 1
     into validate_non_no_op_status;
 
@@ -738,45 +738,45 @@ comment on procedure validate_nonnegative_net_end_offset(_activity_id integer, _
 create procedure validate_nonegative_net_plan_start(_activity_id integer, _plan_id integer)
   security definer
   language plpgsql as $$
-declare
-  net_offset interval;
-  _anchor_id integer;
-  _start_offset interval;
-  _anchored_to_start boolean;
-begin
-  select anchor_id, start_offset, anchored_to_start
-  from activity_directive
-  where (id, plan_id) = (_activity_id, _plan_id)
-  into _anchor_id, _start_offset, _anchored_to_start;
+  declare
+    net_offset interval;
+    _anchor_id integer;
+    _start_offset interval;
+    _anchored_to_start boolean;
+  begin
+    select anchor_id, start_offset, anchored_to_start
+    from activity_directive
+    where (id, plan_id) = (_activity_id, _plan_id)
+    into _anchor_id, _start_offset, _anchored_to_start;
 
-  if (_start_offset < '0' and _anchored_to_start) then -- only need to check if anchored to start or something with a negative offset
-    with recursive anchors(activity_id, anchor_id, anchored_to_start, start_offset, total_offset) as (
-      select _activity_id, _anchor_id, _anchored_to_start, _start_offset, _start_offset
-      union
-      select ad.id, ad.anchor_id, ad.anchored_to_start, ad.start_offset, anchors.total_offset + ad.start_offset
-      from activity_directive ad, anchors
-      where anchors.anchor_id is not null                               -- stop at plan
-        and  (ad.id, ad.plan_id) = (anchors.anchor_id, _plan_id)
-        and anchors.anchored_to_start                                  -- or, stop at end-time offset
-    )
-    select total_offset  -- get the id of the activity that the selected activity is anchored to
-    from anchors a
-    where a.anchor_id is null
-      and a.anchored_to_start
-    limit 1
-    into net_offset;
+    if (_start_offset < '0' and _anchored_to_start) then -- only need to check if anchored to start or something with a negative offset
+      with recursive anchors(activity_id, anchor_id, anchored_to_start, start_offset, total_offset) as (
+          select _activity_id, _anchor_id, _anchored_to_start, _start_offset, _start_offset
+        union
+          select ad.id, ad.anchor_id, ad.anchored_to_start, ad.start_offset, anchors.total_offset + ad.start_offset
+          from activity_directive ad, anchors
+          where anchors.anchor_id is not null                               -- stop at plan
+            and  (ad.id, ad.plan_id) = (anchors.anchor_id, _plan_id)
+            and anchors.anchored_to_start                                  -- or, stop at end-time offset
+      )
+      select total_offset  -- get the id of the activity that the selected activity is anchored to
+      from anchors a
+      where a.anchor_id is null
+        and a.anchored_to_start
+      limit 1
+      into net_offset;
 
-    if(net_offset < '0') then
-      raise notice 'Activity Directive % has a net negative offset relative to Plan Start.', _activity_id;
+      if(net_offset < '0') then
+        raise notice 'Activity Directive % has a net negative offset relative to Plan Start.', _activity_id;
 
-      insert into anchor_validation_status (activity_id, plan_id, reason_invalid)
-      values (_activity_id, _plan_id, 'Activity Directive ' || _activity_id || ' has a net negative offset relative to Plan Start.')
-      on conflict (activity_id, plan_id) do update
-        set reason_invalid = 'Activity Directive ' || excluded.activity_id || ' has a net negative offset relative to Plan Start.';
+        insert into anchor_validation_status (activity_id, plan_id, reason_invalid)
+        values (_activity_id, _plan_id, 'Activity Directive ' || _activity_id || ' has a net negative offset relative to Plan Start.')
+        on conflict (activity_id, plan_id) do update
+          set reason_invalid = 'Activity Directive ' || excluded.activity_id || ' has a net negative offset relative to Plan Start.';
+     end if;
     end if;
-  end if;
-end
-$$;
+    end
+  $$;
 comment on procedure validate_nonegative_net_plan_start(_activity_id integer, _plan_id integer) is e''
   'Returns true if the specified activity has a net negative offset from plan start. Otherwise, returns false.\n'
   'If true, writes to anchor_validation_status.';
@@ -837,14 +837,14 @@ begin
   -- Get collection of dependent activities, with offset relative to this activity
   create temp table dependent_activities as
   with recursive d_activities(activity_id, anchor_id, anchored_to_start, start_offset, total_offset) as (
-    select ad.id, ad.anchor_id, ad.anchored_to_start, ad.start_offset, ad.start_offset
-    from activity_directive ad
-    where (ad.anchor_id, ad.plan_id) = (new.id, new.plan_id) -- select all activities anchored to this one
+      select ad.id, ad.anchor_id, ad.anchored_to_start, ad.start_offset, ad.start_offset
+      from activity_directive ad
+      where (ad.anchor_id, ad.plan_id) = (new.id, new.plan_id) -- select all activities anchored to this one
     union
-    select ad.id, ad.anchor_id, ad.anchored_to_start, ad.start_offset, da.total_offset + ad.start_offset
-    from activity_directive ad, d_activities da
-    where (ad.anchor_id, ad.plan_id) = (da.activity_id, new.plan_id) -- select all activities anchored to those in the selection
-      and ad.anchored_to_start  -- stop at next end-time anchor
+      select ad.id, ad.anchor_id, ad.anchored_to_start, ad.start_offset, da.total_offset + ad.start_offset
+      from activity_directive ad, d_activities da
+      where (ad.anchor_id, ad.plan_id) = (da.activity_id, new.plan_id) -- select all activities anchored to those in the selection
+        and ad.anchored_to_start  -- stop at next end-time anchor
   ) select activity_id, total_offset
   from d_activities da;
 
@@ -858,7 +858,7 @@ begin
       and eta.anchor_id is not null                               -- stop at plan
       and eta.anchored_to_start                                   -- or stop at end time anchor
   ) select into end_anchor_id, offset_from_end_anchor
-      anchor_id, total_offset from end_time_anchor eta -- get the id of the activity that the selected activity is anchored to
+        anchor_id, total_offset from end_time_anchor eta -- get the id of the activity that the selected activity is anchored to
   where not eta.anchored_to_start and eta.anchor_id is not null
   limit 1;
 
@@ -878,8 +878,8 @@ begin
                               ' anchor on Activity Directive ' || end_anchor_id ||'.'
       from unnest(invalid_descendant_act_ids) as id
       on conflict (activity_id, plan_id) do update
-        set reason_invalid = 'Activity Directive ' || excluded.activity_id || ' has a net negative offset relative to an end-time' ||
-                             ' anchor on Activity Directive ' || end_anchor_id ||'.';
+      set reason_invalid = 'Activity Directive ' || excluded.activity_id || ' has a net negative offset relative to an end-time' ||
+                           ' anchor on Activity Directive ' || end_anchor_id ||'.';
     end if;
   end if;
 
@@ -935,7 +935,7 @@ begin
   select da.activity_id, new.plan_id, ''
   from dependent_activities as da
   where total_offset + offset_from_plan_start >= '0'
-     or total_offset + offset_from_end_anchor >= '0' -- only one of these checks will run depending on which one has `null` behind the offset
+    or total_offset + offset_from_end_anchor >= '0' -- only one of these checks will run depending on which one has `null` behind the offset
   on conflict (activity_id, plan_id) do update
     set reason_invalid = '';
 
@@ -962,34 +962,34 @@ execute procedure validate_anchors();
 
 -- Hasura functions for handling anchors during delete
 create table hasura_functions.delete_anchor_return_value(
-                                                          affected_row activity_directive,
-                                                          change_type text
+  affected_row activity_directive,
+  change_type text
 );
 
 create function hasura_functions.delete_activity_by_pk_reanchor_plan_start(_activity_id int, _plan_id int)
   returns setof hasura_functions.delete_anchor_return_value
   strict
-  language plpgsql as $$
-begin
-  if not exists(select id from public.activity_directive where (id, plan_id) = (_activity_id, _plan_id)) then
-    raise exception 'Activity Directive % does not exist in Plan %', _activity_id, _plan_id;
-  end if;
+language plpgsql as $$
+  begin
+    if not exists(select id from public.activity_directive where (id, plan_id) = (_activity_id, _plan_id)) then
+      raise exception 'Activity Directive % does not exist in Plan %', _activity_id, _plan_id;
+    end if;
 
-  return query
-    with updated as (
-      select public.anchor_direct_descendents_to_plan(_activity_id := _activity_id, _plan_id := _plan_id)
-    )
-    select updated.*, 'updated'
-    from updated;
+    return query
+      with updated as (
+        select public.anchor_direct_descendents_to_plan(_activity_id := _activity_id, _plan_id := _plan_id)
+      )
+      select updated.*, 'updated'
+        from updated;
 
-  return query
-    with deleted as (
-      delete from activity_directive where (id, plan_id) = (_activity_id, _plan_id) returning *
-    )
-    select (deleted.id, deleted.plan_id, deleted.name, deleted.tags, deleted.source_scheduling_goal_id,
-            deleted.created_at, deleted.last_modified_at, deleted.start_offset, deleted.type, deleted.arguments,
-            deleted.last_modified_arguments_at, deleted.metadata, deleted.anchor_id, deleted.anchored_to_start)::activity_directive, 'deleted' from deleted;
-end
+    return query
+      with deleted as (
+        delete from activity_directive where (id, plan_id) = (_activity_id, _plan_id) returning *
+      )
+      select (deleted.id, deleted.plan_id, deleted.name, deleted.tags, deleted.source_scheduling_goal_id,
+              deleted.created_at, deleted.last_modified_at, deleted.start_offset, deleted.type, deleted.arguments,
+              deleted.last_modified_arguments_at, deleted.metadata, deleted.anchor_id, deleted.anchored_to_start)::activity_directive, 'deleted' from deleted;
+  end
 $$;
 
 create function hasura_functions.delete_activity_by_pk_reanchor_to_anchor(_activity_id int, _plan_id int)
@@ -1001,19 +1001,19 @@ begin
     raise exception 'Activity Directive % does not exist in Plan %', _activity_id, _plan_id;
   end if;
 
-  return query
-    with updated as (
-      select public.anchor_direct_descendents_to_ancestor(_activity_id := _activity_id, _plan_id := _plan_id)
-    )
-    select updated.*, 'updated'
-    from updated;
-  return query
-    with deleted as (
-      delete from activity_directive where (id, plan_id) = (_activity_id, _plan_id) returning *
-    )
-    select (deleted.id, deleted.plan_id, deleted.name, deleted.tags, deleted.source_scheduling_goal_id,
-            deleted.created_at, deleted.last_modified_at, deleted.start_offset, deleted.type, deleted.arguments,
-            deleted.last_modified_arguments_at, deleted.metadata, deleted.anchor_id, deleted.anchored_to_start)::activity_directive, 'deleted' from deleted;
+    return query
+      with updated as (
+        select public.anchor_direct_descendents_to_ancestor(_activity_id := _activity_id, _plan_id := _plan_id)
+      )
+      select updated.*, 'updated'
+        from updated;
+    return query
+      with deleted as (
+        delete from activity_directive where (id, plan_id) = (_activity_id, _plan_id) returning *
+      )
+      select (deleted.id, deleted.plan_id, deleted.name, deleted.tags, deleted.source_scheduling_goal_id,
+              deleted.created_at, deleted.last_modified_at, deleted.start_offset, deleted.type, deleted.arguments,
+              deleted.last_modified_arguments_at, deleted.metadata, deleted.anchor_id, deleted.anchored_to_start)::activity_directive, 'deleted' from deleted;
 end
 $$;
 
@@ -1029,23 +1029,23 @@ begin
   return query
     with recursive
       descendents(activity_id, p_id) as (
-        select _activity_id, _plan_id
-        from activity_directive ad
-        where (ad.id, ad.plan_id) = (_activity_id, _plan_id)
+          select _activity_id, _plan_id
+          from activity_directive ad
+          where (ad.id, ad.plan_id) = (_activity_id, _plan_id)
         union
-        select ad.id, ad.plan_id
-        from activity_directive ad, descendents d
-        where (ad.anchor_id, ad.plan_id) = (d.activity_id, d.p_id)
+          select ad.id, ad.plan_id
+          from activity_directive ad, descendents d
+          where (ad.anchor_id, ad.plan_id) = (d.activity_id, d.p_id)
       ),
       deleted as (
-        delete from activity_directive ad
-          using descendents
-          where (ad.plan_id, ad.id) = (_plan_id, descendents.activity_id)
-          returning *
+          delete from activity_directive ad
+            using descendents
+            where (ad.plan_id, ad.id) = (_plan_id, descendents.activity_id)
+            returning *
       )
-    select (deleted.id, deleted.plan_id, deleted.name, deleted.tags, deleted.source_scheduling_goal_id,
-            deleted.created_at, deleted.last_modified_at, deleted.start_offset, deleted.type, deleted.arguments,
-            deleted.last_modified_arguments_at, deleted.metadata, deleted.anchor_id, deleted.anchored_to_start)::activity_directive, 'deleted' from deleted;
+      select (deleted.id, deleted.plan_id, deleted.name, deleted.tags, deleted.source_scheduling_goal_id,
+              deleted.created_at, deleted.last_modified_at, deleted.start_offset, deleted.type, deleted.arguments,
+              deleted.last_modified_arguments_at, deleted.metadata, deleted.anchor_id, deleted.anchored_to_start)::activity_directive, 'deleted' from deleted;
 end
 $$;
 
