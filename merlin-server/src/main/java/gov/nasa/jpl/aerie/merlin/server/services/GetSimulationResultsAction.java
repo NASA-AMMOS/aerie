@@ -15,6 +15,7 @@ import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.temporal.ChronoUnit;
@@ -76,7 +77,7 @@ public final class GetSimulationResultsAction {
     final var revisionData = this.planService.getPlanRevisionData(planId);
     final var simulationResults$ = this.simulationService.get(planId, revisionData);
     if (simulationResults$.isEmpty()) return Collections.emptyMap();
-    final var simulationResults = simulationResults$.get();
+    final var simulationResults = simulationResults$.get().getSimulationResults();
 
     final var samples = new HashMap<String, List<Pair<Duration, SerializedValue>>>();
 
@@ -133,7 +134,7 @@ public final class GetSimulationResultsAction {
       throw new RuntimeException("Assumption falsified -- mission model for existing plan does not exist");
     }
 
-    final var results$ = this.simulationService.get(planId, revisionData);
+    final var results$ = this.simulationService.get(planId, revisionData).map(SimulationResultsHandle::getSimulationResults);
     final var simStartTime = results$.isPresent() ? results$.get().startTime : plan.startTimestamp.toInstant();
     final var simDuration = results$.isPresent() ?
         results$.get().duration :

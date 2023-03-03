@@ -14,6 +14,7 @@ import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol.State;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 import org.apache.commons.lang3.tuple.Pair;
@@ -232,7 +233,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           case INCOMPLETE -> new ResultsProtocol.State.Incomplete(record.simulationDatasetId());
           case FAILED -> new ResultsProtocol.State.Failed(record.simulationDatasetId(), record.state().reason()
               .orElseThrow(() -> new Error("Unexpected state: %s request state has no failure message".formatted(record.state().status()))));
-          case SUCCESS -> new ResultsProtocol.State.Success(record.simulationDatasetId(), getSimulationResults(connection, record));
+          case SUCCESS -> new ResultsProtocol.State.Success(record.simulationDatasetId(), new SimulationResultsHandle(getSimulationResults(connection, record)));
         });
   }
 
