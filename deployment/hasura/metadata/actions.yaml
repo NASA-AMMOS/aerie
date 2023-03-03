@@ -127,25 +127,6 @@ custom_types:
         - description: null
           is_deprecated: null
           value: incomplete
-    - name: CommandSeqJsonType
-      values:
-        - description: null
-          is_deprecated: null
-          value: command
-    - name: CommandSeqJsonTimeType
-      values:
-        - description: null
-          is_deprecated: null
-          value: ABSOLUTE
-        - description: null
-          is_deprecated: null
-          value: COMMAND_RELATIVE
-        - description: null
-          is_deprecated: null
-          value: EPOCH_RELATIVE
-        - description: null
-          is_deprecated: null
-          value: COMMAND_COMPLETE
   input_objects: []
   objects:
     - name: ResourceType
@@ -160,9 +141,6 @@ custom_types:
     - name: AddCommandExpansionResponse
     - name: ExpandAllActivitiesResponse
     - name: ExpandedActivityInstance
-    - name: SequenceSeqJson
-    - name: CommandSeqJson
-    - name: CommandSeqJsonTime
     - name: UserCodeError
     - name: CodeLocation
     - name: ResourceSamplesResponse
@@ -176,4 +154,6 @@ custom_types:
     - name: ActivityArguments
     - name: ProfileSet
     - name: SchedulingFailureReason
+    - name: SequenceSeqJson
+    - name: CommandSeqJson
     - name: Any
