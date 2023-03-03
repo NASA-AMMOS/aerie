@@ -664,7 +664,8 @@ class SchedulingDSLCompilationServiceTests {
               "coexistence interval alias 0",
               new SchedulingDSL.ConstraintExpression.WindowsExpression(new LongerThan(new GreaterThan(new RealResource("/sample/resource/1"), new RealValue(50.0)), new DurationLiteral(Duration.of(10, Duration.MICROSECOND)))),
               Optional.of(new SchedulingDSL.ActivityTimingConstraint(TimeAnchor.END, TimeUtility.Operator.PLUS, Duration.ZERO, true)),
-              Optional.empty()
+              Optional.empty(),
+              false
           ),
           r.value()
       );
