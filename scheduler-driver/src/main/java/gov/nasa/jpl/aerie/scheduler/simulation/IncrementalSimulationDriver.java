@@ -27,7 +27,7 @@ public class IncrementalSimulationDriver<Model> {
   private Duration curTime = Duration.ZERO;
   private SimulationEngine engine = new SimulationEngine();
   private LiveCells cells;
-  private TemporalEventSource timeline = new TemporalEventSource();
+  //private TemporalEventSource timeline = new TemporalEventSource();
   private final MissionModel<Model> missionModel;
 
   private final Topic<ActivityInstanceId> activityTopic = new Topic<>();
@@ -44,6 +44,9 @@ public class IncrementalSimulationDriver<Model> {
   private final List<SimulatedActivity> activitiesInserted = new ArrayList<>();
   private Topic<Topic<?>> queryTopic = new Topic<>();
 
+  // Whether we're rerunning the simulation, in which case we can be lazy about starting up stuff, like daemons
+  private boolean rerunning = false;
+
   record SimulatedActivity(Duration start, SerializedActivity activity, ActivityInstanceId id) {}
 
   public IncrementalSimulationDriver(MissionModel<Model> missionModel){
@@ -56,31 +59,38 @@ public class IncrementalSimulationDriver<Model> {
     plannedDirectiveToTask.clear();
     lastSimResults = null;
     lastSimResultsEnd = Duration.ZERO;
+    this.rerunning = this.engine != null && this.cells.size() > 0;
     if (this.engine != null) this.engine.close();
-    this.engine = new SimulationEngine();
+    if (this.engine == null) this.engine = new SimulationEngine();
     activitiesInserted.clear();
 
     /* The top-level simulation timeline. */
-    this.timeline = new TemporalEventSource();
-    this.cells = new LiveCells(timeline, missionModel.getInitialCells());
+    // this.timeline = new TemporalEventSource();
+    this.cells = new LiveCells(engine.timeline, missionModel.getInitialCells());
     /* The current real time. */
     curTime = Duration.ZERO;
 
-    // Begin tracking all resources.
+    // Begin tracking any resources that have not already been simulated.
     for (final var entry : missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
-      engine.trackResource(name, resource, curTime);
+      if (!engine.hasSimulatedResource(name)) {
+        engine.trackResource(name, resource, curTime);
+      }
     }
 
     // Start daemon task(s) immediately, before anything else happens.
-    {
-      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
-
-      final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, queryTopic);
-      timeline.add(commit);
+    if (!rerunning) {
+      startDaemons();
     }
+  }
+
+  private void startDaemons() {
+    engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
+
+    final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
+    final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, queryTopic);
+    engine.timeline.add(commit);
   }
 
   //
@@ -94,10 +104,10 @@ public class IncrementalSimulationDriver<Model> {
       }
       final var delta = batch.offsetFromStart().minus(curTime);
       curTime = batch.offsetFromStart();
-      timeline.add(delta);
+      engine.timeline.add(delta);
       // Run the jobs in this batch.
       final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, queryTopic);
-      timeline.add(commit);
+      engine.timeline.add(commit);
 
     }
     lastSimResults = null;
@@ -165,7 +175,7 @@ public class IncrementalSimulationDriver<Model> {
           startTimestamp,
           endTime,
           activityTopic,
-          timeline,
+          engine.timeline,
           missionModel.getTopics());
       lastSimResultsEnd = endTime;
       //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
@@ -201,13 +211,13 @@ public class IncrementalSimulationDriver<Model> {
         break;
       }
       curTime = batch.offsetFromStart();
-      timeline.add(delta);
+      engine.timeline.add(delta);
       // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
       //   even if they occur at the same real time.
 
       // Run the jobs in this batch.
       final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, queryTopic);
-      timeline.add(commit);
+      engine.timeline.add(commit);
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time
       if (!plannedDirectiveToTask.isEmpty() && plannedDirectiveToTask.values().stream().allMatch(engine::isTaskComplete)) {

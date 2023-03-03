@@ -24,8 +24,7 @@ public final class SimulationDriver {
   ) {
     try (final var engine = new SimulationEngine()) {
       /* The top-level simulation timeline. */
-      var timeline = new TemporalEventSource();
-      var cells = new LiveCells(timeline, missionModel.getInitialCells());
+      var cells = new LiveCells(engine.timeline, missionModel.getInitialCells());
       /* The current real time. */
       var elapsedTime = Duration.ZERO;
 
@@ -45,7 +44,7 @@ public final class SimulationDriver {
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE, queryTopic);
-        timeline.add(commit);
+        engine.timeline.add(commit);
       }
 
       // Specify a topic on which tasks can log the activity they're associated with.
@@ -77,7 +76,8 @@ public final class SimulationDriver {
         // Increment real time, if necessary.
         final var delta = batch.offsetFromStart().minus(elapsedTime);
         elapsedTime = batch.offsetFromStart();
-        timeline.add(delta);
+        // TODO: Since we moved timeline from SimulationDriver to SimulationEngine, maybe some of this should be encapsulated in the engine.
+        engine.timeline.add(delta);
         // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
         //   even if they occur at the same real time.
 
@@ -87,7 +87,7 @@ public final class SimulationDriver {
 
         // Run the jobs in this batch.
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration, queryTopic);
-        timeline.add(commit);
+        engine.timeline.add(commit);
       }
 
       // A query depends on an event if
@@ -103,7 +103,8 @@ public final class SimulationDriver {
       // tstill not enough...?
 
       final var topics = missionModel.getTopics();
-      return SimulationEngine.computeResults(engine, startTime, elapsedTime, activityTopic, timeline, topics);
+      // TODO: Consider making computeResults() non-static
+      return SimulationEngine.computeResults(engine, startTime, elapsedTime, activityTopic, engine.timeline, topics);
     }
   }
 
@@ -111,8 +112,8 @@ public final class SimulationDriver {
   void simulateTask(final MissionModel<Model> missionModel, final TaskFactory<Return> task) {
     try (final var engine = new SimulationEngine()) {
       /* The top-level simulation timeline. */
-      var timeline = new TemporalEventSource();
-      var cells = new LiveCells(timeline, missionModel.getInitialCells());
+      //var timeline = new TemporalEventSource();
+      var cells = new LiveCells(engine.timeline, missionModel.getInitialCells());
       /* The current real time. */
       var elapsedTime = Duration.ZERO;
 
@@ -132,7 +133,7 @@ public final class SimulationDriver {
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE, queryTopic);
-        timeline.add(commit);
+        engine.timeline.add(commit);
       }
 
       // Schedule all activities.
@@ -146,13 +147,13 @@ public final class SimulationDriver {
         // Increment real time, if necessary.
         final var delta = batch.offsetFromStart().minus(elapsedTime);
         elapsedTime = batch.offsetFromStart();
-        timeline.add(delta);
+        engine.timeline.add(delta);
         // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
         //   even if they occur at the same real time.
 
         // Run the jobs in this batch.
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE, queryTopic);
-        timeline.add(commit);
+        engine.timeline.add(commit);
       }
     }
   }

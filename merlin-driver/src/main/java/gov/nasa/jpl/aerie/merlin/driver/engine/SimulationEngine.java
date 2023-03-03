@@ -50,6 +50,8 @@ import java.util.stream.Collectors;
  * A representation of the work remaining to do during a simulation, and its accumulated results.
  */
 public final class SimulationEngine implements AutoCloseable {
+  /** The EventGraphs separated by Durations between the events */
+  public final TemporalEventSource timeline = new TemporalEventSource();
   /** The set of all jobs waiting for time to pass. */
   private final JobSchedule<JobId, SchedulingInstant> scheduledJobs = new JobSchedule<>();
   /** The set of all jobs waiting on a given signal. */
@@ -59,8 +61,22 @@ public final class SimulationEngine implements AutoCloseable {
   /** The set of queries depending on a given set of topics. */
   private final Subscriptions<Topic<?>, ResourceId> waitingResources = new Subscriptions<>();
 
-  /** The history of when tasks read cells */
-  private final Profile<Pair<TaskId, Topic<?>>> cellReadHistory = new Profile<>();
+  /** The history of when tasks read topics/cells */
+  private final HashMap<Topic<?>, TreeMap<Duration, TaskId>> cellReadHistory = new HashMap<>();
+  public void putInCellReadHistory(Topic<?> topic, TaskId taskId, Duration time) {
+    var m = cellReadHistory.get(topic);
+    if (m == null) {
+      m = new TreeMap<>();
+      cellReadHistory.put(topic, m);
+    }
+    m.put(time, taskId);
+  }
+
+  /** When topics/cells become stale */
+  private final Map<Topic<?>, Duration> staleTopics = new HashMap<>();
+
+  /** When tasks become stale */
+  private final Map<TaskId, Duration> staleTasks = new HashMap<>();
 
   /** The execution state for every task. */
   private final Map<TaskId, ExecutionState<?>> tasks = new HashMap<>();
@@ -110,13 +126,45 @@ public final class SimulationEngine implements AutoCloseable {
     return task;
   }
 
+  /**
+   * Has this resource already been simulated?
+   * @param name
+   * @return
+   */
+  public boolean hasSimulatedResource(final String name) {
+    final var id = new ResourceId(name);
+    final ProfilingState<?> state = this.resources.get(id);
+    if (state == null) {
+      return false;
+    }
+    final Profile<?> profile = state.profile();
+    if (profile == null || profile.segments().size() <= 0) {
+      return false;
+    }
+    return true;
+  }
+
   /** Register a resource whose profile should be accumulated over time. */
   public <Dynamics>
   void trackResource(final String name, final Resource<Dynamics> resource, final Duration nextQueryTime) {
     final var id = new ResourceId(name);
-
-    this.resources.put(id, ProfilingState.create(resource));
+    final ProfilingState<?> state = this.resources.get(id);
+    if (state == null) {
+      this.resources.put(id, ProfilingState.create(resource));
+    } else {
+      // TODO -- should we do some kind of reset, like clearing segments after nextQueryTime?
+    }
     this.scheduledJobs.schedule(JobId.forResource(id), SubInstant.Resources.at(nextQueryTime));
+  }
+
+  public boolean isTaskStale(TaskId taskId, Duration timeOffset) {
+    final Duration staleTime = this.staleTasks.get(taskId);
+    return staleTime.noLongerThan(timeOffset);
+  }
+
+  public boolean isTopicStale(Topic<?> topic, Duration timeOffset) {
+    final Duration staleTime = this.staleTopics.get(topic);
+    return staleTime.noLongerThan(timeOffset);
   }
 
   /** Schedules any conditions or resources dependent on the given topic to be re-checked at the given time. */
@@ -627,6 +675,13 @@ public final class SimulationEngine implements AutoCloseable {
     return Optional.empty();
   }
 
+  public Map<Topic<?>, Duration> getStaleTopics() {
+    return staleTopics;
+  }
+
+  public Map<TaskId, Duration> getStaleTasks() {
+    return staleTasks;
+  }
 
   private static <EventType> Optional<SerializedValue> trySerializeEvent(Event event, SerializableTopic<EventType> serializableTopic) {
     return event.extract(serializableTopic.topic(), serializableTopic.outputType()::serialize);
@@ -706,8 +761,7 @@ public final class SimulationEngine implements AutoCloseable {
       @SuppressWarnings("unchecked")
       final var query = ((EngineCellId<?, State>) token);
 
-      this.queryTrackingInfo.ifPresent(info -> cellReadHistory.append(currentTime, Pair.of(info.getRight(), query.topic())));
-
+      this.queryTrackingInfo.ifPresent(info -> putInCellReadHistory(query.topic(), info.getRight(), currentTime));
 
       this.expiry = min(this.expiry, this.frame.getExpiry(query.query()));
       this.referencedTopics.add(query.topic());
@@ -746,10 +800,11 @@ public final class SimulationEngine implements AutoCloseable {
       @SuppressWarnings("unchecked")
       final var query = ((EngineCellId<?, State>) token);
 
-      cellReadHistory.append(currentTime, Pair.of(activeTask, query.topic()));
+      putInCellReadHistory(query.topic(), activeTask, currentTime);
+
 
       // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
-      //  if the same state is requested multiple times in a row.
+      // if the same state is requested multiple times in a row.
       final var state$ = this.frame.getState(query.query());
       return state$.orElseThrow(IllegalArgumentException::new);
     }
@@ -758,7 +813,16 @@ public final class SimulationEngine implements AutoCloseable {
     public <EventType> void emit(final EventType event, final Topic<EventType> topic) {
       // Append this event to the timeline.
       this.frame.emit(Event.create(topic, event, this.activeTask));
+      if (isTaskStale(this.activeTask, this.currentTime)) {  // TODO -- is this check necessary? Isn't anything that has effects going to be stale?
+        if (!isTopicStale(topic, this.currentTime)) {
+          SimulationEngine.this.staleTopics.put(topic, this.currentTime);
+          // TODO: Determine when staleness ends by stepping up cell to see if/when it matches the cell from the prior event graph (bisimulate)
+          // TODO: Schedule tasks expected to read this topic while it is stale
+          var taskIds = getTasksReadingTopicAfter(topic, this.currentTime);
 
+          // HERE!!! SimulationEngine.this.timeline
+        }
+      }
       SimulationEngine.this.invalidateTopic(topic, this.currentTime);
     }
 
@@ -770,6 +834,14 @@ public final class SimulationEngine implements AutoCloseable {
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       this.frame.signal(JobId.forTask(task));
     }
+  }
+
+  private <EventType> Collection<TaskId> getTasksReadingTopicAfter(Topic<EventType> topic, Duration currentTime) {
+    var m = cellReadHistory.get(topic);
+    if (m != null) {
+      return m.tailMap(currentTime).values();  // TODO: Should we not include reads at the same time?
+    }
+    return Collections.emptyList();
   }
 
   /** A representation of a job processable by the {@link SimulationEngine}. */

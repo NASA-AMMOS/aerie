@@ -59,6 +59,18 @@ public class SimulationFacade {
     this.activityTypes = new HashMap<>();
   }
 
+  public MissionModel<?> getMissionModel() {
+    return missionModel;
+  }
+
+  public PlanningHorizon getPlanningHorizon() {
+    return planningHorizon;
+  }
+
+  public IncrementalSimulationDriver<?> getDriver() {
+    return driver;
+  }
+
   public void setActivityTypes(Collection<ActivityType> activityTypes){
     this.activityTypes = new HashMap<>();
     activityTypes.forEach(at -> this.activityTypes.put(at.getName(), at));

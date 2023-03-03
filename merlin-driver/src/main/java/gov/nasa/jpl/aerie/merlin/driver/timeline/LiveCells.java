@@ -22,6 +22,10 @@ public final class LiveCells {
     this.parent = parent;
   }
 
+  public int size() {
+    return cells.size();
+  }
+
   public <State> Optional<State> getState(final Query<State> query) {
     return getCell(query).map(Cell::getState);
   }
