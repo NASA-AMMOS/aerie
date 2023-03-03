@@ -4,8 +4,8 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.models.InMemorySimulationResultsHandle;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
-import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -104,7 +104,7 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
             this.state.getClass().getCanonicalName()));
       }
 
-      this.state = new ResultsProtocol.State.Success(0, new SimulationResultsHandle(results));
+      this.state = new ResultsProtocol.State.Success(0, new InMemorySimulationResultsHandle(results));
     }
 
     @Override

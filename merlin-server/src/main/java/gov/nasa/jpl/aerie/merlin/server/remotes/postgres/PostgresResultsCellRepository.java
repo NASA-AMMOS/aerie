@@ -222,47 +222,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static Optional<State> getSimulationState (final Connection connection, final long datasetId) throws SQLException {
-    final var record$ = getSimulationDatasetRecord(connection, datasetId);
-    if (record$.isEmpty()) return Optional.empty();
-    final var record = record$.get();
-
-    return Optional.of(
-        switch (record.state().status()) {
-          case PENDING -> new ResultsProtocol.State.Pending(record.simulationDatasetId());
-          case INCOMPLETE -> new ResultsProtocol.State.Incomplete(record.simulationDatasetId());
-          case FAILED -> new ResultsProtocol.State.Failed(record.simulationDatasetId(), record.state().reason()
-              .orElseThrow(() -> new Error("Unexpected state: %s request state has no failure message".formatted(record.state().status()))));
-          case SUCCESS -> new ResultsProtocol.State.Success(record.simulationDatasetId(), new SimulationResultsHandle(getSimulationResults(connection, record)));
-        });
-  }
-
-  private static SimulationResults getSimulationResults(
-      final Connection connection,
-      final SimulationDatasetRecord simulationDatasetRecord
-  ) throws SQLException {
-    final var startTimestamp = simulationDatasetRecord.simulationStartTime();
-    final var endTimestamp = simulationDatasetRecord.simulationEndTime();
-
-    final var simulationStart = startTimestamp.toInstant();
-    final var duration = Duration.of(simulationStart.until(endTimestamp.toInstant(), ChronoUnit.MICROS), Duration.MICROSECONDS);
-    final var profiles = ProfileRepository.getProfiles(connection, simulationDatasetRecord.datasetId());
-    final var activities = getActivities(connection, simulationDatasetRecord.datasetId(), startTimestamp);
-    final var topics = getSimulationTopics(connection, simulationDatasetRecord.datasetId());
-    final var events = getSimulationEvents(connection, simulationDatasetRecord.datasetId(), startTimestamp);
-
-    return new SimulationResults(
-        ProfileSet.unwrapOptional(profiles.realProfiles()),
-        ProfileSet.unwrapOptional(profiles.discreteProfiles()),
-        activities.getLeft(),
-        activities.getRight(),
-        simulationStart,
-        duration,
-        topics,
-        events
-    );
-  }
-
   private static List<Triple<Integer, String, ValueSchema>> getSimulationTopics(Connection connection, long datasetId)
   throws SQLException
   {
@@ -449,8 +408,75 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     @Override
     public State get() {
       try (final var connection = dataSource.getConnection()) {
-        return getSimulationState(connection, datasetId)
-            .orElseThrow(() -> new Error("Dataset corrupted"));
+        Optional<State> result;
+        final var record$ = getSimulationDatasetRecord(
+            connection,
+            datasetId,
+            planStart);
+        if (record$.isEmpty()) {
+          result = Optional.empty();
+        } else {
+          final var record = record$.get();
+          result = Optional.of(
+              switch (record.state().status()) {
+                case PENDING -> new State.Pending(record.simulationDatasetId());
+                case INCOMPLETE -> new State.Incomplete(record.simulationDatasetId());
+                case FAILED -> new State.Failed(record.simulationDatasetId(), record.state().reason()
+                    .orElseThrow(() -> new Error("Unexpected state: %s request state has no failure message".formatted(record.state().status()))));
+                case SUCCESS -> new State.Success(
+                    record.simulationDatasetId(),
+                    new SimulationResultsHandle() {
+                      @Override
+                      public SimulationResults getSimulationResults() {
+                        try {
+                          final var simulationWindow = getSimulationWindow(connection, record, planId);
+                          final var startTimestamp = simulationWindow.start();
+                          final var simulationStart = startTimestamp.toInstant();
+
+                          final var profiles = ProfileRepository.getProfiles(connection, record.datasetId());
+                          final var activities = getActivities(connection, record.datasetId(), startTimestamp);
+                          final var topics = getSimulationTopics(connection, record.datasetId());
+                          final var events = getSimulationEvents(connection, record.datasetId(), startTimestamp);
+
+                          return new SimulationResults(
+                              ProfileSet.unwrapOptional(profiles.realProfiles()),
+                              ProfileSet.unwrapOptional(profiles.discreteProfiles()),
+                              activities.getLeft(),
+                              activities.getRight(),
+                              simulationStart,
+                              topics,
+                              events
+                          );
+                        } catch (SQLException e) {
+                          throw new RuntimeException(e);
+                        }
+                      }
+
+                      @Override
+                      public ProfileSet getProfiles(final Iterable<String> profileNames) {
+                        try(final var connection = PostgresResultsCell.this.dataSource.getConnection()) {
+                          return ProfileRepository.getProfiles(connection, record.datasetId(), profileNames);
+                        } catch (SQLException e) {
+                          throw new RuntimeException(e);
+                        }
+                      }
+
+                      @Override
+                      public Map<SimulatedActivityId, SimulatedActivity> getSimulatedActivities() {
+                        try(final var connection = PostgresResultsCell.this.dataSource.getConnection()) {
+                          final var simulationWindow = getSimulationWindow(connection, record, planId);
+                          final var startTimestamp = simulationWindow.start();
+                          final var activities = getActivities(connection, record.datasetId(), startTimestamp);
+                          return activities.getLeft();
+                        } catch (SQLException e) {
+                          throw new RuntimeException(e);
+                        }
+                      }
+                    });
+              });
+        }
+
+        return result.orElseThrow(() -> new Error("Dataset corrupted"));
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to get dataset", ex);
       }

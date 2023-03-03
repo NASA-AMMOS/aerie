@@ -9,11 +9,8 @@ import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
-import gov.nasa.jpl.aerie.merlin.driver.engine.ProfileSegment;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
@@ -138,7 +135,7 @@ public final class GetSimulationResultsAction {
       throw new RuntimeException("Assumption falsified -- mission model for existing plan does not exist");
     }
 
-    final var results$ = this.simulationService.get(planId, revisionData).map(SimulationResultsHandle::getSimulationResults);
+    final var results$ = this.simulationService.get(planId, revisionData);
     final var simStartTime = results$.isPresent() ? results$.get().startTime : plan.startTimestamp.toInstant();
     final var simDuration = results$.isPresent() ?
         results$.get().duration :
@@ -149,7 +146,7 @@ public final class GetSimulationResultsAction {
 
     final var activities = new ArrayList<ActivityInstance>();
     final var simulatedActivities = results$
-        .map(r -> r.simulatedActivities)
+        .map(SimulationResultsHandle::getSimulatedActivities)
         .orElseGet(Collections::emptyMap);
     for (final var entry : simulatedActivities.entrySet()) {
       final var id = entry.getKey();
@@ -165,12 +162,6 @@ public final class GetSimulationResultsAction {
           activity.arguments(),
           Interval.between(activityOffset, activityOffset.plus(activity.duration()))));
     }
-    final var _discreteProfiles = results$
-        .map(r -> r.discreteProfiles)
-        .orElseGet(Collections::emptyMap);
-    final var _realProfiles = results$
-        .map(r -> r.realProfiles)
-        .orElseGet(Collections::emptyMap);
 
     final var externalDatasets = this.planService.getExternalDatasets(planId);
     final var realExternalProfiles = new HashMap<String, LinearProfile>();
@@ -191,7 +182,7 @@ public final class GetSimulationResultsAction {
     final var environment = new EvaluationEnvironment(realExternalProfiles, discreteExternalProfiles);
 
     final var realProfiles = new HashMap<String, LinearProfile>();
-    final var discreteProfiles = new HashMap<String, DiscreteProfile>(_discreteProfiles.size());
+    final var discreteProfiles = new HashMap<String, DiscreteProfile>();
 
     final var violations = new ArrayList<Violation>();
     for (final var entry : constraintCode.entrySet()) {
@@ -228,7 +219,7 @@ public final class GetSimulationResultsAction {
       }
 
       if (!newNames.isEmpty()) {
-        final var newProfiles = getProfiles(results$.get(), newNames);
+        final var newProfiles = results$.map($ -> $.getProfiles(newNames)).orElse(ProfileSet.of(Map.of(), Map.of()));
 
         for (final var _entry : ProfileSet.unwrapOptional(newProfiles.realProfiles()).entrySet()) {
           if (!realProfiles.containsKey(_entry.getKey())) {
@@ -277,18 +268,5 @@ public final class GetSimulationResultsAction {
     }
 
     return violations;
-  }
-
-  public ProfileSet getProfiles(final gov.nasa.jpl.aerie.merlin.driver.SimulationResults simulationResults, final Iterable<String> profileNames) {
-    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
-    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
-    for (final var profileName : profileNames) {
-      if (simulationResults.realProfiles.containsKey(profileName)) {
-        realProfiles.put(profileName, simulationResults.realProfiles.get(profileName));
-      } else if (simulationResults.discreteProfiles.containsKey(profileName)) {
-        discreteProfiles.put(profileName, simulationResults.discreteProfiles.get(profileName));
-      }
-    }
-    return ProfileSet.of(realProfiles, discreteProfiles);
   }
 }
