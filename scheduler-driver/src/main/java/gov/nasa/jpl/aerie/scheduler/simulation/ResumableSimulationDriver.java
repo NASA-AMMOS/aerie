@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler.simulation;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.ResourceTracker;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.StartOffsetReducer;
@@ -27,6 +28,7 @@ import java.util.Optional;
 
 public class ResumableSimulationDriver<Model> {
 
+  private static final boolean USE_RESOURCE_TRACKER = true;
   private SimulationEngine engine = null;
   private final MissionModel<Model> missionModel;
   private final Duration planDuration;
@@ -43,6 +45,7 @@ public class ResumableSimulationDriver<Model> {
 
   //List of activities simulated since the last reset
   private final Map<ActivityDirectiveId, ActivityDirective> activitiesInserted = new HashMap<>();
+  private ResourceTracker resourceTracker;
   private TemporalEventSource timeline;
 
   public ResumableSimulationDriver(MissionModel<Model> missionModel, Duration planDuration){
@@ -67,10 +70,17 @@ public class ResumableSimulationDriver<Model> {
     this.engine = new SimulationEngine(timeline, missionModel.getInitialCells());
 
     // Begin tracking all resources.
+    if (USE_RESOURCE_TRACKER) {
+      this.resourceTracker = new ResourceTracker(timeline, missionModel.getInitialCells());
+    }
     for (final var entry : missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
-      engine.trackResource(name, resource, Duration.ZERO);
+      if (USE_RESOURCE_TRACKER) {
+        resourceTracker.track(name, resource);
+      } else {
+        engine.trackResource(name, resource, Duration.ZERO);
+      }
     }
 
     // Start daemon task(s) immediately, before anything else happens.
@@ -170,13 +180,27 @@ public class ResumableSimulationDriver<Model> {
     }
 
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.startTime) != 0) {
-      lastSimResults = SimulationEngine.computeResults(
-          engine,
-          startTimestamp,
-          endTime,
-          activityTopic,
-          timeline,
-          missionModel.getTopics());
+      if (USE_RESOURCE_TRACKER) {
+        while (!resourceTracker.isEmpty()) {
+          resourceTracker.updateResources();
+        }
+        lastSimResults = SimulationEngine.computeResults(
+            engine,
+            startTimestamp,
+            endTime,
+            activityTopic,
+            timeline,
+            missionModel.getTopics(),
+            resourceTracker.resourceProfiles());
+      } else {
+        lastSimResults = SimulationEngine.computeResults(
+            engine,
+            startTimestamp,
+            endTime,
+            activityTopic,
+            timeline,
+            missionModel.getTopics());
+      }
       lastSimResultsEnd = endTime;
       //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
     }

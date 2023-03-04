@@ -24,15 +24,19 @@ public final class SimulationDriver {
       final Duration planDuration,
       final Duration simulationDuration
   ) {
+    final var USE_RESOURCE_TRACKER = true;
+
     /* The top-level simulation timeline. */
     final var timeline = new TemporalEventSource();
     try (final var engine = new SimulationEngine(timeline, missionModel.getInitialCells())) {
-      // Begin tracking all resources.
-      for (final var entry : missionModel.getResources().entrySet()) {
-        final var name = entry.getKey();
-        final var resource = entry.getValue();
+      if (!USE_RESOURCE_TRACKER) {
+        // Begin tracking all resources.
+        for (final var entry : missionModel.getResources().entrySet()) {
+          final var name = entry.getKey();
+          final var resource = entry.getValue();
 
-        engine.trackResource(name, resource, Duration.ZERO);
+          engine.trackResource(name, resource, Duration.ZERO);
+        }
       }
 
       // Start daemon task(s) immediately, before anything else happens.
@@ -65,8 +69,35 @@ public final class SimulationDriver {
         engine.step();
       }
 
-      final var topics = missionModel.getTopics();
-      return SimulationEngine.computeResults(engine, startTime, simulationDuration, activityTopic, timeline, topics);
+      if (USE_RESOURCE_TRACKER) {
+        // Replay the timeline to collect resource profiles
+        final var resourceTracker = new ResourceTracker(timeline, missionModel.getInitialCells());
+        for (final var entry : missionModel.getResources().entrySet()) {
+          final var name = entry.getKey();
+          final var resource = entry.getValue();
+          resourceTracker.track(name, resource);
+        }
+        while (!resourceTracker.isEmpty()) {
+          resourceTracker.updateResources();
+        }
+
+        return SimulationEngine.computeResults(
+            engine,
+            startTime,
+            simulationDuration,
+            activityTopic,
+            timeline,
+            missionModel.getTopics(),
+            resourceTracker.resourceProfiles());
+      } else {
+        return SimulationEngine.computeResults(
+            engine,
+            startTime,
+            simulationDuration,
+            activityTopic,
+            timeline,
+            missionModel.getTopics());
+      }
     }
   }
 
