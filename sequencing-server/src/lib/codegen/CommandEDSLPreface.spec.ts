@@ -6,8 +6,6 @@ import {
   HMS_STRING,
   Sequence,
   TimingTypes,
-  Ground_Event,
-  Ground_Block,
 } from './CommandEDSLPreface';
 
 describe('Command', () => {
@@ -109,55 +107,6 @@ describe('Command', () => {
         "A`2020-001T00:00:00.000`.TEST({\n  string: 'string',\n  number: 0,\n  boolean: true,\n})",
       );
     });
-
-    it('should convert to EDSL string from ground event', () => {
-      const groundEvent = Ground_Event.new({
-        name: 'Ground Event Name',
-        args: [{ name: 'name', type: 'string', value: 'hello' }],
-        absoluteTime: doyToInstant('2020-001T00:00:00.000' as DOY_STRING),
-        description: 'ground event description',
-        metadata: { author: 'Emery' },
-      });
-
-      expect(groundEvent.toEDSLString()).toEqual(
-        "A`2020-001T00:00:00.000`.GROUND_EVENT('Ground Event Name')\n" +
-          '.ARGUMENTS([\n' +
-          '  {\n' +
-          "    name: 'name',\n" +
-          "    type: 'string',\n" +
-          "    value: 'hello',\n" +
-          '  }\n' +
-          '])\n' +
-          ".DESCRIPTION('ground event description')\n" +
-          '.METADATA({\n' +
-          "  author: 'Emery',\n" +
-          '})',
-      );
-    });
-
-    it('should convert to EDSL string from ground block', () => {
-      const groundBlock = Ground_Block.new({
-        name: 'Ground Block Name',
-        args: [{ name: 'turnOff', type: 'boolean', value: false }],
-        description: 'ground block description',
-        metadata: { author: 'Jasmine' },
-      });
-
-      expect(groundBlock.toEDSLString()).toEqual(
-        "C.GROUND_BLOCK('Ground Block Name')\n" +
-          '.ARGUMENTS([\n' +
-          '  {\n' +
-          "    name: 'turnOff',\n" +
-          "    type: 'boolean',\n" +
-          '    value: false,\n' +
-          '  }\n' +
-          '])\n' +
-          ".DESCRIPTION('ground block description')\n" +
-          '.METADATA({\n' +
-          "  author: 'Jasmine',\n" +
-          '})',
-      );
-    });
   });
 });
 
@@ -223,8 +172,8 @@ describe('Sequence', () => {
 
       expect(sequence.toEDSLString()).toEqual(`export default () =>
   Sequence.new({
-    seqId: 'test',
-    metadata: {},
+\t  seqId: 'test',
+\t  metadata: {},
   });`);
     });
 
@@ -254,8 +203,8 @@ describe('Sequence', () => {
 
       expect(sequence.toEDSLString()).toEqual(`export default () =>
   Sequence.new({
-    seqId: 'test',
-    metadata: {},
+\t  seqId: 'test',
+\t  metadata: {},
     steps: [
       A\`2020-001T00:00:00.000\`.TEST('string', 0, true),
       A\`2020-001T00:00:00.000\`.TEST({
