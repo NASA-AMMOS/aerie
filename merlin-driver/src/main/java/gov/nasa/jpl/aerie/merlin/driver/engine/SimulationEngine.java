@@ -31,7 +31,6 @@ import org.apache.commons.lang3.tuple.Triple;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -74,6 +73,16 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** A thread pool that modeled tasks can use to keep track of their state between steps. */
   private final ExecutorService executor = getLoomOrFallback();
+
+  private final TemporalEventSource timeline;
+  private final LiveCells cells;
+
+  private Duration elapsedTime = Duration.ZERO;
+
+  public SimulationEngine(final TemporalEventSource timeline, final LiveCells initialCells) {
+    this.timeline = timeline;
+    this.cells = new LiveCells(timeline, initialCells);
+  }
 
   private static ExecutorService getLoomOrFallback() {
     // Try to use Loom's lightweight virtual threads, if possible. Otherwise, just use a thread pool.
@@ -132,9 +141,9 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
-  /** Removes and returns the next set of jobs to be performed concurrently. */
-  public JobSchedule.Batch<JobId> extractNextJobs(final Duration maximumTime) {
-    final var batch = this.scheduledJobs.extractNextJobs(maximumTime);
+  /** Performs a collection of tasks concurrently, extending the given timeline by their stateful effects. */
+  public void step() {
+    final var batch = this.scheduledJobs.extractNextJobs(Duration.MAX_VALUE);
 
     // If we're signaling based on a condition, we need to untrack the condition before any tasks run.
     // Otherwise, we could see a race if one of the tasks running at this time invalidates state
@@ -148,39 +157,35 @@ public final class SimulationEngine implements AutoCloseable {
       this.waitingConditions.unsubscribeQuery(s.id());
     }
 
-    return batch;
-  }
+    this.timeline.add(batch.offsetFromStart().minus(this.elapsedTime));
+    this.elapsedTime = batch.offsetFromStart();
 
-  /** Performs a collection of tasks concurrently, extending the given timeline by their stateful effects. */
-  public EventGraph<Event> performJobs(
-      final Collection<JobId> jobs,
-      final LiveCells context,
-      final Duration currentTime,
-      final Duration maximumTime
-  ) {
     var tip = EventGraph.<Event>empty();
-    for (final var job$ : jobs) {
-      tip = EventGraph.concurrently(tip, TaskFrame.run(job$, context, (job, frame) -> {
-        this.performJob(job, frame, currentTime, maximumTime);
+    for (final var job$ : batch.jobs()) {
+      tip = EventGraph.concurrently(tip, TaskFrame.run(job$, this.cells, (job, frame) -> {
+        this.performJob(job, frame, batch.offsetFromStart());
       }));
     }
 
-    return tip;
+    this.timeline.add(tip);
+  }
+
+  public Duration getElapsedTime() {
+    return this.elapsedTime;
   }
 
   /** Performs a single job. */
-  public void performJob(
+  private void performJob(
       final JobId job,
       final TaskFrame<JobId> frame,
-      final Duration currentTime,
-      final Duration maximumTime
+      final Duration currentTime
   ) {
     if (job instanceof JobId.TaskJobId j) {
       this.stepTask(j.id(), frame, currentTime);
     } else if (job instanceof JobId.SignalJobId j) {
       this.stepSignalledTasks(j.id(), frame);
     } else if (job instanceof JobId.ConditionJobId j) {
-      this.updateCondition(j.id(), frame, currentTime, maximumTime);
+      this.updateCondition(j.id(), frame, currentTime);
     } else if (job instanceof JobId.ResourceJobId j) {
       this.updateResource(j.id(), frame, currentTime);
     } else {
@@ -298,13 +303,12 @@ public final class SimulationEngine implements AutoCloseable {
   public void updateCondition(
       final ConditionId condition,
       final TaskFrame<JobId> frame,
-      final Duration currentTime,
-      final Duration horizonTime
+      final Duration currentTime
   ) {
     final var querier = new EngineQuerier(frame);
     final var prediction = this.conditions
         .get(condition)
-        .nextSatisfied(querier, horizonTime.minus(currentTime))
+        .nextSatisfied(querier, Duration.MAX_VALUE)
         .map(currentTime::plus);
 
     this.waitingConditions.subscribeQuery(condition, querier.referencedTopics);
@@ -314,7 +318,7 @@ public final class SimulationEngine implements AutoCloseable {
       this.scheduledJobs.schedule(JobId.forSignal(SignalId.forCondition(condition)), SubInstant.Tasks.at(prediction.get()));
     } else {
       // Try checking again later -- where "later" is in some non-zero amount of time!
-      final var nextCheckTime = Duration.max(expiry.orElse(horizonTime), currentTime.plus(Duration.EPSILON));
+      final var nextCheckTime = Duration.max(expiry.orElse(Duration.MAX_VALUE), currentTime.plus(Duration.EPSILON));
       this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(nextCheckTime));
     }
   }
@@ -351,6 +355,13 @@ public final class SimulationEngine implements AutoCloseable {
   /** Determine if a given task has fully completed. */
   public boolean isTaskComplete(final TaskId task) {
     return (this.tasks.get(task) instanceof ExecutionState.Terminated);
+  }
+
+  public boolean hasJobsScheduledThrough(final Duration givenTime) {
+    return this.scheduledJobs
+        .min()
+        .map($ -> $.project().noLongerThan(givenTime))
+        .orElse(false);
   }
 
   private record TaskInfo(
@@ -666,12 +677,12 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** A handle for processing requests from a modeled resource or condition. */
-  private static final class EngineQuerier implements Querier {
-    private final TaskFrame<JobId> frame;
-    private final Set<Topic<?>> referencedTopics = new HashSet<>();
-    private Optional<Duration> expiry = Optional.empty();
+  public static final class EngineQuerier implements Querier {
+    private final TaskFrame<?> frame;
+    public final Set<Topic<?>> referencedTopics = new HashSet<>();
+    public Optional<Duration> expiry = Optional.empty();
 
-    public EngineQuerier(final TaskFrame<JobId> frame) {
+    public EngineQuerier(final TaskFrame<?> frame) {
       this.frame = Objects.requireNonNull(frame);
     }
 

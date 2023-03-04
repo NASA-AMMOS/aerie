@@ -1,14 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
+import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -25,28 +24,20 @@ public final class SimulationDriver {
       final Duration planDuration,
       final Duration simulationDuration
   ) {
-    try (final var engine = new SimulationEngine()) {
-      /* The top-level simulation timeline. */
-      var timeline = new TemporalEventSource();
-      var cells = new LiveCells(timeline, missionModel.getInitialCells());
-      /* The current real time. */
-      var elapsedTime = Duration.ZERO;
-
+    /* The top-level simulation timeline. */
+    final var timeline = new TemporalEventSource();
+    try (final var engine = new SimulationEngine(timeline, missionModel.getInitialCells())) {
       // Begin tracking all resources.
       for (final var entry : missionModel.getResources().entrySet()) {
         final var name = entry.getKey();
         final var resource = entry.getValue();
 
-        engine.trackResource(name, resource, elapsedTime);
+        engine.trackResource(name, resource, Duration.ZERO);
       }
 
       // Start daemon task(s) immediately, before anything else happens.
       engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
-      {
-        final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-        timeline.add(commit);
-      }
+      engine.step();
 
       // Specify a topic on which tasks can log the activity they're associated with.
       final var activityTopic = new Topic<ActivityDirectiveId>();
@@ -65,75 +56,34 @@ public final class SimulationDriver {
           activityTopic
       );
 
+      // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
+      engine.scheduleTask(Duration.ZERO, executor -> $ -> TaskStatus.completed(Unit.UNIT));
+
       // Drive the engine until we're out of time.
       // TERMINATION: Actually, we might never break if real time never progresses forward.
-      while (true) {
-        final var batch = engine.extractNextJobs(simulationDuration);
-
-        // Increment real time, if necessary.
-        final var delta = batch.offsetFromStart().minus(elapsedTime);
-        elapsedTime = batch.offsetFromStart();
-        timeline.add(delta);
-        // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
-        //   even if they occur at the same real time.
-
-        if (batch.jobs().isEmpty() && batch.offsetFromStart().isEqualTo(simulationDuration)) {
-          break;
-        }
-
-        // Run the jobs in this batch.
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration);
-        timeline.add(commit);
+      while (engine.hasJobsScheduledThrough(simulationDuration)) {
+        engine.step();
       }
 
       final var topics = missionModel.getTopics();
-      return SimulationEngine.computeResults(engine, startTime, elapsedTime, activityTopic, timeline, topics);
+      return SimulationEngine.computeResults(engine, startTime, simulationDuration, activityTopic, timeline, topics);
     }
   }
 
   public static <Model, Return>
   void simulateTask(final MissionModel<Model> missionModel, final TaskFactory<Return> task) {
-    try (final var engine = new SimulationEngine()) {
-      /* The top-level simulation timeline. */
-      var timeline = new TemporalEventSource();
-      var cells = new LiveCells(timeline, missionModel.getInitialCells());
-      /* The current real time. */
-      var elapsedTime = Duration.ZERO;
-
-      // Begin tracking all resources.
-      for (final var entry : missionModel.getResources().entrySet()) {
-        final var name = entry.getKey();
-        final var resource = entry.getValue();
-
-        engine.trackResource(name, resource, elapsedTime);
-      }
-
+    /* The top-level simulation timeline. */
+    final var timeline = new TemporalEventSource();
+    try (final var engine = new SimulationEngine(timeline, missionModel.getInitialCells())) {
       // Start daemon task(s) immediately, before anything else happens.
       engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
-      {
-        final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-        timeline.add(commit);
-      }
-
-      // Schedule all activities.
-      final var taskId = engine.scheduleTask(elapsedTime, task);
+      engine.step();
 
       // Drive the engine until we're out of time.
       // TERMINATION: Actually, we might never break if real time never progresses forward.
+      final var taskId = engine.scheduleTask(Duration.ZERO, task);
       while (!engine.isTaskComplete(taskId)) {
-        final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-
-        // Increment real time, if necessary.
-        final var delta = batch.offsetFromStart().minus(elapsedTime);
-        elapsedTime = batch.offsetFromStart();
-        timeline.add(delta);
-        // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
-        //   even if they occur at the same real time.
-
-        // Run the jobs in this batch.
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-        timeline.add(commit);
+        engine.step();
       }
     }
   }

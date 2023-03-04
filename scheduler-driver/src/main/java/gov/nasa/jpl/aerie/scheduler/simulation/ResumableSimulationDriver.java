@@ -6,10 +6,8 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.StartOffsetReducer;
-import gov.nasa.jpl.aerie.merlin.driver.engine.JobSchedule;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
@@ -26,17 +24,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class ResumableSimulationDriver<Model> {
 
-  private Duration curTime = Duration.ZERO;
-  private SimulationEngine engine = new SimulationEngine();
-  private LiveCells cells;
-  private TemporalEventSource timeline = new TemporalEventSource();
+  private SimulationEngine engine = null;
   private final MissionModel<Model> missionModel;
   private final Duration planDuration;
-  private JobSchedule.Batch<SimulationEngine.JobId> batch;
 
   private final Topic<ActivityDirectiveId> activityTopic = new Topic<>();
 
@@ -50,13 +43,13 @@ public class ResumableSimulationDriver<Model> {
 
   //List of activities simulated since the last reset
   private final Map<ActivityDirectiveId, ActivityDirective> activitiesInserted = new HashMap<>();
+  private TemporalEventSource timeline;
 
   public ResumableSimulationDriver(MissionModel<Model> missionModel, Duration planDuration){
     this.missionModel = missionModel;
     plannedDirectiveToTask = new HashMap<>();
     this.planDuration = planDuration;
     initSimulation();
-    batch = null;
   }
 
   // This method is currently only used in one test.
@@ -67,47 +60,39 @@ public class ResumableSimulationDriver<Model> {
     lastSimResults = null;
     lastSimResultsEnd = Duration.ZERO;
     if (this.engine != null) this.engine.close();
-    this.engine = new SimulationEngine();
 
     /* The top-level simulation timeline. */
-    this.timeline = new TemporalEventSource();
-    this.cells = new LiveCells(timeline, missionModel.getInitialCells());
-    /* The current real time. */
-    curTime = Duration.ZERO;
+    timeline = new TemporalEventSource();
+
+    this.engine = new SimulationEngine(timeline, missionModel.getInitialCells());
 
     // Begin tracking all resources.
     for (final var entry : missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
-      engine.trackResource(name, resource, curTime);
+      engine.trackResource(name, resource, Duration.ZERO);
     }
 
     // Start daemon task(s) immediately, before anything else happens.
     {
       engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
 
-      batch = engine.extractNextJobs(Duration.MAX_VALUE);
-      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
-      timeline.add(commit);
+      engine.step();
     }
+
+    // The sole purpose of this task is to make sure the simulation has "stuff to do" until the simulationDuration.
+    engine.scheduleTask(planDuration, executor -> $ -> TaskStatus.completed(Unit.UNIT));
   }
 
   private void simulateUntil(Duration endTime){
-    assert(endTime.noShorterThan(curTime));
-      if(batch == null){
-        batch = engine.extractNextJobs(Duration.MAX_VALUE);
-      }
-      // Increment real time, if necessary.
-      while(!batch.offsetFromStart().longerThan(endTime) && !endTime.isEqualTo(Duration.MAX_VALUE)) {
-        final var delta = batch.offsetFromStart().minus(curTime);
-        curTime = batch.offsetFromStart();
-        timeline.add(delta);
-        // Run the jobs in this batch.
-        final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
-        timeline.add(commit);
-
-        batch = engine.extractNextJobs(Duration.MAX_VALUE);
-      }
+    assert(endTime.noShorterThan(engine.getElapsedTime()));
+    if (endTime.isEqualTo(Duration.MAX_VALUE)) return;
+    // The sole purpose of this task is to make sure the simulation has "stuff to do" until the endTime.
+    engine.scheduleTask(endTime, executor -> $ -> TaskStatus.completed(Unit.UNIT));
+    while(engine.hasJobsScheduledThrough(endTime)) {
+      // Run the jobs in this batch.
+      engine.step();
+    }
     lastSimResults = null;
   }
 
@@ -132,7 +117,7 @@ public class ResumableSimulationDriver<Model> {
   public void simulateActivity(ActivityDirective activityToSimulate, ActivityDirectiveId activityId)
   {
     activitiesInserted.put(activityId, activityToSimulate);
-    if(activityToSimulate.startOffset().noLongerThan(curTime)){
+    if(activityToSimulate.startOffset().noLongerThan(engine.getElapsedTime())){
       initSimulation();
       simulateSchedule(activitiesInserted);
     } else {
@@ -149,7 +134,7 @@ public class ResumableSimulationDriver<Model> {
     resolved.get(null).sort(Comparator.comparing(Pair::getRight));
     final var earliestStartOffset = resolved.get(null).get(0);
 
-    if(earliestStartOffset.getRight().noLongerThan(curTime)){
+    if(earliestStartOffset.getRight().noLongerThan(engine.getElapsedTime())){
       initSimulation();
       simulateSchedule(activitiesInserted);
     } else {
@@ -164,11 +149,11 @@ public class ResumableSimulationDriver<Model> {
    * @return the simulation results
    */
   public SimulationResults getSimulationResults(Instant startTimestamp){
-    return getSimulationResultsUpTo(startTimestamp, curTime);
+    return getSimulationResultsUpTo(startTimestamp, engine.getElapsedTime());
   }
 
   public Duration getCurrentSimulationEndTime(){
-    return curTime;
+    return engine.getElapsedTime();
   }
 
   /**
@@ -180,7 +165,7 @@ public class ResumableSimulationDriver<Model> {
    */
   public SimulationResults getSimulationResultsUpTo(Instant startTimestamp, Duration endTime){
     //if previous results cover a bigger period, we return do not regenerate
-    if(endTime.longerThan(curTime)){
+    if(endTime.longerThan(engine.getElapsedTime())){
       simulateUntil(endTime);
     }
 
@@ -220,23 +205,15 @@ public class ResumableSimulationDriver<Model> {
     );
 
     var allTaskFinished = false;
-
-    if (batch == null) {
-      batch = engine.extractNextJobs(Duration.MAX_VALUE);
-    }
     // Increment real time, if necessary.
-    Duration delta = batch.offsetFromStart().minus(curTime);
 
     //once all tasks are finished, we need to wait for events triggered at the same time
-    while (!allTaskFinished || delta.isZero()) {
-      curTime = batch.offsetFromStart();
-      timeline.add(delta);
+    while (!allTaskFinished) {
       // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
       //   even if they occur at the same real time.
 
       // Run the jobs in this batch.
-      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
-      timeline.add(commit);
+      engine.step();
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time
       if (!plannedDirectiveToTask.isEmpty() && plannedDirectiveToTask
@@ -245,10 +222,6 @@ public class ResumableSimulationDriver<Model> {
           .allMatch(engine::isTaskComplete)) {
         allTaskFinished = true;
       }
-
-      // Update batch and increment real time, if necessary.
-      batch = engine.extractNextJobs(Duration.MAX_VALUE);
-      delta = batch.offsetFromStart().minus(curTime);
     }
     lastSimResults = null;
   }
