@@ -1,22 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler.worker.services;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.jar.JarFile;
-import java.util.stream.Collectors;
-
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
@@ -27,12 +10,12 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingCondition;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
@@ -64,6 +47,23 @@ import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import gov.nasa.jpl.aerie.scheduler.solver.Solver;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.jar.JarFile;
+import java.util.stream.Collectors;
+
 /**
  * agent that handles posed scheduling requests by blocking the requester thread until scheduling is complete
  *
@@ -81,15 +81,18 @@ public record SynchronousSchedulerAgent(
     Path modelJarsDir,
     Path goalsJarPath,
     PlanOutputMode outputMode,
-    SchedulingDSLCompilationService schedulingDSLCompilationService
+    SchedulingDSLCompilationService schedulingDSLCompilationService,
+    boolean useResourceTracker
 )
     implements SchedulerAgent
 {
   public SynchronousSchedulerAgent {
+    Objects.requireNonNull(specificationService);
     Objects.requireNonNull(planService);
     Objects.requireNonNull(missionModelService);
     Objects.requireNonNull(modelJarsDir);
     Objects.requireNonNull(goalsJarPath);
+    Objects.requireNonNull(outputMode);
     Objects.requireNonNull(schedulingDSLCompilationService);
   }
 
@@ -121,7 +124,7 @@ public record SynchronousSchedulerAgent(
       final var problem = new Problem(
           schedulerMissionModel.missionModel(),
           planningHorizon,
-          new SimulationFacade(planningHorizon, schedulerMissionModel.missionModel()),
+          new SimulationFacade(planningHorizon, schedulerMissionModel.missionModel(), useResourceTracker),
           schedulerMissionModel.schedulerModel()
       );
       //seed the problem with the initial plan contents

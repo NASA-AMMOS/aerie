@@ -24,12 +24,29 @@ public final class SimulationDriver {
       final Duration planDuration,
       final Duration simulationDuration
   ) {
-    final var USE_RESOURCE_TRACKER = true;
+    return simulate(
+      missionModel,
+      schedule,
+      startTime,
+      planDuration,
+      simulationDuration,
+      false
+    );
+  }
 
+  public static <Model>
+  SimulationResults simulate(
+      final MissionModel<Model> missionModel,
+      final Map<ActivityDirectiveId, ActivityDirective> schedule,
+      final Instant startTime,
+      final Duration planDuration,
+      final Duration simulationDuration,
+      final boolean useResourceTracker
+  ) {
     /* The top-level simulation timeline. */
     final var timeline = new TemporalEventSource();
     try (final var engine = new SimulationEngine(timeline, missionModel.getInitialCells())) {
-      if (!USE_RESOURCE_TRACKER) {
+      if (!useResourceTracker) {
         // Begin tracking all resources.
         for (final var entry : missionModel.getResources().entrySet()) {
           final var name = entry.getKey();
@@ -69,7 +86,7 @@ public final class SimulationDriver {
         engine.step();
       }
 
-      if (USE_RESOURCE_TRACKER) {
+      if (useResourceTracker) {
         // Replay the timeline to collect resource profiles
         final var resourceTracker = new ResourceTracker(timeline, missionModel.getInitialCells());
         for (final var entry : missionModel.getResources().entrySet()) {

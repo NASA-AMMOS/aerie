@@ -54,7 +54,7 @@ public final class MerlinWorkerAppDriver {
         stores.missionModels(),
         configuration.untruePlanStart());
     final var planController = new LocalPlanService(stores.plans());
-    final var simulationAgent = new SynchronousSimulationAgent(planController, missionModelController);
+    final var simulationAgent = new SynchronousSimulationAgent(planController, missionModelController, configuration.useResourceTracker());
 
     final var notificationQueue = new LinkedBlockingQueue<PostgresSimulationNotificationPayload>();
     final var listenAction = new ListenSimulationCapability(hikariDataSource, notificationQueue);
@@ -102,7 +102,8 @@ public final class MerlinWorkerAppDriver {
                           Integer.parseInt(getEnv("MERLIN_WORKER_DB_PORT", "5432")),
                           getEnv("MERLIN_WORKER_DB_PASSWORD", ""),
                           getEnv("MERLIN_WORKER_DB", "aerie_merlin")),
-        Instant.parse(getEnv("UNTRUE_PLAN_START", ""))
+        Instant.parse(getEnv("UNTRUE_PLAN_START", "")),
+        Boolean.parseBoolean(getEnv("USE_RESOURCE_TRACKER", "false"))
     );
   }
 }

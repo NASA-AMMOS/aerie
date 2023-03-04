@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.scheduler.SimulationUtility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +28,7 @@ public class ResumableSimulationTest {
   public void init() {
     final var acts = getActivities();
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel,tenHours);
+    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel,tenHours, false);
     for (var act : acts) {
       resumableSimulationDriver.simulateActivity(act.start, act.activity, null, true, act.id);
     }
@@ -83,7 +82,7 @@ public class ResumableSimulationTest {
         new SerializedActivity("BasicActivity", Map.of()),
         new ActivityDirectiveId(1));
     final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, tenHours);
+    resumableSimulationDriver = new ResumableSimulationDriver<>(fooMissionModel, tenHours, false);
     try (final var executor = unsafeGetExecutor(resumableSimulationDriver)) {
       for (var i = 0; i < 20000; i++) {
         resumableSimulationDriver.initSimulation();

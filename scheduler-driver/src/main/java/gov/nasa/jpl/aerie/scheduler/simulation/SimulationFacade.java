@@ -35,6 +35,7 @@ public class SimulationFacade {
 
   // planning horizon
   private final PlanningHorizon planningHorizon;
+  private final boolean useResourceTracker;
   private Map<String, ActivityType> activityTypes;
   private ResumableSimulationDriver<?> driver;
   private int itSimActivityId;
@@ -52,9 +53,14 @@ public class SimulationFacade {
   }
 
   public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel) {
+    this(planningHorizon, missionModel, false);
+  }
+
+  public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel, final boolean useResourceTracker) {
+    this.useResourceTracker = useResourceTracker;
     this.missionModel = missionModel;
     this.planningHorizon = planningHorizon;
-    this.driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration());
+    this.driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration(), useResourceTracker);
     this.itSimActivityId = 0;
     this.insertedActivities = new HashMap<>();
     this.activityTypes = new HashMap<>();
@@ -129,7 +135,7 @@ public class SimulationFacade {
       final var oldInsertedActivities = new HashMap<>(insertedActivities);
       insertedActivities.clear();
       planActDirectiveIdToSimulationActivityDirectiveId.clear();
-      driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration());
+      driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration(), useResourceTracker);
       simulateActivities(oldInsertedActivities.keySet());
     }
   }

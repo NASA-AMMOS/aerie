@@ -14,7 +14,8 @@ import java.util.stream.Collectors;
 
 public record SynchronousSimulationAgent (
     PlanService planService,
-    MissionModelService missionModelService
+    MissionModelService missionModelService,
+    boolean useResourceTracker
 ) implements SimulationAgent {
   public sealed interface Response {
     record Failed(String reason) implements Response {}
@@ -74,7 +75,8 @@ public record SynchronousSimulationAgent (
           planDuration,
           planDuration,
           plan.activityDirectives,
-          plan.configuration));
+          plan.configuration,
+          this.useResourceTracker));
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       writer.failWith(b -> b
           .type("NO_SUCH_MISSION_MODEL")

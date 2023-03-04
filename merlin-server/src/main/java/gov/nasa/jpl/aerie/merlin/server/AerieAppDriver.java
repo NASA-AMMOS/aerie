@@ -69,7 +69,7 @@ public final class AerieAppDriver {
     // Assemble the core non-web object graph.
     final var simulationAgent = ThreadedSimulationAgent.spawn(
         "simulation-agent",
-        new SynchronousSimulationAgent(planController, missionModelController));
+        new SynchronousSimulationAgent(planController, missionModelController, false));
     final var simulationController = new CachedSimulationService(simulationAgent, stores.results());
     final var simulationAction = new GetSimulationResultsAction(
         planController,

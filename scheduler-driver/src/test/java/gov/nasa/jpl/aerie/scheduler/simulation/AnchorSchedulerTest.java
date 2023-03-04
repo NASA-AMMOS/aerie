@@ -49,7 +49,7 @@ public class AnchorSchedulerTest {
 
   @BeforeEach
   void beforeEach() {
-    driver = new ResumableSimulationDriver<>(AnchorTestModel, tenDays);
+    driver = new ResumableSimulationDriver<>(AnchorTestModel, tenDays, false);
   }
 
   @Nested

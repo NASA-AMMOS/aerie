@@ -232,7 +232,8 @@ public final class LocalMissionModelService implements MissionModelService {
         message.activityDirectives(),
         message.startTime(),
         message.planDuration(),
-        message.simulationDuration());
+        message.simulationDuration(),
+        false);
   }
 
   @Override

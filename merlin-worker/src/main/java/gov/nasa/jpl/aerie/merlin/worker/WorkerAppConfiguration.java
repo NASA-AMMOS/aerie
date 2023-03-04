@@ -9,7 +9,8 @@ import java.util.Objects;
 public record WorkerAppConfiguration(
     Path merlinFileStore,
     Store store,
-    Instant untruePlanStart
+    Instant untruePlanStart,
+    boolean useResourceTracker
 ) {
   public WorkerAppConfiguration {
     Objects.requireNonNull(merlinFileStore);

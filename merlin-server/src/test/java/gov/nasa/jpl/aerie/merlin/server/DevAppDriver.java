@@ -42,7 +42,7 @@ public final class DevAppDriver {
     final var simulationAction = new GetSimulationResultsAction(
         planController,
         missionModelController,
-        new UncachedSimulationService(new SynchronousSimulationAgent(planController, missionModelController)),
+        new UncachedSimulationService(new SynchronousSimulationAgent(planController, missionModelController, false)),
         constraintsDSLCompilationService
     );
 

@@ -28,7 +28,7 @@ import java.util.Optional;
 
 public class ResumableSimulationDriver<Model> {
 
-  private static final boolean USE_RESOURCE_TRACKER = true;
+  private final boolean useResourceTracker;
   private SimulationEngine engine = null;
   private final MissionModel<Model> missionModel;
   private final Duration planDuration;
@@ -48,7 +48,8 @@ public class ResumableSimulationDriver<Model> {
   private ResourceTracker resourceTracker;
   private TemporalEventSource timeline;
 
-  public ResumableSimulationDriver(MissionModel<Model> missionModel, Duration planDuration){
+  public ResumableSimulationDriver(MissionModel<Model> missionModel, Duration planDuration, boolean useResourceTracker){
+    this.useResourceTracker = useResourceTracker;
     this.missionModel = missionModel;
     plannedDirectiveToTask = new HashMap<>();
     this.planDuration = planDuration;
@@ -70,13 +71,13 @@ public class ResumableSimulationDriver<Model> {
     this.engine = new SimulationEngine(timeline, missionModel.getInitialCells());
 
     // Begin tracking all resources.
-    if (USE_RESOURCE_TRACKER) {
+    if (useResourceTracker) {
       this.resourceTracker = new ResourceTracker(timeline, missionModel.getInitialCells());
     }
     for (final var entry : missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
-      if (USE_RESOURCE_TRACKER) {
+      if (useResourceTracker) {
         resourceTracker.track(name, resource);
       } else {
         engine.trackResource(name, resource, Duration.ZERO);
@@ -180,7 +181,7 @@ public class ResumableSimulationDriver<Model> {
     }
 
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.startTime) != 0) {
-      if (USE_RESOURCE_TRACKER) {
+      if (useResourceTracker) {
         while (!resourceTracker.isEmpty()) {
           resourceTracker.updateResources();
         }
