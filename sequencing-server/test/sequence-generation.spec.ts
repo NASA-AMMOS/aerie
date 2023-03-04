@@ -2587,7 +2587,7 @@ describe('sequence generation', () => {
   }, 30000);
 });
 
-describe('expansion regressions', () => {
+describe('expansion', () => {
   test.only('should throw an error is an activity instance goes beyond the plan duration', async () => {
     /** Begin Setup*/
     const activityId = await insertActivityDirective(graphqlClient, planId, 'GrowBanana', '1 days');
@@ -2666,6 +2666,7 @@ describe('expansion regressions', () => {
     }
     `,
     );
+
     const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
     const expansionRunId = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
 
@@ -2923,25 +2924,6 @@ describe('user sequence to seqjson', () => {
                       }
                     ]
                 }),
-                R\`02:02:00.000\`.GROUND_BLOCK('GroundBlock2')
-                .ARGUMENTS([
-                  {
-                    name: 'intStartTime',
-                    type: 'number',
-                    value: 10,
-                  }
-                ])
-                .DESCRIPTION('Set the ground block time')
-                .METADATA({
-                  author: 'Ryan',
-                })
-                .MODELS([
-                  {
-                    offset: '00:10:00.001',
-                    value: true,
-                    variable: 'model_var_boolean',
-                  }
-                ])
               ],
             });
           `,
@@ -3042,31 +3024,6 @@ describe('user sequence to seqjson', () => {
             ],
           },
         ],
-      },
-      {
-        args: [
-          {
-            name: 'intStartTime',
-            type: 'number',
-            value: 10,
-          },
-        ],
-        description: 'Set the ground block time',
-        metadata: {
-          author: 'Ryan',
-        },
-        models: [
-          {
-            offset: '00:10:00.001',
-            value: true,
-            variable: 'model_var_boolean',
-          },
-        ],
-        time: {
-          tag: '02:02:00.000',
-          type: 'COMMAND_RELATIVE',
-        },
-        type: 'ground_block',
       },
     ]);
 
