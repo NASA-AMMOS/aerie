@@ -44,6 +44,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
@@ -436,6 +437,31 @@ public final class SimulationEngine implements AutoCloseable {
     }
   }
 
+  public static SimulationResults computeResults(
+      final SimulationEngine engine,
+      final Instant startTime,
+      final Duration elapsedTime,
+      final Topic<ActivityDirectiveId> activityTopic,
+      final TemporalEventSource timeline,
+      final Iterable<SerializableTopic<?>> serializableTopics
+  )
+  {
+    return computeResults(
+        engine,
+        startTime,
+        elapsedTime,
+        activityTopic,
+        timeline,
+        serializableTopics,
+        engine
+            .resources
+            .entrySet()
+            .stream()
+            .collect(Collectors.toMap(
+                        $ -> $.getKey().id(),
+                        Map.Entry::getValue)));
+  }
+
   /** Compute a set of results from the current state of simulation. */
   // TODO: Move result extraction out of the SimulationEngine.
   //   The Engine should only need to stream events of interest to a downstream consumer.
@@ -449,7 +475,8 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration elapsedTime,
       final Topic<ActivityDirectiveId> activityTopic,
       final TemporalEventSource timeline,
-      final Iterable<SerializableTopic<?>> serializableTopics
+      final Iterable<SerializableTopic<?>> serializableTopics,
+      final Map<String, ProfilingState<?>> resources
   ) {
     // Collect per-task information from the event graph.
     final var taskInfo = new TaskInfo();
@@ -465,11 +492,10 @@ public final class SimulationEngine implements AutoCloseable {
     final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
     final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
 
-    for (final var entry : engine.resources.entrySet()) {
-      final var id = entry.getKey();
+    for (final var entry : resources.entrySet()) {
+      final var name = entry.getKey();
       final var state = entry.getValue();
 
-      final var name = id.id();
       final var resource = state.resource();
 
       switch (resource.getType()) {
