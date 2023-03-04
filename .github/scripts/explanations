@@ -1,0 +1,24 @@
+schema	migrations	migrations	missing in 1st DB	From Migration 0	2
+function definition	migrations	migrations.migrations.mark_migration_applied(character varying)	missing in 1st DB	From Migration 0	3
+function definition	migrations	migrations.migrations.mark_migration_rolled_back(character varying)	missing in 1st DB	From Migration 0	3
+function permissions	migrations	migrations.mark_migration_applied(character varying)-role:aerie	missing in 1st DB	From Migration 0	3
+function permissions	migrations	migrations.mark_migration_rolled_back(character varying)-role:aerie	missing in 1st DB	From Migration 0	3
+function permissions	migrations	migrations.mark_migration_applied(character varying)-role:PUBLIC	missing in 1st DB	From Migration 0	3
+function permissions	migrations	migrations.mark_migration_rolled_back(character varying)-role:PUBLIC	missing in 1st DB	From Migration 0	3
+function owner	migrations	migrations.mark_migration_applied(character varying)	missing in 1st DB	From Migration 0	3
+function owner	migrations	migrations.mark_migration_rolled_back(character varying)	missing in 1st DB	From Migration 0	3
+function language	migrations	migrations.migrations.mark_migration_applied(character varying)	missing in 1st DB	From Migration 0	3
+table owner	migrations	migrations.schema_migrations	missing in 1st DB	From Migration 0	4
+column	migrations	migrations.schema_migrations.migration_id	missing in 1st DB	From Migration 0	4
+function language	migrations	migrations.migrations.mark_migration_rolled_back(character varying)	missing in 1st DB	From Migration 0	3
+function security type	migrations	migrations.migrations.mark_migration_applied(character varying)	missing in 1st DB	From Migration 0	3
+function security type	migrations	migrations.migrations.mark_migration_rolled_back(character varying)	missing in 1st DB	From Migration 0	3
+check constraint	migrations	migrations.schema_migrations:schema_migrations_pkey	missing in 1st DB	From Migration 0	3
+index	migrations	migrations.schema_migrations:schema_migrations_pkey	missing in 1st DB	From Migration 0	3
+data type	migrations	migrations.schema_migrations	missing in 1st DB	From Migration 0	3
+data type	migrations	migrations._schema_migrations	missing in 1st DB	From Migration 0	3
+table	migrations	migrations.schema_migrations	missing in 1st DB	From Migration 0	3
+function config	migrations	migrations.mark_migration_applied(character varying)	missing in 1st DB	From Migration 0	3
+function config	migrations	migrations.mark_migration_rolled_back(character varying)	missing in 1st DB	From Migration 0	3
+data type owner	migrations	migrations.schema_migrations	missing in 1st DB	From Migration 0	4
+data type owner	migrations	migrations._schema_migrations	missing in 1st DB	From Migration 0	4

@@ -4,18 +4,18 @@ create table migrations.schema_migrations (
 );
 
 create procedure migrations.mark_migration_applied(_migration_id varchar)
-  language plpgsql as $$
+language plpgsql as $$
 begin
-insert into migrations.schema_migrations (migration_id)
-values (_migration_id);
+  insert into migrations.schema_migrations (migration_id)
+  values (_migration_id);
 end;
 $$;
 
 create procedure migrations.mark_migration_rolled_back(_migration_id varchar)
-  language plpgsql as $$
+language plpgsql as $$
 begin
-delete from migrations.schema_migrations
-where migration_id = _migration_id;
+  delete from migrations.schema_migrations
+  where migration_id = _migration_id;
 end;
 $$;
 
