@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel.SerializableTopic;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
@@ -20,6 +21,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -40,6 +42,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -63,6 +66,26 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** The history of when tasks read topics/cells */
   private final HashMap<Topic<?>, TreeMap<Duration, TaskId>> cellReadHistory = new HashMap<>();
+
+  private final MissionModel<?> missionModel;
+
+  private Instant startTime;
+
+  private final TaskInfo taskInfo = new TaskInfo();
+  private HashMap<String, ActivityInstanceId> taskToPlannedDirective = new HashMap<>();
+  private Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles = new HashMap<>();
+  private Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles = new HashMap<>();
+  private Map<ActivityInstanceId, SimulatedActivity> simulatedActivities = new HashMap<>();
+  private Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities = new HashMap<>();
+  private SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> serializedTimeline = new TreeMap<>();
+  private List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
+  public final Topic<ActivityInstanceId> defaultActivityTopic = new Topic<>();
+
+  public SimulationEngine(Instant startTime, MissionModel<?> missionModel) {
+    this.startTime = startTime;
+    this.missionModel = missionModel;
+  }
+
   public void putInCellReadHistory(Topic<?> topic, TaskId taskId, Duration time) {
     var m = cellReadHistory.get(topic);
     if (m == null) {
@@ -159,6 +182,9 @@ public final class SimulationEngine implements AutoCloseable {
 
   public boolean isTaskStale(TaskId taskId, Duration timeOffset) {
     final Duration staleTime = this.staleTasks.get(taskId);
+    if (staleTime == null) {
+      return false;
+    }
     return staleTime.noLongerThan(timeOffset);
   }
 
@@ -493,29 +519,22 @@ public final class SimulationEngine implements AutoCloseable {
   // TODO: Whatever mechanism replaces `computeResults` also ought to replace `isTaskComplete`.
   // TODO: Produce results for all tasks, not just those that have completed.
   //   Planners need to be aware of failed or unfinished tasks.
-  public static SimulationResults computeResults(
-      final SimulationEngine engine,
+  public SimulationResults computeResults(
       final Instant startTime,
       final Duration elapsedTime,
-      final Topic<ActivityInstanceId> activityTopic,
-      final TemporalEventSource timeline,
-      final Iterable<SerializableTopic<?>> serializableTopics
+      final Topic<ActivityInstanceId> activityTopic
   ) {
     // Collect per-task information from the event graph.
-    final var taskInfo = new TaskInfo();
-
-    for (final var point : timeline) {
-      if (!(point instanceof TemporalEventSource.TimePoint.Commit p)) continue;
-
-      final var trait = new TaskInfo.Trait(serializableTopics, activityTopic);
-      p.events().evaluate(trait, trait::atom).accept(taskInfo);
-    }
+    var serializableTopics = this.missionModel.getTopics();
+    final var trait = new TaskInfo.Trait(serializableTopics, activityTopic);
+    final Collection<EventGraph<Event>> graphs = timeline.eventsByTopic().get(activityTopic).values();
+    graphs.forEach(events -> events.evaluate(trait, trait::atom).accept(this.taskInfo));
 
     // Extract profiles for every resource.
-    final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
-    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
+    //final var realProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>>();
+    //final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>>();
 
-    for (final var entry : engine.resources.entrySet()) {
+    for (final var entry : this.resources.entrySet()) {
       final var id = entry.getKey();
       final var state = entry.getValue();
 
@@ -523,13 +542,13 @@ public final class SimulationEngine implements AutoCloseable {
       final var resource = state.resource();
 
       switch (resource.getType()) {
-        case "real" -> realProfiles.put(
+        case "real" -> this.realProfiles.put(
             name,
             Pair.of(
                 resource.getOutputType().getSchema(),
                 serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics)));
 
-        case "discrete" -> discreteProfiles.put(
+        case "discrete" -> this.discreteProfiles.put(
             name,
             Pair.of(
                 resource.getOutputType().getSchema(),
@@ -543,34 +562,34 @@ public final class SimulationEngine implements AutoCloseable {
 
 
     // Give every task corresponding to a child activity an ID that doesn't conflict with any root activity.
-    final var taskToPlannedDirective = new HashMap<>(taskInfo.taskToPlannedDirective);
+    this.taskToPlannedDirective = new HashMap<>(this.taskInfo.taskToPlannedDirective);
     final var usedActivityInstanceIds =
-        taskToPlannedDirective
+        this.taskToPlannedDirective
             .values()
             .stream()
             .map(ActivityInstanceId::id)
             .collect(Collectors.toSet());
     var counter = 1L;
-    for (final var task : engine.tasks.keySet()) {
-      if (!taskInfo.isActivity(task)) continue;
-      if (taskToPlannedDirective.containsKey(task.id())) continue;
+    for (final var task : this.tasks.keySet()) {
+      if (!this.taskInfo.isActivity(task)) continue;
+      if (this.taskToPlannedDirective.containsKey(task.id())) continue;
 
       while (usedActivityInstanceIds.contains(counter)) counter++;
-      taskToPlannedDirective.put(task.id(), new ActivityInstanceId(counter++));
+      this.taskToPlannedDirective.put(task.id(), new ActivityInstanceId(counter++));
     }
 
     // Identify the nearest ancestor *activity* (excluding intermediate anonymous tasks).
     final var activityParents = new HashMap<ActivityInstanceId, ActivityInstanceId>();
-    engine.tasks.forEach((task, state) -> {
-      if (!taskInfo.isActivity(task)) return;
+    this.tasks.forEach((task, state) -> {
+      if (!this.taskInfo.isActivity(task)) return;
 
-      var parent = engine.taskParent.get(task);
-      while (parent != null && !taskInfo.isActivity(parent)) {
-        parent = engine.taskParent.get(parent);
+      var parent = this.taskParent.get(task);
+      while (parent != null && !this.taskInfo.isActivity(parent)) {
+        parent = this.taskParent.get(parent);
       }
 
       if (parent != null) {
-        activityParents.put(taskToPlannedDirective.get(task.id()), taskToPlannedDirective.get(parent.id()));
+        activityParents.put(this.taskToPlannedDirective.get(task.id()), this.taskToPlannedDirective.get(parent.id()));
       }
     });
 
@@ -579,18 +598,18 @@ public final class SimulationEngine implements AutoCloseable {
       activityChildren.computeIfAbsent(parent, $ -> new LinkedList<>()).add(task);
     });
 
-    final var simulatedActivities = new HashMap<ActivityInstanceId, SimulatedActivity>();
-    final var unfinishedActivities = new HashMap<ActivityInstanceId, UnfinishedActivity>();
-    engine.tasks.forEach((task, state) -> {
-      if (!taskInfo.isActivity(task)) return;
+    //final var simulatedActivities = new HashMap<ActivityInstanceId, SimulatedActivity>();
+    //final var unfinishedActivities = new HashMap<ActivityInstanceId, UnfinishedActivity>();
+    this.tasks.forEach((task, state) -> {
+      if (!this.taskInfo.isActivity(task)) return;
 
-      final var activityId = taskToPlannedDirective.get(task.id());
+      final var activityId = this.taskToPlannedDirective.get(task.id());
 
       if (state instanceof ExecutionState.Terminated<?> e) {
-        final var inputAttributes = taskInfo.input().get(task.id());
-        final var outputAttributes = taskInfo.output().get(task.id());
+        final var inputAttributes = this.taskInfo.input().get(task.id());
+        final var outputAttributes = this.taskInfo.output().get(task.id());
 
-        simulatedActivities.put(activityId, new SimulatedActivity(
+        this.simulatedActivities.put(activityId, new SimulatedActivity(
             inputAttributes.getTypeName(),
             inputAttributes.getArguments(),
             startTime.plus(e.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
@@ -601,8 +620,8 @@ public final class SimulationEngine implements AutoCloseable {
             outputAttributes
         ));
       } else if (state instanceof ExecutionState.InProgress<?> e){
-        final var inputAttributes = taskInfo.input().get(task.id());
-        unfinishedActivities.put(activityId, new UnfinishedActivity(
+        final var inputAttributes = this.taskInfo.input().get(task.id());
+        this.unfinishedActivities.put(activityId, new UnfinishedActivity(
             inputAttributes.getTypeName(),
             inputAttributes.getArguments(),
             startTime.plus(e.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
@@ -611,8 +630,8 @@ public final class SimulationEngine implements AutoCloseable {
             (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(activityId)
         ));
       } else if (state instanceof ExecutionState.AwaitingChildren<?> e){
-        final var inputAttributes = taskInfo.input().get(task.id());
-        unfinishedActivities.put(activityId, new UnfinishedActivity(
+        final var inputAttributes = this.taskInfo.input().get(task.id());
+        this.unfinishedActivities.put(activityId, new UnfinishedActivity(
             inputAttributes.getTypeName(),
             inputAttributes.getArguments(),
             startTime.plus(e.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
@@ -625,14 +644,14 @@ public final class SimulationEngine implements AutoCloseable {
       }
     });
 
-    final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
+    //final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
     final var serializableTopicToId = new HashMap<SerializableTopic<?>, Integer>();
     for (final var serializableTopic : serializableTopics) {
-      serializableTopicToId.put(serializableTopic, topics.size());
-      topics.add(Triple.of(topics.size(), serializableTopic.name(), serializableTopic.outputType().getSchema()));
+      serializableTopicToId.put(serializableTopic, this.topics.size());
+      this.topics.add(Triple.of(this.topics.size(), serializableTopic.name(), serializableTopic.outputType().getSchema()));
     }
 
-    final var serializedTimeline = new TreeMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
+    //final var serializedTimeline = new TreeMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
     var time = Duration.ZERO;
     for (var point : timeline.points()) {
       if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
@@ -651,20 +670,20 @@ public final class SimulationEngine implements AutoCloseable {
             }
         ).evaluate(new EventGraph.IdentityTrait<>(), EventGraph::atom);
         if (!(serializedEventGraph instanceof EventGraph.Empty)) {
-          serializedTimeline
+          this.serializedTimeline
               .computeIfAbsent(time, x -> new ArrayList<>())
               .add(serializedEventGraph);
         }
       }
     }
 
-    return new SimulationResults(realProfiles,
-                                 discreteProfiles,
-                                 simulatedActivities,
-                                 unfinishedActivities,
+    return new SimulationResults(this.realProfiles,
+                                 this.discreteProfiles,
+                                 this.simulatedActivities,
+                                 this.unfinishedActivities,
                                  startTime,
-                                 topics,
-                                 serializedTimeline);
+                                 this.topics,
+                                 this.serializedTimeline);
   }
 
   public Optional<Duration> getTaskDuration(TaskId taskId){
@@ -819,8 +838,8 @@ public final class SimulationEngine implements AutoCloseable {
           // TODO: Determine when staleness ends by stepping up cell to see if/when it matches the cell from the prior event graph (bisimulate)
           // TODO: Schedule tasks expected to read this topic while it is stale
           var taskIds = getTasksReadingTopicAfter(topic, this.currentTime);
-
-          // HERE!!! SimulationEngine.this.timeline
+          taskIds.forEach(id -> rescheduleTask(id));
+          // HERE!!!
         }
       }
       SimulationEngine.this.invalidateTopic(topic, this.currentTime);
@@ -834,6 +853,32 @@ public final class SimulationEngine implements AutoCloseable {
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       this.frame.signal(JobId.forTask(task));
     }
+  }
+
+  public static <E, T>
+  TaskFactory<T> emitAndThen(final E event, final Topic<E> topic, final TaskFactory<T> continuation) {
+    return executor -> scheduler -> {
+      scheduler.emit(event, topic);
+      return continuation.create(executor).step(scheduler);
+    };
+  }
+
+  public void rescheduleTask(TaskId taskId) {
+    // HERE!!  Need to get the SerializedActivity for the taskId.  computeResults() shows how to do this.
+    SerializedActivity serializedActivity = this.taskInfo.input.get(taskId);
+    var activityInstanceId = taskToPlannedDirective.get(taskId.id());
+    SimulatedActivity simulatedActivity = simulatedActivities.get(activityInstanceId);
+    Instant actStart = simulatedActivity.start();
+    Duration startOffset = Duration.minus(actStart, this.startTime);
+    TaskFactory<?> task;
+    try {
+      task = missionModel.getTaskFactory(serializedActivity);
+    } catch (InstantiationException ex) {
+      // All activity instantiations are assumed to be validated by this point
+      throw new Error("Unexpected state: activity instantiation %s failed with: %s"
+                          .formatted(serializedActivity.getTypeName(), ex.toString()));
+    }
+    scheduleTask(startOffset, emitAndThen(activityInstanceId, defaultActivityTopic, task));
   }
 
   private <EventType> Collection<TaskId> getTasksReadingTopicAfter(Topic<EventType> topic, Duration currentTime) {

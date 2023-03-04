@@ -5,12 +5,16 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
-public record TemporalEventSource(SlabList<TimePoint> points) implements EventSource, Iterable<TemporalEventSource.TimePoint> {
+public record TemporalEventSource(SlabList<TimePoint> points, Map<Topic<?>, TreeMap<Duration, EventGraph<Event>>> eventsByTopic) implements EventSource, Iterable<TemporalEventSource.TimePoint> {
   public TemporalEventSource() {
-    this(new SlabList<>());
+    this(new SlabList<>(), new HashMap<>());
   }
 
   public void add(final Duration delta) {
@@ -18,9 +22,13 @@ public record TemporalEventSource(SlabList<TimePoint> points) implements EventSo
     this.points.append(new TimePoint.Delta(delta));
   }
 
-  public void add(final EventGraph<Event> graph) {
+  public void add(final EventGraph<Event> graph, Duration time) {
     if (graph instanceof EventGraph.Empty) return;
-    this.points.append(new TimePoint.Commit(graph, extractTopics(graph)));
+    var topics = extractTopics(graph);
+    this.points.append(new TimePoint.Commit(graph, topics));
+    // Index the graphs by topic and time, but don't bother pulling apart the EventGraphs to only include one topic.
+    // That would use a lot of memory.
+    topics.forEach(t -> this.eventsByTopic.computeIfAbsent(t, $ -> new TreeMap<>()).put(time, graph));
   }
 
   @Override

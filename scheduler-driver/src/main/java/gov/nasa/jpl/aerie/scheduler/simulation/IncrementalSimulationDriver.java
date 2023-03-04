@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -25,10 +24,12 @@ import java.util.stream.Collectors;
 public class IncrementalSimulationDriver<Model> {
 
   private Duration curTime = Duration.ZERO;
-  private SimulationEngine engine = new SimulationEngine();
+  private SimulationEngine engine;
   private LiveCells cells;
   //private TemporalEventSource timeline = new TemporalEventSource();
   private final MissionModel<Model> missionModel;
+
+  private Instant startTime;
 
   private final Topic<ActivityInstanceId> activityTopic = new Topic<>();
 
@@ -49,8 +50,10 @@ public class IncrementalSimulationDriver<Model> {
 
   record SimulatedActivity(Duration start, SerializedActivity activity, ActivityInstanceId id) {}
 
-  public IncrementalSimulationDriver(MissionModel<Model> missionModel){
+  public IncrementalSimulationDriver(Instant startTime, MissionModel<Model> missionModel){
+    this.startTime = startTime;
     this.missionModel = missionModel;
+    this.engine = new SimulationEngine(startTime, missionModel);
     plannedDirectiveToTask = new HashMap<>();
     initSimulation();
   }
@@ -61,7 +64,7 @@ public class IncrementalSimulationDriver<Model> {
     lastSimResultsEnd = Duration.ZERO;
     this.rerunning = this.engine != null && this.cells.size() > 0;
     if (this.engine != null) this.engine.close();
-    if (this.engine == null) this.engine = new SimulationEngine();
+    if (this.engine == null) this.engine = new SimulationEngine(startTime, missionModel);
     activitiesInserted.clear();
 
     /* The top-level simulation timeline. */
@@ -81,16 +84,16 @@ public class IncrementalSimulationDriver<Model> {
 
     // Start daemon task(s) immediately, before anything else happens.
     if (!rerunning) {
-      startDaemons();
+      startDaemons(curTime);
     }
   }
 
-  private void startDaemons() {
-    engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
+  private void startDaemons(Duration time) {
+    engine.scheduleTask(time, missionModel.getDaemon());
 
     final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-    final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, queryTopic);
-    engine.timeline.add(commit);
+    final var commit = engine.performJobs(batch.jobs(), cells, time, Duration.MAX_VALUE, queryTopic);
+    engine.timeline.add(commit, time);
   }
 
   //
@@ -107,7 +110,7 @@ public class IncrementalSimulationDriver<Model> {
       engine.timeline.add(delta);
       // Run the jobs in this batch.
       final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, queryTopic);
-      engine.timeline.add(commit);
+      engine.timeline.add(commit, curTime);
 
     }
     lastSimResults = null;
@@ -170,13 +173,10 @@ public class IncrementalSimulationDriver<Model> {
     }
 
     if(lastSimResults == null || endTime.longerThan(lastSimResultsEnd) || startTimestamp.compareTo(lastSimResults.startTime) != 0) {
-      lastSimResults = SimulationEngine.computeResults(
-          engine,
+      lastSimResults = engine.computeResults(
           startTimestamp,
           endTime,
-          activityTopic,
-          engine.timeline,
-          missionModel.getTopics());
+          activityTopic);
       lastSimResultsEnd = endTime;
       //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
     }
@@ -217,7 +217,7 @@ public class IncrementalSimulationDriver<Model> {
 
       // Run the jobs in this batch.
       final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, queryTopic);
-      engine.timeline.add(commit);
+      engine.timeline.add(commit, curTime);
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time
       if (!plannedDirectiveToTask.isEmpty() && plannedDirectiveToTask.values().stream().allMatch(engine::isTaskComplete)) {

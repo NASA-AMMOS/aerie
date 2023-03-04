@@ -53,7 +53,7 @@ public class SimulationFacade {
   public SimulationFacade(PlanningHorizon planningHorizon, MissionModel<?> missionModel) {
     this.missionModel = missionModel;
     this.planningHorizon = planningHorizon;
-    this.driver = new IncrementalSimulationDriver<>(missionModel);
+    this.driver = new IncrementalSimulationDriver<>(planningHorizon.getStartInstant(), missionModel);
     this.itSimActivityId = 0;
     this.insertedActivities = new HashMap<>();
     this.activityTypes = new HashMap<>();
@@ -137,7 +137,7 @@ public class SimulationFacade {
       final var oldInsertedActivities = new HashMap<>(insertedActivities);
       insertedActivities.clear();
       planActInstanceIdToSimulationActInstanceId.clear();
-      driver = new IncrementalSimulationDriver<>(missionModel);
+      driver = new IncrementalSimulationDriver<>(planningHorizon.getStartInstant(), missionModel);
       simulateActivities(oldInsertedActivities.keySet());
     }
   }

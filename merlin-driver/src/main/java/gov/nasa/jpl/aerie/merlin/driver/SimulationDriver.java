@@ -1,10 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -22,7 +19,7 @@ public final class SimulationDriver {
       final Instant startTime,
       final Duration simulationDuration
   ) {
-    try (final var engine = new SimulationEngine()) {
+    try (final var engine = new SimulationEngine(startTime, missionModel)) {
       /* The top-level simulation timeline. */
       var cells = new LiveCells(engine.timeline, missionModel.getInitialCells());
       /* The current real time. */
@@ -44,11 +41,11 @@ public final class SimulationDriver {
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE, queryTopic);
-        engine.timeline.add(commit);
+        engine.timeline.add(commit, elapsedTime);
       }
 
       // Specify a topic on which tasks can log the activity they're associated with.
-      final var activityTopic = new Topic<ActivityInstanceId>();
+      //final var activityTopic = new Topic<ActivityInstanceId>();
 
       // Schedule all activities.
       for (final var entry : schedule.entrySet()) {
@@ -65,7 +62,7 @@ public final class SimulationDriver {
               .formatted(serializedDirective.getTypeName(), ex.toString()));
         }
 
-        final var taskId = engine.scheduleTask(startOffset, emitAndThen(directiveId, activityTopic, task));
+        engine.scheduleTask(startOffset, SimulationEngine.emitAndThen(directiveId, engine.defaultActivityTopic, task));
       }
 
       // Drive the engine until we're out of time.
@@ -87,7 +84,7 @@ public final class SimulationDriver {
 
         // Run the jobs in this batch.
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration, queryTopic);
-        engine.timeline.add(commit);
+        engine.timeline.add(commit, elapsedTime);
       }
 
       // A query depends on an event if
@@ -102,15 +99,13 @@ public final class SimulationDriver {
       // - Transitively: if A flows to C and C flows to B, A flows to B
       // tstill not enough...?
 
-      final var topics = missionModel.getTopics();
-      // TODO: Consider making computeResults() non-static
-      return SimulationEngine.computeResults(engine, startTime, elapsedTime, activityTopic, engine.timeline, topics);
+      return engine.computeResults(startTime, elapsedTime, engine.defaultActivityTopic);
     }
   }
 
   public static <Model, Return>
-  void simulateTask(final MissionModel<Model> missionModel, final TaskFactory<Return> task) {
-    try (final var engine = new SimulationEngine()) {
+  void simulateTask(final Instant startTime, final MissionModel<Model> missionModel, final TaskFactory<Return> task) {
+    try (final var engine = new SimulationEngine(startTime, missionModel)) {
       /* The top-level simulation timeline. */
       //var timeline = new TemporalEventSource();
       var cells = new LiveCells(engine.timeline, missionModel.getInitialCells());
@@ -133,7 +128,7 @@ public final class SimulationDriver {
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE, queryTopic);
-        engine.timeline.add(commit);
+        engine.timeline.add(commit, elapsedTime);
       }
 
       // Schedule all activities.
@@ -153,16 +148,9 @@ public final class SimulationDriver {
 
         // Run the jobs in this batch.
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE, queryTopic);
-        engine.timeline.add(commit);
+        engine.timeline.add(commit, elapsedTime);
       }
     }
   }
 
-  private static <E, T>
-  TaskFactory<T> emitAndThen(final E event, final Topic<E> topic, final TaskFactory<T> continuation) {
-    return executor -> scheduler -> {
-      scheduler.emit(event, topic);
-      return continuation.create(executor).step(scheduler);
-    };
-  }
 }

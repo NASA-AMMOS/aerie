@@ -80,7 +80,8 @@ public record SynchronousSchedulerAgent(
     Path modelJarsDir,
     Path goalsJarPath,
     PlanOutputMode outputMode,
-    SchedulingDSLCompilationService schedulingDSLCompilationService
+    SchedulingDSLCompilationService schedulingDSLCompilationService,
+    Map<Pair<PlanId, PlanningHorizon>, SimulationFacade> simulationFacades
 )
     implements SchedulerAgent
 {
@@ -90,6 +91,19 @@ public record SynchronousSchedulerAgent(
     Objects.requireNonNull(modelJarsDir);
     Objects.requireNonNull(goalsJarPath);
     Objects.requireNonNull(schedulingDSLCompilationService);
+    Objects.requireNonNull(simulationFacades);
+  }
+
+  public SynchronousSchedulerAgent(
+      SpecificationService specificationService,
+      PlanService.OwnerRole planService,
+      MissionModelService missionModelService,
+      Path modelJarsDir,
+      Path goalsJarPath,
+      PlanOutputMode outputMode,
+      SchedulingDSLCompilationService schedulingDSLCompilationService) {
+    this(specificationService, planService, missionModelService, modelJarsDir, goalsJarPath, outputMode,
+         schedulingDSLCompilationService, new HashMap<>());
   }
 
   /**
@@ -108,6 +122,7 @@ public record SynchronousSchedulerAgent(
       //TODO: maybe some kind of high level db transaction wrapping entire read/update of target plan revision
 
       final var specification = specificationService.getSpecification(request.specificationId());
+      //TODO: consider caching planMetadata, schedulerMissionModel, Problem, etc. in addition to SimulationFacade
       final var planMetadata = planService.getPlanMetadata(specification.planId());
       ensureRequestIsCurrent(request);
       ensurePlanRevisionMatch(specification, planMetadata.planRev());
@@ -117,10 +132,14 @@ public record SynchronousSchedulerAgent(
           specification.horizonStartTimestamp().toInstant(),
           specification.horizonEndTimestamp().toInstant()
       );
+      //TODO: planningHorizon may be different from planMetadata.horizon(); could we reuse a facade with a different horizon?
+      SimulationFacade simulationFacade = getSimulationFacade(specification.planId(), planningHorizon,
+                                                              schedulerMissionModel.missionModel());
       final var problem = new Problem(
           schedulerMissionModel.missionModel(),
           planningHorizon,
-          new SimulationFacade(planningHorizon, schedulerMissionModel.missionModel()),
+//          getSimulationFacade(specification.planId(), planningHorizon, schedulerMissionModel.missionModel()),
+          simulationFacade,
           schedulerMissionModel.schedulerModel()
       );
       //seed the problem with the initial plan contents
@@ -252,6 +271,18 @@ public record SynchronousSchedulerAgent(
           .trace(e));
     }
   }
+
+  private SimulationFacade getSimulationFacade(PlanId planId, PlanningHorizon planningHorizon,
+                                               final MissionModel<?> missionModel) {
+    var key = Pair.of(planId, planningHorizon);
+    SimulationFacade f = this.simulationFacades.get(key);
+    if (f == null) {
+      f = new SimulationFacade(planningHorizon, missionModel);
+      this.simulationFacades.put(key, f);
+    }
+    return f;
+  }
+
 
   private static SchedulingDSLCompilationService.SchedulingDSLCompilationResult<SchedulingDSL.GoalSpecifier> compileGoalDefinition(
       final MissionModelService missionModelService,
