@@ -26,6 +26,7 @@ public class IncrementalSimulationDriver<Model> {
   private Duration curTime = Duration.ZERO;
   private SimulationEngine engine;
   private LiveCells cells;
+  private LiveCells oldCells;
   //private TemporalEventSource timeline = new TemporalEventSource();
   private final MissionModel<Model> missionModel;
 
@@ -53,7 +54,6 @@ public class IncrementalSimulationDriver<Model> {
   public IncrementalSimulationDriver(Instant startTime, MissionModel<Model> missionModel){
     this.startTime = startTime;
     this.missionModel = missionModel;
-    this.engine = new SimulationEngine(startTime, missionModel);
     plannedDirectiveToTask = new HashMap<>();
     initSimulation();
   }
@@ -62,14 +62,18 @@ public class IncrementalSimulationDriver<Model> {
     plannedDirectiveToTask.clear();
     lastSimResults = null;
     lastSimResultsEnd = Duration.ZERO;
+    // If rerunning the simulation, reuse the existing SimulationEngine to avoid redundant computation
     this.rerunning = this.engine != null && this.cells.size() > 0;
     if (this.engine != null) this.engine.close();
-    if (this.engine == null) this.engine = new SimulationEngine(startTime, missionModel);
+    SimulationEngine oldEngine = rerunning ? this.engine : null;
+    this.engine = new SimulationEngine(startTime, missionModel, oldEngine);
     activitiesInserted.clear();
 
     /* The top-level simulation timeline. */
     // this.timeline = new TemporalEventSource();
     this.cells = new LiveCells(engine.timeline, missionModel.getInitialCells());
+    this.oldCells = oldEngine == null ? null : new LiveCells(oldEngine.timeline, oldEngine.getMissionModel().getInitialCells());
+
     /* The current real time. */
     curTime = Duration.ZERO;
 
@@ -77,7 +81,7 @@ public class IncrementalSimulationDriver<Model> {
     for (final var entry : missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
-      if (!engine.hasSimulatedResource(name)) {
+      if (!rerunning || !oldEngine.hasSimulatedResource(name)) {
         engine.trackResource(name, resource, curTime);
       }
     }
@@ -100,17 +104,39 @@ public class IncrementalSimulationDriver<Model> {
   private void simulateUntil(Duration endTime){
     assert(endTime.noShorterThan(curTime));
     while (true) {
-      final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
+      var timeOfNextJobs = engine.timeOfNextJobs();
+      var nextTime = Duration.min(timeOfNextJobs, endTime.plus(Duration.EPSILON));
+
+      var earliestStaleTopics = engine.earliestStaleTopics(nextTime);  // might want to not limit by nextTime and cache for future iterations
+      var staleTopicTime = earliestStaleTopics.getRight();
+      nextTime = Duration.min(nextTime, staleTopicTime);
+
+      var earliestStaleReads = engine.earliestStaleReads(curTime, nextTime);  // might want to not limit by nextTime and cache for future iterations
+      var staleReadTime = earliestStaleReads.getLeft();
+      nextTime = Duration.min(nextTime, staleReadTime);
+
       // Increment real time, if necessary.
-      if(batch.offsetFromStart().longerThan(endTime) || endTime.isEqualTo(Duration.MAX_VALUE)){
+      final var delta = nextTime.minus(curTime);
+      if(nextTime.longerThan(endTime) || endTime.isEqualTo(Duration.MAX_VALUE)){  // should this be nextTime.isEqualTo(Duration.MAX_VALUE)?
         break;
       }
-      final var delta = batch.offsetFromStart().minus(curTime);
-      curTime = batch.offsetFromStart();
+      curTime = nextTime;
       engine.timeline.add(delta);
-      // Run the jobs in this batch.
-      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, queryTopic);
-      engine.timeline.add(commit, curTime);
+
+      if (staleTopicTime.isEqualTo(nextTime)) {
+        // TODO: HERE!!
+      }
+
+      if (staleReadTime.isEqualTo(nextTime)) {
+        // TODO: HERE!!
+      }
+
+      if (timeOfNextJobs.isEqualTo(nextTime)) {
+        final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
+        // Run the jobs in this batch.
+        final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, queryTopic);
+        engine.timeline.add(commit, curTime);
+      }
 
     }
     lastSimResults = null;
@@ -203,21 +229,42 @@ public class IncrementalSimulationDriver<Model> {
     }
     var allTaskFinished = false;
     while (true) {
-      final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-      // Increment real time, if necessary.
-      final var delta = batch.offsetFromStart().minus(curTime);
+      var timeOfNextJobs = engine.timeOfNextJobs();
+      var nextTime = timeOfNextJobs;
+
+      var earliestStaleTopics = engine.earliestStaleTopics(nextTime);  // might want to not limit by nextTime and cache for future iterations
+      var staleTopicTime = earliestStaleTopics.getRight();
+      nextTime = Duration.min(nextTime, staleTopicTime);
+
+      var earliestStaleReads = engine.earliestStaleReads(curTime, nextTime);  // might want to not limit by nextTime and cache for future iterations
+      var staleReadTime = earliestStaleReads.getLeft();
+      nextTime = Duration.min(nextTime, staleReadTime);
+
+      final var delta = nextTime.minus(curTime);
       //once all tasks are finished, we need to wait for events triggered at the same time
       if(allTaskFinished && !delta.isZero()){
         break;
       }
-      curTime = batch.offsetFromStart();
-      engine.timeline.add(delta);
       // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
       //   even if they occur at the same real time.
 
-      // Run the jobs in this batch.
-      final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, queryTopic);
-      engine.timeline.add(commit, curTime);
+      curTime = nextTime;
+      engine.timeline.add(delta);
+
+      if (staleTopicTime.isEqualTo(nextTime)) {
+        // TODO: HERE!!
+      }
+
+      if (staleReadTime.isEqualTo(nextTime)) {
+        // TODO: HERE!!
+      }
+
+      if (timeOfNextJobs.isEqualTo(nextTime)) {
+        final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
+        // Run the jobs in this batch.
+        final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, queryTopic);
+        engine.timeline.add(commit, curTime);
+      }
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time
       if (!plannedDirectiveToTask.isEmpty() && plannedDirectiveToTask.values().stream().allMatch(engine::isTaskComplete)) {

@@ -19,7 +19,7 @@ public final class SimulationDriver {
       final Instant startTime,
       final Duration simulationDuration
   ) {
-    try (final var engine = new SimulationEngine(startTime, missionModel)) {
+    try (final var engine = new SimulationEngine(startTime, missionModel, null)) {
       /* The top-level simulation timeline. */
       var cells = new LiveCells(engine.timeline, missionModel.getInitialCells());
       /* The current real time. */
@@ -105,7 +105,8 @@ public final class SimulationDriver {
 
   public static <Model, Return>
   void simulateTask(final Instant startTime, final MissionModel<Model> missionModel, final TaskFactory<Return> task) {
-    try (final var engine = new SimulationEngine(startTime, missionModel)) {
+    // TODO: Need to update this to be like IncrementalSimulationDriver
+    try (final var engine = new SimulationEngine(startTime, missionModel, null)) {
       /* The top-level simulation timeline. */
       //var timeline = new TemporalEventSource();
       var cells = new LiveCells(engine.timeline, missionModel.getInitialCells());

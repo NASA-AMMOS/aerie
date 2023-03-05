@@ -22,7 +22,7 @@ public final class JobSchedule<JobRef, TimeRef extends DurationLike & Comparable
   public void schedule(final JobRef job, final TimeRef time) {
     final var oldTime = this.scheduledJobs.put(job, time);
 
-    if (oldTime != null) this.queue.remove(Pair.of(oldTime, job));
+    if (oldTime != null) this.queue.remove(Pair.of(oldTime, job));  // TODO: Is this remove rarely executed?  If not, it's O(n), consider an ordered set instead of a PriorityQueue
     this.queue.add(Pair.of(time, job));
   }
 
@@ -30,6 +30,13 @@ public final class JobSchedule<JobRef, TimeRef extends DurationLike & Comparable
     final var oldTime = this.scheduledJobs.remove(job);
 
     if (oldTime != null) this.queue.remove(Pair.of(oldTime, job));
+  }
+
+  /** Returns the offset time of the next set of job in the queue. */
+  public Duration timeOfNextJobs() {
+    if (this.queue.isEmpty()) return Duration.MAX_VALUE;
+    final var time = this.queue.peek().getKey();
+    return time.project();
   }
 
   public Batch<JobRef> extractNextJobs(final Duration maximumTime) {

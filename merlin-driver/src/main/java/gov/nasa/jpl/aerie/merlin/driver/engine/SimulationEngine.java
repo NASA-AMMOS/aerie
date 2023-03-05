@@ -39,11 +39,13 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -53,6 +55,9 @@ import java.util.stream.Collectors;
  * A representation of the work remaining to do during a simulation, and its accumulated results.
  */
 public final class SimulationEngine implements AutoCloseable {
+  /** The engine from a previous simulation, which we will leverage to avoid redundant computation */
+  public final SimulationEngine oldEngine;
+
   /** The EventGraphs separated by Durations between the events */
   public final TemporalEventSource timeline = new TemporalEventSource();
   /** The set of all jobs waiting for time to pass. */
@@ -65,10 +70,11 @@ public final class SimulationEngine implements AutoCloseable {
   private final Subscriptions<Topic<?>, ResourceId> waitingResources = new Subscriptions<>();
 
   /** The history of when tasks read topics/cells */
-  private final HashMap<Topic<?>, TreeMap<Duration, TaskId>> cellReadHistory = new HashMap<>();
+  private final HashMap<Topic<?>, TreeMap<Duration, HashSet<TaskId>>> cellReadHistory = new HashMap<>();
 
   private final MissionModel<?> missionModel;
 
+  /** The start time of the simulation, from which other times are offsets */
   private Instant startTime;
 
   private final TaskInfo taskInfo = new TaskInfo();
@@ -81,22 +87,14 @@ public final class SimulationEngine implements AutoCloseable {
   private List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
   public final Topic<ActivityInstanceId> defaultActivityTopic = new Topic<>();
 
-  public SimulationEngine(Instant startTime, MissionModel<?> missionModel) {
+  public SimulationEngine(Instant startTime, MissionModel<?> missionModel, SimulationEngine oldEngine) {
     this.startTime = startTime;
     this.missionModel = missionModel;
-  }
-
-  public void putInCellReadHistory(Topic<?> topic, TaskId taskId, Duration time) {
-    var m = cellReadHistory.get(topic);
-    if (m == null) {
-      m = new TreeMap<>();
-      cellReadHistory.put(topic, m);
-    }
-    m.put(time, taskId);
+    this.oldEngine = oldEngine;
   }
 
   /** When topics/cells become stale */
-  private final Map<Topic<?>, Duration> staleTopics = new HashMap<>();
+  private final Map<Topic<?>, TreeSet<Duration>> staleTopics = new HashMap<>();
 
   /** When tasks become stale */
   private final Map<TaskId, Duration> staleTasks = new HashMap<>();
@@ -116,6 +114,72 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** A thread pool that modeled tasks can use to keep track of their state between steps. */
   private final ExecutorService executor = getLoomOrFallback();
+
+  /**  */
+  public void putInCellReadHistory(Topic<?> topic, TaskId taskId, Duration time) {
+    cellReadHistory.computeIfAbsent(topic, $ -> new TreeMap<>()).computeIfAbsent(time, $ -> new HashSet<>()).add(taskId);
+  }
+
+  public Pair<Duration, Map<TaskId, HashSet<Topic<?>>>> earliestStaleReads(Duration after, Duration before) {
+    var earliest = Duration.MAX_VALUE;
+    final var tasks = new HashMap<TaskId, HashSet<Topic<?>>>();
+    final var topicsStale = staleTopics.keySet();
+    for (var topic : topicsStale) {
+      var topicReads = cellReadHistory.get(topic);
+      if (topicReads == null || topicReads.isEmpty()) {
+        continue;
+      }
+      final NavigableMap<Duration, HashSet<TaskId>> topicReadsAfter =
+          topicReads.subMap(after, false, Duration.min(earliest, before), true);
+      if (topicReadsAfter == null || topicReadsAfter.isEmpty()) {
+        continue;
+      }
+      for (var entry : topicReadsAfter.entrySet()) {
+        Duration d = entry.getKey();
+        HashSet<TaskId> taskIds = entry.getValue();
+        if (isTopicStale(topic, d)) {
+          if (d.shorterThan(earliest)) {
+            earliest = d;
+            tasks.clear();
+          }
+          taskIds.forEach(taskId -> tasks.computeIfAbsent(taskId, $ -> new HashSet<>()).add(topic));
+        }
+      }
+    }
+    return Pair.of(earliest, tasks);
+  }
+
+  public void putStaleTopic(Topic topic, Duration offsetTime) {
+    staleTopics.computeIfAbsent(topic, $ -> new TreeSet<>()).add(offsetTime);
+  }
+
+  public boolean removeStaleTopic(Topic topic, Duration offsetTime) {
+    var set = staleTopics.get(topic);
+    if (set == null) return false;
+    boolean removed = set.remove(offsetTime);
+    if (removed && set.isEmpty()) {
+      staleTopics.remove(topic);
+    }
+    return removed;
+  }
+
+  /** Get the earliest time that topics become stale and return those topics with the time */
+  public Pair<List<Topic<?>>, Duration> earliestStaleTopics(Duration before) {
+    var list = new ArrayList<Topic<?>>();
+    Duration earliest = Duration.MAX_VALUE;
+    for (var entry : staleTopics.entrySet()) {
+      Duration d = entry.getValue().first();
+      if (d.noShorterThan(before)) {
+        continue;
+      }
+      int comp = d.compareTo(earliest);
+      if (comp <= 0) {
+        if (comp < 0) list = new ArrayList<>();
+        list.add(entry.getKey());
+      }
+    }
+    return Pair.of(list, earliest);
+  }
 
   private static ExecutorService getLoomOrFallback() {
     // Try to use Loom's lightweight virtual threads, if possible. Otherwise, just use a thread pool.
@@ -183,14 +247,15 @@ public final class SimulationEngine implements AutoCloseable {
   public boolean isTaskStale(TaskId taskId, Duration timeOffset) {
     final Duration staleTime = this.staleTasks.get(taskId);
     if (staleTime == null) {
-      return false;
+      return true;  // This is only asked of tasks in progress, so if
     }
     return staleTime.noLongerThan(timeOffset);
   }
 
   public boolean isTopicStale(Topic<?> topic, Duration timeOffset) {
-    final Duration staleTime = this.staleTopics.get(topic);
-    return staleTime.noLongerThan(timeOffset);
+    var set = this.staleTopics.get(topic);
+    final Duration staleTime = set.first();
+    return timeOffset.shorterThan(staleTime);
   }
 
   /** Schedules any conditions or resources dependent on the given topic to be re-checked at the given time. */
@@ -207,6 +272,12 @@ public final class SimulationEngine implements AutoCloseable {
       this.scheduledJobs.unschedule(JobId.forSignal(SignalId.forCondition(condition)));
       this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(invalidationTime));
     }
+  }
+
+  /** Returns the offset time of the next batch of scheduled jobs. */
+  public Duration timeOfNextJobs() {
+    final var t = this.scheduledJobs.timeOfNextJobs();
+    return t;
   }
 
   /** Removes and returns the next set of jobs to be performed concurrently. */
@@ -438,6 +509,10 @@ public final class SimulationEngine implements AutoCloseable {
   /** Determine if a given task has fully completed. */
   public boolean isTaskComplete(final TaskId task) {
     return (this.tasks.get(task) instanceof ExecutionState.Terminated);
+  }
+
+  public MissionModel<?> getMissionModel() {
+    return this.missionModel;
   }
 
   private record TaskInfo(
@@ -694,7 +769,7 @@ public final class SimulationEngine implements AutoCloseable {
     return Optional.empty();
   }
 
-  public Map<Topic<?>, Duration> getStaleTopics() {
+  public Map<Topic<?>, TreeSet<Duration>> getStaleTopics() {
     return staleTopics;
   }
 
@@ -780,7 +855,11 @@ public final class SimulationEngine implements AutoCloseable {
       @SuppressWarnings("unchecked")
       final var query = ((EngineCellId<?, State>) token);
 
-      this.queryTrackingInfo.ifPresent(info -> putInCellReadHistory(query.topic(), info.getRight(), currentTime));
+      this.queryTrackingInfo.ifPresent(info -> {
+        if (isTaskStale(info.getRight(), currentTime)) {
+          putInCellReadHistory(query.topic(), info.getRight(), currentTime);
+        }
+      });
 
       this.expiry = min(this.expiry, this.frame.getExpiry(query.query()));
       this.referencedTopics.add(query.topic());
@@ -830,16 +909,18 @@ public final class SimulationEngine implements AutoCloseable {
 
     @Override
     public <EventType> void emit(final EventType event, final Topic<EventType> topic) {
-      // Append this event to the timeline.
-      this.frame.emit(Event.create(topic, event, this.activeTask));
-      if (isTaskStale(this.activeTask, this.currentTime)) {  // TODO -- is this check necessary? Isn't anything that has effects going to be stale?
+      if (isTaskStale(this.activeTask, this.currentTime)) {
+        // Add this event to the timeline.
+        this.frame.emit(Event.create(topic, event, this.activeTask));
         if (!isTopicStale(topic, this.currentTime)) {
-          SimulationEngine.this.staleTopics.put(topic, this.currentTime);
+          SimulationEngine.this.putStaleTopic(topic, this.currentTime);
           // TODO: Determine when staleness ends by stepping up cell to see if/when it matches the cell from the prior event graph (bisimulate)
           // TODO: Schedule tasks expected to read this topic while it is stale
           var taskIds = getTasksReadingTopicAfter(topic, this.currentTime);
-          taskIds.forEach(id -> rescheduleTask(id));
-          // HERE!!!
+          taskIds.forEach(id -> {
+            staleTasks.put(id, currentTime);
+            rescheduleTask(id);
+          });
         }
       }
       SimulationEngine.this.invalidateTopic(topic, this.currentTime);
@@ -878,13 +959,15 @@ public final class SimulationEngine implements AutoCloseable {
       throw new Error("Unexpected state: activity instantiation %s failed with: %s"
                           .formatted(serializedActivity.getTypeName(), ex.toString()));
     }
-    scheduleTask(startOffset, emitAndThen(activityInstanceId, defaultActivityTopic, task));
+    final TaskId newTask = scheduleTask(startOffset, emitAndThen(activityInstanceId, defaultActivityTopic, task));
   }
 
   private <EventType> Collection<TaskId> getTasksReadingTopicAfter(Topic<EventType> topic, Duration currentTime) {
     var m = cellReadHistory.get(topic);
+    var tasks = new HashSet<TaskId>();
     if (m != null) {
-      return m.tailMap(currentTime).values();  // TODO: Should we not include reads at the same time?
+      m.tailMap(currentTime).values().forEach(set -> tasks.addAll(set));  // TODO: Should we not include reads at the same time?
+      return tasks;
     }
     return Collections.emptyList();
   }
