@@ -8,7 +8,6 @@ beforeEach(async () => {
 });
 
 describe('getEdslForSeqJson', () => {
-  /**
   it('should return the seqjson for a given sequence edsl', async () => {
     const res = await graphqlClient.request<{
       getEdslForSeqJson: string;
@@ -43,21 +42,18 @@ describe('getEdslForSeqJson', () => {
       },
     );
 
-    expect(res.getEdslForSeqJson).toEqual(
-      `export default () =>
+    expect(res.getEdslForSeqJson).toEqual(`export default () =>
   Sequence.new({
-\t  seqId: 'test_00001',
-\t  metadata: {},
+    seqId: 'test_00001',
+    metadata: {},
     steps: [
       C.BAKE_BREAD,
       A\`2020-060T03:45:19.000\`.PREHEAT_OVEN({
         temperature: 100,
       }),
     ],
-  });`,
-    );
+  });`);
   });
-    */
 
   it('should throw an error if the user uploads an invalid seqjson', async () => {
     try {
@@ -99,7 +95,6 @@ describe('getEdslForSeqJson', () => {
   });
 });
 
-/**
 describe('getEdslForSeqJsonBulk', () => {
   it('should return the seqjson for a given sequence edsl', async () => {
     const res = await graphqlClient.request<{
@@ -159,29 +154,8 @@ describe('getEdslForSeqJsonBulk', () => {
     );
 
     expect(res.getEdslForSeqJsonBulk).toEqual([
-      `export default () =>
-  Sequence.new({
-\t  seqId: 'test_00001',
-\t  metadata: {},
-    steps: [
-      C.BAKE_BREAD,
-      A\`2020-060T03:45:19.000\`.PREHEAT_OVEN({
-        temperature: 100,
-      }),
-    ],
-  });`,
-      `export default () =>
-  Sequence.new({
-\t  seqId: 'test_00002',
-\t  metadata: {},
-    steps: [
-      C.BAKE_BREAD,
-      A\`2020-060T03:45:19.000\`.PREHEAT_OVEN({
-        temperature: 100,
-      }),
-    ],
-  });`,
+      "export default () =>\n  Sequence.new({\n    seqId: 'test_00001',\n    metadata: {},\n    steps: [\n      C.BAKE_BREAD,\n      A`2020-060T03:45:19.000`.PREHEAT_OVEN({\n        temperature: 100,\n      }),\n    ],\n  });",
+      "export default () =>\n  Sequence.new({\n    seqId: 'test_00002',\n    metadata: {},\n    steps: [\n      C.BAKE_BREAD,\n      A`2020-060T03:45:19.000`.PREHEAT_OVEN({\n        temperature: 100,\n      }),\n    ],\n  });",
     ]);
   });
 });
-*/

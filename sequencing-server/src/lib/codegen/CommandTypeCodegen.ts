@@ -33,7 +33,7 @@ export const Commands = {${dictionary.fswCommands
     .map(fswCommand => `\t\t${fswCommand.stem}: ${fswCommand.stem},\n`)
     .join('')}};
 
-Object.assign(globalThis, { A:A, R:R, E:E, C:Commands, Sequence});
+Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS), Sequence});
 `;
 
   return {
