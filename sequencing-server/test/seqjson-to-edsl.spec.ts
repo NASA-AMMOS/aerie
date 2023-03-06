@@ -13,7 +13,7 @@ describe('getEdslForSeqJson', () => {
       getEdslForSeqJson: string;
     }>(
       gql`
-        query GetEdslForSeqJson($seqJson: SequenceSeqJsonInput!) {
+        query GetEdslForSeqJson($seqJson: SequenceSeqJson!) {
           getEdslForSeqJson(seqJson: $seqJson)
         }
       `,
@@ -62,7 +62,7 @@ describe('getEdslForSeqJson', () => {
           getEdslForSeqJson: string;
         }>(
           gql`
-            query GetEdslForSeqJson($seqJson: SequenceSeqJsonInput!) {
+            query GetEdslForSeqJson($seqJson: SequenceSeqJson!) {
               getEdslForSeqJson(seqJson: $seqJson)
             }
           `,
@@ -101,7 +101,7 @@ describe('getEdslForSeqJsonBulk', () => {
       getEdslForSeqJsonBulk: string;
     }>(
       gql`
-        query GetEdslForSeqJsonBulk($seqJsons: [SequenceSeqJsonInput!]!) {
+        query GetEdslForSeqJsonBulk($seqJsons: [SequenceSeqJson!]!) {
           getEdslForSeqJsonBulk(seqJsons: $seqJsons)
         }
       `,

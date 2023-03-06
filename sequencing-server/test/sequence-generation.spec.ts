@@ -3062,6 +3062,7 @@ describe('user sequence to seqjson', () => {
             variable: 'model_var_boolean',
           },
         ],
+        name: 'GroundBlock2',
         time: {
           tag: '02:02:00.000',
           type: 'COMMAND_RELATIVE',
