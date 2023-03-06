@@ -204,12 +204,23 @@ const gql = {
     }
   `,
 
+  EXTEND_EXTERNAL_DATASET: `#graphql
+  mutation extendExternalDataset($dataset_id: Int!, $profile_set: ProfileSet!) {
+    extendExternalDataset(
+      datasetId: $dataset_id
+      profileSet: $profile_set
+    ) {
+      datasetId
+    }
+  }
+  `,
+
   GET_EXTERNAL_DATASET: `#graphql
     query getExtProfile($plan_id: Int!, $dataset_id: Int!) {
       plan_dataset_by_pk(plan_id:$plan_id, dataset_id:$dataset_id) {
         offset_from_plan_start
         dataset {
-          profiles(distinct_on:[]) {
+          profiles(distinct_on:[], order_by: { name: asc }) {
             profile_segments(distinct_on: []) {
               start_offset
               dynamics

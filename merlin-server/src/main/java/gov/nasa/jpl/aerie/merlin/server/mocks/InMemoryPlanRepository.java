@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
@@ -151,6 +152,11 @@ public final class InMemoryPlanRepository implements PlanRepository {
   throws NoSuchPlanException
   {
     return 0;
+  }
+
+  @Override
+  public void extendExternalDataset(final DatasetId datasetId, final ProfileSet profileSet) {
+    throw new UnsupportedOperationException("InMemoryPlanRepository does not store external datasets, so they cannot be extended");
   }
 
   @Override

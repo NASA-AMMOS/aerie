@@ -12,6 +12,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelAccessException;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
@@ -399,6 +400,13 @@ public final class ResponseSerializers {
         .add("message", "no such plan")
         .add("plan_id", ex.id.id())
         .build();
+  }
+
+  public static JsonValue serializeNoSuchPlanDatasetException(final NoSuchPlanDatasetException ex) {
+    return Json.createObjectBuilder()
+               .add("message", "no such plan dataset")
+               .add("plan_id", ex.id.id())
+               .build();
   }
 
   public static JsonValue serializeNoSuchMissionModelException(final MissionModelService.NoSuchMissionModelException ex) {

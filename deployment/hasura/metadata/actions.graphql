@@ -21,6 +21,13 @@ type Mutation {
 }
 
 type Mutation {
+  extendExternalDataset(
+    datasetId: Int!
+    profileSet: ProfileSet!
+  ): AddExternalDatasetResponse
+}
+
+type Mutation {
   uploadDictionary(dictionary: String!): CommandDictionaryResponse
 }
 

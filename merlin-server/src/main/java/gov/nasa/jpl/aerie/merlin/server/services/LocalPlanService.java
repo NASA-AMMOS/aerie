@@ -2,8 +2,10 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
@@ -43,6 +45,13 @@ public final class LocalPlanService implements PlanService {
   throws NoSuchPlanException
   {
     return this.planRepository.addExternalDataset(planId, datasetStart, profileSet);
+  }
+
+  @Override
+  public void extendExternalDataset(final DatasetId datasetId, final ProfileSet profileSet)
+  throws NoSuchPlanDatasetException
+  {
+    this.planRepository.extendExternalDataset(datasetId, profileSet);
   }
 
   @Override
