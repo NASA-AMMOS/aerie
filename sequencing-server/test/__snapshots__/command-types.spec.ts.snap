@@ -1290,7 +1290,7 @@ function commandsWithTimeValue<T extends TimingTypes>(
 ): typeof Commands & typeof STEPS {
   return {
     // @ts-ignore : Commands Used in generated code
-    ...Object.keys(Commands).reduce((accum: { [key: string]: (...args: any[]) => any } = {}, key) => {
+    ...Object.keys(Commands).reduce((accum, key) => {
       // @ts-ignore : Used in generated code
       const command = Commands[key as keyof Commands];
 
@@ -1323,10 +1323,10 @@ function commandsWithTimeValue<T extends TimingTypes>(
       return accum;
       // @ts-ignore : Used in generated code
     }, {} as typeof Commands),
-    ...Object.keys(STEPS).reduce((accum: { [key: string]: (...args: any[]) => any } = {}, key) => {
+    ...Object.keys(STEPS).reduce((accum, key) => {
       // @ts-ignore : Used in generated code
       const step = STEPS[key as keyof STEPS];
-
+      // @ts-ignore : Used in generated code
       accum[key] = (...args: Parameters<typeof step>): typeof step => {
         switch (timeType) {
           case TimingTypes.ABSOLUTE:
