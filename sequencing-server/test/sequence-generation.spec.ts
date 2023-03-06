@@ -2587,7 +2587,7 @@ describe('sequence generation', () => {
   }, 30000);
 });
 
-describe('expansion regressions', () => {
+describe('expansion', () => {
   it('should throw an error if an activity instance goes beyond the plan duration', async () => {
     /** Begin Setup*/
     const activityId = await insertActivityDirective(graphqlClient, planId, 'GrowBanana', '1 days');
