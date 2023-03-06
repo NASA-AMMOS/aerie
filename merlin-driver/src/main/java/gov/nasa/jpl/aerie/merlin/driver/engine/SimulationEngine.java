@@ -75,16 +75,16 @@ public final class SimulationEngine implements AutoCloseable {
   private final MissionModel<?> missionModel;
 
   /** The start time of the simulation, from which other times are offsets */
-  private Instant startTime;
+  private final Instant startTime;
 
   private final TaskInfo taskInfo = new TaskInfo();
   private HashMap<String, ActivityInstanceId> taskToPlannedDirective = new HashMap<>();
-  private Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles = new HashMap<>();
-  private Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles = new HashMap<>();
-  private Map<ActivityInstanceId, SimulatedActivity> simulatedActivities = new HashMap<>();
-  private Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities = new HashMap<>();
-  private SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> serializedTimeline = new TreeMap<>();
-  private List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
+  private final Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles = new HashMap<>();
+  private final Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles = new HashMap<>();
+  private final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities = new HashMap<>();
+  private final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities = new HashMap<>();
+  private final SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> serializedTimeline = new TreeMap<>();
+  private final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
   public final Topic<ActivityInstanceId> defaultActivityTopic = new Topic<>();
 
   public SimulationEngine(Instant startTime, MissionModel<?> missionModel, SimulationEngine oldEngine) {
@@ -149,11 +149,11 @@ public final class SimulationEngine implements AutoCloseable {
     return Pair.of(earliest, tasks);
   }
 
-  public void putStaleTopic(Topic topic, Duration offsetTime) {
+  public void putStaleTopic(Topic<?> topic, Duration offsetTime) {
     staleTopics.computeIfAbsent(topic, $ -> new TreeSet<>()).add(offsetTime);
   }
 
-  public boolean removeStaleTopic(Topic topic, Duration offsetTime) {
+  public boolean removeStaleTopic(Topic<?> topic, Duration offsetTime) {
     var set = staleTopics.get(topic);
     if (set == null) return false;
     boolean removed = set.remove(offsetTime);
@@ -215,8 +215,8 @@ public final class SimulationEngine implements AutoCloseable {
 
   /**
    * Has this resource already been simulated?
-   * @param name
-   * @return
+   * @param name the name of the resource used for lookup
+   * @return whether the resource already has segments recorded, indicating that it has at least been partly simulated
    */
   public boolean hasSimulatedResource(final String name) {
     final var id = new ResourceId(name);
@@ -225,10 +225,7 @@ public final class SimulationEngine implements AutoCloseable {
       return false;
     }
     final Profile<?> profile = state.profile();
-    if (profile == null || profile.segments().size() <= 0) {
-      return false;
-    }
-    return true;
+    return profile != null && profile.segments().size() > 0;
   }
 
   /** Register a resource whose profile should be accumulated over time. */
@@ -276,8 +273,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** Returns the offset time of the next batch of scheduled jobs. */
   public Duration timeOfNextJobs() {
-    final var t = this.scheduledJobs.timeOfNextJobs();
-    return t;
+    return this.scheduledJobs.timeOfNextJobs();
   }
 
   /** Removes and returns the next set of jobs to be performed concurrently. */

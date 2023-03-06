@@ -68,6 +68,7 @@ public class IncrementalSimulationDriver<Model> {
     SimulationEngine oldEngine = rerunning ? this.engine : null;
     this.engine = new SimulationEngine(startTime, missionModel, oldEngine);
     activitiesInserted.clear();
+    // TODO: For the scheduler, it only simulates up to the end of the last activity added.  Make sure we don't assume a full simulation exists.
 
     /* The top-level simulation timeline. */
     // this.timeline = new TemporalEventSource();
@@ -144,7 +145,8 @@ public class IncrementalSimulationDriver<Model> {
 
 
   /**
-   * Simulate an activity
+   * Simulate an activity.  We assume that the original plan activities have
+   * been scheduled in the SimulationEngine and may be partially simulated.
    * @param activity the activity to simulate
    * @param startTime the start time of the activity
    * @param activityId the activity id for the activity to simulate
@@ -209,10 +211,15 @@ public class IncrementalSimulationDriver<Model> {
     return lastSimResults;
   }
 
+  /**
+   * Simulate the input activities.  We assume that the original plan activities have
+   * been scheduled in the SimulationEngine and may be partially simulated.
+   * @param schedule the activities to schedule with the times to schedule them
+   * @throws InstantiationException
+   */
   private void simulateSchedule(final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule)
   throws InstantiationException
   {
-
     if(schedule.isEmpty()){
       throw new IllegalArgumentException("simulateSchedule() called with empty schedule, use simulateUntil() instead");
     }
