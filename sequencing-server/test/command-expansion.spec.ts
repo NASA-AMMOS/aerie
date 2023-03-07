@@ -38,6 +38,8 @@ afterEach(async () => {
 
 describe('expansion', () => {
   let expansionId: number;
+  let groundEventExpansion: number;
+  let groundBlockExpansion: number;
 
   beforeEach(async () => {
     expansionId = await insertExpansion(
@@ -53,10 +55,52 @@ describe('expansion', () => {
     }
     `,
     );
+
+    groundEventExpansion = await insertExpansion(
+      graphqlClient,
+      'GrowBanana',
+      `
+    export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+      return [
+        C.GROUND_EVENT("test")
+      ];
+    }
+    `,
+    );
+
+    groundBlockExpansion = await insertExpansion(
+      graphqlClient,
+      'GrowBanana',
+      `
+    export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+      return [
+        C.GROUND_BLOCK("test")
+      ];
+    }
+    `,
+    );
   });
 
   afterEach(async () => {
     await removeExpansion(graphqlClient, expansionId);
+    await removeExpansion(graphqlClient, groundEventExpansion);
+    await removeExpansion(graphqlClient, groundBlockExpansion);
+  });
+
+  it('should fail when the user creates an expansion set with a ground block', async () => {
+    try {
+      expect(
+        await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [groundBlockExpansion]),
+      ).toThrow();
+    } catch (e) {}
+  });
+
+  it('should fail when the user creates an expansion set with a ground event', async () => {
+    try {
+      expect(
+        await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [groundEventExpansion]),
+      ).toThrow();
+    } catch (e) {}
   });
 
   it('should allow an activity type and command to have the same name', async () => {
