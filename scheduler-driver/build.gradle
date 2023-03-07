@@ -1,6 +1,7 @@
 plugins {
   id 'java-library'
   id 'jacoco'
+  id 'maven-publish'
 }
 
 java {
@@ -43,4 +44,26 @@ dependencies {
   //for when aerielander will be published
   //testImplementation 'gov.nasa.jpl.aerie:aerielander:0.11.0-SNAPSHOT-+'
   testImplementation files('src/test/resources/gov/nasa/jpl/aerie/scheduler/aerielander.jar')
+}
+
+publishing {
+  publications {
+    library(MavenPublication) {
+      version = findProperty('publishing.version')
+      from components.java
+    }
+  }
+
+  publishing {
+    repositories {
+      maven {
+        name = findProperty("publishing.name")
+        url = findProperty("publishing.url")
+        credentials {
+          username = System.getenv(findProperty("publishing.usernameEnvironmentVariable"))
+          password = System.getenv(findProperty("publishing.passwordEnvironmentVariable"))
+        }
+      }
+    }
+  }
 }

@@ -1,0 +1,3 @@
+table:
+  name: activity_presets
+  schema: public

@@ -1,4 +1,6 @@
 import * as ampcs from '@nasa-jpl/aerie-ampcs';
+import Ajv from 'ajv/dist/2020.js';
+import schema from '@nasa-jpl/seq-json-schema/schema.json' assert { type: 'json' };
 import type { CacheItem, UserCodeError } from '@nasa-jpl/aerie-ts-user-code-runner';
 import { Result } from '@nasa-jpl/aerie-ts-user-code-runner/build/utils/monads.js';
 import bodyParser from 'body-parser';
@@ -22,7 +24,9 @@ import {
   simulatedActivityInstanceBySimulatedActivityIdBatchLoader,
 } from './lib/batchLoaders/simulatedActivityBatchLoader.js';
 import { generateTypescriptForGraphQLActivitySchema } from './lib/codegen/ActivityTypescriptCodegen.js';
-import { CommandStem, CommandSeqJson, Sequence, SequenceSeqJson } from './lib/codegen/CommandEDSLPreface.js';
+import { CommandStem, Sequence } from './lib/codegen/CommandEDSLPreface.js';
+import type { Command, SeqJson } from '@nasa-jpl/seq-json-schema/types';
+
 import { processDictionary } from './lib/codegen/CommandTypeCodegen.js';
 import './polyfills.js';
 import { FallibleStatus } from './types.js';
@@ -363,6 +367,15 @@ app.post('/expand-all-activity-instances', async (req, res, next) => {
 
   const settledExpansionResults = await Promise.allSettled(
     simulatedActivities.map(async simulatedActivity => {
+      // The simulatedActivity's duration and endTime will be null if the effect model reaches across the plan end boundaries.
+      if (!simulatedActivity.duration && !simulatedActivity.endTime) {
+        return {
+          activityInstance: simulatedActivity,
+          commands: null,
+          errors: [{ message: 'Duration is null' }],
+        };
+      }
+
       const activitySchema = await context.activitySchemaDataLoader.load({
         missionModelId: expansionSet.missionModel.id,
         activityTypeName: simulatedActivity.activityTypeName,
@@ -605,7 +618,7 @@ app.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, res, next)
   const [{ rows: activityInstanceCommandRows }, { rows: seqRows }] = await Promise.all([
     db.query<{
       metadata: Record<string, unknown>;
-      commands: CommandSeqJson[];
+      commands: Command[];
       activity_instance_id: number;
       errors: ReturnType<UserCodeError['toJSON']>[] | null;
     }>(
@@ -735,7 +748,7 @@ app.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (req, res, 
   const [{ rows: activityInstanceCommandRows }, { rows: seqRows }] = await Promise.all([
     db.query<{
       metadata: Record<string, unknown>;
-      commands: CommandSeqJson[];
+      commands: Command[];
       activity_instance_id: number;
       errors: ReturnType<UserCodeError['toJSON']>[] | null;
       seq_id: string;
@@ -899,17 +912,37 @@ app.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (req, res, 
  * @deprecated Use `/bulk-get-edsl-for-seqjson` instead
  */
 app.post('/get-edsl-for-seqjson', async (req, res, next) => {
-  const seqJson = req.body.input.seqJson as SequenceSeqJson;
+  const seqJson = req.body.input.seqJson as SeqJson;
+  const validate = new Ajv({ strict: false }).compile(schema);
+
+  if (!validate(seqJson)) {
+    throw new Error(
+      `POST /bulk-get-edsl-for-seqjson: Uploaded sequence JSON is invalid and does not match the current spec`,
+    );
+  }
 
   res.json(Sequence.fromSeqJson(seqJson).toEDSLString());
+
   return next();
 });
 
 // Generate Sequence EDSL from many sequence JSONs
 app.post('/bulk-get-edsl-for-seqjson', async (req, res, next) => {
-  const seqJsons = req.body.input.seqJsons as SequenceSeqJson[];
+  const seqJsons = req.body.input.seqJsons as SeqJson[];
+  const validate = new Ajv({ strict: false }).compile(schema);
 
-  res.json(seqJsons.map(seqJson => Sequence.fromSeqJson(seqJson).toEDSLString()));
+  res.json(
+    seqJsons.map(seqJson => {
+      if (!validate(seqJson)) {
+        throw new Error(
+          `POST /bulk-get-edsl-for-seqjson: Uploaded sequence JSON is invalid and does not match the current spec`,
+        );
+      }
+
+      return Sequence.fromSeqJson(seqJson).toEDSLString();
+    }),
+  );
+
   return next();
 });
 

@@ -14,7 +14,7 @@ import gov.nasa.jpl.aerie.scheduler.goals.ChildCustody;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.ProceduralCreationGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
@@ -24,7 +24,6 @@ import gov.nasa.jpl.aerie.scheduler.solver.PrioritySolver;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Objects;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
@@ -88,32 +87,32 @@ public class PrioritySolverTest {
   private static PlanInMemory makePlanA012(Problem problem) {
     final var plan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    plan.add(ActivityInstance.of(actTypeA, t0, d1min));
-    plan.add(ActivityInstance.of(actTypeA, t1hr, d1min));
-    plan.add(ActivityInstance.of(actTypeA, t2hr, d1min));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t0, d1min, null, true));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t1hr, d1min, null, true));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t2hr, d1min, null, true));
     return plan;
   }
 
   private static PlanInMemory makePlanA12(Problem problem) {
     final var plan = new PlanInMemory();
     final var actTypeA = problem.getActivityType("ControllableDurationActivity");
-    plan.add(ActivityInstance.of(actTypeA, t1hr, d1min));
-    plan.add(ActivityInstance.of(actTypeA, t2hr, d1min));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t1hr, d1min, null, true));
+    plan.add(SchedulingActivityDirective.of(actTypeA, t2hr, d1min, null, true));
     return plan;
   }
 
   private static PlanInMemory makePlanAB012(Problem problem) {
     final var plan = makePlanA012(problem);
     final var actTypeB = problem.getActivityType("OtherControllableDurationActivity");
-    plan.add(ActivityInstance.of(actTypeB, t0, d1min));
-    plan.add(ActivityInstance.of(actTypeB, t1hr, d1min));
-    plan.add(ActivityInstance.of(actTypeB, t2hr, d1min));
+    plan.add(SchedulingActivityDirective.of(actTypeB, t0, d1min, null, true));
+    plan.add(SchedulingActivityDirective.of(actTypeB, t1hr, d1min, null, true));
+    plan.add(SchedulingActivityDirective.of(actTypeB, t2hr, d1min, null, true));
     return plan;
   }
 
   /** matches activities if they agree in everything except the (possibly auto-generated) names **/
-  private static final Correspondence<ActivityInstance, ActivityInstance> equalExceptInName = Correspondence.from(
-      ActivityInstance::equalsInProperties, "matches");
+  private static final Correspondence<SchedulingActivityDirective, SchedulingActivityDirective> equalExceptInName = Correspondence.from(
+      SchedulingActivityDirective::equalsInProperties, "matches");
 
   @Test
   public void getNextSolution_initialPlanInOutput() {

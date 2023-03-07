@@ -3,9 +3,10 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.SchemaCache;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
@@ -60,17 +61,23 @@ public abstract class MerlinParsers {
           microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
           duration -> duration.in(Duration.MICROSECONDS));
 
-  public static final JsonParser<ActivityInstanceId> activityInstanceIdP
+  public static final JsonParser<ActivityDirectiveId> activityInstanceIdP
       = longP
       . map(
-          ActivityInstanceId::new,
-          ActivityInstanceId::id);
+          ActivityDirectiveId::new,
+          ActivityDirectiveId::id);
 
   public static final JsonParser<PlanId> planIdP
       = longP
       . map(
           PlanId::new,
           PlanId::id);
+
+  public static final JsonParser<DatasetId> datasetIdP
+      = longP
+      . map(
+          DatasetId::new,
+          DatasetId::id);
 
   public static final JsonParser<SimulationFailure> simulationFailureP = productP
       .field("type", stringP)

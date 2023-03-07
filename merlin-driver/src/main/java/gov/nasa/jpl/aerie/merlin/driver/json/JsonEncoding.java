@@ -2,92 +2,18 @@ package gov.nasa.jpl.aerie.merlin.driver.json;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonNumber;
-import javax.json.JsonObject;
-import javax.json.JsonString;
 import javax.json.JsonValue;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 
 public final class JsonEncoding {
-  public static JsonValue encode(final SerializedValue parameter) {
-    return parameter.match(new SerializedValue.Visitor<>() {
-      @Override
-      public JsonValue onNull() {
-        return JsonValue.NULL;
-      }
-
-      @Override
-      public JsonValue onBoolean(final boolean value) {
-        return (value) ? JsonValue.TRUE : JsonValue.FALSE;
-      }
-
-      @Override
-      public JsonValue onReal(final double value) {
-        return Json.createValue(value);
-      }
-
-      @Override
-      public JsonValue onInt(final long value) {
-        return Json.createValue(value);
-      }
-
-      @Override
-      public JsonValue onString(final String value) {
-        return Json.createValue(value);
-      }
-
-      @Override
-      public JsonValue onList(final List<SerializedValue> elements) {
-        final var builder = Json.createArrayBuilder();
-        for (final var element : elements) builder.add(element.match(this));
-
-        return builder.build();
-      }
-
-      @Override
-      public JsonValue onMap(final Map<String, SerializedValue> fields) {
-        final var builder = Json.createObjectBuilder();
-        for (final var entry : fields.entrySet()) builder.add(entry.getKey(), entry.getValue().match(this));
-
-        return builder.build();
-      }
-    });
+  public static JsonValue encode(final SerializedValue value) {
+    return serializedValueP.unparse(value);
   }
 
   public static SerializedValue decode(final JsonValue value) {
-    switch (value.getValueType()) {
-      case NULL: return SerializedValue.NULL;
-      case TRUE: return SerializedValue.of(true);
-      case FALSE: return SerializedValue.of(false);
-      case NUMBER:
-        if (((JsonNumber) value).isIntegral()) {
-          return SerializedValue.of(((JsonNumber) value).longValueExact());
-        } else {
-          return SerializedValue.of(((JsonNumber) value).doubleValue());
-        }
-      case STRING:
-        return SerializedValue.of(((JsonString) value).getString());
-      case ARRAY: {
-        final var elements = new ArrayList<SerializedValue>(((JsonArray) value).size());
-        for (final var element : (JsonArray) value) {
-          elements.add(decode(element));
-        }
-        return SerializedValue.of(elements);
-      }
-      case OBJECT: {
-        final var fields = new HashMap<String, SerializedValue>(((JsonObject) value).size());
-        for (final var field : ((JsonObject) value).entrySet()) {
-          fields.put(field.getKey(), decode(field.getValue()));
-        }
-        return SerializedValue.of(fields);
-      }
-      default:
-        throw new Error("Unknown type of JSON value: " + value.getValueType());
-    }
+    return serializedValueP
+        .parse(value)
+        .getSuccessOrThrow($ -> new Error("Unable to parse JSON as SerializedValue: " + $));
   }
 }

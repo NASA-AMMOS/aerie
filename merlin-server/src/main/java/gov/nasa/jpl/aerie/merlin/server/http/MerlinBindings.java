@@ -3,8 +3,9 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
+import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
@@ -23,11 +24,12 @@ import java.util.stream.Collectors;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityDirectiveEventTriggerP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraConstraintsCodeAction;
-import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraExternalDatasetActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraUploadExternalDatasetActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelArgumentsActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelEventTriggerP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraPlanActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraExtendExternalDatasetActionP;
 import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
@@ -108,6 +110,9 @@ public final class MerlinBindings implements Plugin {
       path("addExternalDataset", () -> {
         post(this::addExternalDataset);
       });
+      path("extendExternalDataset", () -> {
+        post(this::extendExternalDataset);
+      });
       path("constraintsDslTypescript", () -> {
         post(this::getConstraintsDslTypescript);
       });
@@ -156,7 +161,7 @@ public final class MerlinBindings implements Plugin {
       final var input = parseJson(ctx.body(), hasuraActivityDirectiveEventTriggerP);
       final var planId = input.planId();
       final var serializedActivity = new SerializedActivity(input.activityTypeName(), input.arguments());
-      final var activityDirective = new ActivityDirective(input.activityDirectiveId(), input.planId(), input.argumentsModifiedTime(), serializedActivity);
+      final var activityDirective = new ActivityDirectiveForValidation(input.activityDirectiveId(), input.planId(), input.argumentsModifiedTime(), serializedActivity);
 
       final var plan = this.planService.getPlan(planId);
       this.missionModelService.refreshActivityValidations(plan.missionModelId, activityDirective);
@@ -294,9 +299,9 @@ public final class MerlinBindings implements Plugin {
       final var planId = parseJson(ctx.body(), hasuraPlanActionP).input().planId();
 
       final var plan = this.planService.getPlan(planId);
-      final var activities = plan.activityInstances.entrySet().stream().collect(Collectors.toMap(
+      final var activities = plan.activityDirectives.entrySet().stream().collect(Collectors.toMap(
           Map.Entry::getKey,
-          e -> new SerializedActivity(e.getValue().type, e.getValue().arguments)));
+          e -> e.getValue().serializedActivity()));
       final var failures = this.missionModelService.validateActivityInstantiations(plan.missionModelId, activities);
 
       ctx.result(ResponseSerializers.serializeUnconstructableActivityFailures(failures).toString());
@@ -359,7 +364,7 @@ public final class MerlinBindings implements Plugin {
 
   private void addExternalDataset(final Context ctx) {
     try {
-      final var input = parseJson(ctx.body(), hasuraExternalDatasetActionP).input();
+      final var input = parseJson(ctx.body(), hasuraUploadExternalDatasetActionP).input();
 
       final var planId = input.planId();
       final var datasetStart = input.datasetStart();
@@ -370,6 +375,29 @@ public final class MerlinBindings implements Plugin {
       ctx.status(201).result(ResponseSerializers.serializeCreatedDatasetId(datasetId).toString());
     } catch (final NoSuchPlanException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    }
+  }
+
+  private void extendExternalDataset(final Context ctx) {
+    try {
+      final var input = parseJson(ctx.body(), hasuraExtendExternalDatasetActionP).input();
+
+      final var datasetId = input.datasetId();
+      final var profileSet = input.profileSet();
+
+      this.planService.extendExternalDataset(datasetId, profileSet);
+
+      ctx.status(200).result(
+          Json
+              .createObjectBuilder()
+              .add("datasetId", datasetId.id())
+              .build().toString());
+    } catch (final NoSuchPlanDatasetException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanDatasetException(ex).toString());
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {

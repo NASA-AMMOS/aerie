@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
@@ -39,7 +39,7 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
    */
   @Override
   public @NotNull
-  Optional<ActivityInstance> createActivity(String name, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
+  Optional<SchedulingActivityDirective> createActivity(String name, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
     //TODO: returns first ACT of disjunction, change it
     return activityCreationTemplates.get(0).createActivity(name, facade, plan, planningHorizon, evaluationEnvironment);
 
@@ -55,7 +55,7 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
    */
   @Override
   public @NotNull
-  Optional<ActivityInstance> createActivity(String name, Windows windows, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
+  Optional<SchedulingActivityDirective> createActivity(String name, Windows windows, SimulationFacade facade, Plan plan, PlanningHorizon planningHorizon, EvaluationEnvironment evaluationEnvironment) {
     for(var act : activityCreationTemplates) {
       final var activityCreation = act.createActivity(name, windows, facade, plan, planningHorizon, evaluationEnvironment);
       if(activityCreation.isPresent()){
@@ -71,7 +71,7 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
    * @return true if the act instance matches one of the activity expression of the disjunction
    */
   @Override
-  public boolean matches(@NotNull ActivityInstance act, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment) {
+  public boolean matches(@NotNull SchedulingActivityDirective act, SimulationResults simulationResults, EvaluationEnvironment evaluationEnvironment) {
     for (var expr : activityCreationTemplates) {
       if (expr.matches(act, simulationResults, evaluationEnvironment)) {
         return true;

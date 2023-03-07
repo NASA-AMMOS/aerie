@@ -1,28 +1,22 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.json.JsonParser;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
-import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import org.apache.commons.lang3.tuple.Pair;
 
-import javax.json.Json;
-import javax.json.JsonReader;
-import javax.json.stream.JsonParsingException;
 import javax.sql.DataSource;
-import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -31,16 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
-import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
-import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstanceIdP;
-import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 
 public final class PostgresPlanRepository implements PlanRepository {
   private final DataSource dataSource;
@@ -110,7 +94,7 @@ public final class PostgresPlanRepository implements PlanRepository {
   ) throws SQLException {
     try (
         final var getSimulationAction = new GetSimulationAction(connection);
-        final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection);
+        final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection)
     ) {
       final var arguments = new HashMap<String, SerializedValue> ();
       final var simRecord$ = getSimulationAction.get(planId.id());
@@ -157,7 +141,7 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<ActivityInstanceId, ActivityInstance> getAllActivitiesInPlan(final PlanId planId)
+  public Map<ActivityDirectiveId, ActivityDirective> getAllActivitiesInPlan(final PlanId planId)
   throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       return getPlanActivities(connection, planId);
@@ -211,6 +195,32 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
+  public void extendExternalDataset(
+      final DatasetId datasetId,
+      final ProfileSet profileSet
+  ) throws NoSuchPlanDatasetException {
+    try (final var connection = this.dataSource.getConnection()) {
+      if (!planDatasetExists(connection, datasetId)) {
+        throw new NoSuchPlanDatasetException(datasetId);
+      }
+      ProfileRepository.appendResourceProfiles(
+          connection,
+          datasetId.id(),
+          profileSet
+      );
+    } catch (final SQLException ex) {
+      throw new DatabaseException(
+          "Failed to extend external dataset with id `%s`".formatted(datasetId), ex);
+    }
+  }
+
+  private static boolean planDatasetExists(final Connection connection, final DatasetId datasetId) throws SQLException {
+    try (final var getPlanDatasetAction = new CheckPlanDatasetExistsAction(connection)) {
+      return getPlanDatasetAction.get(datasetId);
+    }
+  }
+
+  @Override
   public List<Pair<Duration, ProfileSet>> getExternalDatasets(final PlanId planId) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       final var plan = getPlanRecord(connection, planId);
@@ -258,53 +268,24 @@ public final class PostgresPlanRepository implements PlanRepository {
     }
   }
 
-  private Map<ActivityInstanceId, ActivityInstance> getPlanActivities(
+  private Map<ActivityDirectiveId, ActivityDirective> getPlanActivities(
       final Connection connection,
       final PlanId planId
   ) throws SQLException, NoSuchPlanException {
     try (
-        final var getPlanAction = new GetPlanAction(connection);
         final var getActivitiesAction = new GetActivityDirectivesAction(connection)
     ) {
-      final var planStart = getPlanAction
-          .get(planId.id())
-          .orElseThrow(() -> new NoSuchPlanException(planId))
-          .startTime();
-
       return getActivitiesAction
           .get(planId.id())
           .stream()
           .collect(Collectors.toMap(
-              a -> new ActivityInstanceId(a.id()),
-              a -> new ActivityInstance(
+              a -> new ActivityDirectiveId(a.id()),
+              a -> new ActivityDirective(
+                  Duration.of(a.startOffsetInMicros(), Duration.MICROSECONDS),
                   a.type(),
-                  planStart.plusMicros(a.startOffsetInMicros()),
-                  a.arguments())));
-    }
-  }
-
-  // TODO: This functionality is not required for the use-case
-  //       we are addressing at the time of creation, but it
-  //       will be necessary for our future use-cases of associating
-  //       multiple plans with an external dataset. At that time,
-  //       this function should be lifted to the PlanRepository interface
-  //       and hooked up to the merlin bindings
-  private static void useExternalDataset(
-      final Connection connection,
-      final PlanId planId,
-      final long datasetId,
-      final Timestamp planStart
-  ) throws SQLException {
-    associatePlanWithDataset(connection, planId, datasetId, planStart);
-  }
-
-  private static long toMissionModelId(final String modelId)
-  throws NoSuchMissionModelException
-  {
-    try {
-      return Long.parseLong(modelId, 10);
-    } catch (final NumberFormatException ex) {
-      throw new NoSuchMissionModelException();
+                  a.arguments(),
+                  a.anchorId()!=null? new ActivityDirectiveId(a.anchorId()): null,
+                  a.anchoredToStart())));
     }
   }
 
@@ -315,74 +296,10 @@ public final class PostgresPlanRepository implements PlanRepository {
       final Timestamp datasetStart
   ) throws SQLException {
     try (final var createPlanDatasetAction = new CreatePlanDatasetAction(connection);
-         final var createProfileSegmentPartitionAction = new CreateProfileSegmentPartitionAction(connection)) {
+         final var createDatasetPartitionsAction = new CreateDatasetPartitionsAction(connection)) {
       final var pdr = createPlanDatasetAction.apply(planId.id(), planStart, datasetStart);
-      createProfileSegmentPartitionAction.apply(pdr.datasetId());
+      createDatasetPartitionsAction.apply(pdr.datasetId());
       return pdr;
-    }
-  }
-
-  private static PlanDatasetRecord associatePlanWithDataset(
-      final Connection connection,
-      final PlanId planId,
-      final long datasetId,
-      final Timestamp planStart
-  ) throws SQLException {
-    try (final var associatePlanDatasetAction = new AssociatePlanDatasetAction(connection)) {
-      return associatePlanDatasetAction.apply(planId.id(), datasetId, planStart);
-    }
-  }
-
-  /*package-local*/ static Map<ActivityInstanceId, ActivityInstance> parseActivitiesJson(final String json, final Timestamp planStartTime) {
-    try {
-      final var activityRowP =
-          productP
-              .field("id", activityInstanceIdP)
-              .field("start_offset_in_micros", longP)
-              .field("type", stringP)
-              .field("arguments", mapP(serializedValueP))
-              .map(
-                  untuple((actId, startOffsetInMicros, type, arguments) ->
-                              tuple(
-                                  actId,
-                                  new ActivityInstance(type,
-                                                       planStartTime.plusMicros(startOffsetInMicros),
-                                                       arguments))),
-                  untuple((ActivityInstanceId actId, ActivityInstance $) ->
-                              tuple(actId, planStartTime.microsUntil($.startTimestamp), $.type, $.arguments)));
-
-      final var activities = new HashMap<ActivityInstanceId, ActivityInstance>();
-      for (final var entry : parseJson(json, listP(activityRowP))) {
-        activities.put(entry.getKey(), entry.getValue());
-      }
-
-      return activities;
-    } catch (final InvalidJsonException ex) {
-      throw new UnexpectedJsonException("The JSON returned from the database has an unexpected structure", ex);
-    } catch (final InvalidEntityException ex) {
-      throw new UnexpectedJsonException("The JSON returned from the database is syntactically invalid", ex);
-    }
-  }
-
-  private static <T> T parseJson(final String subject, final JsonParser<T> parser)
-  throws InvalidJsonException, InvalidEntityException
-  {
-    try (JsonReader reader = Json.createReader(new StringReader(subject))) {
-      final var requestJson = reader.readValue();
-      final var result = parser.parse(requestJson);
-      return result.getSuccessOrThrow($ -> new InvalidEntityException(List.of($)));
-    } catch (final JsonParsingException ex) {
-      throw new InvalidJsonException(ex);
-    }
-  }
-
-  /*package-local*/ static Map<String, SerializedValue> parseActivityArgumentsJson(final String json) {
-    try {
-      return parseJson(json, mapP(serializedValueP));
-    } catch (final InvalidJsonException ex) {
-      throw new UnexpectedJsonException("The JSON returned from the database has an unexpected structure", ex);
-    } catch (final InvalidEntityException ex) {
-      throw new UnexpectedJsonException("The JSON returned from the database is syntactically invalid", ex);
     }
   }
 

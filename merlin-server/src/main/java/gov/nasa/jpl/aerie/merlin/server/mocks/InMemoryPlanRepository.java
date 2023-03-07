@@ -1,13 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
@@ -66,18 +66,13 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<ActivityInstanceId, ActivityInstance> getAllActivitiesInPlan(final PlanId planId) throws NoSuchPlanException {
+  public Map<ActivityDirectiveId, ActivityDirective> getAllActivitiesInPlan(final PlanId planId) throws NoSuchPlanException {
     final Plan plan = this.plans.get(planId).getRight();
     if (plan == null) {
       throw new NoSuchPlanException(planId);
     }
 
-    return plan.activityInstances
-        .entrySet()
-        .stream()
-        .collect(Collectors.toMap(
-            (entry) -> entry.getKey(),
-            (entry) -> new ActivityInstance(entry.getValue())));
+    return new HashMap<>(plan.activityDirectives);
   }
 
   public CreatedPlan createPlan(final NewPlan newPlan) {
@@ -89,18 +84,18 @@ public final class InMemoryPlanRepository implements PlanRepository {
     plan.endTimestamp = newPlan.endTimestamp;
     plan.configuration = newPlan.configuration;
     plan.missionModelId = newPlan.missionModelId;
-    plan.activityInstances = new HashMap<>();
+    plan.activityDirectives = new HashMap<>();
 
-    final List<ActivityInstanceId> activityIds;
-    if (newPlan.activityInstances == null) {
+    final List<ActivityDirectiveId> activityIds;
+    if (newPlan.activityDirectives == null) {
       activityIds = new ArrayList<>();
     } else {
-      activityIds = new ArrayList<>(newPlan.activityInstances.size());
-      for (final var activity : newPlan.activityInstances) {
-        final ActivityInstanceId activityId = new ActivityInstanceId(this.nextActivityId++);
+      activityIds = new ArrayList<>(newPlan.activityDirectives.size());
+      for (final var activity : newPlan.activityDirectives) {
+        final ActivityDirectiveId activityId = new ActivityDirectiveId(this.nextActivityId++);
 
         activityIds.add(activityId);
-        plan.activityInstances.put(activityId, new ActivityInstance(activity));
+        plan.activityDirectives.put(activityId, activity);
       }
     }
 
@@ -122,15 +117,15 @@ public final class InMemoryPlanRepository implements PlanRepository {
     this.plans.remove(planId);
   }
 
-  public ActivityInstanceId createActivity(final PlanId planId, final ActivityInstance activity) throws NoSuchPlanException {
+  public ActivityDirectiveId createActivity(final PlanId planId, final ActivityDirective activity) throws NoSuchPlanException {
     final var entry = this.plans.get(planId);
     if (entry == null) throw new NoSuchPlanException(planId);
 
     final var plan = entry.getRight();
     final var revision = entry.getLeft() + 1;
 
-    final ActivityInstanceId activityId = new ActivityInstanceId(this.nextActivityId++);
-    plan.activityInstances.put(activityId, new ActivityInstance(activity));
+    final ActivityDirectiveId activityId = new ActivityDirectiveId(this.nextActivityId++);
+    plan.activityDirectives.put(activityId, activity);
     this.plans.put(planId, Pair.of(revision, plan));
 
     return activityId;
@@ -143,7 +138,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
     final var plan = entry.getRight();
     final var revision = entry.getLeft() + 1;
 
-    plan.activityInstances.clear();
+    plan.activityDirectives.clear();
     this.plans.put(planId, Pair.of(revision, plan));
   }
 
@@ -157,6 +152,11 @@ public final class InMemoryPlanRepository implements PlanRepository {
   throws NoSuchPlanException
   {
     return 0;
+  }
+
+  @Override
+  public void extendExternalDataset(final DatasetId datasetId, final ProfileSet profileSet) {
+    throw new UnsupportedOperationException("InMemoryPlanRepository does not store external datasets, so they cannot be extended");
   }
 
   @Override
@@ -221,58 +221,6 @@ public final class InMemoryPlanRepository implements PlanRepository {
     public PlanTransaction setConfiguration(final Map<String, SerializedValue> configuration)
     {
       this.configuration = Optional.of(configuration);
-      return this;
-    }
-  }
-
-  private class MockActivityTransaction implements ActivityTransaction {
-    private final PlanId planId;
-    private final ActivityInstanceId activityId;
-
-    private Optional<String> type = Optional.empty();
-    private Optional<Timestamp> startTimestamp = Optional.empty();
-    private Optional<Map<String, SerializedValue>> parameters = Optional.empty();
-
-    public MockActivityTransaction(final PlanId planId, final ActivityInstanceId activityId) {
-      this.planId = planId;
-      this.activityId = activityId;
-    }
-
-    @Override
-    public void commit() throws NoSuchPlanException, NoSuchActivityInstanceException {
-      final var entry = InMemoryPlanRepository.this.plans.get(this.planId);
-      if (entry == null) throw new NoSuchPlanException(this.planId);
-
-      final var plan = entry.getRight();
-      final var revision = entry.getLeft() + 1;
-
-      final ActivityInstance activity = plan.activityInstances.get(this.activityId);
-      if (activity == null) {
-        throw new NoSuchActivityInstanceException(this.planId, this.activityId);
-      }
-
-      this.type.ifPresent(type -> activity.type = type);
-      this.startTimestamp.ifPresent(startTimestamp -> activity.startTimestamp = startTimestamp);
-      this.parameters.ifPresent(arguments -> activity.arguments = arguments);
-
-      InMemoryPlanRepository.this.plans.put(this.planId, Pair.of(revision, plan));
-    }
-
-    @Override
-    public ActivityTransaction setType(final String type) {
-      this.type = Optional.of(type);
-      return this;
-    }
-
-    @Override
-    public ActivityTransaction setStartTimestamp(final Timestamp timestamp) {
-      this.startTimestamp = Optional.of(timestamp);
-      return this;
-    }
-
-    @Override
-    public ActivityTransaction setParameters(final Map<String, SerializedValue> parameters) {
-      this.parameters = Optional.of(new HashMap<>(parameters));
       return this;
     }
   }

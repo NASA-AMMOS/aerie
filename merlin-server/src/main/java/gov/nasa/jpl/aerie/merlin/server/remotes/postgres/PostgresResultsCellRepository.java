@@ -1,7 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivityId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
@@ -25,7 +26,6 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -235,14 +235,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         claimSimulationAction.apply(datasetId);
     }
 
-    try (final var transactionContext = new TransactionContext(connection)) {
-      final var createSimulationDatasetPartitionsAction = new CreateProfileSegmentPartitionAction(connection);
-      final var createSpanPartitionAction = new CreateSpanPartitionAction(connection);
-      final var createEventPartitionAction = new CreateEventPartitionAction(connection);
-
-      createSimulationDatasetPartitionsAction.apply(datasetId);
-      createSpanPartitionAction.apply(datasetId);
-      createEventPartitionAction.apply(datasetId);
+    try (final var transactionContext = new TransactionContext(connection);
+         final var createDatasetPartitionsAction = new CreateDatasetPartitionsAction(connection)) {
+      createDatasetPartitionsAction.apply(datasetId);
       transactionContext.commit();
     } catch (final SQLException ex) {
       throw new DatabaseException(String.format("Failed to create partitions for simulation dataset id %s", datasetId), ex);
@@ -344,7 +339,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static Pair<Map<ActivityInstanceId, SimulatedActivity>, Map<ActivityInstanceId, UnfinishedActivity>> getActivities(
+  private static Pair<Map<SimulatedActivityId, SimulatedActivity>, Map<SimulatedActivityId, UnfinishedActivity>> getActivities(
       final Connection connection,
       final long datasetId,
       final Timestamp startTime
@@ -352,15 +347,14 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   {
     try (final var getActivitiesAction = new GetSpanRecords(connection)) {
       final var activityRecords = getActivitiesAction.get(datasetId, startTime);
-      final var pgIdToSimId = liftDirectiveIds(activityRecords);
 
       // Remap all activity IDs to reflect lifted directive IDs
-      final var simulatedActivities = new HashMap<ActivityInstanceId, SimulatedActivity>();
-      final var unfinishedActivities = new HashMap<ActivityInstanceId, UnfinishedActivity>();
+      final var simulatedActivities = new HashMap<SimulatedActivityId, SimulatedActivity>();
+      final var unfinishedActivities = new HashMap<SimulatedActivityId, UnfinishedActivity>();
       for (final var entry : activityRecords.entrySet()) {
         final var pgId = entry.getKey();
         final var record = entry.getValue();
-        final var activityInstanceId = pgIdToSimId.get(pgId);
+        final var activityInstanceId = new SimulatedActivityId(pgId);
 
         // Only records with duration and computed attributes represent simulated activities
         if (record.duration().isPresent() && record.attributes().computedAttributes().isPresent()) {
@@ -369,9 +363,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
               record.attributes().arguments(),
               record.start(),
               record.duration().get(),
-              record.parentId().map(pgIdToSimId::get).orElse(null),
-              record.childIds().stream().map(pgIdToSimId::get).collect(Collectors.toList()),
-              record.attributes().directiveId().map(ActivityInstanceId::new),
+              record.parentId().map(SimulatedActivityId::new).orElse(null),
+              record.childIds().stream().map(SimulatedActivityId::new).collect(Collectors.toList()),
+              record.attributes().directiveId().map(ActivityDirectiveId::new),
               record.attributes().computedAttributes().get()
           ));
         } else {
@@ -379,46 +373,15 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
               record.type(),
               record.attributes().arguments(),
               record.start(),
-              record.parentId().map(pgIdToSimId::get).orElse(null),
-              record.childIds().stream().map(pgIdToSimId::get).collect(Collectors.toList()),
-              record.attributes().directiveId().map(ActivityInstanceId::new)
+              record.parentId().map(SimulatedActivityId::new).orElse(null),
+              record.childIds().stream().map(SimulatedActivityId::new).collect(Collectors.toList()),
+              record.attributes().directiveId().map(ActivityDirectiveId::new)
           ));
         }
       }
 
       return Pair.of(simulatedActivities, unfinishedActivities);
     }
-  }
-
-  private static HashMap<Long, ActivityInstanceId> liftDirectiveIds(final Map<Long, SpanRecord> activityRecords) {
-    final var pgIdToSimId = new HashMap<Long, ActivityInstanceId>(activityRecords.size());
-    final var simIds = new HashSet<Long>(activityRecords.size());
-
-    for (final var entry : activityRecords.entrySet()) {
-      final var id = entry.getKey();
-      final var record = entry.getValue();
-      if (record.attributes().directiveId().isEmpty()) continue;
-
-      final var directiveId = new ActivityInstanceId(record.attributes().directiveId().get());
-      pgIdToSimId.put(id, directiveId);
-      simIds.add(directiveId.id());
-    }
-
-    var counter = 1L;
-    for (final var entry : activityRecords.entrySet()) {
-      final var id = entry.getKey();
-      final var record = entry.getValue();
-      if (record.attributes().directiveId().isPresent()) continue;
-
-      long newId;
-      do {
-        newId = counter++;
-      } while (simIds.contains(newId));
-
-      pgIdToSimId.put(id, new ActivityInstanceId(newId));
-      simIds.add(newId);
-    }
-    return pgIdToSimId;
   }
 
   private static Window getSimulationWindow(
@@ -494,8 +457,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static void postActivities(
       final Connection connection,
       final long datasetId,
-      final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities,
-      final Map<ActivityInstanceId, UnfinishedActivity> unfinishedActivities,
+      final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
+      final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities,
       final Timestamp simulationStart
   ) throws SQLException {
     try (
@@ -530,10 +493,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         activity.type(),
         activity.start(),
         Optional.of(activity.duration()),
-        Optional.ofNullable(activity.parentId()).map(ActivityInstanceId::id),
-        activity.childIds().stream().map(ActivityInstanceId::id).collect(Collectors.toList()),
+        Optional.ofNullable(activity.parentId()).map(SimulatedActivityId::id),
+        activity.childIds().stream().map(SimulatedActivityId::id).collect(Collectors.toList()),
         new ActivityAttributesRecord(
-          activity.directiveId().map(ActivityInstanceId::id),
+          activity.directiveId().map(ActivityDirectiveId::id),
           activity.arguments(),
           Optional.of(activity.computedAttributes())));
   }
@@ -543,10 +506,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         activity.type(),
         activity.start(),
         Optional.empty(),
-        Optional.ofNullable(activity.parentId()).map(ActivityInstanceId::id),
-        activity.childIds().stream().map(ActivityInstanceId::id).collect(Collectors.toList()),
+        Optional.ofNullable(activity.parentId()).map(SimulatedActivityId::id),
+        activity.childIds().stream().map(SimulatedActivityId::id).collect(Collectors.toList()),
         new ActivityAttributesRecord(
-            activity.directiveId().map(ActivityInstanceId::id),
+            activity.directiveId().map(ActivityDirectiveId::id),
             activity.arguments(),
             Optional.empty()));
   }

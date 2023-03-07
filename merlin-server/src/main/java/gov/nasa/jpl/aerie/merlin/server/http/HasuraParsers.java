@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraActivityDirectiveEvent;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraMissionModelEvent;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Optional;
 
@@ -17,10 +16,11 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
+import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.datasetIdP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.planIdP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.timestampP;
 import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.profileSetP;
-import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.pgTimestampP;
 
 public abstract class HasuraParsers {
@@ -34,28 +34,29 @@ public abstract class HasuraParsers {
           untuple((role, userId) -> new HasuraAction.Session(role, userId.orElse(""))),
           $ -> tuple($.hasuraRole(), Optional.ofNullable($.hasuraUserId())));
 
-  private static <I> JsonParser<Pair<Pair<Pair<String, I>, HasuraAction.Session>, String>> hasuraActionP(final JsonParser<I> inputP) {
+  private static <I extends HasuraAction.Input> JsonParser<HasuraAction<I>> hasuraActionF(final JsonParser<I> inputP) {
     return productP
         .field("action", productP.field("name", stringP))
         .field("input", inputP)
         .field("session_variables", hasuraActionSessionP)
-        .field("request_query", stringP);
+        .field("request_query", stringP)
+        .map(
+            untuple((name, input, session, requestQuery) -> new HasuraAction<>(name, input, session)),
+            $ -> tuple($.name(), $.input(), $.session(), ""));
   }
 
   public static final JsonParser<HasuraAction<HasuraAction.MissionModelInput>> hasuraMissionModelActionP
-      = hasuraActionP(productP.field("missionModelId", stringP))
-      .map(
-          untuple((name, missionModelId, session, requestQuery) -> new HasuraAction<>(name, new HasuraAction.MissionModelInput(missionModelId), session)),
-          $ -> tuple($.name(), $.input().missionModelId(), $.session(), ""));
+      = hasuraActionF(productP
+                          .field("missionModelId", stringP)
+                          .map(HasuraAction.MissionModelInput::new, HasuraAction.MissionModelInput::missionModelId));
 
   public static final JsonParser<HasuraAction<HasuraAction.PlanInput>> hasuraPlanActionP
-      = hasuraActionP(productP.field("planId", planIdP))
-      .map(
-          untuple((name, planId, session, requestQuery) -> new HasuraAction<>(name, new HasuraAction.PlanInput(planId), session)),
-          $ -> tuple($.name(), $.input().planId(), $.session(), ""));
+      = hasuraActionF(productP
+                          .field("planId", planIdP)
+                          .map(HasuraAction.PlanInput::new, HasuraAction.PlanInput::planId));
 
   public static final JsonParser<HasuraAction<HasuraAction.ConstraintsInput>> hasuraConstraintsCodeAction
-      = hasuraActionP(
+      = hasuraActionF(
           productP
               .field("missionModelId", stringP)
               .optionalField("planId", nullableP(planIdP))
@@ -63,10 +64,6 @@ public abstract class HasuraParsers {
                   untuple((modelId, planId) -> new HasuraAction.ConstraintsInput(modelId, planId.flatMap($ -> $))),
                   $ -> tuple($.missionModelId(), Optional.of($.planId()))
               )
-      )
-      .map(
-          untuple((name, input, session, requestQuery) -> new HasuraAction<>(name, input, session)),
-          $ -> tuple($.name(), $.input(), $.session(), "")
       );
 
   public static final JsonParser<HasuraMissionModelEvent> hasuraMissionModelEventTriggerP
@@ -111,10 +108,7 @@ public abstract class HasuraParsers {
           $ -> tuple($.missionModelId(), $.arguments()));
 
   public static final JsonParser<HasuraAction<HasuraAction.MissionModelArgumentsInput>> hasuraMissionModelArgumentsActionP
-      = hasuraActionP(hasuraMissionModelArgumentsInputP)
-      .map(
-          untuple((name, input, session, requestQuery) -> new HasuraAction<>(name, input, session)),
-          $ -> tuple($.name(), $.input(), $.session(), ""));
+      = hasuraActionF(hasuraMissionModelArgumentsInputP);
 
   private static final JsonParser<HasuraAction.ActivityInput> hasuraActivityInputP
       = productP
@@ -126,23 +120,24 @@ public abstract class HasuraParsers {
           $ -> tuple($.missionModelId(), $.activityTypeName(), $.arguments()));
 
   public static final JsonParser<HasuraAction<HasuraAction.ActivityInput>> hasuraActivityActionP
-      = hasuraActionP(hasuraActivityInputP)
-      .map(
-          untuple((name, input, session, requestQuery) -> new HasuraAction<>(name, input, session)),
-          $ -> tuple($.name(), $.input(), $.session(), ""));
+      = hasuraActionF(hasuraActivityInputP);
 
-  public static final JsonParser<HasuraAction.UploadExternalDatasetInput> hasuraUploadExternalDatasetActionP
-      = productP
-      .field("planId", planIdP)
-      .field("datasetStart", timestampP)
-      .field("profileSet", profileSetP)
-      .map(
-          untuple(HasuraAction.UploadExternalDatasetInput::new),
-          $ -> tuple($.planId(), $.datasetStart(), $.profileSet()));
+  public static final JsonParser<HasuraAction<HasuraAction.UploadExternalDatasetInput>> hasuraUploadExternalDatasetActionP
+      = hasuraActionF(
+          productP
+            .field("planId", planIdP)
+            .field("datasetStart", timestampP)
+            .field("profileSet", profileSetP)
+            .map(
+                untuple(HasuraAction.UploadExternalDatasetInput::new),
+                $ -> tuple($.planId(), $.datasetStart(), $.profileSet())));
 
-  public static final JsonParser<HasuraAction<HasuraAction.UploadExternalDatasetInput>> hasuraExternalDatasetActionP
-      = hasuraActionP(hasuraUploadExternalDatasetActionP)
-      .map(
-          untuple((name, input, session, requestQuery) -> new HasuraAction<>(name, input, session)),
-          $ -> tuple($.name(), $.input(), $.session(), ""));
+  public static final JsonParser<HasuraAction<HasuraAction.ExtendExternalDatasetInput>> hasuraExtendExternalDatasetActionP
+      = hasuraActionF(
+          productP
+            .field("datasetId", datasetIdP)
+            .field("profileSet", profileSetP)
+            .map(
+                untuple(HasuraAction.ExtendExternalDatasetInput::new),
+                $ -> tuple($.datasetId(), $.profileSet())));
 }

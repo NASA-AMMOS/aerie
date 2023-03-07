@@ -16,7 +16,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
@@ -26,13 +27,13 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingCondition;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
@@ -217,7 +218,7 @@ public record SynchronousSchedulerAgent(
       final var solutionPlan = scheduler.getNextSolution().orElseThrow(
           () -> new ResultsProtocolFailure("scheduler returned no solution"));
 
-      final var activityToGoalId = new HashMap<ActivityInstance, GoalId>();
+      final var activityToGoalId = new HashMap<SchedulingActivityDirective, GoalId>();
       for (final var entry : solutionPlan.getEvaluation().getGoalEvaluations().entrySet()) {
         for (final var activity : entry.getValue().getInsertedActivities()) {
           activityToGoalId.put(activity, goals.get(entry.getKey()));
@@ -373,21 +374,21 @@ public record SynchronousSchedulerAgent(
     //TODO: maybe paranoid check if plan rev has changed since original metadata?
     try {
       final var merlinPlan =  planService.getPlanActivityDirectives(planMetadata, problem);
-      final Map<SchedulingActivityInstanceId, ActivityInstanceId> schedulingIdToMerlinId = new HashMap<>();
+      final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> schedulingIdToDirectiveId = new HashMap<>();
       final var plan = new PlanInMemory();
       final var activityTypes = problem.getActivityTypes().stream().collect(Collectors.toMap(ActivityType::getName, at -> at));
       for(final var elem : merlinPlan.getActivitiesById().entrySet()){
         final var activity = elem.getValue();
-        if(!activityTypes.containsKey(activity.type())){
+        if(!activityTypes.containsKey(activity.serializedActivity().getTypeName())){
           throw new IllegalArgumentException("Activity type found in JSON object after request to merlin server has "
                                              + "not been found in types extracted from mission model. Probable "
                                              + "inconsistency between mission model used by scheduler server and "
                                              + "merlin server.");
         }
-        final var schedulerActType = activityTypes.get(activity.type());
+        final var schedulerActType = activityTypes.get(activity.serializedActivity().getTypeName());
         Duration actDuration = null;
         if (schedulerActType.getDurationType() instanceof DurationType.Controllable s) {
-          final var serializedDuration = activity.arguments().get(s.parameterName());
+          final var serializedDuration = activity.serializedActivity().getArguments().get(s.parameterName());
           if (serializedDuration != null) {
             actDuration = Duration.of(
                 serializedDuration
@@ -400,17 +401,18 @@ public record SynchronousSchedulerAgent(
         } else {
           throw new Error("Unhandled variant of DurationType:" + schedulerActType.getDurationType());
         }
-        final var act = ActivityInstance.of(schedulerActType, activity.startTimestamp(), actDuration, activity.arguments());
-        schedulingIdToMerlinId.put(act.getId(), elem.getKey());
+        final var act = SchedulingActivityDirective.fromActivityDirective(elem.getKey(), activity, schedulerActType, actDuration);
+
+        schedulingIdToDirectiveId.put(act.getId(), elem.getKey());
         plan.add(act);
       }
-      return new PlanComponents(plan, merlinPlan, schedulingIdToMerlinId);
+      return new PlanComponents(plan, merlinPlan, schedulingIdToDirectiveId);
     } catch (Exception e) {
       throw new ResultsProtocolFailure(e);
     }
   }
 
-  record PlanComponents(Plan schedulerPlan, MerlinPlan merlinPlan, Map<SchedulingActivityInstanceId, ActivityInstanceId> idMap) {}
+  record PlanComponents(Plan schedulerPlan, MerlinPlan merlinPlan, Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idMap) {}
   record SchedulerMissionModel(MissionModel<?> missionModel, SchedulerModel schedulerModel) {}
 
   /**
@@ -520,12 +522,12 @@ public record SynchronousSchedulerAgent(
    * @throws ResultsProtocolFailure when the plan could not be stored to aerie, the target plan revision has
    *     changed, or aerie could not be reached
    */
-  private Map<ActivityInstance, ActivityInstanceId> storeFinalPlan(
+  private Map<SchedulingActivityDirective, ActivityDirectiveId> storeFinalPlan(
     final PlanMetadata planMetadata,
-    final Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
+    final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
     final MerlinPlan initialPlan,
     final Plan newPlan,
-    final Map<ActivityInstance, GoalId> goalToActivity
+    final Map<SchedulingActivityDirective, GoalId> goalToActivity
   ) {
     try {
       switch (this.outputMode) {
@@ -571,7 +573,7 @@ public record SynchronousSchedulerAgent(
    * @param plan the target plan after the scheduling run has completed
    * @return summary of the state of the plan after scheduling ran; eg goal success metrics, associated instances, etc
    */
-  private ScheduleResults collectResults(final Plan plan, final Map<ActivityInstance, ActivityInstanceId> instancesToIds, Map<Goal, GoalId> goalsToIds) {
+  private ScheduleResults collectResults(final Plan plan, final Map<SchedulingActivityDirective, ActivityDirectiveId> instancesToIds, Map<Goal, GoalId> goalsToIds) {
     Map<GoalId, ScheduleResults.GoalResult> goalResults = new HashMap<>();
       for (var goalEval : plan.getEvaluation().getGoalEvaluations().entrySet()) {
         var goalId = goalsToIds.get(goalEval.getKey());

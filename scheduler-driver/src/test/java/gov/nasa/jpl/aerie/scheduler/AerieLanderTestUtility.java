@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.protocol.model.SchedulerModel;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 
 import java.time.Instant;
@@ -15,8 +15,8 @@ import java.util.List;
  */
 public class AerieLanderTestUtility {
   public static void printPlan(Plan plan) {
-    List<ActivityInstance> acts = plan.getActivitiesByTime();
-    ActivityInstance last = null;
+    List<SchedulingActivityDirective> acts = plan.getActivitiesByTime();
+    SchedulingActivityDirective last = null;
     for (var act : acts) {
       System.out.println(act.toString());
     }

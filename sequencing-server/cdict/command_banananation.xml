@@ -106,6 +106,32 @@
                 <prime_string_restriction prime_string_only="No" />
             </restricted_modes>
         </fsw_command>
+        <fsw_command opcode="0xFFFF" stem="GrowBanana" class="FSW">
+            <arguments>
+                <unsigned_arg name="quantity" bit_length="8" units="none">
+                    <range_of_values>
+                        <include min="0" max="100" />
+                    </range_of_values>
+                    <description>Number of bananas to grow</description>
+                </unsigned_arg>
+                <unsigned_arg name="durationSecs" bit_length="8" units="none">
+                    <range_of_values>
+                        <include min="0" max="100" />
+                    </range_of_values>
+                    <description>How many seconds will it take to grow</description>
+                </unsigned_arg>
+            </arguments>
+            <categories>
+                <module>shell_ctl</module>
+                <ops_category>FSW</ops_category>
+            </categories>
+            <description>This command will grow bananas, it's a duplicate to clash with an activity type of the same name</description>
+            <completion>Bananas are grown</completion>
+            <fsw_specification custom_validation_required="No" command_priority="Nominal" />
+            <restricted_modes>
+                <prime_string_restriction prime_string_only="No" />
+            </restricted_modes>
+        </fsw_command>
         <fsw_command opcode="0xFFFF" stem="PREPARE_LOAF" class="FSW">
             <arguments>
                 <unsigned_arg name="tb_sugar" bit_length="8" units="priority">

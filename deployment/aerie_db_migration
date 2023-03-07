@@ -106,10 +106,10 @@ def bulk_migration():
         continue
       os.system(f'hasura migrate apply --database-name {database.db_name}')
     else:
-      exit_code = os.system(f'hasura migrate apply --down all --database-name {database.db_name} --dry-run --log-level WARN')
+      exit_code = os.system(f'hasura migrate apply --goto 0 --database-name {database.db_name} --dry-run --log-level WARN')
       if exit_code != 0:
         continue
-      os.system(f'hasura migrate apply --down all --database-name {database.db_name}')
+      os.system(f'hasura migrate apply --goto 0 --database-name {database.db_name}')
 
     os.system('hasura metadata reload')
 

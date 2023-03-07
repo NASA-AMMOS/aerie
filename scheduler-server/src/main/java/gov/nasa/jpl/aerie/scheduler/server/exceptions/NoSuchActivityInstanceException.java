@@ -1,16 +1,16 @@
 package gov.nasa.jpl.aerie.scheduler.server.exceptions;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 
 public class NoSuchActivityInstanceException extends Exception {
-  private final ActivityInstanceId id;
+  private final ActivityDirectiveId id;
 
-  public NoSuchActivityInstanceException(final ActivityInstanceId id) {
+  public NoSuchActivityInstanceException(final ActivityDirectiveId id) {
     super("No activity instance exists with id `" + id + "`");
     this.id = id;
   }
 
-  public ActivityInstanceId getInvalidPlanId() {
+  public ActivityDirectiveId getInvalidPlanId() {
     return this.id;
   }
 }

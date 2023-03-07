@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol.types;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -52,8 +53,7 @@ public sealed interface SerializedValue {
    */
   interface Visitor<T> {
     T onNull();
-    T onReal(double value);
-    T onInt(long value);
+    T onNumeric(BigDecimal value);
     T onBoolean(boolean value);
     T onString(String value);
     T onMap(Map<String, SerializedValue> value);
@@ -67,17 +67,22 @@ public sealed interface SerializedValue {
     }
   }
 
-  record RealValue(double value) implements SerializedValue {
+  record NumericValue(BigDecimal value) implements SerializedValue {
     @Override
     public <T> T match(final Visitor<T> visitor) {
-      return visitor.onReal(value);
+      return visitor.onNumeric(value);
     }
-  }
 
-  record IntValue(long value) implements SerializedValue {
+    // `BigDecimal#equals` is too strict -- values differing only in representation need to be considered the same.
     @Override
-    public <T> T match(final Visitor<T> visitor) {
-      return visitor.onInt(value);
+    public boolean equals(final Object obj) {
+      if (!(obj instanceof NumericValue other)) return false;
+      return (this.value.compareTo(other.value) == 0);
+    }
+
+    @Override
+    public int hashCode() {
+      return this.value.stripTrailingZeros().hashCode();
     }
   }
 
@@ -119,13 +124,23 @@ public sealed interface SerializedValue {
   }
 
   /**
+   * Creates a {@link SerializedValue} containing an arbitrary-precision number.
+   *
+   * @param value Any {@link BigDecimal} value.
+   * @return A new {@link SerializedValue} containing an arbitrary-precision number.
+   */
+  static SerializedValue of(final BigDecimal value) {
+    return new NumericValue(value);
+  }
+
+  /**
    * Creates a {@link SerializedValue} containing a real number.
    *
    * @param value Any double} value.
    * @return A new {@link SerializedValue} containing a real number.
    */
   static SerializedValue of(final double value) {
-    return new RealValue(value);
+    return new NumericValue(BigDecimal.valueOf(value));
   }
 
   /**
@@ -135,7 +150,7 @@ public sealed interface SerializedValue {
    * @return A new {@link SerializedValue} containing an integral number.
    */
   static SerializedValue of(final long value) {
-    return new IntValue(value);
+    return new NumericValue(BigDecimal.valueOf(value));
   }
 
   /**
@@ -201,12 +216,7 @@ public sealed interface SerializedValue {
     }
 
     @Override
-    public T onReal(final double value) {
-      return this.onDefault();
-    }
-
-    @Override
-    public T onInt(final long value) {
+    public T onNumeric(final BigDecimal value) {
       return this.onDefault();
     }
 
@@ -263,6 +273,21 @@ public sealed interface SerializedValue {
   }
 
   /**
+   * Attempts to access the data in this object as an arbitrary-precision number.
+   *
+   * @return An {@link Optional} containing a BigDecimal if this object contains an arbitrary-precision number.
+   *   Otherwise, returns an empty {@link Optional}.
+   */
+  default Optional<BigDecimal> asNumeric() {
+    return this.match(new OptionalVisitor<>() {
+      @Override
+      public Optional<BigDecimal> onNumeric(final BigDecimal value) {
+        return Optional.of(value);
+      }
+    });
+  }
+
+  /**
    * Attempts to access the data in this object as a real number.
    *
    * @return An {@link Optional} containing a double if this object contains a real number.
@@ -271,13 +296,8 @@ public sealed interface SerializedValue {
   default Optional<Double> asReal() {
     return this.match(new OptionalVisitor<>() {
       @Override
-      public Optional<Double> onReal(final double value) {
-        return Optional.of(value);
-      }
-
-      @Override
-      public Optional<Double> onInt(final long value) {
-        return Optional.of((double)value);
+      public Optional<Double> onNumeric(final BigDecimal value) {
+        return Optional.of(value.doubleValue());
       }
     });
   }
@@ -291,15 +311,12 @@ public sealed interface SerializedValue {
   default Optional<Long> asInt() {
     return this.match(new OptionalVisitor<>() {
       @Override
-      public Optional<Long> onInt(final long value) {
-        return Optional.of(value);
-      }
-
-      @Override
-      public Optional<Long> onReal(final double value) {
-        if (!Double.isFinite(value)) return Optional.empty();
-        if (Math.floor(value) != value) return Optional.empty();
-        return Optional.of((long)value);
+      public Optional<Long> onNumeric(final BigDecimal value) {
+        try {
+          return Optional.of(value.longValueExact());
+        } catch (final ArithmeticException ex) {
+          return Optional.empty();
+        }
       }
     });
   }

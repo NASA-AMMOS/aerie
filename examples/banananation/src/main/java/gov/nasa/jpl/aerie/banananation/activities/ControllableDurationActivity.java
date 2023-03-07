@@ -7,9 +7,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
 
-/**
- * This activity type intentionally takes a duration as a parameter, but is not a ControllableDuration activity
- */
 @ActivityType("ControllableDurationActivity")
 public record ControllableDurationActivity(Duration duration) {
 

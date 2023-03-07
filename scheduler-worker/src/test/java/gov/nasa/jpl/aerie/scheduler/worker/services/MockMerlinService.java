@@ -1,57 +1,53 @@
 package gov.nasa.jpl.aerie.scheduler.worker.services;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.TimeUtility;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
-import gov.nasa.jpl.aerie.scheduler.model.Plan;
-import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
-import gov.nasa.jpl.aerie.scheduler.model.Problem;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityInstanceId;
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchActivityInstanceException;
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchMissionModelException;
-import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.scheduler.model.*;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
-import gov.nasa.jpl.aerie.scheduler.server.models.MerlinActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.MissionModelId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 import gov.nasa.jpl.aerie.scheduler.server.services.MissionModelService;
 import gov.nasa.jpl.aerie.scheduler.server.services.PlanService;
-import gov.nasa.jpl.aerie.scheduler.server.services.PlanServiceException;
 import org.apache.commons.lang3.tuple.Pair;
 
 class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
 
-  private Optional<PlanningHorizon> planningHorizon = Optional.empty();
+  private Optional<PlanningHorizon> planningHorizon;
 
   record MissionModelInfo(Path libPath, Path modelPath, String modelName, MissionModelTypes types, Map<String, SerializedValue> config) {}
 
   private Optional<MissionModelInfo> missionModelInfo = Optional.empty();
-  private List<PlannedActivityInstance> initialPlan;
-  Collection<PlannedActivityInstance> updatedPlan;
+  private MerlinPlan initialPlan;
+  Collection<ActivityDirective> updatedPlan;
 
   MockMerlinService() {
-    this.initialPlan = List.of();
+    this.initialPlan = new MerlinPlan();
     this.planningHorizon = Optional.of(new PlanningHorizon(
         TimeUtility.fromDOY("2021-001T00:00:00"),
         TimeUtility.fromDOY("2021-005T00:00:00")));
   }
 
-  void setInitialPlan(final List<PlannedActivityInstance> initialPlan) {
-    this.initialPlan = initialPlan;
+  void setInitialPlan(final Map<ActivityDirectiveId, ActivityDirective> initialActivities) {
+    final var newInitialPlan = new MerlinPlan();
+    for (final var activity : initialActivities.entrySet()) {
+      newInitialPlan.addActivity(activity.getKey(), activity.getValue());
+    }
+    this.initialPlan = newInitialPlan;
   }
 
   void setMissionModel(final MissionModelInfo value) {
@@ -69,7 +65,6 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
 
   @Override
   public PlanMetadata getPlanMetadata(final PlanId planId)
-  throws IOException, NoSuchPlanException, PlanServiceException
   {
     if (this.missionModelInfo.isEmpty()) throw new RuntimeException("Make sure to call setMissionModel before running a test");
     if (this.planningHorizon.isEmpty()) throw new RuntimeException("Make sure to call setPlanningHorizon before running a test");
@@ -91,79 +86,71 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   public MerlinPlan getPlanActivityDirectives(final PlanMetadata planMetadata, final Problem mission)
   {
     // TODO this gets the planMetadata from above
-
-    return makePlan(initialPlan, mission);
+    return this.initialPlan;
   }
 
   @Override
-  public Pair<PlanId, Map<ActivityInstance, ActivityInstanceId>> createNewPlanWithActivityDirectives(
+  public Pair<PlanId, Map<SchedulingActivityDirective, ActivityDirectiveId>> createNewPlanWithActivityDirectives(
       final PlanMetadata planMetadata,
       final Plan plan,
-      final Map<ActivityInstance, GoalId> activityToGoal
-  ) throws IOException, NoSuchPlanException, PlanServiceException
+      final Map<SchedulingActivityDirective, GoalId> activityToGoal
+  )
   {
     return null;
   }
 
   @Override
   public PlanId createEmptyPlan(final String name, final long modelId, final Instant startTime, final Duration duration)
-  throws IOException, NoSuchPlanException, PlanServiceException
   {
     return null;
   }
 
   @Override
   public void createSimulationForPlan(final PlanId planId)
-  throws IOException, NoSuchPlanException, PlanServiceException
   {
 
   }
 
   @Override
-  public Map<ActivityInstance, ActivityInstanceId> updatePlanActivityDirectives(
+  public Map<SchedulingActivityDirective, ActivityDirectiveId> updatePlanActivityDirectives(
       final PlanId planId,
-      final Map<SchedulingActivityInstanceId, ActivityInstanceId> idsFromInitialPlan,
+      final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,
       final MerlinPlan initialPlan,
       final Plan plan,
-      final Map<ActivityInstance, GoalId> activityToGoal
+      final Map<SchedulingActivityDirective, GoalId> activityToGoal
   )
-  throws IOException, NoSuchPlanException, PlanServiceException, NoSuchActivityInstanceException
   {
-    this.updatedPlan = extractPlannedActivityInstances(plan);
-    final var res = new HashMap<ActivityInstance, ActivityInstanceId>();
-    var id = 0L;
+    this.updatedPlan = extractActivityDirectives(plan);
+    final var res = new HashMap<SchedulingActivityDirective, ActivityDirectiveId>();
     for (final var activity : plan.getActivities()) {
-      res.put(activity, new ActivityInstanceId(id++));
+      res.put(activity, new ActivityDirectiveId(activity.id().id()));
     }
     return res;
   }
 
   @Override
-  public void ensurePlanExists(final PlanId planId) throws IOException, NoSuchPlanException, PlanServiceException {
+  public void ensurePlanExists(final PlanId planId) {
 
   }
 
   @Override
   public void clearPlanActivityDirectives(final PlanId planId)
-  throws IOException, NoSuchPlanException, PlanServiceException
   {
 
   }
 
   @Override
-  public Map<ActivityInstance, ActivityInstanceId> createAllPlanActivityDirectives(
+  public Map<SchedulingActivityDirective, ActivityDirectiveId> createAllPlanActivityDirectives(
       final PlanId planId,
       final Plan plan,
-      final Map<ActivityInstance, GoalId> activityToGoalId
+      final Map<SchedulingActivityDirective, GoalId> activityToGoalId
   )
-  throws IOException, NoSuchPlanException, PlanServiceException
   {
     return null;
   }
 
   @Override
   public MissionModelTypes getMissionModelTypes(final PlanId planId)
-  throws IOException, MissionModelServiceException
   {
     if (this.missionModelInfo.isEmpty()) throw new RuntimeException("Make sure to call setMissionModel before running a test");
     return this.missionModelInfo.get().types();
@@ -171,16 +158,14 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
 
   @Override
   public MissionModelTypes getMissionModelTypes(final MissionModelId missionModelId)
-  throws IOException, MissionModelServiceException, NoSuchMissionModelException
   {
     if (this.missionModelInfo.isEmpty()) throw new RuntimeException("Make sure to call setMissionModel before running a test");
     return this.missionModelInfo.get().types();
   }
 
-  record PlannedActivityInstance(String type, Map<String, SerializedValue> args, Duration startTime) {}
 
-  private static Collection<PlannedActivityInstance> extractPlannedActivityInstances(final Plan plan) {
-    final var plannedActivityInstances = new ArrayList<PlannedActivityInstance>();
+  private static Collection<ActivityDirective> extractActivityDirectives(final Plan plan) {
+    final var activityDirectives = new ArrayList<ActivityDirective>();
     for (final var activity : plan.getActivities()) {
       final var type = activity.getType();
       final var arguments = new HashMap<>(activity.arguments());
@@ -190,22 +175,13 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
           arguments.put(durationType.parameterName(), SerializedValue.of(activity.duration().in(Duration.MICROSECONDS)));
         }
       }
-      plannedActivityInstances.add(new PlannedActivityInstance(
+      activityDirectives.add(new ActivityDirective(
+          activity.startOffset(),
           activity.getType().getName(),
           arguments,
-          activity.startTime()));
+          (activity.anchorId() != null ? new ActivityDirectiveId(-activity.anchorId().id()) : null),
+          activity.anchoredToStart()));
     }
-    return plannedActivityInstances;
-  }
-
-  private static MerlinPlan makePlan(final Iterable<MockMerlinService.PlannedActivityInstance> activities, final Problem problem) {
-    final var initialPlan = new MerlinPlan();
-
-    var id = 0L;
-    for (final var activity : activities) {
-      final var activityInstance = new MerlinActivityInstance(activity.type(), activity.startTime(), activity.args());
-      initialPlan.addActivity(new ActivityInstanceId(id++), activityInstance);
-    }
-    return initialPlan;
+    return activityDirectives;
   }
 }

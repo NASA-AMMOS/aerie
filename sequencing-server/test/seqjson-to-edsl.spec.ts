@@ -34,7 +34,7 @@ describe('getEdslForSeqJson', () => {
               type: 'command',
               stem: 'PREHEAT_OVEN',
               time: { type: TimingTypes.ABSOLUTE, tag: '2020-060T03:45:19.000Z' },
-              args: [100],
+              args: [{ value: 100, name: 'temperature', type: 'number' }],
               metadata: {},
             },
           ],
@@ -42,17 +42,56 @@ describe('getEdslForSeqJson', () => {
       },
     );
 
-    expect(res.getEdslForSeqJson).toEqual(
-      `export default () =>
+    expect(res.getEdslForSeqJson).toEqual(`export default () =>
   Sequence.new({
     seqId: 'test_00001',
     metadata: {},
-    commands: [
+    steps: [
       C.BAKE_BREAD,
-      A\`2020-060T03:45:19.000\`.PREHEAT_OVEN(100),
+      A\`2020-060T03:45:19.000\`.PREHEAT_OVEN({
+        temperature: 100,
+      }),
     ],
-  });`,
-    );
+  });`);
+  });
+
+  it('should throw an error if the user uploads an invalid seqjson', async () => {
+    try {
+      expect(
+        await graphqlClient.request<{
+          getEdslForSeqJson: string;
+        }>(
+          gql`
+            query GetEdslForSeqJson($seqJson: SequenceSeqJsonInput!) {
+              getEdslForSeqJson(seqJson: $seqJson)
+            }
+          `,
+          {
+            seqJson: {
+              id: 'test_00001',
+              metadata: {},
+              steps: [
+                {
+                  // expansion 1
+                  type: 'command',
+                  stem: 'BAKE_BREAD',
+                  time: { type: TimingTypes.COMMAND_COMPLETE },
+                  args: [],
+                  metadata: {},
+                },
+                {
+                  type: 'command',
+                  stem: 'PREHEAT_OVEN',
+                  time: { type: TimingTypes.ABSOLUTE, tag: '2020-060T03:45:19.000Z' },
+                  args: [100],
+                  metadata: {},
+                },
+              ],
+            },
+          },
+        ),
+      ).toThrow();
+    } catch (e) {}
   });
 });
 
@@ -84,7 +123,7 @@ describe('getEdslForSeqJsonBulk', () => {
                 type: 'command',
                 stem: 'PREHEAT_OVEN',
                 time: { type: TimingTypes.ABSOLUTE, tag: '2020-060T03:45:19.000Z' },
-                args: [100],
+                args: [{ value: 100, name: 'temperature', type: 'number' }],
                 metadata: {},
               },
             ],
@@ -105,7 +144,7 @@ describe('getEdslForSeqJsonBulk', () => {
                 type: 'command',
                 stem: 'PREHEAT_OVEN',
                 time: { type: TimingTypes.ABSOLUTE, tag: '2020-060T03:45:19.000Z' },
-                args: [100],
+                args: [{ value: 100, name: 'temperature', type: 'number' }],
                 metadata: {},
               },
             ],
@@ -115,24 +154,8 @@ describe('getEdslForSeqJsonBulk', () => {
     );
 
     expect(res.getEdslForSeqJsonBulk).toEqual([
-      `export default () =>
-  Sequence.new({
-    seqId: 'test_00001',
-    metadata: {},
-    commands: [
-      C.BAKE_BREAD,
-      A\`2020-060T03:45:19.000\`.PREHEAT_OVEN(100),
-    ],
-  });`,
-      `export default () =>
-  Sequence.new({
-    seqId: 'test_00002',
-    metadata: {},
-    commands: [
-      C.BAKE_BREAD,
-      A\`2020-060T03:45:19.000\`.PREHEAT_OVEN(100),
-    ],
-  });`,
+      "export default () =>\n  Sequence.new({\n    seqId: 'test_00001',\n    metadata: {},\n    steps: [\n      C.BAKE_BREAD,\n      A`2020-060T03:45:19.000`.PREHEAT_OVEN({\n        temperature: 100,\n      }),\n    ],\n  });",
+      "export default () =>\n  Sequence.new({\n    seqId: 'test_00002',\n    metadata: {},\n    steps: [\n      C.BAKE_BREAD,\n      A`2020-060T03:45:19.000`.PREHEAT_OVEN({\n        temperature: 100,\n      }),\n    ],\n  });",
     ]);
   });
 });

@@ -1,12 +1,8 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedModelType;
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
-import gov.nasa.jpl.aerie.merlin.driver.DirectiveTypeRegistry;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
-import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
+import gov.nasa.jpl.aerie.merlin.driver.*;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -46,6 +42,7 @@ public class SimulateMapSchedule {
         missionModel,
         schedule,
         startTime,
+        simulationDuration,
         simulationDuration);
 
       simulationResults.realProfiles.forEach((name, samples) -> {
@@ -63,8 +60,8 @@ public class SimulateMapSchedule {
     });
   }
 
-  private static Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> loadSchedule() {
-    final var schedule = new HashMap<ActivityInstanceId, Pair<Duration, SerializedActivity>>();
+  private static Map<ActivityDirectiveId, ActivityDirective> loadSchedule() {
+    final var schedule = new HashMap<ActivityDirectiveId, ActivityDirective>();
     long counter = 0;
 
     final var planJson = Json.createReader(SimulateMapSchedule.class.getResourceAsStream("plan.json")).readValue();
@@ -78,10 +75,12 @@ public class SimulateMapSchedule {
       }
 
       schedule.put(
-          new ActivityInstanceId(counter++),
-          Pair.of(
+          new ActivityDirectiveId(counter++),
+          new ActivityDirective(
               duration(deferInMicroseconds, MICROSECONDS),
-              new SerializedActivity(activityType, arguments)));
+              new SerializedActivity(activityType, arguments),
+              null,
+              true));
     }
 
     return schedule;

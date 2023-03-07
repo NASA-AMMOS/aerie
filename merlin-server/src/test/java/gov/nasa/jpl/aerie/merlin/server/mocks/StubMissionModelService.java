@@ -1,13 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.InputType.ValidationNotice;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirective;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
@@ -158,9 +158,9 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public Map<ActivityInstanceId, ActivityInstantiationFailure> validateActivityInstantiations(
+  public Map<ActivityDirectiveId, ActivityInstantiationFailure> validateActivityInstantiations(
       final String missionModelId,
-      final Map<ActivityInstanceId, SerializedActivity> activities)
+      final Map<ActivityDirectiveId, SerializedActivity> activities)
   throws LocalMissionModelService.MissionModelLoadException
   {
     return Map.of();
@@ -215,7 +215,7 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public void refreshActivityValidations(final String missionModelId, final ActivityDirective directive)
+  public void refreshActivityValidations(final String missionModelId, final ActivityDirectiveForValidation directive)
   {
   }
 }

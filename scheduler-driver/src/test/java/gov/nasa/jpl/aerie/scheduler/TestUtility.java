@@ -7,8 +7,9 @@ import gov.nasa.jpl.aerie.constraints.tree.ForEachActivitySpans;
 import gov.nasa.jpl.aerie.constraints.tree.Not;
 import gov.nasa.jpl.aerie.constraints.tree.Or;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsFromSpans;
+import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingCondition;
@@ -19,9 +20,9 @@ import java.util.List;
 public class TestUtility {
 
   public static boolean activityStartingAtTime(Plan plan, Duration time, ActivityType activityType) {
-    List<ActivityInstance> acts = plan.getActivitiesByTime();
-    for (ActivityInstance act : acts) {
-      if (act.getType().equals(activityType) && act.startTime().compareTo(time) == 0) {
+    List<SchedulingActivityDirective> acts = plan.getActivitiesByTime();
+    for (SchedulingActivityDirective act : acts) {
+      if (act.getType().equals(activityType) && act.startOffset().compareTo(time) == 0) {
         return true;
       }
     }
@@ -29,10 +30,10 @@ public class TestUtility {
   }
 
   public static boolean containsActivity(Plan plan, Duration startTime, Duration endTime, ActivityType activityType) {
-    List<ActivityInstance> acts = plan.getActivitiesByTime();
-    for (ActivityInstance act : acts) {
+    List<SchedulingActivityDirective> acts = plan.getActivitiesByTime();
+    for (SchedulingActivityDirective act : acts) {
       if (act.getType().equals(activityType) &&
-          act.startTime().compareTo(startTime) == 0 &&
+          act.startOffset().compareTo(startTime) == 0 &&
           act.getEndTime().compareTo(endTime) == 0) {
         return true;
       }
@@ -56,15 +57,23 @@ public class TestUtility {
    */
   public static boolean atLeastOneActivityOfTypeInRange(Plan plan, Interval interval, ActivityType activityType) {
 
-    List<ActivityInstance> acts = plan.getActivitiesByTime();
-    for (ActivityInstance act : acts) {
+    List<SchedulingActivityDirective> acts = plan.getActivitiesByTime();
+    for (SchedulingActivityDirective act : acts) {
       if (act.getType().equals(activityType)
-          && act.startTime().compareTo(interval.start) >= 0
+          && act.startOffset().compareTo(interval.start) >= 0
           && act.getEndTime().compareTo(interval.end) <= 0) {
         return true;
       }
     }
     return false;
+  }
+
+  public static SchedulingCondition createExclusionSchedulingZone(final ActivityType activityType, final Windows exclusionZone){
+    return new SchedulingCondition(
+        new Not(
+            new WindowsWrapperExpression(exclusionZone)
+        ),
+        List.of(activityType));
   }
 
   public static List<SchedulingCondition> createAutoMutexGlobalSchedulingCondition(final ActivityType activityType) {
@@ -100,8 +109,8 @@ public class TestUtility {
   /**
    * Returns true if plan does not contain specific activity instance act
    */
-  public static boolean doesNotContainActivity(Plan plan, ActivityInstance act) {
-    for (ActivityInstance actI : plan.getActivitiesByTime()) {
+  public static boolean doesNotContainActivity(Plan plan, SchedulingActivityDirective act) {
+    for (SchedulingActivityDirective actI : plan.getActivitiesByTime()) {
       if (actI.equals(act)) {
         return false;
       }
@@ -112,8 +121,8 @@ public class TestUtility {
     /**
    * Returns true if plan contains specific activity instance act
    */
-  public static boolean containsExactlyActivity(Plan plan, ActivityInstance act) {
-    for (ActivityInstance actI : plan.getActivitiesByTime()) {
+  public static boolean containsExactlyActivity(Plan plan, SchedulingActivityDirective act) {
+    for (SchedulingActivityDirective actI : plan.getActivitiesByTime()) {
       if (actI.equalsInProperties(act)) {
         return true;
       }

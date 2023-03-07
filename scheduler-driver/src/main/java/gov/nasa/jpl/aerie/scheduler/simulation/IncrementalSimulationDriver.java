@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler.simulation;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
@@ -32,10 +32,10 @@ public class IncrementalSimulationDriver<Model> {
 
   private Instant startTime;
 
-  private final Topic<ActivityInstanceId> activityTopic = new Topic<>();
+  private final Topic<ActivityDirectiveId> activityTopic = new Topic<>();
 
   //mapping each activity name to its task id (in String form) in the simulation engine
-  private final Map<ActivityInstanceId, TaskId> plannedDirectiveToTask;
+  private final Map<ActivityDirectiveId, TaskId> plannedDirectiveToTask;
 
   //simulation results so far
   private SimulationResults lastSimResults;
@@ -49,7 +49,7 @@ public class IncrementalSimulationDriver<Model> {
   // Whether we're rerunning the simulation, in which case we can be lazy about starting up stuff, like daemons
   private boolean rerunning = false;
 
-  record SimulatedActivity(Duration start, SerializedActivity activity, ActivityInstanceId id) {}
+  record SimulatedActivity(Duration start, SerializedActivity activity, ActivityDirectiveId id) {}
 
   public IncrementalSimulationDriver(Instant startTime, MissionModel<Model> missionModel){
     this.startTime = startTime;
@@ -152,7 +152,7 @@ public class IncrementalSimulationDriver<Model> {
    * @param activityId the activity id for the activity to simulate
    * @throws InstantiationException
    */
-  public void simulateActivity(SerializedActivity activity, Duration startTime, ActivityInstanceId activityId)
+  public void simulateActivity(SerializedActivity activity, Duration startTime, ActivityDirectiveId activityId)
   throws InstantiationException
   {
     final var activityToSimulate = new SimulatedActivity(startTime, activity, activityId);
@@ -217,7 +217,7 @@ public class IncrementalSimulationDriver<Model> {
    * @param schedule the activities to schedule with the times to schedule them
    * @throws InstantiationException
    */
-  private void simulateSchedule(final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule)
+  private void simulateSchedule(final Map<ActivityDirectiveId, Pair<Duration, SerializedActivity>> schedule)
   throws InstantiationException
   {
     if(schedule.isEmpty()){
@@ -287,7 +287,7 @@ public class IncrementalSimulationDriver<Model> {
    * @param activityInstanceId the activity id
    * @return its duration if the activity has been simulated and has finished simulating, an IllegalArgumentException otherwise
    */
-  public Optional<Duration> getActivityDuration(ActivityInstanceId activityInstanceId){
+  public Optional<Duration> getActivityDuration(ActivityDirectiveId activityInstanceId){
     return engine.getTaskDuration(plannedDirectiveToTask.get(activityInstanceId));
   }
 

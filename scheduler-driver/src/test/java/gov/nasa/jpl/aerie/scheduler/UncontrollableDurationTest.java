@@ -12,7 +12,7 @@ import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeFixed;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.RecurrenceGoal;
-import gov.nasa.jpl.aerie.scheduler.model.ActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
@@ -146,9 +146,9 @@ public class UncontrollableDurationTest {
 
   @Test
   public void testBug(){
-    final var controllableDurationActivity = ActivityInstance.of(problem.getActivityType("ControllableDurationActivity"),
+    final var controllableDurationActivity = SchedulingActivityDirective.of(problem.getActivityType("ControllableDurationActivity"),
                                                                    Duration.of(1, Duration.MICROSECONDS),
-                                                                   Duration.of(3, Duration.MICROSECONDS));
+                                                                   Duration.of(3, Duration.MICROSECONDS), null, true);
 
     final var zeroDurationUncontrollableActivity = new ActivityCreationTemplate.Builder()
         .ofType(problem.getActivityType("ZeroDurationUncontrollableActivity"))

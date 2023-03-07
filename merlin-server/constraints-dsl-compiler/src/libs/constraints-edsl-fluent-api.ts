@@ -551,6 +551,17 @@ export class Real {
   }
 
   /**
+   * Create a real profile where all segments are negated.
+   */
+  public negate(): Real {
+    return new Real({
+      kind: AST.NodeKind.RealProfileTimes,
+      profile: this.__astNode,
+      multiplier: -1
+    });
+  }
+
+  /**
    * Produce a window whenever this profile is less than another real profile.
    * @param other
    */
@@ -1222,6 +1233,11 @@ declare global {
      * @param other
      */
     public plus(other: Real | number): Real;
+
+    /**
+     * Create a real profile where all segments are negated.
+     */
+    public negate(): Real;
 
     /**
      * Produce a window whenever this profile is less than another real profile.

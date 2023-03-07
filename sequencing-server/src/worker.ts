@@ -7,8 +7,8 @@ import ts from 'typescript';
 import { CacheItem, UserCodeError, UserCodeRunner } from '@nasa-jpl/aerie-ts-user-code-runner';
 
 import type { SimulatedActivity } from './lib/batchLoaders/simulatedActivityBatchLoader.js';
-import type { CommandStem, SequenceSeqJson } from './lib/codegen/CommandEDSLPreface.js';
-import type { Mutable } from './lib/codegen/CodegenHelpers';
+import type { CommandStem } from './lib/codegen/CommandEDSLPreface.js';
+import type { SeqJson } from '@nasa-jpl/seq-json-schema/types';
 import { deserializeWithTemporal } from './utils/temporalSerializers.js';
 import { Result, SerializedResult } from '@nasa-jpl/aerie-ts-user-code-runner/build/utils/monads.js';
 
@@ -47,7 +47,7 @@ export async function typecheckExpansion(opts: {
 export async function executeEDSL(opts: {
   edslBody: string;
   commandTypes: string;
-}): Promise<SerializedResult<SequenceSeqJson, ReturnType<UserCodeError['toJSON']>[]>> {
+}): Promise<SerializedResult<SeqJson, ReturnType<UserCodeError['toJSON']>[]>> {
   const result = await codeRunner.executeUserCode(
     opts.edslBody,
     [],
@@ -102,13 +102,14 @@ export async function executeExpansionFromBuildArtifacts(opts: {
     if (!Array.isArray(commands)) {
       commands = [commands];
     }
-    const commandsFlat = commands.flat() as CommandStem[];
-    for (const command of commandsFlat) {
-      (command as Mutable<CommandStem>).metadata = {
-        ...command.metadata,
+    let commandsFlat = commands.flat() as CommandStem[];
+    commandsFlat = commandsFlat.map(command => {
+      return command.METADATA({
+        ...command.GET_METADATA(),
         simulatedActivityId: activityInstance.id,
-      };
-    }
+      });
+    });
+
     return Result.Ok(commandsFlat.map(c => c.toSeqJson())).toJSON();
   } else {
     return Result.Err(result.unwrapErr().map(err => err.toJSON())).toJSON();

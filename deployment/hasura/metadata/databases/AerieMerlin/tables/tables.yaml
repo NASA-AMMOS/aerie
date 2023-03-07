@@ -28,6 +28,8 @@
 - "!include public_conflicting_activities.yaml"
 - "!include public_plan_snapshot.yaml"
 - "!include public_anchor_validation_status.yaml"
+- "!include public_activity_presets.yaml"
+- "!include public_preset_to_directive.yaml"
 # Function return values:
 - table:
     name: create_merge_request_return_value

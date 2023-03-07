@@ -13,8 +13,8 @@ public record SimulatedActivity(
   Map<String, SerializedValue> arguments,
   Instant start,
   Duration duration,
-  ActivityInstanceId parentId,
-  List<ActivityInstanceId> childIds,
-  Optional<ActivityInstanceId> directiveId,
+  SimulatedActivityId parentId,
+  List<SimulatedActivityId> childIds,
+  Optional<ActivityDirectiveId> directiveId,
   SerializedValue computedAttributes
 ) { }

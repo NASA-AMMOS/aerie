@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.foomissionmodel.models.Imager;
 import gov.nasa.jpl.aerie.foomissionmodel.models.ImagerMode;
 import gov.nasa.jpl.aerie.foomissionmodel.models.SimpleData;
+import gov.nasa.jpl.aerie.foomissionmodel.models.TimeTrackerDaemon;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
@@ -37,6 +38,8 @@ public final class Mission {
 
   public final Clock utcClock = new Clock(Instant.parse("2023-08-18T00:00:00.00Z"));
   private final Registrar cachedRegistrar; // Normally bad practice, only stored to demonstrate built/unbuilt check
+
+  public final TimeTrackerDaemon timeTrackerDaemon = new TimeTrackerDaemon();
 
   public Mission(final Registrar registrar, final Instant planStart, final Configuration config) {
     this.cachedRegistrar = registrar;
@@ -70,6 +73,8 @@ public final class Mission {
     registrar.real("/simple_data/b/volume", this.simpleData.b.volume);
     registrar.real("/simple_data/b/rate", this.simpleData.b.rate);
     registrar.real("/simple_data/total_volume", this.simpleData.totalVolume);
+
+    spawn(timeTrackerDaemon::run);
 
     spawn(() -> { // Register a never-ending daemon task
       while (true) {

@@ -1,7 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
@@ -9,11 +7,8 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -60,9 +55,9 @@ public record SynchronousSimulationAgent (
       {
         final var failures = this.missionModelService.validateActivityInstantiations(
             plan.missionModelId,
-            plan.activityInstances.entrySet().stream().collect(Collectors.toMap(
+            plan.activityDirectives.entrySet().stream().collect(Collectors.toMap(
                 Map.Entry::getKey,
-                e -> new SerializedActivity(e.getValue().type, e.getValue().arguments))));
+                e -> e.getValue().serializedActivity())));
 
         if (!failures.isEmpty()) {
           writer.failWith(b -> b
@@ -77,7 +72,8 @@ public record SynchronousSimulationAgent (
           plan.missionModelId,
           plan.startTimestamp.toInstant(),
           planDuration,
-          serializeScheduledActivities(plan.startTimestamp.toInstant(), plan.activityInstances),
+          planDuration,
+          plan.activityDirectives,
           plan.configuration));
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       writer.failWith(b -> b
@@ -96,24 +92,5 @@ public record SynchronousSimulationAgent (
     }
 
     writer.succeedWith(results);
-  }
-
-  private static Map<ActivityInstanceId, Pair<Duration, SerializedActivity>>
-  serializeScheduledActivities(
-      final Instant startTime,
-      final Map<ActivityInstanceId, gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance> activityInstances)
-  {
-    final var scheduledActivities = new HashMap<ActivityInstanceId, Pair<Duration, SerializedActivity>>();
-
-    for (final var entry : activityInstances.entrySet()) {
-      final var id = entry.getKey();
-      final var activity = entry.getValue();
-
-      scheduledActivities.put(id, Pair.of(
-          Duration.of(startTime.until(activity.startTimestamp.toInstant(), ChronoUnit.MICROS), Duration.MICROSECONDS),
-          new SerializedActivity(activity.type, activity.arguments)));
-    }
-
-    return scheduledActivities;
   }
 }

@@ -4,8 +4,9 @@ table:
 array_relationships:
 - name: profile_segments
   using:
-    foreign_key_constraint_on:
-      column: profile_id
-      table:
-        name: profile_segment
+    manual_configuration:
+      remote_table:
         schema: public
+        name: profile_segment
+      column_mapping:
+        id: profile_id

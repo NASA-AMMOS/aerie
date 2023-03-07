@@ -7,7 +7,7 @@ readonly startTime: Temporal.Instant;
 readonly endTime: Temporal.Instant;`;
 
 export function generateTypescriptForGraphQLActivitySchema(activitySchema: GraphQLActivitySchema): string {
-  const activityTypeAlias = `type ActivityType = ${activitySchema.name};`;
+  const activityTypeAlias = `type ActivityType = ActivityTypes.${activitySchema.name};`;
 
   const activityTypeDeclaration = `readonly type: '${activitySchema.name}';`;
 
@@ -27,8 +27,12 @@ export function generateTypescriptForGraphQLActivitySchema(activitySchema: Graph
   const propertyDeclarations = [activityTypeDeclaration, commonProperties, attributesDeclaration].join('\n');
 
   return (
-    globalDeclaration(`${interfaceDeclaration(activitySchema.name, propertyDeclarations)}\n${activityTypeAlias}`) +
-    '\n\nexport {};'
+    globalDeclaration(
+      `namespace ActivityTypes {\n${interfaceDeclaration(
+        activitySchema.name,
+        propertyDeclarations,
+      )}\n}\n${activityTypeAlias}`,
+    ) + '\n\nexport {};'
   );
 }
 
