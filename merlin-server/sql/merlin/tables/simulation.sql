@@ -20,7 +20,9 @@ create table simulation (
     foreign key (plan_id)
     references plan
     on update cascade
-    on delete cascade
+    on delete cascade,
+  constraint one_simulation_per_plan
+    unique(plan_id)
 );
 
 
