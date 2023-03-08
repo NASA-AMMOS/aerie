@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
+import javax.swing.text.html.Option;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -50,15 +51,16 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final var planStart = planRecord.startTime();
       // TODO: At the time of writing, simulation starts at the plan start every time
       //       When that changes, we will need to update the simulation start here as well
-      final var simulationStart = planStart;
       var simulation$ = getSimulation(connection, planRecord);
 
       final SimulationRecord simulation;
       if (simulation$.isPresent()) {
         simulation = simulation$.get();
       } else {
-        simulation = createSimulation(connection, planId, Map.of(), Duration.ZERO, Duration.of(planRecord.startTime().microsUntil(planRecord.endTime()), MICROSECONDS));
+        simulation = createSimulation(connection, planId, Map.of(), Optional.empty(), Optional.empty());
       }
+
+      final var simulationStart = planStart.plusMicros(simulation.offsetFromPlanStart().orElse(Duration.ZERO).in(MICROSECONDS));
 
       final var dataset = createSimulationDataset(
           connection,
@@ -168,7 +170,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   ) throws SQLException
   {
     try (final var getSimulationAction = new GetSimulationAction(connection)) {
-      return getSimulationAction.get(planRecord.id(), planRecord.startTime());
+      return getSimulationAction.get(planRecord.id());
     }
   }
 
@@ -198,8 +200,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final Connection connection,
       final PlanId planId,
       final Map<String, SerializedValue> arguments,
-      final Duration offsetFromPlanStart,
-      final Duration duration
+      final Optional<Duration> offsetFromPlanStart,
+      final Optional<Duration> duration
   ) throws SQLException
   {
     try (final var createSimulationAction = new CreateSimulationAction(connection)) {

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -17,7 +18,9 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           t.model_id,
           t.revision,
           t.description,
-          t.arguments
+          t.arguments,
+          t.offset_from_plan_start,
+          t.duration
       from simulation_template as t
       where t.id = ?
     """;
@@ -43,7 +46,9 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
               failureReason -> new Error("Corrupt simulation template arguments cannot be parsed: "
                                          + failureReason.reason())
           );
-      return Optional.of(new SimulationTemplateRecord(simulationTemplateId, revision, modelId, description, arguments));
+      final var offsetFromPlanStart = results.getObject(5) == null ? Optional.<Duration>empty() : Optional.of(PostgresParsers.parseDurationISO8601(results.getString(5)));
+      final var duration = results.getObject(6) == null ? Optional.<Duration>empty() : Optional.of(PostgresParsers.parseDurationISO8601(results.getString(6)));
+      return Optional.of(new SimulationTemplateRecord(simulationTemplateId, revision, modelId, description, arguments, offsetFromPlanStart, duration));
   }
 
   @Override

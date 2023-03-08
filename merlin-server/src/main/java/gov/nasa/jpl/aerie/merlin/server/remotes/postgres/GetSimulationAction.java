@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.intellij.lang.annotations.Language;
 
@@ -32,7 +33,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Optional<SimulationRecord> get(final long planId, final Timestamp timestamp)
+  public Optional<SimulationRecord> get(final long planId)
   throws SQLException {
       this.statement.setLong(1, planId);
       PreparedStatements.setIntervalStyle(this.statement.getConnection(), PreparedStatements.PGIntervalStyle.ISO8601);
@@ -51,8 +52,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           .getSuccessOrThrow(
               failureReason -> new Error("Corrupt simulation arguments cannot be parsed: " + failureReason.reason())
           );
-      final var offsetFromPlanStart = PostgresParsers.parseOffset(results, 5, timestamp);
-      final var duration = PostgresParsers.parseOffset(results, 5, timestamp.plusMicros(offsetFromPlanStart.in(MICROSECONDS)));
+      final var offsetFromPlanStart = results.getObject(5) == null ? Optional.<Duration>empty() : Optional.of(PostgresParsers.parseDurationISO8601(results.getString(5)));
+      final var duration = results.getObject(6) == null ? Optional.<Duration>empty() : Optional.of(PostgresParsers.parseDurationISO8601(results.getString(6)));
       return Optional.of(new SimulationRecord(id, revision, planId, templateId$, arguments, offsetFromPlanStart, duration));
   }
 

@@ -12,6 +12,6 @@ public record SimulationRecord(
     long planId,
     Optional<Long> simulationTemplateId,
     Map<String, SerializedValue> arguments,
-    Duration offsetFromPlanStart,
-    Duration duration
+    Optional<Duration> offsetFromPlanStart,
+    Optional<Duration> duration
 ) {}

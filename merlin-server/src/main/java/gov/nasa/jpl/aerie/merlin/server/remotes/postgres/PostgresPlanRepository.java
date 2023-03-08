@@ -88,7 +88,7 @@ public final class PostgresPlanRepository implements PlanRepository {
   @Override
   public PlanService.SimulationArguments getSimulationArguments(final PlanId planId, final Timestamp startTimestamp, final Duration planDuration) {
     try (final var connection = this.dataSource.getConnection()) {
-      return getSimulationArguments(connection, planId.id(), startTimestamp, planDuration);
+      return getSimulationArguments(connection, planId.id(), planDuration);
     } catch (SQLException e) {
       throw new DatabaseException("Failed to get simulation arguments", e);
     }
@@ -97,7 +97,6 @@ public final class PostgresPlanRepository implements PlanRepository {
   private PlanService.SimulationArguments getSimulationArguments(
       final Connection connection,
       final long planId,
-      final Timestamp planStart,
       final Duration planDuration
   ) throws SQLException {
     try (
@@ -105,7 +104,7 @@ public final class PostgresPlanRepository implements PlanRepository {
         final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection)
     ) {
       final var arguments = new HashMap<String, SerializedValue> ();
-      final var simRecord$ = getSimulationAction.get(planId, planStart);
+      final var simRecord$ = getSimulationAction.get(planId);
 
       if (simRecord$.isPresent()) {
         final var simRecord = simRecord$.get();
@@ -114,14 +113,19 @@ public final class PostgresPlanRepository implements PlanRepository {
         // Apply template arguments followed by simulation arguments.
         // Overwriting of template arguments with sim. arguments is intentional here,
         // and the resulting set of arguments is assumed to be complete
+        var simulationTemplateRecord = Optional.<SimulationTemplateRecord>empty();
         if (templateId$.isPresent()) {
-          getSimulationTemplateAction.get(templateId$.get()).ifPresent(simTemplateRecord -> {
+          simulationTemplateRecord = getSimulationTemplateAction.get(templateId$.get());
+          simulationTemplateRecord.ifPresent(simTemplateRecord -> {
             arguments.putAll(simTemplateRecord.arguments());
           });
         }
         arguments.putAll(simRecord.arguments());
 
-        return new PlanService.SimulationArguments(simRecord.offsetFromPlanStart(), simRecord.duration(), arguments);
+        return new PlanService.SimulationArguments(
+            simulationTemplateRecord.flatMap(SimulationTemplateRecord::offsetFromPlanStart).orElse(simRecord.offsetFromPlanStart().orElse(Duration.ZERO)),
+            simulationTemplateRecord.flatMap(SimulationTemplateRecord::duration).orElse(simRecord.duration().orElse(planDuration)),
+            arguments);
       }
 
       return new PlanService.SimulationArguments(Duration.ZERO, planDuration, arguments);
