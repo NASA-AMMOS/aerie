@@ -31,6 +31,13 @@ public final class LocalPlanService implements PlanService {
   }
 
   @Override
+  public SimulationArguments getSimulationArguments(final PlanId planId, final Timestamp startTimestamp, final Duration planDuration)
+  throws NoSuchPlanException
+  {
+    return this.planRepository.getSimulationArguments(planId, startTimestamp, planDuration);
+  }
+
+  @Override
   public RevisionData getPlanRevisionData(final PlanId planId) throws NoSuchPlanException {
     return this.planRepository.getPlanRevisionData(planId);
   }

@@ -14,6 +14,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
+import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 
 public final class InMemoryPlanRepository implements PlanRepository {
   private final Map<PlanId, Pair<Long, Plan>> plans = new HashMap<>();
+  private final Map<PlanId, List<PlanService.SimulationArguments>> simulationArguments = new HashMap<>();
   private int nextPlanId = 0;
   private int nextActivityId = 0;
 
@@ -75,6 +77,15 @@ public final class InMemoryPlanRepository implements PlanRepository {
     return new HashMap<>(plan.activityDirectives);
   }
 
+  @Override
+  public PlanService.SimulationArguments getSimulationArguments(
+      final PlanId planId,
+      final Timestamp startTimestamp,
+      final Duration planDuration)
+  {
+    return this.simulationArguments.get(planId).get(0);
+  }
+
   public CreatedPlan createPlan(final NewPlan newPlan) {
     final PlanId planId = new PlanId(this.nextPlanId++);
 
@@ -82,7 +93,6 @@ public final class InMemoryPlanRepository implements PlanRepository {
     plan.name = newPlan.name;
     plan.startTimestamp = newPlan.startTimestamp;
     plan.endTimestamp = newPlan.endTimestamp;
-    plan.configuration = newPlan.configuration;
     plan.missionModelId = newPlan.missionModelId;
     plan.activityDirectives = new HashMap<>();
 
@@ -100,6 +110,9 @@ public final class InMemoryPlanRepository implements PlanRepository {
     }
 
     this.plans.put(planId, Pair.of(0L, plan));
+
+    this.simulationArguments.putIfAbsent(planId, new ArrayList<>());
+    this.simulationArguments.get(planId).add(new PlanService.SimulationArguments(Duration.ZERO, plan.duration(), newPlan.configuration));
 
     return new CreatedPlan(planId, activityIds);
   }
@@ -193,7 +206,6 @@ public final class InMemoryPlanRepository implements PlanRepository {
       this.name.ifPresent(name -> plan.name = name);
       this.startTimestamp.ifPresent(startTimestamp -> plan.startTimestamp = startTimestamp);
       this.endTimestamp.ifPresent(endTimestamp -> plan.endTimestamp = endTimestamp);
-      this.configuration.ifPresent(configuration -> plan.configuration = configuration);
       this.missionModelId.ifPresent(missionModelId -> plan.missionModelId = missionModelId);
 
       InMemoryPlanRepository.this.plans.put(this.planId, Pair.of(revision, plan));

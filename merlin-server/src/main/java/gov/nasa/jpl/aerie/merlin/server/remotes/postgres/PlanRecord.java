@@ -1,6 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 
 public record PlanRecord(
     long id,
@@ -9,4 +12,8 @@ public record PlanRecord(
     long missionModelId,
     Timestamp startTime,
     Timestamp endTime
-) {}
+) {
+  Duration duration() {
+    return Duration.of(startTime.microsUntil(endTime), MICROSECONDS);
+  }
+}

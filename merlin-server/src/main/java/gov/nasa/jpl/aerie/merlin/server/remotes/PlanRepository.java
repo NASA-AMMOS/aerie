@@ -14,6 +14,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -35,6 +36,7 @@ public interface PlanRepository {
   long getPlanRevision(PlanId planId) throws NoSuchPlanException;
   RevisionData getPlanRevisionData(PlanId planId) throws NoSuchPlanException;
   Map<ActivityDirectiveId, ActivityDirective> getAllActivitiesInPlan(PlanId planId) throws NoSuchPlanException;
+  PlanService.SimulationArguments getSimulationArguments(PlanId planId, Timestamp startTimestamp, Duration planDuration);
 
   Map<String, Constraint> getAllConstraintsInPlan(PlanId planId) throws NoSuchPlanException;
 

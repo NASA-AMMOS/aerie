@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
@@ -17,6 +18,7 @@ import java.util.Map;
 
 public interface PlanService {
   Plan getPlan(PlanId planId) throws NoSuchPlanException;
+  SimulationArguments getSimulationArguments(PlanId planId, final Timestamp startTimestamp, final Duration planDuration) throws NoSuchPlanException;
   RevisionData getPlanRevisionData(PlanId planId) throws NoSuchPlanException;
 
   Map<String, Constraint> getConstraintsForPlan(PlanId planId) throws NoSuchPlanException;
@@ -25,4 +27,6 @@ public interface PlanService {
   void extendExternalDataset(DatasetId datasetId, ProfileSet profileSet) throws NoSuchPlanDatasetException;
   List<Pair<Duration, ProfileSet>> getExternalDatasets(final PlanId planId) throws NoSuchPlanException;
   Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId) throws NoSuchPlanException;
+
+  record SimulationArguments(Duration offsetFromPlanStart, Duration duration, Map<String, SerializedValue> modelArguments) {}
 }

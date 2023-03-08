@@ -29,8 +29,6 @@ public final class NewPlan {
       this.activityDirectives = new ArrayList<>();
       this.activityDirectives.addAll(template.activityDirectives.values());
     }
-
-    if (template.configuration != null) this.configuration = new HashMap<>(template.configuration);
   }
 
   public NewPlan(

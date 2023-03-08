@@ -1,14 +1,21 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.StartOffsetReducer;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import org.apache.commons.lang3.tuple.Pair;
 
+import javax.naming.spi.Resolver;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -24,8 +31,10 @@ public record SynchronousSimulationAgent (
   @Override
   public void simulate(final PlanId planId, final RevisionData revisionData, final ResultsProtocol.WriterRole writer) {
     final Plan plan;
+    final PlanService.SimulationArguments configuration;
     try {
       plan = this.planService.getPlan(planId);
+      configuration = this.planService.getSimulationArguments(planId, plan.startTimestamp, plan.duration());
 
       // Validate plan revision
       final var currentRevisionData = this.planService.getPlanRevisionData(planId);
@@ -70,11 +79,11 @@ public record SynchronousSimulationAgent (
 
       results = this.missionModelService.runSimulation(new CreateSimulationMessage(
           plan.missionModelId,
-          plan.startTimestamp.toInstant(),
+          plan.startTimestamp.plusMicros(configuration.offsetFromPlanStart().in(Duration.MICROSECONDS)).toInstant(),
           planDuration,
-          planDuration,
-          plan.activityDirectives,
-          plan.configuration));
+          configuration.duration(),
+          filterByStartTime(plan.activityDirectives, configuration.offsetFromPlanStart(), plan.duration()),
+          configuration.modelArguments()));
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       writer.failWith(b -> b
           .type("NO_SUCH_MISSION_MODEL")
@@ -92,5 +101,39 @@ public record SynchronousSimulationAgent (
     }
 
     writer.succeedWith(results);
+  }
+
+  private Map<ActivityDirectiveId, ActivityDirective> filterByStartTime(final Map<ActivityDirectiveId, ActivityDirective> activityDirectives, final Duration offsetFromPlanStart, final Duration planDuration) {
+    final var reduced = new StartOffsetReducer(planDuration, activityDirectives).compute();
+    final var relativeToPlan = reduced.get(null);
+    final var schedule = new HashMap<ActivityDirectiveId, ActivityDirective>();
+    for (final var entry : relativeToPlan) {
+      final var directiveId = entry.getKey();
+      final var directive = activityDirectives.get(directiveId);
+      final var newOffset = entry.getValue().minus(offsetFromPlanStart);
+      if (newOffset.isNegative()) continue;
+      schedule.put(directiveId, new ActivityDirective(
+          newOffset,
+          directive.serializedActivity(),
+          null,
+          true
+      ));
+    }
+    for (final var entry : reduced.entrySet()) {
+      if (entry.getKey() == null) continue;
+      final var anchorId = entry.getKey();
+      final var anchoredDirectives = entry.getValue();
+      if (schedule.containsKey(anchorId)) {
+        for (final var directive : anchoredDirectives) {
+          schedule.put(directive.getKey(), new ActivityDirective(
+              directive.getRight(),
+              activityDirectives.get(directive.getKey()).serializedActivity(),
+              anchorId,
+              false
+          ));
+        }
+      }
+    }
+    return schedule;
   }
 }

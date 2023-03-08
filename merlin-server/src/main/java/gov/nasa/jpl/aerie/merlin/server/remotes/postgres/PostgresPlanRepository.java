@@ -14,6 +14,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
+import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.sql.DataSource;
@@ -44,15 +45,13 @@ public final class PostgresPlanRepository implements PlanRepository {
           try {
             final var planId = new PlanId(record.id());
             final var activities = getPlanActivities(connection, planId);
-            final var arguments = getPlanArguments(connection, record);
 
             plans.put(planId, new Plan(
                 record.name(),
                 Long.toString(record.missionModelId()),
                 record.startTime(),
                 record.endTime(),
-                activities,
-                arguments
+                activities
             ));
           } catch (final NoSuchPlanException ex) {
             // If a plan was removed between getting its record and getting its activities, then the plan
@@ -73,31 +72,40 @@ public final class PostgresPlanRepository implements PlanRepository {
     try (final var connection = this.dataSource.getConnection()) {
         final var planRecord = getPlanRecord(connection, planId);
         final var activities = getPlanActivities(connection, planId);
-        final var arguments = getPlanArguments(connection, planRecord);
 
         return new Plan(
             planRecord.name(),
             Long.toString(planRecord.missionModelId()),
             planRecord.startTime(),
             planRecord.endTime(),
-            activities,
-            arguments
+            activities
         );
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get plan", ex);
     }
   }
 
-  private Map<String, SerializedValue> getPlanArguments(
+  @Override
+  public PlanService.SimulationArguments getSimulationArguments(final PlanId planId, final Timestamp startTimestamp, final Duration planDuration) {
+    try (final var connection = this.dataSource.getConnection()) {
+      return getSimulationArguments(connection, planId.id(), startTimestamp, planDuration);
+    } catch (SQLException e) {
+      throw new DatabaseException("Failed to get simulation arguments", e);
+    }
+  }
+
+  private PlanService.SimulationArguments getSimulationArguments(
       final Connection connection,
-      final PlanRecord planRecord
+      final long planId,
+      final Timestamp planStart,
+      final Duration planDuration
   ) throws SQLException {
     try (
         final var getSimulationAction = new GetSimulationAction(connection);
         final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection)
     ) {
       final var arguments = new HashMap<String, SerializedValue> ();
-      final var simRecord$ = getSimulationAction.get(planRecord.id(), planRecord.startTime());
+      final var simRecord$ = getSimulationAction.get(planId, planStart);
 
       if (simRecord$.isPresent()) {
         final var simRecord = simRecord$.get();
@@ -112,9 +120,11 @@ public final class PostgresPlanRepository implements PlanRepository {
           });
         }
         arguments.putAll(simRecord.arguments());
+
+        return new PlanService.SimulationArguments(simRecord.offsetFromPlanStart(), simRecord.duration(), arguments);
       }
 
-      return arguments;
+      return new PlanService.SimulationArguments(Duration.ZERO, planDuration, arguments);
     }
   }
 

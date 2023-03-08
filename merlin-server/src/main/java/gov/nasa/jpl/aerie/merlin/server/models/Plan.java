@@ -2,11 +2,14 @@ package gov.nasa.jpl.aerie.merlin.server.models;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 
 public final class Plan {
   public String name;
@@ -14,7 +17,6 @@ public final class Plan {
   public Timestamp startTimestamp;
   public Timestamp endTimestamp;
   public Map<ActivityDirectiveId, ActivityDirective> activityDirectives;
-  public Map<String, SerializedValue> configuration = new HashMap<>();
 
   public Plan() {}
 
@@ -25,11 +27,8 @@ public final class Plan {
     this.endTimestamp = other.endTimestamp;
 
     if (other.activityDirectives != null) {
-      this.activityDirectives = new HashMap<>();
-      this.activityDirectives.putAll(other.activityDirectives);
+      this.activityDirectives = new HashMap<>(other.activityDirectives);
     }
-
-    if (other.configuration != null) this.configuration = new HashMap<>(other.configuration);
   }
 
   public Plan(
@@ -37,15 +36,18 @@ public final class Plan {
       final String missionModelId,
       final Timestamp startTimestamp,
       final Timestamp endTimestamp,
-      final Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
-      final Map<String, SerializedValue> configuration
+      final Map<ActivityDirectiveId, ActivityDirective> activityDirectives
   ) {
     this.name = name;
     this.missionModelId = missionModelId;
     this.startTimestamp = startTimestamp;
     this.endTimestamp = endTimestamp;
     this.activityDirectives = (activityDirectives != null) ? Map.copyOf(activityDirectives) : null;
-    if (configuration != null) this.configuration = new HashMap<>(configuration);
+  }
+
+  public Duration duration() {
+    if (startTimestamp == null || endTimestamp == null) return Duration.ZERO;
+    return Duration.of(startTimestamp.microsUntil(endTimestamp), MICROSECONDS);
   }
 
   @Override
@@ -61,7 +63,6 @@ public final class Plan {
         && Objects.equals(this.startTimestamp, other.startTimestamp)
         && Objects.equals(this.endTimestamp, other.endTimestamp)
         && Objects.equals(this.activityDirectives, other.activityDirectives)
-        && Objects.equals(this.configuration, other.configuration)
         );
   }
 
@@ -72,8 +73,7 @@ public final class Plan {
         missionModelId,
         startTimestamp,
         endTimestamp,
-        activityDirectives,
-        configuration
+        activityDirectives
     );
   }
 }

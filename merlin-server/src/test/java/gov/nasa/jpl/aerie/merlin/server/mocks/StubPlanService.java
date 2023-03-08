@@ -50,13 +50,22 @@ public final class StubPlanService implements PlanService {
     EXISTENT_PLAN.activityDirectives = Map.of(EXISTENT_ACTIVITY_ID, EXISTENT_ACTIVITY);
   }
 
-
+  @Override
   public Plan getPlan(final PlanId planId) throws NoSuchPlanException {
     if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(planId);
     }
 
     return EXISTENT_PLAN;
+  }
+
+  @Override
+  public SimulationArguments getSimulationArguments(
+      final PlanId planId,
+      final Timestamp startTimestamp,
+      final Duration planDuration) throws NoSuchPlanException
+  {
+    return new SimulationArguments(Duration.ZERO, planDuration, Map.of());
   }
 
   @Override
