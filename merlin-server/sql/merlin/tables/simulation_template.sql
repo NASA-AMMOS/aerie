@@ -6,6 +6,9 @@ create table simulation_template (
   description text not null,
   arguments merlin_argument_set not null,
 
+  simulation_start_time timestamptz default null,
+  simulation_end_time timestamptz default null,
+
   constraint simulation_template_synthetic_key
     primary key (id),
   constraint simulation_template_owned_by_model
