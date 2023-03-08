@@ -136,26 +136,26 @@ class MerlinDatabaseTests {
   int getSimulationId(final int planId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery(
-              """
+          """
                   SELECT id
                   FROM simulation
                   WHERE simulation.plan_id = '%s';
               """.formatted(planId)
-          );
+      );
       res.next();
       return res.getInt("id");
     }
   }
 
-   void addTemplateIdToSimulation(final int simulationTemplateId, final int simulationId) throws SQLException {
+  void addTemplateIdToSimulation(final int simulationTemplateId, final int simulationId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       statement.executeUpdate(
           """
-              UPDATE simulation
-              SET simulation_template_id = '%s',
-                  arguments = '{}'
-              WHERE id = '%s';
-          """.formatted(simulationTemplateId, simulationId));
+                  UPDATE simulation
+                  SET simulation_template_id = '%s',
+                      arguments = '{}'
+                  WHERE id = '%s';
+              """.formatted(simulationTemplateId, simulationId));
     }
   }
 
@@ -544,13 +544,13 @@ class MerlinDatabaseTests {
     @Test
     void shouldCreateDefaultDatasetOnPlanDatasetInsertWithNullDatasetId() throws SQLException {
       final var res = connection.createStatement()
-          .executeQuery(
-              """
-                  INSERT INTO plan_dataset (plan_id, offset_from_plan_start)
-                  VALUES (%s, '0')
-                  RETURNING dataset_id;"""
-                  .formatted(planId)
-          );
+                                .executeQuery(
+                                    """
+                                        INSERT INTO plan_dataset (plan_id, offset_from_plan_start)
+                                        VALUES (%s, '0')
+                                        RETURNING dataset_id;"""
+                                        .formatted(planId)
+                                );
       res.next();
       final var newDatasetId = res.getInt("dataset_id");
       assertFalse(res.wasNull());
@@ -558,12 +558,12 @@ class MerlinDatabaseTests {
 
 
       final var datasetRes = connection.createStatement()
-          .executeQuery(
-              """
-                  SELECT * FROM dataset
-                  WHERE id = %s;"""
-                  .formatted(newDatasetId)
-          );
+                                       .executeQuery(
+                                           """
+                                               SELECT * FROM dataset
+                                               WHERE id = %s;"""
+                                               .formatted(newDatasetId)
+                                       );
 
       datasetRes.next();
       assertEquals(newDatasetId, datasetRes.getInt("id"));
@@ -575,23 +575,25 @@ class MerlinDatabaseTests {
     void shouldCalculatePlanDatasetOffsetOnPlanDatasetInsertWithNonNullDatasetId() throws SQLException {
 
       final var planRes = connection.createStatement()
-          .executeQuery(
-              """
-                  SELECT * from plan
-                  WHERE id = %s;"""
-                  .formatted(planDatasetRecord.plan_id())
-          );
+                                    .executeQuery(
+                                        """
+                                            SELECT * from plan
+                                            WHERE id = %s;"""
+                                            .formatted(planDatasetRecord.plan_id())
+                                    );
       planRes.next();
       final var planStartTime = planRes.getTimestamp("start_time");
       planRes.close();
 
       final var planDatasetSelectRes = connection.createStatement()
-          .executeQuery(
-              """
-                  SELECT * FROM plan_dataset
-                  WHERE plan_id = %s and dataset_id = %s;"""
-                  .formatted(planDatasetRecord.plan_id(), planDatasetRecord.dataset_id())
-          );
+                                                 .executeQuery(
+                                                     """
+                                                         SELECT * FROM plan_dataset
+                                                         WHERE plan_id = %s and dataset_id = %s;"""
+                                                         .formatted(
+                                                             planDatasetRecord.plan_id(),
+                                                             planDatasetRecord.dataset_id())
+                                                 );
       planDatasetSelectRes.next();
       final var offsetFromPlanStart = Duration.parse(planDatasetSelectRes.getString("offset_from_plan_start"));
       planDatasetSelectRes.close();
@@ -599,29 +601,30 @@ class MerlinDatabaseTests {
       final var newPlanId = insertPlan(missionModelId, "2020-1-1 01:00:00");
 
       final var newPlanRes = connection.createStatement()
-          .executeQuery(
-              """
-                  SELECT * from plan
-                  WHERE id = %s;"""
-                  .formatted(newPlanId)
-          );
+                                       .executeQuery(
+                                           """
+                                               SELECT * from plan
+                                               WHERE id = %s;"""
+                                               .formatted(newPlanId)
+                                       );
       newPlanRes.next();
       final var newPlanStartTime = newPlanRes.getTimestamp("start_time");
       newPlanRes.close();
 
       final var planDatasetInsertRes = connection.createStatement()
-          .executeQuery(
-              """
-                  INSERT INTO plan_dataset (plan_id, dataset_id)
-                  VALUES (%s, %s)
-                  RETURNING *;"""
-                  .formatted(newPlanId, planDatasetRecord.dataset_id())
-          );
+                                                 .executeQuery(
+                                                     """
+                                                         INSERT INTO plan_dataset (plan_id, dataset_id)
+                                                         VALUES (%s, %s)
+                                                         RETURNING *;"""
+                                                         .formatted(newPlanId, planDatasetRecord.dataset_id())
+                                                 );
       planDatasetInsertRes.next();
       final var newOffsetFromPlanStart = Duration.parse(planDatasetInsertRes.getString("offset_from_plan_start"));
       planDatasetInsertRes.close();
 
-      final var calculatedOffset = offsetFromPlanStart.minus(Duration.ofMillis(newPlanStartTime.getTime() - planStartTime.getTime()));
+      final var calculatedOffset = offsetFromPlanStart.minus(Duration.ofMillis(newPlanStartTime.getTime()
+                                                                               - planStartTime.getTime()));
 
       assertEquals(calculatedOffset, newOffsetFromPlanStart);
     }
@@ -670,7 +673,8 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s AND dataset_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id(), simulationDatasetRecord.dataset_id())
-        )) {
+        )
+        ) {
           res.next();
           assertEquals(1, res.getInt("plan_revision"));
           assertEquals(0, res.getInt("model_revision"));
@@ -695,7 +699,8 @@ class MerlinDatabaseTests {
                 FROM dataset
                 WHERE id = %s;"""
                 .formatted(simulationDatasetRecord.dataset_id())
-        )) {
+        )
+        ) {
           res.next();
           assertEquals(0, res.getInt("count"));
         }
@@ -711,7 +716,8 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id())
-        )) {
+        )
+        ) {
           res.next();
           assertFalse(res.getBoolean("canceled"));
         }
@@ -731,7 +737,8 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id())
-        )) {
+        )
+        ) {
           res.next();
           assertTrue(res.getBoolean("canceled"));
         }
@@ -747,7 +754,8 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id())
-        )) {
+        )
+        ) {
           res.next();
           assertFalse(res.getBoolean("canceled"));
         }
@@ -767,7 +775,8 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id())
-        )) {
+        )
+        ) {
           res.next();
           assertTrue(res.getBoolean("canceled"));
         }
@@ -783,7 +792,8 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id())
-        )) {
+        )
+        ) {
           res.next();
           assertFalse(res.getBoolean("canceled"));
         }
@@ -803,7 +813,8 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id())
-        )) {
+        )
+        ) {
           res.next();
           assertTrue(res.getBoolean("canceled"));
         }
@@ -819,7 +830,8 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id())
-        )) {
+        )
+        ) {
           res.next();
           assertFalse(res.getBoolean("canceled"));
         }
@@ -839,7 +851,8 @@ class MerlinDatabaseTests {
                 FROM simulation_dataset
                 WHERE simulation_id = %s;"""
                 .formatted(simulationDatasetRecord.simulation_id())
-        )) {
+        )
+        ) {
           res.next();
           assertTrue(res.getBoolean("canceled"));
         }
@@ -874,7 +887,9 @@ class MerlinDatabaseTests {
           );
       fail();
     } catch (SQLException e) {
-      if (!e.getMessage().contains("foreign key violation: there is no topic with topic_index 1234 in dataset %d".formatted(datasetId))) {
+      if (!e
+          .getMessage()
+          .contains("foreign key violation: there is no topic with topic_index 1234 in dataset %d".formatted(datasetId))) {
         throw e;
       }
     }
@@ -898,7 +913,9 @@ class MerlinDatabaseTests {
           );
       fail();
     } catch (SQLException e) {
-      if (!e.getMessage().contains("foreign key violation: there is no profile with id %d in dataset %d".formatted(profileId + 1, datasetId))) {
+      if (!e.getMessage().contains("foreign key violation: there is no profile with id %d in dataset %d".formatted(
+          profileId + 1,
+          datasetId))) {
         throw e;
       }
     }
@@ -915,15 +932,20 @@ class MerlinDatabaseTests {
 
     try (final var statement = connection.createStatement()) {
       statement.executeUpdate(
-              """
+          """
               UPDATE event
               set topic_index=%d
               where dataset_id=%d and topic_index=%d;
               """.formatted(topicIndex + 1, datasetId, topicIndex)
-          );
+      );
       fail();
     } catch (SQLException e) {
-      if (!e.getMessage().contains("foreign key violation: there is no topic with topic_index %d in dataset %d".formatted(topicIndex + 1, datasetId))) {
+      if (!e
+          .getMessage()
+          .contains("foreign key violation: there is no topic with topic_index %d in dataset %d".formatted(
+              topicIndex
+              + 1,
+              datasetId))) {
         throw e;
       }
     }
@@ -939,9 +961,9 @@ class MerlinDatabaseTests {
       statement
           .executeUpdate(
               """
-              DELETE FROM profile
-              WHERE dataset_id=%d and id=%d
-              """.formatted(datasetId, profileId)
+                  DELETE FROM profile
+                  WHERE dataset_id=%d and id=%d
+                  """.formatted(datasetId, profileId)
           );
     }
 
@@ -960,16 +982,17 @@ class MerlinDatabaseTests {
       statement
           .executeUpdate(
               """
-              DELETE FROM topic
-              WHERE dataset_id=%d and topic_index=%d
-              """.formatted(datasetId, topicIndex)
+                  DELETE FROM topic
+                  WHERE dataset_id=%d and topic_index=%d
+                  """.formatted(datasetId, topicIndex)
           );
 
       try (final var res = statement.executeQuery(
           """
-          SELECT count(1) FROM event WHERE dataset_id=%d and topic_index=%d
-          """.formatted(datasetId, topicIndex)
-      )) {
+              SELECT count(1) FROM event WHERE dataset_id=%d and topic_index=%d
+              """.formatted(datasetId, topicIndex)
+      )
+      ) {
         res.next();
         assertEquals(0, res.getInt("count"));
       }
@@ -985,17 +1008,17 @@ class MerlinDatabaseTests {
     final int newProfileId;
     try (final var statement = connection.createStatement();
          final var res = statement.executeQuery(
-              """
-              UPDATE profile
-              SET id=default
-              WHERE dataset_id=%d and id=%d
-              RETURNING id;
-              """.formatted(datasetId, profileId)
-          )
-      ) {
-        res.next();
-        newProfileId = res.getInt("id");
-      }
+             """
+                 UPDATE profile
+                 SET id=default
+                 WHERE dataset_id=%d and id=%d
+                 RETURNING id;
+                 """.formatted(datasetId, profileId)
+         )
+    ) {
+      res.next();
+      newProfileId = res.getInt("id");
+    }
 
     assertNotEquals(profileId, newProfileId);
     assertEquals(1, getProfileSegmentCount(datasetId, newProfileId));
@@ -1013,17 +1036,18 @@ class MerlinDatabaseTests {
       statement
           .executeUpdate(
               """
-              UPDATE topic
-              SET topic_index=%d
-              WHERE dataset_id=%d and topic_index=%d
-              """.formatted(topicIndex + 1, datasetId, topicIndex)
+                  UPDATE topic
+                  SET topic_index=%d
+                  WHERE dataset_id=%d and topic_index=%d
+                  """.formatted(topicIndex + 1, datasetId, topicIndex)
           );
 
       try (final var res = statement.executeQuery(
           """
-          SELECT count(1) FROM event WHERE dataset_id=%d and topic_index=%d
-          """.formatted(datasetId, topicIndex + 1)
-      )) {
+              SELECT count(1) FROM event WHERE dataset_id=%d and topic_index=%d
+              """.formatted(datasetId, topicIndex + 1)
+      )
+      ) {
         res.next();
         assertEquals(1, res.getInt("count"));
       }
@@ -1041,7 +1065,7 @@ class MerlinDatabaseTests {
     final var winnerType = "{\"type\": \"discrete\", \"schema\": {\"type\": \"string\"}}";
 
     final var contestantCountId = insertProfile(datasetId, contestantName, contestantType, "12 hours");
-    final var winnerId = insertProfile(datasetId, winnerName, winnerType,  "12 hours");
+    final var winnerId = insertProfile(datasetId, winnerName, winnerType, "12 hours");
 
     // Contestant Count Segments:
     insertProfileSegment(datasetId, contestantCountId, "0 seconds", "20", false);
@@ -1060,17 +1084,52 @@ class MerlinDatabaseTests {
     assertEquals(2, segmentsAtOneHour.size());
     assertEquals(2, segmentsAtTwelveHours.size());
 
-    final var atStartSegment0 = new ProfileSegmentAtATimeRecord(datasetId, contestantCountId, contestantName, contestantType, "PT0S", "20", false);
+    final var atStartSegment0 = new ProfileSegmentAtATimeRecord(
+        datasetId,
+        contestantCountId,
+        contestantName,
+        contestantType,
+        "PT0S",
+        "20",
+        false);
     assertEquals(atStartSegment0, segmentsAtStart.get(0));
 
-    final var atOneSegment0 = new ProfileSegmentAtATimeRecord(datasetId, contestantCountId, contestantName, contestantType, "PT2H", "12", false);
-    final var atOneSegment1 = new ProfileSegmentAtATimeRecord(datasetId, winnerId, winnerName, winnerType, "PT6H", "\"Bob or Alice\"", false);
+    final var atOneSegment0 = new ProfileSegmentAtATimeRecord(
+        datasetId,
+        contestantCountId,
+        contestantName,
+        contestantType,
+        "PT2H",
+        "12",
+        false);
+    final var atOneSegment1 = new ProfileSegmentAtATimeRecord(
+        datasetId,
+        winnerId,
+        winnerName,
+        winnerType,
+        "PT6H",
+        "\"Bob or Alice\"",
+        false);
 
     assertEquals(atOneSegment0, segmentsAtOneHour.get(0));
     assertEquals(atOneSegment1, segmentsAtOneHour.get(1));
 
-    final var atTwelveSegment0 = new ProfileSegmentAtATimeRecord(datasetId, contestantCountId, contestantName, contestantType, "PT12H", "1", false);
-    final var atTwelveSegment1 = new ProfileSegmentAtATimeRecord(datasetId, winnerId, winnerName, winnerType, "PT10H", "\"Alice\"", false);
+    final var atTwelveSegment0 = new ProfileSegmentAtATimeRecord(
+        datasetId,
+        contestantCountId,
+        contestantName,
+        contestantType,
+        "PT12H",
+        "1",
+        false);
+    final var atTwelveSegment1 = new ProfileSegmentAtATimeRecord(
+        datasetId,
+        winnerId,
+        winnerName,
+        winnerType,
+        "PT10H",
+        "\"Alice\"",
+        false);
 
     assertEquals(atTwelveSegment0, segmentsAtTwelveHours.get(0));
     assertEquals(atTwelveSegment1, segmentsAtTwelveHours.get(1));
@@ -1080,16 +1139,18 @@ class MerlinDatabaseTests {
     return insertProfile(datasetId, "fred", "{}", "0 seconds");
   }
 
-  private int insertProfile(final int datasetId, final String name, final String type, final String duration) throws SQLException {
-    try(final var statement = connection.createStatement()) {
+  private int insertProfile(final int datasetId, final String name, final String type, final String duration)
+  throws SQLException
+  {
+    try (final var statement = connection.createStatement()) {
       final var results = statement.executeQuery(
-        """
-        INSERT INTO profile(dataset_id, name, type, duration)
-        VALUES (%d, '%s', '%s', '%s')
-        RETURNING id;
-        """.formatted(datasetId, name, type, duration));
-        assertTrue(results.first());
-        return results.getInt("id");
+          """
+              INSERT INTO profile(dataset_id, name, type, duration)
+              VALUES (%d, '%s', '%s', '%s')
+              RETURNING id;
+              """.formatted(datasetId, name, type, duration));
+      assertTrue(results.first());
+      return results.getInt("id");
     }
   }
 
@@ -1097,13 +1158,19 @@ class MerlinDatabaseTests {
     insertProfileSegment(datasetId, profileId, "0 seconds", "{}", false);
   }
 
-  private void insertProfileSegment(final int datasetId, final int profileId, final String startOffset, final String dynamics, final boolean isGap) throws SQLException {
-    try(final var statement = connection.createStatement()) {
+  private void insertProfileSegment(
+      final int datasetId,
+      final int profileId,
+      final String startOffset,
+      final String dynamics,
+      final boolean isGap) throws SQLException
+  {
+    try (final var statement = connection.createStatement()) {
       statement.execute(
-        """
-        INSERT INTO profile_segment(dataset_id, profile_id, start_offset, dynamics, is_gap)
-        VALUES (%d, %d, '%s'::interval, '%s'::jsonb, %b);
-        """.formatted(datasetId, profileId, startOffset, dynamics, isGap));
+          """
+              INSERT INTO profile_segment(dataset_id, profile_id, start_offset, dynamics, is_gap)
+              VALUES (%d, %d, '%s'::interval, '%s'::jsonb, %b);
+              """.formatted(datasetId, profileId, startOffset, dynamics, isGap));
     }
   }
 
@@ -1141,14 +1208,17 @@ class MerlinDatabaseTests {
     }
   }
 
-  private ArrayList<ProfileSegmentAtATimeRecord> getResourcesAtStartOffset(final int datasetId, final String startOffset) throws SQLException {
-    try(final var statement = connection.createStatement()) {
+  private ArrayList<ProfileSegmentAtATimeRecord> getResourcesAtStartOffset(
+      final int datasetId,
+      final String startOffset) throws SQLException
+  {
+    try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery("""
-        select * from hasura_functions.get_resources_at_start_offset(%d, '%s');
-        """.formatted(datasetId, startOffset));
+                                                 select * from hasura_functions.get_resources_at_start_offset(%d, '%s');
+                                                 """.formatted(datasetId, startOffset));
 
       final var segments = new ArrayList<ProfileSegmentAtATimeRecord>();
-      while (res.next()){
+      while (res.next()) {
         segments.add(new ProfileSegmentAtATimeRecord(
             res.getInt("dataset_id"),
             res.getInt("id"),
@@ -1172,17 +1242,10 @@ class MerlinDatabaseTests {
             DEFAULT VALUES
             RETURNING id;
             """)) {
-        res.next();
-        datasetId = res.getInt("id");
-      }
-
-      statement
-        .executeUpdate(
-            """
-            SELECT FROM allocate_dataset_partitions(%d)
-            """.formatted(datasetId)
-        );
-      return datasetId;
+      res.next();
+      datasetId = res.getInt("id");
     }
+    return datasetId;
   }
+}
 }
