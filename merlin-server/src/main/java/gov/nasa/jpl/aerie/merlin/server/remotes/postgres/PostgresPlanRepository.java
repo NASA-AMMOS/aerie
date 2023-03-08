@@ -44,7 +44,7 @@ public final class PostgresPlanRepository implements PlanRepository {
           try {
             final var planId = new PlanId(record.id());
             final var activities = getPlanActivities(connection, planId);
-            final var arguments = getPlanArguments(connection, planId);
+            final var arguments = getPlanArguments(connection, record);
 
             plans.put(planId, new Plan(
                 record.name(),
@@ -73,7 +73,7 @@ public final class PostgresPlanRepository implements PlanRepository {
     try (final var connection = this.dataSource.getConnection()) {
         final var planRecord = getPlanRecord(connection, planId);
         final var activities = getPlanActivities(connection, planId);
-        final var arguments = getPlanArguments(connection, planId);
+        final var arguments = getPlanArguments(connection, planRecord);
 
         return new Plan(
             planRecord.name(),
@@ -90,14 +90,14 @@ public final class PostgresPlanRepository implements PlanRepository {
 
   private Map<String, SerializedValue> getPlanArguments(
       final Connection connection,
-      final PlanId planId
+      final PlanRecord planRecord
   ) throws SQLException {
     try (
         final var getSimulationAction = new GetSimulationAction(connection);
         final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection)
     ) {
       final var arguments = new HashMap<String, SerializedValue> ();
-      final var simRecord$ = getSimulationAction.get(planId.id());
+      final var simRecord$ = getSimulationAction.get(planRecord.id(), planRecord.startTime());
 
       if (simRecord$.isPresent()) {
         final var simRecord = simRecord$.get();

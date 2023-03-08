@@ -6,6 +6,9 @@ create table simulation (
   plan_id integer not null,
   arguments merlin_argument_set not null,
 
+  offset_from_plan_start interval,
+  duration interval,
+
   constraint simulation_synthetic_key
     primary key (id),
   constraint simulation_has_simulation_template

@@ -1,17 +1,15 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.intellij.lang.annotations.Language;
 
-import javax.json.Json;
-import java.io.Reader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Map;
 import java.util.Optional;
 
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.simulationArgumentsP;
 
@@ -21,7 +19,9 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           s.id,
           s.revision,
           s.simulation_template_id,
-          s.arguments
+          s.arguments,
+          s.offset_from_plan_start,
+          s.duration
       from simulation as s
       where s.plan_id = ?
     """;
@@ -32,9 +32,11 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Optional<SimulationRecord> get(final long planId)
+  public Optional<SimulationRecord> get(final long planId, final Timestamp timestamp)
   throws SQLException {
       this.statement.setLong(1, planId);
+      PreparedStatements.setIntervalStyle(this.statement.getConnection(), PreparedStatements.PGIntervalStyle.ISO8601);
+
       final ResultSet results = this.statement.executeQuery();
 
       if (!results.next()) return Optional.empty();
@@ -49,7 +51,9 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           .getSuccessOrThrow(
               failureReason -> new Error("Corrupt simulation arguments cannot be parsed: " + failureReason.reason())
           );
-      return Optional.of(new SimulationRecord(id, revision, planId, templateId$, arguments));
+      final var offsetFromPlanStart = PostgresParsers.parseOffset(results, 5, timestamp);
+      final var duration = PostgresParsers.parseOffset(results, 5, timestamp.plusMicros(offsetFromPlanStart.in(MICROSECONDS)));
+      return Optional.of(new SimulationRecord(id, revision, planId, templateId$, arguments, offsetFromPlanStart, duration));
   }
 
   @Override

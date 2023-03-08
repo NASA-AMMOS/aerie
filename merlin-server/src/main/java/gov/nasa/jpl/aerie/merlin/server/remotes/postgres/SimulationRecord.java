@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
@@ -10,4 +11,7 @@ public record SimulationRecord(
     long revision,
     long planId,
     Optional<Long> simulationTemplateId,
-    Map<String, SerializedValue> arguments) {}
+    Map<String, SerializedValue> arguments,
+    Duration offsetFromPlanStart,
+    Duration duration
+) {}

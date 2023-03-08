@@ -32,6 +32,8 @@ import java.util.Optional;
 import java.util.SortedMap;
 import java.util.stream.Collectors;
 
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
+
 public final class PostgresResultsCellRepository implements ResultsCellRepository {
   private static final Logger logger = LoggerFactory.getLogger(PostgresResultsCellRepository.class);
 
@@ -44,17 +46,18 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   @Override
   public ResultsProtocol.OwnerRole allocate(final PlanId planId) {
     try (final var connection = this.dataSource.getConnection()) {
-      final var planStart = getPlan(connection, planId).startTime();
+      final var planRecord = getPlan(connection, planId);
+      final var planStart = planRecord.startTime();
       // TODO: At the time of writing, simulation starts at the plan start every time
       //       When that changes, we will need to update the simulation start here as well
       final var simulationStart = planStart;
-      var simulation$ = getSimulation(connection, planId);
+      var simulation$ = getSimulation(connection, planRecord);
 
       final SimulationRecord simulation;
       if (simulation$.isPresent()) {
         simulation = simulation$.get();
       } else {
-        simulation = createSimulation(connection, planId, Map.of());
+        simulation = createSimulation(connection, planId, Map.of(), Duration.ZERO, Duration.of(planRecord.startTime().microsUntil(planRecord.endTime()), MICROSECONDS));
       }
 
       final var dataset = createSimulationDataset(
@@ -93,9 +96,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       claimSimulationDataset(connection, datasetId);
       logger.info("Claimed simulation with datatset id {}", datasetId);
 
-      final var planStart = getPlan(connection, planId).startTime();
+      final var planRecord = getPlan(connection, planId);
+      final var planStart = planRecord.startTime();
 
-      final var simulation$ = getSimulation(connection, planId);
+      final var simulation$ = getSimulation(connection, planRecord);
       if (simulation$.isEmpty()) {
         return Optional.empty();
       }
@@ -118,9 +122,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   @Override
   public Optional<ResultsProtocol.ReaderRole> lookup(final PlanId planId) {
     try (final var connection = this.dataSource.getConnection()) {
-      final var planStart = getPlan(connection, planId).startTime();
+      final var planRecord = getPlan(connection, planId);
+      final var planStart = planRecord.startTime();
 
-      final var simulation$ = getSimulation(connection, planId);
+      final var simulation$ = getSimulation(connection, planRecord);
       if (simulation$.isEmpty()) return Optional.empty();
       final var simulation = simulation$.get();
 
@@ -159,11 +164,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   /* Database accessors */
   private static Optional<SimulationRecord> getSimulation(
       final Connection connection,
-      final PlanId planId
+      final PlanRecord planRecord
   ) throws SQLException
   {
     try (final var getSimulationAction = new GetSimulationAction(connection)) {
-      return getSimulationAction.get(planId.id());
+      return getSimulationAction.get(planRecord.id(), planRecord.startTime());
     }
   }
 
@@ -192,11 +197,13 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static SimulationRecord createSimulation(
       final Connection connection,
       final PlanId planId,
-      final Map<String, SerializedValue> arguments
+      final Map<String, SerializedValue> arguments,
+      final Duration offsetFromPlanStart,
+      final Duration duration
   ) throws SQLException
   {
     try (final var createSimulationAction = new CreateSimulationAction(connection)) {
-      return createSimulationAction.apply(planId.id(), arguments);
+      return createSimulationAction.apply(planId.id(), arguments, offsetFromPlanStart, duration);
     }
   }
 
@@ -392,7 +399,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     try {
       final var plan = getPlan(connection, planId);
       final var simulationStart = plan.startTime()
-          .plusMicros(simulationDatasetRecord.offsetFromPlanStart().dividedBy(Duration.MICROSECONDS));
+          .plusMicros(simulationDatasetRecord.offsetFromPlanStart().dividedBy(MICROSECONDS));
       final var simulationEnd = plan.endTime();
       return new Window(simulationStart, simulationEnd);
     } catch (final NoSuchPlanException ex) {

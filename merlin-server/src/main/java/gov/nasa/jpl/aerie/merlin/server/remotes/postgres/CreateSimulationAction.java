@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.intellij.lang.annotations.Language;
 
@@ -26,8 +27,10 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
   public SimulationRecord apply(
       final long planId,
-      final Map<String, SerializedValue> arguments
-  ) throws SQLException, FailedInsertException {
+      final Map<String, SerializedValue> arguments,
+      final Duration offsetFromPlanStart,
+      final Duration duration
+      ) throws SQLException, FailedInsertException {
     this.statement.setLong(1, planId);
     this.statement.setString(2, simulationArgumentsP.unparse(arguments).toString());
 
@@ -36,7 +39,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
     final var simulationId = results.getLong(1);
     final var simulationRevision = results.getLong(2);
-    return new SimulationRecord(simulationId, simulationRevision, planId, Optional.empty(), arguments);
+    return new SimulationRecord(simulationId, simulationRevision, planId, Optional.empty(), arguments, offsetFromPlanStart, duration);
   }
 
   @Override
