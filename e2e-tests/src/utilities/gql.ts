@@ -18,12 +18,43 @@ const gql = {
     }
   `,
 
+
+  GET_TOPIC_EVENTS:`#graphql
+  query GetTopicsEvents($datasetId: Int!) {
+    topic(where: {dataset_id: {_eq: $datasetId}}) {
+      name
+      value_schema
+      events {
+        causal_time
+        real_time
+        topic_index
+        transaction_index
+        value
+      }
+    }
+  }
+  `,
+
+  GET_PROFILES:`#graphql
+    query GetProfiles($datasetId: Int!){
+      profile(where: {dataset_id: {_eq: $datasetId}}) {
+        name
+        profile_segments {
+          dynamics
+          is_gap
+          start_offset
+        }
+    }
+  }
+  `,
+
   SCHEDULE: `#graphql
     query Schedule($specificationId: Int!) {
       schedule(specificationId: $specificationId){
         reason
         status
         analysisId
+        datasetId
       }
     }
   `,
@@ -87,8 +118,24 @@ const gql = {
   `,
 
   GET_SIMULATION_DATASET: `#graphql
+  query GetSimulationDataset($id: Int!) {
+    simulationDataset: simulation_dataset_by_pk(id: $id) {
+      canceled
+      simulation_start_time
+      simulation_end_time
+      simulated_activities {
+        activity_directive { id }
+        duration
+        start_time
+        start_offset
+      }
+    }
+  }
+  `,
+
+  GET_SIMULATION_DATASET_BY_DATASET_ID: `#graphql
     query GetSimulationDataset($id: Int!) {
-      simulationDataset: simulation_dataset_by_pk(id: $id) {
+      simulation_dataset(where: {dataset_id: {_eq: $id}}) {
         canceled
         simulation_start_time
         simulation_end_time

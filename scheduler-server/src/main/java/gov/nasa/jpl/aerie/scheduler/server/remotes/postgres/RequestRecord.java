@@ -9,7 +9,8 @@ public record RequestRecord(
     long specificationRevision,
     Status status,
     Optional<ScheduleFailure> reason,
-    boolean canceled
+    boolean canceled,
+    Optional<Long> datasetId
 ) {
   public enum Status {
     PENDING("pending"),

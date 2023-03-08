@@ -2,6 +2,11 @@ import { expect, test } from '@playwright/test';
 import req from '../utilities/requests.js';
 import time from '../utilities/time.js';
 
+const eqSet = (xs, ys) =>
+    xs.size === ys.size &&
+    [...xs].every((x) => ys.has(x));
+
+
 test.describe('Scheduling', () => {
   const rd = Math.random() * 100;
   const plan_start_timestamp = "2021-001T00:00:00.000";
@@ -13,6 +18,7 @@ test.describe('Scheduling', () => {
   let second_goal_id: number;
   let plan_revision: number;
   let specification_id: number;
+  let dataset_id:number;
 
   test('Upload jar and create mission model', async ({ request }) => {
     //upload bananation jar
@@ -184,11 +190,12 @@ test.describe('Scheduling', () => {
     let it = 0;
     let reason_local: string;
     while (it++ < max_it && (status == 'pending' || status == 'incomplete')) {
-      const { reason, status, analysisId } = await req.schedule(request, specification_id);
+      const { reason, status, analysisId, datasetId } = await req.schedule(request, specification_id);
       status_local = status;
       reason_local = reason;
       expect(status).not.toBeNull();
       expect(status).toBeDefined();
+      dataset_id = datasetId
       await delay(1000);
     }
     if (status_local == "failed") {
@@ -196,6 +203,87 @@ test.describe('Scheduling', () => {
     }
     expect(status_local).toEqual("complete")
     expect(analysisId_local).toEqual(analysisId)
+    expect(dataset_id).not.toBeNull();
+  });
+
+  test('Verify posting of simulation results', async ({ request }) => {
+    let plan = await req.getPlan(request, plan_id)
+    let directiveIds = new Set<number>()
+    let startOffsetsActivityDirectives = new Set<string>()
+    for(const activity of plan.activity_directives){
+      directiveIds.add(activity['id'])
+    }
+    const activities = await req.getSimulationDatasetByDatasetId(request,dataset_id)
+    expect(activities.simulated_activities.length).toEqual(plan.activity_directives.length)
+    let refDirectiveIds = new Set<number>()
+    for(let simulated_activity of activities.simulated_activities){
+      refDirectiveIds.add(simulated_activity.activity_directive.id)
+      startOffsetsActivityDirectives.add(simulated_activity.start_offset)
+    }
+    //all directive have their simulated activity
+    expect(eqSet(refDirectiveIds,directiveIds))
+    const dataset = await req.getProfiles(request, dataset_id)
+    //expect one profile per resource in the banananation model
+    expect(dataset.length).toEqual(7)
+    for(let resource of dataset){
+      if(resource.name =="/fruit" || resource.name == "/peel"){
+        let startOffsetOfResource = new Set<string>()
+        for(let segment of resource.profile_segments){
+          startOffsetOfResource.add(segment.start_offset)
+        }
+        //these two resources are affected by the peel, grow and bite banana
+        expect(eqSet(startOffsetOfResource, startOffsetsActivityDirectives)).toEqual(true)
+      }
+    }
+    let topics = await req.getTopicsEvents(request, dataset_id)
+    let prefixInput = "ActivityType.Input."
+    let prefixOutput = "ActivityType.Output."
+    let peelInputIsThere = false
+    let biteInputIsThere = false
+    let growInputIsThere = false
+    let peelOutputIsThere = false
+    let biteOutputIsThere = false
+    let growOutputIsThere = false
+    //topic added in the mission model
+    let producerIsThere = false
+    for(let topic of topics){
+      switch (topic.name){
+        case prefixInput+"BiteBanana":
+          biteInputIsThere = true
+          expect(topic.events.length).toEqual(1)
+          break
+        case prefixOutput+"BiteBanana":
+          biteOutputIsThere = true
+          expect(topic.events.length).toEqual(1)
+          break
+        case prefixInput+"GrowBanana":
+          growInputIsThere = true
+          expect(topic.events.length).toEqual(1)
+          break
+        case prefixOutput+"GrowBanana":
+          growOutputIsThere = true
+          expect(topic.events.length).toEqual(1)
+          break
+        case prefixInput+"PeelBanana":
+          peelInputIsThere = true
+          expect(topic.events.length).toEqual(12)
+          break
+        case prefixOutput+"PeelBanana":
+          peelOutputIsThere = true
+          expect(topic.events.length).toEqual(12)
+          break
+        case "/producer":
+          producerIsThere = true
+          expect(topic.events.length).toEqual(0)
+      }
+    }
+    expect(peelInputIsThere)
+    expect(growInputIsThere)
+    expect(biteInputIsThere)
+    expect(peelOutputIsThere)
+    expect(growOutputIsThere)
+    expect(biteOutputIsThere)
+    expect(producerIsThere)
   });
 
   test('Get Plan', async ({ request }) => {

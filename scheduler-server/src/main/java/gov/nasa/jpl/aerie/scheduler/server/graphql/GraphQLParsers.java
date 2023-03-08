@@ -1,9 +1,18 @@
 package gov.nasa.jpl.aerie.scheduler.server.graphql;
 
 import com.impossibl.postgres.api.data.Interval;
+import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.json.Unit;
+import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.scheduler.server.models.ActivityAttributesRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.Timestamp;
+import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -11,6 +20,16 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
+
+import static gov.nasa.jpl.aerie.json.BasicParsers.doubleP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
+import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
+import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
+import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
+import static gov.nasa.jpl.aerie.merlin.driver.json.ValueSchemaJsonParser.valueSchemaP;
 
 /**
  * utility methods for parsing graphql scalars as returned by the merlin interface
@@ -75,4 +94,42 @@ public class GraphQLParsers {
     final var total = hr.plus(min).plus(sec).multipliedBy(sign);
     return Interval.of(total);
   }
+
+  public static final JsonParser<Map<String, SerializedValue>> simulationArgumentsP = mapP(serializedValueP);
+
+  public static final JsonParser<RealDynamics> realDynamicsP
+      = productP
+      . field("initial", doubleP)
+      . field("rate", doubleP)
+      . map(
+          untuple(RealDynamics::linear),
+          $ -> tuple($.initial, $.rate));
+
+  public static final JsonParser<Pair<String, ValueSchema>> discreteProfileTypeP =
+      productP
+          .field("type", literalP("discrete"))
+          .field("schema", valueSchemaP)
+          .map(
+              untuple((type, schema) -> Pair.of("discrete", schema)),
+              $ -> tuple(Unit.UNIT, $.getRight()));
+
+  public static final JsonParser<Pair<String, ValueSchema>> realProfileTypeP =
+      productP
+          .field("type", literalP("real"))
+          .field("schema", valueSchemaP)
+          .map(
+              untuple((type, schema) -> Pair.of("real", schema)),
+              $ -> tuple(Unit.UNIT, $.getRight()));
+
+
+  public static final JsonParser<Map<String, SerializedValue>> activityArgumentsP = mapP(serializedValueP);
+
+  public static final JsonParser<ActivityAttributesRecord> activityAttributesP = productP
+      .optionalField("directiveId", longP)
+      .field("arguments", activityArgumentsP)
+      .optionalField("computedAttributes", serializedValueP)
+      .map(
+          untuple(ActivityAttributesRecord::new),
+          $ -> tuple($.directiveId(), $.arguments(), $.computedAttributes()));
+
 }

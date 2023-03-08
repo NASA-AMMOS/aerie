@@ -140,6 +140,12 @@ const req = {
     return simulationDataset as SimulationDataset;
   },
 
+  async getSimulationDatasetByDatasetId(request: APIRequestContext, simulationDatasetId: number) {
+    const data = await req.hasura(request, gql.GET_SIMULATION_DATASET_BY_DATASET_ID, {id: simulationDatasetId});
+    const {simulation_dataset} = data;
+    return simulation_dataset[0] as SimulationDataset;
+  },
+
   async insertAndAssociateSimulationTemplate(request: APIRequestContext, template: InsertSimulationTemplateInput,simulationId: number){
     const data = await req.hasura(request, gql.INSERT_SIMULATION_TEMPLATE, {simulationTemplateInsertInput: template} );
     const {insert_simulation_template_one} = data;
@@ -266,6 +272,18 @@ const req = {
     const { delete_plan_dataset_by_pk } = data;
     const { dataset_id } = delete_plan_dataset_by_pk;
     return dataset_id;
+  },
+
+  async getProfiles(request: APIRequestContext, datasetId:number){
+    const data = await req.hasura(request, gql.GET_PROFILES, {datasetId:datasetId});
+    const { profile } = data;
+    return profile
+  },
+
+  async getTopicsEvents(request: APIRequestContext, datasetId:number){
+    const data = await req.hasura(request, gql.GET_TOPIC_EVENTS, {datasetId:datasetId});
+    const { topic } = data;
+    return topic
   }
 };
 /**

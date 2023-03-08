@@ -8,6 +8,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
 
+import static gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.PreparedStatements.getDatasetId;
+
 /*package-local*/ final class CreateRequestAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
       insert into scheduling_request (specification_id, specification_revision)
@@ -16,7 +18,8 @@ import java.util.Optional;
         analysis_id,
         status,
         reason,
-        canceled
+        canceled,
+        dataset_id
     """;
 
   private final PreparedStatement statement;
@@ -42,6 +45,7 @@ import java.util.Optional;
     final var analysis_id = result.getLong("analysis_id");
     final var failureReason$ = PreparedStatements.getFailureReason(result, "reason");
     final var canceled = result.getBoolean("canceled");
+    final var datasetId = getDatasetId(result, "dataset_id");
 
     return new RequestRecord(
         specification.id(),
@@ -49,7 +53,8 @@ import java.util.Optional;
         specification.revision(),
         status,
         failureReason$,
-        canceled
+        canceled,
+        datasetId
     );
   }
 

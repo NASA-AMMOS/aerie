@@ -1,15 +1,17 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.http.InvalidJsonException;
+import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
@@ -145,6 +147,20 @@ public interface PlanService {
         final Map<SchedulingActivityDirective, GoalId> activityToGoalId
     )
     throws IOException, NoSuchPlanException, PlanServiceException;
+
+    /**
+     * Stores the simulation results produced during scheduling
+     *
+     * @param planMetadata the plan metadata
+     * @param results the simulation results
+     * @param simulationActivityDirectiveIdToMerlinActivityDirectiveId the translation between activity ids in the
+     *     local simulation and the merlin activity ids
+     * @return
+     * @throws PlanServiceException
+     * @throws IOException
+     */
+   DatasetId storeSimulationResults(final PlanMetadata planMetadata, final SimulationResults results,
+                                    final Map<ActivityDirectiveId, ActivityDirectiveId> simulationActivityDirectiveIdToMerlinActivityDirectiveId) throws PlanServiceException, IOException;
   }
 
   interface OwnerRole extends ReaderRole, WriterRole {}

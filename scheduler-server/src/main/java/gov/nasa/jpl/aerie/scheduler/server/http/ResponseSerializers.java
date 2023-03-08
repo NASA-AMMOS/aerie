@@ -66,12 +66,15 @@ public class ResponseSerializers {
           .add("analysisId", r.analysisId())
           .build();
     } else if (response instanceof ScheduleAction.Response.Complete r) {
-      return Json
+      final var responseJson = Json
           .createObjectBuilder()
           .add("status", "complete")
           .add("results", serializeScheduleResults(r.results()))
-          .add("analysisId", r.analysisId())
-          .build();
+          .add("analysisId", r.analysisId());
+      if(r.datasetId().isPresent()){
+        responseJson.add("datasetId", r.datasetId().get());
+      }
+      return responseJson.build();
     } else {
       throw new UnexpectedSubtypeError(ScheduleAction.Response.class, response);
     }
