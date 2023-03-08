@@ -11,12 +11,13 @@ import java.util.List;
 /*package-local*/ final class GetSpecificationGoalsAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
     select
-            s.goal_id,
-            g.name,
-            g.definition,
+      s.goal_id,
+      g.name,
+      g.definition,
       g.revision,
       s.enabled,
-          from scheduling_specification_goals as s
+      s.simulate_after
+    from scheduling_specification_goals as s
     left join scheduling_goal as g on s.goal_id = g.id
     where s.specification_id = ?
     order by s.priority;
@@ -39,7 +40,8 @@ import java.util.List;
       final var name = resultSet.getString("name");
       final var definition = resultSet.getString("definition");
       final var enabled = resultSet.getBoolean("enabled");
-      goals.add(new PostgresGoalRecord(id, revision, name, definition, enabled));
+      final var simulateAfter = resultSet.getBoolean("simulate_after");
+      goals.add(new PostgresGoalRecord(id, revision, name, definition, enabled, simulateAfter));
     }
 
     return goals;

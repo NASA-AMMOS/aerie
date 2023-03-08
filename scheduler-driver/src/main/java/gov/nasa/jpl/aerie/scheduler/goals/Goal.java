@@ -32,6 +32,12 @@ public class Goal {
    * state constraints applying to the goal
    */
   protected Expression<Windows> resourceConstraints;
+  
+  /**
+   * Whether to resimulate after this goal or use stale results
+   */
+  public boolean simulateAfter;
+  
   /** Set to true if partial satisfaction is ok, the scheduler will try to do its best */
   private boolean shouldRollbackIfUnsatisfied = false;
 
@@ -148,6 +154,13 @@ public class Goal {
 
     boolean shouldRollbackIfUnsatisfied;
 
+    public T simulateAfter(boolean simAfter) {
+      this.simulateAfter = simAfter;
+      return getThis();
+    }
+
+    boolean simulateAfter = true;
+
     /**
      * uses all pending specifications to construct a matching new goal object
      *
@@ -205,6 +218,8 @@ public class Goal {
         final var windows = new Windows(false).set(Interval.between(starting, ending), true);
         goal.temporalContext = new WindowsWrapperExpression(windows);
       }
+
+      goal.simulateAfter = this.simulateAfter;
 
       return goal;
     }
