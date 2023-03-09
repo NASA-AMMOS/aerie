@@ -163,7 +163,7 @@ public final class MerlinBindings implements Plugin {
       final var serializedActivity = new SerializedActivity(input.activityTypeName(), input.arguments());
       final var activityDirective = new ActivityDirectiveForValidation(input.activityDirectiveId(), input.planId(), input.argumentsModifiedTime(), serializedActivity);
 
-      final var plan = this.planService.getPlan(planId);
+      final var plan = this.planService.getPlanForValidation(planId);
       this.missionModelService.refreshActivityValidations(plan.missionModelId, activityDirective);
       ctx.status(200);
     } catch (final InvalidJsonException ex) {
@@ -298,7 +298,7 @@ public final class MerlinBindings implements Plugin {
     try {
       final var planId = parseJson(ctx.body(), hasuraPlanActionP).input().planId();
 
-      final var plan = this.planService.getPlan(planId);
+      final var plan = this.planService.getPlanForValidation(planId);
       final var activities = plan.activityDirectives.entrySet().stream().collect(Collectors.toMap(
           Map.Entry::getKey,
           e -> e.getValue().serializedActivity()));

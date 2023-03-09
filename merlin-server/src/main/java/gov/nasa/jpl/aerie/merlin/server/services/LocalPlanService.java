@@ -26,8 +26,13 @@ public final class LocalPlanService implements PlanService {
   }
 
   @Override
-  public Plan getPlan(final PlanId planId) throws NoSuchPlanException {
-    return this.planRepository.getPlan(planId);
+  public Plan getPlanForSimulation(final PlanId planId) throws NoSuchPlanException {
+    return this.planRepository.getPlanForSimulation(planId);
+  }
+
+  @Override
+  public Plan getPlanForValidation(final PlanId planId) throws NoSuchPlanException {
+    return this.planRepository.getPlanForValidation(planId);
   }
 
   @Override

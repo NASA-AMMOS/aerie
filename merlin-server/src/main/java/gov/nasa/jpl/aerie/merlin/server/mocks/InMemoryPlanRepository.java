@@ -39,7 +39,17 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Plan getPlan(final PlanId planId) throws NoSuchPlanException {
+  public Plan getPlanForValidation(final PlanId planId) throws NoSuchPlanException {
+    final Plan plan = Optional
+        .ofNullable(this.plans.get(planId))
+        .orElseThrow(() -> new NoSuchPlanException(planId))
+        .getRight();
+
+    return new Plan(plan);
+  }
+
+  @Override
+  public Plan getPlanForSimulation(final PlanId planId) throws NoSuchPlanException {
     final Plan plan = Optional
         .ofNullable(this.plans.get(planId))
         .orElseThrow(() -> new NoSuchPlanException(planId))

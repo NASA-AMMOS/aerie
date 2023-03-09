@@ -27,7 +27,7 @@ public abstract class PlanRepositoryContractTest {
   }
 
   @Test
-  public void testCanStorePlan() throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException {
+  public void testCanStorePlan() throws NoSuchPlanException {
     // GIVEN
 
     // WHEN
@@ -37,7 +37,7 @@ public abstract class PlanRepositoryContractTest {
     final CreatedPlan ids = this.planRepository.createPlan(newPlan);
 
     // THEN
-    final Plan plan = this.planRepository.getPlan(ids.planId());
+    final Plan plan = this.planRepository.getPlanForValidation(ids.planId());
     assertThat(plan.name).isEqualTo("new-plan");
   }
 
@@ -57,7 +57,7 @@ public abstract class PlanRepositoryContractTest {
         // no .commit()
 
     // THEN
-    final Plan plan = this.planRepository.getPlan(ids.planId());
+    final Plan plan = this.planRepository.getPlanForValidation(ids.planId());
     assertThat(plan.name).isEqualTo("before");
   }
 
@@ -76,7 +76,7 @@ public abstract class PlanRepositoryContractTest {
     this.planRepository.createActivity(ids.planId(), activity);
 
     // THEN
-    final Plan plan = this.planRepository.getPlan(ids.planId());
+    final Plan plan = this.planRepository.getPlanForValidation(ids.planId());
     assertThat(plan.name).isEqualTo("new-plan");
     assertThat(plan.activityDirectives.values()).containsExactly(activity);
   }
@@ -91,7 +91,7 @@ public abstract class PlanRepositoryContractTest {
     final CreatedPlan ids = this.planRepository.createPlan(new NewPlan());
 
     // THEN
-    assertThat(this.planRepository.getPlan(ids.planId()).activityDirectives).isNotNull().isEmpty();
+    assertThat(this.planRepository.getPlanForValidation(ids.planId()).activityDirectives).isNotNull().isEmpty();
   }
 
   @Test
