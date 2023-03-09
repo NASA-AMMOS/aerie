@@ -44,18 +44,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   @Override
   public ResultsProtocol.OwnerRole allocate(final PlanId planId) {
     try (final var connection = this.dataSource.getConnection()) {
-      final var planStart = getPlan(connection, planId).startTime();
-      // TODO: At the time of writing, simulation starts at the plan start every time
-      //       When that changes, we will need to update the simulation start here as well
-      final var simulationStart = planStart;
-      var simulation$ = getSimulation(connection, planId);
+      final SimulationRecord simulation = getSimulation(connection, planId);
+      final SimulationTemplateRecord template;
 
-      final SimulationRecord simulation;
-      if (simulation$.isPresent()) {
-        simulation = simulation$.get();
-      } else {
-        simulation = createSimulation(connection, planId, Map.of());
-      }
+      // TODO: When the Simulation Dataset changes to have columns for subset start and end, this will need to change
 
       final var dataset = createSimulationDataset(
           connection,
@@ -91,15 +83,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   public Optional<ResultsProtocol.OwnerRole> claim(final PlanId planId, final Long datasetId) {
     try (final var connection = this.dataSource.getConnection()) {
       claimSimulationDataset(connection, datasetId);
-      logger.info("Claimed simulation with datatset id {}", datasetId);
+      logger.info("Claimed simulation with dataset id {}", datasetId);
 
       final var planStart = getPlan(connection, planId).startTime();
 
-      final var simulation$ = getSimulation(connection, planId);
-      if (simulation$.isEmpty()) {
-        return Optional.empty();
-      }
-      final var simulation = simulation$.get();
+      final var simulation = getSimulation(connection, planId);
 
       return Optional.of(new PostgresResultsCell(
           this.dataSource,
@@ -120,9 +108,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     try (final var connection = this.dataSource.getConnection()) {
       final var planStart = getPlan(connection, planId).startTime();
 
-      final var simulation$ = getSimulation(connection, planId);
-      if (simulation$.isEmpty()) return Optional.empty();
-      final var simulation = simulation$.get();
+      final var simulation = getSimulation(connection, planId);
 
       final var datasetId$ = lookupSimulationDatasetRecord(
           connection,
@@ -157,7 +143,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   }
 
   /* Database accessors */
-  private static Optional<SimulationRecord> getSimulation(
+  private static SimulationRecord getSimulation(
       final Connection connection,
       final PlanId planId
   ) throws SQLException
@@ -186,17 +172,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   {
     try (final var getSimulationDatasetAction = new GetSimulationDatasetAction(connection)) {
       return getSimulationDatasetAction.get(datasetId, planStart);
-    }
-  }
-
-  private static SimulationRecord createSimulation(
-      final Connection connection,
-      final PlanId planId,
-      final Map<String, SerializedValue> arguments
-  ) throws SQLException
-  {
-    try (final var createSimulationAction = new CreateSimulationAction(connection)) {
-      return createSimulationAction.apply(planId.id(), arguments);
     }
   }
 
