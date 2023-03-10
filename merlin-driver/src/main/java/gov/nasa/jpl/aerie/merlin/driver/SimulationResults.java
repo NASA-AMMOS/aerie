@@ -16,6 +16,7 @@ import java.util.SortedMap;
 
 public final class SimulationResults {
   public final Instant startTime;
+  public final Duration duration;
   public final Map<String, Pair<ValueSchema, List<ProfileSegment<RealDynamics>>>> realProfiles;
   public final Map<String, Pair<ValueSchema, List<ProfileSegment<SerializedValue>>>> discreteProfiles;
   public final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities;
@@ -29,10 +30,12 @@ public final class SimulationResults {
         final Map<SimulatedActivityId, SimulatedActivity> simulatedActivities,
         final Map<SimulatedActivityId, UnfinishedActivity> unfinishedActivities,
         final Instant startTime,
+        final Duration duration,
         final List<Triple<Integer, String, ValueSchema>> topics,
         final SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events)
   {
     this.startTime = startTime;
+    this.duration = duration;
     this.realProfiles = realProfiles;
     this.discreteProfiles = discreteProfiles;
     this.topics = topics;

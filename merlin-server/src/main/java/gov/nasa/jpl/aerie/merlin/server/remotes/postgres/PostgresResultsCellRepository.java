@@ -271,13 +271,13 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
   private static SimulationResults getSimulationResults(
       final Connection connection,
-      final SimulationDatasetRecord simulationDatasetRecord,
-      final PlanId planId
+      final SimulationDatasetRecord simulationDatasetRecord
   ) throws SQLException {
-    final var simulationWindow = getSimulationWindow(connection, simulationDatasetRecord, planId);
-    final var startTimestamp = simulationWindow.start();
-    final var simulationStart = startTimestamp.toInstant();
+    final var startTimestamp = simulationDatasetRecord.simulationStartTime();
+    final var endTimestamp = simulationDatasetRecord.simulationEndTime();
 
+    final var simulationStart = startTimestamp.toInstant();
+    final var duration = Duration.of(simulationStart.until(endTimestamp.toInstant(), ChronoUnit.MICROS), Duration.MICROSECONDS);
     final var profiles = ProfileRepository.getProfiles(connection, simulationDatasetRecord.datasetId());
     final var activities = getActivities(connection, simulationDatasetRecord.datasetId(), startTimestamp);
     final var topics = getSimulationTopics(connection, simulationDatasetRecord.datasetId());
@@ -289,6 +289,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         activities.getLeft(),
         activities.getRight(),
         simulationStart,
+        duration,
         topics,
         events
     );

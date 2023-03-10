@@ -485,6 +485,7 @@ public final class AnchorSimulationTest {
      */
     private static void assertEqualsSimulationResults(SimulationResults expected, SimulationResults actual){
       assertEquals(expected.startTime, actual.startTime);
+      assertEquals(expected.duration, actual.duration);
       assertEquals(expected.simulatedActivities.entrySet().size(), actual.simulatedActivities.size());
       for(final var entry : expected.simulatedActivities.entrySet()){
         final var key = entry.getKey();
@@ -628,6 +629,7 @@ public final class AnchorSimulationTest {
           simulatedActivities,
           Map.of(), //unfinished
           planStart,
+          tenDays,
           modelTopicList,
           new TreeMap<>() //events
       );
@@ -743,6 +745,7 @@ public final class AnchorSimulationTest {
           simulatedActivities,
           Map.of(), //unfinished
           planStart,
+          tenDays,
           modelTopicList,
           new TreeMap<>() //events
       );
@@ -1037,6 +1040,7 @@ public final class AnchorSimulationTest {
           simulatedActivities,
           Map.of(), //unfinished
           planStart,
+          tenDays,
           modelTopicList,
           new TreeMap<>() //events
       );

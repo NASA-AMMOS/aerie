@@ -121,7 +121,7 @@ public final class GetSimulationResultsAction {
   public Map<String, List<Violation>> getViolations(final PlanId planId)
   throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException
   {
-    final var plan = this.planService.getPlan(planId);
+    final var plan = this.planService.getPlanForValidation(planId);
     final var revisionData = this.planService.getPlanRevisionData(planId);
 
     final var constraintCode = new HashMap<String, Constraint>();
@@ -138,6 +138,13 @@ public final class GetSimulationResultsAction {
     }
 
     final var results$ = this.simulationService.get(planId, revisionData);
+    final var simStartTime = results$.isPresent() ? results$.get().startTime : plan.startTimestamp.toInstant();
+    final var simDuration = results$.isPresent() ?
+        results$.get().duration :
+        Duration.of(
+          plan.startTimestamp.toInstant().until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS),
+          Duration.MICROSECONDS);
+    final var simOffset = Duration.of(plan.startTimestamp.toInstant().until(simStartTime, ChronoUnit.MICROS), Duration.MICROSECONDS);
 
     final var activities = new ArrayList<ActivityInstance>();
     final var simulatedActivities = results$
@@ -148,7 +155,7 @@ public final class GetSimulationResultsAction {
       final var activity = entry.getValue();
 
       final var activityOffset = Duration.of(
-          plan.startTimestamp.toInstant().until(activity.start(), ChronoUnit.MICROS),
+          simStartTime.until(activity.start(), ChronoUnit.MICROS),
           Duration.MICROSECONDS);
 
       activities.add(new ActivityInstance(
@@ -177,26 +184,22 @@ public final class GetSimulationResultsAction {
     final var discreteExternalProfiles = new HashMap<String, DiscreteProfile>();
 
     for (final var pair: externalDatasets) {
-      final var offsetFromPlanStart = pair.getLeft();
+      final var offsetFromSimulationStart = pair.getLeft().minus(simOffset);
       final var profileSet = pair.getRight();
 
       for (final var profile: profileSet.discreteProfiles().entrySet()) {
-        discreteExternalProfiles.put(profile.getKey(), DiscreteProfile.fromExternalProfile(offsetFromPlanStart, profile.getValue().getRight()));
+        discreteExternalProfiles.put(profile.getKey(), DiscreteProfile.fromExternalProfile(offsetFromSimulationStart, profile.getValue().getRight()));
       }
       for (final var profile: profileSet.realProfiles().entrySet()) {
-        realExternalProfiles.put(profile.getKey(), LinearProfile.fromExternalProfile(offsetFromPlanStart, profile.getValue().getRight()));
+        realExternalProfiles.put(profile.getKey(), LinearProfile.fromExternalProfile(offsetFromSimulationStart, profile.getValue().getRight()));
       }
     }
 
     final var environment = new EvaluationEnvironment(Map.of(), Map.of(), realExternalProfiles, discreteExternalProfiles);
 
-    final var planDuration = Duration.of(
-        plan.startTimestamp.toInstant().until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS),
-        Duration.MICROSECONDS);
-
     final var preparedResults = new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
-        plan.startTimestamp.toInstant(),
-        Interval.between(Duration.ZERO, planDuration),
+        simStartTime,
+        Interval.between(Duration.ZERO, simDuration),
         activities,
         realProfiles,
         discreteProfiles);
