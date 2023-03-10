@@ -9,15 +9,16 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
 
-/*package-local*/ final class GetSimulationDatasetAction implements AutoCloseable {
+public final class GetSimulationDatasetAction implements AutoCloseable {
   private static final @Language("Sql") String sql = """
     select
-          d.simulation_id,
-          d.status,
-          d.reason,
-          d.canceled,
-          d.offset_from_plan_start,
-          d.id
+          d.simulation_id as simulation_id,
+          d.status as status,
+          d.reason as reason,
+          d.canceled as canceled,
+          to_char(d.simulation_start_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as simulation_start_time,
+          to_char(d.simulation_end_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as simulation_end_time,
+          d.id as id
       from simulation_dataset as d
       where
         d.dataset_id = ?
@@ -30,8 +31,7 @@ import java.util.Optional;
   }
 
   public Optional<SimulationDatasetRecord> get(
-      final long datasetId,
-      final Timestamp planStart
+      final long datasetId
   ) throws SQLException {
     this.statement.setLong(1, datasetId);
 
@@ -40,17 +40,18 @@ import java.util.Optional;
 
       final Status status;
       try {
-        status = Status.fromString(results.getString(2));
+        status = Status.fromString(results.getString("status"));
       } catch (final Status.InvalidSimulationStatusException ex) {
         throw new Error("Simulation Dataset initialized with invalid state.");
       }
 
-      final var simulationId = results.getLong(1);
+      final var simulationId = results.getLong("simulation_id");
       final var reason = PreparedStatements.getFailureReason(results, 3);
-      final var canceled = results.getBoolean(4);
-      final var offsetFromPlanStart = PostgresParsers.parseOffset(results, 5, planStart);
-      final var simulationDatasetId = results.getLong(6);
+      final var canceled = results.getBoolean("canceled");
+      final var simulationDatasetId = results.getLong("id");
       final var state = new SimulationStateRecord(status, reason);
+      final var simStartTime = Timestamp.fromString(results.getString("simulation_start_time"));
+      final var simEndTime = Timestamp.fromString(results.getString("simulation_end_time"));
 
       return Optional.of(
           new SimulationDatasetRecord(
@@ -58,7 +59,8 @@ import java.util.Optional;
               datasetId,
               state,
               canceled,
-              offsetFromPlanStart,
+              simStartTime,
+              simEndTime,
               simulationDatasetId));
     }
   }

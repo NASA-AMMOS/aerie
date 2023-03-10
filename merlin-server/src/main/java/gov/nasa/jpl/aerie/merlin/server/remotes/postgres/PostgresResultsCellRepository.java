@@ -155,38 +155,38 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
   private static Optional<SimulationDatasetRecord> lookupSimulationDatasetRecord(
       final Connection connection,
-      final long simulationId,
-      final Timestamp planStart
+      final long simulationId
   ) throws SQLException
   {
     try (final var lookupSimulationDatasetAction = new LookupSimulationDatasetAction(connection)) {
-      return lookupSimulationDatasetAction.get(simulationId, planStart);
+      return lookupSimulationDatasetAction.get(simulationId);
     }
   }
 
   private static Optional<SimulationDatasetRecord> getSimulationDatasetRecord(
       final Connection connection,
-      final long datasetId,
-      final Timestamp planStart
+      final long datasetId
   ) throws SQLException
   {
     try (final var getSimulationDatasetAction = new GetSimulationDatasetAction(connection)) {
-      return getSimulationDatasetAction.get(datasetId, planStart);
+      return getSimulationDatasetAction.get(datasetId);
     }
   }
 
   private static SimulationDatasetRecord createSimulationDataset(
       final Connection connection,
       final SimulationRecord simulation,
-      final Timestamp planStart,
-      final Timestamp simulationStart
+      final Timestamp simulationStart,
+      final Timestamp simulationEnd,
+      final Map<String, SerializedValue> arguments
   ) throws SQLException
   {
     try (final var createSimulationDatasetAction = new CreateSimulationDatasetAction(connection)) {
       return createSimulationDatasetAction.apply(
           simulation.id(),
-          planStart,
-          simulationStart);
+          simulationStart,
+          simulationEnd,
+          arguments);
     }
   }
   /**
