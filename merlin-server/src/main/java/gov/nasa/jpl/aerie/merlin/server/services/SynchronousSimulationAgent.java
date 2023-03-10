@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.merlin.driver.SimulationException;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
@@ -8,6 +9,8 @@ import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 
+import javax.json.Json;
+import javax.json.JsonObjectBuilder;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -75,6 +78,15 @@ public record SynchronousSimulationAgent (
           planDuration,
           plan.activityDirectives,
           plan.configuration));
+    } catch (SimulationException ex) {
+      writer.failWith(b -> b
+          .type("SIMULATION_EXCEPTION")
+          .data(Json.createObjectBuilder()
+                    .add("elapsedTime", SimulationException.formatDuration(ex.elapsedTime))
+                    .add("utcTimeDoy", SimulationException.formatInstant(ex.instant))
+                    .build())
+          .trace(ex.cause));
+      return;
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       writer.failWith(b -> b
           .type("NO_SUCH_MISSION_MODEL")

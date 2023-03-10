@@ -40,50 +40,56 @@ public final class SimulationDriver {
         engine.trackResource(name, resource, elapsedTime);
       }
 
-      // Start daemon task(s) immediately, before anything else happens.
-      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
-      {
-        final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-        timeline.add(commit);
-      }
-
       // Specify a topic on which tasks can log the activity they're associated with.
       final var activityTopic = new Topic<ActivityDirectiveId>();
 
-      // Get all activities as close as possible to absolute time
-      // Schedule all activities.
-      // Using HashMap explicitly because it allows `null` as a key.
-      // `null` key means that an activity is not waiting on another activity to finish to know its start time
-      final HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(planDuration, schedule).compute();
-
-      scheduleActivities(
-          schedule,
-          resolved,
-          missionModel,
-          engine,
-          activityTopic
-      );
-
-      // Drive the engine until we're out of time.
-      // TERMINATION: Actually, we might never break if real time never progresses forward.
-      while (true) {
-        final var batch = engine.extractNextJobs(simulationDuration);
-
-        // Increment real time, if necessary.
-        final var delta = batch.offsetFromStart().minus(elapsedTime);
-        elapsedTime = batch.offsetFromStart();
-        timeline.add(delta);
-        // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
-        //   even if they occur at the same real time.
-
-        if (batch.jobs().isEmpty() && batch.offsetFromStart().isEqualTo(simulationDuration)) {
-          break;
+      try {
+        // Start daemon task(s) immediately, before anything else happens.
+        engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
+        {
+          final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
+          final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
+          timeline.add(commit);
         }
 
-        // Run the jobs in this batch.
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration);
-        timeline.add(commit);
+        // Get all activities as close as possible to absolute time
+        // Schedule all activities.
+        // Using HashMap explicitly because it allows `null` as a key.
+        // `null` key means that an activity is not waiting on another activity to finish to know its start time
+        final HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(
+            planDuration,
+            schedule).compute();
+
+        scheduleActivities(
+            schedule,
+            resolved,
+            missionModel,
+            engine,
+            activityTopic
+        );
+
+        // Drive the engine until we're out of time.
+        // TERMINATION: Actually, we might never break if real time never progresses forward.
+        while (true) {
+          final var batch = engine.extractNextJobs(simulationDuration);
+
+          // Increment real time, if necessary.
+          final var delta = batch.offsetFromStart().minus(elapsedTime);
+          elapsedTime = batch.offsetFromStart();
+          timeline.add(delta);
+          // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
+          //   even if they occur at the same real time.
+
+          if (batch.jobs().isEmpty() && batch.offsetFromStart().isEqualTo(simulationDuration)) {
+            break;
+          }
+
+          // Run the jobs in this batch.
+          final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration);
+          timeline.add(commit);
+        }
+      } catch (Throwable ex) {
+        throw new SimulationException(elapsedTime, startTime, ex);
       }
 
       final var topics = missionModel.getTopics();
