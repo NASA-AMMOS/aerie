@@ -1,15 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.intellij.lang.annotations.Language;
 
-import javax.json.Json;
-import java.io.Reader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Map;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.getJsonColumn;
@@ -21,7 +18,9 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           s.id,
           s.revision,
           s.simulation_template_id,
-          s.arguments
+          s.arguments,
+          to_char(s.simulation_start_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as simulation_start_time,
+          to_char(s.simulation_end_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as simulation_end_time
       from simulation as s
       where s.plan_id = ?
     """;
@@ -50,8 +49,10 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           .getSuccessOrThrow(
               failureReason -> new Error("Corrupt simulation arguments cannot be parsed: " + failureReason.reason())
           );
-      final var simulationStartTime = Timestamp.fromString(results.getString("simulation_start_time"));
-      final var simulationEndTime = Timestamp.fromString(results.getString("simulation_end_time"));
+      final String simStartString = results.getString("simulation_start_time");
+      final String simEndString = results.getString("simulation_end_time");
+      final var simulationStartTime = simStartString == null ? null : Timestamp.fromString(simStartString);
+      final var simulationEndTime = simEndString == null ? null : Timestamp.fromString(simEndString);
       return new SimulationRecord(id, revision, planId, templateId$, arguments, simulationStartTime, simulationEndTime);
   }
 
