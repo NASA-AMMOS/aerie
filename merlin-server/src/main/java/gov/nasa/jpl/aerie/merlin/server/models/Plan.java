@@ -15,6 +15,8 @@ public final class Plan {
   public Timestamp endTimestamp;
   public Map<ActivityDirectiveId, ActivityDirective> activityDirectives;
   public Map<String, SerializedValue> configuration = new HashMap<>();
+  public Timestamp simulationStartTimestamp;
+  public Timestamp simulationEndTimestamp;
 
   public Plan() {}
 
@@ -23,6 +25,8 @@ public final class Plan {
     this.missionModelId = other.missionModelId;
     this.startTimestamp = other.startTimestamp;
     this.endTimestamp = other.endTimestamp;
+    this.simulationStartTimestamp = other.simulationStartTimestamp;
+    this.simulationEndTimestamp = other.simulationEndTimestamp;
 
     if (other.activityDirectives != null) {
       this.activityDirectives = new HashMap<>();
@@ -37,8 +41,28 @@ public final class Plan {
       final String missionModelId,
       final Timestamp startTimestamp,
       final Timestamp endTimestamp,
+      final Map<ActivityDirectiveId, ActivityDirective> activityDirectives
+  )
+  {
+    this.name = name;
+    this.missionModelId = missionModelId;
+    this.startTimestamp = startTimestamp;
+    this.endTimestamp = endTimestamp;
+    this.activityDirectives = (activityDirectives != null) ? Map.copyOf(activityDirectives) : null;
+    this.configuration = null;
+    this.simulationStartTimestamp = startTimestamp;
+    this.simulationEndTimestamp = endTimestamp;
+  }
+
+  public Plan(
+      final String name,
+      final String missionModelId,
+      final Timestamp startTimestamp,
+      final Timestamp endTimestamp,
       final Map<ActivityDirectiveId, ActivityDirective> activityDirectives,
-      final Map<String, SerializedValue> configuration
+      final Map<String, SerializedValue> configuration,
+      final Timestamp simulationStartTimestamp,
+      final Timestamp simulationEndTimestamp
   ) {
     this.name = name;
     this.missionModelId = missionModelId;
@@ -46,22 +70,25 @@ public final class Plan {
     this.endTimestamp = endTimestamp;
     this.activityDirectives = (activityDirectives != null) ? Map.copyOf(activityDirectives) : null;
     if (configuration != null) this.configuration = new HashMap<>(configuration);
+    this.simulationStartTimestamp = simulationStartTimestamp;
+    this.simulationEndTimestamp = simulationEndTimestamp;
   }
 
   @Override
   public boolean equals(final Object object) {
-    if (!(object instanceof Plan)) {
+    if (!(object instanceof final Plan other)) {
       return false;
     }
 
-    final var other = (Plan)object;
     return
-        (  Objects.equals(this.name, other.name)
-        && Objects.equals(this.missionModelId, other.missionModelId)
-        && Objects.equals(this.startTimestamp, other.startTimestamp)
-        && Objects.equals(this.endTimestamp, other.endTimestamp)
-        && Objects.equals(this.activityDirectives, other.activityDirectives)
-        && Objects.equals(this.configuration, other.configuration)
+        (Objects.equals(this.name, other.name)
+         && Objects.equals(this.missionModelId, other.missionModelId)
+         && Objects.equals(this.startTimestamp, other.startTimestamp)
+         && Objects.equals(this.endTimestamp, other.endTimestamp)
+         && Objects.equals(this.activityDirectives, other.activityDirectives)
+         && Objects.equals(this.configuration, other.configuration)
+         && Objects.equals(this.simulationStartTimestamp, other.simulationStartTimestamp)
+         && Objects.equals(this.simulationEndTimestamp, other.simulationEndTimestamp)
         );
   }
 
@@ -73,7 +100,9 @@ public final class Plan {
         startTimestamp,
         endTimestamp,
         activityDirectives,
-        configuration
+        configuration,
+        simulationStartTimestamp,
+        simulationEndTimestamp
     );
   }
 }
