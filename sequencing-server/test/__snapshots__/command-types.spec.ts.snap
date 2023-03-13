@@ -543,17 +543,16 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
     }
   }
 
-  // This function takes an array of Args interfaces and converts it into an object or an array depending on whether
-  // the repeat argument is true or false. The interfaces array contains objects matching the ARGS interface.
+  // This function takes an array of Args interfaces and converts it into an object.
+  // The interfaces array contains objects matching the ARGS interface.
   // Depending on the type property of each object, a corresponding object with the name and value properties is created
-  // and added to the output. If an object's type property is "repeat", then the value property is recursively passed
-  // through the function with repeat set to true.Additionally, the function includes a validation function that prevents
-  // remote property injection attacks.
+  // and added to the output.
+  // Additionally, the function includes a validation function that prevents remote property injection attacks.
   // @ts-ignore : 'Args' found in JSON Spec
-  private static convertInterfacesToArgs(interfaces: Args, repeat = false): {} | [] {
-    const args = interfaces.length === 0 ? [] : !repeat ? {} : [];
+  private static convertInterfacesToArgs(interfaces: Args): {} | [] {
+    const args = interfaces.length === 0 ? [] : {};
 
-    //use to prevent a Remote property injection attack
+    // Use to prevent a Remote property injection attack
     const validate = (input: string): boolean => {
       const pattern = /^[a-zA-Z0-9_-]+$/;
       const isValid = pattern.test(input);
@@ -569,7 +568,20 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
         if (arg.type === 'repeat') {
           if (validate(arg.name)) {
             // @ts-ignore : 'RepeatArgument' found in JSON Spec
-            return { [arg.name]: this.convertInterfacesToArgs(arg.value, true) };
+            return {
+              [arg.name]: arg.value.map(
+                (
+                  // @ts-ignore : found in JSON Spec
+                  repeatArgBundle: (StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument)[],
+                ) =>
+                  repeatArgBundle.reduce((obj, item) => {
+                    if (validate(item.name)) {
+                      obj[item.name] = item.value;
+                    }
+                    return obj;
+                  }, {}),
+              ),
+            };
           }
           return { repeat_error: 'Remote property injection detected...' };
         } else if (arg.type === 'symbol') {
@@ -594,25 +606,65 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
       },
     );
 
-    if (repeat) {
-      let obj = {};
-      for (const i in convertedArgs) {
-        for (const key in convertedArgs[i]) {
-          if (key in obj) {
-            (args as any[]).push(obj);
-            obj = {};
-          }
-          Object.assign(obj, convertedArgs[i]);
-        }
-      }
-      (args as any[]).push(obj);
-    } else {
-      for (const i in convertedArgs) {
-        Object.assign(args, convertedArgs[i]);
-      }
+    for (const key in convertedArgs) {
+      Object.assign(args, convertedArgs[key]);
     }
 
     return args;
+  }
+
+  /**
+   * The specific function to handle repeat args, we need to do this separately because
+   * you cannot have a RepeatArgument inside a RepeatArgument.
+   *
+   * @param args
+   * @returns
+   */
+  private static convertRepeatArgs(args: { [argName: string]: any }): any[] {
+    let result: any[] = [];
+
+    if (args['length'] === 0) {
+      return result;
+    }
+
+    const values = Array.isArray(args) ? args[0] : args;
+
+    for (let key in values) {
+      result.push(this.convertValueToObject(values[key], key));
+    }
+
+    return result;
+  }
+
+  /**
+   * This function takes a value and key and converts it to the correct object type supported by the seqjson spec.
+   * The only type not supported here is RepeatArgument, as that is handled differently because you cannot have a
+   * RepeatArgument inside a RepeatArgument.
+   *
+   * @param value
+   * @param key
+   * @returns An object for each type
+   */
+  private static convertValueToObject(value: any, key: string): any {
+    switch (typeof value) {
+      case 'string':
+        return { type: 'string', value: value, name: key };
+      case 'number':
+        return { type: 'number', value: value, name: key };
+      case 'boolean':
+        return { type: 'boolean', value: value, name: key };
+      default:
+        if (value instanceof Object && value.symbol && value.symbol === 'string') {
+          return { type: 'symbol', value: value, name: key };
+        } else if (
+          value instanceof Object &&
+          value.hex &&
+          value.hex === 'string' &&
+          new RegExp('^0x([0-9A-F])+$').test(value.hex)
+        ) {
+          return { type: 'hex', value: value, name: key };
+        }
+    }
   }
 
   //The function takes an object of arguments and converts them into the Args type. It does this by looping through the
@@ -620,7 +672,6 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
   // If the value is an array, it will create a RepeatArgument type and recursively call on the values of the array.
   // the function returns the result array of argument types -
   // StringArgument, NumberArgument, BooleanArgument, SymbolArgument, HexArgument, and RepeatArgument.
-  // @ts-ignore : 'Args' found in JSON Spec
   // @ts-ignore : 'Args' found in JSON Spec
   private static convertArgsToInterfaces(args: { [argName: string]: any }): Args {
     // @ts-ignore : 'Args' found in JSON Spec
@@ -636,39 +687,15 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
       if (Array.isArray(value)) {
         // @ts-ignore : 'RepeatArgument' found in JSON Spec
         let repeatArg: RepeatArgument = {
-          value: value
-            .map(arg => {
-              return this.convertArgsToInterfaces(arg);
-            })
-            .flat(),
+          value: value.map(arg => {
+            return this.convertRepeatArgs(arg);
+          }),
           type: 'repeat',
           name: key,
         };
         result.push(repeatArg);
       } else {
-        switch (typeof value) {
-          case 'string':
-            result.push({ type: 'string', value: value, name: key });
-            break;
-          case 'number':
-            result.push({ type: 'number', value: value, name: key });
-            break;
-          case 'boolean':
-            result.push({ type: 'boolean', value: value, name: key });
-            break;
-          default:
-            if (value instanceof Object && value.symbol && value.symbol === 'string') {
-              result.push({ type: 'symbol', value: value, name: key });
-            } else if (
-              value instanceof Object &&
-              value.hex &&
-              value.hex === 'string' &&
-              new RegExp('^0x([0-9A-F])+$').test(value.hex)
-            ) {
-              result.push({ type: 'hex', value: value, name: key });
-            }
-            break;
-        }
+        result = result.concat(this.convertValueToObject(value, key));
       }
     }
     return result;
@@ -1672,9 +1699,9 @@ export interface RepeatArgument {
    */
   type: 'repeat';
   /**
-   * A repeat argument value, there can be a nested repeat arguments inside.
+   * A repeat argument value.
    */
-  value: (StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument | RepeatArgument)[];
+  value: (StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument)[][];
 }
 /**
  * Model object that be included with commands to set variables for modeling purposes only, usually to direct sequence execution down a particular branch during modeling.
