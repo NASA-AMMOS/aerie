@@ -12,6 +12,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,9 +58,18 @@ public final class SimulationDriver {
         // Schedule all activities.
         // Using HashMap explicitly because it allows `null` as a key.
         // `null` key means that an activity is not waiting on another activity to finish to know its start time
-        final HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(
-            planDuration,
-            schedule).compute();
+        HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(planDuration, schedule).compute();
+        if(resolved.size() != 0) {
+          resolved.put(
+              null,
+              StartOffsetReducer.adjustStartOffset(
+                  resolved.get(null),
+                  Duration.of(
+                      planStartTime.until(simulationStartTime, ChronoUnit.MICROS),
+                      Duration.MICROSECONDS)));
+        }
+        // Filter out activities that are before simulationStartTime
+        resolved = StartOffsetReducer.filterOutNegativeStartOffset(resolved);
 
         scheduleActivities(
             schedule,
