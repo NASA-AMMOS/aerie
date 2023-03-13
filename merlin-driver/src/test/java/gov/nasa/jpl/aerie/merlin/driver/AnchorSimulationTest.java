@@ -486,7 +486,7 @@ public final class AnchorSimulationTest {
     private static void assertEqualsSimulationResults(SimulationResults expected, SimulationResults actual){
       assertEquals(expected.startTime, actual.startTime);
       assertEquals(expected.duration, actual.duration);
-      assertEquals(expected.simulatedActivities.entrySet().size(), actual.simulatedActivities.size());
+      assertEquals(expected.simulatedActivities.size(), actual.simulatedActivities.size());
       for(final var entry : expected.simulatedActivities.entrySet()){
         final var key = entry.getKey();
         final var expectedValue = entry.getValue();
@@ -1057,7 +1057,7 @@ public final class AnchorSimulationTest {
     }
 
     //region Mission Model
-    private static final List<Triple<Integer, String, ValueSchema>> modelTopicList = Arrays.asList(
+    /* package-private */static final List<Triple<Integer, String, ValueSchema>> modelTopicList = Arrays.asList(
         Triple.of(0, "ActivityType.Input.DelayActivityDirective", new ValueSchema.StructSchema(Map.of())),
         Triple.of(1, "ActivityType.Output.DelayActivityDirective", new ValueSchema.StructSchema(Map.of())),
         Triple.of(2, "ActivityType.Input.DecomposingActivityDirective", new ValueSchema.StructSchema(Map.of())),
@@ -1065,7 +1065,7 @@ public final class AnchorSimulationTest {
 
     private static final Topic<Object> delayedActivityDirectiveInputTopic = new Topic<>();
     private static final Topic<Object> delayedActivityDirectiveOutputTopic = new Topic<>();
-    private static final DirectiveType<Object, Object, Object> delayedActivityDirective = new DirectiveType<>() {
+    /* package-private*/ static final DirectiveType<Object, Object, Object> delayedActivityDirective = new DirectiveType<>() {
       @Override
       public InputType<Object> getInputType() {
         return testModelInputType;
@@ -1090,7 +1090,7 @@ public final class AnchorSimulationTest {
 
     private static final Topic<Object> decomposingActivityDirectiveInputTopic = new Topic<>();
     private static final Topic<Object> decomposingActivityDirectiveOutputTopic = new Topic<>();
-    private static final DirectiveType<Object, Object, Object> decomposingActivityDirective = new DirectiveType<>() {
+    /* package-private */  static final DirectiveType<Object, Object, Object> decomposingActivityDirective = new DirectiveType<>() {
       @Override
       public InputType<Object> getInputType() {
         return testModelInputType;
@@ -1169,7 +1169,7 @@ public final class AnchorSimulationTest {
       }
     };
 
-    private static final MissionModel<Object> AnchorTestModel = new MissionModel<>(
+    /* package-private */ static final MissionModel<Object> AnchorTestModel = new MissionModel<>(
         new Object(),
         new LiveCells(null),
         Map.of(),
