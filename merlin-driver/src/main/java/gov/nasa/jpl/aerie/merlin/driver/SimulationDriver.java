@@ -21,9 +21,10 @@ public final class SimulationDriver {
   SimulationResults simulate(
       final MissionModel<Model> missionModel,
       final Map<ActivityDirectiveId, ActivityDirective> schedule,
-      final Instant startTime,
-      final Duration planDuration,
-      final Duration simulationDuration
+      final Instant simulationStartTime,
+      final Duration simulationDuration,
+      final Instant planStartTime,
+      final Duration planDuration
   ) {
     try (final var engine = new SimulationEngine()) {
       /* The top-level simulation timeline. */
@@ -89,11 +90,11 @@ public final class SimulationDriver {
           timeline.add(commit);
         }
       } catch (Throwable ex) {
-        throw new SimulationException(elapsedTime, startTime, ex);
+        throw new SimulationException(elapsedTime, simulationStartTime, ex);
       }
 
       final var topics = missionModel.getTopics();
-      return SimulationEngine.computeResults(engine, startTime, elapsedTime, activityTopic, timeline, topics);
+      return SimulationEngine.computeResults(engine, simulationStartTime, elapsedTime, activityTopic, timeline, topics);
     }
   }
 
