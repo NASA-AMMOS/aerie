@@ -14,6 +14,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -31,7 +32,9 @@ import java.util.TreeMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public final class AnchorSimulationTest {
   private final Duration tenDays = Duration.duration(10 * 60 * 60 * 24, Duration.SECONDS);
@@ -40,6 +43,12 @@ public final class AnchorSimulationTest {
   private final SerializedActivity serializedActivity = new SerializedActivity("unusedType", arguments);
   @Nested
   public final class StartOffsetReducerTests {
+    @Test
+    public void nullInputToStartOffsetReducer(){
+      // Due to implementation, this swallows an Empty Map case.
+      assertTrue(new StartOffsetReducer(tenDays, null).compute().isEmpty());
+    }
+
     @Test
     @DisplayName("Activities anchored to the plan depend on no activities")
     public void activitiesWithoutAnchor() {
@@ -278,6 +287,185 @@ public final class AnchorSimulationTest {
         assertEquals(new ActivityDirectiveId(l), evenReduced.get(null).get((int) (l - 1)).getLeft());
       }
       assertEquals(new ActivityDirectiveId(12001), oddReduced.get(null).get(12000).getLeft());
+    }
+
+    @Test
+    @DisplayName("adjustStartOffset() adjusts start time correctly")
+    public void adjustStartOffsetTest() {
+      /*
+      Cases:
+       1) Zero Difference
+       2) Positive Difference
+       3) Negative Difference
+      */
+      final Duration oneMinute = Duration.of(1, Duration.MINUTES);
+      final Duration minusOneMin = Duration.of(-1, Duration.MINUTES);
+      final Duration twoMinutes = Duration.of(2, Duration.MINUTES);
+      final Duration minusTwoMins = Duration.of(-2, Duration.MINUTES);
+
+      // This asserts that the original list is unaffected, as it is an unmodifiable list of immutable elements.
+      final var immutableReference = List.of(
+          Pair.of(new ActivityDirectiveId(0), Duration.ZERO),
+          Pair.of(new ActivityDirectiveId(1), oneMinute),
+          Pair.of(new ActivityDirectiveId(2), minusOneMin));
+
+      final var case1 = StartOffsetReducer.adjustStartOffset(immutableReference, Duration.ZERO);
+      final var case2 = StartOffsetReducer.adjustStartOffset(immutableReference, oneMinute);
+      final var case3 = StartOffsetReducer.adjustStartOffset(immutableReference, minusOneMin);
+
+      // Case 1
+      assertEquals(3, case1.size());
+      assertEquals(Pair.of(new ActivityDirectiveId(0), Duration.ZERO), case1.get(0));
+      assertEquals(Pair.of(new ActivityDirectiveId(1), oneMinute), case1.get(1));
+      assertEquals(Pair.of(new ActivityDirectiveId(2), minusOneMin), case1.get(2));
+
+      // Case 2
+      assertEquals(3, case2.size());
+      assertEquals(Pair.of(new ActivityDirectiveId(0), minusOneMin), case2.get(0));
+      assertEquals(Pair.of(new ActivityDirectiveId(1), Duration.ZERO), case2.get(1));
+      assertEquals(Pair.of(new ActivityDirectiveId(2), minusTwoMins), case2.get(2));
+
+      // Case 3
+      assertEquals(3, case3.size());
+      assertEquals(Pair.of(new ActivityDirectiveId(0), oneMinute), case3.get(0));
+      assertEquals(Pair.of(new ActivityDirectiveId(1), twoMinutes), case3.get(1));
+      assertEquals(Pair.of(new ActivityDirectiveId(2), Duration.ZERO), case3.get(2));
+    }
+
+    @Test
+    @DisplayName("adjustStartOffset() returns null on null original")
+    public void adjustStartOffsetNullOriginal() {
+      assertNull(StartOffsetReducer.adjustStartOffset(null, tenDays));
+    }
+
+    @Test
+    @DisplayName("adjustStartOffset() returns empty list on empty original")
+    public void adjustStartOffsetEmptyOriginal() {
+      assertTrue(StartOffsetReducer.adjustStartOffset(List.of(), tenDays).isEmpty());
+    }
+
+    @Test
+    @DisplayName("adjustStartOffset() raises NPE on null difference")
+    public void adjustStartOffsetNullDifference() {
+      try {
+        StartOffsetReducer.adjustStartOffset(
+            List.of(Pair.of(new ActivityDirectiveId(1), tenDays)),
+            null);
+        fail();
+      } catch (NullPointerException npe) {
+        if (!npe.getMessage().contains("Cannot adjust start offset because \"difference\" is null.")){
+          throw npe;
+        }
+      }
+    }
+
+    @Test
+    @DisplayName("filterOutNegativeStartOffset() returns null on null input")
+    public void filterNullInput() {
+      assertNull(StartOffsetReducer.filterOutNegativeStartOffset(null));
+    }
+
+    @Test
+    @DisplayName("filterOutNegativeStartOffset() returns empty HashMap on empty input")
+    public void filterEmptyInput() {
+      assertTrue(StartOffsetReducer.filterOutNegativeStartOffset(new HashMap<>()).isEmpty());
+    }
+
+    @Test
+    @DisplayName("filterOutNegativeStartOffset() raises RTE on impossible input")
+    public void filterNothingInNull() {
+      final var map = new HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>>(1);
+      map.put(new ActivityDirectiveId(1), List.of(Pair.of(new ActivityDirectiveId(2), Duration.ZERO)));
+      try {
+        StartOffsetReducer.filterOutNegativeStartOffset(map);
+        fail();
+      } catch (RuntimeException rte) {
+        if(!rte.getMessage().contains("None of the activities in \"toFilter\" are anchored to the plan")){
+          throw rte;
+        }
+      }
+    }
+
+    @Test
+    @DisplayName("Filter only filters out correct activities")
+    public void filterTest() {
+      /*
+        Scenarios Tested:
+         1) Negative in null is excluded from output
+         2) Entire chain is excluded from output
+         3) Negative not in null and not in chain to be excluded (while invalid) is included in output
+         4) Positive in null is included in output
+         5) Positive not in null and not in chain to be excluded is included in output
+         6) Zero in null is included in output
+      */
+      final Duration minusTenMins = Duration.of(-10, Duration.MINUTES);
+      final Duration oneMinute = Duration.of(1, Duration.MINUTES);
+      final Duration minusOneMin = Duration.of(-1, Duration.MINUTES);
+
+      /*
+        Hashmap Overview:
+         null = (1, -10), (2, 1), (3, 0), (4, -1) [Satisfies 1), 4), and 6)]
+         1 = (5, 1 min), (6, 0 mins)  [Satisfies 2)]
+         2 = (7, 1 min), (8, -1 mins) [Satisfies 5) and 3)]
+         5 = (9, 1 min), (10, 0 mins), (11, -1 mins)
+         7 = (12, 0 mins)
+      */
+      final var map = new HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>>(5);
+      map.put(null, List.of(
+          Pair.of(new ActivityDirectiveId(1), minusTenMins),
+          Pair.of(new ActivityDirectiveId(2), oneMinute),
+          Pair.of(new ActivityDirectiveId(3), Duration.ZERO),
+          Pair.of(new ActivityDirectiveId(4), minusOneMin)));
+      map.put(new ActivityDirectiveId(1), List.of(
+          Pair.of(new ActivityDirectiveId(5), oneMinute),
+          Pair.of(new ActivityDirectiveId(6), Duration.ZERO)));
+      map.put(new ActivityDirectiveId(2), List.of(
+          Pair.of(new ActivityDirectiveId(7), oneMinute),
+          Pair.of(new ActivityDirectiveId(8), minusOneMin)));
+      map.put(new ActivityDirectiveId(5), List.of(
+          Pair.of(new ActivityDirectiveId(9), oneMinute),
+          Pair.of(new ActivityDirectiveId(10), Duration.ZERO),
+          Pair.of(new ActivityDirectiveId(11), minusOneMin)));
+      map.put(new ActivityDirectiveId(7), List.of(
+          Pair.of(new ActivityDirectiveId(12), Duration.ZERO)));
+
+      final var filtered = StartOffsetReducer.filterOutNegativeStartOffset(map);
+      /*
+        Hashmap should now look like:
+         null = (2, 1), (3, 0)
+         2 = (7, 1 min), (8, -1 mins)
+         7 = (12, 0 mins)
+      */
+      final var two = new ActivityDirectiveId(2);
+      final var three = new ActivityDirectiveId(3);
+      final var seven = new ActivityDirectiveId(7);
+      final var eight = new ActivityDirectiveId(8);
+      final var twelve = new ActivityDirectiveId(12);
+
+      assertEquals(3, filtered.size());
+      assertTrue(filtered.containsKey(null));
+      assertTrue(filtered.containsKey(two));
+      assertTrue(filtered.containsKey(seven));
+
+      assertEquals(2, filtered.get(null).size());
+      assertEquals(Pair.of(two, oneMinute), filtered.get(null).get(0));
+      assertEquals(Pair.of(three, Duration.ZERO), filtered.get(null).get(1));
+
+      assertEquals(2, filtered.get(two).size());
+      assertEquals(Pair.of(seven, oneMinute), filtered.get(two).get(0));
+      assertEquals(Pair.of(eight, minusOneMin), filtered.get(two).get(1));
+
+      assertEquals(1, filtered.get(seven).size());
+      assertEquals(Pair.of(twelve, Duration.ZERO), filtered.get(seven).get(0));
+
+      // Additionally, assert that the original HashMap is unaffected
+      // Since immutable lists were used to create the rows, the issue is if all the keys are still present
+      assertEquals(5, map.size());
+      assertTrue(map.containsKey(null));
+      assertTrue(map.containsKey(new ActivityDirectiveId(1)));
+      assertTrue(map.containsKey(two));
+      assertTrue(map.containsKey(new ActivityDirectiveId(5)));
+      assertTrue(map.containsKey(seven));
     }
   }
   @Nested
