@@ -14,23 +14,23 @@ actions:
   - name: addCommandExpansionTypeScript
     definition:
       kind: synchronous
-      handler: http://aerie_sequencing:27184/put-expansion
+      handler: http://aerie_sequencing:27184/command-expansion/put-expansion
   - name: createExpansionSet
     definition:
       kind: synchronous
-      handler: http://aerie_sequencing:27184/put-expansion-set
+      handler: http://aerie_sequencing:27184/command-expansion/put-expansion-set
   - name: expandAllActivities
     definition:
       kind: synchronous
-      handler: http://aerie_sequencing:27184/expand-all-activity-instances
+      handler: http://aerie_sequencing:27184/command-expansion/expand-all-activity-instances
   - name: getEdslForSeqJson
     definition:
       kind: synchronous
-      handler: http://aerie_sequencing:27184/get-edsl-for-seqjson
+      handler: http://aerie_sequencing:27184/seqjson/get-edsl-for-seqjson
   - name: getEdslForSeqJsonBulk
     definition:
       kind: synchronous
-      handler: http://aerie_sequencing:27184/bulk-get-edsl-for-seqjson
+      handler: http://aerie_sequencing:27184/seqjson/bulk-get-edsl-for-seqjson
   - name: getModelEffectiveArguments
     definition:
       kind: ""
@@ -50,19 +50,19 @@ actions:
   - name: getSequenceSeqJson
     definition:
       kind: ""
-      handler: http://aerie_sequencing:27184/get-seqjson-for-seqid-and-simulation-dataset
+      handler: http://aerie_sequencing:27184/seqjson/get-seqjson-for-seqid-and-simulation-dataset
   - name: getSequenceSeqJsonBulk
     definition:
       kind: ""
-      handler: http://aerie_sequencing:27184/bulk-get-seqjson-for-seqid-and-simulation-dataset
+      handler: http://aerie_sequencing:27184/seqjson/bulk-get-seqjson-for-seqid-and-simulation-dataset
   - name: getUserSequenceSeqJson
     definition:
       kind: ""
-      handler: http://aerie_sequencing:27184/get-seqjson-for-sequence-standalone
+      handler: http://aerie_sequencing:27184/seqjson/get-seqjson-for-sequence-standalone
   - name: getUserSequenceSeqJsonBulk
     definition:
       kind: ""
-      handler: http://aerie_sequencing:27184/bulk-get-seqjson-for-sequence-standalone
+      handler: http://aerie_sequencing:27184/seqjson/bulk-get-seqjson-for-sequence-standalone
   - name: resourceTypes
     definition:
       kind: ""
