@@ -2887,6 +2887,86 @@ describe('user sequence to seqjson', () => {
                     variable: 'model_var_boolean',
                   }]),
               ],
+              locals: [
+                {
+                  allowable_ranges: [
+                    {
+                      max: 3600,
+                      min: 1,
+                    },
+                  ],
+                  name: 'duration',
+                  type: 'UINT',
+                }
+              ],
+              parameters: [
+                {
+                  allowable_ranges: [
+                    {
+                      max: 3600,
+                      min: 1,
+                    },
+                  ],
+                  name: 'duration',
+                  type: 'UINT',
+                }
+              ],
+              hardware_commands: [
+                {
+                  description: 'FIRE THE PYROS',
+                  metadata:{
+                    author: 'rrgoetz',
+                  },
+                  stem: 'HDW_PYRO_ENGINE',
+                }
+              ],
+              immediate_commands: [
+                {
+                  args: [
+                    {
+                      name: 'direction',
+                      type: 'string',
+                      value: 'FromStem',
+                    },
+                  ],
+                  stem: 'PEEL_BANANA',
+                }
+              ],
+              requests: [
+                {
+                  name: 'power',
+                  steps: [
+                    R\`04:39:22.000\`.PREHEAT_OVEN({
+                      temperature: 360,
+                    }),
+                    C.ADD_WATER,
+                  ],
+                  type: 'request',
+                  description: ' Activate the oven',
+                  ground_epoch: {
+                    delta: 'now',
+                    name: 'activate',
+                  },
+                  metadata: {
+                    author: 'rrgoet',
+                  },
+                },
+                {
+                  name: 'power2',
+                  steps: [
+                    C.ADD_WATER,
+                  ],
+                  type: 'request',
+                  description: ' Activate the oven',
+                  ground_epoch: {
+                    delta: 'now',
+                    name: 'activate',
+                  },
+                  metadata: {
+                    author: 'rrgoet',
+                  },
+                }
+              ],
             });
           `,
       },
@@ -3055,6 +3135,110 @@ describe('user sequence to seqjson', () => {
             variable: 'model_var_boolean',
           },
         ],
+      },
+    ]);
+    expect(results[1]!.locals).toEqual([
+      {
+        allowable_ranges: [
+          {
+            max: 3600,
+            min: 1,
+          },
+        ],
+        name: 'duration',
+        type: 'UINT',
+      },
+    ]);
+    expect(results[1]!.parameters).toEqual([
+      {
+        allowable_ranges: [
+          {
+            max: 3600,
+            min: 1,
+          },
+        ],
+        name: 'duration',
+        type: 'UINT',
+      },
+    ]);
+    expect(results[1]!.hardware_commands).toEqual([
+      {
+        description: 'FIRE THE PYROS',
+        metadata: {
+          author: 'rrgoetz',
+        },
+        stem: 'HDW_PYRO_ENGINE',
+      },
+    ]);
+    expect(results[1]!.immediate_commands).toEqual([
+      {
+        args: [
+          {
+            name: 'direction',
+            type: 'string',
+            value: 'FromStem',
+          },
+        ],
+        stem: 'PEEL_BANANA',
+      },
+    ]);
+    expect(results[1]!.requests).toEqual([
+      {
+        description: ' Activate the oven',
+        ground_epoch: {
+          delta: 'now',
+          name: 'activate',
+        },
+        metadata: {
+          author: 'rrgoet',
+        },
+        name: 'power',
+        steps: [
+          {
+            args: [
+              {
+                name: 'temperature',
+                type: 'number',
+                value: 360,
+              },
+            ],
+            stem: 'PREHEAT_OVEN',
+            time: {
+              tag: '04:39:22.000',
+              type: 'COMMAND_RELATIVE',
+            },
+            type: 'command',
+          },
+          {
+            args: [],
+            stem: 'ADD_WATER',
+            time: {
+              type: 'COMMAND_COMPLETE',
+            },
+            type: 'command',
+          },
+        ],
+        type: 'request',
+      },
+      {
+        description: ' Activate the oven',
+        ground_epoch: {
+          delta: 'now',
+          name: 'activate',
+        },
+        metadata: {
+          author: 'rrgoet',
+        },
+        name: 'power2',
+        steps: [
+          {
+            args: [],
+            stem: 'ADD_WATER',
+            time: { type: 'COMMAND_COMPLETE' },
+            type: 'command',
+          },
+        ],
+        type: 'request',
       },
     ]);
   }, 30000);
