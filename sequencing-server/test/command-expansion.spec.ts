@@ -16,7 +16,8 @@ import {
 } from './testUtils/Expansion.js';
 import { removeMissionModel, uploadMissionModel } from './testUtils/MissionModel.js';
 import { createPlan, removePlan } from './testUtils/Plan.js';
-import { executeSimulation, removeSimulationArtifacts } from './testUtils/Simulation.js';
+import {executeSimulation, removeSimulationArtifacts, updateSimulationBounds} from './testUtils/Simulation.js';
+import {waitMs} from "./testUtils/testUtils";
 
 let planId: number;
 let graphqlClient: GraphQLClient;
@@ -27,6 +28,7 @@ beforeEach(async () => {
   graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string);
   missionModelId = await uploadMissionModel(graphqlClient);
   planId = await createPlan(graphqlClient, missionModelId);
+  await updateSimulationBounds(graphqlClient, {plan_id: planId, simulation_start_time:"2020-001T00:00:00Z", simulation_end_time:"2020-002T00:00:00Z" });
   commandDictionaryId = await insertCommandDictionary(graphqlClient);
 });
 
@@ -126,6 +128,9 @@ describe('expansion', () => {
     /** Begin Setup*/
     const activityId = await insertActivityDirective(graphqlClient, planId, 'GrowBanana', '1 days');
     const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
+    // Wait 2s to allow the dataset to finish uploading
+    // This is a bandaid method and should be fixed with a proper subscribe (or by also excluding the "uploading" state/changing it to wait for "success" state once 730 is complete)
+    await waitMs(2000);
     const expansionId = await insertExpansion(
       graphqlClient,
       'GrowBanana',

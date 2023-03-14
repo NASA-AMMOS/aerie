@@ -50,17 +50,6 @@ test.describe('Scheduling', () => {
     expect(typeof plan_id).toEqual("number");
   });
 
-  test('Create Simulation', async ({ request }) => {
-    const simulation : SimulationCreation = {
-      plan_id: plan_id,
-      arguments : {},
-    };
-    const simulation_id = await req.createSimulation(request, simulation);
-    expect(simulation_id).not.toBeNull();
-    expect(simulation_id).toBeDefined();
-    expect(typeof simulation_id).toEqual("number");
-  });
-
   test('Create Scheduling goal', async ({ request }) =>{
 
     const schedulingGoal : SchedulingGoalInsertInput =

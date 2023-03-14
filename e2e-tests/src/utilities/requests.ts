@@ -127,11 +127,12 @@ const req = {
     return plan_id;
   },
 
-  async createSimulation(request: APIRequestContext, simulationInput: SimulationCreation): Promise<number> {
-    const data = await req.hasura(request, gql.CREATE_SIMULATION, { simulation: simulationInput });
-    const { insert_simulation_one } = data;
-    const { id: simulation_id } = insert_simulation_one;
-    return simulation_id;
+  async updateSimulationBounds(request: APIRequestContext, bounds: UpdateSimulationBoundsInput) {
+    const {plan_id, simulation_start_time, simulation_end_time} = bounds;
+    const data = await req.hasura(request, gql.UPDATE_SIMULATION_BOUNDS, {plan_id: plan_id, simulation_start_time: simulation_start_time, simulation_end_time: simulation_end_time});
+    const {update_simulation} = data;
+    const {id} = update_simulation
+    return id;
   },
 
   async insertSchedulingGoal(request: APIRequestContext, schedulingInput: SchedulingGoalInsertInput) {

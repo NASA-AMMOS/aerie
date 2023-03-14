@@ -45,14 +45,6 @@ const gql = {
     }
   `,
 
-  CREATE_SIMULATION: `#graphql
-    mutation CreateSimulation($simulation: simulation_insert_input!) {
-      insert_simulation_one(object: $simulation) {
-        id
-      }
-    }
-  `,
-
   CREATE_ACTIVITY_DIRECTIVE: `#graphql
     mutation CreateActivityDirective($activityDirectiveInsertInput: activity_directive_insert_input!) {
       createActivityDirective: insert_activity_directive_one(object: $activityDirectiveInsertInput) {
@@ -189,6 +181,17 @@ const gql = {
         }
         startTime: start_time
       }
+    }
+  `,
+
+  UPDATE_SIMULATION_BOUNDS: `#graphql
+    mutation updateSimulationBounds($plan_id: Int!, $simulation_start_time: timestamptz!, $simulation_end_time: timestamptz!) {
+      update_simulation(where: {plan_id: {_eq: $plan_id}},
+      _set: {
+        simulation_start_time: $simulation_start_time,
+        simulation_end_time: $simulation_end_time}) {
+        affected_rows
+       }
     }
   `,
 

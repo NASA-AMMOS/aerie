@@ -4,6 +4,29 @@ import perf from 'perf_hooks';
 
 jest.setTimeout(10000);
 
+export async function updateSimulationBounds(
+    graphqlClient: GraphQLClient,
+    bounds: {plan_id: number, simulation_start_time: string, simulation_end_time: string}
+): Promise<void> {
+  await graphqlClient.request(
+      gql`
+      mutation updateSimulationBounds($plan_id: Int!, $simulation_start_time: timestamptz!, $simulation_end_time: timestamptz!) {
+      update_simulation(where: {plan_id: {_eq: $plan_id}},
+      _set: {
+        simulation_start_time: $simulation_start_time,
+        simulation_end_time: $simulation_end_time}) {
+        affected_rows
+       }
+    }
+    `,
+      {
+        plan_id: bounds.plan_id,
+        simulation_start_time: bounds.simulation_start_time,
+        simulation_end_time: bounds.simulation_end_time
+      },
+  );
+}
+
 export async function executeSimulation(
   graphqlClient: GraphQLClient,
   planId: number,
@@ -54,7 +77,7 @@ export async function executeSimulation(
 
 export async function removeSimulationArtifacts(
   graphqlClient: GraphQLClient,
-  simulationPk: { simulationId: number; simulationDatasetId: number },
+  simulationPk: { simulationDatasetId: number },
 ): Promise<void> {
   /*
    * Remove a plan
@@ -62,17 +85,13 @@ export async function removeSimulationArtifacts(
 
   await graphqlClient.request(
     gql`
-      mutation DeleteSimulation($simulationId: Int!, $simulationDatasetId: Int!) {
-        delete_simulation_by_pk(id: $simulationId) {
-          id
-        }
+      mutation DeleteSimulation($simulationDatasetId: Int!) {
         delete_simulation_dataset_by_pk(id: $simulationDatasetId) {
           id
         }
       }
     `,
     {
-      simulationId: simulationPk.simulationId,
       simulationDatasetId: simulationPk.simulationDatasetId,
     },
   );

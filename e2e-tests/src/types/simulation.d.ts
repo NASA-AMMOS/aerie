@@ -9,6 +9,12 @@ type SimulationCreation = {
   plan_id: number;
 };
 
+type UpdateSimulationBoundsInput = {
+  plan_id: number,
+  simulation_start_time: string,
+  simulation_end_time: string
+}
+
 type SimulationTemplate = {
   arguments: ArgumentsMap;
   description: string;

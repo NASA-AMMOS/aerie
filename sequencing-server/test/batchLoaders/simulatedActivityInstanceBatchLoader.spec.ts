@@ -10,7 +10,7 @@ import {
   insertActivityDirective,
   removeActivityDirective,
 } from '../testUtils/ActivityDirective';
-import { executeSimulation, removeSimulationArtifacts } from '../testUtils/Simulation';
+import {executeSimulation, removeSimulationArtifacts, updateSimulationBounds} from '../testUtils/Simulation';
 import DataLoader from 'dataloader';
 import { activitySchemaBatchLoader } from '../../src/lib/batchLoaders/activitySchemaBatchLoader.js';
 
@@ -25,11 +25,12 @@ beforeAll(async () => {
   missionModelId = await uploadMissionModel(graphqlClient);
   planId = await createPlan(graphqlClient, missionModelId);
   activityId = await insertActivityDirective(graphqlClient, planId, 'ParameterTest');
+  await updateSimulationBounds(graphqlClient, {plan_id: planId, simulation_start_time:"2020-001T00:00:00Z", simulation_end_time:"2020-002T00:00:00Z" });
   simulationArtifactIds = await executeSimulation(graphqlClient, planId);
 });
 
 afterAll(async () => {
-  await removeSimulationArtifacts(graphqlClient, simulationArtifactIds);
+  await removeSimulationArtifacts(graphqlClient, {simulationDatasetId: simulationArtifactIds.simulationDatasetId } );
   await removeActivityDirective(graphqlClient, activityId, planId);
   await removePlan(graphqlClient, planId);
   await removeMissionModel(graphqlClient, missionModelId);
