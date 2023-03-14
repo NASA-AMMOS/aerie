@@ -49,7 +49,7 @@ describe('expansion', () => {
     export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
       return [
         C.PREHEAT_OVEN({ temperature: 70 }),
-        C.PREPARE_LOAF({ tb_sugar: 50, gluten_free: false }),
+        C.PREPARE_LOAF({ tb_sugar: 50, gluten_free: "FALSE" }),
         C.BAKE_BREAD,
       ];
     }

@@ -1816,7 +1816,7 @@ declare global {
 
 	interface GrowBanana extends CommandStem<[ [{ 'quantity': U8,'durationSecs': U8 }] ]> {}
 
-	interface PREPARE_LOAF extends CommandStem<[ [{ 'tb_sugar': U8,'gluten_free': boolean }] ]> {}
+	interface PREPARE_LOAF extends CommandStem<[ [{ 'tb_sugar': U8,'gluten_free': ('FALSE' | 'TRUE') }] ]> {}
 
 	interface PEEL_BANANA extends CommandStem<[ [{ 'peelDirection': ('fromStem' | 'fromTip') }] ]> {}
 
@@ -1937,7 +1937,7 @@ function GrowBanana(...args: [{ 'quantity': U8,'durationSecs': U8 }]) {
 * @param tb_sugar How much sugar is needed
 * @param gluten_free Do you hate flavor
 */
-function PREPARE_LOAF(...args: [{ 'tb_sugar': U8,'gluten_free': boolean }]) {
+function PREPARE_LOAF(...args: [{ 'tb_sugar': U8,'gluten_free': ('FALSE' | 'TRUE') }]) {
   return CommandStem.new({
     stem: 'PREPARE_LOAF',
     arguments: args
