@@ -59,7 +59,7 @@ describe('sequence generation', () => {
     export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
       return [
         C.PREHEAT_OVEN({ temperature: 70 }),
-        C.PREPARE_LOAF({ tb_sugar: 50, gluten_free: false }),
+        C.PREPARE_LOAF({ tb_sugar: 50, gluten_free: "FALSE" }),
         C.BAKE_BREAD,
       ];
     }
@@ -73,7 +73,7 @@ describe('sequence generation', () => {
       return [
         C.PREHEAT_OVEN({ temperature: 70 }),
         C.BAKE_BREAD,
-        C.PREPARE_LOAF({ tb_sugar: 50, gluten_free: false }),
+        C.PREPARE_LOAF({ tb_sugar: 50, gluten_free: "FALSE" }),
       ];
     }
     `,
@@ -88,7 +88,7 @@ describe('sequence generation', () => {
         A(Temporal.Instant.from("2025-12-24T12:01:59Z")).PREHEAT_OVEN({ temperature: 360 }),
         R\`00:15:30\`.PREHEAT_OVEN({ temperature: 425 }),
         R(Temporal.Duration.from({ hours: 1, minutes: 15, seconds: 30 })).EAT_BANANA,
-        E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PREPARE_LOAF({ tb_sugar: 50, gluten_free: false }),
+        E(Temporal.Duration.from({ hours: 12, minutes: 6, seconds: 54 })).PREPARE_LOAF({ tb_sugar: 50, gluten_free: "FALSE" }),
         E\`04:56:54\`.EAT_BANANA,
         C.PACKAGE_BANANA({
           lot_number:  1093,
@@ -211,7 +211,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
@@ -243,7 +243,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
@@ -297,7 +297,7 @@ describe('sequence generation', () => {
         },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
@@ -521,7 +521,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
@@ -553,7 +553,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
@@ -607,7 +607,7 @@ describe('sequence generation', () => {
         },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
@@ -719,7 +719,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId4 },
       },
@@ -751,7 +751,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId5 },
       },
@@ -805,7 +805,7 @@ describe('sequence generation', () => {
         },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId6 },
       },
@@ -1010,7 +1010,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
@@ -1042,7 +1042,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
@@ -1096,7 +1096,7 @@ describe('sequence generation', () => {
         },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
@@ -1351,7 +1351,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
@@ -1383,7 +1383,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
@@ -1437,7 +1437,7 @@ describe('sequence generation', () => {
         },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
@@ -1552,7 +1552,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId5 },
       },
@@ -1584,7 +1584,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId6 },
       },
@@ -1638,7 +1638,7 @@ describe('sequence generation', () => {
         },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId7 },
       },
@@ -1846,7 +1846,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
@@ -1878,7 +1878,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
@@ -1932,7 +1932,7 @@ describe('sequence generation', () => {
         },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
@@ -2167,7 +2167,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId1 },
       },
@@ -2199,7 +2199,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId2 },
       },
@@ -2253,7 +2253,7 @@ describe('sequence generation', () => {
         },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId3 },
       },
@@ -2365,7 +2365,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId5 },
       },
@@ -2397,7 +2397,7 @@ describe('sequence generation', () => {
         time: { type: TimingTypes.COMMAND_COMPLETE },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId6 },
       },
@@ -2451,7 +2451,7 @@ describe('sequence generation', () => {
         },
         args: [
           { value: 50, name: 'tb_sugar', type: 'number' },
-          { value: false, name: 'gluten_free', type: 'boolean' },
+          { value: 'FALSE', name: 'gluten_free', type: 'string' },
         ],
         metadata: { simulatedActivityId: simulatedActivityId7 },
       },

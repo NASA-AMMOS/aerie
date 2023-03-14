@@ -145,16 +145,7 @@ ${parameters.length > 0 ? parameters.join('\n') : '*'}
 function mapArgumentType(argument: ampcs.FswCommandArgument, enumMap: ampcs.EnumMap): string {
   switch (argument.arg_type) {
     case 'enum':
-      // boolean enum shouldn't be 'TRUE | FALSE' but of `boolean` type
-      if (
-        enumMap[argument.enum_name]?.values.length === 2 &&
-        enumMap[argument.enum_name]?.values.some(({ symbol }) => symbol.toLocaleLowerCase() === 'true') &&
-        enumMap[argument.enum_name]?.values.some(({ symbol }) => symbol.toLocaleLowerCase() === 'false')
-      ) {
-        return 'boolean';
-      } else {
-        return `(${enumMap[argument.enum_name]?.values.map(value => `'${value.symbol}'`).join(' | ')})`;
-      }
+      return `(${enumMap[argument.enum_name]?.values.map(value => `'${value.symbol}'`).join(' | ')})`;
     case 'boolean':
       return 'boolean';
     case 'float':
