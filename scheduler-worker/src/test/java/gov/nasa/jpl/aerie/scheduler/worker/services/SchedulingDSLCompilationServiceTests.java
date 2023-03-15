@@ -149,6 +149,12 @@ class SchedulingDSLCompilationServiceTests {
     ));
   }
 
+  private static StructExpressionAt getSampleActivity2PresetParameters() {
+    return new StructExpressionAt(Map.of(
+        "quantity", new ProfileExpression<>(new DiscreteValue(SerializedValue.of(5)))
+    ));
+  }
+
   @Test
   void  testSchedulingDSL_basic()
   {
@@ -818,6 +824,32 @@ class SchedulingDSLCompilationServiceTests {
           r.value()
       );
     } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error r) {
+      fail(r.toString());
+    }
+  }
+
+  @Test
+  void  testActivityPreset() {
+    final var result = schedulingDSLCompilationService.compileSchedulingGoalDSL(
+        missionModelService,
+        PLAN_ID, """
+                export default (): Goal => {
+                  return Goal.ActivityRecurrenceGoal({
+                    activityTemplate: ActivityTemplates.SampleActivity2(ActivityPresets.SampleActivity2["my preset"]),
+                    interval: Temporal.Duration.from({ hours: 1 })
+                  })
+                }
+            """);
+    final var expectedGoalDefinition = new SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition(
+        new SchedulingDSL.ActivityTemplate(
+            "SampleActivity2",
+            getSampleActivity2PresetParameters()
+        ),
+        HOUR,
+        false);
+    if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
+      assertEquals(expectedGoalDefinition, r.value());
+    } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
       fail(r.toString());
     }
   }
