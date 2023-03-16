@@ -306,7 +306,7 @@ export class Sequence implements SeqJson {
                 if (step instanceof CommandStem || step instanceof Ground_Block || step instanceof Ground_Event) {
                   return step.toEDSLString() + ',';
                 }
-                return step + ',';
+                return objectToString(step) + ',';
               })
               .join('\n'),
             1,
@@ -382,7 +382,7 @@ export class Sequence implements SeqJson {
                           if (s instanceof CommandStem || s instanceof Ground_Block || s instanceof Ground_Event) {
                             return s.toEDSLString() + ',';
                           }
-                          return s + ',';
+                          return objectToString(s) + ',';
                         })
                         .join('\n'),
                       1,
