@@ -1,6 +1,6 @@
 # Aerie Project Governance
 
-The Aerie project aims to create an open source community that encourages transparency, contributions, and collaboration, but maintains sound technical and quality standards. Our goal is to build a community comprised of members across the the space community and beyond, including from private organizations, universities, Federally Funded Research and Development Centers (FFRDCs), other government organizations, and international organizations. 
+The Aerie project aims to create an open source community that encourages transparency, contributions, and collaboration, but maintains sound technical and quality standards. Our goal is to build a community comprised of members across the space community and beyond, including from private organizations, universities, Federally Funded Research and Development Centers (FFRDCs), other government organizations, and international organizations. 
 
 The project follows a fairly liberal contribution model where people and/or organizations who do the most work will have the most influence on project direction. Technical decision making will primarily be made through a "[consensus-seeking](https://en.wikipedia.org/wiki/Consensus-seeking_decision-making)" approach. 
 
@@ -12,7 +12,16 @@ Anyone who has downloaded, deployed, or operated the Aerie system to meet a spec
 
 ### Contributor
 
-Contributors include anyone that provides input to the project. This includes code, documentation, graphics, designs, or anything else that tangibly improves the project. We encourage you to start contributing right away by joining our [Discussions](https://github.com/NASA-AMMOS/aerie/discussions) or submitting an [Issue](https://github.com/NASA-AMMOS/aerie/issues). 
+Contributors include anyone that provides input to the project. This includes code, issues, documentation, graphics, designs, or anything else that tangibly improves the project. We encourage you to start contributing right away by joining our [Discussions](https://github.com/NASA-AMMOS/aerie/discussions) or submitting an [Issue](https://github.com/NASA-AMMOS/aerie/issues). 
+
+### Triager
+
+Subset of contributors who have demonstrated a strong familiarity with Aerie and are regularly contributing to the project via issue creation, commenting, discussions, etc. Triagers are given the "Triage" GitHub role and are added to corresponding GitHub team. These team members have the ability to do the following:
+
+    - Label issues and pull requests
+    - Comment, close, and reopen issues and pull requests
+
+[List of current Triagers](https://github.com/orgs/NASA-AMMOS/teams/aerie-triagers/members)
  
 ### Collaborator
 
@@ -20,12 +29,14 @@ Subset of contributors who have been given write access to one or more of the Ae
 
 If you are planning on making a substantial contribution to the project or feel as though you should be given write access to a repository, please send a request to aerie_support@jpl.nasa.gov. 
 
+[List of current collaborators](https://github.com/orgs/NASA-AMMOS/teams/aerie-collaborators/members)
+
 ## Technical Steering Committee
 
 A subset of the collaborators forms the Technical Steering Committee (TSC). The TSC has authority over the following aspects of this project:
 
 - Technical direction and guidance
-- Project governance and process 
+- Committee governance and process 
 - Contribution policy
 - Conduct guidelines
 - Maintaining the list of collaborators
@@ -81,6 +92,7 @@ The Project Management Committee (PMC) is made up of sponsor organization repres
 - Assessing available resources and allocating them across the project
 - Monitoring and reporting on progress against the roadmap 
 - On-boarding new sponsors and stakeholders
+- Overall project governance (including this policy)
 - Addressing any legal considerations
 
 The current list of PMC members is currently in work. If your project or organization is planning to use Aerie and you would like to join the PMC, please contact aerie_support@jpl.nasa.gov.   
