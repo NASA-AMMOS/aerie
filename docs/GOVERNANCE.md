@@ -36,7 +36,7 @@ If you are planning on making a substantial contribution to the project or feel 
 A subset of the collaborators forms the Technical Steering Committee (TSC). The TSC has authority over the following aspects of this project:
 
 - Technical direction and guidance
-- Project governance and process 
+- Committee governance and process 
 - Contribution policy
 - Conduct guidelines
 - Maintaining the list of collaborators
@@ -92,6 +92,7 @@ The Project Management Committee (PMC) is made up of sponsor organization repres
 - Assessing available resources and allocating them across the project
 - Monitoring and reporting on progress against the roadmap 
 - On-boarding new sponsors and stakeholders
+- Overall project governance (including this policy)
 - Addressing any legal considerations
 
 The current list of PMC members is currently in work. If your project or organization is planning to use Aerie and you would like to join the PMC, please contact aerie_support@jpl.nasa.gov.   
