@@ -31,6 +31,14 @@ export type CommandOptions<A extends Args[] | { [argName: string]: any } = [] | 
   | {}
 );
 
+export type HardwareOptions = {
+  stem: string;
+  // @ts-ignore : 'Description' found in JSON Spec
+  description?: Description;
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  metadata?: Metadata;
+};
+
 export type GroundOptions = {
   name: string;
   // @ts-ignore : 'Args' found in JSON Spec
@@ -150,6 +158,26 @@ declare global {
 
     // @ts-ignore : 'Description' found in JSON Spec
     public DESCRIPTION(description: Description): CommandStem<A>;
+    // @ts-ignore : 'Description' found in JSON Spec
+    public GET_DESCRIPTION(): Description | undefined;
+  }
+
+  // @ts-ignore : 'HardwareCommand' found in JSON Spec
+  class HardwareStem implements HardwareCommand {
+    stem: string;
+
+    public static new(opts: HardwareOptions): HardwareStem;
+
+    // @ts-ignore : 'Command' found in JSON Spec
+    public toSeqJson(): HardwareCommand;
+
+    // @ts-ignore : 'Metadata' found in JSON Spec
+    public METADATA(metadata: Metadata): HardwareStem;
+    // @ts-ignore : 'Metadata' found in JSON Spec
+    public GET_METADATA(): Metadata | undefined;
+
+    // @ts-ignore : 'Description' found in JSON Spec
+    public DESCRIPTION(description: Description): HardwareStem;
     // @ts-ignore : 'Description' found in JSON Spec
     public GET_DESCRIPTION(): Description | undefined;
   }
@@ -292,7 +320,13 @@ export class Sequence implements SeqJson {
           }
         : {}),
       ...(this.immediate_commands ? { immediate_commands: this.immediate_commands } : {}),
-      ...(this.hardware_commands ? { hardware_commands: this.hardware_commands } : {}),
+      ...(this.hardware_commands
+        ? {
+            hardware_commands: this.hardware_commands.map(h => {
+              return h instanceof HardwareStem ? h.toSeqJson() : h;
+            }),
+          }
+        : {}),
     };
   }
 
@@ -337,7 +371,7 @@ export class Sequence implements SeqJson {
     // ]`;
 
     const hardwareString = this.hardware_commands
-      ? `[\n${indent(this.hardware_commands.map(h => objectToString(h)).join(',\n'), 1)}\n]`
+      ? `[\n${indent(this.hardware_commands.map(h => (h as HardwareStem).toEDSLString()).join(',\n'), 1)}\n]`
       : '';
     //ex.
     // hardware_commands: [
@@ -492,7 +526,10 @@ export class Sequence implements SeqJson {
           }
         : {}),
       ...(json.immediate_commands ? { immediate_commands: json.immediate_commands } : {}),
-      ...(json.hardware_commands ? { hardware_commands: json.hardware_commands } : {}),
+      ...(json.hardware_commands
+        ? // @ts-ignore : 'HardwareCommand' found in JSON Spec
+          { hardware_commands: json.hardware_commands.map((h: HardwareCommand) => HardwareStem.fromSeqJson(h)) }
+        : {}),
     });
   }
 }
@@ -1344,6 +1381,84 @@ export const STEPS = {
   GROUND_BLOCK: GROUND_BLOCK,
   GROUND_EVENT: GROUND_EVENT,
 };
+
+/*-----------------------------------
+	  HW Commands
+	------------------------------------- */
+// @ts-ignore : 'HardwareCommand' found in JSON Spec
+export class HardwareStem implements HardwareCommand {
+  public readonly stem: string;
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  private readonly _metadata?: Metadata | undefined;
+  // @ts-ignore : 'Description' found in JSON Spec
+  private readonly _description?: Description | undefined;
+
+  private constructor(opts: HardwareOptions) {
+    this.stem = opts.stem;
+    this._metadata = opts.metadata;
+    this._description = opts.description;
+  }
+
+  public static new(opts: HardwareOptions): HardwareStem {
+    return new HardwareStem(opts);
+  }
+
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  public METADATA(metadata: Metadata): HardwareStem {
+    return HardwareStem.new({
+      stem: this.stem,
+      metadata: metadata,
+      description: this._description,
+    });
+  }
+
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  public GET_METADATA(): Metadata | undefined {
+    return this._metadata;
+  }
+
+  // @ts-ignore : 'Description' found in JSON Spec
+  public DESCRIPTION(description: Description): HardwareStem {
+    return HardwareStem.new({
+      stem: this.stem,
+      metadata: this._metadata,
+      description: description,
+    });
+  }
+  // @ts-ignore : 'Description' found in JSON Spec
+  public GET_DESCRIPTION(): Description | undefined {
+    return this._description;
+  }
+
+  // @ts-ignore : 'Command' found in JSON Spec
+  public toSeqJson(): HardwareCommand {
+    return {
+      stem: this.stem,
+      ...(this._metadata ? { metadata: this._metadata } : {}),
+      ...(this._description ? { description: this._description } : {}),
+    };
+  }
+
+  // @ts-ignore : 'Command' found in JSON Spec
+  public static fromSeqJson(json: HardwareCommand): HardwareStem {
+    return HardwareStem.new({
+      stem: json.stem,
+      metadata: json.metadata,
+      description: json.description,
+    });
+  }
+
+  public toEDSLString(): string {
+    const metadata =
+      this._metadata && Object.keys(this._metadata).length !== 0
+        ? `\n.METADATA(${objectToString(this._metadata)})`
+        : '';
+    const description =
+      this._description && this._description.length !== 0 ? `\n.DESCRIPTION('${this._description}')` : '';
+
+    return `${this.stem}${description}${metadata}`;
+  }
+}
 
 /*
 	---------------------------------
