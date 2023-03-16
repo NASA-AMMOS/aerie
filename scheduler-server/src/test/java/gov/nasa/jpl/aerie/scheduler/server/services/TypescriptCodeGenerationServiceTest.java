@@ -68,17 +68,21 @@ const ActivityTemplateConstructors = {
     return { activityType: ActivityType.SampleActivityEmpty, args: {} };
   },
 };
-const ActivityPresetMap = {
-  SampleActivity1: {
-  },
-  SampleActivity2: {
-    "my preset": {
-      quantity: 5,
+const ActivityPresetMap = Object.freeze({
+  SampleActivity1: Object.freeze({
+  }),
+  SampleActivity2: Object.freeze({
+    get "my preset"(): {
+      "quantity": number,
+    } {
+      return {
+        "quantity": 5,
+      };
     },
-  },
-  SampleActivityEmpty: {
-  },
-};
+  }),
+  SampleActivityEmpty: Object.freeze({
+  }),
+});
 export enum Resource {
   "/sample/resource/1" = "/sample/resource/1",
   "/sample/resource/3" = "/sample/resource/3",

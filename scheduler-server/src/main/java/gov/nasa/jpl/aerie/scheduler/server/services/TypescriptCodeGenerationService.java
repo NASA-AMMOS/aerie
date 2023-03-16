@@ -3,10 +3,8 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -123,19 +121,21 @@ return (<T>makeAllDiscreteProfile(args))
 
   private static String generateActivityPresetConstructors(final Iterable<ActivityTypeCode> activityTypeCodes) {
     final var result = new ArrayList<String>();
-    result.add("const ActivityPresetMap = {");
+    result.add("const ActivityPresetMap = Object.freeze({");
     for (final var activityTypeCode : activityTypeCodes) {
-      result.add(indent("%s: {".formatted(activityTypeCode.activityTypeName)));
+      result.add(indent("%s: Object.freeze({".formatted(activityTypeCode.activityTypeName)));
       for (final var preset: activityTypeCode.presets.entrySet()) {
-        result.add(indent(indent("\"%s\": {".formatted(preset.getKey()))));
+        result.add(indent(indent("get \"%s\"(): %s {".formatted(preset.getKey(), serializedValueToType(SerializedValue.of(preset.getValue()))))));
+        result.add(indent(indent(indent("return {"))));
         for (final var argument: preset.getValue().entrySet()) {
-          result.add(indent(indent(indent("%s: %s,".formatted(argument.getKey(), serializedValueToTypescript(argument.getValue()))))));
+          result.add(indent(indent(indent(indent("\"%s\": %s,".formatted(argument.getKey(), serializedValueToTypescript(argument.getValue())))))));
         }
+        result.add(indent(indent(indent("};"))));
         result.add(indent(indent("},")));
       }
-      result.add(indent("},"));
+      result.add(indent("}),"));
     }
-    result.add("};");
+    result.add("});");
     return joinLines(result);
   }
 
@@ -206,11 +206,11 @@ return (<T>makeAllDiscreteProfile(args))
         .entrySet()
         .stream()
         .sorted(Map.Entry.comparingByKey())
-        .map($ -> new ActivityParameter($.getKey(), valueSchemaToTypescriptType($.getValue())))
+        .map($ -> new ActivityParameter($.getKey(), valueSchemaToTypescriptTypeOrProfile($.getValue())))
         .toList();
   }
 
-  private static TypescriptType valueSchemaToTypescriptType(final ValueSchema valueSchema) {
+  private static TypescriptType valueSchemaToTypescriptTypeOrProfile(final ValueSchema valueSchema) {
     return valueSchema.match(new ValueSchema.Visitor<>() {
       @Override
       public TypescriptType onReal() {
@@ -244,7 +244,7 @@ return (<T>makeAllDiscreteProfile(args))
 
       @Override
       public TypescriptType onSeries(final ValueSchema value) {
-        return new TypescriptType.TSArray(valueSchemaToTypescriptType(value));
+        return new TypescriptType.TSArray(valueSchemaToTypescriptTypeOrProfile(value));
       }
 
       @Override
@@ -257,7 +257,7 @@ return (<T>makeAllDiscreteProfile(args))
                 .map($ ->
                          Pair.of(
                              $.getKey(),
-                             valueSchemaToTypescriptType($.getValue())))
+                             valueSchemaToTypescriptTypeOrProfile($.getValue())))
                 .toList());
       }
 
@@ -291,7 +291,7 @@ return (<T>makeAllDiscreteProfile(args))
 
       @Override
       public String onString(final String value) {
-        return '"' + value + '"';
+        return value;
       }
 
       @Override
@@ -311,6 +311,52 @@ return (<T>makeAllDiscreteProfile(args))
         result.add("[");
         for (final var entry : value) {
           result.add(indent(serializedValueToTypescript(entry) + ','));
+        }
+        result.add("]");
+        return joinLines(result);
+      }
+    });
+  }
+
+  private static String serializedValueToType(final SerializedValue value) {
+    return value.match(new SerializedValue.Visitor<>() {
+      @Override
+      public String onNull() {
+        return "null";
+      }
+
+      @Override
+      public String onNumeric(final BigDecimal value) {
+        return "number";
+      }
+
+      @Override
+      public String onBoolean(final boolean value) {
+        return "boolean";
+      }
+
+      @Override
+      public String onString(final String value) {
+        return "string";
+      }
+
+      @Override
+      public String onMap(final Map<String, SerializedValue> value) {
+        final var result = new ArrayList<String>();
+        result.add("{");
+        for (final var entry : value.entrySet()) {
+          result.add(indent("\"%s\": %s,".formatted(entry.getKey(), serializedValueToType(entry.getValue()))));
+        }
+        result.add("}");
+        return joinLines(result);
+      }
+
+      @Override
+      public String onList(final List<SerializedValue> value) {
+        final var result = new ArrayList<String>();
+        result.add("[");
+        for (final var entry : value) {
+          result.add(indent(serializedValueToType(entry) + ','));
         }
         result.add("]");
         return joinLines(result);
