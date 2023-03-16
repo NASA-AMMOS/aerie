@@ -1,6 +1,6 @@
 # Aerie Project Governance
 
-The Aerie project aims to create an open source community that encourages transparency, contributions, and collaboration, but maintains sound technical and quality standards. Our goal is to build a community comprised of members across the the space community and beyond, including from private organizations, universities, Federally Funded Research and Development Centers (FFRDCs), other government organizations, and international organizations. 
+The Aerie project aims to create an open source community that encourages transparency, contributions, and collaboration, but maintains sound technical and quality standards. Our goal is to build a community comprised of members across the space community and beyond, including from private organizations, universities, Federally Funded Research and Development Centers (FFRDCs), other government organizations, and international organizations. 
 
 The project follows a fairly liberal contribution model where people and/or organizations who do the most work will have the most influence on project direction. Technical decision making will primarily be made through a "[consensus-seeking](https://en.wikipedia.org/wiki/Consensus-seeking_decision-making)" approach. 
 
