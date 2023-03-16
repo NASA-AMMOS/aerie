@@ -249,5 +249,11 @@
                 <prime_string_restriction prime_string_only="No" />
             </restricted_modes>
         </fsw_command>
+        <hw_command opcode="0x0000" stem="HDW_BLENDER_DUMP">
+          <categories>
+            <ops_category>UPL</ops_category>
+          </categories>
+          <description>Dump the blender configuration file.</description>
+        </hw_command>
     </command_definitions>
 </command_dictionary>
