@@ -321,26 +321,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Dole',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Dole',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -356,26 +360,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Blue',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Blue',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -631,26 +639,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Dole',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Dole',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -666,26 +678,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Blue',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Blue',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -829,26 +845,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Dole',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Dole',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -864,26 +884,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Blue',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Blue',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -1120,26 +1144,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Dole',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Dole',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -1155,26 +1183,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Blue',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Blue',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -1461,26 +1493,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Dole',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Dole',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -1496,26 +1532,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Blue',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Blue',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -1662,26 +1702,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Dole',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Dole',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -1697,26 +1741,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Blue',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Blue',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -1956,26 +2004,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Dole',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Dole',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -1991,26 +2043,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Blue',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Blue',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -2277,26 +2333,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Dole',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Dole',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -2312,26 +2372,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Blue',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Blue',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -2475,26 +2539,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Dole',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Dole',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -2510,26 +2578,30 @@ describe('sequence generation', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Blue',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Blue',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -2700,26 +2772,30 @@ describe('user sequence to seqjson', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Dole',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Dole',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -2848,26 +2924,30 @@ describe('user sequence to seqjson', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Dole',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Dole',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
@@ -2931,26 +3011,30 @@ describe('user sequence to seqjson', () => {
             name: 'bundle',
             type: 'repeat',
             value: [
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Chiquita',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 43,
-              },
-              {
-                name: 'bundle_name',
-                type: 'string',
-                value: 'Dole',
-              },
-              {
-                name: 'number_of_bananas',
-                type: 'number',
-                value: 12,
-              },
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Chiquita',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 43,
+                },
+              ],
+              [
+                {
+                  name: 'bundle_name',
+                  type: 'string',
+                  value: 'Dole',
+                },
+                {
+                  name: 'number_of_bananas',
+                  type: 'number',
+                  value: 12,
+                },
+              ],
             ],
           },
         ],
