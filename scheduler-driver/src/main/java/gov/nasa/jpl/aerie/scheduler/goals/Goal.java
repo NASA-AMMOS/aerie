@@ -32,12 +32,16 @@ public class Goal {
    * state constraints applying to the goal
    */
   protected Expression<Windows> resourceConstraints;
-  
+
   /**
-   * Whether to resimulate after this goal or use stale results
+   * Whether to resimulate after this goal or make the next goal use stale results.
+   *
+   * True is the default behavior. If False, the durations of the activities inserted by
+   * *this* goal will not be simulated and checked, and the *next* goal will not have up-to-date
+   * sim results if this goal placed any activities.
    */
   public boolean simulateAfter;
-  
+
   /** Set to true if partial satisfaction is ok, the scheduler will try to do its best */
   private boolean shouldRollbackIfUnsatisfied = false;
 
