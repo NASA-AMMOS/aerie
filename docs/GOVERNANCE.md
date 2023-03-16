@@ -12,13 +12,24 @@ Anyone who has downloaded, deployed, or operated the Aerie system to meet a spec
 
 ### Contributor
 
-Contributors include anyone that provides input to the project. This includes code, documentation, graphics, designs, or anything else that tangibly improves the project. We encourage you to start contributing right away by joining our [Discussions](https://github.com/NASA-AMMOS/aerie/discussions) or submitting an [Issue](https://github.com/NASA-AMMOS/aerie/issues). 
+Contributors include anyone that provides input to the project. This includes code, issues, documentation, graphics, designs, or anything else that tangibly improves the project. We encourage you to start contributing right away by joining our [Discussions](https://github.com/NASA-AMMOS/aerie/discussions) or submitting an [Issue](https://github.com/NASA-AMMOS/aerie/issues). 
+
+### Triager
+
+Subset of contributors who have demonstrated a strong familiarity with Aerie and are regularly contributing to the project via issue creation, commenting, discussions, etc. Triagers are given the "Triage" GitHub role and are added to corresponding GitHub team. These team members have the ability to do the following:
+
+    - Label issues and pull requests
+    - Comment, close, and reopen issues and pull requests
+
+[List of current Triagers](https://github.com/orgs/NASA-AMMOS/teams/aerie-users/members)
  
 ### Collaborator
 
 Subset of contributors who have been given write access to one or more of the Aerie repositories. Both contributors and collaborators can propose changes to the project via pull requests, but only collaborators can formally review and approve (merge) these requests. Any contributor who has made a non-trivial contribution should be on-boarded as a collaborator in a timely manner. 
 
 If you are planning on making a substantial contribution to the project or feel as though you should be given write access to a repository, please send a request to aerie_support@jpl.nasa.gov. 
+
+[List of current collaborators](https://github.com/orgs/NASA-AMMOS/teams/aerie/members)
 
 ## Technical Steering Committee
 
