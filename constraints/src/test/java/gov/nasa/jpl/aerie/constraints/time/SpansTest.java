@@ -193,4 +193,15 @@ public class SpansTest {
 
     assertIterableEquals(expected, acc);
   }
+
+  @Test
+  public void testIntersectWindows() {
+    final var intersection = new Spans(interval(0, 2, SECONDS)).intersectWith(
+        new Windows(false).set(interval(1, 10, SECONDS), true)
+    );
+
+    final var expected = new Spans(interval(1,2, SECONDS));
+
+    assertIterableEquals(expected, intersection);
+  }
 }
