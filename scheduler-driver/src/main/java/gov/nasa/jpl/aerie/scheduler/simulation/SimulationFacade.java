@@ -95,6 +95,7 @@ public class SimulationFacade {
   }
 
   public Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> getAllChildActivities(final Duration endTime){
+    if(this.insertedActivities.isEmpty()) return Map.of();
     computeSimulationResultsUntil(endTime);
     final Map<SchedulingActivityDirective, SchedulingActivityDirectiveId> childActivities = new HashMap<>();
     this.lastSimDriverResults.simulatedActivities.forEach( (activityInstanceId, activity) -> {
