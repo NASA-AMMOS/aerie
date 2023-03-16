@@ -21,7 +21,7 @@ Subset of contributors who have demonstrated a strong familiarity with Aerie and
     - Label issues and pull requests
     - Comment, close, and reopen issues and pull requests
 
-[List of current Triagers](https://github.com/orgs/NASA-AMMOS/teams/aerie-users/members)
+[List of current Triagers](https://github.com/orgs/NASA-AMMOS/teams/aerie-triagers/members)
  
 ### Collaborator
 
@@ -29,7 +29,7 @@ Subset of contributors who have been given write access to one or more of the Ae
 
 If you are planning on making a substantial contribution to the project or feel as though you should be given write access to a repository, please send a request to aerie_support@jpl.nasa.gov. 
 
-[List of current collaborators](https://github.com/orgs/NASA-AMMOS/teams/aerie/members)
+[List of current collaborators](https://github.com/orgs/NASA-AMMOS/teams/aerie-collaborators/members)
 
 ## Technical Steering Committee
 
