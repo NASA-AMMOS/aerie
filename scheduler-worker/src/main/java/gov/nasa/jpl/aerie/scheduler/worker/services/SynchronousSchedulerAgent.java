@@ -43,6 +43,7 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.ResultsProtocolFailure;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.SpecificationLoadException;
 import gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
+import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
 import gov.nasa.jpl.aerie.scheduler.server.models.MerlinPlan;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanId;
@@ -158,7 +159,7 @@ public record SynchronousSchedulerAgent(
 
       final var orderedGoals = new ArrayList<Goal>();
       final var goals = new HashMap<Goal, GoalId>();
-      final var compiledGoals = new ArrayList<Pair<GoalId, SchedulingDSL.GoalSpecifier>>();
+      final var compiledGoals = new ArrayList<Pair<GoalRecord, SchedulingDSL.GoalSpecifier>>();
       final var failedGoals = new ArrayList<Pair<GoalId, List<SchedulingCompilationError.UserCodeError>>>();
       for (final var goalRecord : specification.goalsByPriority()) {
         if (!goalRecord.enabled()) continue;
@@ -168,7 +169,7 @@ public record SynchronousSchedulerAgent(
             goalRecord.definition(),
             schedulingDSLCompilationService);
         if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Success<SchedulingDSL.GoalSpecifier> r) {
-          compiledGoals.add(Pair.of(goalRecord.id(), r.value()));
+          compiledGoals.add(Pair.of(goalRecord, r.value()));
         } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
           failedGoals.add(Pair.of(goalRecord.id(), r.errors()));
         } else {
@@ -188,9 +189,10 @@ public record SynchronousSchedulerAgent(
                 compiledGoal.getValue(),
                 specification.horizonStartTimestamp(),
                 specification.horizonEndTimestamp(),
-                problem::getActivityType);
+                problem::getActivityType,
+                compiledGoal.getKey().simulateAfter());
         orderedGoals.add(goal);
-        goals.put(goal, compiledGoal.getKey());
+        goals.put(goal, compiledGoal.getKey().id());
       }
       problem.setGoals(orderedGoals);
 

@@ -35,7 +35,8 @@ public class GoalBuilder {
       final SchedulingDSL.GoalSpecifier goalSpecifier,
       final Timestamp horizonStartTimestamp,
       final Timestamp horizonEndTimestamp,
-      final Function<String, ActivityType> lookupActivityType) {
+      final Function<String, ActivityType> lookupActivityType,
+      final boolean simulateAfter) {
     final var hor = new PlanningHorizon(
         horizonStartTimestamp.toInstant(),
         horizonEndTimestamp.toInstant()).getHor();
@@ -45,6 +46,7 @@ public class GoalBuilder {
           .repeatingEvery(g.interval())
           .shouldRollbackIfUnsatisfied(g.shouldRollbackIfUnsatisfied())
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
+          .simulateAfter(simulateAfter)
           .build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition g) {
       var builder = new CoexistenceGoal.Builder()
@@ -52,6 +54,7 @@ public class GoalBuilder {
           .forEach(spansOfConstraintExpression(
               g.forEach()))
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
+          .simulateAfter(simulateAfter)
           .shouldRollbackIfUnsatisfied(g.shouldRollbackIfUnsatisfied())
           .aliasForAnchors(g.alias());
       if (g.startConstraint().isPresent()) {
@@ -82,8 +85,10 @@ public class GoalBuilder {
         builder = builder.and(goalOfGoalSpecifier(subGoalSpecifier,
                                                   horizonStartTimestamp,
                                                   horizonEndTimestamp,
-                                                  lookupActivityType));
+                                                  lookupActivityType,
+                                                  simulateAfter));
       }
+      builder.simulateAfter(simulateAfter);
       builder.forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)));
       builder.shouldRollbackIfUnsatisfied(g.shouldRollbackIfUnsatisfied());
       return builder.build();
@@ -93,15 +98,17 @@ public class GoalBuilder {
         builder = builder.or(goalOfGoalSpecifier(subGoalSpecifier,
                                                  horizonStartTimestamp,
                                                  horizonEndTimestamp,
-                                                 lookupActivityType));
+                                                 lookupActivityType,
+                                                 simulateAfter));
       }
+      builder.simulateAfter(simulateAfter);
       builder.forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)));
       builder.shouldRollbackIfUnsatisfied(g.shouldRollbackIfUnsatisfied());
       return builder.build();
     }
 
     else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalApplyWhen g) {
-      var goal = goalOfGoalSpecifier(g.goal(), horizonStartTimestamp, horizonEndTimestamp, lookupActivityType);
+      var goal = goalOfGoalSpecifier(g.goal(), horizonStartTimestamp, horizonEndTimestamp, lookupActivityType, simulateAfter);
       goal.setTemporalContext(g.windows());
       return goal;
     }
@@ -109,6 +116,7 @@ public class GoalBuilder {
     else if(goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CardinalityGoalDefinition g){
       final var builder = new CardinalityGoal.Builder()
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
+          .simulateAfter(simulateAfter)
            .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)))
           .shouldRollbackIfUnsatisfied(g.shouldRollbackIfUnsatisfied());
       if(g.specification().duration().isPresent()){
