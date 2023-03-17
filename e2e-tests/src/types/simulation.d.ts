@@ -2,6 +2,8 @@ type Simulation = {
   arguments: ArgumentsMap;
   id: number;
   template: SimulationTemplate | null;
+  simulation_start_time: string | null;
+  simulation_end_time: string | null;
 };
 
 type SimulationCreation = {
@@ -19,6 +21,8 @@ type SimulationTemplate = {
   arguments: ArgumentsMap;
   description: string;
   id: number;
+  simulation_start_time: string | null;
+  simulation_end_time: string | null;
 };
 
 type Resource = {

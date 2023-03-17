@@ -173,10 +173,14 @@ const gql = {
         simulations {
           arguments
           id
+          simulation_start_time
+          simulation_end_time
           template: simulation_template {
             arguments
             description
             id
+            simulation_start_time
+            simulation_end_time
           }
         }
         startTime: start_time
