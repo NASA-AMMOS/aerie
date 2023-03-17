@@ -25,6 +25,18 @@ type SimulationTemplate = {
   simulation_end_time: string | null;
 };
 
+type InsertSimulationTemplateInput = {
+  arguments: ArgumentsMap;
+  description: string;
+  model_id: number;
+}
+
+type UpdateSimulationTemplateBoundsInput = {
+  simulation_template_id: number,
+  simulation_start_time: string,
+  simulation_end_time: string
+}
+
 type Resource = {
   name: string;
   schema: ValueSchema;
@@ -54,3 +66,17 @@ type SimulationResponse = {
   status: SimulationResponseStatus;
   simulationDatasetId: number;
 };
+
+type SimulationDataset = {
+  canceled: boolean;
+  simulation_start_time: string;
+  simulation_end_time: string;
+  simulated_activities: SimulatedActivity[];
+};
+
+type SimulatedActivity = {
+  activity_directive: {id: number} | null;
+  duration: string | null;
+  start_time: string;
+  start_offset: string;
+}
