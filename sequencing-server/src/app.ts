@@ -111,7 +111,8 @@ app.post('/put-dictionary', async (req, res, next) => {
   const dictionary = req.body.input.dictionary as string;
   logger.info(`Dictionary received`);
 
-  const parsedDictionary = ampcs.parse(dictionary);
+  // Note we ignore comments when parsing dictionary because the parser breaks otherwise.
+  const parsedDictionary = ampcs.parse(dictionary, null, { ignoreComment: true });
   logger.info(
     `Dictionary parsed - version: ${parsedDictionary.header.version}, mission: ${parsedDictionary.header.mission_name}`,
   );
