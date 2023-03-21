@@ -5,6 +5,7 @@ create table simulation_dataset (
   simulation_id integer not null,
   dataset_id integer null,
 
+  -- This column may be removed in the future in favor of simulation_start_time
   offset_from_plan_start interval not null,
 
   -- Determinant entities
@@ -15,6 +16,11 @@ create table simulation_dataset (
 
   -- Dependent entities
   dataset_revision integer null,
+
+  -- Simulation Arguments
+  arguments jsonb not null,
+  simulation_start_time timestamptz not null,
+  simulation_end_time timestamptz not null,
 
   -- Simulation state
   status status_t not null default 'pending',
@@ -34,7 +40,9 @@ create table simulation_dataset (
     foreign key (dataset_id)
     references dataset
     on update cascade
-    on delete cascade
+    on delete cascade,
+  constraint start_before_end
+    check (simulation_start_time <= simulation_end_time)
 );
 
 create index simulation_dataset_simulation_has_many_datasets
@@ -258,3 +266,26 @@ create trigger notify_simulation_workers
   for each row
   execute function notify_simulation_workers();
 end $$;
+
+create function update_offset_from_plan_start()
+returns trigger
+security invoker
+language plpgsql as $$
+declare
+  plan_start timestamptz;
+begin
+  select p.start_time
+  from simulation s, plan p
+  where s.plan_id = p.id
+    and new.simulation_id = s.id
+  into plan_start;
+
+  new.offset_from_plan_start = new.simulation_start_time - plan_start;
+  return new;
+end
+$$;
+
+create trigger update_offset_from_plan_start_trigger
+before insert or update on simulation_dataset
+for each row
+execute function update_offset_from_plan_start();

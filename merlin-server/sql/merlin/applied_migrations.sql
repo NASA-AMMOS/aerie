@@ -7,3 +7,7 @@ call migrations.mark_migration_applied('1');
 call migrations.mark_migration_applied('2');
 call migrations.mark_migration_applied('3');
 call migrations.mark_migration_applied('4');
+
+call migrations.mark_migration_applied('5');
+call migrations.mark_migration_applied('6');
+call migrations.mark_migration_applied('7');

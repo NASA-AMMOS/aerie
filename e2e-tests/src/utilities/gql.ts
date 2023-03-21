@@ -33,6 +33,7 @@ const gql = {
     simulate(planId: $plan_id){
       status
       reason
+      simulationDatasetId
     }
   }`,
 
@@ -41,14 +42,6 @@ const gql = {
       insert_plan_one(object: $plan) {
         id
         revision
-      }
-    }
-  `,
-
-  CREATE_SIMULATION: `#graphql
-    mutation CreateSimulation($simulation: simulation_insert_input!) {
-      insert_simulation_one(object: $simulation) {
-        id
       }
     }
   `,
@@ -89,6 +82,22 @@ const gql = {
     query GetPlanRevision($id: Int!) {
       plan: plan_by_pk(id: $id) {
         revision
+      }
+    }
+  `,
+
+  GET_SIMULATION_DATASET: `#graphql
+    query GetSimulationDataset($id: Int!) {
+      simulationDataset: simulation_dataset_by_pk(id: $id) {
+        canceled
+        simulation_start_time
+        simulation_end_time
+        simulated_activities {
+          activity_directive { id }
+          duration
+          start_time
+          start_offset
+        }
       }
     }
   `,
@@ -181,14 +190,64 @@ const gql = {
         simulations {
           arguments
           id
+          simulation_start_time
+          simulation_end_time
           template: simulation_template {
             arguments
             description
             id
+            simulation_start_time
+            simulation_end_time
           }
         }
         startTime: start_time
       }
+    }
+  `,
+
+  INSERT_SIMULATION_TEMPLATE: `#graphql
+    mutation CreateSimulationTemplate($simulationTemplateInsertInput: simulation_template_insert_input!) {
+      insert_simulation_template_one(object: $simulationTemplateInsertInput) {
+        id
+      }
+    }
+  `,
+
+  ASSIGN_TEMPLATE_TO_SIMULATION: `#graphql
+    mutation AssignTemplateToSimulation($simulation_id: Int!, $simulation_template_id: Int!) {
+      update_simulation_by_pk(pk_columns: {id: $simulation_id}, _set: {simulation_template_id: $simulation_template_id}) {
+        simulation_template_id
+      }
+    }
+  `,
+
+  UPDATE_SIMULATION_TEMPLATE_BOUNDS: `#graphql
+    mutation updateSimulationTemplateBounds($simulation_template_id: Int!, $simulation_start_time: timestamptz!, $simulation_end_time: timestamptz!) {
+      update_simulation_template_by_pk(pk_columns: {id: $simulation_template_id},
+      _set: {
+        simulation_start_time: $simulation_start_time,
+        simulation_end_time: $simulation_end_time}) {
+        id
+       }
+    }
+  `,
+
+  GET_SIMULATION_ID: `#graphql
+    query getSimulationId($plan_id: Int!) {
+      simulation: simulation(where: {plan_id: {_eq: $plan_id}}) {
+        id
+      }
+    }
+  `,
+
+  UPDATE_SIMULATION_BOUNDS: `#graphql
+    mutation updateSimulationBounds($plan_id: Int!, $simulation_start_time: timestamptz!, $simulation_end_time: timestamptz!) {
+      update_simulation(where: {plan_id: {_eq: $plan_id}},
+      _set: {
+        simulation_start_time: $simulation_start_time,
+        simulation_end_time: $simulation_end_time}) {
+        affected_rows
+       }
     }
   `,
 

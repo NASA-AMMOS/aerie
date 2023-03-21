@@ -28,7 +28,7 @@ public record SynchronousSimulationAgent (
   public void simulate(final PlanId planId, final RevisionData revisionData, final ResultsProtocol.WriterRole writer) {
     final Plan plan;
     try {
-      plan = this.planService.getPlan(planId);
+      plan = this.planService.getPlanForSimulation(planId);
 
       // Validate plan revision
       final var currentRevisionData = this.planService.getPlanRevisionData(planId);
@@ -50,6 +50,9 @@ public record SynchronousSimulationAgent (
 
     final var planDuration = Duration.of(
         plan.startTimestamp.toInstant().until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS),
+        Duration.MICROSECONDS);
+    final var simDuration = Duration.of(
+        plan.simulationStartTimestamp.toInstant().until(plan.simulationEndTimestamp.toInstant(), ChronoUnit.MICROS),
         Duration.MICROSECONDS);
 
     final SimulationResults results;
@@ -73,8 +76,9 @@ public record SynchronousSimulationAgent (
 
       results = this.missionModelService.runSimulation(new CreateSimulationMessage(
           plan.missionModelId,
+          plan.simulationStartTimestamp.toInstant(),
+          simDuration,
           plan.startTimestamp.toInstant(),
-          planDuration,
           planDuration,
           plan.activityDirectives,
           plan.configuration));

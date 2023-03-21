@@ -109,3 +109,18 @@ create trigger cleanup_on_delete_trigger
   before delete on plan
   for each row
 execute function cleanup_on_delete();
+
+create function create_simulation_row_for_new_plan()
+returns trigger
+security definer
+language plpgsql as $$begin
+  insert into simulation (revision, simulation_template_id, plan_id, arguments)
+  values (0, null, new.id, '{}');
+  return new;
+end
+$$;
+
+create trigger simulation_row_for_new_plan_trigger
+after insert on plan
+for each row
+execute function create_simulation_row_for_new_plan();

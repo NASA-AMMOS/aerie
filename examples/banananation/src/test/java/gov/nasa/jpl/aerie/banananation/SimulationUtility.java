@@ -32,6 +32,7 @@ public final class SimulationUtility {
         schedule,
         startTime,
         simulationDuration,
+        startTime,
         simulationDuration);
   }
 

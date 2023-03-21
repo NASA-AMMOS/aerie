@@ -43,6 +43,7 @@ public class SimulateMapSchedule {
         schedule,
         startTime,
         simulationDuration,
+        startTime,
         simulationDuration);
 
       simulationResults.realProfiles.forEach((name, samples) -> {

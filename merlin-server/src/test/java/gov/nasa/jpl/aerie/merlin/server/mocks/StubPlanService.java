@@ -51,7 +51,15 @@ public final class StubPlanService implements PlanService {
   }
 
 
-  public Plan getPlan(final PlanId planId) throws NoSuchPlanException {
+  public Plan getPlanForSimulation(final PlanId planId) throws NoSuchPlanException {
+    if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
+      throw new NoSuchPlanException(planId);
+    }
+
+    return EXISTENT_PLAN;
+  }
+
+   public Plan getPlanForValidation(final PlanId planId) throws NoSuchPlanException {
     if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(planId);
     }

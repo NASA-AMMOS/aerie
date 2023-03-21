@@ -12,6 +12,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Unit;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,9 +22,10 @@ public final class SimulationDriver {
   SimulationResults simulate(
       final MissionModel<Model> missionModel,
       final Map<ActivityDirectiveId, ActivityDirective> schedule,
-      final Instant startTime,
-      final Duration planDuration,
-      final Duration simulationDuration
+      final Instant simulationStartTime,
+      final Duration simulationDuration,
+      final Instant planStartTime,
+      final Duration planDuration
   ) {
     try (final var engine = new SimulationEngine()) {
       /* The top-level simulation timeline. */
@@ -56,9 +58,18 @@ public final class SimulationDriver {
         // Schedule all activities.
         // Using HashMap explicitly because it allows `null` as a key.
         // `null` key means that an activity is not waiting on another activity to finish to know its start time
-        final HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(
-            planDuration,
-            schedule).compute();
+        HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> resolved = new StartOffsetReducer(planDuration, schedule).compute();
+        if(resolved.size() != 0) {
+          resolved.put(
+              null,
+              StartOffsetReducer.adjustStartOffset(
+                  resolved.get(null),
+                  Duration.of(
+                      planStartTime.until(simulationStartTime, ChronoUnit.MICROS),
+                      Duration.MICROSECONDS)));
+        }
+        // Filter out activities that are before simulationStartTime
+        resolved = StartOffsetReducer.filterOutNegativeStartOffset(resolved);
 
         scheduleActivities(
             schedule,
@@ -89,11 +100,11 @@ public final class SimulationDriver {
           timeline.add(commit);
         }
       } catch (Throwable ex) {
-        throw new SimulationException(elapsedTime, startTime, ex);
+        throw new SimulationException(elapsedTime, simulationStartTime, ex);
       }
 
       final var topics = missionModel.getTopics();
-      return SimulationEngine.computeResults(engine, startTime, elapsedTime, activityTopic, timeline, topics);
+      return SimulationEngine.computeResults(engine, simulationStartTime, elapsedTime, activityTopic, timeline, topics);
     }
   }
 

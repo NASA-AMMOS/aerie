@@ -17,8 +17,13 @@ public class StartOffsetReducer extends RecursiveTask<HashMap<ActivityDirectiveI
 
   public StartOffsetReducer(Duration planDuration, Map<ActivityDirectiveId, ActivityDirective> activityDirectives){
     this.planDuration = planDuration;
-    this.completeMapOfDirectives = activityDirectives;
-    this.activityDirectivesToProcess = activityDirectives;
+    if(activityDirectives == null) {
+      this.completeMapOfDirectives = Map.of();
+      this.activityDirectivesToProcess = Map.of();
+    } else {
+      this.completeMapOfDirectives = activityDirectives;
+      this.activityDirectivesToProcess = activityDirectives;
+    }
   }
 
   private StartOffsetReducer(
@@ -92,7 +97,7 @@ public class StartOffsetReducer extends RecursiveTask<HashMap<ActivityDirectiveI
    *   Duration: the net start offset from that ID
    */
   private Pair<ActivityDirectiveId, Duration> getNetOffset(ActivityDirective ad){
-    ActivityDirective currentActivityDirective = ad;
+    ActivityDirective currentActivityDirective;
     ActivityDirectiveId currentAnchorId = ad.anchorId();
     boolean anchoredToStart = ad.anchoredToStart();
     Duration netOffset = ad.startOffset();
@@ -108,6 +113,59 @@ public class StartOffsetReducer extends RecursiveTask<HashMap<ActivityDirectiveI
       return Pair.of(null, planDuration.plus(netOffset)); // Add plan duration if anchored to plan end for net
     }
     return Pair.of(currentAnchorId, netOffset);
+  }
+
+  /**
+   * Takes a List of Pairs of ActivityDirectiveIds and Durations, and returns a new List where the Durations have been uniformly adjusted.
+   *
+   * This will generally exclusively be called with the values mapped to the `null` key, in order to correct for the difference between plan startTime and simulation startTime.
+   *
+   * @param original The list to be used as reference.
+   * @param difference The amount to subtract from the Duration of each entry in original.
+   * @return A new List with the updated Durations.
+   */
+  public static List<Pair<ActivityDirectiveId, Duration>> adjustStartOffset(List<Pair<ActivityDirectiveId, Duration>> original, Duration difference) {
+    if(original == null) return null;
+    if(difference == null) throw new NullPointerException("Cannot adjust start offset because \"difference\" is null.");
+    return original.stream().map( pair -> Pair.of(pair.getKey(), pair.getValue().minus(difference))).toList();
+  }
+
+  /**
+   * Takes a Hashmap and filters out all activities with a negative start offset, as well as any activities depending on the activities that were filtered out (and so on).
+   *
+   * @param toFilter The HashMap to be filtered.
+   * @return A new HashMap that has been appropriately filtered.
+   */
+  public static HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> filterOutNegativeStartOffset(HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>> toFilter) {
+    if(toFilter == null) return null;
+
+    // Create a deep copy of toFilter (The Pairs are immutable, so they do not need to be copied)
+    final var filtered = new HashMap<ActivityDirectiveId, List<Pair<ActivityDirectiveId, Duration>>>(toFilter.size());
+    for(final var key : toFilter.keySet()){
+      filtered.put(key, new ArrayList<>(toFilter.get(key)));
+    }
+
+    if(!toFilter.containsKey(null)){
+      if(!toFilter.isEmpty()) {
+        throw new RuntimeException("None of the activities in \"toFilter\" are anchored to the plan");
+      }
+      return filtered;
+    }
+
+    final var beforeStartTime = new ArrayList<>(toFilter
+                                                    .get(null)
+                                                    .stream()
+                                                    .filter(pair -> pair.getValue().isNegative())
+                                                    .toList());
+    while(!beforeStartTime.isEmpty()){
+      final Pair<ActivityDirectiveId, Duration> currentPair = beforeStartTime.remove(beforeStartTime.size() - 1);
+      if(filtered.containsKey(currentPair.getLeft())) {
+        beforeStartTime.addAll(filtered.get(currentPair.getLeft()));
+        filtered.remove(currentPair.getLeft());
+      }
+    }
+    filtered.get(null).removeIf(pair -> pair.getValue().isNegative());
+    return filtered;
   }
 }
 

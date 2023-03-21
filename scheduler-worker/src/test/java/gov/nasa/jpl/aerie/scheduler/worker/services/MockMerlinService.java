@@ -106,12 +106,6 @@ class MockMerlinService implements MissionModelService, PlanService.OwnerRole {
   }
 
   @Override
-  public void createSimulationForPlan(final PlanId planId)
-  {
-
-  }
-
-  @Override
   public Map<SchedulingActivityDirective, ActivityDirectiveId> updatePlanActivityDirectives(
       final PlanId planId,
       final Map<SchedulingActivityDirectiveId, ActivityDirectiveId> idsFromInitialPlan,

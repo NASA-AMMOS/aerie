@@ -602,6 +602,7 @@ public final class SimulationEngine implements AutoCloseable {
                                  simulatedActivities,
                                  unfinishedActivities,
                                  startTime,
+                                 elapsedTime,
                                  topics,
                                  serializedTimeline);
   }

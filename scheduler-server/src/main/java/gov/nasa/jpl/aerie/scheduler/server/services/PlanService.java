@@ -85,7 +85,7 @@ public interface PlanService {
     /**
      * create a new empty plan container based on specifications
      *
-     * does not attach a simulation / configuration to the plan! (may require separate call to createSimulationForPlan)
+     * does not attach a scheduling specification to the plan!
      *
      * @param name the human legible label for the new plan container to create
      * @param modelId the database identifier of the mission model to associate with the plan
@@ -95,16 +95,6 @@ public interface PlanService {
      * @throws NoSuchPlanException when the plan container could not be found in aerie after creation
      */
     PlanId createEmptyPlan(final String name, final long modelId, final Instant startTime, final Duration duration)
-    throws IOException, NoSuchPlanException, PlanServiceException;
-
-
-    /**
-     * create a new empty simulation container with default configuration args attached to the target plan
-     *
-     * @param planId the database id of the aerie plan container to attach the simulation container to
-     * @throws NoSuchPlanException when the plan container does not exist in aerie
-     */
-    void createSimulationForPlan(final PlanId planId)
     throws IOException, NoSuchPlanException, PlanServiceException;
 
     /**

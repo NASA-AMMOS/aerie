@@ -33,6 +33,8 @@ public final class PostgresPlanRepository implements PlanRepository {
     this.dataSource = dataSource;
   }
 
+  // GetAllPlans is exclusively used in tests currently and none of its usages are for simulation
+  // Therefore, this is implicitly GetAllPlans(ForValidation)
   @Override
   public Map<PlanId, Plan> getAllPlans() {
     try (final var connection = this.dataSource.getConnection()) {
@@ -44,15 +46,13 @@ public final class PostgresPlanRepository implements PlanRepository {
           try {
             final var planId = new PlanId(record.id());
             final var activities = getPlanActivities(connection, planId);
-            final var arguments = getPlanArguments(connection, planId);
 
             plans.put(planId, new Plan(
                 record.name(),
                 Long.toString(record.missionModelId()),
                 record.startTime(),
                 record.endTime(),
-                activities,
-                arguments
+                activities
             ));
           } catch (final NoSuchPlanException ex) {
             // If a plan was removed between getting its record and getting its activities, then the plan
@@ -69,53 +69,114 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Plan getPlan(final PlanId planId) throws NoSuchPlanException {
+  public Plan getPlanForSimulation(final PlanId planId) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
-        final var planRecord = getPlanRecord(connection, planId);
-        final var activities = getPlanActivities(connection, planId);
-        final var arguments = getPlanArguments(connection, planId);
+      final var planRecord = getPlanRecord(connection, planId);
+      final var simulationRecord = getSimRecord(connection, planId.id());
+      final Optional<SimulationTemplateRecord> templateRecord;
+      if (simulationRecord.simulationTemplateId().isPresent()) {
+        templateRecord = getTemplate(connection, simulationRecord.simulationTemplateId().get());
+      } else {
+        templateRecord = Optional.empty();
+      }
 
-        return new Plan(
-            planRecord.name(),
-            Long.toString(planRecord.missionModelId()),
-            planRecord.startTime(),
-            planRecord.endTime(),
-            activities,
-            arguments
-        );
+      final var activities = getPlanActivities(connection, planId);
+      final var arguments = getSimulationArguments(simulationRecord, templateRecord);
+      final var simStartTime = getSimStartTime(simulationRecord, templateRecord);
+      final var simEndTime = getSimEndTime(simulationRecord, templateRecord);
+
+      return new Plan(
+          planRecord.name(),
+          Long.toString(planRecord.missionModelId()),
+          planRecord.startTime(),
+          planRecord.endTime(),
+          activities,
+          arguments,
+          simStartTime,
+          simEndTime
+      );
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get plan", ex);
     }
   }
 
-  private Map<String, SerializedValue> getPlanArguments(
-      final Connection connection,
-      final PlanId planId
-  ) throws SQLException {
-    try (
-        final var getSimulationAction = new GetSimulationAction(connection);
-        final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection)
-    ) {
-      final var arguments = new HashMap<String, SerializedValue> ();
-      final var simRecord$ = getSimulationAction.get(planId.id());
+  @Override
+  public Plan getPlanForValidation(final PlanId planId) throws NoSuchPlanException {
+    try (final var connection = this.dataSource.getConnection()) {
+      final var planRecord = getPlanRecord(connection, planId);
+      final var activities = getPlanActivities(connection, planId);
 
-      if (simRecord$.isPresent()) {
-        final var simRecord = simRecord$.get();
-        final var templateId$ = simRecord.simulationTemplateId();
-
-        // Apply template arguments followed by simulation arguments.
-        // Overwriting of template arguments with sim. arguments is intentional here,
-        // and the resulting set of arguments is assumed to be complete
-        if (templateId$.isPresent()) {
-          getSimulationTemplateAction.get(templateId$.get()).ifPresent(simTemplateRecord -> {
-            arguments.putAll(simTemplateRecord.arguments());
-          });
-        }
-        arguments.putAll(simRecord.arguments());
-      }
-
-      return arguments;
+      return new Plan(
+          planRecord.name(),
+          Long.toString(planRecord.missionModelId()),
+          planRecord.startTime(),
+          planRecord.endTime(),
+          activities
+      );
+    } catch (final SQLException ex) {
+      throw new DatabaseException("Failed to get plan", ex);
     }
+  }
+
+
+  private SimulationRecord getSimRecord(final Connection connection, final long planId) throws SQLException {
+    try (final var getSimulationAction = new GetSimulationAction(connection)) {
+      return getSimulationAction.get(planId);
+    } catch (SQLException ex) {
+      throw new DatabaseException("Failed to get simulation configuration", ex);
+    }
+  }
+
+  private Optional<SimulationTemplateRecord> getTemplate(final Connection connection, final long templateID) {
+    try (final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection)) {
+      return getSimulationTemplateAction.get(templateID);
+    } catch (SQLException ex) {
+      throw new DatabaseException("Failed to get template", ex);
+    }
+  }
+
+  private Map<String, SerializedValue> getSimulationArguments(final SimulationRecord simulationRecord, final Optional<SimulationTemplateRecord> templateRecord)
+  {
+    final var arguments = new HashMap<String, SerializedValue>();
+    final var templateId$ = simulationRecord.simulationTemplateId();
+
+    // Apply template arguments followed by simulation arguments.
+    // Overwriting of template arguments with sim. arguments is intentional here,
+    // and the resulting set of arguments is assumed to be complete
+    if (templateId$.isPresent()) {
+      templateRecord.ifPresentOrElse(
+          simTemplateRecord -> arguments.putAll(simTemplateRecord.arguments()),
+          () -> {
+            throw new RuntimeException("TemplateRecord should not be empty");
+          });
+    }
+
+    arguments.putAll(simulationRecord.arguments());
+    return arguments;
+  }
+
+    private Timestamp getSimStartTime(SimulationRecord simulationRecord, Optional<SimulationTemplateRecord> templateRecord) {
+    final var templateId = simulationRecord.simulationTemplateId();
+    if(simulationRecord.simulationStartTime() != null) return simulationRecord.simulationStartTime();
+
+    if(templateId.isPresent()){
+      if(templateRecord.isEmpty()) throw new RuntimeException("TemplateRecord should not be empty");
+      if(templateRecord.get().simulationStartTime() != null) return templateRecord.get().simulationStartTime();
+      throw new RuntimeException("Either \"simulationRecord\" or \"templateRecord\" must define \"simulationStartTime\".");
+    }
+    throw new RuntimeException("\"simulationRecord\" must either define \"simulationStartTime\" or have a \"simulationTemplateId\".");
+  }
+
+  private Timestamp getSimEndTime(SimulationRecord simulationRecord, Optional<SimulationTemplateRecord> templateRecord) {
+    final var templateId = simulationRecord.simulationTemplateId();
+    if(simulationRecord.simulationEndTime() != null) return simulationRecord.simulationEndTime();
+
+    if(templateId.isPresent()){
+      if(templateRecord.isEmpty()) throw new RuntimeException("TemplateRecord should not be empty");
+      if(templateRecord.get().simulationEndTime() != null) return templateRecord.get().simulationEndTime();
+      throw new RuntimeException("Either \"simulationRecord\" or \"templateRecord\" must define \"simulationEndTime\".");
+    }
+    throw new RuntimeException("\"simulationRecord\" must either define \"simulationEndTime\" or have a \"simulationTemplateId\".");
   }
 
   @Override

@@ -301,8 +301,6 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
     final var planId = createEmptyPlan(
         planName, planMetadata.modelId(),
         planMetadata.horizon().getStartInstant(), planMetadata.horizon().getEndAerie());
-    //create sim storage space since doesn't happen automatically (else breaks further queries)
-    createSimulationForPlan(planId);
     final Map<SchedulingActivityDirective, ActivityDirectiveId> activityToId = createAllPlanActivityDirectives(planId, plan, activityToGoalId);
 
     return Pair.of(planId, activityToId);
@@ -335,25 +333,6 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
               .longValueExact());
     } catch (ClassCastException | ArithmeticException e) {
       throw new NoSuchPlanException(null);
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void createSimulationForPlan(final PlanId planId)
-  throws IOException, NoSuchPlanException, PlanServiceException
-  {
-    final var request = (
-        "mutation createSimulationForPlan { insert_simulation_one( object: {"
-        + "plan_id: %d arguments: {} } ) { id } }")
-        .formatted(planId.id());
-    final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(planId));
-    try {
-      response.getJsonObject("data").getJsonObject("insert_simulation_one").getJsonNumber("id").longValueExact();
-    } catch (ClassCastException | ArithmeticException e) {
-      throw new NoSuchPlanException(planId);
     }
   }
 
