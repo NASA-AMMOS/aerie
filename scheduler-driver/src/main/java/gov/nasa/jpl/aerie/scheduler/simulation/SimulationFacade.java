@@ -27,7 +27,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 /**
  * A facade for simulating plans and processing simulation results.
  */
-public class SimulationFacade {
+public class SimulationFacade implements AutoCloseable{
 
   private static final Logger logger = LoggerFactory.getLogger(SimulationFacade.class);
 
@@ -58,6 +58,11 @@ public class SimulationFacade {
     this.itSimActivityId = 0;
     this.insertedActivities = new HashMap<>();
     this.activityTypes = new HashMap<>();
+  }
+
+  @Override
+  public void close(){
+    driver.close();
   }
 
   public void setActivityTypes(final Collection<ActivityType> activityTypes){
@@ -129,7 +134,7 @@ public class SimulationFacade {
       final var oldInsertedActivities = new HashMap<>(insertedActivities);
       insertedActivities.clear();
       planActDirectiveIdToSimulationActivityDirectiveId.clear();
-      driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration());
+      driver.initSimulation();
       simulateActivities(oldInsertedActivities.keySet());
     }
   }
