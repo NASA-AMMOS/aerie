@@ -31,6 +31,16 @@ export type CommandOptions<A extends Args[] | { [argName: string]: any } = [] | 
   | {}
 );
 
+// @ts-ignore : 'Args' found in JSON Spec
+export type ImmediateOptions<A extends Args[] | { [argName: string]: any } = [] | {}> = {
+  stem: string;
+  arguments: A;
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  metadata?: Metadata | undefined;
+  // @ts-ignore : 'Description' found in JSON Spec
+  description?: Description | undefined;
+};
+
 export type HardwareOptions = {
   stem: string;
   // @ts-ignore : 'Description' found in JSON Spec
@@ -162,6 +172,28 @@ declare global {
     public GET_DESCRIPTION(): Description | undefined;
   }
 
+  // @ts-ignore : 'ARGS' found in JSON Spec
+  class ImmediateStem<A extends Args[] | { [argName: string]: any } = [] | {}> implements ImmediateCommand {
+    // @ts-ignore : 'Args' found in JSON Spec
+    args: Args;
+    stem: string;
+
+    public static new<A extends any[] | { [argName: string]: any }>(opts: ImmediateOptions<A>): ImmediateStem<A>;
+
+    // @ts-ignore : 'Command' found in JSON Spec
+    public toSeqJson(): ImmediateCommand;
+
+    // @ts-ignore : 'Metadata' found in JSON Spec
+    public METADATA(metadata: Metadata): ImmediateStem<A>;
+    // @ts-ignore : 'Metadata' found in JSON Spec
+    public GET_METADATA(): Metadata | undefined;
+
+    // @ts-ignore : 'Description' found in JSON Spec
+    public DESCRIPTION(description: Description): ImmediateStem<A>;
+    // @ts-ignore : 'Description' found in JSON Spec
+    public GET_DESCRIPTION(): Description | undefined;
+  }
+
   // @ts-ignore : 'HardwareCommand' found in JSON Spec
   class HardwareStem implements HardwareCommand {
     stem: string;
@@ -211,7 +243,7 @@ declare global {
   // @ts-ignore : 'Commands' found in generated code
   function A(absoluteTime: Temporal.Instant): typeof Commands & typeof STEPS;
   // @ts-ignore : 'Commands' found in generated code
-  function A(timeDOYString: string): typeof Commands;
+  function A(timeDOYString: string): typeof Commands & typeof STEPS;
 
   // @ts-ignore : 'Commands' found in generated code
   function R(...args: [TemplateStringsArray, ...string[]]): typeof Commands & typeof STEPS;
@@ -232,10 +264,10 @@ declare global {
 }
 
 /*
-	---------------------------------
-				Sequence eDSL
-	---------------------------------
-	*/
+		  ---------------------------------
+					  Sequence eDSL
+		  ---------------------------------
+		  */
 // @ts-ignore : 'SeqJson' found in JSON Spec
 export class Sequence implements SeqJson {
   public readonly id: string;
@@ -319,7 +351,14 @@ export class Sequence implements SeqJson {
             }),
           }
         : {}),
-      ...(this.immediate_commands ? { immediate_commands: this.immediate_commands } : {}),
+      ...(this.immediate_commands
+        ? {
+            immediate_commands: this.immediate_commands.map(command => {
+              if (command instanceof ImmediateStem) return command.toSeqJson();
+              return command;
+            }),
+          }
+        : {}),
       ...(this.hardware_commands
         ? {
             hardware_commands: this.hardware_commands.map(h => {
@@ -384,9 +423,22 @@ export class Sequence implements SeqJson {
     //   }
     // ],
 
-    const immediateString = this.immediate_commands
-      ? `[\n${indent(this.immediate_commands.map(i => objectToString(i)).join(',\n'), 1)}\n]`
-      : '';
+    const immediateString =
+      this.immediate_commands && this.immediate_commands.length > 0
+        ? '[\n' +
+          indent(
+            this.immediate_commands
+              .map(command => {
+                if (command instanceof ImmediateStem) {
+                  return command.toEDSLString() + ',';
+                }
+                return objectToString(command) + ',';
+              })
+              .join('\n'),
+            1,
+          ) +
+          '\n]'
+        : '';
     //ex.
     // immediate_commands: [
     //   {
@@ -437,25 +489,25 @@ export class Sequence implements SeqJson {
       : '';
     //ex.
     /*requests: [
-        {
-          name: 'power',
-          steps: [
-            R`04:39:22.000`.PREHEAT_OVEN({
-              temperature: 360,
-            }),
-            C.ADD_WATER,
-          ],
-          type: 'request',
-          description: ' Activate the oven',
-          ground_epoch: {
-            delta: 'now',
-            name: 'activate',
-          },
-          metadata: {
-            author: 'rrgoet',
-          },
-        }
-      ]
+    {
+      name: 'power',
+      steps: [
+      R`04:39:22.000`.PREHEAT_OVEN({
+      temperature: 360,
+      }),
+      C.ADD_WATER,
+      ],
+      type: 'request',
+      description: ' Activate the oven',
+      ground_epoch: {
+      delta: 'now',
+      name: 'activate',
+      },
+      metadata: {
+      author: 'rrgoet',
+      },
+    }
+    ]
     }*/
 
     return (
@@ -525,7 +577,12 @@ export class Sequence implements SeqJson {
             }),
           }
         : {}),
-      ...(json.immediate_commands ? { immediate_commands: json.immediate_commands } : {}),
+      ...(json.immediate_commands
+        ? {
+            // @ts-ignore : 'Step' found in JSON Spec
+            immediate_commands: json.immediate_commands.map((c: ImmediateCommand) => ImmediateStem.fromSeqJson(c)),
+          }
+        : {}),
       ...(json.hardware_commands
         ? // @ts-ignore : 'HardwareCommand' found in JSON Spec
           { hardware_commands: json.hardware_commands.map((h: HardwareCommand) => HardwareStem.fromSeqJson(h)) }
@@ -535,10 +592,10 @@ export class Sequence implements SeqJson {
 }
 
 /*
-	---------------------------------
-				STEPS eDSL
-	---------------------------------
-	*/
+	  ---------------------------------
+				  STEPS eDSL
+	  ---------------------------------
+	  */
 
 // @ts-ignore : 'Args' found in JSON Spec
 export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}> implements Command {
@@ -917,6 +974,267 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
     return result;
   }
 }
+
+// @ts-ignore : 'Args' found in JSON Spec
+export class ImmediateStem<A extends Args[] | { [argName: string]: any } = [] | {}> implements ImmediateCommand {
+  public readonly arguments: A;
+  public readonly stem: string;
+  // @ts-ignore : 'Args' found in JSON Spec
+  public readonly args!: Args;
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  private readonly _metadata?: Metadata | undefined;
+  // @ts-ignore : 'Description' found in JSON Spec
+  private readonly _description?: Description | undefined;
+
+  private constructor(opts: ImmediateOptions<A>) {
+    this.stem = opts.stem;
+    this.arguments = opts.arguments;
+    this._metadata = opts.metadata;
+    this._description = opts.description;
+  }
+
+  public static new<A extends any[] | { [argName: string]: any }>(opts: ImmediateOptions<A>): ImmediateStem<A> {
+    return new ImmediateStem<A>(opts);
+  }
+
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  public METADATA(metadata: Metadata): ImmediateStem {
+    return ImmediateStem.new({
+      stem: this.stem,
+      arguments: this.arguments,
+      metadata: metadata,
+      description: this._description,
+    });
+  }
+
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  public GET_METADATA(): Metadata | undefined {
+    return this._metadata;
+  }
+
+  // @ts-ignore : 'Description' found in JSON Spec
+  public DESCRIPTION(description: Description): ImmediateStem {
+    return ImmediateStem.new({
+      stem: this.stem,
+      arguments: this.arguments,
+      metadata: this._metadata,
+      description: description,
+    });
+  }
+  // @ts-ignore : 'Description' found in JSON Spec
+  public GET_DESCRIPTION(): Description | undefined {
+    return this._description;
+  }
+
+  // @ts-ignore : 'Command' found in JSON Spec
+  public toSeqJson(): ImmediateCommand {
+    return {
+      args: ImmediateStem.convertArgsToInterfaces(this.arguments),
+      stem: this.stem,
+      ...(this._metadata ? { metadata: this._metadata } : {}),
+      ...(this._description ? { description: this._description } : {}),
+    };
+  }
+
+  // @ts-ignore : 'Command' found in JSON Spec
+  public static fromSeqJson(json: ImmediateCommand): ImmediateStem {
+    return ImmediateStem.new({
+      stem: json.stem,
+      arguments: ImmediateStem.convertInterfacesToArgs(json.args),
+      metadata: json.metadata,
+      description: json.description,
+    });
+  }
+
+  public toEDSLString(): string {
+    const argsString =
+      Object.keys(this.arguments).length === 0 ? '' : `(${ImmediateStem.argumentsToString(this.arguments)})`;
+
+    const metadata =
+      this._metadata && Object.keys(this._metadata).length !== 0
+        ? `\n.METADATA(${objectToString(this._metadata)})`
+        : '';
+    const description =
+      this._description && this._description.length !== 0 ? `\n.DESCRIPTION('${this._description}')` : '';
+
+    return `${this.stem}${argsString}${description}${metadata}`;
+  }
+
+  // @ts-ignore : 'Args' found in JSON Spec
+  private static argumentsToString<A extends Args[] | { [argName: string]: any } = [] | {}>(args: A): string {
+    if (Array.isArray(args)) {
+      const argStrings = args.map(arg => {
+        if (typeof arg === 'string') {
+          return `'${arg}'`;
+        }
+        return arg.toString();
+      });
+
+      return argStrings.join(', ');
+    } else {
+      return objectToString(args);
+    }
+  }
+
+  // This function takes an array of Args interfaces and converts it into an object.
+  // The interfaces array contains objects matching the ARGS interface.
+  // Depending on the type property of each object, a corresponding object with the name and value properties is created
+  // and added to the output.
+  // Additionally, the function includes a validation function that prevents remote property injection attacks.
+  // @ts-ignore : 'Args' found in JSON Spec
+  private static convertInterfacesToArgs(interfaces: Args): {} | [] {
+    const args = interfaces.length === 0 ? [] : {};
+
+    // Use to prevent a Remote property injection attack
+    const validate = (input: string): boolean => {
+      const pattern = /^[a-zA-Z0-9_-]+$/;
+      const isValid = pattern.test(input);
+      return isValid;
+    };
+
+    const convertedArgs = interfaces.map(
+      (
+        // @ts-ignore : found in JSON Spec
+        arg: StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument | RepeatArgument,
+      ) => {
+        // @ts-ignore : 'RepeatArgument' found in JSON Spec
+        if (arg.type === 'repeat') {
+          if (validate(arg.name)) {
+            // @ts-ignore : 'RepeatArgument' found in JSON Spec
+            return {
+              [arg.name]: arg.value.map(
+                (
+                  // @ts-ignore : found in JSON Spec
+                  repeatArgBundle: (StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument)[],
+                ) =>
+                  repeatArgBundle.reduce((obj, item) => {
+                    if (validate(item.name)) {
+                      obj[item.name] = item.value;
+                    }
+                    return obj;
+                  }, {}),
+              ),
+            };
+          }
+          return { repeat_error: 'Remote property injection detected...' };
+        } else if (arg.type === 'symbol') {
+          if (validate(arg.name)) {
+            // @ts-ignore : 'SymbolArgument' found in JSON Spec
+            return { [arg.name]: { symbol: arg.value } };
+          }
+          return { symbol_error: 'Remote property injection detected...' };
+          // @ts-ignore : 'HexArgument' found in JSON Spec
+        } else if (arg.type === 'hex') {
+          if (validate(arg.name)) {
+            // @ts-ignore : 'HexArgument' found in JSON Spec
+            return { [arg.name]: { hex: arg.value } };
+          }
+          return { hex_error: 'Remote property injection detected...' };
+        } else {
+          if (validate(arg.name)) {
+            return { [arg.name]: arg.value };
+          }
+          return { error: 'Remote property injection detected...' };
+        }
+      },
+    );
+
+    for (const key in convertedArgs) {
+      Object.assign(args, convertedArgs[key]);
+    }
+
+    return args;
+  }
+
+  /**
+   * The specific function to handle repeat args, we need to do this separately because
+   * you cannot have a RepeatArgument inside a RepeatArgument.
+   *
+   * @param args
+   * @returns
+   */
+  private static convertRepeatArgs(args: { [argName: string]: any }): any[] {
+    let result: any[] = [];
+
+    if (args['length'] === 0) {
+      return result;
+    }
+
+    const values = Array.isArray(args) ? args[0] : args;
+
+    for (let key in values) {
+      result.push(this.convertValueToObject(values[key], key));
+    }
+
+    return result;
+  }
+
+  /**
+   * This function takes a value and key and converts it to the correct object type supported by the seqjson spec.
+   * The only type not supported here is RepeatArgument, as that is handled differently because you cannot have a
+   * RepeatArgument inside a RepeatArgument.
+   *
+   * @param value
+   * @param key
+   * @returns An object for each type
+   */
+  private static convertValueToObject(value: any, key: string): any {
+    switch (typeof value) {
+      case 'string':
+        return { type: 'string', value: value, name: key };
+      case 'number':
+        return { type: 'number', value: value, name: key };
+      case 'boolean':
+        return { type: 'boolean', value: value, name: key };
+      default:
+        if (value instanceof Object && value.symbol && value.symbol === 'string') {
+          return { type: 'symbol', value: value, name: key };
+        } else if (
+          value instanceof Object &&
+          value.hex &&
+          value.hex === 'string' &&
+          new RegExp('^0x([0-9A-F])+$').test(value.hex)
+        ) {
+          return { type: 'hex', value: value, name: key };
+        }
+    }
+  }
+
+  //The function takes an object of arguments and converts them into the Args type. It does this by looping through the
+  // values and pushing a new argument type to the result array depending on the type of the value.
+  // If the value is an array, it will create a RepeatArgument type and recursively call on the values of the array.
+  // the function returns the result array of argument types -
+  // StringArgument, NumberArgument, BooleanArgument, SymbolArgument, HexArgument, and RepeatArgument.
+  // @ts-ignore : 'Args' found in JSON Spec
+  private static convertArgsToInterfaces(args: { [argName: string]: any }): Args {
+    // @ts-ignore : 'Args' found in JSON Spec
+    let result: Args = [];
+    if (args['length'] === 0) {
+      return result;
+    }
+
+    const values = Array.isArray(args) ? args[0] : args;
+
+    for (let key in values) {
+      let value = values[key];
+      if (Array.isArray(value)) {
+        // @ts-ignore : 'RepeatArgument' found in JSON Spec
+        let repeatArg: RepeatArgument = {
+          value: value.map(arg => {
+            return this.convertRepeatArgs(arg);
+          }),
+          type: 'repeat',
+          name: key,
+        };
+        result.push(repeatArg);
+      } else {
+        result = result.concat(this.convertValueToObject(value, key));
+      }
+    }
+    return result;
+  }
+}
+
 // @ts-ignore : 'GroundBlock' found in JSON Spec
 export class Ground_Block implements GroundBlock {
   name: string;
@@ -1383,8 +1701,8 @@ export const STEPS = {
 };
 
 /*-----------------------------------
-	  HW Commands
-	------------------------------------- */
+		HW Commands
+	  ------------------------------------- */
 // @ts-ignore : 'HardwareCommand' found in JSON Spec
 export class HardwareStem implements HardwareCommand {
   public readonly stem: string;
@@ -1461,10 +1779,10 @@ export class HardwareStem implements HardwareCommand {
 }
 
 /*
-	---------------------------------
-			Time Utilities
-	---------------------------------
-	*/
+	  ---------------------------------
+			  Time Utilities
+	  ---------------------------------
+	  */
 
 export type DOY_STRING = string & { __brand: 'DOY_STRING' };
 export type HMS_STRING = string & { __brand: 'HMS_STRING' };
@@ -1665,10 +1983,10 @@ function commandsWithTimeValue<T extends TimingTypes>(
 }
 
 /*
-	---------------------------------
-			Utility Functions
-	---------------------------------
-	*/
+	  ---------------------------------
+			  Utility Functions
+	  ---------------------------------
+	  */
 
 // @ts-ignore : Used in generated code
 function sortCommandArguments(args: { [argName: string]: any }, order: string[]): { [argName: string]: any } {

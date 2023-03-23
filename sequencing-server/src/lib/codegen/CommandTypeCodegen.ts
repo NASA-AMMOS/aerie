@@ -33,8 +33,8 @@ ${typescriptFswCommands.map(fswCommand => fswCommand.interfaces).join('\n')}${ty
     .join('')}\t};
 
 \tconst Hardwares : {\n${dictionary.hwCommands
-    .map(hwCommand => `\t\t${hwCommand.stem}: typeof ${hwCommand.stem}`)
-    .join(',\n')} \t};
+    .map(hwCommand => `\t\t${hwCommand.stem}: typeof ${hwCommand.stem},\n`)
+    .join('')} \t};
 }`;
 
   // language=TypeScript
@@ -45,19 +45,19 @@ ${typescriptFswCommands.map(fswCommand => fswCommand.interfaces).join('\n')}${ty
 
 ${typescriptFswCommands.map(fswCommand => fswCommand.value).join('\n')}
 ${typescriptHwCommands.map(hwCommands => hwCommands.value).join('\n')}\n
-export const Commands = {${dictionary.fswCommands
+export const Commands = {\n${dictionary.fswCommands
     .map(fswCommand => `\t\t${fswCommand.stem}: ${fswCommand.stem}_STEP,\n`)
     .join('')}};
 
-export const Immediates = {${dictionary.fswCommands
+export const Immediates = {\n${dictionary.fswCommands
     .map(fswCommand => `\t\t${fswCommand.stem}: ${fswCommand.stem},\n`)
     .join('')}};
 
-export const Hardwares = {${dictionary.hwCommands
+export const Hardwares = {\n${dictionary.hwCommands
     .map(hwCommands => `\t\t${hwCommands.stem}: ${hwCommands.stem},\n`)
     .join('')}};
 
-Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS), Sequence}, Hardwares);
+Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS), Sequence}, Hardwares, Immediates);
 `;
 
   return {
@@ -179,7 +179,7 @@ function generateHwCommandCode(hwCommand: ampcs.HwCommand): { value: string; int
     `\n})`;
 
   const interfaces =
-    `${doc}` + `\ninterface ${hwCommandName} extends HardwareStem {}\nconst ${hwCommandName}: ${hwCommandName}`;
+    `\t\t${doc}` + `\n\tinterface ${hwCommandName} extends HardwareStem {}\n\tconst ${hwCommandName}: ${hwCommandName}`;
   return {
     value,
     interfaces,
