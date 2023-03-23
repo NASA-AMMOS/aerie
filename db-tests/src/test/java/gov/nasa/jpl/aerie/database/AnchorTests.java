@@ -188,7 +188,7 @@ public class AnchorTests {
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery("""
         SELECT *
-        FROM activity_directive
+        FROM activity_directive_extended
         WHERE id = %d
         AND plan_id = %d;
       """.formatted(activityId, planId));
@@ -198,7 +198,8 @@ public class AnchorTests {
           res.getInt("plan_id"),
           (Interval) res.getObject("start_offset"),
           res.getString("anchor_id"),
-          res.getBoolean("anchored_to_start")
+          res.getBoolean("anchored_to_start"),
+          res.getString("approximate_start_time")
       );
     }
   }
@@ -207,7 +208,7 @@ public class AnchorTests {
     try (final var statement = connection.createStatement()) {
       final var res = statement.executeQuery("""
         SELECT *
-        FROM activity_directive
+        FROM activity_directive_extended
         WHERE plan_id = %d
         ORDER BY id;
       """.formatted(planId));
@@ -219,7 +220,8 @@ public class AnchorTests {
             res.getInt("plan_id"),
             (Interval) res.getObject("start_offset"),
             res.getString("anchor_id"),
-            res.getBoolean("anchored_to_start")
+            res.getBoolean("anchored_to_start"),
+            res.getString("approximate_start_time")
         ));
       }
       return activities;
@@ -286,7 +288,8 @@ public class AnchorTests {
       int planId,
       Interval startOffset,
       String anchorId,  // Since anchor_id allows for null values, this is a String to avoid confusion over what the number means.
-      boolean anchoredToStart
+      boolean anchoredToStart,
+      String approximateStartTime
   ) {}
 
   private record AnchorValidationStatus(int activityId, int planId, String reasonInvalid) {}
@@ -308,6 +311,7 @@ public class AnchorTests {
       assertNull(otherActivity.anchorId);
       assertTrue(otherActivity.anchoredToStart);
       assertEquals(oneDay, otherActivity.startOffset);
+      assertEquals("2020-01-02 00:00:00+00", otherActivity.approximateStartTime);
 
       // Set the anchor and assert that otherActivity was updated as expected.
       setAnchor(anchorActId, false, otherActId, planId);
@@ -318,6 +322,11 @@ public class AnchorTests {
       assertEquals(anchorActId, Integer.valueOf(otherActivity.anchorId));
       assertFalse(otherActivity.anchoredToStart);
       assertEquals(tenMinutes, otherActivity.startOffset);
+      assertEquals("2020-01-01 00:10:00+00", otherActivity.approximateStartTime);
+
+      // Anchor activity has the correct offset
+      Activity anchorActivity = getActivity(planId, anchorActId);
+      assertEquals("2020-01-01 00:00:00+00", anchorActivity.approximateStartTime);
     }
 
     @Test

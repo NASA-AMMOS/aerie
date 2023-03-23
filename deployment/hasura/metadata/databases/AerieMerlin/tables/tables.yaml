@@ -20,6 +20,7 @@
 - "!include public_event.yaml"
 - "!include public_simulated_activity_view.yaml"
 - "!include public_resource_profile_view.yaml"
+- "!include public_activity_directive_extended.yaml"
 - "!include hasura_functions_duplicate_plan_return_value.yaml"
 - "!include hasura_functions_get_plan_history_return_value.yaml"
 - "!include public_merge_request.yaml"
