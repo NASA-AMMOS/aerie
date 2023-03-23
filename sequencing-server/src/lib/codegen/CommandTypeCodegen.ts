@@ -29,7 +29,7 @@ ${typescriptFswCommands.map(fswCommand => fswCommand.interfaces).join('\n')}${ty
     .map(hwCommand => hwCommand.interfaces)
     .join('\n')}\n
 \tconst Commands: {\n${dictionary.fswCommands
-    .map(fswCommand => `\t\t${fswCommand.stem}: typeof ${fswCommand.stem},\n`)
+    .map(fswCommand => `\t\t${fswCommand.stem}: typeof ${fswCommand.stem}_STEP,\n`)
     .join('')}\t};
 
 \tconst Hardwares : {\n${dictionary.hwCommands
@@ -46,6 +46,10 @@ ${typescriptFswCommands.map(fswCommand => fswCommand.interfaces).join('\n')}${ty
 ${typescriptFswCommands.map(fswCommand => fswCommand.value).join('\n')}
 ${typescriptHwCommands.map(hwCommands => hwCommands.value).join('\n')}\n
 export const Commands = {${dictionary.fswCommands
+    .map(fswCommand => `\t\t${fswCommand.stem}: ${fswCommand.stem}_STEP,\n`)
+    .join('')}};
+
+export const Immediates = {${dictionary.fswCommands
     .map(fswCommand => `\t\t${fswCommand.stem}: ${fswCommand.stem},\n`)
     .join('')}};
 
@@ -80,14 +84,20 @@ function generateFswCommandCode(
     // language=TypeScript
     const value = `
 ${doc}
-const ${fswCommandName}: ${fswCommandName} = CommandStem.new({
+const ${fswCommandName}: ${fswCommandName}_IMMEDIATE = ImmediateStem.new({
 \tstem: '${fswCommand.stem}',
 \targuments: [],
-})`;
+});
+const ${fswCommandName}_STEP: ${fswCommandName}_STEP = CommandStem.new({
+\tstem: '${fswCommand.stem}',
+\targuments: [],
+});`;
 
     const interfaces = `
 ${doc}
-\tinterface ${fswCommandName} extends CommandStem<[]> {}
+\tinterface ${fswCommandName}_IMMEDIATE extends ImmediateStem<[]> {}
+\tinterface ${fswCommandName}_STEP extends CommandStem<[]> {}
+\tconst ${fswCommandName}: BAKE_BREAD_IMMEDIATE;
 `;
     return {
       value,
@@ -124,16 +134,28 @@ ${doc}
   const value = `
 ${doc}
 function ${fswCommandName}(...args: [{ ${argsWithType.map(arg => arg.name + ': ' + arg.type).join(',')} }]) {
+  return ImmediateStem.new({
+    stem: '${fswCommandName}',
+    arguments: args
+  }) as ${fswCommandName}_IMMEDIATE;
+}
+function ${fswCommandName}_STEP(...args: [{ ${argsWithType.map(arg => arg.name + ': ' + arg.type).join(',')} }]) {
   return CommandStem.new({
     stem: '${fswCommandName}',
     arguments: sortCommandArguments(args, argumentOrders['${fswCommandName}'])
-  }) as ${fswCommandName};
+  }) as ${fswCommandName}_STEP;
 }`;
 
   const interfaces = `
-\tinterface ${fswCommandName} extends CommandStem<[ [{ ${argsWithType
+\tinterface ${fswCommandName}_IMMEDIATE extends ImmediateStem<[ [{ ${argsWithType
     .map(arg => arg.name + ': ' + arg.type)
-    .join(',')} }] ]> {}`;
+    .join(',')} }] ]> {}
+\tinterface ${fswCommandName}_STEP extends CommandStem<[ [{ ${argsWithType
+    .map(arg => arg.name + ': ' + arg.type)
+    .join(',')} }] ]> {}
+\tfunction ${fswCommandName}(...args: [{ ${argsWithType
+    .map(arg => arg.name + ': ' + arg.type)
+    .join(',')} }]) : ${fswCommandName}_IMMEDIATE`;
 
   return {
     value,
