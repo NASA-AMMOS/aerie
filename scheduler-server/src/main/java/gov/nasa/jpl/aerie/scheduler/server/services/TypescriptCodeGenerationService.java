@@ -10,6 +10,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
+import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
+
 public final class TypescriptCodeGenerationService {
   private TypescriptCodeGenerationService() { }
 
@@ -128,7 +130,8 @@ return (<T>makeAllDiscreteProfile(args))
         result.add(indent(indent("get \"%s\"(): %s {".formatted(preset.getKey(), serializedValueToType(SerializedValue.of(preset.getValue()))))));
         result.add(indent(indent(indent("return {"))));
         for (final var argument: preset.getValue().entrySet()) {
-          result.add(indent(indent(indent(indent("\"%s\": %s,".formatted(argument.getKey(), serializedValueToTypescript(argument.getValue())))))));
+          final var deserializedJson = serializedValueP.unparse(argument.getValue());
+          result.add(indent(indent(indent(indent("\"%s\": %s,".formatted(argument.getKey(), deserializedJson))))));
         }
         result.add(indent(indent(indent("};"))));
         result.add(indent(indent("},")));
@@ -268,52 +271,6 @@ return (<T>makeAllDiscreteProfile(args))
                 .stream()
                 .map(ValueSchema.Variant::label)
                 .toList());
-      }
-    });
-  }
-
-  private static String serializedValueToTypescript(final SerializedValue value) {
-    return value.match(new SerializedValue.Visitor<>() {
-      @Override
-      public String onNull() {
-        return "null";
-      }
-
-      @Override
-      public String onNumeric(final BigDecimal value) {
-        return value.toPlainString();
-      }
-
-      @Override
-      public String onBoolean(final boolean value) {
-        return Boolean.toString(value);
-      }
-
-      @Override
-      public String onString(final String value) {
-        return value;
-      }
-
-      @Override
-      public String onMap(final Map<String, SerializedValue> value) {
-        final var result = new ArrayList<String>();
-        result.add("{");
-        for (final var entry : value.entrySet()) {
-          result.add(indent("\"%s\": %s,".formatted(entry.getKey(), serializedValueToTypescript(entry.getValue()))));
-        }
-        result.add("}");
-        return joinLines(result);
-      }
-
-      @Override
-      public String onList(final List<SerializedValue> value) {
-        final var result = new ArrayList<String>();
-        result.add("[");
-        for (final var entry : value) {
-          result.add(indent(serializedValueToTypescript(entry) + ','));
-        }
-        result.add("]");
-        return joinLines(result);
       }
     });
   }
