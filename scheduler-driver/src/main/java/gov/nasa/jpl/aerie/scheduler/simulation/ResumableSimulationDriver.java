@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class ResumableSimulationDriver<Model> {
+public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
   private Duration curTime = Duration.ZERO;
   private SimulationEngine engine = new SimulationEngine();
@@ -90,6 +90,11 @@ public class ResumableSimulationDriver<Model> {
       final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
       timeline.add(commit);
     }
+  }
+
+  @Override
+  public void close() {
+    this.engine.close();
   }
 
   private void simulateUntil(Duration endTime){
