@@ -9,7 +9,9 @@ create table scheduling_specification (
   simulation_arguments jsonb not null,
   analysis_only boolean not null,
   constraint scheduling_specification_synthetic_key
-    primary key(id)
+    primary key(id),
+  constraint scheduling_specification_unique_plan_id
+    unique (plan_id)
 );
 
 comment on table scheduling_specification is e''
