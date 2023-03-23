@@ -134,7 +134,8 @@ public class SimulationFacade implements AutoCloseable{
       final var oldInsertedActivities = new HashMap<>(insertedActivities);
       insertedActivities.clear();
       planActDirectiveIdToSimulationActivityDirectiveId.clear();
-      driver.initSimulation();
+      if (driver != null) driver.close();
+      driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration());
       simulateActivities(oldInsertedActivities.keySet());
     }
   }
