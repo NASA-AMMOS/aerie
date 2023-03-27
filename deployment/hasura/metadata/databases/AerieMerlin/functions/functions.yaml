@@ -112,3 +112,8 @@
   configuration:
     custom_root_fields:
       function: apply_preset_to_activity
+- function:
+    name: get_resources_at_start_offset
+    schema: hasura_functions
+  configuration:
+    custom_name: getResourcesAtStartOffset
