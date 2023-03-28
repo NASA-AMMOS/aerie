@@ -713,7 +713,7 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
   // @ts-ignore : 'Command' found in JSON Spec
   public toSeqJson(): Command {
     return {
-      args: CommandStem.convertArgsToInterfaces(this.arguments),
+      args: convertArgsToInterfaces(this.arguments),
       stem: this.stem,
       time:
         this.absoluteTime !== null
@@ -743,7 +743,7 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
 
     return CommandStem.new({
       stem: json.stem,
-      arguments: CommandStem.convertInterfacesToArgs(json.args),
+      arguments: convertInterfacesToArgs(json.args),
       metadata: json.metadata,
       models: json.models,
       description: json.description,
@@ -784,8 +784,7 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
       ? `R\`${durationToHms(this.relativeTime)}\``
       : 'C';
 
-    const argsString =
-      Object.keys(this.arguments).length === 0 ? '' : `(${CommandStem.argumentsToString(this.arguments)})`;
+    const argsString = Object.keys(this.arguments).length === 0 ? '' : `(${argumentsToString(this.arguments)})`;
 
     const metadata =
       this._metadata && Object.keys(this._metadata).length !== 0
@@ -798,180 +797,6 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
         ? `\n.MODELS([\n${this._models.map(m => indent(objectToString(m))).join(',\n')}\n])`
         : '';
     return `${timeString}.${this.stem}${argsString}${description}${metadata}${models}`;
-  }
-
-  // @ts-ignore : 'Args' found in JSON Spec
-  private static argumentsToString<A extends Args[] | { [argName: string]: any } = [] | {}>(args: A): string {
-    if (Array.isArray(args)) {
-      const argStrings = args.map(arg => {
-        if (typeof arg === 'string') {
-          return `'${arg}'`;
-        }
-        return arg.toString();
-      });
-
-      return argStrings.join(', ');
-    } else {
-      return objectToString(args);
-    }
-  }
-
-  // This function takes an array of Args interfaces and converts it into an object.
-  // The interfaces array contains objects matching the ARGS interface.
-  // Depending on the type property of each object, a corresponding object with the name and value properties is created
-  // and added to the output.
-  // Additionally, the function includes a validation function that prevents remote property injection attacks.
-  // @ts-ignore : 'Args' found in JSON Spec
-  private static convertInterfacesToArgs(interfaces: Args): {} | [] {
-    const args = interfaces.length === 0 ? [] : {};
-
-    // Use to prevent a Remote property injection attack
-    const validate = (input: string): boolean => {
-      const pattern = /^[a-zA-Z0-9_-]+$/;
-      const isValid = pattern.test(input);
-      return isValid;
-    };
-
-    const convertedArgs = interfaces.map(
-      (
-        // @ts-ignore : found in JSON Spec
-        arg: StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument | RepeatArgument,
-      ) => {
-        // @ts-ignore : 'RepeatArgument' found in JSON Spec
-        if (arg.type === 'repeat') {
-          if (validate(arg.name)) {
-            // @ts-ignore : 'RepeatArgument' found in JSON Spec
-            return {
-              [arg.name]: arg.value.map(
-                (
-                  // @ts-ignore : found in JSON Spec
-                  repeatArgBundle: (StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument)[],
-                ) =>
-                  repeatArgBundle.reduce((obj, item) => {
-                    if (validate(item.name)) {
-                      obj[item.name] = item.value;
-                    }
-                    return obj;
-                  }, {}),
-              ),
-            };
-          }
-          return { repeat_error: 'Remote property injection detected...' };
-        } else if (arg.type === 'symbol') {
-          if (validate(arg.name)) {
-            // @ts-ignore : 'SymbolArgument' found in JSON Spec
-            return { [arg.name]: { symbol: arg.value } };
-          }
-          return { symbol_error: 'Remote property injection detected...' };
-          // @ts-ignore : 'HexArgument' found in JSON Spec
-        } else if (arg.type === 'hex') {
-          if (validate(arg.name)) {
-            // @ts-ignore : 'HexArgument' found in JSON Spec
-            return { [arg.name]: { hex: arg.value } };
-          }
-          return { hex_error: 'Remote property injection detected...' };
-        } else {
-          if (validate(arg.name)) {
-            return { [arg.name]: arg.value };
-          }
-          return { error: 'Remote property injection detected...' };
-        }
-      },
-    );
-
-    for (const key in convertedArgs) {
-      Object.assign(args, convertedArgs[key]);
-    }
-
-    return args;
-  }
-
-  /**
-   * The specific function to handle repeat args, we need to do this separately because
-   * you cannot have a RepeatArgument inside a RepeatArgument.
-   *
-   * @param args
-   * @returns
-   */
-  private static convertRepeatArgs(args: { [argName: string]: any }): any[] {
-    let result: any[] = [];
-
-    if (args['length'] === 0) {
-      return result;
-    }
-
-    const values = Array.isArray(args) ? args[0] : args;
-
-    for (let key in values) {
-      result.push(this.convertValueToObject(values[key], key));
-    }
-
-    return result;
-  }
-
-  /**
-   * This function takes a value and key and converts it to the correct object type supported by the seqjson spec.
-   * The only type not supported here is RepeatArgument, as that is handled differently because you cannot have a
-   * RepeatArgument inside a RepeatArgument.
-   *
-   * @param value
-   * @param key
-   * @returns An object for each type
-   */
-  private static convertValueToObject(value: any, key: string): any {
-    switch (typeof value) {
-      case 'string':
-        return { type: 'string', value: value, name: key };
-      case 'number':
-        return { type: 'number', value: value, name: key };
-      case 'boolean':
-        return { type: 'boolean', value: value, name: key };
-      default:
-        if (value instanceof Object && value.symbol && value.symbol === 'string') {
-          return { type: 'symbol', value: value, name: key };
-        } else if (
-          value instanceof Object &&
-          value.hex &&
-          value.hex === 'string' &&
-          new RegExp('^0x([0-9A-F])+$').test(value.hex)
-        ) {
-          return { type: 'hex', value: value, name: key };
-        }
-    }
-  }
-
-  //The function takes an object of arguments and converts them into the Args type. It does this by looping through the
-  // values and pushing a new argument type to the result array depending on the type of the value.
-  // If the value is an array, it will create a RepeatArgument type and recursively call on the values of the array.
-  // the function returns the result array of argument types -
-  // StringArgument, NumberArgument, BooleanArgument, SymbolArgument, HexArgument, and RepeatArgument.
-  // @ts-ignore : 'Args' found in JSON Spec
-  private static convertArgsToInterfaces(args: { [argName: string]: any }): Args {
-    // @ts-ignore : 'Args' found in JSON Spec
-    let result: Args = [];
-    if (args['length'] === 0) {
-      return result;
-    }
-
-    const values = Array.isArray(args) ? args[0] : args;
-
-    for (let key in values) {
-      let value = values[key];
-      if (Array.isArray(value)) {
-        // @ts-ignore : 'RepeatArgument' found in JSON Spec
-        let repeatArg: RepeatArgument = {
-          value: value.map(arg => {
-            return this.convertRepeatArgs(arg);
-          }),
-          type: 'repeat',
-          name: key,
-        };
-        result.push(repeatArg);
-      } else {
-        result = result.concat(this.convertValueToObject(value, key));
-      }
-    }
-    return result;
   }
 }
 
@@ -1029,7 +854,7 @@ export class ImmediateStem<A extends Args[] | { [argName: string]: any } = [] | 
   // @ts-ignore : 'Command' found in JSON Spec
   public toSeqJson(): ImmediateCommand {
     return {
-      args: ImmediateStem.convertArgsToInterfaces(this.arguments),
+      args: convertArgsToInterfaces(this.arguments),
       stem: this.stem,
       ...(this._metadata ? { metadata: this._metadata } : {}),
       ...(this._description ? { description: this._description } : {}),
@@ -1040,15 +865,14 @@ export class ImmediateStem<A extends Args[] | { [argName: string]: any } = [] | 
   public static fromSeqJson(json: ImmediateCommand): ImmediateStem {
     return ImmediateStem.new({
       stem: json.stem,
-      arguments: ImmediateStem.convertInterfacesToArgs(json.args),
+      arguments: convertInterfacesToArgs(json.args),
       metadata: json.metadata,
       description: json.description,
     });
   }
 
   public toEDSLString(): string {
-    const argsString =
-      Object.keys(this.arguments).length === 0 ? '' : `(${ImmediateStem.argumentsToString(this.arguments)})`;
+    const argsString = Object.keys(this.arguments).length === 0 ? '' : `(${argumentsToString(this.arguments)})`;
 
     const metadata =
       this._metadata && Object.keys(this._metadata).length !== 0
@@ -1059,180 +883,40 @@ export class ImmediateStem<A extends Args[] | { [argName: string]: any } = [] | 
 
     return `${this.stem}${argsString}${description}${metadata}`;
   }
+}
 
+//The function takes an object of arguments and converts them into the Args type. It does this by looping through the
+// values and pushing a new argument type to the result array depending on the type of the value.
+// If the value is an array, it will create a RepeatArgument type and recursively call on the values of the array.
+// the function returns the result array of argument types -
+// StringArgument, NumberArgument, BooleanArgument, SymbolArgument, HexArgument, and RepeatArgument.
+// @ts-ignore : 'Args' found in JSON Spec
+function convertArgsToInterfaces(args: { [argName: string]: any }): Args {
   // @ts-ignore : 'Args' found in JSON Spec
-  private static argumentsToString<A extends Args[] | { [argName: string]: any } = [] | {}>(args: A): string {
-    if (Array.isArray(args)) {
-      const argStrings = args.map(arg => {
-        if (typeof arg === 'string') {
-          return `'${arg}'`;
-        }
-        return arg.toString();
-      });
+  let result: Args = [];
+  if (args['length'] === 0) {
+    return result;
+  }
 
-      return argStrings.join(', ');
+  const values = Array.isArray(args) ? args[0] : args;
+
+  for (let key in values) {
+    let value = values[key];
+    if (Array.isArray(value)) {
+      // @ts-ignore : 'RepeatArgument' found in JSON Spec
+      let repeatArg: RepeatArgument = {
+        value: value.map(arg => {
+          return convertRepeatArgs(arg);
+        }),
+        type: 'repeat',
+        name: key,
+      };
+      result.push(repeatArg);
     } else {
-      return objectToString(args);
+      result = result.concat(convertValueToObject(value, key));
     }
   }
-
-  // This function takes an array of Args interfaces and converts it into an object.
-  // The interfaces array contains objects matching the ARGS interface.
-  // Depending on the type property of each object, a corresponding object with the name and value properties is created
-  // and added to the output.
-  // Additionally, the function includes a validation function that prevents remote property injection attacks.
-  // @ts-ignore : 'Args' found in JSON Spec
-  private static convertInterfacesToArgs(interfaces: Args): {} | [] {
-    const args = interfaces.length === 0 ? [] : {};
-
-    // Use to prevent a Remote property injection attack
-    const validate = (input: string): boolean => {
-      const pattern = /^[a-zA-Z0-9_-]+$/;
-      const isValid = pattern.test(input);
-      return isValid;
-    };
-
-    const convertedArgs = interfaces.map(
-      (
-        // @ts-ignore : found in JSON Spec
-        arg: StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument | RepeatArgument,
-      ) => {
-        // @ts-ignore : 'RepeatArgument' found in JSON Spec
-        if (arg.type === 'repeat') {
-          if (validate(arg.name)) {
-            // @ts-ignore : 'RepeatArgument' found in JSON Spec
-            return {
-              [arg.name]: arg.value.map(
-                (
-                  // @ts-ignore : found in JSON Spec
-                  repeatArgBundle: (StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument)[],
-                ) =>
-                  repeatArgBundle.reduce((obj, item) => {
-                    if (validate(item.name)) {
-                      obj[item.name] = item.value;
-                    }
-                    return obj;
-                  }, {}),
-              ),
-            };
-          }
-          return { repeat_error: 'Remote property injection detected...' };
-        } else if (arg.type === 'symbol') {
-          if (validate(arg.name)) {
-            // @ts-ignore : 'SymbolArgument' found in JSON Spec
-            return { [arg.name]: { symbol: arg.value } };
-          }
-          return { symbol_error: 'Remote property injection detected...' };
-          // @ts-ignore : 'HexArgument' found in JSON Spec
-        } else if (arg.type === 'hex') {
-          if (validate(arg.name)) {
-            // @ts-ignore : 'HexArgument' found in JSON Spec
-            return { [arg.name]: { hex: arg.value } };
-          }
-          return { hex_error: 'Remote property injection detected...' };
-        } else {
-          if (validate(arg.name)) {
-            return { [arg.name]: arg.value };
-          }
-          return { error: 'Remote property injection detected...' };
-        }
-      },
-    );
-
-    for (const key in convertedArgs) {
-      Object.assign(args, convertedArgs[key]);
-    }
-
-    return args;
-  }
-
-  /**
-   * The specific function to handle repeat args, we need to do this separately because
-   * you cannot have a RepeatArgument inside a RepeatArgument.
-   *
-   * @param args
-   * @returns
-   */
-  private static convertRepeatArgs(args: { [argName: string]: any }): any[] {
-    let result: any[] = [];
-
-    if (args['length'] === 0) {
-      return result;
-    }
-
-    const values = Array.isArray(args) ? args[0] : args;
-
-    for (let key in values) {
-      result.push(this.convertValueToObject(values[key], key));
-    }
-
-    return result;
-  }
-
-  /**
-   * This function takes a value and key and converts it to the correct object type supported by the seqjson spec.
-   * The only type not supported here is RepeatArgument, as that is handled differently because you cannot have a
-   * RepeatArgument inside a RepeatArgument.
-   *
-   * @param value
-   * @param key
-   * @returns An object for each type
-   */
-  private static convertValueToObject(value: any, key: string): any {
-    switch (typeof value) {
-      case 'string':
-        return { type: 'string', value: value, name: key };
-      case 'number':
-        return { type: 'number', value: value, name: key };
-      case 'boolean':
-        return { type: 'boolean', value: value, name: key };
-      default:
-        if (value instanceof Object && value.symbol && value.symbol === 'string') {
-          return { type: 'symbol', value: value, name: key };
-        } else if (
-          value instanceof Object &&
-          value.hex &&
-          value.hex === 'string' &&
-          new RegExp('^0x([0-9A-F])+$').test(value.hex)
-        ) {
-          return { type: 'hex', value: value, name: key };
-        }
-    }
-  }
-
-  //The function takes an object of arguments and converts them into the Args type. It does this by looping through the
-  // values and pushing a new argument type to the result array depending on the type of the value.
-  // If the value is an array, it will create a RepeatArgument type and recursively call on the values of the array.
-  // the function returns the result array of argument types -
-  // StringArgument, NumberArgument, BooleanArgument, SymbolArgument, HexArgument, and RepeatArgument.
-  // @ts-ignore : 'Args' found in JSON Spec
-  private static convertArgsToInterfaces(args: { [argName: string]: any }): Args {
-    // @ts-ignore : 'Args' found in JSON Spec
-    let result: Args = [];
-    if (args['length'] === 0) {
-      return result;
-    }
-
-    const values = Array.isArray(args) ? args[0] : args;
-
-    for (let key in values) {
-      let value = values[key];
-      if (Array.isArray(value)) {
-        // @ts-ignore : 'RepeatArgument' found in JSON Spec
-        let repeatArg: RepeatArgument = {
-          value: value.map(arg => {
-            return this.convertRepeatArgs(arg);
-          }),
-          type: 'repeat',
-          name: key,
-        };
-        result.push(repeatArg);
-      } else {
-        result = result.concat(this.convertValueToObject(value, key));
-      }
-    }
-    return result;
-  }
+  return result;
 }
 
 // @ts-ignore : 'GroundBlock' found in JSON Spec
@@ -2020,9 +1704,158 @@ function indent(text: string, numTimes: number = 1, char: string = '  '): string
     .join('\n');
 }
 
-// This method takes an object and converts it to a string representation, with each key-value pair on a new line
-// and nested objects/arrays indented. The indentLevel parameter specifies the initial indentation level,
-// used to prettify the generated eDSL from SeqJSON
+// @ts-ignore : 'Args' found in JSON Spec
+function argumentsToString<A extends Args[] | { [argName: string]: any } = [] | {}>(args: A): string {
+  if (Array.isArray(args)) {
+    const argStrings = args.map(arg => {
+      if (typeof arg === 'string') {
+        return `'${arg}'`;
+      }
+      return arg.toString();
+    });
+
+    return argStrings.join(', ');
+  } else {
+    return objectToString(args);
+  }
+}
+
+/**
+ * This function takes an array of Args interfaces and converts it into an object.
+ * The interfaces array contains objects matching the ARGS interface.
+ * Depending on the type property of each object, a corresponding object with the
+ * name and value properties is created and added to the output.
+ * Additionally, the function includes a validation function that prevents remote
+ * property injection attacks.
+ * @param interfaces
+ */
+// @ts-ignore : `Args` found in JSON Spec
+function convertInterfacesToArgs(interfaces: Args): {} | [] {
+  const args = interfaces.length === 0 ? [] : {};
+
+  // Use to prevent a Remote property injection attack
+  const validate = (input: string): boolean => {
+    const pattern = /^[a-zA-Z0-9_-]+$/;
+    const isValid = pattern.test(input);
+    return isValid;
+  };
+
+  const convertedArgs = interfaces.map(
+    (
+      // @ts-ignore : found in JSON Spec
+      arg: StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument | RepeatArgument,
+    ) => {
+      // @ts-ignore : 'RepeatArgument' found in JSON Spec
+      if (arg.type === 'repeat') {
+        if (validate(arg.name)) {
+          // @ts-ignore : 'RepeatArgument' found in JSON Spec
+          return {
+            [arg.name]: arg.value.map(
+              (
+                // @ts-ignore : found in JSON Spec
+                repeatArgBundle: (StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument)[],
+              ) =>
+                repeatArgBundle.reduce((obj, item) => {
+                  if (validate(item.name)) {
+                    obj[item.name] = item.value;
+                  }
+                  return obj;
+                }, {}),
+            ),
+          };
+        }
+        return { repeat_error: 'Remote property injection detected...' };
+      } else if (arg.type === 'symbol') {
+        if (validate(arg.name)) {
+          // @ts-ignore : 'SymbolArgument' found in JSON Spec
+          return { [arg.name]: { symbol: arg.value } };
+        }
+        return { symbol_error: 'Remote property injection detected...' };
+        // @ts-ignore : 'HexArgument' found in JSON Spec
+      } else if (arg.type === 'hex') {
+        if (validate(arg.name)) {
+          // @ts-ignore : 'HexArgument' found in JSON Spec
+          return { [arg.name]: { hex: arg.value } };
+        }
+        return { hex_error: 'Remote property injection detected...' };
+      } else {
+        if (validate(arg.name)) {
+          return { [arg.name]: arg.value };
+        }
+        return { error: 'Remote property injection detected...' };
+      }
+    },
+  );
+
+  for (const key in convertedArgs) {
+    Object.assign(args, convertedArgs[key]);
+  }
+
+  return args;
+}
+
+/**
+ * The specific function to handle repeat args, we need to do this separately because
+ * you cannot have a RepeatArgument inside a RepeatArgument.
+ *
+ * @param args
+ * @returns
+ */
+function convertRepeatArgs(args: { [argName: string]: any }): any[] {
+  let result: any[] = [];
+
+  if (args['length'] === 0) {
+    return result;
+  }
+
+  const values = Array.isArray(args) ? args[0] : args;
+
+  for (let key in values) {
+    result.push(convertValueToObject(values[key], key));
+  }
+
+  return result;
+}
+
+/**
+ * This function takes a value and key and converts it to the correct object type supported by the seqjson spec.
+ * The only type not supported here is RepeatArgument, as that is handled differently because you cannot have a
+ * RepeatArgument inside a RepeatArgument.
+ *
+ * @param value
+ * @param key
+ * @returns An object for each type
+ */
+function convertValueToObject(value: any, key: string): any {
+  switch (typeof value) {
+    case 'string':
+      return { type: 'string', value: value, name: key };
+    case 'number':
+      return { type: 'number', value: value, name: key };
+    case 'boolean':
+      return { type: 'boolean', value: value, name: key };
+    default:
+      if (value instanceof Object && value.symbol && value.symbol === 'string') {
+        return { type: 'symbol', value: value, name: key };
+      } else if (
+        value instanceof Object &&
+        value.hex &&
+        value.hex === 'string' &&
+        new RegExp('^0x([0-9A-F])+$').test(value.hex)
+      ) {
+        return { type: 'hex', value: value, name: key };
+      }
+  }
+}
+
+/**
+ * This method takes an object and converts it to a string representation, with each
+ * key-value pair on a new line and nested objects/arrays indented. The indentLevel
+ * parameter specifies the initial indentation level, used to prettify the generated
+ * eDSL from SeqJSON.
+ * @param obj
+ * @param indentLevel
+ */
 function objectToString(obj: any, indentLevel: number = 1): string {
   let output = '';
 
