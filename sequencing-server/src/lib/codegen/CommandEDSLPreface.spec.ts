@@ -9,6 +9,7 @@ import {
   TimingTypes,
   Ground_Event,
   Ground_Block,
+  ImmediateStem,
 } from './CommandEDSLPreface';
 
 describe('Command', () => {
@@ -291,6 +292,33 @@ describe('Sequence', () => {
           '      .METADATA({\n' +
           "        author: 'Emery',\n" +
           '      })\n' +
+          '    ],\n' +
+          '  });',
+      );
+    });
+
+    it('should convert with immediate commands,', () => {
+      const sequence = Sequence.new({
+        seqId: 'Immediate',
+        metadata: {},
+        immediate_commands: [
+          ImmediateStem.new({ stem: 'SMASH_BANANA', arguments: ['AGRESSIVE'] })
+            .DESCRIPTION('Hulk smash banannas')
+            .METADATA({ author: 'An Avenger' }),
+        ],
+      });
+
+      expect(sequence.toEDSLString()).toEqual(
+        'export default () =>\n' +
+          '  Sequence.new({\n' +
+          "    seqId: 'Immediate',\n" +
+          '    metadata: {},\n' +
+          '    immediate_commands: [\n' +
+          "      SMASH_BANANA('AGRESSIVE')\n" +
+          "      .DESCRIPTION('Hulk smash banannas')\n" +
+          '      .METADATA({\n' +
+          "        author: 'An Avenger',\n" +
+          '      }),\n' +
           '    ],\n' +
           '  });',
       );

@@ -26,7 +26,7 @@ import {
   linkActivityInstance,
   removeSequence,
 } from './testUtils/Sequence.js';
-import {executeSimulation, removeSimulationArtifacts, updateSimulationBounds} from './testUtils/Simulation.js';
+import { executeSimulation, removeSimulationArtifacts, updateSimulationBounds } from './testUtils/Simulation.js';
 
 let planId: number;
 let graphqlClient: GraphQLClient;
@@ -37,7 +37,11 @@ beforeEach(async () => {
   graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string);
   missionModelId = await uploadMissionModel(graphqlClient);
   planId = await createPlan(graphqlClient, missionModelId);
-  await updateSimulationBounds(graphqlClient, {plan_id: planId, simulation_start_time:"2020-001T00:00:00Z", simulation_end_time:"2020-002T00:00:00Z" });
+  await updateSimulationBounds(graphqlClient, {
+    plan_id: planId,
+    simulation_start_time: '2020-001T00:00:00Z',
+    simulation_end_time: '2020-002T00:00:00Z',
+  });
   commandDictionaryId = await insertCommandDictionary(graphqlClient);
 });
 
@@ -2918,16 +2922,7 @@ describe('user sequence to seqjson', () => {
                 .METADATA({author: 'rrgoetz'})
               ],
               immediate_commands: [
-                {
-                  args: [
-                    {
-                      name: 'direction',
-                      type: 'string',
-                      value: 'FromStem',
-                    },
-                  ],
-                  stem: 'PEEL_BANANA',
-                }
+                PEEL_BANANA({peelDirection: 'fromStem'})
               ],
               requests: [
                 {
@@ -3171,9 +3166,9 @@ describe('user sequence to seqjson', () => {
       {
         args: [
           {
-            name: 'direction',
+            name: 'peelDirection',
             type: 'string',
-            value: 'FromStem',
+            value: 'fromStem',
           },
         ],
         stem: 'PEEL_BANANA',
