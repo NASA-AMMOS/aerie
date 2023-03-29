@@ -1,7 +1,7 @@
 // Language: TypeScript
 // Path: src/libs/CommandTypeCodegen.ts
 
-import type * as ampcs from '@nasa-jpl/aerie-ampcs';
+import * as ampcs from '@nasa-jpl/aerie-ampcs';
 import fs from 'fs';
 import reservedWords from 'reserved-words';
 import { getEnv } from '../../env.js';
@@ -39,6 +39,10 @@ ${typescriptFswCommands.map(fswCommand => fswCommand.interfaces).join('\n')}${ty
 
   // language=TypeScript
   const values = `
+\nconst argumentOrders = {\n${dictionary.fswCommands
+    .map(fswCommand => `\t'${fswCommand.stem}': [${generateArgOrder(fswCommand)}],\n`)
+    .join('')}};
+
 ${typescriptFswCommands.map(fswCommand => fswCommand.value).join('\n')}
 ${typescriptHwCommands.map(hwCommands => hwCommands.value).join('\n')}\n
 export const Commands = {${dictionary.fswCommands
@@ -122,7 +126,7 @@ ${doc}
 function ${fswCommandName}(...args: [{ ${argsWithType.map(arg => arg.name + ': ' + arg.type).join(',')} }]) {
   return CommandStem.new({
     stem: '${fswCommandName}',
-    arguments: args
+    arguments: sortCommandArguments(args, argumentOrders['${fswCommandName}'])
   }) as ${fswCommandName};
 }`;
 
@@ -158,6 +162,22 @@ function generateHwCommandCode(hwCommand: ampcs.HwCommand): { value: string; int
     value,
     interfaces,
   };
+}
+
+function generateArgOrder(fswCommand: ampcs.FswCommand): string[] {
+  let argOrder = [];
+
+  for (const argument of fswCommand.arguments) {
+    argOrder.push("'" + argument.name + "'");
+
+    if (argument.arg_type === 'repeat' && argument.repeat?.arguments) {
+      for (const repeatArg of argument.repeat?.arguments) {
+        argOrder.push("'" + repeatArg.name + "'");
+      }
+    }
+  }
+
+  return argOrder;
 }
 
 /**

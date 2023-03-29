@@ -1673,6 +1673,31 @@ function commandsWithTimeValue<T extends TimingTypes>(
 	---------------------------------
 	*/
 
+// @ts-ignore : Used in generated code
+function sortCommandArguments(args: { [argName: string]: any }, order: string[]): { [argName: string]: any } {
+  if (typeof args[0] === 'object') {
+    return Object.keys(args[0])
+      .sort((a, b) => order.indexOf(a) - order.indexOf(b))
+      .reduce((objectEntries: { [argName: string]: any }, key) => {
+        if (Array.isArray(args[0][key])) {
+          const sortedRepeatArgs = [];
+
+          for (const test of args[0][key]) {
+            sortedRepeatArgs.push(sortCommandArguments([test], order));
+          }
+
+          objectEntries[key] = sortedRepeatArgs;
+        } else {
+          objectEntries[key] = args[0][key];
+        }
+
+        return objectEntries;
+      }, {});
+  }
+
+  return args;
+}
+
 function indent(text: string, numTimes: number = 1, char: string = '  '): string {
   return text
     .split('\\n')
@@ -2203,6 +2228,22 @@ const HDW_BLENDER_DUMP: HDW_BLENDER_DUMP
 		HDW_BLENDER_DUMP: typeof HDW_BLENDER_DUMP 	};
 }
 
+const argumentOrders = {
+	'ECHO': ['echo_string'],
+	'PREHEAT_OVEN': ['temperature'],
+	'THROW_BANANA': ['distance'],
+	'GROW_BANANA': ['quantity','durationSecs'],
+	'GrowBanana': ['quantity','durationSecs'],
+	'PREPARE_LOAF': ['tb_sugar','gluten_free'],
+	'PEEL_BANANA': ['peelDirection'],
+	'BAKE_BREAD': [],
+	'ADD_WATER': [],
+	'PACKAGE_BANANA': ['lot_number','bundle','bundle_name','number_of_bananas'],
+	'PICK_BANANA': [],
+	'EAT_BANANA': [],
+};
+
+
 
 /**
 * This command will echo back a string
@@ -2211,7 +2252,7 @@ const HDW_BLENDER_DUMP: HDW_BLENDER_DUMP
 function ECHO(...args: [{ 'echo_string': VarString<8, 1024> }]) {
   return CommandStem.new({
     stem: 'ECHO',
-    arguments: args
+    arguments: sortCommandArguments(args, argumentOrders['ECHO'])
   }) as ECHO;
 }
 
@@ -2223,7 +2264,7 @@ function ECHO(...args: [{ 'echo_string': VarString<8, 1024> }]) {
 function PREHEAT_OVEN(...args: [{ 'temperature': U8 }]) {
   return CommandStem.new({
     stem: 'PREHEAT_OVEN',
-    arguments: args
+    arguments: sortCommandArguments(args, argumentOrders['PREHEAT_OVEN'])
   }) as PREHEAT_OVEN;
 }
 
@@ -2235,7 +2276,7 @@ function PREHEAT_OVEN(...args: [{ 'temperature': U8 }]) {
 function THROW_BANANA(...args: [{ 'distance': U8 }]) {
   return CommandStem.new({
     stem: 'THROW_BANANA',
-    arguments: args
+    arguments: sortCommandArguments(args, argumentOrders['THROW_BANANA'])
   }) as THROW_BANANA;
 }
 
@@ -2248,7 +2289,7 @@ function THROW_BANANA(...args: [{ 'distance': U8 }]) {
 function GROW_BANANA(...args: [{ 'quantity': U8,'durationSecs': U8 }]) {
   return CommandStem.new({
     stem: 'GROW_BANANA',
-    arguments: args
+    arguments: sortCommandArguments(args, argumentOrders['GROW_BANANA'])
   }) as GROW_BANANA;
 }
 
@@ -2261,7 +2302,7 @@ function GROW_BANANA(...args: [{ 'quantity': U8,'durationSecs': U8 }]) {
 function GrowBanana(...args: [{ 'quantity': U8,'durationSecs': U8 }]) {
   return CommandStem.new({
     stem: 'GrowBanana',
-    arguments: args
+    arguments: sortCommandArguments(args, argumentOrders['GrowBanana'])
   }) as GrowBanana;
 }
 
@@ -2274,7 +2315,7 @@ function GrowBanana(...args: [{ 'quantity': U8,'durationSecs': U8 }]) {
 function PREPARE_LOAF(...args: [{ 'tb_sugar': U8,'gluten_free': ('FALSE' | 'TRUE') }]) {
   return CommandStem.new({
     stem: 'PREPARE_LOAF',
-    arguments: args
+    arguments: sortCommandArguments(args, argumentOrders['PREPARE_LOAF'])
   }) as PREPARE_LOAF;
 }
 
@@ -2286,7 +2327,7 @@ function PREPARE_LOAF(...args: [{ 'tb_sugar': U8,'gluten_free': ('FALSE' | 'TRUE
 function PEEL_BANANA(...args: [{ 'peelDirection': ('fromStem' | 'fromTip') }]) {
   return CommandStem.new({
     stem: 'PEEL_BANANA',
-    arguments: args
+    arguments: sortCommandArguments(args, argumentOrders['PEEL_BANANA'])
   }) as PEEL_BANANA;
 }
 
@@ -2319,7 +2360,7 @@ const ADD_WATER: ADD_WATER = CommandStem.new({
 function PACKAGE_BANANA(...args: [{ 'lot_number': U16,'bundle': Array<{ 'bundle_name': VarString<8, 1024>, 'number_of_bananas': U8 }> }]) {
   return CommandStem.new({
     stem: 'PACKAGE_BANANA',
-    arguments: args
+    arguments: sortCommandArguments(args, argumentOrders['PACKAGE_BANANA'])
   }) as PACKAGE_BANANA;
 }
 

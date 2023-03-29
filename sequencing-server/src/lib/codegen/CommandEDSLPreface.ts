@@ -1670,6 +1670,31 @@ function commandsWithTimeValue<T extends TimingTypes>(
 	---------------------------------
 	*/
 
+// @ts-ignore : Used in generated code
+function sortCommandArguments(args: { [argName: string]: any }, order: string[]): { [argName: string]: any } {
+  if (typeof args[0] === 'object') {
+    return Object.keys(args[0])
+      .sort((a, b) => order.indexOf(a) - order.indexOf(b))
+      .reduce((objectEntries: { [argName: string]: any }, key) => {
+        if (Array.isArray(args[0][key])) {
+          const sortedRepeatArgs = [];
+
+          for (const test of args[0][key]) {
+            sortedRepeatArgs.push(sortCommandArguments([test], order));
+          }
+
+          objectEntries[key] = sortedRepeatArgs;
+        } else {
+          objectEntries[key] = args[0][key];
+        }
+
+        return objectEntries;
+      }, {});
+  }
+
+  return args;
+}
+
 function indent(text: string, numTimes: number = 1, char: string = '  '): string {
   return text
     .split('\n')
