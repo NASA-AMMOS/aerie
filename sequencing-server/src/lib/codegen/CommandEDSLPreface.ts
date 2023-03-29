@@ -355,7 +355,18 @@ export class Sequence implements SeqJson {
         ? {
             immediate_commands: this.immediate_commands.map(command => {
               if (command instanceof ImmediateStem) return command.toSeqJson();
-              return command;
+              if (command instanceof CommandStem)
+                return {
+                  args: [
+                    {
+                      name: 'message',
+                      type: 'string',
+                      value: `ERROR: ${command.toEDSLString()}, is not an immediate command.`,
+                    },
+                  ],
+                  stem: '$$ERROR$$',
+                };
+              else return command;
             }),
           }
         : {}),
