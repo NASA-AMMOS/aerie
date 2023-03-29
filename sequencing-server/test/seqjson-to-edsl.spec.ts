@@ -250,13 +250,11 @@ describe('getEdslForSeqJson', () => {
       }
     ],
     hardware_commands: [
-      {
-        description: 'FIRE THE PYROS',
-        metadata:{
-          author: 'rrgoetz',
-        },
-        stem: 'HDW_PYRO_ENGINE',
-      }
+      HDW_PYRO_ENGINE
+      .DESCRIPTION('FIRE THE PYROS')
+      .METADATA({
+        author: 'rrgoetz',
+      })
     ],
     immediate_commands: [
       {

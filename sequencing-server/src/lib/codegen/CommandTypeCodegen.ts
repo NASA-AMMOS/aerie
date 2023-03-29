@@ -17,23 +17,39 @@ function generateTypescriptCode(dictionary: ampcs.CommandDictionary): {
     typescriptFswCommands.push(generateFswCommandCode(fswCommand, dictionary.enumMap));
   }
 
+  const typescriptHwCommands: { value: string; interfaces: string }[] = [];
+  for (const hwCommand of dictionary.hwCommands) {
+    typescriptHwCommands.push(generateHwCommandCode(hwCommand));
+  }
+
   // language=TypeScript
   const declarations = `
 declare global {
-${typescriptFswCommands.map(fswCommand => fswCommand.interfaces).join('\n')}
+${typescriptFswCommands.map(fswCommand => fswCommand.interfaces).join('\n')}${typescriptHwCommands
+    .map(hwCommand => hwCommand.interfaces)
+    .join('\n')}\n
 \tconst Commands: {\n${dictionary.fswCommands
     .map(fswCommand => `\t\t${fswCommand.stem}: typeof ${fswCommand.stem},\n`)
     .join('')}\t};
+
+\tconst Hardwares : {\n${dictionary.hwCommands
+    .map(hwCommand => `\t\t${hwCommand.stem}: typeof ${hwCommand.stem}`)
+    .join(',\n')} \t};
 }`;
 
   // language=TypeScript
   const values = `
 ${typescriptFswCommands.map(fswCommand => fswCommand.value).join('\n')}
+${typescriptHwCommands.map(hwCommands => hwCommands.value).join('\n')}\n
 export const Commands = {${dictionary.fswCommands
     .map(fswCommand => `\t\t${fswCommand.stem}: ${fswCommand.stem},\n`)
     .join('')}};
 
-Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS), Sequence});
+export const Hardwares = {${dictionary.hwCommands
+    .map(hwCommands => `\t\t${hwCommands.stem}: ${hwCommands.stem},\n`)
+    .join('')}};
+
+Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS), Sequence}, Hardwares);
 `;
 
   return {
@@ -121,23 +137,48 @@ function ${fswCommandName}(...args: [{ ${argsWithType.map(arg => arg.name + ': '
   };
 }
 
+function generateHwCommandCode(hwCommand: ampcs.HwCommand): { value: string; interfaces: string } {
+  const needsUnderscore =
+    /^\d/.test(hwCommand.stem) ||
+    reservedWords.check(hwCommand.stem) ||
+    typescriptReservedWords.includes(hwCommand.stem);
+
+  const hwCommandName = (needsUnderscore ? '_' : '') + hwCommand.stem;
+
+  const doc = generateDoc(hwCommand);
+  const value =
+    `${doc}` +
+    `\nconst ${hwCommandName}: ${hwCommandName} = HardwareStem.new({` +
+    `\n\tstem: '${hwCommand.stem}'` +
+    `\n})`;
+
+  const interfaces =
+    `${doc}` + `\ninterface ${hwCommandName} extends HardwareStem {}\nconst ${hwCommandName}: ${hwCommandName}`;
+  return {
+    value,
+    interfaces,
+  };
+}
+
 /**
  * Creates a jsdoc style doc for the given command. Right now it just includes the args as
  * parameters.
  *
- * @param fswCommand The command we're generating documentation for.
+ * @param command The command we're generating documentation for.
  * @returns The generated documentation.
  */
-function generateDoc(fswCommand: ampcs.FswCommand): string {
+function generateDoc(command: ampcs.FswCommand | ampcs.HwCommand): string {
   let parameters: string[] = [];
 
-  fswCommand.arguments.forEach(arg => {
-    parameters.push(`* @param ${arg.name} ${arg.description}`);
-  });
+  if ('arguments' in command) {
+    command.arguments.forEach(arg => {
+      parameters.push(`* @param ${arg.name} ${arg.description}`);
+    });
+  }
 
   return `
 /**
-* ${fswCommand.description}
+* ${command.description}
 ${parameters.length > 0 ? parameters.join('\n') : '*'}
 */`;
 }

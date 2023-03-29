@@ -1,5 +1,6 @@
 import {
   CommandStem,
+  HardwareStem,
   doyToInstant,
   DOY_STRING,
   hmsToDuration,
@@ -268,6 +269,31 @@ describe('Sequence', () => {
       }),
     ],
   });`);
+    });
+
+    it('should convert with Hardware,', () => {
+      const sequence = Sequence.new({
+        seqId: 'HW',
+        metadata: {},
+        hardware_commands: [
+          HardwareStem.new({ stem: 'HW_PYRO_DUMP' }).DESCRIPTION('Fire the pyros').METADATA({ author: 'Emery' }),
+        ],
+      });
+
+      expect(sequence.toEDSLString()).toEqual(
+        'export default () =>\n' +
+          '  Sequence.new({\n' +
+          "    seqId: 'HW',\n" +
+          '    metadata: {},\n' +
+          '    hardware_commands: [\n' +
+          '      HW_PYRO_DUMP\n' +
+          "      .DESCRIPTION('Fire the pyros')\n" +
+          '      .METADATA({\n' +
+          "        author: 'Emery',\n" +
+          '      })\n' +
+          '    ],\n' +
+          '  });',
+      );
     });
   });
 });

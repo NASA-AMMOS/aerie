@@ -2913,13 +2913,9 @@ describe('user sequence to seqjson', () => {
                 }
               ],
               hardware_commands: [
-                {
-                  description: 'FIRE THE PYROS',
-                  metadata:{
-                    author: 'rrgoetz',
-                  },
-                  stem: 'HDW_PYRO_ENGINE',
-                }
+                HDW_BLENDER_DUMP
+                .DESCRIPTION("FIRE THE PYROS")
+                .METADATA({author: 'rrgoetz'})
               ],
               immediate_commands: [
                 {
@@ -3168,7 +3164,7 @@ describe('user sequence to seqjson', () => {
         metadata: {
           author: 'rrgoetz',
         },
-        stem: 'HDW_PYRO_ENGINE',
+        stem: 'HDW_BLENDER_DUMP',
       },
     ]);
     expect(results[1]!.immediate_commands).toEqual([
