@@ -1671,7 +1671,7 @@ function commandsWithTimeValue<T extends TimingTypes>(
 	*/
 
 // @ts-ignore : Used in generated code
-function sortCommandArguments(args: { [argName: string]: any }, order: string[]): any {
+function sortCommandArguments(args: { [argName: string]: any }, order: string[]): { [argName: string]: any } {
   if (typeof args[0] === 'object') {
     return Object.keys(args[0])
       .sort((a, b) => order.indexOf(a) - order.indexOf(b))

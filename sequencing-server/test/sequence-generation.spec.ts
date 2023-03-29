@@ -60,7 +60,7 @@ describe('sequence generation', () => {
     export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
       return [
         C.PREHEAT_OVEN({ temperature: 70 }),
-        C.PREPARE_LOAF({ tb_sugar: 50, gluten_free: "FALSE" }),
+        C.PREPARE_LOAF({ gluten_free: "FALSE", tb_sugar: 50 }),
         C.BAKE_BREAD,
       ];
     }
