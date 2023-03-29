@@ -67,6 +67,7 @@ public class TestUnsatisfiableCompositeGoals {
                             .ofType(B)
                             .build())
         .startsAt(TimeAnchor.START)
+        .aliasForAnchors("hi I'm an alias")
         .build();
   }
 

@@ -647,6 +647,7 @@ public class TestApplyWhen {
                             .duration(Duration.of(2, Duration.SECONDS))
                             .build())
         .startsAt(TimeAnchor.START)
+        .aliasForAnchors("Bond. James Bond")
         .build();
 
     problem.setGoals(List.of(goal));
@@ -700,6 +701,7 @@ public class TestApplyWhen {
                             .duration(Duration.of(2, Duration.SECONDS))
                             .build())
         .startsAt(TimeAnchor.START)
+        .aliasForAnchors("Bond. James Bond")
         .build();
 
     problem.setGoals(List.of(goal));
@@ -760,6 +762,7 @@ public class TestApplyWhen {
                             .ofType(actTypeB)
                             .build())
         .startsAt(TimeAnchor.START)
+        .aliasForAnchors("Bond. James Bond")
         .build();
 
     problem.setGoals(List.of(goal));
@@ -823,6 +826,7 @@ public class TestApplyWhen {
                             .duration(Duration.of(2, Duration.SECONDS))
                             .build())
         .startsAt(TimeAnchor.START)
+        .aliasForAnchors("Bond. James Bond")
         .build();
 
     problem.setGoals(List.of(goal));
@@ -892,6 +896,7 @@ public class TestApplyWhen {
                             .duration(Duration.of(2, Duration.SECONDS))
                             .build())
         .startsAt(TimeAnchor.START)
+        .aliasForAnchors("Bond. James Bond")
         .build();
 
     problem.setGoals(List.of(goal));
@@ -961,6 +966,7 @@ public class TestApplyWhen {
                             .duration(Duration.of(2, Duration.SECONDS))
                             .build())
         .startsAt(TimeAnchor.START)
+        .aliasForAnchors("Bond. James Bond")
         .build();
 
     problem.setGoals(List.of(goal));
@@ -1025,6 +1031,7 @@ public class TestApplyWhen {
                             .duration(Duration.of(2, Duration.SECONDS))
                             .build())
         .startsAt(TimeAnchor.START)
+        .aliasForAnchors("Bond. James Bond")
         .build();
 
     problem.setGoals(List.of(goal));
@@ -1081,6 +1088,7 @@ public class TestApplyWhen {
                             .ofType(actTypeB)
                             .build())
         .startsAt(TimeAnchor.START)
+        .aliasForAnchors("Bond. James Bond")
         .build();
 
     problem.setGoals(List.of(goal));

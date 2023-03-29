@@ -52,14 +52,20 @@ class TypescriptCodeGenerationServiceTest {
                   alias,
                   name: "AnotherParam"
                 }),
+                "Duration": new Discrete<Temporal.Duration>({
+                  kind: AST.NodeKind.DiscreteProfileParameter,
+                  alias,
+                  name: "Duration"
+                }),
               }),
             };
-            export type ParameterTypeactivity2 = {
+            type ParameterTypeactivity2 = {
               Param: (( | "hello" | "there") | Discrete<( | "hello" | "there")>),
             }
-            export type ParameterTypeactivity = {
+            type ParameterTypeactivity = {
               Param: (string | Discrete<string>),
               AnotherParam: (number | Real),
+              Duration: (AST.Duration | Discrete<Temporal.Duration>),
             }
             export type ActivityTypeParameterMap = {
               [ActivityType.activity2]:ParameterTypeactivity2,

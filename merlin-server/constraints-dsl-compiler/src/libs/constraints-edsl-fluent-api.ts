@@ -10,7 +10,7 @@
 
 import * as AST from './constraints-ast.js';
 import * as Gen from './mission-model-generated-code.js';
-import {ActivityType, ActivityTypeParameterInstantiationMap} from "./mission-model-generated-code.js";
+import {ActivityType, ActivityTypeParameterInstantiationMap} from './mission-model-generated-code.js';
 
 export { Gen };
 
@@ -89,11 +89,12 @@ export class Windows {
    * @param interval interval of the window segment.
    */
   public static Value(value: boolean, interval?: Interval): Windows {
-    return new Windows({
+    let node: AST.WindowsExpression = {
       kind: AST.NodeKind.WindowsExpressionValue,
-      value,
-      interval: interval ?? {}
-    });
+      value
+    };
+    if (interval !== undefined) Object.assign(node, {interval: interval.__astNode});
+    return new Windows(node);
   }
 
   /**
@@ -194,7 +195,7 @@ export class Windows {
    *
    * @param duration the duration
    */
-  public longerThan(duration: Temporal.Duration) : Windows {
+  public longerThan(duration: AST.Duration) : Windows {
     return new Windows({
       kind: AST.NodeKind.WindowsExpressionLongerThan,
       windowExpression: this.__astNode,
@@ -208,9 +209,9 @@ export class Windows {
    *
    * @param duration the duration
    */
-  public shorterThan(duration: Temporal.Duration) : Windows {
+  public shorterThan(duration: AST.Duration) : Windows {
     return new Windows({
-      kind: AST.NodeKind.WindowsExpressionShorterhan,
+      kind: AST.NodeKind.WindowsExpressionShorterThan,
       windowExpression: this.__astNode,
       duration
     })
@@ -225,7 +226,7 @@ export class Windows {
    * @param fromStart duration to add from the start of each true segment
    * @param fromEnd duration to add from the end of each true segment
    */
-  public shiftBy(fromStart: Temporal.Duration, fromEnd: Temporal.Duration) : Windows {
+  public shiftBy(fromStart: AST.Duration, fromEnd: AST.Duration) : Windows {
     return new Windows({
       kind: AST.NodeKind.WindowsExpressionShiftBy,
       windowExpression: this.__astNode,
@@ -334,7 +335,7 @@ export class Windows {
    *
    * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
    */
-  public accumulatedDuration(unit: Temporal.Duration): Real {
+  public accumulatedDuration(unit: AST.Duration): Real {
     return new Real({
       kind: AST.NodeKind.RealProfileAccumulatedDuration,
       intervalsExpression: this.__astNode,
@@ -365,7 +366,7 @@ export class Spans {
   public static FromInterval(interval: Interval): Spans {
     return new Spans({
       kind: AST.NodeKind.SpansExpressionInterval,
-      interval
+      interval: interval.__astNode
     });
   }
 
@@ -439,7 +440,7 @@ export class Spans {
    *
    * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
    */
-  public accumulatedDuration(unit: Temporal.Duration): Real {
+  public accumulatedDuration(unit: AST.Duration): Real {
     return new Real({
       kind: AST.NodeKind.RealProfileAccumulatedDuration,
       intervalsExpression: this.__astNode,
@@ -505,12 +506,13 @@ export class Real {
    * @constructor
    */
   public static Value(value: number, rate?: number, interval?: Interval): Real {
-    return new Real({
+    let node: AST.RealProfileExpression = {
       kind: AST.NodeKind.RealProfileValue,
       value,
-      rate: rate ?? 0.0,
-      interval: interval ?? {}
-    });
+      rate: rate ?? 0.0
+    };
+    if (interval !== undefined) Object.assign(node, { interval: interval.__astNode });
+    return new Real(node);
   }
 
   /**
@@ -771,11 +773,12 @@ export class Discrete<Schema> {
    * @constructor
    */
   public static Value<Schema>(value: Schema, interval?: Interval): Discrete<Schema> {
-    return new Discrete({
+    let node: AST.DiscreteProfileExpression = {
       kind: AST.NodeKind.DiscreteProfileValue,
-      value,
-      interval: interval ?? {}
-    });
+      value
+    };
+    if (interval !== undefined) Object.assign(node, { interval: interval.__astNode });
+    return new Discrete(node);
   }
 
   /**
@@ -904,33 +907,49 @@ export enum Inclusivity {
   Exclusive = "Exclusive"
 }
 
-/** Represents an absolute time range, using Temporal.Instant. */
+/** Represents an absolute time range. */
 export class Interval {
-  private readonly start?: Temporal.Instant;
-  private readonly end?: Temporal.Instant;
-  private readonly startInclusivity?: Inclusivity;
-  private readonly endInclusivity?: Inclusivity;
+  /** @internal */
+  public readonly __astNode: AST.IntervalExpression;
 
-  private constructor(start?: Temporal.Instant, end?: Temporal.Instant, startInclusivity?: Inclusivity | undefined, endInclusivity?: Inclusivity | undefined) {
-    if (start !== undefined) this.start = start;
-    if (end !== undefined) this.end = end;
-    if (startInclusivity !== undefined) this.startInclusivity = startInclusivity;
-    if (endInclusivity !== undefined) this.endInclusivity = endInclusivity;
+  public constructor(node: AST.IntervalExpression) {
+    this.__astNode = node;
   }
 
   /** Creates an instantaneous interval at a single time. */
   public static At(time: Temporal.Instant): Interval {
-    return new Interval(time, time);
+    return new Interval({
+      kind: AST.NodeKind.AbsoluteInterval,
+      start: time,
+      end: time
+    });
   }
 
   /** Creates an interval between two times, with optional bounds inclusivity (default inclusive). */
-  public static Between(start: Temporal.Instant, end: Temporal.Instant, startInclusivity?: Inclusivity | undefined, endInclusivity?: Inclusivity | undefined): Interval {
-    return new Interval(start, end, startInclusivity, endInclusivity);
+  public static Between(start: Temporal.Instant, end: Temporal.Instant, startInclusivity?: Inclusivity, endInclusivity?: Inclusivity): Interval {
+    let node: AST.AbsoluteInterval = {
+      kind: AST.NodeKind.AbsoluteInterval,
+      start,
+      end,
+    };
+
+    if (startInclusivity !== undefined) Object.assign(node, {startInclusivity});
+    if (endInclusivity !== undefined) Object.assign(node, {endInclusivity});
+    return new Interval(node);
   }
 
   /** Creates an interval for the whole planning horizon. */
   public static Horizon(): Interval {
-    return new Interval();
+    return new Interval({
+      kind: AST.NodeKind.AbsoluteInterval
+    });
+  }
+
+  public duration(): AST.Duration {
+    return {
+      kind: AST.NodeKind.IntervalDuration,
+      interval: this.__astNode
+    }
   }
 }
 
@@ -1035,7 +1054,7 @@ declare global {
      * @param fromStart duration to add from the start of each true segment
      * @param fromEnd duration to add from the end of each true segment
      */
-    public shiftBy(fromStart: Temporal.Duration, fromEnd: Temporal.Duration): Windows;
+    public shiftBy(fromStart: AST.Duration, fromEnd: AST.Duration): Windows;
 
     /**
      * Returns a new windows object, with all true segments shorter than or equal to the given
@@ -1043,7 +1062,7 @@ declare global {
      *
      * @param duration the duration
      */
-    public longerThan(duration: Temporal.Duration): Windows;
+    public longerThan(duration: AST.Duration): Windows;
 
     /**
      * Returns a new windows object, with all true segments longer than or equal to the given
@@ -1051,7 +1070,7 @@ declare global {
      *
      * @param duration the duration
      */
-    public shorterThan(duration: Temporal.Duration): Windows;
+    public shorterThan(duration: AST.Duration): Windows;
 
     /**
      * Splits each window into equal sized sub-intervals. Returns a Spans object.
@@ -1121,11 +1140,11 @@ declare global {
      *
      * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
      */
-    public accumulatedDuration(unit: Temporal.Duration): Real;
+    public accumulatedDuration(unit: AST.Duration): Real;
   }
 
   /**
-   * A set of intervals that can overlap without being coaleseced together.
+   * A set of intervals that can overlap without being coalesced together.
    */
   export class Spans {
     public readonly __astNode: AST.SpansExpression;
@@ -1188,7 +1207,7 @@ declare global {
      *
      * @param unit unit of time to count. Does not need to be a round unit (i.e. can be 1.5 minutes, if you want).
      */
-    public accumulatedDuration(unit: Temporal.Duration): Real;
+    public accumulatedDuration(unit: AST.Duration): Real;
   }
 
   /**
@@ -1390,10 +1409,7 @@ declare global {
 
   /** Represents an absolute time range, using Temporal.Instant. */
   export class Interval {
-    private readonly start?: Temporal.Instant;
-    private readonly end?: Temporal.Instant;
-    private readonly startInclusivity?: Inclusivity;
-    private readonly endInclusivity?: Inclusivity;
+    public readonly __astNode: AST.IntervalExpression;
 
     /** Creates an instantaneous interval at a single time. */
     public static At(time: Temporal.Instant): Interval;
@@ -1403,6 +1419,8 @@ declare global {
 
     /** Creates an interval for the whole planning horizon. */
     public static Horizon(): Interval;
+
+    public duration(): AST.Duration;
   }
 }
 

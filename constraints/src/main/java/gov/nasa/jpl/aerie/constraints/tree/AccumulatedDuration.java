@@ -13,12 +13,12 @@ import java.util.Set;
 
 public record AccumulatedDuration<I extends IntervalContainer<?>>(
         Expression<I> intervals,
-        Duration unit) implements Expression<LinearProfile> {
+        Expression<Duration> unit) implements Expression<LinearProfile> {
 
   @Override
   public LinearProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     final var intervals = this.intervals.evaluate(results, bounds, environment);
-    return intervals.accumulatedDuration(unit);
+    return intervals.accumulatedDuration(unit.evaluate(results, bounds, environment));
   }
 
   @Override

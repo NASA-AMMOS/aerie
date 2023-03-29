@@ -1,8 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.json;
 
-import gov.nasa.jpl.aerie.constraints.time.AbsoluteInterval;
+import gov.nasa.jpl.aerie.constraints.tree.AbsoluteInterval;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
-import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.AccumulatedDuration;
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
 import gov.nasa.jpl.aerie.constraints.tree.ActivityWindow;
@@ -12,6 +11,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Changes;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
+import gov.nasa.jpl.aerie.constraints.tree.DurationLiteral;
 import gov.nasa.jpl.aerie.constraints.tree.EndOf;
 import gov.nasa.jpl.aerie.constraints.tree.Ends;
 import gov.nasa.jpl.aerie.constraints.tree.Equal;
@@ -53,12 +53,10 @@ import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.constraintP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.discreteProfileExprP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.discreteResourceP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.linearProfileExprP;
-import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.profileExpressionF;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.spansExpressionP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.windowsExpressionP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.windowsValueP;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.discreteProfileExprF;
 
 
 public final class ConstraintParsersTest {
@@ -66,6 +64,7 @@ public final class ConstraintParsersTest {
   public void testParseAbsoluteInterval() {
     final var json = Json
         .createObjectBuilder()
+        .add("kind", "AbsoluteInterval")
         .add("start", "2020-03-30T19:00:00Z")
         .add("end", "2020-03-30T20:00:00Z")
         .add("startInclusivity", "Inclusive")
@@ -82,7 +81,7 @@ public final class ConstraintParsersTest {
 
     assertEquals(expected, result);
 
-    final var emptyJson = Json.createObjectBuilder().build();
+    final var emptyJson = Json.createObjectBuilder().add("kind", "AbsoluteInterval").build();
     final var emptyResult = absoluteIntervalP.parse(emptyJson).getSuccessOrThrow();
     final var emptyExpected = new AbsoluteInterval(
         Optional.empty(),
@@ -99,12 +98,11 @@ public final class ConstraintParsersTest {
         .createObjectBuilder()
         .add("kind", "DiscreteProfileValue")
         .add("value", false)
-        .add("interval", Json.createObjectBuilder())
         .build();
     final var result = discreteProfileExprP.parse(json).getSuccessOrThrow();
 
     final var expected =
-        new DiscreteValue(SerializedValue.of(false), AbsoluteInterval.FOREVER);
+        new DiscreteValue(SerializedValue.of(false), Optional.empty());
 
     assertEquivalent(expected, result);
   }
@@ -117,15 +115,14 @@ public final class ConstraintParsersTest {
         .add("expression", Json
             .createObjectBuilder()
             .add("kind", "DiscreteProfileValue")
-            .add("value", false)
-            .add("interval", Json.createObjectBuilder()))
+            .add("value", false))
         .build();
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
 
     final var expected =
         new Changes<>(
             new ProfileExpression<>(
-                new DiscreteValue(SerializedValue.of(false), AbsoluteInterval.FOREVER)));
+                new DiscreteValue(SerializedValue.of(false), Optional.empty())));
 
     assertEquivalent(expected, result);
   }
@@ -190,11 +187,10 @@ public final class ConstraintParsersTest {
         .add("kind", "RealProfileValue")
         .add("value", 3.4)
         .add("rate", 2.2)
-        .add("interval", Json.createObjectBuilder())
         .build();
     final var result = linearProfileExprP.parse(json).getSuccessOrThrow();
 
-    final var expected = new RealValue(3.4, 2.2, AbsoluteInterval.FOREVER);
+    final var expected = new RealValue(3.4, 2.2, Optional.empty());
 
     assertEquivalent(expected, result);
   }
@@ -355,11 +351,10 @@ public final class ConstraintParsersTest {
         .createObjectBuilder()
         .add("kind", "WindowsExpressionValue")
         .add("value", true)
-        .add("interval", Json.createObjectBuilder())
         .build();
     final var result = windowsValueP.parse(json).getSuccessOrThrow();
 
-    final var expected = new WindowsValue(true, AbsoluteInterval.FOREVER);
+    final var expected = new WindowsValue(true, Optional.empty());
 
     assertEquivalent(expected, result);
   }
@@ -703,7 +698,7 @@ public final class ConstraintParsersTest {
     final var expected =
         new AccumulatedDuration<>(
             new ActivityWindow("A"),
-            Duration.of(101, Duration.MICROSECOND)
+            new DurationLiteral(Duration.of(101, Duration.MICROSECOND))
         );
 
     assertEquivalent(expected, result);
@@ -726,7 +721,7 @@ public final class ConstraintParsersTest {
     final var expected =
         new AccumulatedDuration<>(
             new ActivitySpan("A"),
-            Duration.of(101, Duration.MICROSECOND)
+            new DurationLiteral(Duration.of(101, Duration.MICROSECOND))
         );
 
     assertEquivalent(expected, result);
@@ -764,20 +759,18 @@ public final class ConstraintParsersTest {
         .add("originalProfile", Json
             .createObjectBuilder()
             .add("kind", "WindowsExpressionValue")
-            .add("value", true)
-            .add("interval", Json.createObjectBuilder()))
+            .add("value", true))
         .add("defaultProfile", Json
             .createObjectBuilder()
             .add("kind", "WindowsExpressionValue")
-            .add("value", false)
-            .add("interval", Json.createObjectBuilder()))
+            .add("value", false))
         .build();
 
     final var resultWindows = windowsExpressionP.parse(json).getSuccessOrThrow();
 
     final var expectedWindows = new AssignGaps<>(
-        new WindowsValue(true, AbsoluteInterval.FOREVER),
-        new WindowsValue(false, AbsoluteInterval.FOREVER)
+        new WindowsValue(true, Optional.empty()),
+        new WindowsValue(false, Optional.empty())
     );
 
     assertEquivalent(expectedWindows, resultWindows);
@@ -852,7 +845,6 @@ public final class ConstraintParsersTest {
                                           .add("left", Json
                                               .createObjectBuilder()
                                               .add("kind", "DiscreteProfileValue")
-                                              .add("interval", Json.createObjectBuilder())
                                               .add("value", false))
                                           .add("right", Json
                                               .createObjectBuilder()
@@ -892,7 +884,7 @@ public final class ConstraintParsersTest {
                                     2),
                                 new RealParameter("A", "a"))),
                         new Equal<>(
-                            new DiscreteValue(SerializedValue.of(false), AbsoluteInterval.FOREVER),
+                            new DiscreteValue(SerializedValue.of(false), Optional.empty()),
                             new DiscreteParameter("B", "b"))),
                     new Not(new ActivityWindow("A")),
                     new Not(new ActivityWindow("B"))))));

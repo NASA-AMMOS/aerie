@@ -34,6 +34,7 @@ public final class ForEachActivityViolations implements Expression<List<Violatio
         final var newEnvironment = new EvaluationEnvironment(
             new HashMap<>(environment.activityInstances()),
             environment.spansInstances(),
+            environment.intervals(),
             environment.realExternalProfiles(),
             environment.discreteExternalProfiles()
         );

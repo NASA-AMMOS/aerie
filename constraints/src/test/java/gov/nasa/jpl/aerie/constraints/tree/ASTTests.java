@@ -8,7 +8,6 @@ import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearEquation;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
-import gov.nasa.jpl.aerie.constraints.time.AbsoluteInterval;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.IntervalMap;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
@@ -80,7 +79,7 @@ public class ASTTests {
         Map.of()
     );
 
-    final var result = new WindowsValue(true, AbsoluteInterval.FOREVER).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new WindowsValue(true, Optional.empty()).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new Windows(Interval.between(0, 20, SECONDS), true);
 
@@ -376,7 +375,7 @@ public class ASTTests {
     final var expandByFromStart = Duration.of(-1, SECONDS);
     final var expandByFromEnd = Duration.of(0, SECONDS);
 
-    final var result = new ShiftBy(Supplier.of(left), expandByFromStart, expandByFromEnd).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new ShiftBy(Supplier.of(left), Supplier.of(expandByFromStart), Supplier.of(expandByFromEnd)).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new Windows()
         .set(Interval.between(-1, Inclusive, 7, Inclusive, SECONDS), true)
@@ -408,7 +407,7 @@ public class ASTTests {
     final var clampFromStart = Duration.of(1, SECONDS);
     final var clampFromEnd = Duration.negate(Duration.of(1, SECONDS));
 
-    final var result = new ShiftBy(Supplier.of(left), clampFromStart, clampFromEnd).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new ShiftBy(Supplier.of(left), Supplier.of(clampFromStart), Supplier.of(clampFromEnd)).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new Windows()
         .set(Interval.between(1, Inclusive, 4, Exclusive, SECONDS), true)
@@ -429,7 +428,7 @@ public class ASTTests {
         Map.of()
     );
 
-    final var result = new RealValue(7, 3.14, AbsoluteInterval.FOREVER).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new RealValue(7, 3.14, Optional.empty()).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new LinearProfile(
         Segment.of(simResults.bounds, new LinearEquation(Duration.ZERO, 7, 3.14))
@@ -447,7 +446,7 @@ public class ASTTests {
         Map.of()
     );
 
-    final var result = new DiscreteValue(SerializedValue.of("IDLE"), AbsoluteInterval.FOREVER).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new DiscreteValue(SerializedValue.of("IDLE"), Optional.empty()).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new DiscreteProfile(
         Segment.of(simResults.bounds, SerializedValue.of("IDLE"))
@@ -470,7 +469,7 @@ public class ASTTests {
         Map.of(),
         Map.of()
     );
-    final var environment = new EvaluationEnvironment(Map.of("act", act), Map.of(), Map.of(), Map.of());
+    final var environment = new EvaluationEnvironment(Map.of("act", act), Map.of(), Map.of(), Map.of(), Map.of());
 
     final var result = new RealParameter("act", "p1").evaluate(simResults, environment);
 
@@ -764,6 +763,7 @@ public class ASTTests {
         ),
         Map.of(),
         Map.of(),
+        Map.of(),
         Map.of()
     );
 
@@ -794,6 +794,7 @@ public class ASTTests {
                 Map.of(),
                 Interval.between(4, 8, SECONDS))
         ),
+        Map.of(),
         Map.of(),
         Map.of(),
         Map.of()
@@ -829,6 +830,7 @@ public class ASTTests {
         ),
         Map.of(),
         Map.of(),
+        Map.of(),
         Map.of()
     );
 
@@ -861,7 +863,7 @@ public class ASTTests {
         .set(interval(24, 30, SECONDS), false);
 
     final var right = Duration.of(2, SECONDS);
-    final var result = new LongerThan(Supplier.of(left), right).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new LongerThan(Supplier.of(left), Supplier.of(right)).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new Windows()
         .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), true)
@@ -894,7 +896,7 @@ public class ASTTests {
         .set(interval(24, 30, SECONDS), false);
 
     final var right = Duration.of(2, SECONDS);
-    final var result = new ShorterThan(Supplier.of(left), right).evaluate(simResults, new EvaluationEnvironment());
+    final var result = new ShorterThan(Supplier.of(left), Supplier.of(right)).evaluate(simResults, new EvaluationEnvironment());
 
     final var expected = new Windows()
         .set(Interval.between(0, Inclusive, 5, Exclusive, SECONDS), false)
@@ -918,8 +920,6 @@ public class ASTTests {
     );
 
     final var environment = new EvaluationEnvironment(
-        Map.of(),
-        Map.of(),
         Map.of(
             "real1", new LinearProfile(Segment.of(Interval.at(1, SECONDS), new LinearEquation(Duration.of(1, SECONDS), 0, 1))),
             "real2", new LinearProfile(Segment.of(Interval.at(2, SECONDS), new LinearEquation(Duration.of(2, SECONDS), 0, 1))),
@@ -949,8 +949,6 @@ public class ASTTests {
     );
 
     final var environment = new EvaluationEnvironment(
-        Map.of(),
-        Map.of(),
         Map.of(
             "real1", new LinearProfile(Segment.of(Interval.at(1, SECONDS), new LinearEquation(Duration.of(1, SECONDS), 0, 1))),
             "real2", new LinearProfile(Segment.of(Interval.at(2, SECONDS), new LinearEquation(Duration.of(2, SECONDS), 0, 1))),
@@ -986,6 +984,7 @@ public class ASTTests {
     final var environment = new EvaluationEnvironment(
         Map.of(),
         Map.of("my spans", spans),
+        Map.of(),
         Map.of(),
         Map.of()
     );

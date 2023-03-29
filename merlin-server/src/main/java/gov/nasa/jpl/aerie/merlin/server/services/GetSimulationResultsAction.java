@@ -195,7 +195,7 @@ public final class GetSimulationResultsAction {
       }
     }
 
-    final var environment = new EvaluationEnvironment(Map.of(), Map.of(), realExternalProfiles, discreteExternalProfiles);
+    final var environment = new EvaluationEnvironment(realExternalProfiles, discreteExternalProfiles);
 
     final var preparedResults = new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
         simStartTime,

@@ -89,16 +89,6 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
   }
 
   /**
-   * returns the range of possible durations for the created activities
-   *
-   * @return the range of possible durations for the activity instances
-   *     that may be created by this goal
-   */
-  public Interval getActivityDurationRange() {
-    return desiredActTemplate.getDurationRange();
-  }
-
-  /**
    * creates a new activity instance that will increase this goal's satisfaction
    *
    * the activity is labeled as being created for this goal

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.constraints.time.AbsoluteInterval;
+import gov.nasa.jpl.aerie.constraints.tree.AbsoluteInterval;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.tree.AccumulatedDuration;
 import gov.nasa.jpl.aerie.constraints.tree.ActivitySpan;
@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Changes;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
+import gov.nasa.jpl.aerie.constraints.tree.DurationLiteral;
 import gov.nasa.jpl.aerie.constraints.tree.Ends;
 import gov.nasa.jpl.aerie.constraints.tree.Equal;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
@@ -197,7 +198,7 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new DiscreteValue(
             SerializedValue.of(5),
-            new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")), Optional.empty(), Optional.empty())
+            Optional.of(new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")), Optional.empty(), Optional.empty()))
         ))))
     );
   }
@@ -382,7 +383,7 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(
             5, 3,
-            new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")), Optional.empty(), Optional.empty())
+            Optional.of(new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")), Optional.empty(), Optional.empty()))
         ))))
     );
 
@@ -399,8 +400,8 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(
             5, 3,
-            new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")), Optional.of(
-                Interval.Inclusivity.Exclusive), Optional.of(Interval.Inclusivity.Inclusive))
+            Optional.of(new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:02.816Z")), Optional.of(
+                Interval.Inclusivity.Exclusive), Optional.of(Interval.Inclusivity.Inclusive)))
         ))))
     );
 
@@ -414,7 +415,7 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(
             5, 3,
-            new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.empty(), Optional.empty())
+            Optional.of(new AbsoluteInterval(Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.of(Instant.parse("2019-11-18T10:52:01.816Z")), Optional.empty(), Optional.empty()))
         ))))
     );
 
@@ -426,7 +427,7 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(new Changes<>(new ProfileExpression<>(new RealValue(
             5, 3,
-            new AbsoluteInterval(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty())
+            Optional.of(new AbsoluteInterval(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()))
         ))))
     );
   }
@@ -468,7 +469,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).longerThan(Temporal.Duration.from({seconds: 1}));
             }
         """,
-        new ViolationsOfWindows(new LongerThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), Duration.of(1000, Duration.MILLISECONDS)))
+        new ViolationsOfWindows(new LongerThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), new DurationLiteral(Duration.of(1000, Duration.MILLISECONDS))))
     );
   }
 
@@ -480,7 +481,7 @@ class ConstraintsDSLCompilationServiceTests {
               return Real.Resource("state of charge").rate().equal(Real.Value(4.0)).shorterThan(Temporal.Duration.from({hours: 2}));
             }
         """,
-        new ViolationsOfWindows(new ShorterThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), Duration.of(2, Duration.HOURS)))
+        new ViolationsOfWindows(new ShorterThan(new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)), new DurationLiteral(Duration.of(2, Duration.HOURS))))
     );
   }
 
@@ -495,8 +496,9 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(new ShiftBy(
             new Equal<>(new Rate(new RealResource("state of charge")), new RealValue(4.0)),
-            Duration.of(2, Duration.MINUTE),
-            Duration.of(-20, Duration.MINUTE)))
+            new DurationLiteral(Duration.of(2, Duration.MINUTE)),
+            new DurationLiteral(Duration.of(-20, Duration.MINUTE)))
+        )
     );
   }
 
@@ -951,7 +953,7 @@ class ConstraintsDSLCompilationServiceTests {
         """,
         new ViolationsOfWindows(
             new LessThan(
-                new AccumulatedDuration<>(new Equal<>(new RealResource("state of charge"), new RealValue(4.0)), Duration.MINUTE),
+                new AccumulatedDuration<>(new Equal<>(new RealResource("state of charge"), new RealValue(4.0)), new DurationLiteral(Duration.MINUTE)),
                 new RealValue(5.0)
             )
         )

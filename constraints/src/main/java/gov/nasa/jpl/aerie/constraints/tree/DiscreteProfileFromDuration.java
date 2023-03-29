@@ -5,24 +5,20 @@ import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
 import gov.nasa.jpl.aerie.constraints.time.Segment;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Optional;
 import java.util.Set;
 
-public record DiscreteValue(
-    SerializedValue value,
-    Optional<Expression<Interval>> interval
+public record DiscreteProfileFromDuration(
+    Expression<Duration> duration
 ) implements Expression<DiscreteProfile> {
-
-  public DiscreteValue(final SerializedValue value) {
-    this(value, Optional.empty());
-  }
 
   @Override
   public DiscreteProfile evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
-    final Interval interval = this.interval.map(i -> i.evaluate(results, bounds, environment)).orElse(Interval.FOREVER);
-    return new DiscreteProfile(Segment.of(Interval.intersect(bounds, interval), this.value));
+    final Duration duration = this.duration.evaluate(results, bounds, environment);
+    return new DiscreteProfile(Segment.of(Interval.FOREVER, SerializedValue.of(duration.in(Duration.MICROSECOND))));
   }
 
   @Override
@@ -31,9 +27,9 @@ public record DiscreteValue(
   @Override
   public String prettyPrint(final String prefix) {
     return String.format(
-        "\n%s(value %s)",
+        "\n%s(discrete-profile-of-duration %s)",
         prefix,
-        this.value
+        this.duration
     );
   }
 }

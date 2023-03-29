@@ -19,8 +19,10 @@ interface SampleActivity1 extends ActivityTemplate<ActivityType.SampleActivity1>
 interface SampleActivity2 extends ActivityTemplate<ActivityType.SampleActivity2> {}
 interface SampleActivityEmpty extends ActivityTemplate<ActivityType.SampleActivityEmpty> {}
 export function makeAllDiscreteProfile (argument: any) : any{
- if ((argument instanceof Discrete) || (argument instanceof Real) ){
+ if ((argument instanceof Discrete) || (argument instanceof Real)) {
    return argument.__astNode
+ } else if ((argument instanceof Temporal.Duration) || (argument.kind === 'IntervalDuration')) {
+   return argument;
  } else if(typeof(argument) === "number"){
      if(Number.isInteger(argument)){
        return Discrete.Value(argument).__astNode

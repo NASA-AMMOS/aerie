@@ -11,9 +11,9 @@ import java.util.Set;
 
 public final class ShorterThan implements Expression<Windows> {
   public final Expression<Windows> windows;
-  public final Duration duration;
+  public final Expression<Duration> duration;
 
-  public ShorterThan(final Expression<Windows> left, final Duration right) {
+  public ShorterThan(final Expression<Windows> left, final Expression<Duration> right) {
     this.windows = left;
     this.duration = right;
   }
@@ -21,7 +21,7 @@ public final class ShorterThan implements Expression<Windows> {
   @Override
   public Windows evaluate(final SimulationResults results, final Interval bounds, final EvaluationEnvironment environment) {
     final var windows = this.windows.evaluate(results, bounds, environment);
-    return windows.filterByDuration(Duration.ZERO, duration);
+    return windows.filterByDuration(Duration.ZERO, duration.evaluate(results, bounds, environment));
   }
 
   @Override

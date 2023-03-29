@@ -53,31 +53,4 @@ public class TestCardinalityGoal {
                      .map(SchedulingActivityDirective::duration)
                      .reduce(Duration.ZERO, Duration::plus), Duration.of(12, Duration.SECOND));
   }
-
-
-  @Test
-  public void unsatifiablegoaltest() {
-
-    Interval period = Interval.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(10, Duration.SECONDS));
-    Interval period2 = Interval.betweenClosedOpen(Duration.of(13, Duration.SECONDS), Duration.of(20, Duration.SECONDS));
-
-    final var fooMissionModel = SimulationUtility.getFooMissionModel();
-    final var planningHorizon = new PlanningHorizon(TestUtility.timeFromEpochSeconds(0), TestUtility.timeFromEpochSeconds(25));
-    Problem problem = new Problem(fooMissionModel, planningHorizon, new SimulationFacade(
-        planningHorizon,
-        fooMissionModel), SimulationUtility.getFooSchedulerModel());
-
-    assertThrows(IllegalArgumentException.class, () -> {new CardinalityGoal.Builder()
-        .duration(Interval.between(Duration.of(5, Duration.SECONDS), Duration.of(6, Duration.SECONDS)))
-        .occurences(new Range<>(3, 10))
-        .thereExistsOne(new ActivityCreationTemplate.Builder()
-                            .ofType(problem.getActivityType("ControllableDurationActivity"))
-                            .duration(Interval.between(Duration.of(3, Duration.SECONDS), Duration.of(4, Duration.SECONDS)))
-                            .build())
-        .named("TestCardGoal")
-        .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(period, true)))
-        .owned(ChildCustody.Jointly)
-        .build();});
-  }
-
 }

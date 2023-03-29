@@ -8,6 +8,7 @@
 import * as AST from "./scheduler-ast.js";
 import  * as WindowsEDSL from "./constraints-edsl-fluent-api.js";
 import {ActivityInstance} from "./constraints-edsl-fluent-api.js";
+import * as ConstraintsAST from "./constraints-ast.js";
 
 type WindowProperty = AST.WindowProperty
 type TimingConstraintOperator = AST.TimingConstraintOperator
@@ -345,18 +346,42 @@ export class Goal {
    * @param opts an object containing the activity template, a set of windows, and optionally temporal constraints.
    */
 
-  public static CoexistenceGoal<T extends WindowsEDSL.Gen.ActivityType, S extends WindowsEDSL.Gen.ActivityType>(opts: {
+  public static CoexistenceGoal<T extends WindowsEDSL.Gen.ActivityType, S extends WindowsEDSL.Gen.ActivityType>(opts: ({
+    activityTemplate: (( interval: WindowsEDSL.Interval ) => ActivityTemplate<S>) | ActivityTemplate<S>,
+    forEach:  WindowsEDSL.Windows,
+  } | {
     activityTemplate: (( span: ActivityInstance<T> ) => ActivityTemplate<S>) | ActivityTemplate<S>,
-    forEach:  ActivityExpression<T> | WindowsEDSL.Windows,
-  } & CoexistenceGoalTimingConstraints): Goal {
-    let alias = 'coexistence activity alias ' + Goal.__numGeneratedAliases;
+    forEach:  ActivityExpression<T>,
+  }) & CoexistenceGoalTimingConstraints): Goal {
+
+    let alias: string;
+
+    if (opts.forEach instanceof WindowsEDSL.Windows) {
+      alias = 'coexistence interval alias ' + Goal.__numGeneratedAliases;
+    } else {
+      alias = 'coexistence activity alias ' + Goal.__numGeneratedAliases;
+    }
     Goal.__numGeneratedAliases += 1;
+
+    let activityTemplate: ActivityTemplate<S>;
+
+    if (opts.activityTemplate instanceof Function) {
+      if (opts.forEach instanceof WindowsEDSL.Windows) {
+        activityTemplate = (opts.activityTemplate as (i: WindowsEDSL.Interval) => ActivityTemplate<S>)(new WindowsEDSL.Interval({
+          kind: ConstraintsAST.NodeKind.IntervalAlias,
+          alias
+        }));
+      } else {
+        activityTemplate = (opts.activityTemplate as (a: ActivityInstance<T>) => ActivityTemplate<S>)(new ActivityInstance((<ActivityExpression<T>>opts.forEach).activityType, alias));
+      }
+    } else {
+      activityTemplate = opts.activityTemplate;
+    }
+
     return Goal.new({
       kind: AST.NodeKind.ActivityCoexistenceGoal,
-      alias:alias,
-      activityTemplate: (opts.activityTemplate instanceof Function)
-          ? opts.activityTemplate(new ActivityInstance((<ActivityExpression<T>>opts.forEach).activityType, alias))
-          : opts.activityTemplate,
+      alias,
+      activityTemplate,
       forEach: opts.forEach.__astNode,
       startConstraint: (("startsAt" in opts) ? opts.startsAt.__astNode : ("startsWithin" in opts) ? opts.startsWithin.__astNode : undefined),
       endConstraint: (("endsAt" in opts) ? opts.endsAt.__astNode : ("endsWithin" in opts) ? opts.endsWithin.__astNode : undefined),
@@ -635,7 +660,7 @@ declare global {
 
     /**
      * Restricts the windows on which a goal is applied
-     * @param windows the windows on which this goal applies
+     * @param window the windows on which this goal applies
      * @returns a new goal applying on a restricted horizon
      */
     public applyWhen(window: WindowsEDSL.Windows): Goal
@@ -650,10 +675,13 @@ declare global {
      * The CoexistenceGoal places one activity (defined by activityTemplate) per window (defined by forEach).
      * The activity is placed such that it starts at (startsAt) or ends at (endsAt) a certain offset from the window
      */
-    public static CoexistenceGoal <T extends WindowsEDSL.Gen.ActivityType, S extends WindowsEDSL.Gen.ActivityType>(opts: {
+    public static CoexistenceGoal <T extends WindowsEDSL.Gen.ActivityType, S extends WindowsEDSL.Gen.ActivityType>(opts: ({
+      activityTemplate: (( interval: WindowsEDSL.Interval ) => ActivityTemplate<S>) | ActivityTemplate<S>,
+      forEach:  WindowsEDSL.Windows,
+    } | {
       activityTemplate: (( span: ActivityInstance<T> ) => ActivityTemplate<S>) | ActivityTemplate<S>,
-      forEach:  ActivityExpression<T> | WindowsEDSL.Windows,
-    } & CoexistenceGoalTimingConstraints): Goal
+      forEach:  ActivityExpression<T>,
+    }) & CoexistenceGoalTimingConstraints): Goal
 
     /**
      * Creates a CardinalityGoal
