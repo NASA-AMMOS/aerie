@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server;
 
-import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfiguration;
@@ -104,16 +103,15 @@ public final class AerieAppDriver {
   private static Stores loadStores(final AppConfiguration config) {
     final var store = config.store();
     if (store instanceof PostgresStore c) {
-      final var pgDataSource = new PGDataSource();
-      pgDataSource.setServerName(c.server());
-      pgDataSource.setPortNumber(c.port());
-      pgDataSource.setDatabaseName(c.database());
-      pgDataSource.setApplicationName("Merlin Server");
-
       final var hikariConfig = new HikariConfig();
+      hikariConfig.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
+      hikariConfig.addDataSourceProperty("serverName", c.server());
+      hikariConfig.addDataSourceProperty("portNumber", c.port());
+      hikariConfig.addDataSourceProperty("databaseName", c.database());
+      hikariConfig.addDataSourceProperty("applicationName", "Merlin Server");
+
       hikariConfig.setUsername(c.user());
       hikariConfig.setPassword(c.password());
-      hikariConfig.setDataSource(pgDataSource);
 
       final var hikariDataSource = new HikariDataSource(hikariConfig);
 

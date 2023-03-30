@@ -15,7 +15,7 @@ import java.util.Optional;
 public final class PostProfileSegmentsAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
       insert into profile_segment (dataset_id, profile_id, start_offset, dynamics, is_gap)
-      values (?, ?, ?::interval, ?::json, ?)
+      values (?, ?, ?::interval, ?::jsonb, ?)
     """;
   private final PreparedStatement statement;
 

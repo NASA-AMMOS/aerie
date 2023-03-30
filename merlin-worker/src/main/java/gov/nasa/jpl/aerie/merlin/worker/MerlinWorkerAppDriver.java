@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.worker;
 
-import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
@@ -24,23 +23,21 @@ import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public final class MerlinWorkerAppDriver {
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) throws InterruptedException {
     final var configuration = loadConfiguration();
     final var store = configuration.store();
 
     if (!(store instanceof final PostgresStore postgresStore)) {
       throw new UnexpectedSubtypeError(Store.class, store);
     }
-    final var pgDataSource = new PGDataSource();
-    pgDataSource.setServerName(postgresStore.server());
-    pgDataSource.setPortNumber(postgresStore.port());
-    pgDataSource.setDatabaseName(postgresStore.database());
-    pgDataSource.setApplicationName("Merlin Server");
-
     final var hikariConfig = new HikariConfig();
+    hikariConfig.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
+    hikariConfig.addDataSourceProperty("serverName", postgresStore.server());
+    hikariConfig.addDataSourceProperty("portNumber", postgresStore.port());
+    hikariConfig.addDataSourceProperty("databaseName", postgresStore.database());
+    hikariConfig.addDataSourceProperty("applicationName", "Merlin Server");
     hikariConfig.setUsername(postgresStore.user());
     hikariConfig.setPassword(postgresStore.password());
-    hikariConfig.setDataSource(pgDataSource);
 
     final var hikariDataSource = new HikariDataSource(hikariConfig);
 

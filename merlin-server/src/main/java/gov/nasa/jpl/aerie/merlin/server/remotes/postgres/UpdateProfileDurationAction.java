@@ -11,7 +11,7 @@ import java.sql.Statement;
 /*package-local*/ final class UpdateProfileDurationAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
       update profile
-      set duration = ?
+      set duration = ?::interval
       where dataset_id=? and id=?;
     """;
   private final PreparedStatement statement;

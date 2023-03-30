@@ -85,7 +85,7 @@ dependencies {
   implementation 'org.glassfish:javax.json:1.1.4'
   implementation 'org.apache.bcel:bcel:6.6.0'
 
-  implementation 'com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9'
+  implementation 'org.postgresql:postgresql:42.6.0'
   implementation 'com.zaxxer:HikariCP:5.0.1'
 
   testImplementation project(':examples:foo-missionmodel')

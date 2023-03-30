@@ -1,10 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.worker;
 
-import com.impossibl.postgres.api.jdbc.PGConnection;
-import com.impossibl.postgres.api.jdbc.PGNotificationListener;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.DatabaseException;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.ListenSimulationStatusAction;
 import gov.nasa.jpl.aerie.merlin.worker.postgres.PostgresSimulationNotificationPayload;
+import org.postgresql.PGConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,38 +28,42 @@ public class ListenSimulationCapability {
     this.notificationQueue = notificationQueue;
   }
 
-  public void registerListener() throws SQLException {
-    PGConnection connection = this.dataSource.getConnection().unwrap(PGConnection.class);
-    connection.addNotificationListener(new SimulationNotificationListener());
+  public void registerListener() {
+    new Thread(() -> {
+      try (final var connection = this.dataSource.getConnection()) {
+        try (final var listenSimulationStatusAction = new ListenSimulationStatusAction(connection)) {
+          listenSimulationStatusAction.apply();
+        } catch (final SQLException ex) {
+          throw new DatabaseException("Failed to register as LISTEN to postgres database.", ex);
+        }
 
-    try (final var listenSimulationStatusAction = new ListenSimulationStatusAction(connection)) {
-       listenSimulationStatusAction.apply();
-    } catch (final SQLException ex) {
-      throw new DatabaseException("Failed to register as LISTEN to postgres database.", ex);
-    }
-  }
-
-  private class SimulationNotificationListener implements PGNotificationListener {
-
-    @Override
-    public void notification(int processId, String channelName, String payload){
-      logger.info("Received PSQL Notification: {}, {}, {}", processId, channelName, payload);
-      final var jsonValue = Json.createReader(new StringReader(payload)).readValue();
-      final var notificationPayload = postgresSimulationNotificationP
-          .parse(jsonValue)
-          .getSuccessOrThrow();
-      try {
-        notificationQueue.put(notificationPayload);
-      } catch (InterruptedException ex) {
-        // We are unable to handle this exception here so the thread interrupt flag is set to true
-        // so that code higher up the call stack can see that an interrupt was issued.
-        Thread.currentThread().interrupt();
+        while (true) {
+          final var pgConnection = connection.unwrap(PGConnection.class);
+          final var notifications = pgConnection.getNotifications(10000);
+          if (notifications != null) {
+            for (final var notification : notifications) {
+              final var processId = notification.getPID();
+              final var channelName = notification.getName();
+              final var payload = notification.getParameter();
+              logger.info("Received PSQL Notification: {}, {}, {}", processId, channelName, payload);
+              try (final var reader = Json.createReader(new StringReader(payload))) {
+                final var jsonValue = reader.readValue();
+                final var notificationPayload = postgresSimulationNotificationP
+                    .parse(jsonValue)
+                    .getSuccessOrThrow();
+                try {
+                  this.notificationQueue.put(notificationPayload);
+                } catch (InterruptedException e) {
+                  // We do not expect this thread to be interrupted. If it is, exit gracefully:
+                  return;
+                }
+              }
+            }
+          }
+        }
+      } catch (SQLException e) {
+        throw new DatabaseException("Listener encountered exception", e);
       }
-    }
-
-    @Override
-    public void closed() {
-      PGNotificationListener.super.closed();
-    }
+    }).start();
   }
 }

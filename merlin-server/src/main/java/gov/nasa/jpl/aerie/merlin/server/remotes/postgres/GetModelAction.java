@@ -10,7 +10,7 @@ import java.util.Optional;
 
 /*package-local*/ final class GetModelAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
-    select m.mission, m.name, m.version, m.owner, f.path
+    select m.mission, m.name, m.version, m.owner, encode(f.path, 'escape')
     from mission_model AS m
     inner join uploaded_file AS f
       on m.jar_id = f.id
