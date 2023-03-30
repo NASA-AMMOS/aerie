@@ -14,15 +14,18 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 record SimulationDatasetRecord(int simulation_id, int dataset_id){}
 record PlanDatasetRecord(int plan_id, int dataset_id) {}
+record ProfileSegmentAtATimeRecord(int datasetId, int profileId, String name, String type, String startOffset, String dynamics, boolean isGap) {}
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -846,149 +849,93 @@ class MerlinDatabaseTests {
 
   @Test
   void shouldRejectInsertProfileSegmentWithNonExistentProfile() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var datasetId = allocateDataset(statement);
-      try {
-        statement
-            .executeUpdate(
-              """
-              INSERT INTO profile_segment (dataset_id, profile_id, start_offset, dynamics, is_gap)
-              VALUES (%d, 1256, '0 seconds', '{}', false);
-              """.formatted(datasetId)
-          );
-      } catch (SQLException e) {
-        if (!e.getMessage().contains("foreign key violation: there is no profile with id 1256 in dataset %d".formatted(datasetId))) {
-          throw e;
-        }
+    final var datasetId = allocateDataset();
+    try {
+      insertProfileSegment(datasetId, 1256);
+      fail();
+    } catch (SQLException e) {
+      if (!e.getMessage().contains("foreign key violation: there is no profile with id 1256 in dataset %d".formatted(
+          datasetId))) {
+        throw e;
       }
     }
   }
 
   @Test
   void shouldRejectInsertEventWithNonExistentTopic() throws SQLException {
+    final var datasetId = allocateDataset();
     try (final var statement = connection.createStatement()) {
-      final var datasetId = allocateDataset(statement);
-      try {
-        statement
-            .executeUpdate(
-                """
-                INSERT INTO event (dataset_id, real_time, transaction_index, causal_time, value, topic_index)
-                VALUES (%d, '0 seconds', 0, '.1', '{}', 1234);
-                """.formatted(datasetId)
-            );
-      } catch (SQLException e) {
-        if (!e.getMessage().contains("foreign key violation: there is no topic with topic_index 1234 in dataset %d".formatted(datasetId))) {
-          throw e;
-        }
+      statement
+          .executeUpdate(
+              """
+                  INSERT INTO event (dataset_id, real_time, transaction_index, causal_time, value, topic_index)
+                  VALUES (%d, '0 seconds', 0, '.1', '{}', 1234);
+                  """.formatted(datasetId)
+          );
+      fail();
+    } catch (SQLException e) {
+      if (!e.getMessage().contains("foreign key violation: there is no topic with topic_index 1234 in dataset %d".formatted(datasetId))) {
+        throw e;
       }
     }
   }
 
   @Test
   void shouldRejectUpdateProfileSegmentToNonExistentProfile() throws SQLException {
+    final var datasetId = allocateDataset();
+    final int profileId = insertProfile(datasetId);
+
+    insertProfileSegment(datasetId, profileId);
+
     try (final var statement = connection.createStatement()) {
-      final var datasetId = allocateDataset(statement);
-
-      final int profileId;
-      try (final var res = statement
-          .executeQuery(
-              """
-              INSERT INTO profile (dataset_id, name, type, duration)
-              VALUES (%d, 'fred', '{}', '0 seconds')
-              RETURNING id
-              """.formatted(datasetId)
-          )
-      ) {
-        res.next();
-        profileId = res.getInt("id");
-      }
-
       statement
           .executeUpdate(
               """
-              INSERT INTO profile_segment (dataset_id, profile_id, start_offset, dynamics, is_gap)
-              VALUES (%d, %d, '0 seconds', '{}', false);
-              """.formatted(datasetId, profileId)
+                  UPDATE profile_segment
+                   set profile_id=%d
+                   where dataset_id=%d and profile_id=%d;
+                  """.formatted(profileId + 1, datasetId, profileId)
           );
-
-      try {
-        statement
-            .executeUpdate(
-                """
-                UPDATE profile_segment
-                 set profile_id=%d
-                 where dataset_id=%d and profile_id=%d;
-                """.formatted(profileId + 1, datasetId, profileId)
-            );
-      } catch (SQLException e) {
-        assertTrue(e.getMessage().contains("foreign key violation: there is no profile with id %d in dataset %d".formatted(profileId + 1, datasetId)), e.getMessage());
+      fail();
+    } catch (SQLException e) {
+      if (!e.getMessage().contains("foreign key violation: there is no profile with id %d in dataset %d".formatted(profileId + 1, datasetId))) {
+        throw e;
       }
     }
+
   }
 
   @Test
   void shouldRejectUpdateEventToNonExistentTopic() throws SQLException {
+    final var datasetId = allocateDataset();
+    final var topicIndex = 42;
+
+    insertTopic(datasetId, topicIndex);
+    insertEvent(datasetId, topicIndex);
+
     try (final var statement = connection.createStatement()) {
-      final var datasetId = allocateDataset(statement);
-      final var topicIndex = 42;
-
-      statement
-          .executeUpdate(
+      statement.executeUpdate(
               """
-              INSERT INTO topic (dataset_id, topic_index, name, value_schema)
-              VALUES (%d, %d, 'fred', '{}');
-              """.formatted(datasetId, topicIndex));
-
-      statement
-          .executeUpdate(
-              """
-              INSERT INTO event (dataset_id, real_time, transaction_index, causal_time, value, topic_index)
-              VALUES (%d, '0 seconds', 0, '.1', '{}', %d);
-              """.formatted(datasetId, topicIndex)
+              UPDATE event
+              set topic_index=%d
+              where dataset_id=%d and topic_index=%d;
+              """.formatted(topicIndex + 1, datasetId, topicIndex)
           );
-
-      try {
-        statement
-            .executeUpdate(
-                """
-                UPDATE event
-                 set topic_index=%d
-                 where dataset_id=%d and topic_index=%d;
-                """.formatted(topicIndex + 1, datasetId, topicIndex)
-            );
-      } catch (SQLException e) {
-        assertTrue(e.getMessage().contains("foreign key violation: there is no topic with topic_index %d in dataset %d".formatted(topicIndex + 1, datasetId)), e.getMessage());
+      fail();
+    } catch (SQLException e) {
+      if (!e.getMessage().contains("foreign key violation: there is no topic with topic_index %d in dataset %d".formatted(topicIndex + 1, datasetId))) {
+        throw e;
       }
     }
   }
 
   @Test
   void shouldCascadeWhenDeletingProfile() throws SQLException {
+    final var datasetId = allocateDataset();
+    final int profileId = insertProfile(datasetId);
+    insertProfileSegment(datasetId, profileId);
+
     try (final var statement = connection.createStatement()) {
-      final var datasetId = allocateDataset(statement);
-
-      final int profileId;
-      try (final var res = statement
-          .executeQuery(
-              """
-              INSERT INTO profile (dataset_id, name, type, duration)
-              VALUES (%d, 'fred', '{}', '0 seconds')
-              RETURNING id
-              """.formatted(datasetId)
-          )
-      ) {
-        res.next();
-        profileId = res.getInt("id");
-      }
-
-      statement
-          .executeUpdate(
-              """
-              INSERT INTO profile_segment (dataset_id, profile_id, start_offset, dynamics, is_gap)
-              VALUES (%d, %d, '0 seconds', '{}', false);
-              """.formatted(datasetId, profileId)
-          );
-
       statement
           .executeUpdate(
               """
@@ -996,39 +943,20 @@ class MerlinDatabaseTests {
               WHERE dataset_id=%d and id=%d
               """.formatted(datasetId, profileId)
           );
-
-      try (final var res = statement.executeQuery(
-          """
-          SELECT count(1) FROM profile_segment WHERE dataset_id=%d and profile_id=%d
-          """.formatted(datasetId, profileId)
-      )) {
-        res.next();
-        assertEquals(0, res.getInt("count"));
-      }
     }
+
+    assertEquals(0, getProfileSegmentCount(datasetId, profileId));
   }
 
   @Test
   void shouldCascadeWhenDeletingTopic() throws SQLException {
+    final var datasetId = allocateDataset();
+    final var topicIndex = 42;
+
+    insertTopic(datasetId, topicIndex);
+    insertEvent(datasetId, topicIndex);
+
     try (final var statement = connection.createStatement()) {
-      final var datasetId = allocateDataset(statement);
-      final var topicIndex = 42;
-
-      statement
-          .executeUpdate(
-              """
-              INSERT INTO topic (dataset_id, topic_index, name, value_schema)
-              VALUES (%d, %d, 'fred', '{}');
-              """.formatted(datasetId, topicIndex));
-
-      statement
-          .executeUpdate(
-              """
-              INSERT INTO event (dataset_id, real_time, transaction_index, causal_time, value, topic_index)
-              VALUES (%d, '0 seconds', 0, '.1', '{}', %d);
-              """.formatted(datasetId, topicIndex)
-          );
-
       statement
           .executeUpdate(
               """
@@ -1050,33 +978,13 @@ class MerlinDatabaseTests {
 
   @Test
   void shouldCascadeWhenUpdatingProfile() throws SQLException {
-    try (final var statement = connection.createStatement()) {
-      final var datasetId = allocateDataset(statement);
-      final int profileId;
-      try (final var res = statement
-          .executeQuery(
-              """
-              INSERT INTO profile (dataset_id, name, type, duration)
-              VALUES (%d, 'fred', '{}', '0 seconds')
-              RETURNING id
-              """.formatted(datasetId)
-          )
-      ) {
-        res.next();
-        profileId = res.getInt("id");
-      }
+    final var datasetId = allocateDataset();
+    final int profileId = insertProfile(datasetId);
+    insertProfileSegment(datasetId, profileId);
 
-      statement
-          .executeUpdate(
-              """
-              INSERT INTO profile_segment (dataset_id, profile_id, start_offset, dynamics, is_gap)
-              VALUES (%d, %d, '0 seconds', '{}', false);
-              """.formatted(datasetId, profileId)
-          );
-
-      final int newProfileId;
-      try (final var res = statement
-          .executeQuery(
+    final int newProfileId;
+    try (final var statement = connection.createStatement();
+         final var res = statement.executeQuery(
               """
               UPDATE profile
               SET id=default
@@ -1089,40 +997,19 @@ class MerlinDatabaseTests {
         newProfileId = res.getInt("id");
       }
 
-      assertNotEquals(profileId, newProfileId);
-
-      try (final var res = statement.executeQuery(
-          """
-          SELECT count(1) FROM profile_segment WHERE dataset_id=%d and profile_id=%d
-          """.formatted(datasetId, newProfileId)
-      )) {
-        res.next();
-        assertEquals(1, res.getInt("count"));
-      }
-    }
+    assertNotEquals(profileId, newProfileId);
+    assertEquals(1, getProfileSegmentCount(datasetId, newProfileId));
   }
 
   @Test
   void shouldCascadeWhenUpdatingTopicIndex() throws SQLException {
+    final var datasetId = allocateDataset();
+    final var topicIndex = 42;
+
+    insertTopic(datasetId, topicIndex);
+    insertEvent(datasetId, topicIndex);
+
     try (final var statement = connection.createStatement()) {
-
-      final var datasetId = allocateDataset(statement);
-      final var topicIndex = 42;
-      statement
-          .executeUpdate(
-              """
-              INSERT INTO topic (dataset_id, topic_index, name, value_schema)
-              VALUES (%d, %d, 'fred', '{}');
-              """.formatted(datasetId, topicIndex));
-
-      statement
-          .executeUpdate(
-              """
-              INSERT INTO event (dataset_id, real_time, transaction_index, causal_time, value, topic_index)
-              VALUES (%d, '0 seconds', 0, '.1', '{}', %d);
-              """.formatted(datasetId, topicIndex)
-          );
-
       statement
           .executeUpdate(
               """
@@ -1143,25 +1030,159 @@ class MerlinDatabaseTests {
     }
   }
 
-  private static int allocateDataset(final Statement statement) throws SQLException {
-    final int datasetId;
-    try (final var res = statement.executeQuery(
+  @Test
+  void getResourcesAtTimeFetchesLatestData() throws SQLException {
+    final var datasetId = allocateDataset();
+
+    final var contestantName = "contestantCount";
+    final var contestantType = "{\"type\": \"discrete\", \"schema\": {\"type\": \"int\"}}";
+
+    final var winnerName = "winner";
+    final var winnerType = "{\"type\": \"discrete\", \"schema\": {\"type\": \"string\"}}";
+
+    final var contestantCountId = insertProfile(datasetId, contestantName, contestantType, "12 hours");
+    final var winnerId = insertProfile(datasetId, winnerName, winnerType,  "12 hours");
+
+    // Contestant Count Segments:
+    insertProfileSegment(datasetId, contestantCountId, "0 seconds", "20", false);
+    insertProfileSegment(datasetId, contestantCountId, "2 hours", "12", false);
+    insertProfileSegment(datasetId, contestantCountId, "12 hours", "1", false);
+
+    // Winner Segments:
+    insertProfileSegment(datasetId, winnerId, "6 hours", "\"Bob or Alice\"", false);
+    insertProfileSegment(datasetId, winnerId, "10 hours", "\"Alice\"", false);
+
+    final var segmentsAtStart = getResourcesAtStartOffset(datasetId, "00:00:00");
+    final var segmentsAtOneHour = getResourcesAtStartOffset(datasetId, "06:00:00");
+    final var segmentsAtTwelveHours = getResourcesAtStartOffset(datasetId, "12:00:00");
+
+    assertEquals(1, segmentsAtStart.size());
+    assertEquals(2, segmentsAtOneHour.size());
+    assertEquals(2, segmentsAtTwelveHours.size());
+
+    final var atStartSegment0 = new ProfileSegmentAtATimeRecord(datasetId, contestantCountId, contestantName, contestantType, "PT0S", "20", false);
+    assertEquals(atStartSegment0, segmentsAtStart.get(0));
+
+    final var atOneSegment0 = new ProfileSegmentAtATimeRecord(datasetId, contestantCountId, contestantName, contestantType, "PT2H", "12", false);
+    final var atOneSegment1 = new ProfileSegmentAtATimeRecord(datasetId, winnerId, winnerName, winnerType, "PT6H", "\"Bob or Alice\"", false);
+
+    assertEquals(atOneSegment0, segmentsAtOneHour.get(0));
+    assertEquals(atOneSegment1, segmentsAtOneHour.get(1));
+
+    final var atTwelveSegment0 = new ProfileSegmentAtATimeRecord(datasetId, contestantCountId, contestantName, contestantType, "PT12H", "1", false);
+    final var atTwelveSegment1 = new ProfileSegmentAtATimeRecord(datasetId, winnerId, winnerName, winnerType, "PT10H", "\"Alice\"", false);
+
+    assertEquals(atTwelveSegment0, segmentsAtTwelveHours.get(0));
+    assertEquals(atTwelveSegment1, segmentsAtTwelveHours.get(1));
+  }
+
+  private int insertProfile(final int datasetId) throws SQLException {
+    return insertProfile(datasetId, "fred", "{}", "0 seconds");
+  }
+
+  private int insertProfile(final int datasetId, final String name, final String type, final String duration) throws SQLException {
+    try(final var statement = connection.createStatement()) {
+      final var results = statement.executeQuery(
         """
+        INSERT INTO profile(dataset_id, name, type, duration)
+        VALUES (%d, '%s', '%s', '%s')
+        RETURNING id;
+        """.formatted(datasetId, name, type, duration));
+        assertTrue(results.first());
+        return results.getInt("id");
+    }
+  }
+
+  private void insertProfileSegment(final int datasetId, final int profileId) throws SQLException {
+    insertProfileSegment(datasetId, profileId, "0 seconds", "{}", false);
+  }
+
+  private void insertProfileSegment(final int datasetId, final int profileId, final String startOffset, final String dynamics, final boolean isGap) throws SQLException {
+    try(final var statement = connection.createStatement()) {
+      statement.execute(
+        """
+        INSERT INTO profile_segment(dataset_id, profile_id, start_offset, dynamics, is_gap)
+        VALUES (%d, %d, '%s'::interval, '%s'::jsonb, %b);
+        """.formatted(datasetId, profileId, startOffset, dynamics, isGap));
+    }
+  }
+
+  private int getProfileSegmentCount(final int datasetId, final int profileId) throws SQLException {
+    try (final Statement statement = connection.createStatement()) {
+      final var res = statement.executeQuery(
+          """
+              SELECT count(1) FROM profile_segment WHERE dataset_id=%d and profile_id=%d
+              """.formatted(datasetId, profileId));
+      assertTrue(res.first());
+      return res.getInt("count");
+    }
+  }
+
+  private void insertTopic(final int datasetId, final int topicIndex) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement
+          .executeUpdate(
+              """
+                  INSERT INTO topic (dataset_id, topic_index, name, value_schema)
+                  VALUES (%d, %d, 'fred', '{}');
+                  """.formatted(datasetId, topicIndex));
+    }
+  }
+
+  private void insertEvent(final int datasetId, final int topicIndex) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement
+          .executeUpdate(
+              """
+                  INSERT INTO event (dataset_id, real_time, transaction_index, causal_time, value, topic_index)
+                  VALUES (%d, '0 seconds', 0, '.1', '{}', %d);
+                  """.formatted(datasetId, topicIndex)
+          );
+    }
+  }
+
+  private ArrayList<ProfileSegmentAtATimeRecord> getResourcesAtStartOffset(final int datasetId, final String startOffset) throws SQLException {
+    try(final var statement = connection.createStatement()) {
+      final var res = statement.executeQuery("""
+        select * from hasura_functions.get_resources_at_start_offset(%d, '%s');
+        """.formatted(datasetId, startOffset));
+
+      final var segments = new ArrayList<ProfileSegmentAtATimeRecord>();
+      while (res.next()){
+        segments.add(new ProfileSegmentAtATimeRecord(
+            res.getInt("dataset_id"),
+            res.getInt("id"),
+            res.getString("name"),
+            res.getString("type"),
+            res.getString("start_offset"),
+            res.getString("dynamics"),
+            res.getBoolean("is_gap")
+        ));
+      }
+      return segments;
+    }
+  }
+
+  private int allocateDataset() throws SQLException {
+    final int datasetId;
+    try (final Statement statement = connection.createStatement()) {
+      try (final var res = statement.executeQuery(
+          """
             INSERT INTO dataset
             DEFAULT VALUES
             RETURNING id;
-            """
-    )) {
-      res.next();
-      datasetId = res.getInt("id");
-    }
+            """)) {
+        res.next();
+        datasetId = res.getInt("id");
+      }
 
-    statement
+      statement
         .executeUpdate(
             """
             SELECT FROM allocate_dataset_partitions(%d)
             """.formatted(datasetId)
         );
-    return datasetId;
+      return datasetId;
+    }
   }
 }

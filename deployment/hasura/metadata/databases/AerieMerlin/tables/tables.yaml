@@ -59,3 +59,6 @@
 - table:
     name: delete_anchor_return_value
     schema: hasura_functions
+- table:
+    name: resource_at_start_offset_return_value
+    schema: hasura_functions
