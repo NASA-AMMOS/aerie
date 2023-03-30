@@ -93,4 +93,17 @@ begin
 end$$;
 
 comment on function allocate_dataset_partitions is e''
-  'Creates partition tables for the components of a dataset and attaches them to their partitioned tables.'
+  'Creates partition tables for the components of a dataset and attaches them to their partitioned tables.';
+
+create function call_create_partition()
+  returns trigger
+  security invoker
+  language plpgsql as $$ begin
+    perform allocate_dataset_partitions(new.id);
+return new;
+end $$;
+
+create trigger create_partition_on_simulation
+  after insert on dataset
+  for each row
+  execute function call_create_partition();

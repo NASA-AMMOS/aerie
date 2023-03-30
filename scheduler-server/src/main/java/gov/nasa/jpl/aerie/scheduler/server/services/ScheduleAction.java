@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import java.io.IOException;
+import java.util.Optional;
+
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
@@ -39,7 +41,7 @@ public record ScheduleAction(SpecificationService specificationService, Schedule
     /**
      * scheduler completed successfully; contains the requested results
      */
-    record Complete(ScheduleResults results, long analysisId) implements Response {}
+    record Complete(ScheduleResults results, long analysisId, Optional<Long> datasetId) implements Response {}
   }
 
   /**
@@ -79,7 +81,7 @@ public record ScheduleAction(SpecificationService specificationService, Schedule
     } else if (response instanceof ResultsProtocol.State.Success r) {
       final var results = r.results();
       //NB: could elaborate with more response content here, like merlin...SimResults adds in violation analytics
-      return new Response.Complete(results, r.analysisId());
+      return new Response.Complete(results, r.analysisId(), r.datasetId());
     } else {
       throw new UnexpectedSubtypeError(ResultsProtocol.State.class, response);
     }

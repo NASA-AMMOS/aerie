@@ -1,7 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler.worker.services;
 
 import java.util.ArrayList;
+import java.util.Optional;
+
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
+import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleFailure;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 
@@ -13,7 +16,7 @@ class MockResultsProtocolWriter implements ResultsProtocol.WriterRole {
   }
 
   sealed interface Result {
-    record Success(ScheduleResults results) implements Result {}
+    record Success(ScheduleResults results, Optional<DatasetId> datasetId) implements Result {}
 
     record Failure(ScheduleFailure reason) implements Result {}
   }
@@ -24,8 +27,8 @@ class MockResultsProtocolWriter implements ResultsProtocol.WriterRole {
   }
 
   @Override
-  public void succeedWith(final ScheduleResults results) {
-    this.results.add(new Result.Success(results));
+  public void succeedWith(final ScheduleResults results, final Optional<DatasetId> datasetId) {
+    this.results.add(new Result.Success(results, datasetId));
   }
 
   @Override

@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
@@ -27,12 +28,12 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.constraints.scheduling.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.goals.Goal;
-import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.model.Plan;
 import gov.nasa.jpl.aerie.scheduler.model.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.model.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.model.Problem;
+import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingCondition;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
@@ -42,6 +43,7 @@ import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationExcepti
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.ResultsProtocolFailure;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.SpecificationLoadException;
 import gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers;
+import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalRecord;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalSource;
@@ -120,7 +122,6 @@ public record SynchronousSchedulerAgent(
           specification.horizonEndTimestamp().toInstant()
       );
       try(final var simulationFacade = new SimulationFacade(planningHorizon, schedulerMissionModel.missionModel())) {
-
         final var problem = new Problem(
             schedulerMissionModel.missionModel(),
             planningHorizon,
@@ -145,14 +146,18 @@ public record SynchronousSchedulerAgent(
           } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.ConditionSpecifier> r) {
             failedGlobalSchedulingConditions.add(r.errors());
           } else {
-          throw new Error("Unhandled variant of %s: %s".formatted(SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(), result));
+            throw new Error("Unhandled variant of %s: %s".formatted(
+                SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(),
+                result));
           }
         });
 
         if (!failedGlobalSchedulingConditions.isEmpty()) {
           writer.failWith(b -> b
               .type("GLOBAL_SCHEDULING_CONDITIONS_FAILED")
-            .message("Global scheduling condition%s failed".formatted(failedGlobalSchedulingConditions.size() > 1 ? "s" : ""))
+              .message("Global scheduling condition%s failed".formatted(failedGlobalSchedulingConditions.size() > 1
+                                                                            ? "s"
+                                                                            : ""))
               .data(ResponseSerializers.serializeFailedGlobalSchedulingConditions(failedGlobalSchedulingConditions)));
           return;
         }
@@ -175,7 +180,9 @@ public record SynchronousSchedulerAgent(
           } else if (result instanceof SchedulingDSLCompilationService.SchedulingDSLCompilationResult.Error<SchedulingDSL.GoalSpecifier> r) {
             failedGoals.add(Pair.of(goalRecord.id(), r.errors()));
           } else {
-          throw new Error("Unhandled variant of %s: %s".formatted(SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(), result));
+            throw new Error("Unhandled variant of %s: %s".formatted(
+                SchedulingDSLCompilationService.SchedulingDSLCompilationResult.class.getSimpleName(),
+                result));
           }
         }
         if (!failedGoals.isEmpty()) {
@@ -219,9 +226,10 @@ public record SynchronousSchedulerAgent(
             solutionPlan,
             activityToGoalId
         );
+        final var datasetId = storeSimulationResults(planningHorizon, simulationFacade, planMetadata, instancesToIds);
         //collect results and notify subscribers of success
         final var results = collectResults(solutionPlan, instancesToIds, goals);
-        writer.succeedWith(results);
+        writer.succeedWith(results, datasetId);
       }
     } catch (final SpecificationLoadException e) {
       writer.failWith(b -> b
@@ -256,6 +264,32 @@ public record SynchronousSchedulerAgent(
           .type("IO_EXCEPTION")
           .message(e.toString())
           .trace(e));
+    }
+  }
+
+  private Optional<DatasetId> storeSimulationResults(PlanningHorizon planningHorizon, SimulationFacade simulationFacade, PlanMetadata planMetadata,
+                                                     final Map<SchedulingActivityDirective, ActivityDirectiveId> schedDirectiveToMerlinId)
+  throws PlanServiceException, IOException
+  {
+    //finish simulation until end of horizon before posting results
+    simulationFacade.computeSimulationResultsUntil(planningHorizon.getEndAerie());
+    final var schedID_to_MerlinID =
+        schedDirectiveToMerlinId.entrySet().stream()
+                                .collect(Collectors.toMap(
+                                    (a) -> new SchedulingActivityDirectiveId(a.getKey().id().id()), Map.Entry::getValue));
+    final var schedID_to_simID =
+        simulationFacade.getActivityIdCorrespondence();
+    final var simID_to_MerlinID =
+        schedID_to_simID.entrySet().stream().collect(Collectors.toMap(
+            Map.Entry::getValue,
+            (a) -> schedID_to_MerlinID.get(a.getKey())));
+    if(simID_to_MerlinID.values().containsAll(schedDirectiveToMerlinId.values()) && schedDirectiveToMerlinId.values().containsAll(simID_to_MerlinID.values())){
+      return Optional.of(planService.storeSimulationResults(planMetadata,
+                                                simulationFacade.getLatestDriverSimulationResults(),
+                                                            simID_to_MerlinID));
+    } else{
+      //schedule in simulation is inconsistent with current state of the plan (user probably disabled simulation for some of the goals)
+      return Optional.empty();
     }
   }
 

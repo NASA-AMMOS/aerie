@@ -7,6 +7,7 @@ create table scheduling_request (
   status status_t not null default 'pending',
   reason jsonb null,
   canceled boolean not null default false,
+  dataset_id integer default null,
 
   specification_revision integer not null,
 

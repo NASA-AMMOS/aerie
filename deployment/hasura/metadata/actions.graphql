@@ -248,6 +248,7 @@ type SchedulingResponse {
   status: SchedulingStatus!
   reason: SchedulingFailureReason
   analysisId: Int!
+  datasetId: Int
 }
 
 type DslTypescriptResponse {

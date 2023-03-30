@@ -214,9 +214,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         claimSimulationAction.apply(datasetId);
     }
 
-    try (final var transactionContext = new TransactionContext(connection);
-         final var createDatasetPartitionsAction = new CreateDatasetPartitionsAction(connection)) {
-      createDatasetPartitionsAction.apply(datasetId);
+    try (final var transactionContext = new TransactionContext(connection)) {
       transactionContext.commit();
     } catch (final SQLException ex) {
       throw new DatabaseException(String.format("Failed to create partitions for simulation dataset id %s", datasetId), ex);

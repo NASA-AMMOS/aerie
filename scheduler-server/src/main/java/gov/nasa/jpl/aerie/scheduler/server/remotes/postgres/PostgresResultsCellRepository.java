@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchRequestException;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.NoSuchSpecificationException;
+import gov.nasa.jpl.aerie.scheduler.server.models.DatasetId;
 import gov.nasa.jpl.aerie.scheduler.server.models.GoalId;
 import gov.nasa.jpl.aerie.scheduler.server.models.SpecificationId;
 import gov.nasa.jpl.aerie.scheduler.server.remotes.ResultsCellRepository;
@@ -174,7 +175,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           specId.id(),
           specRevision,
           RequestRecord.Status.FAILED,
-          reason);
+          reason,
+          Optional.empty());
     }
   }
 
@@ -183,7 +185,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final SpecificationId specId,
       final long specRevision,
       final long analysisId,
-      final ScheduleResults results
+      final ScheduleResults results,
+      final Optional<DatasetId> datasetId
   ) throws SQLException {
     postResults(connection, analysisId, results);
     try (final var setRequestStateAction = new SetRequestStateAction(connection)) {
@@ -191,7 +194,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           specId.id(),
           specRevision,
           RequestRecord.Status.SUCCESS,
-          null);
+          null,
+          datasetId);
     }
   }
 
@@ -265,7 +269,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
               request.reason()
                   .orElseThrow(() -> new Error("Unexpected state: %s request state has no failure message".formatted(request.status()))),
               request.analysisId());
-          case SUCCESS -> new ResultsProtocol.State.Success(getResults(connection, request.analysisId()), request.analysisId());
+          case SUCCESS -> new ResultsProtocol.State.Success(getResults(connection, request.analysisId()),
+                                                            request.analysisId(),
+                                                            request.datasetId());
         }
     );
   }
@@ -324,9 +330,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
 
     @Override
-    public void succeedWith(final ScheduleResults results) {
+    public void succeedWith(final ScheduleResults results, final Optional<DatasetId> datasetId) {
       try (final var connection = dataSource.getConnection()) {
-        succeedRequest(connection, specId, specRevision, analysisId, results);
+        succeedRequest(connection, specId, specRevision, analysisId, results, datasetId);
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to update scheduling request state", ex);
       }

@@ -21,6 +21,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 
@@ -51,6 +52,10 @@ public class SimulationFacade implements AutoCloseable{
     return lastSimConstraintResults;
   }
 
+  public SimulationResults getLatestDriverSimulationResults(){
+    return lastSimDriverResults;
+  }
+
   public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel) {
     this.missionModel = missionModel;
     this.planningHorizon = planningHorizon;
@@ -68,6 +73,10 @@ public class SimulationFacade implements AutoCloseable{
   public void setActivityTypes(final Collection<ActivityType> activityTypes){
     this.activityTypes = new HashMap<>();
     activityTypes.forEach(at -> this.activityTypes.put(at.getName(), at));
+  }
+
+  public Map<SchedulingActivityDirectiveId, ActivityDirectiveId> getActivityIdCorrespondence(){
+    return planActDirectiveIdToSimulationActivityDirectiveId;
   }
 
   /**

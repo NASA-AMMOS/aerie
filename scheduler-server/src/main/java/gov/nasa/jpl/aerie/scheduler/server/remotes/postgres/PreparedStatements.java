@@ -36,4 +36,13 @@ public final class PreparedStatements {
       return SchedulerParsers.scheduleFailureP.parse(reader.readValue()).getSuccessOrThrow();
     }
   }
+
+  public static Optional<Long> getDatasetId(final ResultSet results, final String columnLabel)
+  throws SQLException
+  {
+    final var datasetId = results.getObject(columnLabel);
+    return datasetId == null ?
+        Optional.empty() :
+        Optional.of(results.getLong(columnLabel));
+  }
 }

@@ -40,6 +40,7 @@ type SchedulingResponse = {
   reason: any;
   status: SchedulingResponseStatus;
   analysisId: number;
+  datasetId: number | null;
 };
 
 type SchedulingSpec = {
