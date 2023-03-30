@@ -29,7 +29,7 @@ dependencies {
   implementation 'org.eclipse:yasson:1.0.5'
   implementation 'org.apache.bcel:bcel:6.6.0'
 
-  implementation 'com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9'
+  implementation 'org.postgresql:postgresql:42.6.0'
   implementation 'com.zaxxer:HikariCP:5.0.1'
 
   testImplementation project(':examples:foo-missionmodel')

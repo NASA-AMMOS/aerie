@@ -1,18 +1,19 @@
 package gov.nasa.jpl.aerie.scheduler.worker;
 
+import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.DatabaseException;
+import gov.nasa.jpl.aerie.scheduler.worker.postgres.ListenSchedulingRequestStatusAction;
+import gov.nasa.jpl.aerie.scheduler.worker.postgres.PostgresSchedulingRequestNotificationPayload;
+import org.postgresql.PGConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.json.Json;
 import javax.sql.DataSource;
 import java.io.StringReader;
 import java.sql.SQLException;
 import java.util.concurrent.BlockingQueue;
+
 import static gov.nasa.jpl.aerie.scheduler.worker.postgres.PostgresNotificationJsonParsers.postgresSchedulingRequestNotificationP;
-import com.impossibl.postgres.api.jdbc.PGConnection;
-import com.impossibl.postgres.api.jdbc.PGNotificationListener;
-import gov.nasa.jpl.aerie.scheduler.server.remotes.postgres.DatabaseException;
-import gov.nasa.jpl.aerie.scheduler.worker.postgres.ListenSchedulingRequestStatusAction;
-import gov.nasa.jpl.aerie.scheduler.worker.postgres.PostgresSchedulingRequestNotificationPayload;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ListenSchedulerCapability {
   private static final Logger logger = LoggerFactory.getLogger(ListenSchedulerCapability.class);
@@ -27,38 +28,42 @@ public class ListenSchedulerCapability {
     this.notificationQueue = notificationQueue;
   }
 
-  public void registerListener() throws SQLException {
-    PGConnection connection = this.dataSource.getConnection().unwrap(PGConnection.class);
-    connection.addNotificationListener(new SchedulingRequestNotificationListener());
+  public void registerListener() {
+    new Thread(() -> {
+      try (final var connection = this.dataSource.getConnection()) {
+        try (final var listenSimulationStatusAction = new ListenSchedulingRequestStatusAction(connection)) {
+          listenSimulationStatusAction.apply();
+        } catch (final SQLException ex) {
+          throw new DatabaseException("Failed to register as LISTEN to postgres database.", ex);
+        }
 
-    try (final var listenSchedulingRequestStatusAction = new ListenSchedulingRequestStatusAction(connection)) {
-       listenSchedulingRequestStatusAction.apply();
-    } catch (final SQLException ex) {
-      throw new DatabaseException("Failed to register as LISTEN to postgres database.", ex);
-    }
-  }
-
-  private final class SchedulingRequestNotificationListener implements PGNotificationListener {
-
-    @Override
-    public void notification(final int processId, final String channelName, final String payload){
-      logger.info("Received PSQL Notification: {}, {}, {}", processId, channelName, payload);
-      final var jsonValue = Json.createReader(new StringReader(payload)).readValue();
-      final var notificationPayload = postgresSchedulingRequestNotificationP
-          .parse(jsonValue)
-          .getSuccessOrThrow();
-      try {
-        notificationQueue.put(notificationPayload);
-      } catch (InterruptedException ex) {
-        // We are unable to handle this exception here so the thread interrupt flag is set to true
-        // so that code higher up the call stack can see that an interrupt was issued.
-        Thread.currentThread().interrupt();
+        while (true) {
+          final var pgConnection = connection.unwrap(PGConnection.class);
+          final var notifications = pgConnection.getNotifications(10000);
+          if (notifications != null) {
+            for (final var notification : notifications) {
+              final var processId = notification.getPID();
+              final var channelName = notification.getName();
+              final var payload = notification.getParameter();
+              logger.info("Received PSQL Notification: {}, {}, {}", processId, channelName, payload);
+              try (final var reader = Json.createReader(new StringReader(payload))) {
+                final var jsonValue = reader.readValue();
+                final var notificationPayload = postgresSchedulingRequestNotificationP
+                    .parse(jsonValue)
+                    .getSuccessOrThrow();
+                try {
+                  this.notificationQueue.put(notificationPayload);
+                } catch (InterruptedException e) {
+                  // We do not expect this thread to be interrupted. If it is, exit gracefully:
+                  return;
+                }
+              }
+            }
+          }
+        }
+      } catch (SQLException e) {
+        throw new DatabaseException("Listener encountered exception", e);
       }
-    }
-
-    @Override
-    public void closed() {
-      PGNotificationListener.super.closed();
-    }
+    }).start();
   }
 }

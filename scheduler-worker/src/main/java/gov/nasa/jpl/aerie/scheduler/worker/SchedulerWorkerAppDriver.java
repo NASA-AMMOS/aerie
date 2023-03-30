@@ -5,7 +5,6 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
-import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
@@ -44,16 +43,14 @@ public final class SchedulerWorkerAppDriver {
     if (!(store instanceof final PostgresStore postgresStore)) {
       throw new UnexpectedSubtypeError(Store.class, store);
     }
-    final var pgDataSource = new PGDataSource();
-    pgDataSource.setServerName(postgresStore.server());
-    pgDataSource.setPortNumber(postgresStore.port());
-    pgDataSource.setDatabaseName(postgresStore.database());
-    pgDataSource.setApplicationName("Scheduler Server");
-
     final var hikariConfig = new HikariConfig();
+    hikariConfig.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
+    hikariConfig.addDataSourceProperty("serverName", postgresStore.server());
+    hikariConfig.addDataSourceProperty("portNumber", postgresStore.port());
+    hikariConfig.addDataSourceProperty("databaseName", postgresStore.database());
+    hikariConfig.addDataSourceProperty("applicationName", "Scheduler Worker");
     hikariConfig.setUsername(postgresStore.user());
     hikariConfig.setPassword(postgresStore.password());
-    hikariConfig.setDataSource(pgDataSource);
 
     final var hikariDataSource = new HikariDataSource(hikariConfig);
 
