@@ -575,6 +575,10 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
               activity_types {
                 name
                 parameters
+                presets {
+                  name
+                  arguments
+                }
               }
             }
           }
@@ -617,7 +621,23 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
                         .getJsonObject("schema"))
                 .getSuccessOrThrow());
       }
-      activityTypes.add(new ActivityType(activityTypeJson.asJsonObject().getString("name"), parameters));
+      final var presetsJsonArray = activityTypeJson.asJsonObject().getJsonArray("presets");
+      final var presets = new HashMap<String, Map<String, SerializedValue>>();
+      for (final var presetJson: presetsJsonArray) {
+        final var argumentsJson = presetJson.asJsonObject().getJsonObject("arguments");
+        final var arguments = new HashMap<String, SerializedValue>();
+        for (final var argumentJson: argumentsJson.entrySet()) {
+          arguments.put(
+              argumentJson.getKey(),
+              serializedValueP.parse(argumentJson.getValue()).getSuccessOrThrow()
+          );
+        }
+        presets.put(
+            presetJson.asJsonObject().getString("name"),
+            arguments
+        );
+      }
+      activityTypes.add(new ActivityType(activityTypeJson.asJsonObject().getString("name"), parameters, presets));
     }
     return activityTypes;
   }
@@ -628,12 +648,16 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements PlanService.
   {
     final var request = """
         query GetActivityTypesFromMissionModel{
-           mission_model_by_pk(id:%d){
-             activity_types{
-               name
-               parameters
-             }
-           }
+          mission_model_by_pk(id:%d){
+            activity_types{
+              name
+              parameters
+              presets {
+                name
+                arguments
+              }
+            }
+          }
         }
         """.formatted(missionModelId.id());
     final JsonObject response;

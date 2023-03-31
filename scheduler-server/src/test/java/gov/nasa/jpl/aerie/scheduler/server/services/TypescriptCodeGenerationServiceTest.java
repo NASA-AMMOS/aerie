@@ -68,6 +68,21 @@ const ActivityTemplateConstructors = {
     return { activityType: ActivityType.SampleActivityEmpty, args: {} };
   },
 };
+const ActivityPresetMap = Object.freeze({
+  SampleActivity1: Object.freeze({
+  }),
+  SampleActivity2: Object.freeze({
+    get "my preset"(): {
+      "quantity": number,
+    } {
+      return {
+        "quantity": 5,
+      };
+    },
+  }),
+  SampleActivityEmpty: Object.freeze({
+  }),
+});
 export enum Resource {
   "/sample/resource/1" = "/sample/resource/1",
   "/sample/resource/3" = "/sample/resource/3",
@@ -75,11 +90,13 @@ export enum Resource {
 };
 declare global {
   var ActivityTemplates: typeof ActivityTemplateConstructors;
+  var ActivityPresets: typeof ActivityPresetMap;
   var Resources: typeof Resource;
 }
 // Make ActivityTemplates and ActivityTypes available on the global object
 Object.assign(globalThis, {
   ActivityTemplates: ActivityTemplateConstructors,
+  ActivityPresets: ActivityPresetMap,
   ActivityTypes: ActivityType,
   Resources: Resource,
 });

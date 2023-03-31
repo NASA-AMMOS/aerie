@@ -1248,7 +1248,9 @@ public class SchedulingIntegrationTests {
               .getInputType()
               .getParameters()
               .stream()
-              .collect(Collectors.toMap(Parameter::name, Parameter::schema))));
+              .collect(Collectors.toMap(Parameter::name, Parameter::schema)),
+          Map.of()
+      ));
     }
 
     final var resourceTypes = new ArrayList<MissionModelService.ResourceType>();
