@@ -177,6 +177,7 @@ declare global {
     // @ts-ignore : 'Args' found in JSON Spec
     args: Args;
     stem: string;
+    type: 'immediate';
 
     public static new<A extends any[] | { [argName: string]: any }>(opts: ImmediateOptions<A>): ImmediateStem<A>;
 
@@ -197,6 +198,7 @@ declare global {
   // @ts-ignore : 'HardwareCommand' found in JSON Spec
   class HardwareStem implements HardwareCommand {
     stem: string;
+    type: 'hardware';
 
     public static new(opts: HardwareOptions): HardwareStem;
 
@@ -355,17 +357,6 @@ export class Sequence implements SeqJson {
         ? {
             immediate_commands: this.immediate_commands.map(command => {
               if (command instanceof ImmediateStem) return command.toSeqJson();
-              if (command instanceof CommandStem)
-                return {
-                  args: [
-                    {
-                      name: 'message',
-                      type: 'string',
-                      value: `ERROR: ${command.toEDSLString()}, is not an immediate command.`,
-                    },
-                  ],
-                  stem: '$$ERROR$$',
-                };
               else return command;
             }),
           }
@@ -821,6 +812,7 @@ export class ImmediateStem<A extends Args[] | { [argName: string]: any } = [] | 
   private readonly _metadata?: Metadata | undefined;
   // @ts-ignore : 'Description' found in JSON Spec
   private readonly _description?: Description | undefined;
+  public readonly type: 'immediate' = 'immediate';
 
   private constructor(opts: ImmediateOptions<A>) {
     this.stem = opts.stem;
@@ -867,6 +859,7 @@ export class ImmediateStem<A extends Args[] | { [argName: string]: any } = [] | 
     return {
       args: convertArgsToInterfaces(this.arguments),
       stem: this.stem,
+      type: this.type,
       ...(this._metadata ? { metadata: this._metadata } : {}),
       ...(this._description ? { description: this._description } : {}),
     };
@@ -1405,6 +1398,7 @@ export class HardwareStem implements HardwareCommand {
   private readonly _metadata?: Metadata | undefined;
   // @ts-ignore : 'Description' found in JSON Spec
   private readonly _description?: Description | undefined;
+  public readonly type: 'hardware' = 'hardware';
 
   private constructor(opts: HardwareOptions) {
     this.stem = opts.stem;
@@ -1447,6 +1441,7 @@ export class HardwareStem implements HardwareCommand {
   public toSeqJson(): HardwareCommand {
     return {
       stem: this.stem,
+      type: this.type,
       ...(this._metadata ? { metadata: this._metadata } : {}),
       ...(this._description ? { description: this._description } : {}),
     };
