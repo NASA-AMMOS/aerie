@@ -323,8 +323,7 @@ public final class PostgresPlanRepository implements PlanRepository {
       final Timestamp datasetStart
   ) throws SQLException {
     try (final var createPlanDatasetAction = new CreatePlanDatasetAction(connection)) {
-      final var pdr = createPlanDatasetAction.apply(planId.id(), planStart, datasetStart);
-      return pdr;
+      return createPlanDatasetAction.apply(planId.id(), planStart, datasetStart);
     }
   }
 }

@@ -10,7 +10,6 @@ import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 
 import javax.json.Json;
-import javax.json.JsonObjectBuilder;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.stream.Collectors;

@@ -14,10 +14,6 @@ public record SchedulingInstant(Duration offsetFromStart, SubInstant priority)
   public int compareTo(final SchedulingInstant o) {
     final var x = this.offsetFromStart.compareTo(o.offsetFromStart);
     if (x != 0) return x;
-
-    final var y = this.priority.compareTo(o.priority);
-    if (y != 0) return y;
-
-    return 0;
+    return this.priority.compareTo(o.priority);
   }
 }

@@ -55,13 +55,11 @@ public final class InMemoryMissionModelRepository implements MissionModelReposit
 
     @Override
     public void updateModelParameters(final String missionModelId, final List<Parameter> modelParameters)
-    throws NoSuchMissionModelException
     {
     }
 
     @Override
     public void updateActivityTypes(final String missionModelId, final Map<String, ActivityType> activityTypes)
-    throws NoSuchMissionModelException
     {
     }
 
@@ -93,7 +91,7 @@ public final class InMemoryMissionModelRepository implements MissionModelReposit
     }
 
     @Override
-    public Map<String, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
+    public Map<String, Constraint> getConstraints(final String missionModelId){
       return Map.of();
     }
 

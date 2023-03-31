@@ -61,7 +61,7 @@ public abstract class MerlinParsers {
           microseconds -> Duration.of(microseconds, Duration.MICROSECONDS),
           duration -> duration.in(Duration.MICROSECONDS));
 
-  public static final JsonParser<ActivityDirectiveId> activityInstanceIdP
+  public static final JsonParser<ActivityDirectiveId> activityDirectiveIdP
       = longP
       . map(
           ActivityDirectiveId::new,

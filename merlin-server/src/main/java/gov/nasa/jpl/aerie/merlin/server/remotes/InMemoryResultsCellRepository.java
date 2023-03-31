@@ -126,9 +126,7 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
 
     public boolean isEqualTo(final InMemoryCell other) {
       if (this.canceled != other.canceled) return false;
-      if (!Objects.equals(this.state, other.state)) return false;
-
-      return true;
+      return Objects.equals(this.state, other.state);
     }
 
     @Deprecated
