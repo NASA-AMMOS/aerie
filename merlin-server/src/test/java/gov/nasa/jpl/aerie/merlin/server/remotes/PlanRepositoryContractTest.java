@@ -40,26 +40,6 @@ public abstract class PlanRepositoryContractTest {
   }
 
   @Test
-  public void testUnsavedPlanTransactionHasNoEffect()
-  throws NoSuchPlanException
-  {
-    // GIVEN
-    final Plan oldPlan = new Plan();
-    oldPlan.name = "before";
-    final CreatedPlan ids = this.planRepository.storePlan(oldPlan);
-
-    // WHEN
-    this.planRepository
-        .updatePlan(ids.planId())
-        .setName("after");
-        // no .commit()
-
-    // THEN
-    final Plan plan = this.planRepository.getPlanForValidation(ids.planId());
-    assertThat(plan.name).isEqualTo("before");
-  }
-
-  @Test
   public void testCreatePlanWithActivity() throws NoSuchPlanException {
     // GIVEN
 

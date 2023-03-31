@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirective;
@@ -84,10 +83,6 @@ public final class InMemoryPlanRepository implements PlanRepository {
     return new CreatedPlan(planId, activityIds);
   }
 
-  public PlanTransaction updatePlan(final PlanId planId) {
-    return new MockPlanTransaction(planId);
-  }
-
   public void deletePlan(final PlanId planId) throws NoSuchPlanException {
     if (!this.plans.containsKey(planId)) {
       throw new NoSuchPlanException(planId);
@@ -123,13 +118,12 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<String, Constraint> getAllConstraintsInPlan(final PlanId planId) throws NoSuchPlanException {
+  public Map<String, Constraint> getAllConstraintsInPlan(final PlanId planId) {
     return Map.of();
   }
 
   @Override
   public long addExternalDataset(final PlanId planId, final Timestamp datasetStart, final ProfileSet profileSet)
-  throws NoSuchPlanException
   {
     return 0;
   }
@@ -140,68 +134,12 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public List<Pair<Duration, ProfileSet>> getExternalDatasets(final PlanId planId) throws NoSuchPlanException {
+  public List<Pair<Duration, ProfileSet>> getExternalDatasets(final PlanId planId) {
     return List.of();
   }
 
   @Override
-  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId) throws NoSuchPlanException {
+  public Map<String, ValueSchema> getExternalResourceSchemas(final PlanId planId) {
     return Map.of();
-  }
-
-  private class MockPlanTransaction implements PlanTransaction {
-    private final PlanId planId;
-
-    private Optional<String> name = Optional.empty();
-    private Optional<Timestamp> startTimestamp = Optional.empty();
-    private Optional<Timestamp> endTimestamp = Optional.empty();
-    private Optional<Map<String, SerializedValue>> configuration = Optional.empty();
-    private Optional<String> missionModelId = Optional.empty();
-
-    public MockPlanTransaction(final PlanId planId) {
-      this.planId = planId;
-    }
-
-    @Override
-    public void commit() throws NoSuchPlanException {
-      final var entry = InMemoryPlanRepository.this.plans.get(this.planId);
-      if (entry == null) throw new NoSuchPlanException(this.planId);
-
-      final var plan = entry.getRight();
-      final var revision = entry.getLeft() + 1;
-
-      this.name.ifPresent(name -> plan.name = name);
-      this.startTimestamp.ifPresent(startTimestamp -> plan.startTimestamp = startTimestamp);
-      this.endTimestamp.ifPresent(endTimestamp -> plan.endTimestamp = endTimestamp);
-      this.configuration.ifPresent(configuration -> plan.configuration = configuration);
-      this.missionModelId.ifPresent(missionModelId -> plan.missionModelId = missionModelId);
-
-      InMemoryPlanRepository.this.plans.put(this.planId, Pair.of(revision, plan));
-    }
-
-    @Override
-    public PlanTransaction setName(final String name) {
-      this.name = Optional.of(name);
-      return this;
-    }
-
-    @Override
-    public PlanTransaction setStartTimestamp(final Timestamp timestamp) {
-      this.startTimestamp = Optional.of(timestamp);
-      return this;
-    }
-
-    @Override
-    public PlanTransaction setEndTimestamp(final Timestamp timestamp) {
-      this.endTimestamp = Optional.of(timestamp);
-      return this;
-    }
-
-    @Override
-    public PlanTransaction setConfiguration(final Map<String, SerializedValue> configuration)
-    {
-      this.configuration = Optional.of(configuration);
-      return this;
-    }
   }
 }

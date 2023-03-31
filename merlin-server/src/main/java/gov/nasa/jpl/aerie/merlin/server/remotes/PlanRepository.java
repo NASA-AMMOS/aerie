@@ -2,9 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes;
 
 import gov.nasa.jpl.aerie.merlin.driver.ActivityDirectiveId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
@@ -43,13 +41,4 @@ public interface PlanRepository {
   Map<String, ValueSchema> getExternalResourceSchemas(PlanId planId) throws NoSuchPlanException;
 
   record CreatedPlan(PlanId planId, List<ActivityDirectiveId> activityIds) {}
-
-  interface PlanTransaction {
-    void commit() throws NoSuchPlanException;
-
-    PlanTransaction setName(String name);
-    PlanTransaction setStartTimestamp(Timestamp timestamp);
-    PlanTransaction setEndTimestamp(Timestamp timestamp);
-    PlanTransaction setConfiguration(Map<String, SerializedValue> configuration);
-  }
 }
