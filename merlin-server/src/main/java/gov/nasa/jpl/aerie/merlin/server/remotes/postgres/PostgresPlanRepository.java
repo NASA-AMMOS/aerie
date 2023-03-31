@@ -178,16 +178,6 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<ActivityDirectiveId, ActivityDirective> getAllActivitiesInPlan(final PlanId planId)
-  throws NoSuchPlanException {
-    try (final var connection = this.dataSource.getConnection()) {
-      return getPlanActivities(connection, planId);
-    } catch (final SQLException ex) {
-      throw new DatabaseException("Failed to get all activities from plan", ex);
-    }
-  }
-
-  @Override
   public Map<String, Constraint> getAllConstraintsInPlan(final PlanId planId) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getPlanConstraintsAction = new GetPlanConstraintsAction(connection)) {

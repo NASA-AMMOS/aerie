@@ -12,7 +12,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol.State;
-import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
@@ -349,17 +348,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       }
 
       return Pair.of(simulatedActivities, unfinishedActivities);
-    }
-  }
-
-  private static PlanRecord getPlan(
-      final Connection connection,
-      final PlanId planId
-  ) throws SQLException, NoSuchPlanException {
-    try (final var getPlanAction = new GetPlanAction(connection)) {
-      return getPlanAction
-          .get(planId.id())
-          .orElseThrow(() -> new NoSuchPlanException(planId));
     }
   }
 

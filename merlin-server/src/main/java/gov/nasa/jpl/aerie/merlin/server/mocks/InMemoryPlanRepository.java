@@ -73,16 +73,6 @@ public final class InMemoryPlanRepository implements PlanRepository {
             .getLeft());
   }
 
-  @Override
-  public Map<ActivityDirectiveId, ActivityDirective> getAllActivitiesInPlan(final PlanId planId) throws NoSuchPlanException {
-    final Plan plan = this.plans.get(planId).getRight();
-    if (plan == null) {
-      throw new NoSuchPlanException(planId);
-    }
-
-    return new HashMap<>(plan.activityDirectives);
-  }
-
   public CreatedPlan storePlan(final Plan other) {
     final PlanId planId = new PlanId(this.nextPlanId++);
     final Plan plan = new Plan(other);

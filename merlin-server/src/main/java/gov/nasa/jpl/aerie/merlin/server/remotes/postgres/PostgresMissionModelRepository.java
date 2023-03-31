@@ -11,8 +11,6 @@ import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 
 import javax.sql.DataSource;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
@@ -168,14 +166,5 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
     model.path = record.path();
 
     return model;
-  }
-
-  private static Path getUnusedFilename(final Path base, final String preferredName) {
-    var path = base.resolve(preferredName + ".jar");
-    for (int i = 0; Files.exists(path); ++i) {
-      path = base.resolve(preferredName + "_" + i + ".jar");
-    }
-
-    return path;
   }
 }
