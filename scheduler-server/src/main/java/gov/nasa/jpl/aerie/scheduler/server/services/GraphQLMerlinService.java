@@ -1116,11 +1116,11 @@ public SimulationId getSimulationId(PlanId planId) throws PlanServiceException, 
   {
       final var simulatedActivityRecords = simulatedActivities.entrySet().stream()
                                                               .collect(Collectors.toMap(
-                                                                  e -> simulationActivityDirectiveIdToMerlinActivityDirectiveId.get(e.getValue().directiveId().get()).id(),
+                                                                  e -> e.getKey().id(),
                                                                   e -> simulatedActivityToRecord(e.getValue(), simulationActivityDirectiveIdToMerlinActivityDirectiveId)));
       final var allActivityRecords = unfinishedActivities.entrySet().stream()
                                                          .collect(Collectors.toMap(
-                                                             e -> simulationActivityDirectiveIdToMerlinActivityDirectiveId.get(e.getValue().directiveId().get()).id(),
+                                                             e -> e.getKey().id(),
                                                              e -> unfinishedActivityToRecord(e.getValue(), simulationActivityDirectiveIdToMerlinActivityDirectiveId)));
       allActivityRecords.putAll(simulatedActivityRecords);
       final var simIdToPgId = postSpans(
