@@ -34,6 +34,16 @@ export type CommandOptions<A extends Args[] | { [argName: string]: any } = [] | 
   | {}
 );
 
+// @ts-ignore : 'Args' found in JSON Spec
+export type ImmediateOptions<A extends Args[] | { [argName: string]: any } = [] | {}> = {
+  stem: string;
+  arguments: A;
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  metadata?: Metadata | undefined;
+  // @ts-ignore : 'Description' found in JSON Spec
+  description?: Description | undefined;
+};
+
 export type HardwareOptions = {
   stem: string;
   // @ts-ignore : 'Description' found in JSON Spec
@@ -165,6 +175,28 @@ declare global {
     public GET_DESCRIPTION(): Description | undefined;
   }
 
+  // @ts-ignore : 'ARGS' found in JSON Spec
+  class ImmediateStem<A extends Args[] | { [argName: string]: any } = [] | {}> implements ImmediateCommand {
+    // @ts-ignore : 'Args' found in JSON Spec
+    args: Args;
+    stem: string;
+
+    public static new<A extends any[] | { [argName: string]: any }>(opts: ImmediateOptions<A>): ImmediateStem<A>;
+
+    // @ts-ignore : 'Command' found in JSON Spec
+    public toSeqJson(): ImmediateCommand;
+
+    // @ts-ignore : 'Metadata' found in JSON Spec
+    public METADATA(metadata: Metadata): ImmediateStem<A>;
+    // @ts-ignore : 'Metadata' found in JSON Spec
+    public GET_METADATA(): Metadata | undefined;
+
+    // @ts-ignore : 'Description' found in JSON Spec
+    public DESCRIPTION(description: Description): ImmediateStem<A>;
+    // @ts-ignore : 'Description' found in JSON Spec
+    public GET_DESCRIPTION(): Description | undefined;
+  }
+
   // @ts-ignore : 'HardwareCommand' found in JSON Spec
   class HardwareStem implements HardwareCommand {
     stem: string;
@@ -214,7 +246,7 @@ declare global {
   // @ts-ignore : 'Commands' found in generated code
   function A(absoluteTime: Temporal.Instant): typeof Commands & typeof STEPS;
   // @ts-ignore : 'Commands' found in generated code
-  function A(timeDOYString: string): typeof Commands;
+  function A(timeDOYString: string): typeof Commands & typeof STEPS;
 
   // @ts-ignore : 'Commands' found in generated code
   function R(...args: [TemplateStringsArray, ...string[]]): typeof Commands & typeof STEPS;
@@ -235,10 +267,10 @@ declare global {
 }
 
 /*
-	---------------------------------
-				Sequence eDSL
-	---------------------------------
-	*/
+		  ---------------------------------
+					  Sequence eDSL
+		  ---------------------------------
+		  */
 // @ts-ignore : 'SeqJson' found in JSON Spec
 export class Sequence implements SeqJson {
   public readonly id: string;
@@ -322,7 +354,25 @@ export class Sequence implements SeqJson {
             }),
           }
         : {}),
-      ...(this.immediate_commands ? { immediate_commands: this.immediate_commands } : {}),
+      ...(this.immediate_commands
+        ? {
+            immediate_commands: this.immediate_commands.map(command => {
+              if (command instanceof ImmediateStem) return command.toSeqJson();
+              if (command instanceof CommandStem)
+                return {
+                  args: [
+                    {
+                      name: 'message',
+                      type: 'string',
+                      value: \`ERROR: \${command.toEDSLString()}, is not an immediate command.\`,
+                    },
+                  ],
+                  stem: '$$ERROR$$',
+                };
+              else return command;
+            }),
+          }
+        : {}),
       ...(this.hardware_commands
         ? {
             hardware_commands: this.hardware_commands.map(h => {
@@ -387,9 +437,22 @@ export class Sequence implements SeqJson {
     //   }
     // ],
 
-    const immediateString = this.immediate_commands
-      ? \`[\\n\${indent(this.immediate_commands.map(i => objectToString(i)).join(',\\n'), 1)}\\n]\`
-      : '';
+    const immediateString =
+      this.immediate_commands && this.immediate_commands.length > 0
+        ? '[\\n' +
+          indent(
+            this.immediate_commands
+              .map(command => {
+                if (command instanceof ImmediateStem) {
+                  return command.toEDSLString() + ',';
+                }
+                return objectToString(command) + ',';
+              })
+              .join('\\n'),
+            1,
+          ) +
+          '\\n]'
+        : '';
     //ex.
     // immediate_commands: [
     //   {
@@ -440,25 +503,25 @@ export class Sequence implements SeqJson {
       : '';
     //ex.
     /*requests: [
-        {
-          name: 'power',
-          steps: [
-            R\`04:39:22.000\`.PREHEAT_OVEN({
-              temperature: 360,
-            }),
-            C.ADD_WATER,
-          ],
-          type: 'request',
-          description: ' Activate the oven',
-          ground_epoch: {
-            delta: 'now',
-            name: 'activate',
-          },
-          metadata: {
-            author: 'rrgoet',
-          },
-        }
-      ]
+    {
+      name: 'power',
+      steps: [
+      R\`04:39:22.000\`.PREHEAT_OVEN({
+      temperature: 360,
+      }),
+      C.ADD_WATER,
+      ],
+      type: 'request',
+      description: ' Activate the oven',
+      ground_epoch: {
+      delta: 'now',
+      name: 'activate',
+      },
+      metadata: {
+      author: 'rrgoet',
+      },
+    }
+    ]
     }*/
 
     return (
@@ -528,7 +591,12 @@ export class Sequence implements SeqJson {
             }),
           }
         : {}),
-      ...(json.immediate_commands ? { immediate_commands: json.immediate_commands } : {}),
+      ...(json.immediate_commands
+        ? {
+            // @ts-ignore : 'Step' found in JSON Spec
+            immediate_commands: json.immediate_commands.map((c: ImmediateCommand) => ImmediateStem.fromSeqJson(c)),
+          }
+        : {}),
       ...(json.hardware_commands
         ? // @ts-ignore : 'HardwareCommand' found in JSON Spec
           { hardware_commands: json.hardware_commands.map((h: HardwareCommand) => HardwareStem.fromSeqJson(h)) }
@@ -538,10 +606,10 @@ export class Sequence implements SeqJson {
 }
 
 /*
-	---------------------------------
-				STEPS eDSL
-	---------------------------------
-	*/
+	  ---------------------------------
+				  STEPS eDSL
+	  ---------------------------------
+	  */
 
 // @ts-ignore : 'Args' found in JSON Spec
 export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}> implements Command {
@@ -659,7 +727,7 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
   // @ts-ignore : 'Command' found in JSON Spec
   public toSeqJson(): Command {
     return {
-      args: CommandStem.convertArgsToInterfaces(this.arguments),
+      args: convertArgsToInterfaces(this.arguments),
       stem: this.stem,
       time:
         this.absoluteTime !== null
@@ -689,7 +757,7 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
 
     return CommandStem.new({
       stem: json.stem,
-      arguments: CommandStem.convertInterfacesToArgs(json.args),
+      arguments: convertInterfacesToArgs(json.args),
       metadata: json.metadata,
       models: json.models,
       description: json.description,
@@ -730,8 +798,7 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
       ? \`R\\\`\${durationToHms(this.relativeTime)}\\\`\`
       : 'C';
 
-    const argsString =
-      Object.keys(this.arguments).length === 0 ? '' : \`(\${CommandStem.argumentsToString(this.arguments)})\`;
+    const argsString = Object.keys(this.arguments).length === 0 ? '' : \`(\${argumentsToString(this.arguments)})\`;
 
     const metadata =
       this._metadata && Object.keys(this._metadata).length !== 0
@@ -745,181 +812,127 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
         : '';
     return \`\${timeString}.\${this.stem}\${argsString}\${description}\${metadata}\${models}\`;
   }
+}
 
+// @ts-ignore : 'Args' found in JSON Spec
+export class ImmediateStem<A extends Args[] | { [argName: string]: any } = [] | {}> implements ImmediateCommand {
+  public readonly arguments: A;
+  public readonly stem: string;
   // @ts-ignore : 'Args' found in JSON Spec
-  private static argumentsToString<A extends Args[] | { [argName: string]: any } = [] | {}>(args: A): string {
-    if (Array.isArray(args)) {
-      const argStrings = args.map(arg => {
-        if (typeof arg === 'string') {
-          return \`'\${arg}'\`;
-        }
-        return arg.toString();
-      });
+  public readonly args!: Args;
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  private readonly _metadata?: Metadata | undefined;
+  // @ts-ignore : 'Description' found in JSON Spec
+  private readonly _description?: Description | undefined;
 
-      return argStrings.join(', ');
-    } else {
-      return objectToString(args);
-    }
+  private constructor(opts: ImmediateOptions<A>) {
+    this.stem = opts.stem;
+    this.arguments = opts.arguments;
+    this._metadata = opts.metadata;
+    this._description = opts.description;
   }
 
-  // This function takes an array of Args interfaces and converts it into an object.
-  // The interfaces array contains objects matching the ARGS interface.
-  // Depending on the type property of each object, a corresponding object with the name and value properties is created
-  // and added to the output.
-  // Additionally, the function includes a validation function that prevents remote property injection attacks.
-  // @ts-ignore : 'Args' found in JSON Spec
-  private static convertInterfacesToArgs(interfaces: Args): {} | [] {
-    const args = interfaces.length === 0 ? [] : {};
+  public static new<A extends any[] | { [argName: string]: any }>(opts: ImmediateOptions<A>): ImmediateStem<A> {
+    return new ImmediateStem<A>(opts);
+  }
 
-    // Use to prevent a Remote property injection attack
-    const validate = (input: string): boolean => {
-      const pattern = /^[a-zA-Z0-9_-]+$/;
-      const isValid = pattern.test(input);
-      return isValid;
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  public METADATA(metadata: Metadata): ImmediateStem {
+    return ImmediateStem.new({
+      stem: this.stem,
+      arguments: this.arguments,
+      metadata: metadata,
+      description: this._description,
+    });
+  }
+
+  // @ts-ignore : 'Metadata' found in JSON Spec
+  public GET_METADATA(): Metadata | undefined {
+    return this._metadata;
+  }
+
+  // @ts-ignore : 'Description' found in JSON Spec
+  public DESCRIPTION(description: Description): ImmediateStem {
+    return ImmediateStem.new({
+      stem: this.stem,
+      arguments: this.arguments,
+      metadata: this._metadata,
+      description: description,
+    });
+  }
+  // @ts-ignore : 'Description' found in JSON Spec
+  public GET_DESCRIPTION(): Description | undefined {
+    return this._description;
+  }
+
+  // @ts-ignore : 'Command' found in JSON Spec
+  public toSeqJson(): ImmediateCommand {
+    return {
+      args: convertArgsToInterfaces(this.arguments),
+      stem: this.stem,
+      ...(this._metadata ? { metadata: this._metadata } : {}),
+      ...(this._description ? { description: this._description } : {}),
     };
-
-    const convertedArgs = interfaces.map(
-      (
-        // @ts-ignore : found in JSON Spec
-        arg: StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument | RepeatArgument,
-      ) => {
-        // @ts-ignore : 'RepeatArgument' found in JSON Spec
-        if (arg.type === 'repeat') {
-          if (validate(arg.name)) {
-            // @ts-ignore : 'RepeatArgument' found in JSON Spec
-            return {
-              [arg.name]: arg.value.map(
-                (
-                  // @ts-ignore : found in JSON Spec
-                  repeatArgBundle: (StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument)[],
-                ) =>
-                  repeatArgBundle.reduce((obj, item) => {
-                    if (validate(item.name)) {
-                      obj[item.name] = item.value;
-                    }
-                    return obj;
-                  }, {}),
-              ),
-            };
-          }
-          return { repeat_error: 'Remote property injection detected...' };
-        } else if (arg.type === 'symbol') {
-          if (validate(arg.name)) {
-            // @ts-ignore : 'SymbolArgument' found in JSON Spec
-            return { [arg.name]: { symbol: arg.value } };
-          }
-          return { symbol_error: 'Remote property injection detected...' };
-          // @ts-ignore : 'HexArgument' found in JSON Spec
-        } else if (arg.type === 'hex') {
-          if (validate(arg.name)) {
-            // @ts-ignore : 'HexArgument' found in JSON Spec
-            return { [arg.name]: { hex: arg.value } };
-          }
-          return { hex_error: 'Remote property injection detected...' };
-        } else {
-          if (validate(arg.name)) {
-            return { [arg.name]: arg.value };
-          }
-          return { error: 'Remote property injection detected...' };
-        }
-      },
-    );
-
-    for (const key in convertedArgs) {
-      Object.assign(args, convertedArgs[key]);
-    }
-
-    return args;
   }
 
-  /**
-   * The specific function to handle repeat args, we need to do this separately because
-   * you cannot have a RepeatArgument inside a RepeatArgument.
-   *
-   * @param args
-   * @returns
-   */
-  private static convertRepeatArgs(args: { [argName: string]: any }): any[] {
-    let result: any[] = [];
-
-    if (args['length'] === 0) {
-      return result;
-    }
-
-    const values = Array.isArray(args) ? args[0] : args;
-
-    for (let key in values) {
-      result.push(this.convertValueToObject(values[key], key));
-    }
-
-    return result;
+  // @ts-ignore : 'Command' found in JSON Spec
+  public static fromSeqJson(json: ImmediateCommand): ImmediateStem {
+    return ImmediateStem.new({
+      stem: json.stem,
+      arguments: convertInterfacesToArgs(json.args),
+      metadata: json.metadata,
+      description: json.description,
+    });
   }
 
-  /**
-   * This function takes a value and key and converts it to the correct object type supported by the seqjson spec.
-   * The only type not supported here is RepeatArgument, as that is handled differently because you cannot have a
-   * RepeatArgument inside a RepeatArgument.
-   *
-   * @param value
-   * @param key
-   * @returns An object for each type
-   */
-  private static convertValueToObject(value: any, key: string): any {
-    switch (typeof value) {
-      case 'string':
-        return { type: 'string', value: value, name: key };
-      case 'number':
-        return { type: 'number', value: value, name: key };
-      case 'boolean':
-        return { type: 'boolean', value: value, name: key };
-      default:
-        if (value instanceof Object && value.symbol && value.symbol === 'string') {
-          return { type: 'symbol', value: value, name: key };
-        } else if (
-          value instanceof Object &&
-          value.hex &&
-          value.hex === 'string' &&
-          new RegExp('^0x([0-9A-F])+$').test(value.hex)
-        ) {
-          return { type: 'hex', value: value, name: key };
-        }
-    }
-  }
+  public toEDSLString(): string {
+    const argsString = Object.keys(this.arguments).length === 0 ? '' : \`(\${argumentsToString(this.arguments)})\`;
 
-  //The function takes an object of arguments and converts them into the Args type. It does this by looping through the
-  // values and pushing a new argument type to the result array depending on the type of the value.
-  // If the value is an array, it will create a RepeatArgument type and recursively call on the values of the array.
-  // the function returns the result array of argument types -
-  // StringArgument, NumberArgument, BooleanArgument, SymbolArgument, HexArgument, and RepeatArgument.
-  // @ts-ignore : 'Args' found in JSON Spec
-  private static convertArgsToInterfaces(args: { [argName: string]: any }): Args {
-    // @ts-ignore : 'Args' found in JSON Spec
-    let result: Args = [];
-    if (args['length'] === 0) {
-      return result;
-    }
+    const metadata =
+      this._metadata && Object.keys(this._metadata).length !== 0
+        ? \`\\n.METADATA(\${objectToString(this._metadata)})\`
+        : '';
+    const description =
+      this._description && this._description.length !== 0 ? \`\\n.DESCRIPTION('\${this._description}')\` : '';
 
-    const values = Array.isArray(args) ? args[0] : args;
-
-    for (let key in values) {
-      let value = values[key];
-      if (Array.isArray(value)) {
-        // @ts-ignore : 'RepeatArgument' found in JSON Spec
-        let repeatArg: RepeatArgument = {
-          value: value.map(arg => {
-            return this.convertRepeatArgs(arg);
-          }),
-          type: 'repeat',
-          name: key,
-        };
-        result.push(repeatArg);
-      } else {
-        result = result.concat(this.convertValueToObject(value, key));
-      }
-    }
-    return result;
+    return \`\${this.stem}\${argsString}\${description}\${metadata}\`;
   }
 }
+
+//The function takes an object of arguments and converts them into the Args type. It does this by looping through the
+// values and pushing a new argument type to the result array depending on the type of the value.
+// If the value is an array, it will create a RepeatArgument type and recursively call on the values of the array.
+// the function returns the result array of argument types -
+// StringArgument, NumberArgument, BooleanArgument, SymbolArgument, HexArgument, and RepeatArgument.
+// @ts-ignore : 'Args' found in JSON Spec
+function convertArgsToInterfaces(args: { [argName: string]: any }): Args {
+  // @ts-ignore : 'Args' found in JSON Spec
+  let result: Args = [];
+  if (args['length'] === 0) {
+    return result;
+  }
+
+  const values = Array.isArray(args) ? args[0] : args;
+
+  for (let key in values) {
+    let value = values[key];
+    if (Array.isArray(value)) {
+      // @ts-ignore : 'RepeatArgument' found in JSON Spec
+      let repeatArg: RepeatArgument = {
+        value: value.map(arg => {
+          return convertRepeatArgs(arg);
+        }),
+        type: 'repeat',
+        name: key,
+      };
+      result.push(repeatArg);
+    } else {
+      result = result.concat(convertValueToObject(value, key));
+    }
+  }
+  return result;
+}
+
 // @ts-ignore : 'GroundBlock' found in JSON Spec
 export class Ground_Block implements GroundBlock {
   name: string;
@@ -1386,8 +1399,8 @@ export const STEPS = {
 };
 
 /*-----------------------------------
-	  HW Commands
-	------------------------------------- */
+		HW Commands
+	  ------------------------------------- */
 // @ts-ignore : 'HardwareCommand' found in JSON Spec
 export class HardwareStem implements HardwareCommand {
   public readonly stem: string;
@@ -1464,10 +1477,10 @@ export class HardwareStem implements HardwareCommand {
 }
 
 /*
-	---------------------------------
-			Time Utilities
-	---------------------------------
-	*/
+	  ---------------------------------
+			  Time Utilities
+	  ---------------------------------
+	  */
 
 export type DOY_STRING = string & { __brand: 'DOY_STRING' };
 export type HMS_STRING = string & { __brand: 'HMS_STRING' };
@@ -1668,10 +1681,10 @@ function commandsWithTimeValue<T extends TimingTypes>(
 }
 
 /*
-	---------------------------------
-			Utility Functions
-	---------------------------------
-	*/
+	  ---------------------------------
+			  Utility Functions
+	  ---------------------------------
+	  */
 
 // @ts-ignore : Used in generated code
 function sortCommandArguments(args: { [argName: string]: any }, order: string[]): { [argName: string]: any } {
@@ -1705,9 +1718,158 @@ function indent(text: string, numTimes: number = 1, char: string = '  '): string
     .join('\\n');
 }
 
-// This method takes an object and converts it to a string representation, with each key-value pair on a new line
-// and nested objects/arrays indented. The indentLevel parameter specifies the initial indentation level,
-// used to prettify the generated eDSL from SeqJSON
+// @ts-ignore : 'Args' found in JSON Spec
+function argumentsToString<A extends Args[] | { [argName: string]: any } = [] | {}>(args: A): string {
+  if (Array.isArray(args)) {
+    const argStrings = args.map(arg => {
+      if (typeof arg === 'string') {
+        return \`'\${arg}'\`;
+      }
+      return arg.toString();
+    });
+
+    return argStrings.join(', ');
+  } else {
+    return objectToString(args);
+  }
+}
+
+/**
+ * This function takes an array of Args interfaces and converts it into an object.
+ * The interfaces array contains objects matching the ARGS interface.
+ * Depending on the type property of each object, a corresponding object with the
+ * name and value properties is created and added to the output.
+ * Additionally, the function includes a validation function that prevents remote
+ * property injection attacks.
+ * @param interfaces
+ */
+// @ts-ignore : \`Args\` found in JSON Spec
+function convertInterfacesToArgs(interfaces: Args): {} | [] {
+  const args = interfaces.length === 0 ? [] : {};
+
+  // Use to prevent a Remote property injection attack
+  const validate = (input: string): boolean => {
+    const pattern = /^[a-zA-Z0-9_-]+$/;
+    const isValid = pattern.test(input);
+    return isValid;
+  };
+
+  const convertedArgs = interfaces.map(
+    (
+      // @ts-ignore : found in JSON Spec
+      arg: StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument | RepeatArgument,
+    ) => {
+      // @ts-ignore : 'RepeatArgument' found in JSON Spec
+      if (arg.type === 'repeat') {
+        if (validate(arg.name)) {
+          // @ts-ignore : 'RepeatArgument' found in JSON Spec
+          return {
+            [arg.name]: arg.value.map(
+              (
+                // @ts-ignore : found in JSON Spec
+                repeatArgBundle: (StringArgument | NumberArgument | BooleanArgument | SymbolArgument | HexArgument)[],
+              ) =>
+                repeatArgBundle.reduce((obj, item) => {
+                  if (validate(item.name)) {
+                    obj[item.name] = item.value;
+                  }
+                  return obj;
+                }, {}),
+            ),
+          };
+        }
+        return { repeat_error: 'Remote property injection detected...' };
+      } else if (arg.type === 'symbol') {
+        if (validate(arg.name)) {
+          // @ts-ignore : 'SymbolArgument' found in JSON Spec
+          return { [arg.name]: { symbol: arg.value } };
+        }
+        return { symbol_error: 'Remote property injection detected...' };
+        // @ts-ignore : 'HexArgument' found in JSON Spec
+      } else if (arg.type === 'hex') {
+        if (validate(arg.name)) {
+          // @ts-ignore : 'HexArgument' found in JSON Spec
+          return { [arg.name]: { hex: arg.value } };
+        }
+        return { hex_error: 'Remote property injection detected...' };
+      } else {
+        if (validate(arg.name)) {
+          return { [arg.name]: arg.value };
+        }
+        return { error: 'Remote property injection detected...' };
+      }
+    },
+  );
+
+  for (const key in convertedArgs) {
+    Object.assign(args, convertedArgs[key]);
+  }
+
+  return args;
+}
+
+/**
+ * The specific function to handle repeat args, we need to do this separately because
+ * you cannot have a RepeatArgument inside a RepeatArgument.
+ *
+ * @param args
+ * @returns
+ */
+function convertRepeatArgs(args: { [argName: string]: any }): any[] {
+  let result: any[] = [];
+
+  if (args['length'] === 0) {
+    return result;
+  }
+
+  const values = Array.isArray(args) ? args[0] : args;
+
+  for (let key in values) {
+    result.push(convertValueToObject(values[key], key));
+  }
+
+  return result;
+}
+
+/**
+ * This function takes a value and key and converts it to the correct object type supported by the seqjson spec.
+ * The only type not supported here is RepeatArgument, as that is handled differently because you cannot have a
+ * RepeatArgument inside a RepeatArgument.
+ *
+ * @param value
+ * @param key
+ * @returns An object for each type
+ */
+function convertValueToObject(value: any, key: string): any {
+  switch (typeof value) {
+    case 'string':
+      return { type: 'string', value: value, name: key };
+    case 'number':
+      return { type: 'number', value: value, name: key };
+    case 'boolean':
+      return { type: 'boolean', value: value, name: key };
+    default:
+      if (value instanceof Object && value.symbol && value.symbol === 'string') {
+        return { type: 'symbol', value: value, name: key };
+      } else if (
+        value instanceof Object &&
+        value.hex &&
+        value.hex === 'string' &&
+        new RegExp('^0x([0-9A-F])+$').test(value.hex)
+      ) {
+        return { type: 'hex', value: value, name: key };
+      }
+  }
+}
+
+/**
+ * This method takes an object and converts it to a string representation, with each
+ * key-value pair on a new line and nested objects/arrays indented. The indentLevel
+ * parameter specifies the initial indentation level, used to prettify the generated
+ * eDSL from SeqJSON.
+ * @param obj
+ * @param indentLevel
+ */
 function objectToString(obj: any, indentLevel: number = 1): string {
   let output = '';
 
@@ -2155,26 +2317,42 @@ export interface HardwareCommand {
 /** END Sequence JSON Spec */
 declare global {
 
-	interface ECHO extends CommandStem<[ [{ 'echo_string': VarString<8, 1024> }] ]> {}
+	interface ECHO_IMMEDIATE extends ImmediateStem<[ [{ 'echo_string': VarString<8, 1024> }] ]> {}
+	interface ECHO_STEP extends CommandStem<[ [{ 'echo_string': VarString<8, 1024> }] ]> {}
+	function ECHO(...args: [{ 'echo_string': VarString<8, 1024> }]) : ECHO_IMMEDIATE
 
-	interface PREHEAT_OVEN extends CommandStem<[ [{ 'temperature': U8 }] ]> {}
+	interface PREHEAT_OVEN_IMMEDIATE extends ImmediateStem<[ [{ 'temperature': U8 }] ]> {}
+	interface PREHEAT_OVEN_STEP extends CommandStem<[ [{ 'temperature': U8 }] ]> {}
+	function PREHEAT_OVEN(...args: [{ 'temperature': U8 }]) : PREHEAT_OVEN_IMMEDIATE
 
-	interface THROW_BANANA extends CommandStem<[ [{ 'distance': U8 }] ]> {}
+	interface THROW_BANANA_IMMEDIATE extends ImmediateStem<[ [{ 'distance': U8 }] ]> {}
+	interface THROW_BANANA_STEP extends CommandStem<[ [{ 'distance': U8 }] ]> {}
+	function THROW_BANANA(...args: [{ 'distance': U8 }]) : THROW_BANANA_IMMEDIATE
 
-	interface GROW_BANANA extends CommandStem<[ [{ 'quantity': U8,'durationSecs': U8 }] ]> {}
+	interface GROW_BANANA_IMMEDIATE extends ImmediateStem<[ [{ 'quantity': U8,'durationSecs': U8 }] ]> {}
+	interface GROW_BANANA_STEP extends CommandStem<[ [{ 'quantity': U8,'durationSecs': U8 }] ]> {}
+	function GROW_BANANA(...args: [{ 'quantity': U8,'durationSecs': U8 }]) : GROW_BANANA_IMMEDIATE
 
-	interface GrowBanana extends CommandStem<[ [{ 'quantity': U8,'durationSecs': U8 }] ]> {}
+	interface GrowBanana_IMMEDIATE extends ImmediateStem<[ [{ 'quantity': U8,'durationSecs': U8 }] ]> {}
+	interface GrowBanana_STEP extends CommandStem<[ [{ 'quantity': U8,'durationSecs': U8 }] ]> {}
+	function GrowBanana(...args: [{ 'quantity': U8,'durationSecs': U8 }]) : GrowBanana_IMMEDIATE
 
-	interface PREPARE_LOAF extends CommandStem<[ [{ 'tb_sugar': U8,'gluten_free': ('FALSE' | 'TRUE') }] ]> {}
+	interface PREPARE_LOAF_IMMEDIATE extends ImmediateStem<[ [{ 'tb_sugar': U8,'gluten_free': ('FALSE' | 'TRUE') }] ]> {}
+	interface PREPARE_LOAF_STEP extends CommandStem<[ [{ 'tb_sugar': U8,'gluten_free': ('FALSE' | 'TRUE') }] ]> {}
+	function PREPARE_LOAF(...args: [{ 'tb_sugar': U8,'gluten_free': ('FALSE' | 'TRUE') }]) : PREPARE_LOAF_IMMEDIATE
 
-	interface PEEL_BANANA extends CommandStem<[ [{ 'peelDirection': ('fromStem' | 'fromTip') }] ]> {}
+	interface PEEL_BANANA_IMMEDIATE extends ImmediateStem<[ [{ 'peelDirection': ('fromStem' | 'fromTip') }] ]> {}
+	interface PEEL_BANANA_STEP extends CommandStem<[ [{ 'peelDirection': ('fromStem' | 'fromTip') }] ]> {}
+	function PEEL_BANANA(...args: [{ 'peelDirection': ('fromStem' | 'fromTip') }]) : PEEL_BANANA_IMMEDIATE
 
 
 /**
 * This command bakes a banana bread
 *
 */
-	interface BAKE_BREAD extends CommandStem<[]> {}
+	interface BAKE_BREAD_IMMEDIATE extends ImmediateStem<[]> {}
+	interface BAKE_BREAD_STEP extends CommandStem<[]> {}
+	const BAKE_BREAD: BAKE_BREAD_IMMEDIATE;
 
 
 
@@ -2182,17 +2360,23 @@ declare global {
 * This command waters the banana tree
 *
 */
-	interface ADD_WATER extends CommandStem<[]> {}
+	interface ADD_WATER_IMMEDIATE extends ImmediateStem<[]> {}
+	interface ADD_WATER_STEP extends CommandStem<[]> {}
+	const ADD_WATER: BAKE_BREAD_IMMEDIATE;
 
 
-	interface PACKAGE_BANANA extends CommandStem<[ [{ 'lot_number': U16,'bundle': Array<{ 'bundle_name': VarString<8, 1024>, 'number_of_bananas': U8 }> }] ]> {}
+	interface PACKAGE_BANANA_IMMEDIATE extends ImmediateStem<[ [{ 'lot_number': U16,'bundle': Array<{ 'bundle_name': VarString<8, 1024>, 'number_of_bananas': U8 }> }] ]> {}
+	interface PACKAGE_BANANA_STEP extends CommandStem<[ [{ 'lot_number': U16,'bundle': Array<{ 'bundle_name': VarString<8, 1024>, 'number_of_bananas': U8 }> }] ]> {}
+	function PACKAGE_BANANA(...args: [{ 'lot_number': U16,'bundle': Array<{ 'bundle_name': VarString<8, 1024>, 'number_of_bananas': U8 }> }]) : PACKAGE_BANANA_IMMEDIATE
 
 
 /**
 * Pick a banana
 *
 */
-	interface PICK_BANANA extends CommandStem<[]> {}
+	interface PICK_BANANA_IMMEDIATE extends ImmediateStem<[]> {}
+	interface PICK_BANANA_STEP extends CommandStem<[]> {}
+	const PICK_BANANA: BAKE_BREAD_IMMEDIATE;
 
 
 
@@ -2200,32 +2384,35 @@ declare global {
 * Eat a banana
 *
 */
-	interface EAT_BANANA extends CommandStem<[]> {}
-
+	interface EAT_BANANA_IMMEDIATE extends ImmediateStem<[]> {}
+	interface EAT_BANANA_STEP extends CommandStem<[]> {}
+	const EAT_BANANA: BAKE_BREAD_IMMEDIATE;
+		
 /**
 * Dump the blender configuration file.
 *
 */
-interface HDW_BLENDER_DUMP extends HardwareStem {}
-const HDW_BLENDER_DUMP: HDW_BLENDER_DUMP
+	interface HDW_BLENDER_DUMP extends HardwareStem {}
+	const HDW_BLENDER_DUMP: HDW_BLENDER_DUMP
 
 	const Commands: {
-		ECHO: typeof ECHO,
-		PREHEAT_OVEN: typeof PREHEAT_OVEN,
-		THROW_BANANA: typeof THROW_BANANA,
-		GROW_BANANA: typeof GROW_BANANA,
-		GrowBanana: typeof GrowBanana,
-		PREPARE_LOAF: typeof PREPARE_LOAF,
-		PEEL_BANANA: typeof PEEL_BANANA,
-		BAKE_BREAD: typeof BAKE_BREAD,
-		ADD_WATER: typeof ADD_WATER,
-		PACKAGE_BANANA: typeof PACKAGE_BANANA,
-		PICK_BANANA: typeof PICK_BANANA,
-		EAT_BANANA: typeof EAT_BANANA,
+		ECHO: typeof ECHO_STEP,
+		PREHEAT_OVEN: typeof PREHEAT_OVEN_STEP,
+		THROW_BANANA: typeof THROW_BANANA_STEP,
+		GROW_BANANA: typeof GROW_BANANA_STEP,
+		GrowBanana: typeof GrowBanana_STEP,
+		PREPARE_LOAF: typeof PREPARE_LOAF_STEP,
+		PEEL_BANANA: typeof PEEL_BANANA_STEP,
+		BAKE_BREAD: typeof BAKE_BREAD_STEP,
+		ADD_WATER: typeof ADD_WATER_STEP,
+		PACKAGE_BANANA: typeof PACKAGE_BANANA_STEP,
+		PICK_BANANA: typeof PICK_BANANA_STEP,
+		EAT_BANANA: typeof EAT_BANANA_STEP,
 	};
 
 	const Hardwares : {
-		HDW_BLENDER_DUMP: typeof HDW_BLENDER_DUMP 	};
+		HDW_BLENDER_DUMP: typeof HDW_BLENDER_DUMP,
+ 	};
 }
 
 const argumentOrders = {
@@ -2250,10 +2437,16 @@ const argumentOrders = {
 * @param echo_string String to echo back
 */
 function ECHO(...args: [{ 'echo_string': VarString<8, 1024> }]) {
+  return ImmediateStem.new({
+    stem: 'ECHO',
+    arguments: args
+  }) as ECHO_IMMEDIATE;
+}
+function ECHO_STEP(...args: [{ 'echo_string': VarString<8, 1024> }]) {
   return CommandStem.new({
     stem: 'ECHO',
     arguments: sortCommandArguments(args, argumentOrders['ECHO'])
-  }) as ECHO;
+  }) as ECHO_STEP;
 }
 
 
@@ -2262,10 +2455,16 @@ function ECHO(...args: [{ 'echo_string': VarString<8, 1024> }]) {
 * @param temperature Set the oven temperature
 */
 function PREHEAT_OVEN(...args: [{ 'temperature': U8 }]) {
+  return ImmediateStem.new({
+    stem: 'PREHEAT_OVEN',
+    arguments: args
+  }) as PREHEAT_OVEN_IMMEDIATE;
+}
+function PREHEAT_OVEN_STEP(...args: [{ 'temperature': U8 }]) {
   return CommandStem.new({
     stem: 'PREHEAT_OVEN',
     arguments: sortCommandArguments(args, argumentOrders['PREHEAT_OVEN'])
-  }) as PREHEAT_OVEN;
+  }) as PREHEAT_OVEN_STEP;
 }
 
 
@@ -2274,10 +2473,16 @@ function PREHEAT_OVEN(...args: [{ 'temperature': U8 }]) {
 * @param distance The distance you throw the bananan
 */
 function THROW_BANANA(...args: [{ 'distance': U8 }]) {
+  return ImmediateStem.new({
+    stem: 'THROW_BANANA',
+    arguments: args
+  }) as THROW_BANANA_IMMEDIATE;
+}
+function THROW_BANANA_STEP(...args: [{ 'distance': U8 }]) {
   return CommandStem.new({
     stem: 'THROW_BANANA',
     arguments: sortCommandArguments(args, argumentOrders['THROW_BANANA'])
-  }) as THROW_BANANA;
+  }) as THROW_BANANA_STEP;
 }
 
 
@@ -2287,10 +2492,16 @@ function THROW_BANANA(...args: [{ 'distance': U8 }]) {
 * @param durationSecs How many seconds will it take to grow
 */
 function GROW_BANANA(...args: [{ 'quantity': U8,'durationSecs': U8 }]) {
+  return ImmediateStem.new({
+    stem: 'GROW_BANANA',
+    arguments: args
+  }) as GROW_BANANA_IMMEDIATE;
+}
+function GROW_BANANA_STEP(...args: [{ 'quantity': U8,'durationSecs': U8 }]) {
   return CommandStem.new({
     stem: 'GROW_BANANA',
     arguments: sortCommandArguments(args, argumentOrders['GROW_BANANA'])
-  }) as GROW_BANANA;
+  }) as GROW_BANANA_STEP;
 }
 
 
@@ -2300,10 +2511,16 @@ function GROW_BANANA(...args: [{ 'quantity': U8,'durationSecs': U8 }]) {
 * @param durationSecs How many seconds will it take to grow
 */
 function GrowBanana(...args: [{ 'quantity': U8,'durationSecs': U8 }]) {
+  return ImmediateStem.new({
+    stem: 'GrowBanana',
+    arguments: args
+  }) as GrowBanana_IMMEDIATE;
+}
+function GrowBanana_STEP(...args: [{ 'quantity': U8,'durationSecs': U8 }]) {
   return CommandStem.new({
     stem: 'GrowBanana',
     arguments: sortCommandArguments(args, argumentOrders['GrowBanana'])
-  }) as GrowBanana;
+  }) as GrowBanana_STEP;
 }
 
 
@@ -2313,10 +2530,16 @@ function GrowBanana(...args: [{ 'quantity': U8,'durationSecs': U8 }]) {
 * @param gluten_free Do you hate flavor
 */
 function PREPARE_LOAF(...args: [{ 'tb_sugar': U8,'gluten_free': ('FALSE' | 'TRUE') }]) {
+  return ImmediateStem.new({
+    stem: 'PREPARE_LOAF',
+    arguments: args
+  }) as PREPARE_LOAF_IMMEDIATE;
+}
+function PREPARE_LOAF_STEP(...args: [{ 'tb_sugar': U8,'gluten_free': ('FALSE' | 'TRUE') }]) {
   return CommandStem.new({
     stem: 'PREPARE_LOAF',
     arguments: sortCommandArguments(args, argumentOrders['PREPARE_LOAF'])
-  }) as PREPARE_LOAF;
+  }) as PREPARE_LOAF_STEP;
 }
 
 
@@ -2325,10 +2548,16 @@ function PREPARE_LOAF(...args: [{ 'tb_sugar': U8,'gluten_free': ('FALSE' | 'TRUE
 * @param peelDirection Which way do you peel the banana
 */
 function PEEL_BANANA(...args: [{ 'peelDirection': ('fromStem' | 'fromTip') }]) {
+  return ImmediateStem.new({
+    stem: 'PEEL_BANANA',
+    arguments: args
+  }) as PEEL_BANANA_IMMEDIATE;
+}
+function PEEL_BANANA_STEP(...args: [{ 'peelDirection': ('fromStem' | 'fromTip') }]) {
   return CommandStem.new({
     stem: 'PEEL_BANANA',
     arguments: sortCommandArguments(args, argumentOrders['PEEL_BANANA'])
-  }) as PEEL_BANANA;
+  }) as PEEL_BANANA_STEP;
 }
 
 
@@ -2336,20 +2565,28 @@ function PEEL_BANANA(...args: [{ 'peelDirection': ('fromStem' | 'fromTip') }]) {
 * This command bakes a banana bread
 *
 */
-const BAKE_BREAD: BAKE_BREAD = CommandStem.new({
+const BAKE_BREAD: BAKE_BREAD_IMMEDIATE = ImmediateStem.new({
 	stem: 'BAKE_BREAD',
 	arguments: [],
-})
+});
+const BAKE_BREAD_STEP: BAKE_BREAD_STEP = CommandStem.new({
+	stem: 'BAKE_BREAD',
+	arguments: [],
+});
 
 
 /**
 * This command waters the banana tree
 *
 */
-const ADD_WATER: ADD_WATER = CommandStem.new({
+const ADD_WATER: ADD_WATER_IMMEDIATE = ImmediateStem.new({
 	stem: 'ADD_WATER',
 	arguments: [],
-})
+});
+const ADD_WATER_STEP: ADD_WATER_STEP = CommandStem.new({
+	stem: 'ADD_WATER',
+	arguments: [],
+});
 
 
 /**
@@ -2358,10 +2595,16 @@ const ADD_WATER: ADD_WATER = CommandStem.new({
 * @param bundle A repeated set of strings and integer containing the arguments to the lot
 */
 function PACKAGE_BANANA(...args: [{ 'lot_number': U16,'bundle': Array<{ 'bundle_name': VarString<8, 1024>, 'number_of_bananas': U8 }> }]) {
+  return ImmediateStem.new({
+    stem: 'PACKAGE_BANANA',
+    arguments: args
+  }) as PACKAGE_BANANA_IMMEDIATE;
+}
+function PACKAGE_BANANA_STEP(...args: [{ 'lot_number': U16,'bundle': Array<{ 'bundle_name': VarString<8, 1024>, 'number_of_bananas': U8 }> }]) {
   return CommandStem.new({
     stem: 'PACKAGE_BANANA',
     arguments: sortCommandArguments(args, argumentOrders['PACKAGE_BANANA'])
-  }) as PACKAGE_BANANA;
+  }) as PACKAGE_BANANA_STEP;
 }
 
 
@@ -2369,20 +2612,28 @@ function PACKAGE_BANANA(...args: [{ 'lot_number': U16,'bundle': Array<{ 'bundle_
 * Pick a banana
 *
 */
-const PICK_BANANA: PICK_BANANA = CommandStem.new({
+const PICK_BANANA: PICK_BANANA_IMMEDIATE = ImmediateStem.new({
 	stem: 'PICK_BANANA',
 	arguments: [],
-})
+});
+const PICK_BANANA_STEP: PICK_BANANA_STEP = CommandStem.new({
+	stem: 'PICK_BANANA',
+	arguments: [],
+});
 
 
 /**
 * Eat a banana
 *
 */
-const EAT_BANANA: EAT_BANANA = CommandStem.new({
+const EAT_BANANA: EAT_BANANA_IMMEDIATE = ImmediateStem.new({
 	stem: 'EAT_BANANA',
 	arguments: [],
-})
+});
+const EAT_BANANA_STEP: EAT_BANANA_STEP = CommandStem.new({
+	stem: 'EAT_BANANA',
+	arguments: [],
+});
 
 /**
 * Dump the blender configuration file.
@@ -2392,7 +2643,23 @@ const HDW_BLENDER_DUMP: HDW_BLENDER_DUMP = HardwareStem.new({
 	stem: 'HDW_BLENDER_DUMP'
 })
 
-export const Commands = {		ECHO: ECHO,
+export const Commands = {
+		ECHO: ECHO_STEP,
+		PREHEAT_OVEN: PREHEAT_OVEN_STEP,
+		THROW_BANANA: THROW_BANANA_STEP,
+		GROW_BANANA: GROW_BANANA_STEP,
+		GrowBanana: GrowBanana_STEP,
+		PREPARE_LOAF: PREPARE_LOAF_STEP,
+		PEEL_BANANA: PEEL_BANANA_STEP,
+		BAKE_BREAD: BAKE_BREAD_STEP,
+		ADD_WATER: ADD_WATER_STEP,
+		PACKAGE_BANANA: PACKAGE_BANANA_STEP,
+		PICK_BANANA: PICK_BANANA_STEP,
+		EAT_BANANA: EAT_BANANA_STEP,
+};
+
+export const Immediates = {
+		ECHO: ECHO,
 		PREHEAT_OVEN: PREHEAT_OVEN,
 		THROW_BANANA: THROW_BANANA,
 		GROW_BANANA: GROW_BANANA,
@@ -2406,9 +2673,10 @@ export const Commands = {		ECHO: ECHO,
 		EAT_BANANA: EAT_BANANA,
 };
 
-export const Hardwares = {		HDW_BLENDER_DUMP: HDW_BLENDER_DUMP,
+export const Hardwares = {
+		HDW_BLENDER_DUMP: HDW_BLENDER_DUMP,
 };
 
-Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS), Sequence}, Hardwares);
+Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS), Sequence}, Hardwares, Immediates);
 "
 `;

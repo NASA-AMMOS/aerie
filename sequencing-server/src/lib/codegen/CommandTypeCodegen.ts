@@ -29,12 +29,12 @@ ${typescriptFswCommands.map(fswCommand => fswCommand.interfaces).join('\n')}${ty
     .map(hwCommand => hwCommand.interfaces)
     .join('\n')}\n
 \tconst Commands: {\n${dictionary.fswCommands
-    .map(fswCommand => `\t\t${fswCommand.stem}: typeof ${fswCommand.stem},\n`)
+    .map(fswCommand => `\t\t${fswCommand.stem}: typeof ${fswCommand.stem}_STEP,\n`)
     .join('')}\t};
 
 \tconst Hardwares : {\n${dictionary.hwCommands
-    .map(hwCommand => `\t\t${hwCommand.stem}: typeof ${hwCommand.stem}`)
-    .join(',\n')} \t};
+    .map(hwCommand => `\t\t${hwCommand.stem}: typeof ${hwCommand.stem},\n`)
+    .join('')} \t};
 }`;
 
   // language=TypeScript
@@ -45,15 +45,19 @@ ${typescriptFswCommands.map(fswCommand => fswCommand.interfaces).join('\n')}${ty
 
 ${typescriptFswCommands.map(fswCommand => fswCommand.value).join('\n')}
 ${typescriptHwCommands.map(hwCommands => hwCommands.value).join('\n')}\n
-export const Commands = {${dictionary.fswCommands
+export const Commands = {\n${dictionary.fswCommands
+    .map(fswCommand => `\t\t${fswCommand.stem}: ${fswCommand.stem}_STEP,\n`)
+    .join('')}};
+
+export const Immediates = {\n${dictionary.fswCommands
     .map(fswCommand => `\t\t${fswCommand.stem}: ${fswCommand.stem},\n`)
     .join('')}};
 
-export const Hardwares = {${dictionary.hwCommands
+export const Hardwares = {\n${dictionary.hwCommands
     .map(hwCommands => `\t\t${hwCommands.stem}: ${hwCommands.stem},\n`)
     .join('')}};
 
-Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS), Sequence}, Hardwares);
+Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS), Sequence}, Hardwares, Immediates);
 `;
 
   return {
@@ -80,14 +84,20 @@ function generateFswCommandCode(
     // language=TypeScript
     const value = `
 ${doc}
-const ${fswCommandName}: ${fswCommandName} = CommandStem.new({
+const ${fswCommandName}: ${fswCommandName}_IMMEDIATE = ImmediateStem.new({
 \tstem: '${fswCommand.stem}',
 \targuments: [],
-})`;
+});
+const ${fswCommandName}_STEP: ${fswCommandName}_STEP = CommandStem.new({
+\tstem: '${fswCommand.stem}',
+\targuments: [],
+});`;
 
     const interfaces = `
 ${doc}
-\tinterface ${fswCommandName} extends CommandStem<[]> {}
+\tinterface ${fswCommandName}_IMMEDIATE extends ImmediateStem<[]> {}
+\tinterface ${fswCommandName}_STEP extends CommandStem<[]> {}
+\tconst ${fswCommandName}: BAKE_BREAD_IMMEDIATE;
 `;
     return {
       value,
@@ -124,16 +134,28 @@ ${doc}
   const value = `
 ${doc}
 function ${fswCommandName}(...args: [{ ${argsWithType.map(arg => arg.name + ': ' + arg.type).join(',')} }]) {
+  return ImmediateStem.new({
+    stem: '${fswCommandName}',
+    arguments: args
+  }) as ${fswCommandName}_IMMEDIATE;
+}
+function ${fswCommandName}_STEP(...args: [{ ${argsWithType.map(arg => arg.name + ': ' + arg.type).join(',')} }]) {
   return CommandStem.new({
     stem: '${fswCommandName}',
     arguments: sortCommandArguments(args, argumentOrders['${fswCommandName}'])
-  }) as ${fswCommandName};
+  }) as ${fswCommandName}_STEP;
 }`;
 
   const interfaces = `
-\tinterface ${fswCommandName} extends CommandStem<[ [{ ${argsWithType
+\tinterface ${fswCommandName}_IMMEDIATE extends ImmediateStem<[ [{ ${argsWithType
     .map(arg => arg.name + ': ' + arg.type)
-    .join(',')} }] ]> {}`;
+    .join(',')} }] ]> {}
+\tinterface ${fswCommandName}_STEP extends CommandStem<[ [{ ${argsWithType
+    .map(arg => arg.name + ': ' + arg.type)
+    .join(',')} }] ]> {}
+\tfunction ${fswCommandName}(...args: [{ ${argsWithType
+    .map(arg => arg.name + ': ' + arg.type)
+    .join(',')} }]) : ${fswCommandName}_IMMEDIATE`;
 
   return {
     value,
@@ -157,7 +179,7 @@ function generateHwCommandCode(hwCommand: ampcs.HwCommand): { value: string; int
     `\n})`;
 
   const interfaces =
-    `${doc}` + `\ninterface ${hwCommandName} extends HardwareStem {}\nconst ${hwCommandName}: ${hwCommandName}`;
+    `\t\t${doc}` + `\n\tinterface ${hwCommandName} extends HardwareStem {}\n\tconst ${hwCommandName}: ${hwCommandName}`;
   return {
     value,
     interfaces,

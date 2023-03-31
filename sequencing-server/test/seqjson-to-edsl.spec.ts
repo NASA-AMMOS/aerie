@@ -257,16 +257,9 @@ describe('getEdslForSeqJson', () => {
       })
     ],
     immediate_commands: [
-      {
-        args: [
-          {
-            name: 'direction',
-            type: 'string',
-            value: 'FromStem',
-          },
-        ],
-        stem: 'PEEL_BANANA',
-      }
+      PEEL_BANANA({
+        direction: 'FromStem',
+      }),
     ],
     requests: [
       {
