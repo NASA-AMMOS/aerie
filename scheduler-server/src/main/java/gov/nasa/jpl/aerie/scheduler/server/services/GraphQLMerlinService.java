@@ -1166,10 +1166,18 @@ public SimulationId getSimulationId(PlanId planId) throws PlanServiceException, 
 
   final JsonObject response;
   response = postRequest(req, arguments).get();
-  final var affected_rows = response.getJsonObject("data").getJsonObject("update_span_many").getInt("affected_rows");
-  if(affected_rows != updateCounter) {
-    throw new PlanServiceException("not the same size");
-  }
+    final var jsonValue = response.getJsonObject("data").get("update_span_many");
+    var affected_rows = 0;
+    if (jsonValue.getValueType() == JsonValue.ValueType.ARRAY) {
+      for (final var jsonObject : response.getJsonObject("data").getJsonArray("update_span_many").getValuesAs(JsonObject.class)) {
+        affected_rows += jsonObject.getInt("affected_rows");
+      }
+    } else {
+      affected_rows = response.getJsonObject("data").getJsonObject("update_span_many").getInt("affected_rows");
+    }
+    if(affected_rows != updateCounter) {
+      throw new PlanServiceException("not the same size");
+    }
 }
 
   private static SpanRecord simulatedActivityToRecord(final SimulatedActivity activity,
