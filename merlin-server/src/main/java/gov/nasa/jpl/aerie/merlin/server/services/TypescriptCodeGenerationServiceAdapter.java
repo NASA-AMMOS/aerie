@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class TypescriptCodeGenerationServiceAdapter implements ConstraintsCodeGenService {
+public class TypescriptCodeGenerationServiceAdapter {
   private final MissionModelService missionModelService;
   private final PlanService planService;
 
@@ -20,7 +20,6 @@ public class TypescriptCodeGenerationServiceAdapter implements ConstraintsCodeGe
     this.planService = planService;
   }
 
-  @Override
   public String generateTypescriptTypes(final String missionModelId, final Optional<PlanId> planId)
   throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException
   {
