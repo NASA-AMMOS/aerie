@@ -25,8 +25,6 @@ import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
-import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
-import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.TypescriptCodeGenerationServiceAdapter;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
@@ -67,10 +65,7 @@ public final class AerieAppDriver {
     Runtime.getRuntime().addShutdownHook(new Thread(constraintsDSLCompilationService::close));
 
     // Assemble the core non-web object graph.
-    final var simulationAgent = ThreadedSimulationAgent.spawn(
-        "simulation-agent",
-        new SynchronousSimulationAgent(planController, missionModelController));
-    final var simulationController = new CachedSimulationService(simulationAgent, stores.results());
+    final var simulationController = new CachedSimulationService(stores.results());
     final var simulationAction = new GetSimulationResultsAction(
         planController,
         missionModelController,
@@ -130,7 +125,7 @@ public final class AerieAppDriver {
           new PostgresPlanRepository(hikariDataSource),
           new PostgresMissionModelRepository(hikariDataSource),
           new PostgresResultsCellRepository(hikariDataSource));
-    } else if (store instanceof InMemoryStore c) {
+    } else if (store instanceof InMemoryStore) {
       final var inMemoryPlanRepository = new InMemoryPlanRepository();
       return new Stores(
           inMemoryPlanRepository,
