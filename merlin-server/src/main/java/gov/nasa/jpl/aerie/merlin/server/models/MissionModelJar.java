@@ -19,14 +19,6 @@ public final class MissionModelJar {
 
   public MissionModelJar() {}
 
-  public MissionModelJar(final MissionModelJar other) {
-      this.name = other.name;
-      this.version = other.version;
-      this.mission = other.mission;
-      this.owner = other.owner;
-      this.path = other.path;
-  }
-
   @Override
   public boolean equals(final Object object) {
       if (object.getClass() != MissionModelJar.class) {
