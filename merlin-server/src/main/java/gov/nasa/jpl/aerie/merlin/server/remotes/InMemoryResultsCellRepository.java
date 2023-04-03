@@ -48,14 +48,6 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  @Override
-  public void deallocate(final ResultsProtocol.OwnerRole resultsCell) {
-    if (!(resultsCell instanceof InMemoryCell cell)) {
-      throw new Error("Unable to deallocate results cell of unknown type");
-    }
-    this.cells.remove(new InMemoryResultsCellRepository.Key(cell.planId, cell.planRevision));
-  }
-
   public boolean isEqualTo(final InMemoryResultsCellRepository other) {
     return this.cells.equals(other.cells);
   }

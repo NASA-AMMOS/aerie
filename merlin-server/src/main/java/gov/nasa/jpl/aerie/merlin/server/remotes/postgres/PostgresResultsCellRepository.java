@@ -131,18 +131,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  @Override
-  public void deallocate(final ResultsProtocol.OwnerRole resultsCell) {
-    if (!(resultsCell instanceof PostgresResultsCell cell)) {
-      throw new Error("Unable to deallocate results cell of unknown type");
-    }
-    try (final var connection = this.dataSource.getConnection()) {
-      deleteSimulationDataset(connection, cell.datasetId);
-    } catch (final SQLException ex) {
-      throw new DatabaseException("Failed to delete simulation", ex);
-    }
-  }
-
   /* Database accessors */
   private static SimulationRecord getSimulation(
       final Connection connection,
@@ -225,12 +213,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   {
     try (final var cancelSimulationAction = new CancelSimulationAction(connection)) {
       cancelSimulationAction.apply(datasetId);
-    }
-  }
-
-  private static boolean deleteSimulationDataset(final Connection connection, final long datasetId) throws SQLException {
-    try (final var deleteSimulationDatasetAction = new DeleteSimulationDatasetAction(connection)) {
-      return deleteSimulationDatasetAction.apply(datasetId);
     }
   }
 

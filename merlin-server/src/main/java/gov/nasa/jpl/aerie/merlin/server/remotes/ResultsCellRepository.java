@@ -11,6 +11,4 @@ public interface ResultsCellRepository {
   Optional<ResultsProtocol.OwnerRole> claim(PlanId planId, Long datasetId);
 
   Optional<ResultsProtocol.ReaderRole> lookup(PlanId planId);
-
-  void deallocate(ResultsProtocol.OwnerRole resultsCell);
 }
