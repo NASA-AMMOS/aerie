@@ -6,6 +6,7 @@ import argparse
 import sys
 import shutil
 import subprocess
+import psycopg
 
 def clear_screen():
   os.system('cls' if os.name=='nt' else 'clear')
@@ -121,6 +122,28 @@ def bulk_migration(migration_db, apply):
   for database in migration_db:
     os.system(f'hasura migrate status --database-name {database.db_name}')
 
+def mark_current_version(dbs_to_apply, username, password, netloc):
+  for db in dbs_to_apply:
+    # Convert db.name to the actual format of the db name: aerie_dbSuffix
+    name = "aerie_"+db.db_name.removeprefix("Aerie").lower()
+    connectionString = "postgres://"+username+":"+password+"@"+netloc+":5432/"+name
+    current_schema = 0
+
+    # Connect to DB
+    with psycopg.connect(connectionString) as connection:
+      # Open a cursor to perform database operations
+      with connection.cursor() as cursor:
+        # Get the current schema version
+        try:
+          cursor.execute("SELECT migration_id FROM migrations.schema_migrations ORDER BY migration_id::int DESC LIMIT 1")
+        except psycopg.errors.UndefinedTable:
+          return
+        current_schema = int(cursor.fetchone()[0])
+
+    # Mark everything up to that as applied
+    for i in range(0, current_schema+1):
+      os.system('hasura migrate apply --skip-execution --version '+str(i)+' --database-name '+db.db_name+' >/dev/null 2>&1')
+
 def main():
   # Create a cli parser
   parser = argparse.ArgumentParser(description=__doc__)
@@ -152,6 +175,16 @@ def main():
   parser.add_argument(
     '-p', '--hasura-path',
     help="the path to the directory containing the config.yaml for Aerie. defaults to ./hasura")
+
+  parser.add_argument(
+    '-e', '--env-path',
+    help="the path to the .env file used to deploy aerie. must define AERIE_USERNAME and AERIE_PASSWORD. defaults to .env",
+    default='.env')
+
+  parser.add_argument(
+    '-n', '--network-location',
+    help="the network location of the database. defaults to localhost",
+    default='localhost')
 
   # Generate arguments
   args = parser.parse_args()
@@ -205,8 +238,36 @@ def main():
   else:
     os.system('hasura version')
 
-  # navigate to the hasura directory
+  # Get the Username/Password
+  username = ""
+  password = ""
+  usernameFound = False
+  passwordFound = False
+  with open(args.env_path) as envFile:
+    for line in envFile:
+      if usernameFound and passwordFound:
+        break
+      line = line.strip()
+      if line.startswith("AERIE_USERNAME"):
+        username = line.removeprefix("AERIE_USERNAME=")
+        usernameFound = True
+        continue
+      if line.startswith("AERIE_PASSWORD"):
+        password = line.removeprefix("AERIE_PASSWORD=")
+        passwordFound = True
+        continue
+  if not usernameFound:
+    print("\033[91mError\033[0m: AERIE_USERNAME environment variable is not defined in "+args.env-path+".")
+    sys.exit(1)
+  if not passwordFound:
+    print("\033[91mError\033[0m: AERIE_PASSWORD environment variable is not defined in "+args.env-path+".")
+    sys.exit(1)
+
+  # Navigate to the hasura directory
   os.chdir(HASURA_PATH)
+
+  # Mark all migrations previously applied to the databases to be updated as such
+  mark_current_version(migration_db, username, password, args.network_location)
 
   # Enter step-by-step mode if not otherwise specified
   if not args.all:
