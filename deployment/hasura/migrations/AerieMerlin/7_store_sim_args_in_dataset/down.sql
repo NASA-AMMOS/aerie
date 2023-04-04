@@ -51,3 +51,5 @@ alter table simulation_dataset
 drop column arguments,
 drop column simulation_start_time,
 drop column simulation_end_time;
+
+call migrations.mark_migration_rolled_back('7');
