@@ -1,0 +1,66 @@
+name: Security Scan
+
+on:
+  pull_request:
+    branches:
+      - develop
+  push:
+    branches:
+      - develop
+    tags:
+      - v*
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["java", "javascript"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
+          queries: +security-extended
+          tools: latest
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "19"
+      - name: Build
+        run: |
+          ./gradlew testClasses
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+      - name: NASA Scrub
+        run: |
+          python3 -m pip install nasa-scrub
+
+          results_dir=`realpath ${{ github.workspace }}/../results`
+          sarif_files=`find $results_dir -name '*.sarif'`
+
+          for sarif_file in $sarif_files
+          do
+            output_file="$results_dir/$(basename $sarif_file .sarif).scrub"
+            python3 -m scrub.tools.parsers.translate_results $sarif_file $output_file ${{ github.workspace }} scrub
+          done
+
+          python3 -m scrub.tools.parsers.csv_parser $results_dir
+
+          echo "RESULTS_DIR=$results_dir" >> $GITHUB_ENV
+      - name: Upload Security Scan Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: Security Scan Results
+          path: ${{ env.RESULTS_DIR }}

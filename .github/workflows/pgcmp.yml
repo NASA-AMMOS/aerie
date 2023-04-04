@@ -1,4 +1,4 @@
-name: "Database Migrations Check PR"
+name: Database Migrations Check PR
 
 on:
   pull_request:
