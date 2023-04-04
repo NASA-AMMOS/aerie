@@ -25,11 +25,13 @@ export const defaultSeqBuilder: SeqBuilder = (
         }).METADATA({ simulatedActivityId: ai.id }),
       );
     }
+
     // Typeguard only
     if (ai.commands === null) {
       return [];
     }
-    return ai.commands;
+
+    return sortCommandsByTime(ai.commands);
   });
 
   return Sequence.new({
@@ -42,3 +44,44 @@ export const defaultSeqBuilder: SeqBuilder = (
     steps: commands,
   });
 };
+
+// Order commands by time in expanded sequences.
+function sortCommandsByTime(commands: CommandStem<{} | []>[]): CommandStem<{} | []>[] {
+  const relativeTimeTracker: Record<string, Temporal.Instant> = {};
+  let previousAbsoluteTimestamp: Temporal.Instant;
+
+  for (const command of commands) {
+    // If the command is epoch-relative, complete, or the first command and relative then short circuit and don't try and sort.
+    if (
+      command.epochTime ||
+      (!command.absoluteTime && !command.epochTime && !command.relativeTime) ||
+      (command.relativeTime && commands.indexOf(command) === 0)
+    ) {
+      return commands;
+    }
+
+    // Keep track of the previously seen absolute time so we can convert the next relative timestamp we come across.
+    if (command.absoluteTime) {
+      previousAbsoluteTimestamp = command.absoluteTime!;
+    } else {
+      relativeTimeTracker[command.stem + command.relativeTime?.toString()] = previousAbsoluteTimestamp!.add(
+        command.relativeTime!,
+      );
+    }
+  }
+
+  // The commands will either be absolute or relative at this point, so we just compare their times.
+  commands.sort((a, b) => {
+    const firstCommandTime = a.absoluteTime
+      ? a.absoluteTime
+      : relativeTimeTracker[a.stem + a.relativeTime?.toString()]!;
+
+    const secondCommandTime = b.absoluteTime
+      ? b.absoluteTime
+      : relativeTimeTracker[b.stem + b.relativeTime?.toString()]!;
+
+    return Temporal.Instant.compare(firstCommandTime, secondCommandTime);
+  });
+
+  return commands;
+}

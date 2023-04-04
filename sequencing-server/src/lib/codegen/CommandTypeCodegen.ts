@@ -1,7 +1,7 @@
 // Language: TypeScript
 // Path: src/libs/CommandTypeCodegen.ts
 
-import * as ampcs from '@nasa-jpl/aerie-ampcs';
+import type * as ampcs from '@nasa-jpl/aerie-ampcs';
 import fs from 'fs';
 import reservedWords from 'reserved-words';
 import { getEnv } from '../../env.js';
