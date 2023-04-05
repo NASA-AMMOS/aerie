@@ -13,9 +13,9 @@ import gov.nasa.jpl.aerie.constraints.tree.SpansFromWindows;
 import gov.nasa.jpl.aerie.constraints.tree.WindowsWrapperExpression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.Range;
 import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityCreationTemplate;
+import gov.nasa.jpl.aerie.scheduler.constraints.activities.ActivityExpression;
 import gov.nasa.jpl.aerie.scheduler.constraints.timeexpressions.TimeExpressionRelativeFixed;
 import gov.nasa.jpl.aerie.scheduler.goals.CardinalityGoal;
 import gov.nasa.jpl.aerie.scheduler.goals.CoexistenceGoal;
@@ -43,13 +43,16 @@ public class GoalBuilder {
         horizonStartTimestamp.toInstant(),
         horizonEndTimestamp.toInstant()).getHor();
     if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.RecurrenceGoalDefinition g) {
-      return new RecurrenceGoal.Builder()
+      final var builder = new RecurrenceGoal.Builder()
           .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)))
           .repeatingEvery(g.interval())
           .shouldRollbackIfUnsatisfied(g.shouldRollbackIfUnsatisfied())
           .thereExistsOne(makeActivityTemplate(g.activityTemplate(), lookupActivityType))
-          .simulateAfter(simulateAfter)
-          .build();
+          .simulateAfter(simulateAfter);
+      if(g.activityFinder().isPresent()){
+        builder.match(buildActivityExpression(g.activityFinder().get(), lookupActivityType));
+      }
+      return builder.build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.CoexistenceGoalDefinition g) {
       var builder = new CoexistenceGoal.Builder()
           .forAllTimeIn(new WindowsWrapperExpression(new Windows(false).set(hor, true)))
@@ -79,6 +82,9 @@ public class GoalBuilder {
       }
       if (g.startConstraint().isEmpty() && g.endConstraint().isEmpty()) {
         throw new Error("Both start and end constraints were empty. This should have been disallowed at the type level.");
+      }
+      if(g.activityFinder().isPresent()){
+        builder.match(buildActivityExpression(g.activityFinder().get(), lookupActivityType));
       }
       return builder.build();
     } else if (goalSpecifier instanceof SchedulingDSL.GoalSpecifier.GoalAnd g) {
@@ -127,11 +133,24 @@ public class GoalBuilder {
       if(g.specification().occurrence().isPresent()){
         builder.occurences(new Range<>(g.specification().occurrence().get(), Integer.MAX_VALUE));
       }
+      if(g.activityFinder().isPresent()){
+        builder.match(buildActivityExpression(g.activityFinder().get(), lookupActivityType));
+      }
       return builder.build();
     } else {
       throw new Error("Unhandled variant of GoalSpecifier:" + goalSpecifier);
     }
   }
+
+  private static ActivityExpression buildActivityExpression(SchedulingDSL.ConstraintExpression.ActivityExpression activityExpr,
+                                                            final Function<String, ActivityType> lookupActivityType){
+    final var builder = new ActivityExpression.Builder().ofType(lookupActivityType.apply(activityExpr.type()));
+    if(activityExpr.arguments().isPresent()){
+      activityExpr.arguments().get().fields().forEach(builder::withArgument);
+    }
+    return builder.build();
+  }
+
   private static Expression<Spans> spansOfConstraintExpression(
       final SchedulingDSL.ConstraintExpression constraintExpression) {
     if (constraintExpression instanceof SchedulingDSL.ConstraintExpression.ActivityExpression c) {

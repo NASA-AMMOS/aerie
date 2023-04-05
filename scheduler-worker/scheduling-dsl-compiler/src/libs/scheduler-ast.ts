@@ -57,6 +57,7 @@ export type Goal =
 export interface ActivityRecurrenceGoal {
   kind: NodeKind.ActivityRecurrenceGoal,
   activityTemplate: ActivityTemplate<any>,
+  activityFinder: ActivityExpression<any> | undefined,
   interval: Temporal.Duration,
   shouldRollbackIfUnsatisfied: boolean
 }
@@ -64,6 +65,7 @@ export interface ActivityRecurrenceGoal {
 export interface ActivityCardinalityGoal {
   kind: NodeKind.ActivityCardinalityGoal,
   activityTemplate: ActivityTemplate<any>,
+  activityFinder: ActivityExpression<any> | undefined,
   specification: CardinalityGoalArguments,
   shouldRollbackIfUnsatisfied: boolean
 }
@@ -71,16 +73,18 @@ export interface ActivityCardinalityGoal {
 export interface ActivityCoexistenceGoal {
   kind: NodeKind.ActivityCoexistenceGoal,
   activityTemplate: ActivityTemplate<any>,
+  activityFinder: ActivityExpression<any> | undefined,
   alias: string,
-  forEach: WindowsExpressions.WindowsExpression | ActivityExpression,
+  forEach: WindowsExpressions.WindowsExpression | ActivityExpression<any>,
   startConstraint: ActivityTimingConstraintSingleton | ActivityTimingConstraintRange | undefined,
   endConstraint: ActivityTimingConstraintSingleton | ActivityTimingConstraintRange | undefined,
   shouldRollbackIfUnsatisfied: boolean
 }
 
-export interface ActivityExpression {
-  kind: NodeKind.ActivityExpression
-  type: string
+export interface ActivityExpression<A extends ConstraintEDSL.Gen.ActivityType> {
+  kind: NodeKind.ActivityExpression,
+  type: string,
+  matchingArguments: ConstraintEDSL.Gen.ActivityTypeParameterMapWithUndefined[A] | undefined
 }
 
 export type TimeExpression =
