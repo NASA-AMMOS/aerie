@@ -19,7 +19,9 @@ import gov.nasa.jpl.aerie.scheduler.model.ActivityType;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.Nullable;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -580,14 +582,7 @@ public class ActivityExpression implements Expression<Spans> {
       Map<String, SerializedValue> actInstanceArguments = act.parameters;
       final var instantiatedArguments = SchedulingActivityDirective
                 .instantiateArguments(arguments, act.interval.start, simulationResults, evaluationEnvironment, type);
-      for (var param : instantiatedArguments.entrySet()) {
-        if (actInstanceArguments.containsKey(param.getKey())) {
-          match = actInstanceArguments.get(param.getKey()).equals(param.getValue());
-        }
-        if (!match) {
-          break;
-        }
-      }
+      match = subsetOrEqual(SerializedValue.of(actInstanceArguments), SerializedValue.of(instantiatedArguments));
     }
     return match;
   }
@@ -613,5 +608,87 @@ public class ActivityExpression implements Expression<Spans> {
 
   @Override
   public void extractResources(final Set<String> names) { }
+
+
+  /**
+   * Evaluates whether a SerializedValue can be qualified as the subset of another SerializedValue or not
+    * @param superset the proposed superset
+   * @param subset the proposed subset
+   * @return true if subset is a subset of superset
+   */
+  public static boolean subsetOrEqual(SerializedValue superset, SerializedValue subset){
+    Objects.requireNonNull(superset);
+    Objects.requireNonNull(subset);
+    final var visitor = new SerializedValue.Visitor<Boolean>(){
+      @Override
+      public Boolean onNull() {
+        return true;
+      }
+
+      @Override
+      public Boolean onNumeric(final BigDecimal value) {
+        final var argumentsAsNumeric = superset.asNumeric();
+        if(argumentsAsNumeric.isEmpty()){
+          return false;
+        }
+        return argumentsAsNumeric.get().equals(value);
+      }
+
+      @Override
+      public Boolean onBoolean(final boolean value) {
+        final var argumentsAsBoolean = superset.asBoolean();
+        if(argumentsAsBoolean.isEmpty()){
+          return false;
+        }
+        return argumentsAsBoolean.get().equals(value);
+      }
+
+      @Override
+      public Boolean onString(final String value) {
+        final var argumentsAsString = superset.asString();
+        if(argumentsAsString.isEmpty()){
+          return false;
+        }
+        return argumentsAsString.get().equals(value);
+      }
+
+      @Override
+      public Boolean onMap(final Map<String, SerializedValue> value) {
+        final var argumentsAsMap = superset.asMap();
+        if(argumentsAsMap.isEmpty()){
+          return false;
+        }
+        for(final var elementInPattern: value.entrySet()){
+          final var elementInArguments = argumentsAsMap.get().get(elementInPattern.getKey());
+          if(elementInArguments != null){
+            if(!subsetOrEqual(elementInArguments, elementInPattern.getValue())){
+              return false;
+            }
+          } else {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      @Override
+      public Boolean onList(final List<SerializedValue> value) {
+        final var argumentsAsListOptional = superset.asList();
+        if(argumentsAsListOptional.isEmpty()){
+          return false;
+        }
+        if(argumentsAsListOptional.get().size() < value.size()){
+          return false;
+        }
+        for(int i = 0; i < value.size(); i++){
+          if(!subsetOrEqual(argumentsAsListOptional.get().get(i), value.get(i))){
+            return false;
+          }
+        }
+        return true;
+      }
+    };
+    return subset.match(visitor);
+  }
 
 }
