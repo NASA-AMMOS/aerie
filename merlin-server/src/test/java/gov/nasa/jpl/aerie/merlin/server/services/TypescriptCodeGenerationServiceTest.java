@@ -15,7 +15,7 @@ class TypescriptCodeGenerationServiceTest {
   @Test
   void testCodeGen() throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException {
     final var codeGenService = new TypescriptCodeGenerationServiceAdapter(new StubMissionModelService(), new StubPlanService());
-
+    final var expected = codeGenService.generateTypescriptTypes("abc", Optional.of(new PlanId(1L)));
     assertEquals(
         """
             /** Start Codegen */
@@ -71,6 +71,18 @@ class TypescriptCodeGenerationServiceTest {
               [ActivityType.activity2]:ParameterTypeactivity2,
               [ActivityType.activity]:ParameterTypeactivity,
             };
+            export type ParameterTypeWithUndefinedactivity2 = {
+              Param?: (( | "hello" | "there") | Discrete<( | "hello" | "there")> | undefined),
+            }
+            export type ParameterTypeWithUndefinedactivity = {
+              Param?: (string | Discrete<string> | undefined),
+              AnotherParam?: (number | Real | undefined),
+              Duration?: (Temporal.Duration | Discrete<Temporal.Duration> | undefined),
+            }
+            export type ActivityTypeParameterMapWithUndefined = {
+              [ActivityType.activity2]:ParameterTypeWithUndefinedactivity2,
+              [ActivityType.activity]:ParameterTypeWithUndefinedactivity,
+            };
             declare global {
               enum ActivityType {
                 activity2 = "activity2",
@@ -81,7 +93,7 @@ class TypescriptCodeGenerationServiceTest {
               ActivityType
             });
             /** End Codegen */""",
-        codeGenService.generateTypescriptTypes("abc", Optional.of(new PlanId(1L)))
+        expected
     );
   }
 }

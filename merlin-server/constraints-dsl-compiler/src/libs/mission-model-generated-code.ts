@@ -32,3 +32,11 @@ export type ParameterTypeactivity = {
 export type ActivityTypeParameterMap = {
   [ActivityType.activity]: ParameterTypeactivity
 };
+
+//same as above but parameters can be undefined
+export type ParameterTypeWithUndefinedactivity = {
+  parameter: string | undefined
+}
+export type ActivityTypeParameterMapWithUndefined = {
+  [ActivityType.activity]: ParameterTypeWithUndefinedactivity
+};

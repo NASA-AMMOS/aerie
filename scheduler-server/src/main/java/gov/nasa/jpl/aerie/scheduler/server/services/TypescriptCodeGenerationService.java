@@ -62,7 +62,10 @@ public final class TypescriptCodeGenerationService {
   private static String getCastingMethod(){
     return """
 export function makeAllDiscreteProfile (argument: any) : any{
- if ((argument instanceof Discrete) || (argument instanceof Real)) {
+  if (argument === undefined){
+    return undefined
+  }
+  else if ((argument instanceof Discrete) || (argument instanceof Real)) {
    return argument.__astNode
  } else if ((argument instanceof Temporal.Duration) || (argument.kind === 'IntervalDuration')) {
    return argument;
@@ -91,7 +94,7 @@ export function makeAllDiscreteProfile (argument: any) : any{
  }
 }
 
-export function makeAll<T>(args : T):T{
+export function makeArgumentsDiscreteProfiles<T>(args : T):T{
 // @ts-ignore
 return (<T>makeAllDiscreteProfile(args))
 }
@@ -113,7 +116,7 @@ return (<T>makeAllDiscreteProfile(args))
         result.add(indent("%s: function %sConstructor(args:  ConstraintEDSL.Gen.ActivityTypeParameterMap[ActivityType.%s]".formatted(activityTypeCode.activityTypeName,activityTypeCode.activityTypeName,activityTypeCode.activityTypeName)));
         result.add(indent("): %s {".formatted(activityTypeCode.activityTypeName())));
         result.add(indent("// @ts-ignore"));
-        result.add(indent(indent("return { activityType: ActivityType.%s, args: makeAll(args) };".formatted(activityTypeCode.activityTypeName()))));
+        result.add(indent(indent("return { activityType: ActivityType.%s, args: makeArgumentsDiscreteProfiles(args) };".formatted(activityTypeCode.activityTypeName()))));
         result.add(indent("},"));
       }
     }

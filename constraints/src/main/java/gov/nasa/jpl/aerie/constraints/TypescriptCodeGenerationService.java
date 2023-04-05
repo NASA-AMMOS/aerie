@@ -88,6 +88,21 @@ public final class TypescriptCodeGenerationService {
     result.add("};");
 
 
+    Map<String, String> mapInterfacesWithUndefined = new HashMap<>();
+    for (final var activityType: activityTypes.entrySet()) {
+      final var nameInterface = "ParameterTypeWithUndefined"+activityType.getKey();
+      final var interfaceType = activityTypeToInterfaceWithUndefined(nameInterface, activityType.getValue());
+      mapInterfacesWithUndefined.put(activityType.getKey(), nameInterface);
+      result.add(interfaceType);
+    }
+
+    result.add("export type ActivityTypeParameterMapWithUndefined = {");
+    for (final var activityType: mapInterfacesWithUndefined.entrySet()) {
+      result.add(indent("[ActivityType." + activityType.getKey() + "]:"+activityType.getValue()+","));
+    }
+    result.add("};");
+
+
     result.add("""
                    declare global {""");
     result.add(indent("enum ActivityType {"));
@@ -115,6 +130,18 @@ public final class TypescriptCodeGenerationService {
     result.add("}");
     return joinLines(result);
   }
+
+  public static String activityTypeToInterfaceWithUndefined(String typeName, TypescriptCodeGenerationService.ActivityType activityType){
+    final var result = new ArrayList<String>();
+    result.add("export type %s = {".formatted(typeName));
+    for (final var parameter: activityType.parameters()) {
+      var parameterProfile = valueSchemaToTypescriptAdditionalWithUndefined(parameter.schema());
+      result.add(indent(parameter.name() + "?: " + parameterProfile + ","));
+    }
+    result.add("}");
+    return joinLines(result);
+  }
+
 
   private static String joinLines(final Iterable<String> result) {
     return String.join("\n", result);
@@ -188,6 +215,74 @@ public final class TypescriptCodeGenerationService {
       public String onVariant(final List<ValueSchema.Variant> variants) {
         final var res = valueSchemaToTypescript(valueSchema);
         return "(%s | Discrete<%s>)".formatted(res, res);
+      }
+    });
+  }
+
+  static String valueSchemaToTypescriptAdditionalWithUndefined(final ValueSchema valueSchema){
+    return valueSchema.match(new ValueSchema.Visitor<>() {
+      @Override
+      public String onReal() {
+        return "("+valueSchemaToTypescript(valueSchema) +" | Real | undefined)";
+      }
+
+      @Override
+      public String onInt() {
+        final var res = valueSchemaToTypescript(valueSchema);
+        //REVIEW: even on int, we are expecting a Real and not a Discrete<number> so we have access to operations,
+        // conversion will happen at activity instantiation during scheduling
+        return "(%s | Real | undefined)".formatted(res);
+      }
+
+      @Override
+      public String onBoolean() {
+        final var res = valueSchemaToTypescript(valueSchema);
+        return "(%s | Discrete<%s> | undefined)".formatted(res, res);
+      }
+
+      @Override
+      public String onString() {
+        final var res = valueSchemaToTypescript(valueSchema);
+        return "(%s | Discrete<%s> | undefined)".formatted(res, res);
+      }
+
+      @Override
+      public String onDuration() {
+        final var res = valueSchemaToTypescript(valueSchema);
+        return "(%s | Discrete<%s> | undefined)".formatted(res, res);
+      }
+
+      @Override
+      public String onPath() { final var res = valueSchemaToTypescript(valueSchema);
+        return "(%s | Discrete<%s> | undefined)".formatted(res, res);}
+
+      @Override
+      public String onSeries(final ValueSchema value) {
+        final var vsTs = valueSchemaToTypescriptAdditionalWithUndefined(value) + "[]";
+        return "(%s | Discrete<%s> | undefined)".formatted(vsTs, vsTs);
+      }
+
+      @Override
+      public String onStruct(final Map<String, ValueSchema> values) {
+        final var result = new StringBuilder("{\n");
+
+        for (final var member: values.keySet().stream().sorted().toList()) {
+          result
+              .append(indent(member))
+              .append("?: ")
+              .append(valueSchemaToTypescriptAdditionalWithUndefined(values.get(member)))
+              .append(",\n ");
+        }
+
+        result.append("}");
+        final var res = result.toString();
+        return indent("(%s | Discrete<%s> | undefined)".formatted(res, res));
+      }
+
+      @Override
+      public String onVariant(final List<ValueSchema.Variant> variants) {
+        final var res = valueSchemaToTypescript(valueSchema);
+        return "(%s | Discrete<%s> | undefined)".formatted(res, res);
       }
     });
   }
