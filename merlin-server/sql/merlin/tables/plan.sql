@@ -114,8 +114,8 @@ create function create_simulation_row_for_new_plan()
 returns trigger
 security definer
 language plpgsql as $$begin
-  insert into simulation (revision, simulation_template_id, plan_id, arguments)
-  values (0, null, new.id, '{}');
+  insert into simulation (revision, simulation_template_id, plan_id, arguments, simulation_start_time, simulation_end_time)
+  values (0, null, new.id, '{}', new.start_time, new.start_time+new.duration);
   return new;
 end
 $$;
