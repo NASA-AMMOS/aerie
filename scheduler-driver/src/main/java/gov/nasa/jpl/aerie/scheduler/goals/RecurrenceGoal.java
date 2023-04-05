@@ -121,7 +121,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
       //collect all matching target acts ordered by start time
       //REVIEW: could collapse with prior template start time query too?
       final var satisfyingActSearch = new ActivityExpression.Builder()
-          .basedOn(desiredActTemplate)
+          .basedOn(matchActTemplate)
           .startsIn(subInterval)
           .build();
       final var acts = new java.util.LinkedList<>(plan.find(satisfyingActSearch, simulationResults, new EvaluationEnvironment()));
