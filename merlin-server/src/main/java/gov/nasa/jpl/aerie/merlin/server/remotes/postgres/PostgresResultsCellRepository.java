@@ -47,19 +47,17 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     try (final var connection = this.dataSource.getConnection()) {
       final SimulationRecord simulation = getSimulation(connection, planId);
       final SimulationTemplateRecord template;
-      Timestamp startTime = simulation.simulationStartTime();
-      Timestamp endTime = simulation.simulationEndTime();
+      final Timestamp startTime = simulation.simulationStartTime();
+      final Timestamp endTime = simulation.simulationEndTime();
       final var arguments = new HashMap<String, SerializedValue>();
 
-      if ((startTime == null || endTime == null) && simulation.simulationTemplateId().isPresent()) {
+      if (simulation.simulationTemplateId().isPresent()) {
           try (final var getSimulationTemplate = new GetSimulationTemplateAction(connection)) {
             final var templateOptional = getSimulationTemplate.get(simulation.simulationTemplateId().get());
             if (templateOptional.isEmpty()) {
               throw new RuntimeException("TemplateRecord should not be empty");
             }
             template = templateOptional.get();
-            startTime = (startTime == null ? template.simulationStartTime() : startTime);
-            endTime = (endTime == null ? template.simulationEndTime() : endTime);
             arguments.putAll(template.arguments());
           }
       }
