@@ -7,6 +7,17 @@ export enum TimingTypes {
   COMMAND_COMPLETE = 'COMMAND_COMPLETE',
 }
 
+const VariableType = ['FLOAT', 'INT', 'STRING', 'UINT', 'ENUM'] as const;
+
+export type VariableOptions = {
+  name: string;
+  type: typeof VariableType[number];
+  enum_name?: string | undefined;
+  allowable_values?: unknown[] | undefined;
+  // @ts-ignore : 'VariableRange' found in JSON Spec
+  allowable_ranges?: VariableRange[] | undefined;
+};
+
 // @ts-ignore : 'Args' found in JSON Spec
 export type CommandOptions<A extends Args[] | { [argName: string]: any } = [] | {}> = {
   stem: string;
@@ -238,6 +249,36 @@ declare global {
   type F32 = F<32>;
   type F64 = F<64>;
 
+  function VARIABLE(name: string, type: typeof VariableType[number]): Variable;
+
+  /**
+   * Construct an object of locals that can be used as arguments for commands
+   *
+   * @param locals: Variable[]
+   */
+  function BUILD_LOCALS(...locals: (Variable | VariableOptions)[]): {
+    [key: string]: Variable;
+  };
+
+  /**
+   * Construct an object of parameters that can be used as arguments for commands
+   *
+   * @param locals: Variable[]
+   *
+   */
+  function BUILD_PARAMETERS(...parameters: (Variable | VariableOptions)[]): {
+    [key: string]: Variable;
+  };
+
+  /**
+   * Map the locals or parameters from the eDSL BUILD_LOCALS or BUILD_PARAMETERS
+   * to a SeqJSON local or parameter
+   *
+   * @param opt: Record<string, Variable>
+   */
+  // @ts-ignore : 'VariableDeclaration' found in generated code
+  function MAP_VARIABLES(opt: Record<string, Variable>): [VariableDeclaration, ...VariableDeclaration[]];
+
   // @ts-ignore : 'Commands' found in generated code
   function A(...args: [TemplateStringsArray, ...string[]]): typeof Commands & typeof STEPS;
   // @ts-ignore : 'Commands' found in generated code
@@ -263,11 +304,11 @@ declare global {
   const C: typeof Commands & typeof STEPS;
 }
 
-/*
-		  ---------------------------------
-					  Sequence eDSL
-		  ---------------------------------
-		  */
+/**
+ *  ---------------------------------
+ * 			 Sequence eDSL
+ * ---------------------------------
+ */
 // @ts-ignore : 'SeqJson' found in JSON Spec
 export class Sequence implements SeqJson {
   public readonly id: string;
@@ -322,8 +363,28 @@ export class Sequence implements SeqJson {
             }),
           }
         : {}),
-      ...(this.locals ? { locals: this.locals } : {}),
-      ...(this.parameters ? { parameters: this.parameters } : {}),
+      ...(this.locals
+        ? {
+            locals: [
+              this.locals[0] instanceof Variable ? this.locals[0].toSeqJson() : this.locals[0],
+              ...this.locals.slice(1).map(local => {
+                if (local instanceof Variable) return local.toSeqJson();
+                return local;
+              }),
+            ],
+          }
+        : {}),
+      ...(this.parameters
+        ? {
+            parameters: [
+              this.parameters[0] instanceof Variable ? this.parameters[0].toSeqJson() : this.parameters[0],
+              ...this.parameters.slice(1).map(parameter => {
+                if (parameter instanceof Variable) return parameter.toSeqJson();
+                return parameter;
+              }),
+            ],
+          }
+        : {}),
       ...(this.requests
         ? {
             requests: this.requests.map(request => {
@@ -381,6 +442,49 @@ export class Sequence implements SeqJson {
   }
 
   public toEDSLString(): string {
+    const localBuilderString =
+      this.locals && this.locals.length > 0
+        ? 'const LOCALS = BUILD_LOCALS(\n' +
+          indent(
+            this.locals
+              .map(l => {
+                if (l instanceof Variable) return l.toEDSLString();
+                return objectToString(l);
+              })
+              .join(',\n'),
+            1,
+          ) +
+          '\n)'
+        : '';
+    //ex.
+    // const LOCALS = BUILD_LOCALS([
+    //   Variable({
+    //     name: 'duration',
+    //     type: 'UINT',
+    //   }),
+    //	])
+
+    const parameterBuilderString =
+      this.parameters && this.parameters.length > 0
+        ? 'const PARAMETERS = BUILD_PARAMETERS(\n' +
+          indent(
+            this.parameters
+              .map(p => {
+                if (p instanceof Variable) return p.toEDSLString();
+                return objectToString(p);
+              })
+              .join(',\n'),
+            1,
+          ) +
+          '\n)'
+        : '';
+    //ex.
+    // const PARAMETERS = BUILD_PARAMETERS([
+    //   Variable({
+    //     name: 'duration',
+    //     type: 'UINT',
+    //   }
+
     const commandsString =
       this.steps && this.steps.length > 0
         ? '[\n' +
@@ -401,37 +505,20 @@ export class Sequence implements SeqJson {
     // [C.ADD_WATER]
     const metadataString = Object.keys(this.metadata).length == 0 ? `{}` : `${objectToString(this.metadata)}`;
 
-    const localsString = this.locals ? `[\n${indent(this.locals.map(l => objectToString(l)).join(',\n'), 1)}\n]` : '';
-
-    const parameterString = this.parameters
-      ? `[\n${indent(this.parameters.map(l => objectToString(l)).join(',\n'), 1)}\n]`
-      : '';
+    const localsString = this.locals ? `MAP_VARIABLES(LOCALS)` : '';
     //ex.
-    // `parameters: [
-    //   {
-    //     allowable_ranges: [
-    //       {
-    //         max: 3600,
-    //         min: 1,
-    //       },
-    //     ],
-    //     name: 'duration',
-    //     type: 'UINT',
-    //   }
-    // ]`;
+    // `locals: MAP_VARIABLES(LOCALS)`;
+
+    const parameterString = this.parameters ? `MAP_VARIABLES(PARAMETERS)` : '';
+    //ex.
+    // `locals: MAP_VARIABLES(PARAMETERS)`;;
 
     const hardwareString = this.hardware_commands
       ? `[\n${indent(this.hardware_commands.map(h => (h as HardwareStem).toEDSLString()).join(',\n'), 1)}\n]`
       : '';
     //ex.
     // hardware_commands: [
-    //   {
-    //     description: 'FIRE THE PYROS',
-    //     metadata:{
-    //       author: 'rrgoetz',
-    //     },
-    //     stem: 'HDW_PYRO_ENGINE',
-    //   }
+    //   HWD_PYRO_BURN,
     // ],
 
     const immediateString =
@@ -451,18 +538,7 @@ export class Sequence implements SeqJson {
           '\n]'
         : '';
     //ex.
-    // immediate_commands: [
-    //   {
-    //     args: [
-    //       {
-    //         name: 'direction',
-    //         type: 'string',
-    //         value: 'FromStem',
-    //       },
-    //     ],
-    //     stem: 'PEEL_BANANA',
-    //   }
-    // ]
+    // immediate_commands: [ADD_WATER]
 
     const requestString = this.requests
       ? `[\n${indent(
@@ -503,25 +579,25 @@ export class Sequence implements SeqJson {
     {
       name: 'power',
       steps: [
-      R`04:39:22.000`.PREHEAT_OVEN({
-      temperature: 360,
-      }),
-      C.ADD_WATER,
-      ],
+        R`04:39:22.000`.PREHEAT_OVEN({
+        temperature: 360,
+        }),
+        C.ADD_WATER,
+        ],
       type: 'request',
       description: ' Activate the oven',
       ground_epoch: {
-      delta: 'now',
-      name: 'activate',
+        delta: 'now',
+        name: 'activate',
       },
       metadata: {
-      author: 'rrgoet',
-      },
-    }
-    ]
-    }*/
+        author: 'rrgoetz',
+        },
+    }]*/
 
     return (
+      `${localBuilderString.length !== 0 ? `${localBuilderString}\n\n` : ''}` +
+      `${parameterBuilderString.length !== 0 ? `${parameterBuilderString}\n\n` : ''}` +
       `export default () =>\n` +
       `${indent(`Sequence.new({`, 1)}\n` +
       `${indent(`seqId: '${this.id}'`, 2)},\n` +
@@ -538,6 +614,26 @@ export class Sequence implements SeqJson {
 
   // @ts-ignore : 'Args' found in JSON Spec
   public static fromSeqJson(json: SeqJson): Sequence {
+    const localNames = json.locals
+      ? [
+          json.locals[0].name,
+          // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+          ...json.locals.slice(1).map((l: VariableDeclaration) => {
+            return l.name;
+          }),
+        ]
+      : [];
+
+    const parameterNames = json.parameters
+      ? [
+          json.parameters[0].name,
+          // @ts-ignore : 'VariableDeclaration' found in JSON Spec
+          ...json.parameters.slice(1).map((p: VariableDeclaration) => {
+            return p.name;
+          }),
+        ]
+      : [];
+
     return Sequence.new({
       seqId: json.id,
       metadata: json.metadata,
@@ -546,15 +642,35 @@ export class Sequence implements SeqJson {
         ? {
             // @ts-ignore : 'Step' found in JSON Spec
             steps: json.steps.map((c: Step) => {
-              if (c.type === 'command') return CommandStem.fromSeqJson(c as CommandStem);
+              if (c.type === 'command') return CommandStem.fromSeqJson(c as CommandStem, localNames, parameterNames);
               else if (c.type === 'ground_block') return Ground_Block.fromSeqJson(c as Ground_Block);
               else if (c.type === 'ground_event') return Ground_Event.fromSeqJson(c as Ground_Event);
               return c;
             }),
           }
         : {}),
-      ...(json.locals ? { locals: json.locals } : {}),
-      ...(json.parameters ? { parameters: json.parameters } : {}),
+      ...(json.locals
+        ? {
+            locals: [
+              Variable.fromSeqJson(json.locals[0]),
+              // @ts-ignore : 'l: Request' found in JSON Spec
+              ...json.locals.slice(1).map(l => {
+                return Variable.fromSeqJson(l as Variable);
+              }),
+            ],
+          }
+        : {}),
+      ...(json.parameters
+        ? {
+            parameters: [
+              Variable.fromSeqJson(json.parameters[0]),
+              // @ts-ignore : 'l: Request' found in JSON Spec
+              ...json.parameters.slice(1).map(p => {
+                return Variable.fromSeqJson(p as Variable);
+              }),
+            ],
+          }
+        : {}),
       ...(json.requests
         ? {
             // @ts-ignore : 'r: Request' found in JSON Spec
@@ -568,7 +684,7 @@ export class Sequence implements SeqJson {
                 ...(r.metadata ? { metadata: r.metadata } : {}),
                 steps: [
                   r.steps[0].type === 'command'
-                    ? CommandStem.fromSeqJson(r.steps[0] as CommandStem)
+                    ? CommandStem.fromSeqJson(r.steps[0] as CommandStem, localNames, parameterNames)
                     : r.steps[0].type === 'ground_block'
                     ? // @ts-ignore : 'GroundBlock' found in JSON Spec
                       Ground_Block.fromSeqJson(r.steps[0] as GroundBlock)
@@ -578,7 +694,8 @@ export class Sequence implements SeqJson {
                     : r.steps[0],
                   // @ts-ignore : 'step : Step' found in JSON Spec
                   ...r.steps.slice(1).map(step => {
-                    if (step.type === 'command') return CommandStem.fromSeqJson(step as CommandStem);
+                    if (step.type === 'command')
+                      return CommandStem.fromSeqJson(step as CommandStem, localNames, parameterNames);
                     else if (step.type === 'ground_block') return Ground_Block.fromSeqJson(step as Ground_Block);
                     else if (step.type === 'ground_event') return Ground_Event.fromSeqJson(step as Ground_Event);
                     return step;
@@ -591,7 +708,9 @@ export class Sequence implements SeqJson {
       ...(json.immediate_commands
         ? {
             // @ts-ignore : 'Step' found in JSON Spec
-            immediate_commands: json.immediate_commands.map((c: ImmediateCommand) => ImmediateStem.fromSeqJson(c)),
+            immediate_commands: json.immediate_commands.map((c: ImmediateCommand) =>
+              ImmediateStem.fromSeqJson(c, localNames, parameterNames),
+            ),
           }
         : {}),
       ...(json.hardware_commands
@@ -602,11 +721,214 @@ export class Sequence implements SeqJson {
   }
 }
 
-/*
-	  ---------------------------------
-				  STEPS eDSL
-	  ---------------------------------
-	  */
+/**
+ * ----------------------------------------
+ * 			Local, and Parmaeters
+ * ----------------------------------------
+ */
+
+// @ts-ignore : 'VariableDeclaration: Request' found in JSON Spec
+class Variable implements VariableDeclaration {
+  name: string;
+  type: typeof VariableType[number];
+  [x: string]: unknown;
+
+  private kind: 'LOCALS' | 'PARAMETERS' | 'UNKNOWN' = 'LOCALS';
+  private readonly _enum_name?: string | undefined;
+  // @ts-ignore : 'VariableRange: Request' found in JSON Spec
+  private readonly _allowable_ranges?: VariableRange[] | undefined;
+  private readonly _allowable_values?: unknown[] | undefined;
+
+  constructor(opts: VariableOptions) {
+    this.name = opts.name;
+    this.type = opts.type;
+
+    this._enum_name = opts.enum_name ?? undefined;
+    this._allowable_ranges = opts.allowable_ranges ?? undefined;
+    this._allowable_values = opts.allowable_values ?? undefined;
+  }
+
+  public static new(opts: VariableOptions): Variable {
+    return new Variable(opts);
+  }
+
+  public ENUM_NAME(enum_name: string): Variable {
+    return Variable.new({
+      name: this.name,
+      type: this.type,
+      enum_name: enum_name,
+      ...(this._allowable_ranges && { allowable_ranges: this._allowable_ranges }),
+      ...(this._allowable_values && { allowable_values: this._allowable_values }),
+    });
+  }
+
+  public GET_ENUM_NAME(): string | undefined {
+    return this._enum_name;
+  }
+
+  // @ts-ignore : 'VariableRange: Request' found in JSON Spec
+  public ALLOWABLE_RANGES(Variable_range: VariableRange[]): Variable {
+    return Variable.new({
+      name: this.name,
+      type: this.type,
+      ...(this._enum_name && { enum_name: this._enum_name }),
+      allowable_ranges: Variable_range,
+      ...(this._allowable_values && { allowable_values: this._allowable_values }),
+    });
+  }
+
+  // @ts-ignore : 'VariableRange: Request' found in JSON Spec
+  public GET_ALLOWABLE_RANGES(): VariableRange[] | undefined {
+    return this._allowable_ranges;
+  }
+
+  public ALLOWABLE_VALUES(allowable_values: unknown[]): Variable {
+    return Variable.new({
+      name: this.name,
+      type: this.type,
+      ...(this._enum_name && { enum_name: this._enum_name }),
+      ...(this._allowable_ranges && { allowable_ranges: this._allowable_ranges }),
+      allowable_values: allowable_values,
+    });
+  }
+
+  public setKind(kind: 'LOCALS' | 'PARAMETERS' | 'UNKNOWN') {
+    this.kind = kind;
+  }
+
+  public GET_ALLOWABLE_VALUES(): unknown[] | undefined {
+    return this._allowable_values;
+  }
+
+  // @ts-ignore : 'Command' found in JSON Spec
+  public toSeqJson(): VariableDeclaration {
+    let error;
+    //check if type ENUM has ENUM_NAME set
+    if (this.type === 'ENUM' && !this._enum_name) {
+      error = `$$ERROR$$: 'enum_name' is required for ENUM type.`;
+    }
+    // check if type ins't ENUM but has a ENUM_NAME set
+    if (this.type !== 'ENUM' && this._enum_name) {
+      error = `$$ERROR$$: 'enum_name: ${this._enum_name}' is not required for non-ENUM type.`;
+    }
+    // check if type is STRING but has allowable_ranges set
+    if (this.type === 'STRING' && this._allowable_ranges) {
+      error = `$$ERROR$$: 'allowable_ranges' is not required for STRING type.`;
+    }
+
+    return {
+      name: error ? error : this.name,
+      type: this.type,
+      ...(this._enum_name && { enum_name: this._enum_name }),
+      ...(this._allowable_ranges && {
+        allowable_ranges: this._allowable_ranges.map(range => {
+          return {
+            min: range.min,
+            max: range.max,
+          };
+        }),
+      }),
+      ...(this._allowable_values && { allowable_values: this._allowable_values }),
+    };
+  }
+
+  // @ts-ignore : 'VariableDeclaration: Request' found in JSON Spec
+  public static fromSeqJson(json: VariableDeclaration): Variable {
+    return new Variable({
+      name: json.name,
+      type: json.type,
+      ...(json.enum_name ? { enum_name: json.enum_name } : {}),
+      ...(json.allowable_ranges ? { allowable_ranges: json.allowable_ranges } : {}),
+      ...(json.allowable_values ? { allowable_values: json.allowable_values } : {}),
+    });
+  }
+
+  public toRefernceString(kind: 'LOCALS' | 'PARAMETERS' | 'UNKNOWN' = this.kind): string {
+    return `${kind}.${this.name}`;
+  }
+
+  public toEDSLString(): string {
+    const enumName = this._enum_name ? `\n.ENUM_NAME('${this._enum_name}')` : '';
+    const allowableRanges = this._allowable_ranges
+      ? `\n.ALLOWABLE_RANGES([${this._allowable_ranges
+          .map(v => {
+            return `{ min: ${v.min}, max: ${v.max} }`;
+          })
+          .join(',')}])`
+      : '';
+    const allowableValues = this._allowable_values ? `\n.ALLOWABLE_VALUES([${this._allowable_values}])` : '';
+
+    return `VARIABLE('${this.name}','${this.type}')${enumName}${allowableRanges}${allowableValues}`;
+  }
+}
+
+export function VARIABLE(name: string, type: typeof VariableType[number]): Variable {
+  return Variable.new({ name, type });
+}
+
+/**
+ * Construct an object of parameters that can be used as arguments for commands
+ *
+ * @param locals: Variable[]
+ */
+export function BUILD_LOCALS(...locals: (Variable | VariableOptions)[]): Record<string, Variable> {
+  return buildVariable(locals, 'LOCALS');
+}
+
+/**
+ * Construct an object of parameters that can be used as arguments for commands
+ *
+ * @param locals: Variable[]
+ *
+ */
+export function BUILD_PARAMETERS(...parameters: (Variable | VariableOptions)[]): Record<string, Variable> {
+  return buildVariable(parameters, 'PARAMETERS');
+}
+
+/**
+ * Map the locals or parameters from the eDSL BUILD_LOCALS or BUILD_PARAMETERS
+ * to a SeqJSON local or parameter
+ *
+ * @param opt: Record<string, Variable>
+ */
+// @ts-ignore : 'VariableDeclaration: Request' found in JSON Spec
+export function MAP_VARIABLES(opt: Record<string, Variable>): [VariableDeclaration, ...VariableDeclaration[]] {
+  const variables = Object.values(opt);
+  return [variables[0], ...variables.slice(1)];
+}
+
+function buildVariable(
+  variables: (Variable | VariableOptions)[],
+  kind: 'LOCALS' | 'PARAMETERS',
+): Record<string, Variable> {
+  const map: Record<string, Variable> = {};
+
+  for (const varable of variables) {
+    if (varable instanceof Variable) {
+      varable.setKind(kind);
+      map[varable.name] = varable;
+    } else {
+      const options = varable;
+      const v = Variable.new({
+        name: options.name,
+        type: options.type,
+        ...(options.enum_name ? { enum_name: options.enum_name } : {}),
+        ...(options.allowable_ranges ? { allowable_ranges: options.allowable_ranges } : {}),
+        ...(options.allowable_values ? { allowable_values: options.allowable_values } : {}),
+      });
+      v.setKind(kind);
+      map[options.name] = v;
+    }
+  }
+
+  return map;
+}
+
+/**
+ * ---------------------------------
+ *        STEPS eDSL
+ * ---------------------------------
+ */
 
 // @ts-ignore : 'Args' found in JSON Spec
 export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}> implements Command {
@@ -741,8 +1063,12 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
     };
   }
 
-  // @ts-ignore : 'Command' found in JSON Spec
-  public static fromSeqJson(json: Command): CommandStem {
+  public static fromSeqJson(
+    // @ts-ignore : 'Command' found in JSON Spec
+    json: Command,
+    localNames?: string[],
+    parameterNames?: string[],
+  ): CommandStem {
     const timeValue =
       json.time.type === TimingTypes.ABSOLUTE
         ? { absoluteTime: doyToInstant(json.time.tag as DOY_STRING) }
@@ -754,7 +1080,7 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
 
     return CommandStem.new({
       stem: json.stem,
-      arguments: convertInterfacesToArgs(json.args),
+      arguments: convertInterfacesToArgs(json.args, localNames, parameterNames),
       metadata: json.metadata,
       models: json.models,
       description: json.description,
@@ -873,10 +1199,10 @@ export class ImmediateStem<A extends Args[] | { [argName: string]: any } = [] | 
   }
 
   // @ts-ignore : 'Command' found in JSON Spec
-  public static fromSeqJson(json: ImmediateCommand): ImmediateStem {
+  public static fromSeqJson(json: ImmediateCommand, localNames?: string[], parameterNames?: string[]): ImmediateStem {
     return ImmediateStem.new({
       stem: json.stem,
-      arguments: convertInterfacesToArgs(json.args),
+      arguments: convertInterfacesToArgs(json.args, localNames, parameterNames),
       metadata: json.metadata,
       description: json.description,
     });
@@ -1395,9 +1721,11 @@ export const STEPS = {
   GROUND_EVENT: GROUND_EVENT,
 };
 
-/*-----------------------------------
-		HW Commands
-	  ------------------------------------- */
+/**
+ * -----------------------------------
+ *        HW Commands
+ * -----------------------------------
+ */
 // @ts-ignore : 'HardwareCommand' found in JSON Spec
 export class HardwareStem implements HardwareCommand {
   public readonly stem: string;
@@ -1473,11 +1801,11 @@ export class HardwareStem implements HardwareCommand {
   }
 }
 
-/*
-	  ---------------------------------
-			  Time Utilities
-	  ---------------------------------
-	  */
+/**
+ *---------------------------------
+ *      Time Utilities
+ *---------------------------------
+ */
 
 export type DOY_STRING = string & { __brand: 'DOY_STRING' };
 export type HMS_STRING = string & { __brand: 'HMS_STRING' };
@@ -1677,11 +2005,11 @@ function commandsWithTimeValue<T extends TimingTypes>(
   };
 }
 
-/*
-	  ---------------------------------
-			  Utility Functions
-	  ---------------------------------
-	  */
+/**
+ * ---------------------------------
+ *      Utility Functions
+ * ---------------------------------
+ */
 
 // @ts-ignore : Used in generated code
 function sortCommandArguments(args: { [argName: string]: any }, order: string[]): { [argName: string]: any } {
@@ -1741,7 +2069,7 @@ function argumentsToString<A extends Args[] | { [argName: string]: any } = [] | 
  * @param interfaces
  */
 // @ts-ignore : `Args` found in JSON Spec
-function convertInterfacesToArgs(interfaces: Args): {} | [] {
+function convertInterfacesToArgs(interfaces: Args, localNames?: String[], parameterNames?: String[]): {} | [] {
   const args = interfaces.length === 0 ? [] : {};
 
   // Use to prevent a Remote property injection attack
@@ -1778,8 +2106,28 @@ function convertInterfacesToArgs(interfaces: Args): {} | [] {
         return { repeat_error: 'Remote property injection detected...' };
       } else if (arg.type === 'symbol') {
         if (validate(arg.name)) {
-          // @ts-ignore : 'SymbolArgument' found in JSON Spec
-          return { [arg.name]: { symbol: arg.value } };
+          // We dont know the TYPE value as that information is lost in seq json, but we don't need
+          // it here so we just use type: "INT" for the variable object. The variable will eventually
+          // become local.<name> or parameter.<name> for the toEDSLString()
+
+          let variable = Variable.new({ name: arg.value, type: 'INT' });
+          if (localNames && parameterNames) {
+            const variableKind = localNames.includes(arg.value)
+              ? 'LOCALS'
+              : parameterNames.includes(arg.value)
+              ? 'PARAMETERS'
+              : 'ERROR';
+            if (variableKind === 'ERROR') {
+              variable = Variable.new({
+                name: `${arg.value} //ERROR: Variable '${arg.value}' is not defined as a local or parameter`,
+                type: 'INT',
+              });
+              variable.setKind('UNKNOWN');
+            } else {
+              variable.setKind(variableKind);
+            }
+          }
+          return { [arg.name]: variable };
         }
         return { symbol_error: 'Remote property injection detected...' };
         // @ts-ignore : 'HexArgument' found in JSON Spec
@@ -1846,8 +2194,17 @@ function convertValueToObject(value: any, key: string): any {
     case 'boolean':
       return { type: 'boolean', value: value, name: key };
     default:
-      if (value instanceof Object && value.symbol && value.symbol === 'string') {
-        return { type: 'symbol', value: value, name: key };
+      if (
+        value instanceof Object &&
+        'name' in value &&
+        'type' in value &&
+        (value.type === 'FLOAT' ||
+          value.type === 'INT' ||
+          value.type === 'STRING' ||
+          value.type === 'UINT' ||
+          value.type === 'ENUM')
+      ) {
+        return { type: 'symbol', value: value.name, name: key };
       } else if (
         value instanceof Object &&
         value.hex &&
@@ -1855,6 +2212,12 @@ function convertValueToObject(value: any, key: string): any {
         new RegExp('^0x([0-9A-F])+$').test(value.hex)
       ) {
         return { type: 'hex', value: value, name: key };
+      } else {
+        return {
+          type: typeof value,
+          value: `${key} is an unknown value`,
+          name: `$$ERROR$$`,
+        };
       }
   }
 }
@@ -1887,11 +2250,16 @@ function objectToString(obj: any, indentLevel: number = 1): string {
         indentLevel--;
         output += indent(`],`, indentLevel) + '\n';
       } else if (typeof value === 'object') {
-        output += indent(`${key}:{`, indentLevel) + '\n';
-        indentLevel++;
-        print(value);
-        indentLevel--;
-        output += indent(`},`, indentLevel) + '\n';
+        //value is a Local or Parameter
+        if (value instanceof Variable) {
+          output += indent(`${key}: ${value.toRefernceString()}`, indentLevel) + ',\n';
+        } else {
+          output += indent(`${key}:{`, indentLevel) + '\n';
+          indentLevel++;
+          print(value);
+          indentLevel--;
+          output += indent(`},`, indentLevel) + '\n';
+        }
       } else {
         output += indent(`${key}: ${typeof value === 'string' ? `'${value}'` : value},`, indentLevel) + '\n';
       }
