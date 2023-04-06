@@ -57,7 +57,7 @@ export const Hardwares = {\n${dictionary.hwCommands
     .map(hwCommands => `\t\t${hwCommands.stem}: ${hwCommands.stem},\n`)
     .join('')}};
 
-Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS), Sequence}, Hardwares, Immediates);
+Object.assign(globalThis, { A:A, R:R, E:E, C:Object.assign(Commands, STEPS), Sequence, VARIABLE, BUILD_LOCALS, BUILD_PARAMETERS, MAP_VARIABLES}, Hardwares, Immediates);
 `;
 
   return {
@@ -139,7 +139,9 @@ function ${fswCommandName}(...args: [{ ${argsWithType.map(arg => arg.name + ': '
     arguments: args
   }) as ${fswCommandName}_IMMEDIATE;
 }
-function ${fswCommandName}_STEP(...args: [{ ${argsWithType.map(arg => arg.name + ': ' + arg.type).join(',')} }]) {
+function ${fswCommandName}_STEP(...args: [{ ${argsWithType
+    .map(arg => arg.name + ': ' + arg.type + '| VariableDeclaration')
+    .join(',')} }]) {
   return CommandStem.new({
     stem: '${fswCommandName}',
     arguments: sortCommandArguments(args, argumentOrders['${fswCommandName}'])
@@ -151,7 +153,7 @@ function ${fswCommandName}_STEP(...args: [{ ${argsWithType.map(arg => arg.name +
     .map(arg => arg.name + ': ' + arg.type)
     .join(',')} }] ]> {}
 \tinterface ${fswCommandName}_STEP extends CommandStem<[ [{ ${argsWithType
-    .map(arg => arg.name + ': ' + arg.type)
+    .map(arg => arg.name + ': ' + arg.type + '| VariableDeclaration')
     .join(',')} }] ]> {}
 \tfunction ${fswCommandName}(...args: [{ ${argsWithType
     .map(arg => arg.name + ': ' + arg.type)
