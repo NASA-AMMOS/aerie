@@ -1,4 +1,5 @@
 export type Env = {
+  HASURA_GRAPHQL_ADMIN_SECRET: string;
   LOG_FILE: string;
   LOG_LEVEL: string;
   MERLIN_GRAPHQL_URL: string;
@@ -12,6 +13,7 @@ export type Env = {
 };
 
 export const defaultEnv: Env = {
+  HASURA_GRAPHQL_ADMIN_SECRET: '',
   LOG_FILE: 'console',
   LOG_LEVEL: 'info',
   MERLIN_GRAPHQL_URL: 'http://hasura:8080/v1/graphql',
@@ -27,6 +29,7 @@ export const defaultEnv: Env = {
 export function getEnv(): Env {
   const { env } = process;
 
+  const HASURA_GRAPHQL_ADMIN_SECRET = env['HASURA_GRAPHQL_ADMIN_SECRET'] ?? defaultEnv.HASURA_GRAPHQL_ADMIN_SECRET;
   const LOG_FILE = env['LOG_FILE'] ?? defaultEnv.LOG_FILE;
   const LOG_LEVEL = env['LOG_LEVEL'] ?? defaultEnv.LOG_LEVEL;
   const MERLIN_GRAPHQL_URL = env['MERLIN_GRAPHQL_URL'] ?? defaultEnv.MERLIN_GRAPHQL_URL;
@@ -38,6 +41,7 @@ export function getEnv(): Env {
   const POSTGRES_USER = env['SEQUENCING_DB_USER'] ?? defaultEnv.POSTGRES_USER;
   const STORAGE = env['SEQUENCING_LOCAL_STORE'] ?? defaultEnv.STORAGE;
   return {
+    HASURA_GRAPHQL_ADMIN_SECRET,
     LOG_FILE,
     LOG_LEVEL,
     MERLIN_GRAPHQL_URL,

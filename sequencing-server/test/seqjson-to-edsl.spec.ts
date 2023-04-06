@@ -4,7 +4,9 @@ import { TimingTypes } from '../src/lib/codegen/CommandEDSLPreface';
 let graphqlClient: GraphQLClient;
 
 beforeEach(async () => {
-  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string);
+  graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string, {
+    headers: { 'x-hasura-admin-secret': process.env['HASURA_GRAPHQL_ADMIN_SECRET'] as string },
+  });
 });
 
 describe('getEdslForSeqJson', () => {

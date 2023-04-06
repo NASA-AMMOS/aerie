@@ -22,6 +22,11 @@ spec:
             - mountPath: /usr/src/app/merlin_file_store
               name: aerie-file-store
           env:
+            - name: HASURA_GRAPHQL_ADMIN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: dev-env
+                  key: HASURA_GRAPHQL_ADMIN_SECRET
             - name: JAVA_OPTS
               value: |
                 -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN -Dorg.slf4j.simpleLogger.logFile=System.err

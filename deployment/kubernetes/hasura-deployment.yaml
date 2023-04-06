@@ -27,6 +27,11 @@ spec:
               value: postgres://aerie:aerie@postgres:5432/aerie_sequencing
             - name: AERIE_UI_DATABASE_URL
               value: postgres://aerie:aerie@postgres:5432/aerie_ui
+            - name: HASURA_GRAPHQL_ADMIN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: dev-env
+                  key: HASURA_GRAPHQL_ADMIN_SECRET
             - name: HASURA_GRAPHQL_METADATA_DATABASE_URL
               value: postgres://aerie:aerie@postgres:5432/aerie_hasura
             - name: HASURA_GRAPHQL_DEV_MODE
@@ -35,6 +40,11 @@ spec:
               value: startup, http-log, webhook-log, websocket-log, query-log
             - name: HASURA_GRAPHQL_ENABLE_CONSOLE
               value: "true"
+            - name: HASURA_GRAPHQL_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: dev-env
+                  key: HASURA_GRAPHQL_JWT_SECRET
             - name: HASURA_GRAPHQL_LOG_LEVEL
               value: warn
             - name: HASURA_GRAPHQL_METADATA_DIR

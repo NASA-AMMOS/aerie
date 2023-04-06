@@ -30,7 +30,8 @@ const req = {
     query: string,
     variables: Record<string, unknown> = {},
   ): Promise<T> {
-    const options = { data: { query, variables } };
+    const hasuraAdminSecret = (process.env['HASURA_GRAPHQL_ADMIN_SECRET'] as string) ?? '';
+    const options = { headers: { 'x-hasura-admin-secret': hasuraAdminSecret }, data: { query, variables } };
     const response = await request.post(`${urls.HASURA_URL}/v1/graphql`, options);
 
     if (response.ok()) {

@@ -24,6 +24,11 @@ spec:
               name: aerie-file-store
               readOnly: true
           env:
+            - name: HASURA_GRAPHQL_ADMIN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: dev-env
+                  key: HASURA_GRAPHQL_ADMIN_SECRET
             - name: JAVA_OPTS
               value: |
                 -Dorg.slf4j.simpleLogger.log.com.zaxxer.hikari=INFO -Dorg.slf4j.simpleLogger.logFile=System.err

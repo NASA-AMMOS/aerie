@@ -23,6 +23,11 @@ spec:
             - mountPath: /usr/src/app/sequencing_file_store
               name: aerie-file-store
           env:
+            - name: HASURA_GRAPHQL_ADMIN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: dev-env
+                  key: HASURA_GRAPHQL_ADMIN_SECRET
             - name: LOG_FILE
               value: console
             - name: LOG_LEVEL

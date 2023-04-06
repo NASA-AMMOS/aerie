@@ -52,7 +52,7 @@ public final class SchedulerAppDriver {
     //load the service configuration options
     final var config = loadConfiguration();
 
-    final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI());
+    final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI(), config.hasuraGraphQlAdminSecret());
 
     final var stores = loadStores(config);
 
@@ -152,7 +152,8 @@ public final class SchedulerAppDriver {
                           Integer.parseInt(getEnv("SCHEDULER_DB_PORT", "5432")),
                           getEnv("SCHEDULER_DB_PASSWORD", ""),
                           getEnv("SCHEDULER_DB", "aerie_scheduler")),
-        URI.create(getEnv("MERLIN_GRAPHQL_URL", "http://localhost:8080/v1/graphql"))
+        URI.create(getEnv("MERLIN_GRAPHQL_URL", "http://localhost:8080/v1/graphql")),
+        getEnv("HASURA_GRAPHQL_ADMIN_SECRET", "")
     );
   }
 }

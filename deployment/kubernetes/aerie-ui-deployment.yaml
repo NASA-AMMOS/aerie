@@ -17,8 +17,6 @@ spec:
         - env:
             - name: ORIGIN
               value: http://127.0.0.1
-            - name: PUBLIC_AUTH_TYPE
-              value: none
             - name: PUBLIC_GATEWAY_CLIENT_URL
               value: http://localhost:9000
             - name: PUBLIC_GATEWAY_SERVER_URL
