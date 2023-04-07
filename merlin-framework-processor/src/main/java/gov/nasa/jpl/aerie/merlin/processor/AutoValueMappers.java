@@ -70,45 +70,49 @@ public class AutoValueMappers {
           methodName);
       typeRules.add(typeRule);
 
-      final var methodBuilder = MethodSpec
-          .methodBuilder(methodName)
-          .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-          .returns(ParameterizedTypeName.get(ClassName.get(ValueMapper.class), TypeName.get(record.asType())))
-          .addParameters(
-              necessaryMappers
-                  .entrySet()
-                  .stream()
-                  .map(mapperRequest -> ParameterSpec
-                      .builder(
-                          ParameterizedTypeName.get(
-                              ClassName.get(ValueMapper.class),
-                              ClassName.get(mapperRequest.getKey()).box()),
-                          mapperRequest.getValue(),
-                          Modifier.FINAL)
+      builder.addMethod(
+          MethodSpec
+              .methodBuilder(methodName)
+              .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+              .returns(ParameterizedTypeName.get(ClassName.get(ValueMapper.class), TypeName.get(record.asType())))
+              .addParameters(
+                  necessaryMappers
+                      .entrySet()
+                      .stream()
+                      .map(mapperRequest -> ParameterSpec
+                          .builder(
+                              ParameterizedTypeName.get(
+                                  ClassName.get(ValueMapper.class),
+                                  ClassName.get(mapperRequest.getKey()).box()),
+                              mapperRequest.getValue(),
+                              Modifier.FINAL)
+                          .build())
+                      .toList())
+              .addCode(
+                  CodeBlock
+                      .builder()
+                      .add("return new $T<>($>\n", RecordValueMapper.class)
+                      .add("$T.class,\n", ClassName.get(record))
+                      .add("$T.of($>\n", List.class)
+                      .add(CodeBlock.join(
+                          componentToMapperName
+                              .stream()
+                              .map(recordComponent ->
+                                       CodeBlock
+                                           .builder()
+                                           .add(
+                                               "new $T<>($>\n" + "$S,\n" + "$T::$L,\n" + "$L" + "$<)",
+                                               RecordValueMapper.Component.class,
+                                               recordComponent.componentName(),
+                                               ClassName.get(record),
+                                               recordComponent.componentName(),
+                                               recordComponent.mapperName())
+                                           .build())
+                              .toList(),
+                          ",\n"))
+                      .add("$<)$<);")
                       .build())
-                  .toList());
-
-      final var codeBlockBuilder = CodeBlock.builder();
-      codeBlockBuilder.add("return new $T<>(\n", RecordValueMapper.class);
-      codeBlockBuilder.add("  $T.class,\n", ClassName.get(record));
-      codeBlockBuilder.add("  $T.of(\n", List.class);
-
-      codeBlockBuilder.add(
-          CodeBlock.join(componentToMapperName
-                             .stream()
-                             .map(recordComponent ->
-                                      CodeBlock
-                                          .builder()
-                                          .add("    new $T<>(\n", RecordValueMapper.Component.class)
-                                          .add("      $S,\n", recordComponent.componentName())
-                                          .add("      $T::$L,\n", ClassName.get(record), recordComponent.componentName())
-                                          .add("    $L)", recordComponent.mapperName())
-                                          .build())
-                             .toList(), ",\n"));
-      codeBlockBuilder.add("));");
-
-      methodBuilder.addCode(codeBlockBuilder.build());
-      builder.addMethod(methodBuilder.build());
+              .build());
     }
 
     return Pair.of(JavaFile
