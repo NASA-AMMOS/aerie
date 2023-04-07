@@ -34,7 +34,7 @@ public final class SimulationUtility {
   }
 
   public static MissionModel<?> getBananaMissionModel(){
-    final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, Path.of("/etc/hosts"));
+    final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, Path.of("/etc/hosts"), Configuration.DEFAULT_INITIAL_CONDITIONS);
     return makeMissionModel(new MissionModelBuilder(), config);
   }
 

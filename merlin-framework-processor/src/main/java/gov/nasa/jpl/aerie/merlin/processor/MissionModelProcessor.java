@@ -91,30 +91,10 @@ public final class MissionModelProcessor implements Processor {
 
     // Iterate over all elements annotated with @MissionModel
     for (final var element : roundEnv.getElementsAnnotatedWith(MissionModel.class)) {
+      final var autoValueMapperRequests = roundEnv.getElementsAnnotatedWith(AutoValueMapper.Record.class);
       final var packageElement = (PackageElement) element;
       try {
         final var missionModelRecord$ = missionModelParser.parseMissionModel(packageElement);
-
-        final var generatedFiles = new ArrayList<>(List.of(
-            missionModelGen.generateMerlinPlugin(missionModelRecord$),
-            missionModelGen.generateSchedulerPlugin(missionModelRecord$)));
-
-        missionModelRecord$.modelConfigurationType
-            .flatMap(configType -> missionModelGen.generateMissionModelConfigurationMapper(missionModelRecord$, configType))
-            .ifPresent(generatedFiles::add);
-
-        generatedFiles.addAll(List.of(
-            missionModelGen.generateModelType(missionModelRecord$),
-            missionModelGen.generateSchedulerModel(missionModelRecord$),
-            missionModelGen.generateActivityActions(missionModelRecord$),
-            missionModelGen.generateActivityTypes(missionModelRecord$)
-        ));
-
-        final var autoValueMapperRequests = roundEnv.getElementsAnnotatedWith(AutoValueMapper.Record.class);
-        final var autoValueMappers = AutoValueMappers.generateAutoValueMappers(
-            missionModelRecord$,
-            autoValueMapperRequests);
-        generatedFiles.add(autoValueMappers);
 
         final var concatenatedTypeRules = new ArrayList<>(missionModelRecord$.typeRules);
         for (final var request : autoValueMapperRequests) {
@@ -129,6 +109,26 @@ public final class MissionModelProcessor implements Processor {
             concatenatedTypeRules,
             missionModelRecord$.activityTypes
         );
+
+        final var generatedFiles = new ArrayList<>(List.of(
+            missionModelGen.generateMerlinPlugin(missionModelRecord),
+            missionModelGen.generateSchedulerPlugin(missionModelRecord)));
+
+        missionModelRecord.modelConfigurationType
+            .flatMap(configType -> missionModelGen.generateMissionModelConfigurationMapper(missionModelRecord, configType))
+            .ifPresent(generatedFiles::add);
+
+        generatedFiles.addAll(List.of(
+            missionModelGen.generateModelType(missionModelRecord),
+            missionModelGen.generateSchedulerModel(missionModelRecord),
+            missionModelGen.generateActivityActions(missionModelRecord),
+            missionModelGen.generateActivityTypes(missionModelRecord)
+        ));
+
+        final var autoValueMappers = AutoValueMappers.generateAutoValueMappers(
+            missionModelRecord,
+            autoValueMapperRequests);
+        generatedFiles.add(autoValueMappers);
 
         for (final var activityRecord : missionModelRecord.activityTypes) {
           this.ownedActivityTypes.add(activityRecord.inputType().declaration());
