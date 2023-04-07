@@ -64,6 +64,8 @@ public abstract class TypePattern {
 
   public abstract TypeName erasure();
 
+  public abstract TypePattern box();
+
   @Override
   public final String toString() {
     return this.render().toString();
@@ -112,6 +114,11 @@ public abstract class TypePattern {
     public TypeName erasure() {
       return this.render();
     }
+
+    @Override
+    public TypePattern box() {
+      return this;
+    }
   }
 
   public static final class PrimitivePattern extends TypePattern {
@@ -154,6 +161,11 @@ public abstract class TypePattern {
     @Override
     public TypeName erasure() {
       return this.render();
+    }
+
+    @Override
+    public TypePattern box() {
+      return new ClassPattern((ClassName) this.render().box(), List.of());
     }
   }
 
@@ -222,6 +234,11 @@ public abstract class TypePattern {
     @Override
     public TypeName erasure() {
       return ArrayTypeName.of(this.element.erasure());
+    }
+
+    @Override
+    public TypePattern box() {
+      return this;
     }
   }
 
@@ -327,6 +344,11 @@ public abstract class TypePattern {
     @Override
     public TypeName erasure() {
       return this.name;
+    }
+
+    @Override
+    public TypePattern box() {
+      return this;
     }
   }
 }
