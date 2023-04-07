@@ -11,25 +11,59 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.RecordValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class AutoValueMappers {
-  static Pair<JavaFile, List<TypeRule>> generateAutoValueMappers(
-      final MissionModelRecord missionModel,
-      final Iterable<TypeElement> recordTypes) {
-    final var typeRules = new ArrayList<TypeRule>();
+  static TypeRule typeRule(final Element autoValueMapperElement, final ClassName generatedClassName) throws InvalidMissionModelException {
+    if (!autoValueMapperElement.getKind().equals(ElementKind.RECORD)) {
+      throw new InvalidMissionModelException(
+          "@%s.%s is only allowed on records".formatted(
+              AutoValueMapper.class.getSimpleName(),
+              AutoValueMapper.Record.class.getSimpleName()),
+          autoValueMapperElement);
+    }
 
+    final var typeMirrors = new HashSet<TypeMirror>();
+    for (final var enclosedElement : autoValueMapperElement.getEnclosedElements()) {
+      if (!(enclosedElement instanceof RecordComponentElement el)) continue;
+      final var typeMirror = el.getAccessor().getReturnType();
+      typeMirrors.add(typeMirror);
+    }
+
+    return new TypeRule(
+        new TypePattern.ClassPattern(
+            ClassName.get(ValueMapper.class),
+            List.of(TypePattern.from(autoValueMapperElement.asType()))),
+        Set.of(),
+        typeMirrors
+            .stream()
+            .map(component -> (TypePattern) new TypePattern.ClassPattern(
+                ClassName.get(ValueMapper.class),
+                List.of(new TypePattern.ClassPattern((ClassName) ClassName.get(component).box(), List.of()))))
+            .toList(),
+        generatedClassName,
+        ClassName.get((TypeElement) autoValueMapperElement).canonicalName().replace(".", "_"));
+  }
+
+  static JavaFile generateAutoValueMappers(final MissionModelRecord missionModel, final Iterable<TypeElement> recordTypes) {
     final var typeName = missionModel.getAutoValueMappersName();
 
     final var builder =
@@ -55,20 +89,6 @@ public class AutoValueMappers {
         componentToMapperName.add(new ComponentMapperNamePair(elementName, valueMapperIdentifier));
         necessaryMappers.put(typeMirror, valueMapperIdentifier);
       }
-
-      final var typeRule = new TypeRule(
-          new TypePattern.ClassPattern(ClassName.get(ValueMapper.class), List.of(TypePattern.from(record.asType()))),
-          Set.of(),
-          necessaryMappers
-              .keySet()
-              .stream()
-              .map(component -> (TypePattern) new TypePattern.ClassPattern(
-                  ClassName.get(ValueMapper.class),
-                  List.of(new TypePattern.ClassPattern((ClassName) ClassName.get(component).box(), List.of()))))
-              .toList(),
-          typeName,
-          methodName);
-      typeRules.add(typeRule);
 
       builder.addMethod(
           MethodSpec
@@ -115,9 +135,9 @@ public class AutoValueMappers {
               .build());
     }
 
-    return Pair.of(JavaFile
-                       .builder(typeName.packageName(), builder.build())
-                       .skipJavaLangImports(true)
-                       .build(), typeRules);
+    return JavaFile
+        .builder(typeName.packageName(), builder.build())
+        .skipJavaLangImports(true)
+        .build();
   }
 }

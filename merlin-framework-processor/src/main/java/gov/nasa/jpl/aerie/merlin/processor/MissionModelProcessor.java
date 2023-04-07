@@ -118,10 +118,12 @@ public final class MissionModelProcessor implements Processor {
         final var autoValueMappers = AutoValueMappers.generateAutoValueMappers(
             missionModelRecord$,
             missionModelRecord$.autoValueMapperRequests);
-        generatedFiles.add(autoValueMappers.getLeft());
+        generatedFiles.add(autoValueMappers);
 
         final var concatenatedTypeRules = new ArrayList<>(missionModelRecord$.typeRules);
-        concatenatedTypeRules.addAll(autoValueMappers.getRight());
+        for (final var request : missionModelRecord$.autoValueMapperRequests) {
+          concatenatedTypeRules.add(AutoValueMappers.typeRule(request, missionModelRecord$.getAutoValueMappersName()));
+        }
 
         final var missionModelRecord = new MissionModelRecord(
             missionModelRecord$.$package,
