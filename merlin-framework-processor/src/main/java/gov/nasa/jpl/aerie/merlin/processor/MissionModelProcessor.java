@@ -115,7 +115,7 @@ public final class MissionModelProcessor implements Processor {
             missionModelGen.generateActivityTypes(missionModelRecord$)
         ));
 
-        final var autoValueMappers = missionModelGen.generateAutoValueMappers(
+        final var autoValueMappers = AutoValueMappers.generateAutoValueMappers(
             missionModelRecord$,
             missionModelRecord$.autoValueMapperRequests);
         generatedFiles.add(autoValueMappers.getLeft());
