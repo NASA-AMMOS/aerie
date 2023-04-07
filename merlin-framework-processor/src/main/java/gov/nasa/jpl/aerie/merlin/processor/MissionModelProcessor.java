@@ -59,7 +59,7 @@ public final class MissionModelProcessor implements Processor {
     return Set.of(
         MissionModel.class.getCanonicalName(),
         ActivityType.class.getCanonicalName(),
-        AutoValueMapper.class.getCanonicalName());
+        AutoValueMapper.Record.class.getCanonicalName());
   }
 
   @Override
