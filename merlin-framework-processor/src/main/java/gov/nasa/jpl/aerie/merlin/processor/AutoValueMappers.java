@@ -9,6 +9,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.TypeVariableName;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.RecordValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
@@ -18,6 +19,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.Parameterizable;
 import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
@@ -73,6 +75,11 @@ public class AutoValueMappers {
                     .builder(javax.annotation.processing.Generated.class)
                     .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
                     .build())
+            .addAnnotation(
+                AnnotationSpec
+                    .builder(SuppressWarnings.class)
+                    .addMember("value", "$S", "unchecked")
+                    .build())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
     record ComponentMapperNamePair(String componentName, String mapperName) {}
@@ -96,6 +103,7 @@ public class AutoValueMappers {
           MethodSpec
               .methodBuilder(methodName)
               .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+              .addTypeVariables(((TypeElement) record).getTypeParameters().stream().map(TypeVariableName::get).toList())
               .returns(ParameterizedTypeName.get(ClassName.get(ValueMapper.class), TypeName.get(record.asType())))
               .addParameters(
                   necessaryMappers
@@ -113,8 +121,16 @@ public class AutoValueMappers {
               .addCode(
                   CodeBlock
                       .builder()
-                      .add("return new $T<>($>\n", RecordValueMapper.class)
-                      .add("$T.class,\n", ClassName.get((TypeElement) record))
+                      .add("return new $T<>($>\n", ClassName.get(RecordValueMapper.class))
+                      .add("$L$T.class,\n",
+                           // SAFETY: This cast cannot fail - it merely exists to compensate for an inability
+                           // to express a MyRecord<T>.class. Instead, we use MyRecord.class, and cast it, via
+                           // Object, to a `Class<MyRecord<T>>`. We need to go via Object because Java generics
+                           // do not allow casting a Foo<Bar> to a Foo<Bar<Baz>> - since Bar may be a container
+                           // that already contains non-Baz objects. In this case, since MyRecord.class is not
+                           // a container, the Java type checker is being overly conservative
+                           castIfGeneric(record),
+                           ClassName.get((TypeElement) record))
                       .add("$T.of($>\n", List.class)
                       .add(CodeBlock.join(
                           componentToMapperName
@@ -141,5 +157,14 @@ public class AutoValueMappers {
         .builder(typeName.packageName(), builder.build())
         .skipJavaLangImports(true)
         .build();
+  }
+
+  private static CodeBlock castIfGeneric(final Element record) {
+    final var typeParameters = ((Parameterizable) record).getTypeParameters();
+    if (typeParameters.isEmpty()) {
+      return CodeBlock.of("");
+    } else {
+      return CodeBlock.of("(Class<$T>) (Object) ", TypeName.get(record.asType()));
+    }
   }
 }

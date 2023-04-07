@@ -99,7 +99,7 @@ public final class ParameterTestActivity {
   public List<Map<String[][], Map<Integer, List<Float>[]>>> obnoxious;
 
   @Parameter
-  public RecordParameter record;
+  public RecordParameter<List<String>> record;
 
   public ParameterTestActivity() {
     this.boxedDouble = 6.282;
@@ -229,7 +229,7 @@ public final class ParameterTestActivity {
     );
     this.obnoxious = obnoxious;
 
-    this.record = new RecordParameter(
+    this.record = new RecordParameter<>(
         this.primitiveDouble,
         this.primitiveFloat,
         this.primitiveByte,
@@ -288,7 +288,8 @@ public final class ParameterTestActivity {
         this.doublePrimIntArray,
         this.intListArrayArray,
         this.obnoxious,
-        new RecordParameter.Nested("", Map.of())
+        new RecordParameter.Nested("", Map.of()),
+        List.of("")
     );
   }
 }

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 @AutoValueMapper.Record
-public record RecordParameter(
+public record RecordParameter<T>(
     // Primitive parameters
     double primitiveDouble,
     float primitiveFloat,
@@ -87,7 +87,9 @@ public record RecordParameter(
 
     List<Map<String[][], Map<Integer, List<Float>[]>>> obnoxious,
 
-    Nested nested
+    Nested nested,
+
+    T genericParameter
 )
 {
   public enum Tenum { A, B, C }
