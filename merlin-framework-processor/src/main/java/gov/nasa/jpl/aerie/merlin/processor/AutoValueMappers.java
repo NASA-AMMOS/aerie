@@ -63,7 +63,7 @@ public class AutoValueMappers {
         ClassName.get((TypeElement) autoValueMapperElement).canonicalName().replace(".", "_"));
   }
 
-  static JavaFile generateAutoValueMappers(final MissionModelRecord missionModel, final Iterable<TypeElement> recordTypes) {
+  static JavaFile generateAutoValueMappers(final MissionModelRecord missionModel, final Iterable<? extends Element> recordTypes) {
     final var typeName = missionModel.getAutoValueMappersName();
 
     final var builder =
@@ -78,7 +78,7 @@ public class AutoValueMappers {
 
     record ComponentMapperNamePair(String componentName, String mapperName) {}
     for (final var record : recordTypes) {
-      final var methodName = ClassName.get(record).canonicalName().replace(".", "_");
+      final var methodName = ClassName.get((TypeElement) record).canonicalName().replace(".", "_");
       final var componentToMapperName = new ArrayList<ComponentMapperNamePair>();
       final var necessaryMappers = new HashMap<TypeMirror, String>();
       for (final var element : record.getEnclosedElements()) {
@@ -112,7 +112,7 @@ public class AutoValueMappers {
                   CodeBlock
                       .builder()
                       .add("return new $T<>($>\n", RecordValueMapper.class)
-                      .add("$T.class,\n", ClassName.get(record))
+                      .add("$T.class,\n", ClassName.get((TypeElement) record))
                       .add("$T.of($>\n", List.class)
                       .add(CodeBlock.join(
                           componentToMapperName
@@ -124,7 +124,7 @@ public class AutoValueMappers {
                                                "new $T<>($>\n" + "$S,\n" + "$T::$L,\n" + "$L" + "$<)",
                                                RecordValueMapper.Component.class,
                                                recordComponent.componentName(),
-                                               ClassName.get(record),
+                                               ClassName.get((TypeElement) record),
                                                recordComponent.componentName(),
                                                recordComponent.mapperName())
                                            .build())

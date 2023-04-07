@@ -39,9 +39,6 @@ public final class MissionModelProcessor implements Processor {
   private final Set<Element> foundActivityTypes = new HashSet<>();
   private final Set<Element> ownedActivityTypes = new HashSet<>();
 
-  private final Set<Element> foundAutoValueMapperRequests = new HashSet<>();
-  private final Set<Element> ownedAutoValueMapperRequests = new HashSet<>();
-
   // Effectively final, late-initialized
   private Messager messager = null;
   private Filer filer = null;
@@ -79,7 +76,6 @@ public final class MissionModelProcessor implements Processor {
   public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     // Accumulate any information added in this round.
     this.foundActivityTypes.addAll(roundEnv.getElementsAnnotatedWith(ActivityType.class));
-    this.foundAutoValueMapperRequests.addAll(roundEnv.getElementsAnnotatedWith(AutoValueMapper.Record.class));
 
     if (!roundEnv.getElementsAnnotatedWith(AutoValueMapper.class).isEmpty()) {
       this.messager.printMessage(
@@ -98,7 +94,6 @@ public final class MissionModelProcessor implements Processor {
       final var packageElement = (PackageElement) element;
       try {
         final var missionModelRecord$ = missionModelParser.parseMissionModel(packageElement);
-        this.ownedAutoValueMapperRequests.addAll(missionModelRecord$.autoValueMapperRequests);
 
         final var generatedFiles = new ArrayList<>(List.of(
             missionModelGen.generateMerlinPlugin(missionModelRecord$),
@@ -115,13 +110,14 @@ public final class MissionModelProcessor implements Processor {
             missionModelGen.generateActivityTypes(missionModelRecord$)
         ));
 
+        final var autoValueMapperRequests = roundEnv.getElementsAnnotatedWith(AutoValueMapper.Record.class);
         final var autoValueMappers = AutoValueMappers.generateAutoValueMappers(
             missionModelRecord$,
-            missionModelRecord$.autoValueMapperRequests);
+            autoValueMapperRequests);
         generatedFiles.add(autoValueMappers);
 
         final var concatenatedTypeRules = new ArrayList<>(missionModelRecord$.typeRules);
-        for (final var request : missionModelRecord$.autoValueMapperRequests) {
+        for (final var request : autoValueMapperRequests) {
           concatenatedTypeRules.add(AutoValueMappers.typeRule(request, missionModelRecord$.getAutoValueMappersName()));
         }
 
@@ -131,8 +127,7 @@ public final class MissionModelProcessor implements Processor {
             missionModelRecord$.expectsPlanStart,
             missionModelRecord$.modelConfigurationType,
             concatenatedTypeRules,
-            missionModelRecord$.activityTypes,
-            missionModelRecord$.autoValueMapperRequests
+            missionModelRecord$.activityTypes
         );
 
         for (final var activityRecord : missionModelRecord.activityTypes) {
@@ -184,26 +179,6 @@ public final class MissionModelProcessor implements Processor {
             Diagnostic.Kind.WARNING,
             "@ActivityType-annotated class is not referenced by any @WithActivity",
             foundActivityType);
-      }
-
-      for (final var foundAutoValueMapperRequest : this.foundAutoValueMapperRequests) {
-        if (this.ownedAutoValueMapperRequests.contains(foundAutoValueMapperRequest)) continue;
-
-        this.messager.printMessage(
-            Diagnostic.Kind.WARNING,
-            "@%s.%s-annotated class is not the return type from any effect model. No value mappper was generated"
-                .formatted(AutoValueMapper.class.getSimpleName(), AutoValueMapper.Record.class.getSimpleName()),
-            foundAutoValueMapperRequest);
-
-
-        if (foundAutoValueMapperRequest.getKind() != ElementKind.RECORD) {
-          this.messager.printMessage(
-              Diagnostic.Kind.WARNING,
-              "@%s.%s is only allowed on records".formatted(
-                  AutoValueMapper.class.getSimpleName(),
-                  AutoValueMapper.Record.class.getSimpleName()),
-              foundAutoValueMapperRequest);
-        }
       }
     }
 

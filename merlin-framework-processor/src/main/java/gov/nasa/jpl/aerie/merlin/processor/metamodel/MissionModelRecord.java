@@ -4,7 +4,6 @@ import com.squareup.javapoet.ClassName;
 
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -15,7 +14,6 @@ public final class MissionModelRecord {
   public final List<TypeRule> typeRules;
   public final List<ActivityTypeRecord> activityTypes;
   public final boolean expectsPlanStart;
-  public final Collection<TypeElement> autoValueMapperRequests;
   public final Optional<InputTypeRecord> modelConfigurationType;
 
   public MissionModelRecord(
@@ -24,8 +22,7 @@ public final class MissionModelRecord {
       final boolean expectsPlanStart,
       final Optional<InputTypeRecord> modelConfigurationType,
       final List<TypeRule> typeRules,
-      final List<ActivityTypeRecord> activityTypes,
-      final Collection<TypeElement> autoValueMapperRequests)
+      final List<ActivityTypeRecord> activityTypes)
   {
     this.$package = Objects.requireNonNull($package);
     this.topLevelModel = Objects.requireNonNull(topLevelModel);
@@ -33,7 +30,6 @@ public final class MissionModelRecord {
     this.modelConfigurationType = Objects.requireNonNull(modelConfigurationType);
     this.typeRules = Objects.requireNonNull(typeRules);
     this.activityTypes = Objects.requireNonNull(activityTypes);
-    this.autoValueMapperRequests = Objects.requireNonNull(autoValueMapperRequests);
   }
 
   public ClassName getMerlinPluginName() {
