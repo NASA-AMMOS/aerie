@@ -14,7 +14,6 @@ import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.AutoValueMapper;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -22,16 +21,16 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 public class AutoValueMappers {
+  private static final Pattern JAVA_IDENTIFIER_ILLEGAL_CHARACTERS = Pattern.compile("[.><,\\[\\]]");
+
   static TypeRule typeRule(final Element autoValueMapperElement, final ClassName generatedClassName) throws InvalidMissionModelException {
     if (!autoValueMapperElement.getKind().equals(ElementKind.RECORD)) {
       throw new InvalidMissionModelException(
@@ -57,7 +56,7 @@ public class AutoValueMappers {
             .stream()
             .map(component -> (TypePattern) new TypePattern.ClassPattern(
                 ClassName.get(ValueMapper.class),
-                List.of(new TypePattern.ClassPattern((ClassName) ClassName.get(component).box(), List.of()))))
+                List.of(TypePattern.from(component).box())))
             .toList(),
         generatedClassName,
         ClassName.get((TypeElement) autoValueMapperElement).canonicalName().replace(".", "_"));
@@ -85,7 +84,10 @@ public class AutoValueMappers {
         if (!(element instanceof RecordComponentElement el)) continue;
         final var typeMirror = el.getAccessor().getReturnType();
         final var elementName = element.toString();
-        final var valueMapperIdentifier = typeMirror.toString().replace(".", "_") + "ValueMapper";
+        final var valueMapperIdentifier = JAVA_IDENTIFIER_ILLEGAL_CHARACTERS
+                                              .matcher(typeMirror.toString())
+                                              .replaceAll("_")
+                                          + "ValueMapper";
         componentToMapperName.add(new ComponentMapperNamePair(elementName, valueMapperIdentifier));
         necessaryMappers.put(typeMirror, valueMapperIdentifier);
       }

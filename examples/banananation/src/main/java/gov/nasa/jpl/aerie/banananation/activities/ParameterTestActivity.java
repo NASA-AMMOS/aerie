@@ -98,6 +98,9 @@ public final class ParameterTestActivity {
   @Parameter
   public List<Map<String[][], Map<Integer, List<Float>[]>>> obnoxious;
 
+  @Parameter
+  public RecordParameter record;
+
   public ParameterTestActivity() {
     this.boxedDouble = 6.282;
     this.boxedFloat = 3.236f;
@@ -225,5 +228,67 @@ public final class ParameterTestActivity {
             )
     );
     this.obnoxious = obnoxious;
+
+    this.record = new RecordParameter(
+        this.primitiveDouble,
+        this.primitiveFloat,
+        this.primitiveByte,
+        this.primitiveShort,
+        this.primitiveInt,
+        this.primitiveLong,
+        this.primitiveChar,
+        this.primitiveBoolean,
+        this.boxedDouble,
+        this.boxedFloat,
+        this.boxedByte,
+        this.boxedShort,
+        this.boxedInt,
+        this.boxedLong,
+        this.boxedChar,
+        this.boxedBoolean,
+        this.string,
+        this.doubleArray,
+        this.floatArray,
+        this.byteArray,
+        this.shortArray,
+        this.intArray,
+        this.longArray,
+        this.charArray,
+        this.booleanArray,
+        this.stringArray,
+        this.primDoubleArray,
+        this.primFloatArray,
+        this.primByteArray,
+        this.primShortArray,
+        this.primIntArray,
+        this.primLongArray,
+        this.primCharArray,
+        this.primBooleanArray,
+        this.doubleList,
+        this.floatList,
+        this.byteList,
+        this.shortList,
+        this.intList,
+        this.longList,
+        this.charList,
+        this.booleanList,
+        this.stringList,
+        this.doubleMap,
+        this.floatMap,
+        this.byteMap,
+        this.shortMap,
+        this.intMap,
+        this.longMap,
+        this.charMap,
+        this.booleanMap,
+        this.stringMap,
+        this.testDuration,
+        RecordParameter.Tenum.valueOf(this.testEnum.name()),
+        this.mappyBoi,
+        this.doublePrimIntArray,
+        this.intListArrayArray,
+        this.obnoxious,
+        new RecordParameter.Nested("", Map.of())
+    );
   }
 }
