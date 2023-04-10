@@ -243,8 +243,6 @@ const gql = {
             arguments
             description
             id
-            simulation_start_time
-            simulation_end_time
           }
         }
         startTime: start_time
@@ -265,17 +263,6 @@ const gql = {
       update_simulation_by_pk(pk_columns: {id: $simulation_id}, _set: {simulation_template_id: $simulation_template_id}) {
         simulation_template_id
       }
-    }
-  `,
-
-  UPDATE_SIMULATION_TEMPLATE_BOUNDS: `#graphql
-    mutation updateSimulationTemplateBounds($simulation_template_id: Int!, $simulation_start_time: timestamptz!, $simulation_end_time: timestamptz!) {
-      update_simulation_template_by_pk(pk_columns: {id: $simulation_template_id},
-      _set: {
-        simulation_start_time: $simulation_start_time,
-        simulation_end_time: $simulation_end_time}) {
-        id
-       }
     }
   `,
 
