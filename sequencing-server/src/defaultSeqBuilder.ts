@@ -48,14 +48,14 @@ export const defaultSeqBuilder: SeqBuilder = (
 // Order commands by time in expanded sequences.
 function sortCommandsByTime(commands: CommandStem<{} | []>[]): CommandStem<{} | []>[] {
   const relativeTimeTracker: Record<string, Temporal.Instant> = {};
-  let previousAbsoluteTimestamp: Temporal.Instant | undefined = undefined;
+  let previousAbsoluteTimestamp: Temporal.Instant | null = null;
 
   for (const command of commands) {
     // If the command is epoch-relative, complete, or the first command and relative then short circuit and don't try and sort.
     if (
-      command.epochTime ||
-      (!command.absoluteTime && !command.epochTime && !command.relativeTime) ||
-      (command.relativeTime && commands.indexOf(command) === 0)
+      command.epochTime !== null ||
+      (command.absoluteTime === null && command.epochTime === null && command.relativeTime === null) ||
+      (command.relativeTime !== null && commands.indexOf(command) === 0)
     ) {
       return commands;
     }
@@ -63,7 +63,7 @@ function sortCommandsByTime(commands: CommandStem<{} | []>[]): CommandStem<{} | 
     // Keep track of the previously seen absolute time so we can convert the next relative timestamp we come across.
     if (command.absoluteTime !== null) {
       previousAbsoluteTimestamp = command.absoluteTime;
-    } else if (command.relativeTime !== null && previousAbsoluteTimestamp !== undefined) {
+    } else if (command.relativeTime !== null && previousAbsoluteTimestamp !== null) {
       relativeTimeTracker[command.stem + command.relativeTime?.toString()] = previousAbsoluteTimestamp.add(
         command.relativeTime,
       );
