@@ -199,7 +199,7 @@ seqjsonRouter.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, 
     return next();
   }
 
-  const sortedActivityInstances = (simulatedActivities as Exclude<(typeof simulatedActivities)[number], Error>[]).sort(
+  const sortedActivityInstances = (simulatedActivities as Exclude<typeof simulatedActivities[number], Error>[]).sort(
     (a, b) => Temporal.Duration.compare(a.startOffset, b.startOffset),
   );
 
@@ -215,7 +215,7 @@ seqjsonRouter.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, 
     }
     return {
       ...ai,
-      commands: row.commands?.map(CommandStem.fromSeqJson) ?? null,
+      commands: row.commands?.map(c => CommandStem.fromSeqJson(c)) ?? null,
       errors: row.errors,
     };
   });
@@ -359,7 +359,7 @@ seqjsonRouter.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (
       }
 
       const sortedActivityInstances = (
-        simulatedActivitiesForSeqId as Exclude<(typeof simulatedActivitiesLoadErrors)[number], Error>[]
+        simulatedActivitiesForSeqId as Exclude<typeof simulatedActivitiesLoadErrors[number], Error>[]
       ).sort((a, b) => Temporal.Instant.compare(a.startTime, b.startTime));
 
       const sortedSimulatedActivitiesWithCommands = sortedActivityInstances.map(ai => {
@@ -374,7 +374,7 @@ seqjsonRouter.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (
         }
         return {
           ...ai,
-          commands: row.commands?.map(CommandStem.fromSeqJson) ?? null,
+          commands: row.commands?.map(c => CommandStem.fromSeqJson(c)) ?? null,
           errors: row.errors,
         };
       });
