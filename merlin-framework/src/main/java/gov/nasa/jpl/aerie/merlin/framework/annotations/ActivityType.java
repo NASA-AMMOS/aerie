@@ -27,6 +27,26 @@ public @interface ActivityType {
     Executor value() default Executor.Threaded;
   }
 
+  /**
+   * Apply to the effect model when the activity has a parameter that sets the activity's duration.
+   *
+   * Apply like the following:
+   *
+   * <pre>{@code
+   * @ActivityType("ControllableDurationActivity")
+   * public record ControllableDurationActivity(Duration duration) {
+   *
+   *   @EffectModel
+   *   @ActivityType.ControllableDuration(parameterName = "duration")
+   *   public void run(Mission mission) {
+   *     delay(duration);
+   *   }
+   * }
+   * }</pre>
+   *
+   * Keep in mind that it is not enough for the activity duration to be *determined* by the duration parameter.
+   * They must be exactly equal as above.
+   */
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.METHOD)
   @interface ControllableDuration {
@@ -40,6 +60,38 @@ public @interface ActivityType {
    * that returns {@link Duration}. For correctness, it is recommended that you use the field or method
    * in the effect model to ensure that the duration is what you say it is - the duration is verified
    * by the scheduler, but only after a (potentially expensive) simulation.
+   *
+   * Apply either like the following on a static field:
+   *
+   * <pre>{@code
+   * @ActivityType("FixedDurationActivity")
+   * public record FixedDurationActivity() {
+   *   @FixedDuration
+   *   public static final Duration DURATION = Duration.HOUR;
+   *
+   *   @EffectModel
+   *   public void run(Mission mission) {
+   *     delay(DURATION);
+   *   }
+   * }
+   * }</pre>
+   *
+   * Or like the following on a static method:
+   *
+   * <pre>{@code
+   * @ActivityType("FixedDurationActivity")
+   * public record FixedDurationActivity() {
+   *   @FixedDuration
+   *   public static Duration duration() {
+   *     return Duration.HOUR;
+   *   }
+   *
+   *   @EffectModel
+   *   public void run(Mission mission) {
+   *     delay(duration());
+   *   }
+   * }
+   * }</pre>
    *
    * This annotation is optional, but it is highly recommended if applicable. The scheduler will assume
    * your activity has an uncontrollable variable duration if no duration annotation is present, which
