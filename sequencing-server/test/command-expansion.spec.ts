@@ -16,8 +16,8 @@ import {
 } from './testUtils/Expansion.js';
 import { removeMissionModel, uploadMissionModel } from './testUtils/MissionModel.js';
 import { createPlan, removePlan } from './testUtils/Plan.js';
-import {executeSimulation, removeSimulationArtifacts, updateSimulationBounds} from './testUtils/Simulation.js';
-import {waitMs} from "./testUtils/testUtils";
+import { executeSimulation, removeSimulationArtifacts, updateSimulationBounds } from './testUtils/Simulation.js';
+import { waitMs } from './testUtils/testUtils';
 
 let planId: number;
 let graphqlClient: GraphQLClient;
@@ -28,7 +28,11 @@ beforeEach(async () => {
   graphqlClient = new GraphQLClient(process.env['MERLIN_GRAPHQL_URL'] as string);
   missionModelId = await uploadMissionModel(graphqlClient);
   planId = await createPlan(graphqlClient, missionModelId);
-  await updateSimulationBounds(graphqlClient, {plan_id: planId, simulation_start_time:"2020-001T00:00:00Z", simulation_end_time:"2020-002T00:00:00Z" });
+  await updateSimulationBounds(graphqlClient, {
+    plan_id: planId,
+    simulation_start_time: '2020-001T00:00:00Z',
+    simulation_end_time: '2020-002T00:00:00Z',
+  });
   commandDictionaryId = await insertCommandDictionary(graphqlClient);
 });
 
@@ -122,7 +126,7 @@ describe('expansion', () => {
     await removeExpansionRun(graphqlClient, expansionRunPk);
     await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
     await removeExpansionSet(graphqlClient, expansionSetId);
-  });
+  }, 30000);
 
   it('should throw an error if an activity instance goes beyond the plan duration', async () => {
     /** Begin Setup*/
@@ -263,5 +267,5 @@ describe('expansion', () => {
     await removeExpansion(graphqlClient, expansionId);
     await removeExpansionSet(graphqlClient, expansionSetId);
     await removeExpansionRun(graphqlClient, expansionRunId);
-  }, 10000);
+  }, 30000);
 });

@@ -219,36 +219,24 @@ describe('getEdslForSeqJson', () => {
       },
     );
 
-    expect(res.getEdslForSeqJson).toEqual(`export default () =>
+    expect(res.getEdslForSeqJson).toEqual(`const LOCALS = BUILD_LOCALS(
+  VARIABLE('duration','UINT')
+  .ALLOWABLE_RANGES([{ min: 1, max: 3600 }])
+)
+
+const PARAMETERS = BUILD_PARAMETERS(
+  VARIABLE('duration','UINT')
+  .ALLOWABLE_RANGES([{ min: 1, max: 3600 }])
+)
+
+export default () =>
   Sequence.new({
     seqId: 'banana1001.0000a',
     metadata: {
       author: 'rrgoetz',
     },
-    locals: [
-      {
-        allowable_ranges: [
-          {
-            max: 3600,
-            min: 1,
-          },
-        ],
-        name: 'duration',
-        type: 'UINT',
-      }
-    ],
-    parameters: [
-      {
-        allowable_ranges: [
-          {
-            max: 3600,
-            min: 1,
-          },
-        ],
-        name: 'duration',
-        type: 'UINT',
-      }
-    ],
+    locals: MAP_VARIABLES(LOCALS),
+    parameters: MAP_VARIABLES(PARAMETERS),
     hardware_commands: [
       HDW_PYRO_ENGINE
       .DESCRIPTION('FIRE THE PYROS')
@@ -295,6 +283,96 @@ describe('getEdslForSeqJson', () => {
           author: 'rrgoetz',
         },
       }
+    ],
+  });`);
+  });
+
+  it('should return errors in edsl', async () => {
+    const res = await graphqlClient.request<{
+      getEdslForSeqJson: string;
+    }>(
+      gql`
+        query GetEdslForSeqJson($seqJson: SequenceSeqJson!) {
+          getEdslForSeqJson(seqJson: $seqJson)
+        }
+      `,
+      {
+        seqJson: {
+          id: '',
+          locals: [
+            {
+              name: 'temp',
+              type: 'FLOAT',
+            },
+          ],
+          metadata: {},
+          parameters: [
+            {
+              name: 'sugar',
+              type: 'INT',
+            },
+          ],
+          steps: [
+            {
+              args: [
+                {
+                  name: 'temperature',
+                  type: 'symbol',
+                  value: 'temp',
+                },
+              ],
+              stem: 'PREHEAT_OVEN',
+              time: {
+                type: 'COMMAND_COMPLETE',
+              },
+              type: 'command',
+            },
+            {
+              args: [
+                {
+                  name: 'tb_sugar',
+                  type: 'symbol',
+                  value: 'sugarrrrr',
+                },
+                {
+                  name: 'gluten_free',
+                  type: 'string',
+                  value: 'FALSE',
+                },
+              ],
+              stem: 'PREPARE_LOAF',
+              time: {
+                type: 'COMMAND_COMPLETE',
+              },
+              type: 'command',
+            },
+          ],
+        },
+      },
+    );
+
+    expect(res.getEdslForSeqJson).toEqual(`const LOCALS = BUILD_LOCALS(
+  VARIABLE('temp','FLOAT')
+)
+
+const PARAMETERS = BUILD_PARAMETERS(
+  VARIABLE('sugar','INT')
+)
+
+export default () =>
+  Sequence.new({
+    seqId: '',
+    metadata: {},
+    locals: MAP_VARIABLES(LOCALS),
+    parameters: MAP_VARIABLES(PARAMETERS),
+    steps: [
+      C.PREHEAT_OVEN({
+        temperature: LOCALS.temp,
+      }),
+      C.PREPARE_LOAF({
+        tb_sugar: UNKNOWN.sugarrrrr //ERROR: Variable 'sugarrrrr' is not defined as a local or parameter,
+        gluten_free: 'FALSE',
+      }),
     ],
   });`);
   });

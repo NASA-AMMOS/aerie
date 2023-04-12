@@ -10,6 +10,7 @@ import {
   Ground_Event,
   Ground_Block,
   ImmediateStem,
+  VARIABLE,
 } from './CommandEDSLPreface';
 
 describe('Command', () => {
@@ -160,6 +161,25 @@ describe('Command', () => {
           '})',
       );
     });
+
+    it('should convert to EDSL string from Variable', () => {
+      const local = VARIABLE('temp', 'FLOAT');
+      expect(local.toSeqJson()).toEqual({ name: 'temp', type: 'FLOAT' });
+    });
+
+    it('should convert to EDSL string from Command with Local/Parameter arguments', () => {
+      const local = VARIABLE('temp', 'FLOAT');
+      const command = CommandStem.new({
+        arguments: [{ temperature: local }],
+        stem: 'PREHEAT_OVEN',
+      });
+      expect(command.toSeqJson()).toEqual({
+        args: [{ name: 'temperature', type: 'symbol', value: 'temp' }],
+        stem: 'PREHEAT_OVEN',
+        time: { type: 'COMMAND_COMPLETE' },
+        type: 'command',
+      });
+    });
   });
 });
 
@@ -231,9 +251,13 @@ describe('Sequence', () => {
     });
 
     it('should convert with commands', () => {
+      const local = VARIABLE('temp', 'FLOAT');
+      const parameter = VARIABLE('duration', 'ENUM').ENUM_NAME('POSSIBLE_DURATION');
       const sequence = Sequence.new({
         seqId: 'test',
         metadata: {},
+        locals: [local],
+        parameters: [parameter],
         steps: [
           CommandStem.new({
             stem: 'TEST',
@@ -251,13 +275,35 @@ describe('Sequence', () => {
           }).METADATA({
             author: 'XXXXXXXXXXXXXXXXXXXXXXXXXX',
           }),
+          CommandStem.new({
+            stem: 'TEST',
+            arguments: {
+              temperature: local,
+              duration: parameter,
+            },
+
+            absoluteTime: doyToInstant('2021-001T00:00:00.000' as DOY_STRING),
+          }).METADATA({
+            author: 'ZZZZ',
+          }),
         ],
       });
 
-      expect(sequence.toEDSLString()).toEqual(`export default () =>
+      expect(sequence.toEDSLString()).toEqual(`const LOCALS = BUILD_LOCALS(
+  VARIABLE('temp','FLOAT')
+)
+
+const PARAMETERS = BUILD_PARAMETERS(
+  VARIABLE('duration','ENUM')
+  .ENUM_NAME('POSSIBLE_DURATION')
+)
+
+export default () =>
   Sequence.new({
     seqId: 'test',
     metadata: {},
+    locals: MAP_VARIABLES(LOCALS),
+    parameters: MAP_VARIABLES(PARAMETERS),
     steps: [
       A\`2020-001T00:00:00.000\`.TEST('string', 0, true),
       A\`2020-001T00:00:00.000\`.TEST({
@@ -267,6 +313,13 @@ describe('Sequence', () => {
       })
       .METADATA({
         author: 'XXXXXXXXXXXXXXXXXXXXXXXXXX',
+      }),
+      A\`2021-001T00:00:00.000\`.TEST({
+        temperature: LOCALS.temp,
+        duration: LOCALS.duration,
+      })
+      .METADATA({
+        author: 'ZZZZ',
       }),
     ],
   });`);

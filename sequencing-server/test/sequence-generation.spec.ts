@@ -133,6 +133,88 @@ describe('sequence generation', () => {
     await removeExpansion(graphqlClient, expansionId3);
   });
 
+  it('should provide start, end, and computed attributes on activities', async () => {
+    // Setup
+
+    const activityId = await insertActivityDirective(graphqlClient, planId, 'BakeBananaBread', '1 hours', {
+      tbSugar: 1,
+      glutenFree: false,
+      temperature: 350,
+    });
+    const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
+    const expansionId = await insertExpansion(
+      graphqlClient,
+      'BakeBananaBread',
+      `
+    export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+      return [
+        A(props.activityInstance.startTime).BAKE_BREAD,
+        A(props.activityInstance.endTime).BAKE_BREAD,
+        C.ECHO({ echo_string: "Computed attributes: " + props.activityInstance.attributes.computed }),
+      ];
+    }
+    `,
+    );
+
+    const expansionSet0Id = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
+    await expand(graphqlClient, expansionSet0Id, simulationArtifactPk.simulationDatasetId);
+    const sequencePk = await insertSequence(graphqlClient, {
+      seqId: 'test00000',
+      simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+    });
+    await linkActivityInstance(graphqlClient, sequencePk, activityId);
+
+    const simulatedActivityId3 = await convertActivityDirectiveIdToSimulatedActivityId(
+      graphqlClient,
+      simulationArtifactPk.simulationDatasetId,
+      activityId,
+    );
+
+    const getSequenceSeqJsonResponse = await getSequenceSeqJson(
+      graphqlClient,
+      'test00000',
+      simulationArtifactPk.simulationDatasetId,
+    );
+
+    if (getSequenceSeqJsonResponse.status !== FallibleStatus.SUCCESS) {
+      throw getSequenceSeqJsonResponse.errors;
+    }
+
+    expect(getSequenceSeqJsonResponse.seqJson.id).toBe('test00000');
+    expect(getSequenceSeqJsonResponse.seqJson.metadata).toEqual({
+      planId: planId,
+      simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+    });
+    expect(getSequenceSeqJsonResponse.seqJson.steps).toEqual([
+      {
+        type: 'command',
+        stem: 'BAKE_BREAD',
+        time: { type: TimingTypes.ABSOLUTE, tag: '2020-001T01:00:00.000' },
+        args: [],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'BAKE_BREAD',
+        time: { type: TimingTypes.ABSOLUTE, tag: '2020-001T01:00:00.000' },
+        args: [],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+      {
+        type: 'command',
+        stem: 'ECHO',
+        time: { type: 'COMMAND_COMPLETE' },
+        args: [{ name: 'echo_string', type: 'string', value: 'Computed attributes: 198' }],
+        metadata: { simulatedActivityId: simulatedActivityId3 },
+      },
+    ]);
+
+    // Cleanup
+    {
+      await removeSequence(graphqlClient, sequencePk);
+    }
+  }, 30000);
+
   it('should return sequence seqjson', async () => {
     /** Begin Setup */
     // Create Expansion Set
@@ -2965,88 +3047,6 @@ describe('sequence generation', () => {
   });
 });
 
-it('should provide start, end, and computed attributes on activities', async () => {
-  // Setup
-
-  const activityId = await insertActivityDirective(graphqlClient, planId, 'BakeBananaBread', '1 hours', {
-    tbSugar: 1,
-    glutenFree: false,
-    temperature: 350,
-  });
-  const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
-  const expansionId = await insertExpansion(
-    graphqlClient,
-    'BakeBananaBread',
-    `
-    export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
-      return [
-        A(props.activityInstance.startTime).BAKE_BREAD,
-        A(props.activityInstance.endTime).BAKE_BREAD,
-        C.ECHO({ echo_string: "Computed attributes: " + props.activityInstance.attributes.computed }),
-      ];
-    }
-    `,
-  );
-
-  const expansionSet0Id = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
-  await expand(graphqlClient, expansionSet0Id, simulationArtifactPk.simulationDatasetId);
-  const sequencePk = await insertSequence(graphqlClient, {
-    seqId: 'test00000',
-    simulationDatasetId: simulationArtifactPk.simulationDatasetId,
-  });
-  await linkActivityInstance(graphqlClient, sequencePk, activityId);
-
-  const simulatedActivityId3 = await convertActivityDirectiveIdToSimulatedActivityId(
-    graphqlClient,
-    simulationArtifactPk.simulationDatasetId,
-    activityId,
-  );
-
-  const getSequenceSeqJsonResponse = await getSequenceSeqJson(
-    graphqlClient,
-    'test00000',
-    simulationArtifactPk.simulationDatasetId,
-  );
-
-  if (getSequenceSeqJsonResponse.status !== FallibleStatus.SUCCESS) {
-    throw getSequenceSeqJsonResponse.errors;
-  }
-
-  expect(getSequenceSeqJsonResponse.seqJson.id).toBe('test00000');
-  expect(getSequenceSeqJsonResponse.seqJson.metadata).toEqual({
-    planId: planId,
-    simulationDatasetId: simulationArtifactPk.simulationDatasetId,
-  });
-  expect(getSequenceSeqJsonResponse.seqJson.steps).toEqual([
-    {
-      type: 'command',
-      stem: 'BAKE_BREAD',
-      time: { type: TimingTypes.ABSOLUTE, tag: '2020-001T01:00:00.000' },
-      args: [],
-      metadata: { simulatedActivityId: simulatedActivityId3 },
-    },
-    {
-      type: 'command',
-      stem: 'BAKE_BREAD',
-      time: { type: TimingTypes.ABSOLUTE, tag: '2020-001T01:00:00.000' },
-      args: [],
-      metadata: { simulatedActivityId: simulatedActivityId3 },
-    },
-    {
-      type: 'command',
-      stem: 'ECHO',
-      time: { type: 'COMMAND_COMPLETE' },
-      args: [{ name: 'echo_string', type: 'string', value: 'Computed attributes: 198' }],
-      metadata: { simulatedActivityId: simulatedActivityId3 },
-    },
-  ]);
-
-  // Cleanup
-  {
-    await removeSequence(graphqlClient, sequencePk);
-  }
-}, 30000);
-
 describe('user sequence to seqjson', () => {
   it('generate sequence seqjson from static sequence', async () => {
     var results = await generateSequenceEDSL(
@@ -3563,6 +3563,64 @@ describe('user sequence to seqjson', () => {
           },
         ],
         type: 'request',
+      },
+    ]);
+  }, 30000);
+});
+
+describe('user sequence generation errors', () => {
+  it('should output ERRORS for Local and Parameters', async () => {
+    var results = await generateSequenceEDSL(
+      graphqlClient,
+      commandDictionaryId,
+      `
+      const LOCALS = BUILD_LOCALS(
+  VARIABLE('temperature','STRING').ENUM_NAME('TEMPERATURE_ARRAY'),
+)
+
+const PARAMETERS = BUILD_PARAMETERS(
+  VARIABLE('arm_position','ENUM').ALLOWABLE_RANGES([{min: 1, max: 2}]),
+  VARIABLE('arm_rotation','STRING').ALLOWABLE_RANGES([{min: 1, max: 2}])
+)
+
+export default () =>
+  Sequence.new({
+    seqId: '',
+    metadata: {},
+    locals: MAP_VARIABLES(LOCALS),
+    parameters: MAP_VARIABLES(PARAMETERS),
+  });
+    `,
+    );
+
+    expect(results.locals).toEqual([
+      {
+        enum_name: 'TEMPERATURE_ARRAY',
+        name: "$$ERROR$$: 'enum_name: TEMPERATURE_ARRAY' is not required for non-ENUM type.",
+        type: 'STRING',
+      },
+    ]);
+
+    expect(results.parameters).toEqual([
+      {
+        allowable_ranges: [
+          {
+            max: 2,
+            min: 1,
+          },
+        ],
+        name: "$$ERROR$$: 'enum_name' is required for ENUM type.",
+        type: 'ENUM',
+      },
+      {
+        allowable_ranges: [
+          {
+            max: 2,
+            min: 1,
+          },
+        ],
+        name: "$$ERROR$$: 'allowable_ranges' is not required for STRING type.",
+        type: 'STRING',
       },
     ]);
   }, 30000);
