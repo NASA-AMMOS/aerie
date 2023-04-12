@@ -21,7 +21,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 
@@ -233,7 +232,7 @@ public class SimulationFacade implements AutoCloseable{
       final var durationType = activity.getType().getDurationType();
       if (durationType instanceof DurationType.Controllable dt) {
         arguments.put(dt.parameterName(), SerializedValue.of(activity.duration().in(Duration.MICROSECONDS)));
-      } else if (durationType instanceof DurationType.Uncontrollable) {
+      } else if (durationType instanceof DurationType.Uncontrollable || durationType instanceof DurationType.Fixed) {
         // If an activity has already been simulated, it will have a duration, even if its DurationType is Uncontrollable.
       } else {
         throw new Error("Unhandled variant of DurationType: " + durationType);

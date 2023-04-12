@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler.constraints.activities;
 
-import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.EvaluationEnvironment;
 import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.time.Interval;
@@ -11,7 +10,6 @@ import gov.nasa.jpl.aerie.constraints.tree.DurationLiteral;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DurationType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.scheduler.EquationSolvingAlgorithms;
 import gov.nasa.jpl.aerie.scheduler.NotNull;
 import gov.nasa.jpl.aerie.scheduler.model.SchedulingActivityDirective;
@@ -341,14 +339,17 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
           type);
 
       final var durationParameterName = dt.parameterName();
-        //handle variable duration parameter here
+      //handle variable duration parameter here
       final Duration setActivityDuration;
       if (instantiatedArguments.containsKey(durationParameterName)) {
-        final var argumentDuration = Duration.of(instantiatedArguments.get(durationParameterName).asInt().get(), Duration.MICROSECOND);
+        final var argumentDuration = Duration.of(
+            instantiatedArguments.get(durationParameterName).asInt().get(),
+            Duration.MICROSECOND);
         if (solved.duration().contains(argumentDuration)) {
           setActivityDuration = argumentDuration;
-        } else{
-          logger.debug("Controllable duration set by user is incompatible with temporal constraints associated to the activity template");
+        } else {
+          logger.debug(
+              "Controllable duration set by user is incompatible with temporal constraints associated to the activity template");
           return Optional.empty();
         }
       } else {
@@ -369,7 +370,25 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
           null,
           null,
           true));
-    } else{
+    } else if (this.type.getDurationType() instanceof DurationType.Fixed dt) {
+      //select earliest start time, STN guarantees satisfiability
+      final var earliestStart = solved.start().start;
+
+      // TODO: When scheduling is allowed to create activities with anchors, this constructor should pull from an expanded creation template
+      return Optional.of(SchedulingActivityDirective.of(
+          type,
+          earliestStart,
+          dt.duration(),
+          SchedulingActivityDirective.instantiateArguments(
+              this.arguments,
+              earliestStart,
+              facade.getLatestConstraintSimulationResults(),
+              evaluationEnvironment,
+              type),
+          null,
+          null,
+          true));
+    } else {
      throw new UnsupportedOperationException("Duration type other than Uncontrollable and Controllable are not suppoerted");
     }
   }

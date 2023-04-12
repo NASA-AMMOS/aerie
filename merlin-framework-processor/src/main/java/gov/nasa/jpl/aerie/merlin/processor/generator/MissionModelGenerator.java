@@ -298,8 +298,11 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                                       DurationType.class,
                                                       activityTypeRecord
                                                           .effectModel()
-                                                          .flatMap(EffectModelRecord::durationParameter)
-                                                          .map(durationParameter -> CodeBlock.of("controllable(\"$L\")", durationParameter))
+                                                          .map($ -> {
+                                                            if ($.durationParameter().isPresent()) return CodeBlock.of("controllable(\"$L\")", $.durationParameter().get());
+                                                            else if ($.fixedDurationExpr().isPresent()) return CodeBlock.of("fixed($L.$L)", activityTypeRecord.fullyQualifiedClass(), $.fixedDurationExpr().get());
+                                                            else return CodeBlock.of("uncontrollable()");
+                                                          })
                                                           .orElse(CodeBlock.of("uncontrollable()"))))
                             .reduce((x, y) -> x.add("$L", y.build()))
                             .orElse(CodeBlock.builder()).build())

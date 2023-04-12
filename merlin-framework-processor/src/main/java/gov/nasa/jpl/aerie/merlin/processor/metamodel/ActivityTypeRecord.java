@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public record ActivityTypeRecord(
+    String fullyQualifiedClass,
     String name,
     InputTypeRecord inputType,
     Optional<EffectModelRecord> effectModel
