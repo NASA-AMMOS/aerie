@@ -400,7 +400,7 @@ public class SchedulingIntegrationTests {
     final var growBananas = planByActivityType.get("GrowBanana");
     assertEquals(1, biteBananas.size());
     assertEquals(2, growBananas.size());
-    final var iterator = growBananas.iterator();
+    final var iterator = growBananas.stream().sorted(Comparator.comparing(ActivityDirective::startOffset)).iterator();
     iterator.next();
     final var created = iterator.next();
 
