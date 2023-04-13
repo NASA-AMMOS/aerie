@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -18,9 +17,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           t.model_id,
           t.revision,
           t.description,
-          t.arguments,
-          to_char(t.simulation_start_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as simulation_start_time,
-          to_char(t.simulation_end_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as simulation_end_time
+          t.arguments
       from simulation_template as t
       where t.id = ?
     """;
@@ -46,11 +43,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
               failureReason -> new Error("Corrupt simulation template arguments cannot be parsed: "
                                          + failureReason.reason())
           );
-      final String simStartString = results.getString("simulation_start_time");
-      final String simEndString = results.getString("simulation_end_time");
-      final var simStartTime = simStartString == null ? null : Timestamp.fromString(simStartString);
-      final var simEndTime = simEndString == null ? null : Timestamp.fromString(simEndString);
-      return Optional.of(new SimulationTemplateRecord(simulationTemplateId, revision, modelId, description, arguments, simStartTime, simEndTime));
+      return Optional.of(new SimulationTemplateRecord(simulationTemplateId, revision, modelId, description, arguments));
   }
 
   @Override

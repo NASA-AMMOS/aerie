@@ -82,8 +82,8 @@ public final class PostgresPlanRepository implements PlanRepository {
 
       final var activities = getPlanActivities(connection, planId);
       final var arguments = getSimulationArguments(simulationRecord, templateRecord);
-      final var simStartTime = getSimStartTime(simulationRecord, templateRecord);
-      final var simEndTime = getSimEndTime(simulationRecord, templateRecord);
+      final var simStartTime = simulationRecord.simulationStartTime();
+      final var simEndTime = simulationRecord.simulationEndTime();
 
       return new Plan(
           planRecord.name(),
@@ -153,30 +153,6 @@ public final class PostgresPlanRepository implements PlanRepository {
 
     arguments.putAll(simulationRecord.arguments());
     return arguments;
-  }
-
-    private Timestamp getSimStartTime(SimulationRecord simulationRecord, Optional<SimulationTemplateRecord> templateRecord) {
-    final var templateId = simulationRecord.simulationTemplateId();
-    if(simulationRecord.simulationStartTime() != null) return simulationRecord.simulationStartTime();
-
-    if(templateId.isPresent()){
-      if(templateRecord.isEmpty()) throw new RuntimeException("TemplateRecord should not be empty");
-      if(templateRecord.get().simulationStartTime() != null) return templateRecord.get().simulationStartTime();
-      throw new RuntimeException("Either \"simulationRecord\" or \"templateRecord\" must define \"simulationStartTime\".");
-    }
-    throw new RuntimeException("\"simulationRecord\" must either define \"simulationStartTime\" or have a \"simulationTemplateId\".");
-  }
-
-  private Timestamp getSimEndTime(SimulationRecord simulationRecord, Optional<SimulationTemplateRecord> templateRecord) {
-    final var templateId = simulationRecord.simulationTemplateId();
-    if(simulationRecord.simulationEndTime() != null) return simulationRecord.simulationEndTime();
-
-    if(templateId.isPresent()){
-      if(templateRecord.isEmpty()) throw new RuntimeException("TemplateRecord should not be empty");
-      if(templateRecord.get().simulationEndTime() != null) return templateRecord.get().simulationEndTime();
-      throw new RuntimeException("Either \"simulationRecord\" or \"templateRecord\" must define \"simulationEndTime\".");
-    }
-    throw new RuntimeException("\"simulationRecord\" must either define \"simulationEndTime\" or have a \"simulationTemplateId\".");
   }
 
   @Override

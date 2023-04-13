@@ -49,10 +49,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           .getSuccessOrThrow(
               failureReason -> new Error("Corrupt simulation arguments cannot be parsed: " + failureReason.reason())
           );
-      final String simStartString = results.getString("simulation_start_time");
-      final String simEndString = results.getString("simulation_end_time");
-      final var simulationStartTime = simStartString == null ? null : Timestamp.fromString(simStartString);
-      final var simulationEndTime = simEndString == null ? null : Timestamp.fromString(simEndString);
+      final var simulationStartTime = Timestamp.fromString(results.getString("simulation_start_time"));
+      final var simulationEndTime = Timestamp.fromString(results.getString("simulation_end_time"));
       return new SimulationRecord(id, revision, planId, templateId$, arguments, simulationStartTime, simulationEndTime);
   }
 

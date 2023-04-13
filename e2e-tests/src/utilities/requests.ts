@@ -146,7 +146,7 @@ const req = {
     return simulation_dataset[0] as SimulationDataset;
   },
 
-  async insertAndAssociateSimulationTemplate(request: APIRequestContext, template: InsertSimulationTemplateInput,simulationId: number){
+  async insertAndAssociateSimulationTemplate(request: APIRequestContext, template: InsertSimulationTemplateInput, simulationId: number){
     const data = await req.hasura(request, gql.INSERT_SIMULATION_TEMPLATE, {simulationTemplateInsertInput: template} );
     const {insert_simulation_template_one} = data;
     const {id: template_id} = insert_simulation_template_one;
@@ -159,13 +159,6 @@ const req = {
     const data = await req.hasura(request, gql.UPDATE_SIMULATION_BOUNDS, {plan_id: plan_id, simulation_start_time: simulation_start_time, simulation_end_time: simulation_end_time});
     const {update_simulation} = data;
     const {id} = update_simulation
-    return id;
-  },
-
-  async updateSimulationTemplateBounds(request: APIRequestContext, templateBounds: UpdateSimulationTemplateBoundsInput) {
-    const {simulation_template_id, simulation_start_time, simulation_end_time} = templateBounds;
-    const data = await req.hasura(request, gql.UPDATE_SIMULATION_TEMPLATE_BOUNDS, {simulation_template_id: simulation_template_id, simulation_start_time: simulation_start_time, simulation_end_time: simulation_end_time});
-    const {id} = data;
     return id;
   },
 

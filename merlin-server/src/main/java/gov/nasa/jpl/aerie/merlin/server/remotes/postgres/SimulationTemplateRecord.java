@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 
 import java.util.Map;
 
@@ -10,8 +9,6 @@ public record SimulationTemplateRecord(
     long revision,
     long modelId,
     String description,
-    Map<String, SerializedValue> arguments,
-    Timestamp simulationStartTime,
-    Timestamp simulationEndTime
+    Map<String, SerializedValue> arguments
     ) {}
 

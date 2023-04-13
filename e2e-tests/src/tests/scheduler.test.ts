@@ -226,7 +226,7 @@ test.describe('Scheduling', () => {
     //expect one profile per resource in the banananation model
     expect(dataset.length).toEqual(7)
     for(let resource of dataset){
-      if(resource.name =="/fruit" || resource.name == "/peel"){
+      if(resource.name == "/fruit" || resource.name == "/peel"){
         let startOffsetOfResource = new Set<string>()
         for(let segment of resource.profile_segments){
           startOffsetOfResource.add(segment.start_offset)
@@ -244,8 +244,6 @@ test.describe('Scheduling', () => {
     let peelOutputIsThere = false
     let biteOutputIsThere = false
     let growOutputIsThere = false
-    //topic added in the mission model
-    let producerIsThere = false
     for(let topic of topics){
       switch (topic.name){
         case prefixInput+"BiteBanana":
@@ -272,9 +270,9 @@ test.describe('Scheduling', () => {
           peelOutputIsThere = true
           expect(topic.events.length).toEqual(12)
           break
-        case "/producer":
-          producerIsThere = true
-          expect(topic.events.length).toEqual(0)
+        default:
+          test.fail(topic.events.length !== 0, "Unexpected topic with events: "+topic.name)
+          break
       }
     }
     expect(peelInputIsThere)
@@ -283,7 +281,6 @@ test.describe('Scheduling', () => {
     expect(peelOutputIsThere)
     expect(growOutputIsThere)
     expect(biteOutputIsThere)
-    expect(producerIsThere)
   });
 
   test('Get Plan', async ({ request }) => {
