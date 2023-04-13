@@ -389,7 +389,7 @@ public class ActivityCreationTemplate extends ActivityExpression implements Expr
           null,
           true));
     } else {
-     throw new UnsupportedOperationException("Duration type other than Uncontrollable and Controllable are not suppoerted");
+     throw new UnsupportedOperationException("Duration types other than Uncontrollable, Controllable, and Fixed are not supported: " + this.type.getDurationType());
     }
   }
 
