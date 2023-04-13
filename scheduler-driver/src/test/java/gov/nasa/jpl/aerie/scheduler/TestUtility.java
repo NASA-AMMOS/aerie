@@ -136,5 +136,11 @@ public class TestUtility {
   public static Instant timeFromEpochSeconds(int seconds){
     return timeFromEpochMillis(seconds * 1000L);
   }
+  public static Instant timeFromEpochHours(int hours) {
+    return timeFromEpochSeconds(hours * 60 * 60);
+  }
+  public static Instant timeFromEpochDays(int days) {
+    return timeFromEpochHours(days * 24);
+  }
 
 }

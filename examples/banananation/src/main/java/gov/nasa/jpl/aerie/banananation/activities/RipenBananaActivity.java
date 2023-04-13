@@ -5,22 +5,26 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
-import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
 
 /**
- * Nap time [banana style]!!!!
- * This activity has no effect :)
+ * Monke is patient.
+ *
+ * Waits two days for bananas to ripen. Ripeness is not modelled.
  *
  * @subsystem fruit
  * @contact Jane Doe
  */
-@ActivityType("BananaNap")
-public final class BananaNapActivity {
+@ActivityType("RipenBanana")
+public final class RipenBananaActivity {
+
   @ActivityType.FixedDuration
-  public static final Duration DURATION = Duration.HOUR;
+  public static Duration duration() {
+    return Duration.of(48, Duration.HOUR);
+  }
 
   @EffectModel
   public void run(final Mission mission) {
-    delay(DURATION);
+    delay(duration());
   }
 }

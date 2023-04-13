@@ -322,6 +322,7 @@ import java.util.stream.Collectors;
   private ActivityTypeRecord parseActivityType(final PackageElement missionModelElement, final TypeElement activityTypeElement)
   throws InvalidMissionModelException
   {
+    final var fullyQualifiedClassName = activityTypeElement.getQualifiedName();
     final var name = this.getActivityTypeName(activityTypeElement);
     final var mapper = this.getExportMapper(missionModelElement, activityTypeElement);
     final var parameters = this.getExportParameters(activityTypeElement);
@@ -345,6 +346,7 @@ import java.util.stream.Collectors;
     final var defaultsStyle = this.getExportDefaultsStyle(activityTypeElement);
 
     return new ActivityTypeRecord(
+        fullyQualifiedClassName.toString(),
         name,
         new InputTypeRecord(name, activityTypeElement, parameters, validations, mapper, defaultsStyle),
         effectModel);
@@ -484,7 +486,29 @@ import java.util.stream.Collectors;
   }
 
   private Optional<EffectModelRecord> getActivityEffectModel(final TypeElement activityTypeElement)
+  throws InvalidMissionModelException
   {
+    Optional<String> fixedDuration = Optional.empty();
+    for (final var element: activityTypeElement.getEnclosedElements()) {
+      if (element.getAnnotation(ActivityType.FixedDuration.class) == null) continue;
+
+      if (fixedDuration.isPresent()) throw new InvalidMissionModelException(
+          "FixedDuration annotation cannot be applied multiple times in one activity type."
+      );
+
+      if (element.getKind() == ElementKind.METHOD) {
+        if (!(element instanceof ExecutableElement executableElement)) throw new InvalidMissionModelException("FixedDuration method annotation must be an executable element.");
+
+        if (!executableElement.getParameters().isEmpty()) throw new InvalidMissionModelException(
+            "FixedDuration annotation must be applied to a method with no arguments."
+        );
+
+        fixedDuration = Optional.of(executableElement.getSimpleName().toString() + "()");
+      } else if (element.getKind() == ElementKind.FIELD) {
+        fixedDuration = Optional.of(element.getSimpleName().toString());
+      }
+    }
+
     for (final var element : activityTypeElement.getEnclosedElements()) {
       if (element.getKind() != ElementKind.METHOD) continue;
 
@@ -495,13 +519,14 @@ import java.util.stream.Collectors;
 
       final var durationTypeAnnotation = element.getAnnotation(ActivityType.ControllableDuration.class);
       final var durationParameter = Optional.ofNullable(durationTypeAnnotation).map(ActivityType.ControllableDuration::parameterName);
+      if (durationParameter.isPresent() && fixedDuration.isPresent()) throw new InvalidMissionModelException("Activity cannot have both FixedDuration and ControllableDuration annotations");
 
       final var returnType = executableElement.getReturnType();
       final var nonVoidReturnType = returnType.getKind() == TypeKind.VOID
           ? Optional.<TypeMirror>empty()
           : Optional.of(returnType);
 
-      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value(), nonVoidReturnType, durationParameter));
+      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value(), nonVoidReturnType, durationParameter, fixedDuration));
     }
 
     return Optional.empty();
