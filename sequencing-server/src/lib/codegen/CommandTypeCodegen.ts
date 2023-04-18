@@ -97,7 +97,7 @@ const ${fswCommandName}_STEP: ${fswCommandName}_STEP = CommandStem.new({
 ${doc}
 \tinterface ${fswCommandName}_IMMEDIATE extends ImmediateStem<[]> {}
 \tinterface ${fswCommandName}_STEP extends CommandStem<[]> {}
-\tconst ${fswCommandName}: BAKE_BREAD_IMMEDIATE;
+\tconst ${fswCommandName}: ${fswCommandName}_IMMEDIATE;
 `;
     return {
       value,
