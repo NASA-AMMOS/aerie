@@ -12,7 +12,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol.State;
-import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
@@ -132,18 +131,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  @Override
-  public void deallocate(final ResultsProtocol.OwnerRole resultsCell) {
-    if (!(resultsCell instanceof PostgresResultsCell cell)) {
-      throw new Error("Unable to deallocate results cell of unknown type");
-    }
-    try (final var connection = this.dataSource.getConnection()) {
-      deleteSimulationDataset(connection, cell.datasetId);
-    } catch (final SQLException ex) {
-      throw new DatabaseException("Failed to delete simulation", ex);
-    }
-  }
-
   /* Database accessors */
   private static SimulationRecord getSimulation(
       final Connection connection,
@@ -226,12 +213,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   {
     try (final var cancelSimulationAction = new CancelSimulationAction(connection)) {
       cancelSimulationAction.apply(datasetId);
-    }
-  }
-
-  private static boolean deleteSimulationDataset(final Connection connection, final long datasetId) throws SQLException {
-    try (final var deleteSimulationDatasetAction = new DeleteSimulationDatasetAction(connection)) {
-      return deleteSimulationDatasetAction.apply(datasetId);
     }
   }
 
@@ -349,17 +330,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       }
 
       return Pair.of(simulatedActivities, unfinishedActivities);
-    }
-  }
-
-  private static PlanRecord getPlan(
-      final Connection connection,
-      final PlanId planId
-  ) throws SQLException, NoSuchPlanException {
-    try (final var getPlanAction = new GetPlanAction(connection)) {
-      return getPlanAction
-          .get(planId.id())
-          .orElseThrow(() -> new NoSuchPlanException(planId));
     }
   }
 

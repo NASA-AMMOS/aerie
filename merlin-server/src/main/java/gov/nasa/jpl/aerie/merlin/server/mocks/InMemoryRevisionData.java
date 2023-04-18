@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
 
-public final record InMemoryRevisionData(
+public record InMemoryRevisionData(
     long planRevision
 ) implements RevisionData {
 

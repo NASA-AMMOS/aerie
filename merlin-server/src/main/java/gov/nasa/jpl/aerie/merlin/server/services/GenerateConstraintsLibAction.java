@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-public record GenerateConstraintsLibAction(ConstraintsCodeGenService typescriptCodeGenerationService) {
+public record GenerateConstraintsLibAction(TypescriptCodeGenerationServiceAdapter typescriptCodeGenerationService) {
   public GenerateConstraintsLibAction {
     Objects.requireNonNull(typescriptCodeGenerationService);
   }

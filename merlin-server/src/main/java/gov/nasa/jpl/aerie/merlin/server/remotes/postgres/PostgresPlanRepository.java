@@ -178,16 +178,6 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<ActivityDirectiveId, ActivityDirective> getAllActivitiesInPlan(final PlanId planId)
-  throws NoSuchPlanException {
-    try (final var connection = this.dataSource.getConnection()) {
-      return getPlanActivities(connection, planId);
-    } catch (final SQLException ex) {
-      throw new DatabaseException("Failed to get all activities from plan", ex);
-    }
-  }
-
-  @Override
   public Map<String, Constraint> getAllConstraintsInPlan(final PlanId planId) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getPlanConstraintsAction = new GetPlanConstraintsAction(connection)) {
@@ -333,62 +323,7 @@ public final class PostgresPlanRepository implements PlanRepository {
       final Timestamp datasetStart
   ) throws SQLException {
     try (final var createPlanDatasetAction = new CreatePlanDatasetAction(connection)) {
-      final var pdr = createPlanDatasetAction.apply(planId.id(), planStart, datasetStart);
-      return pdr;
-    }
-  }
-
-  private static final class PostgresPlanTransaction implements PlanTransaction {
-    private final DataSource dataSource;
-    private final PlanId planId;
-
-    private Optional<String> name = Optional.empty();
-    private Optional<Timestamp> startTime = Optional.empty();
-    private Optional<Timestamp> endTime = Optional.empty();
-
-    public PostgresPlanTransaction(final DataSource dataSource, final PlanId planId) {
-      this.dataSource = dataSource;
-      this.planId = planId;
-    }
-
-    @Override
-    public void commit() throws NoSuchPlanException {
-      try (final var connection = this.dataSource.getConnection()) {
-        try (final var updatePlanAction = new UpdatePlanAction(connection)) {
-          updatePlanAction.apply(
-              this.planId.id(),
-              this.name.orElse(null),
-              this.startTime.orElse(null),
-              this.endTime.orElse(null));
-        }
-      } catch (final FailedUpdateException ex) {
-        throw new NoSuchPlanException(this.planId);
-      } catch (final SQLException ex) {
-        throw new DatabaseException("Failed to update a plan", ex);
-      }
-    }
-
-    @Override
-    public PlanTransaction setName(final String name) {
-      this.name = Optional.of(name);
-      return this;
-    }
-
-    @Override
-    public PlanTransaction setStartTimestamp(final Timestamp timestamp) {
-      this.startTime = Optional.of(timestamp);
-      return this;
-    }
-
-    @Override
-    public PlanTransaction setEndTimestamp(final Timestamp timestamp) {
-      this.endTime = Optional.of(timestamp);
-      return this;
-    }
-
-    @Override
-    public PlanTransaction setConfiguration(final Map<String, SerializedValue> configuration) {
-      return this;
+      return createPlanDatasetAction.apply(planId.id(), planStart, datasetStart);
     }
   }
 }

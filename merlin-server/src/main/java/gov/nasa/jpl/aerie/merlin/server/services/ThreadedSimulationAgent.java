@@ -43,45 +43,44 @@ public final class ThreadedSimulationAgent implements SimulationAgent {
   }
 
 
-  private static final class Worker implements Runnable {
-    private final BlockingQueue<SimulationRequest> requestQueue;
-    private final SimulationAgent simulationAgent;
+  private record Worker(BlockingQueue<SimulationRequest> requestQueue, SimulationAgent simulationAgent)
+      implements Runnable
+  {
+      private Worker(
+          final BlockingQueue<SimulationRequest> requestQueue,
+          final SimulationAgent simulationAgent)
+      {
+        this.requestQueue = Objects.requireNonNull(requestQueue);
+        this.simulationAgent = Objects.requireNonNull(simulationAgent);
+      }
 
-    public Worker(
-        final BlockingQueue<SimulationRequest> requestQueue,
-        final SimulationAgent simulationAgent)
-    {
-      this.requestQueue = Objects.requireNonNull(requestQueue);
-      this.simulationAgent = Objects.requireNonNull(simulationAgent);
-    }
+      @Override
+      public void run() {
+        while (true) {
+          try {
+            final var request = this.requestQueue.take();
 
-    @Override
-    public void run() {
-      while (true) {
-        try {
-          final var request = this.requestQueue.take();
-
-          if (request instanceof SimulationRequest.Simulate req) {
-            try {
-              this.simulationAgent.simulate(req.planId(), req.revisionData(), req.writer());
-            } catch (final Throwable ex) {
-              ex.printStackTrace(System.err);
-              req.writer().failWith(b -> b
-                  .type("UNEXPECTED_SIMULATION_EXCEPTION")
-                  .message("Something went wrong while simulating")
-                  .trace(ex));
+            if (request instanceof SimulationRequest.Simulate req) {
+              try {
+                this.simulationAgent.simulate(req.planId(), req.revisionData(), req.writer());
+              } catch (final Throwable ex) {
+                ex.printStackTrace(System.err);
+                req.writer().failWith(b -> b
+                    .type("UNEXPECTED_SIMULATION_EXCEPTION")
+                    .message("Something went wrong while simulating")
+                    .trace(ex));
+              }
+              // continue
+            } else if (request instanceof SimulationRequest.Terminate) {
+              break;
+            } else {
+              throw new UnexpectedSubtypeError(SimulationRequest.class, request);
             }
+          } catch (final Exception ex) {
+            ex.printStackTrace(System.err);
             // continue
-          } else if (request instanceof SimulationRequest.Terminate) {
-            break;
-          } else {
-            throw new UnexpectedSubtypeError(SimulationRequest.class, request);
           }
-        } catch (final Exception ex) {
-          ex.printStackTrace(System.err);
-          // continue
         }
       }
     }
-  }
 }

@@ -25,5 +25,4 @@ public interface MissionModelRepository {
     void updateActivityDirectiveValidations(final ActivityDirectiveId directiveId, final PlanId planId, final Timestamp argumentsModifiedTime, final List<ValidationNotice> notices);
 
     final class NoSuchMissionModelException extends Exception {}
-    final class NoSuchActivityDirectiveException extends Exception {}
 }

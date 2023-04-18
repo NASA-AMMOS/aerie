@@ -4,11 +4,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.intellij.lang.annotations.Language;
 
-import javax.json.Json;
-import java.io.Reader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -49,10 +46,10 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       while (resultSet.next()) {
         final var id = resultSet.getLong(1);
         final var type = resultSet.getString(2);
-        final var parentId = readOptionalLong(resultSet, 3);
+        final Optional<Long> parentId = resultSet.getObject(3) == null ? Optional.empty() : Optional.of(resultSet.getLong(3));
         final var startOffset = parseOffset(resultSet, 4, simulationStart);
         final var start = simulationStart.toInstant().plus(startOffset.in(MICROSECONDS), ChronoUnit.MICROS);
-        final var duration = isNull(resultSet, 5) ? Optional.<Duration>empty() : Optional.of(parseOffset(
+        final var duration = resultSet.getObject(5) == null ? Optional.<Duration>empty() : Optional.of(parseOffset(
             resultSet,
             5,
             start));
@@ -79,16 +76,6 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
             .ifPresent(parentId -> spans.get(parentId).childIds().add(id)));
 
     return spans;
-  }
-
-  private static boolean isNull(final ResultSet resultSet, final int index) throws SQLException {
-    resultSet.getObject(index);
-    return resultSet.wasNull();
-  }
-
-  private static Optional<Long> readOptionalLong(final ResultSet resultSet, final int index) throws SQLException {
-    final var value = resultSet.getLong(index);
-    return resultSet.wasNull() ? Optional.empty() : Optional.of(value);
   }
 
   @Override

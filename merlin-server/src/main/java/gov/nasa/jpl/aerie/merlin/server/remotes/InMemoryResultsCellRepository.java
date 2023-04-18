@@ -48,14 +48,6 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  @Override
-  public void deallocate(final ResultsProtocol.OwnerRole resultsCell) {
-    if (!(resultsCell instanceof InMemoryCell cell)) {
-      throw new Error("Unable to deallocate results cell of unknown type");
-    }
-    this.cells.remove(new InMemoryResultsCellRepository.Key(cell.planId, cell.planRevision));
-  }
-
   public boolean isEqualTo(final InMemoryResultsCellRepository other) {
     return this.cells.equals(other.cells);
   }
@@ -126,9 +118,7 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
 
     public boolean isEqualTo(final InMemoryCell other) {
       if (this.canceled != other.canceled) return false;
-      if (!Objects.equals(this.state, other.state)) return false;
-
-      return true;
+      return Objects.equals(this.state, other.state);
     }
 
     @Deprecated
