@@ -8,6 +8,7 @@ export const defaultSeqBuilder: SeqBuilder = (
   simulationDatasetId,
 ) => {
   let planId;
+  let timeSorted = false;
 
   const commands = sortedActivityInstancesWithCommands.flatMap(ai => {
     // No associated Expansion
@@ -31,7 +32,10 @@ export const defaultSeqBuilder: SeqBuilder = (
       return [];
     }
 
-    return sortCommandsByTime(ai.commands);
+    const result = sortCommandsByTime(ai.commands);
+    timeSorted = result.timeSorted;
+
+    return result.sortedCommands;
   });
 
   return Sequence.new({
@@ -40,16 +44,35 @@ export const defaultSeqBuilder: SeqBuilder = (
       ...seqMetadata,
       planId,
       simulationDatasetId,
+      timeSorted,
     },
     steps: commands,
   });
 };
 
 // Order commands by time in expanded sequences.
-function sortCommandsByTime(commands: CommandStem<{} | []>[]): CommandStem<{} | []>[] {
+function sortCommandsByTime(commands: CommandStem<{} | []>[]): {
+  sortedCommands: CommandStem<{} | []>[];
+  timeSorted: boolean;
+} {
   const relativeTimeTracker: Record<string, Temporal.Instant> = {};
   let previousAbsoluteTimestamp: Temporal.Instant | null = null;
 
+  if (areAllEpochRelative(commands)) {
+    return {
+      sortedCommands: commands.sort((a, b) => {
+        // Check for null values here, but areAllEpochRelative already checked to make sure they're not null.
+        if (a.epochTime !== null && b.epochTime !== null) {
+          return Temporal.Duration.compare(a.epochTime, b.epochTime);
+        }
+
+        return 0;
+      }),
+      timeSorted: true,
+    };
+  }
+
+  // If we have mixed time commands then we only sort if they're all absolute and relative.
   for (const command of commands) {
     // If the command is epoch-relative, complete, or the first command and relative then short circuit and don't try and sort.
     if (
@@ -57,7 +80,7 @@ function sortCommandsByTime(commands: CommandStem<{} | []>[]): CommandStem<{} | 
       (command.absoluteTime === null && command.epochTime === null && command.relativeTime === null) ||
       (command.relativeTime !== null && commands.indexOf(command) === 0)
     ) {
-      return commands;
+      return { sortedCommands: commands, timeSorted: false };
     }
 
     // Keep track of the previously seen absolute time so we can convert the next relative timestamp we come across.
@@ -82,5 +105,21 @@ function sortCommandsByTime(commands: CommandStem<{} | []>[]): CommandStem<{} | 
     return 0;
   });
 
-  return commands;
+  return { sortedCommands: commands, timeSorted: true };
+}
+
+/**
+ * Checks the commands and returns true if they're all epoch-relative.
+ *
+ * @param commands The commands we're trying to sort.
+ * @returns true if all commands are epoch-relative, otherwise false.
+ */
+function areAllEpochRelative(commands: CommandStem<{} | []>[]): boolean {
+  for (const command of commands) {
+    if (command.epochTime === null) {
+      return false;
+    }
+  }
+
+  return true;
 }
