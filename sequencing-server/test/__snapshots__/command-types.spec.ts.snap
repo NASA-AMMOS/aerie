@@ -2362,7 +2362,7 @@ declare global {
 */
 	interface ADD_WATER_IMMEDIATE extends ImmediateStem<[]> {}
 	interface ADD_WATER_STEP extends CommandStem<[]> {}
-	const ADD_WATER: BAKE_BREAD_IMMEDIATE;
+	const ADD_WATER: ADD_WATER_IMMEDIATE;
 
 
 	interface PACKAGE_BANANA_IMMEDIATE extends ImmediateStem<[ [{ 'lot_number': U16,'bundle': Array<{ 'bundle_name': VarString<8, 1024>, 'number_of_bananas': U8 }> }] ]> {}
@@ -2376,7 +2376,7 @@ declare global {
 */
 	interface PICK_BANANA_IMMEDIATE extends ImmediateStem<[]> {}
 	interface PICK_BANANA_STEP extends CommandStem<[]> {}
-	const PICK_BANANA: BAKE_BREAD_IMMEDIATE;
+	const PICK_BANANA: PICK_BANANA_IMMEDIATE;
 
 
 
@@ -2386,7 +2386,7 @@ declare global {
 */
 	interface EAT_BANANA_IMMEDIATE extends ImmediateStem<[]> {}
 	interface EAT_BANANA_STEP extends CommandStem<[]> {}
-	const EAT_BANANA: BAKE_BREAD_IMMEDIATE;
+	const EAT_BANANA: EAT_BANANA_IMMEDIATE;
 		
 /**
 * Dump the blender configuration file.
