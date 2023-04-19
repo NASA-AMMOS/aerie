@@ -27,6 +27,10 @@ create table simulation_dataset (
   reason jsonb null,
   canceled boolean not null default false,
 
+  -- Additional Metadata
+  requested_by text not null default '',
+  requested_at timestamptz not null default now(),
+
   constraint simulation_dataset_synthetic_key
     primary key (id),
   constraint simulation_dataset_dataset_has_a_simulation
@@ -77,6 +81,10 @@ comment on column simulation_dataset.offset_from_plan_start is e''
 '\n'
   'If the dataset as a whole begins one day before the planning period begins, '
   'then this column should contain the interval ''1 day ago''.';
+comment on column simulation_dataset.requested_by is e''
+  'The user who requested the simulation.';
+comment on column simulation_dataset.requested_at is e''
+  'When this simulation dataset was created.';
 
 -- Dataset management triggers
 -- These triggers create and delete datasets along with the insert/delete of a simulation_dataset
