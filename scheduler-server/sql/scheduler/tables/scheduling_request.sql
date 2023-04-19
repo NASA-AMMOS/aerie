@@ -2,7 +2,7 @@ create type status_t as enum('pending', 'incomplete', 'failed', 'success');
 
 create table scheduling_request (
   specification_id integer not null,
-  analysis_id integer not null,
+  analysis_id integer generated always as identity,
   requested_by text not null default  '',
   requested_at timestamptz not null default now(),
 
@@ -20,11 +20,6 @@ create table scheduling_request (
   constraint scheduling_request_references_scheduling_specification
     foreign key(specification_id)
       references scheduling_specification
-      on update cascade
-      on delete cascade,
-  constraint scheduling_request_references_analysis
-    foreign key(analysis_id)
-      references scheduling_analysis
       on update cascade
       on delete cascade
 );
@@ -45,25 +40,6 @@ comment on column scheduling_request.requested_by is e''
   'The user who made the scheduling request.';
 comment on column scheduling_request.requested_at is e''
   'When this scheduling request was made.';
-
-create or replace function create_scheduling_analysis()
-returns trigger
-security definer
-language plpgsql as $$begin
-  insert into scheduling_analysis
-  default values
-  returning id into new.analysis_id;
-return new;
-end$$;
-
-do $$ begin
-create trigger create_scheduling_analysis_trigger
-  before insert on scheduling_request
-  for each row
-  execute function create_scheduling_analysis();
-exception
-  when duplicate_object then null;
-end $$;
 
 -- Scheduling request NOTIFY triggers
 -- These triggers NOTIFY LISTEN(ing) scheduler worker clients of pending scheduling requests
