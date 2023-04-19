@@ -249,7 +249,7 @@ public final class SimulationEngine implements AutoCloseable {
       this.tasks.put(task, progress.continueWith(s.continuation()));
       this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(target)));
     } else if (status instanceof TaskStatus.AwaitingCondition<Return> s) {
-      final var condition = ConditionId.generate();
+      final var condition = ConditionId.generate(task);
       this.conditions.put(condition, s.condition());
       this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(currentTime));
 
