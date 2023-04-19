@@ -21,6 +21,7 @@ import org.junit.jupiter.api.extension.TestInstancePreDestroyCallback;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 
@@ -155,7 +156,7 @@ public final class MerlinExtension
           });
 
       try {
-        SimulationDriver.simulateTask(this.missionModel, task);
+        SimulationDriver.simulateTask(Instant.now(), this.missionModel, task);
       } catch (final WrappedException ex) {
         throw ex.wrapped;
       }
