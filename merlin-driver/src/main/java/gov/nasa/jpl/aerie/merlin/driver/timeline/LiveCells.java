@@ -1,14 +1,20 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public final class LiveCells {
   // INVARIANT: Every Query<T> maps to a LiveCell<T>; that is, the type parameters are correlated.
   private final Map<Query<?>, LiveCell<?>> cells = new HashMap<>();
+  private final Map<Topic<?>, HashSet<LiveCell<?>>> cellsForTopic = new HashMap<>();
   private final EventSource source;
   private final LiveCells parent;
 
@@ -34,9 +40,22 @@ public final class LiveCells {
     return getCell(query).flatMap(Cell::getExpiry);
   }
 
-  public <State> void put(final Query<State> query, final Cell<State> cell) {
+  public <State> LiveCell<State> put(final Query<State> query, final Cell<State> cell) {
     // SAFETY: The query and cell share the same State type parameter.
-    this.cells.put(query, new LiveCell<>(cell, this.source.cursor()));
+    final var liveCell = new LiveCell<>(cell, this.source.cursor());
+    this.cells.put(query, liveCell);
+    cell.getTopics().forEach(t -> this.cellsForTopic.computeIfAbsent(t, $ -> new HashSet<>()).add(liveCell));
+    return liveCell;
+  }
+
+  public Collection<LiveCell<?>> getCells() {
+    return cells.values();
+  }
+
+  public Set<LiveCell<?>> getCells(final Topic<?> topic) {
+    var cells = cellsForTopic.get(topic);
+    if (cells == null) return Collections.emptySet();
+    return cells;
   }
 
   private <State> Optional<Cell<State>> getCell(final Query<State> query) {
@@ -54,10 +73,7 @@ public final class LiveCells {
     final var cell$ = this.parent.getCell(query);
     if (cell$.isEmpty()) return Optional.empty();
 
-    final var cell = new LiveCell<>(cell$.get().duplicate(), this.source.cursor());
-
-    // SAFETY: The query and cell share the same State type parameter.
-    this.cells.put(query, cell);
+    final var cell = put(query, cell$.get().duplicate());
 
     return Optional.of(cell.get());
   }

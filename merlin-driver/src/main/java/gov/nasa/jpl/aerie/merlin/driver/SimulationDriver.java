@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public final class SimulationDriver {
   public static <Model>
@@ -42,7 +43,7 @@ public final class SimulationDriver {
       final var queryTopic = new Topic<Topic<?>>();
 
       // Start daemon task(s) immediately, before anything else happens.
-      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
+      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), Optional.empty());
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE, queryTopic);
@@ -126,7 +127,7 @@ public final class SimulationDriver {
       final var queryTopic = new Topic<Topic<?>>();
 
       // Start daemon task(s) immediately, before anything else happens.
-      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon());
+      engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), Optional.empty());
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE, queryTopic);
@@ -134,7 +135,7 @@ public final class SimulationDriver {
       }
 
       // Schedule all activities.
-      final var taskId = engine.scheduleTask(elapsedTime, task);
+      final var taskId = engine.scheduleTask(elapsedTime, task, Optional.empty());
 
       // Drive the engine until we're out of time.
       // TERMINATION: Actually, we might never break if real time never progresses forward.
@@ -180,14 +181,14 @@ public final class SimulationDriver {
                             .formatted(serializedDirective.getTypeName(), ex.toString()));
       }
 
-      engine.scheduleTask(startOffset, makeTaskFactory(
-          directiveId,
-          task,
-          schedule,
-          resolved,
-          missionModel,
-          activityTopic
-      ));
+      engine.scheduleTask(startOffset,
+                          makeTaskFactory(directiveId,
+                                          task,
+                                          schedule,
+                                          resolved,
+                                          missionModel,
+                                          activityTopic),
+                          Optional.empty());
     }
   }
 

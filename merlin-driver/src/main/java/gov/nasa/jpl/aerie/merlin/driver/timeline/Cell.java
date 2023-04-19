@@ -5,8 +5,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.CellType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /** Binds the state of a cell together with its dynamical behavior. */
 public final class Cell<State> {
@@ -36,7 +39,16 @@ public final class Cell<State> {
   }
 
   public void apply(final EventGraph<Event> events) {
-    this.inner.apply(this.state, events);
+  }
+
+  /**
+   * Step up the Cell (apply Effects of Events) for one set of Events (an EventGraph) up to a specified last Event
+   * @param events the Events that may affect the Cell
+   * @param lastEvent a boundary within the graph of Events beyond which Events are not applied
+   * @param includeLast whether to apply the Effect of the last Event
+   */
+  public void apply(final EventGraph<Event> events, Optional<Event> lastEvent, boolean includeLast) {
+    this.inner.apply(this.state, events, lastEvent, includeLast);
   }
 
   public void apply(final Event event) {
@@ -55,6 +67,19 @@ public final class Cell<State> {
     return this.inner.cellType.duplicate(this.state);
   }
 
+  public List<Topic<?>> getTopics() {
+    return Arrays.stream(this.inner.selector.rows()).map(r -> r.topic()).collect(Collectors.toList());
+  }
+
+  public Topic<?> getTopic() throws Exception {
+    var topics = getTopics();
+    if (topics != null && topics.size() == 1) {
+      return topics.get(0);
+    }
+    throw(new Exception("No single topic for cell! " + topics));
+  }
+
+
   public boolean isInterestedIn(final Set<Topic<?>> topics) {
     return this.inner.selector.matchesAny(topics);
   }
@@ -70,8 +95,8 @@ public final class Cell<State> {
       Selector<Effect> selector,
       EventGraphEvaluator evaluator
   ) {
-    public void apply(final State state, final EventGraph<Event> events) {
-      final var effect$ = this.evaluator.evaluate(this.algebra, this.selector, events);
+    public void apply(final State state, final EventGraph<Event> events, Optional<Event> lastEvent, boolean includeLast) {
+      final var effect$ = this.evaluator.evaluate(this.algebra, this.selector, events, lastEvent, includeLast);
       if (effect$.isPresent()) this.cellType.apply(state, effect$.get());
     }
 

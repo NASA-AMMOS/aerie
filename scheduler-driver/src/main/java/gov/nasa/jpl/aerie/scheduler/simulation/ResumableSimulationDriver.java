@@ -10,7 +10,6 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.JobSchedule;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -114,7 +113,7 @@ public class ResumableSimulationDriver<Model> {
   }
 
   private void startDaemons(Duration time) {
-    engine.scheduleTask(time, missionModel.getDaemon());
+    engine.scheduleTask(time, missionModel.getDaemon(), Optional.empty());
 
     final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
     final var commit = engine.performJobs(batch.jobs(), cells, time, Duration.MAX_VALUE, queryTopic);
@@ -148,7 +147,7 @@ public class ResumableSimulationDriver<Model> {
       }
 
       if (staleReadTime.isEqualTo(nextTime)) {
-        // TODO: HERE!!
+        engine.rescheduleStaleTasks(cells, earliestStaleReads);
       }
 
       if (timeOfNextJobs.isEqualTo(nextTime)) {
@@ -364,7 +363,7 @@ public class ResumableSimulationDriver<Model> {
           resolved,
           missionModel,
           activityTopic
-      ));
+      ), Optional.empty());
       plannedDirectiveToTask.put(directiveId,taskId);
     }
   }
