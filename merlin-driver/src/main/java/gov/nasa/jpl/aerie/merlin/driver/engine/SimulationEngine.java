@@ -573,7 +573,7 @@ public final class SimulationEngine implements AutoCloseable {
 
     final var serializedTimeline = new TreeMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
     var time = Duration.ZERO;
-    for (var point : timeline.points()) {
+    for (var point : timeline.points) {
       if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
         time = time.plus(delta.delta());
       } else if (point instanceof TemporalEventSource.TimePoint.Commit commit) {

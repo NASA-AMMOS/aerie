@@ -88,7 +88,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
       batch = engine.extractNextJobs(Duration.MAX_VALUE);
       final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
-      timeline.add(commit);
+      timeline.add(commit, curTime);
     }
   }
 
@@ -109,7 +109,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
         timeline.add(delta);
         // Run the jobs in this batch.
         final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
-        timeline.add(commit);
+        timeline.add(commit, curTime);
 
         batch = engine.extractNextJobs(Duration.MAX_VALUE);
       }
@@ -241,7 +241,7 @@ public class ResumableSimulationDriver<Model> implements AutoCloseable {
 
       // Run the jobs in this batch.
       final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE);
-      timeline.add(commit);
+      timeline.add(commit, curTime);
 
       // all tasks are complete : do not exit yet, there might be event triggered at the same time
       if (!plannedDirectiveToTask.isEmpty() && plannedDirectiveToTask

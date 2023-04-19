@@ -51,7 +51,7 @@ public final class SimulationDriver {
         {
           final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
           final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-          timeline.add(commit);
+          timeline.add(commit, elapsedTime);
         }
 
         // Get all activities as close as possible to absolute time
@@ -97,7 +97,7 @@ public final class SimulationDriver {
 
           // Run the jobs in this batch.
           final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration);
-          timeline.add(commit);
+          timeline.add(commit, elapsedTime);
         }
       } catch (Throwable ex) {
         throw new SimulationException(elapsedTime, simulationStartTime, ex);
@@ -130,7 +130,7 @@ public final class SimulationDriver {
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-        timeline.add(commit);
+        timeline.add(commit, elapsedTime);
       }
 
       // Schedule all activities.
@@ -150,7 +150,7 @@ public final class SimulationDriver {
 
         // Run the jobs in this batch.
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE);
-        timeline.add(commit);
+        timeline.add(commit, elapsedTime);
       }
     }
   }
