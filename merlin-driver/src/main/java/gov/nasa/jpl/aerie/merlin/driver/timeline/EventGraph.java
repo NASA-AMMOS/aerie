@@ -90,6 +90,53 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
   }
 
   /**
+   * Return a subset of the graph filtering on events.
+   * @param f a boolean Function testing whether an Event should remain in the graph
+   * @return an empty graph if no events remain, {@code this} graph if no events are removed, or else a new graph with filtered events.
+   */
+  default EventGraph<Event> filter(final Function<Event, Boolean> f) {
+    // Instead of redefining filter() and evaluate() in each class, they are implemented for each Class here in one function.
+    // This is so it's easier to follow the logic with it all in one place.  For this very situation Java 17 has a preview feature
+    // for Pattern Matching for switch.
+    // Would it be better to create a class implementing EffectTrait<EventGraph> and just call evaluate?
+    // --> No, it would always make a copy of the graph, and we want to preserve it in some cases.
+
+    if (this instanceof EventGraph.Empty) return this;
+    if (this instanceof EventGraph.Atom<Event> g) {
+      if (f.apply(g.atom)) return g;
+      return EventGraph.empty();
+    }
+    if (this instanceof EventGraph.Sequentially<Event> g) {
+      final var g1 = g.prefix.filter(f);
+      final var g2 = g.suffix.filter(f);
+      if (g.prefix == g1 && g.suffix == g2) return this;
+      if (g1 instanceof EventGraph.Empty<Event>) return g2;
+      if (g2 instanceof EventGraph.Empty<Event>) return g1;
+      return sequentially(g1, g2);
+    }
+    if (this instanceof EventGraph.Concurrently<Event> g) {
+      final var g1 = g.left.filter(f);
+      final var g2 = g.right.filter(f);
+      if (g.left == g1 && g.right == g2) return this;
+      if (g1 instanceof EventGraph.Empty<Event>) return g2;
+      if (g2 instanceof EventGraph.Empty<Event>) return g1;
+      return concurrently(g1, g2);
+    } else {
+      throw new IllegalArgumentException();
+    }
+  }
+
+  /**
+   * Remove all occurrences of an Event from the graph, returning {@code this} EventGraph if and
+   * only if there are no removals, else a new graph.
+   * @param e the Event to remove
+   * @return a new graph if there are any changes, else {@code this}
+   */
+  default EventGraph<Event> remove(final Event e) {
+    return filter(ev -> !ev.equals(e));
+  }
+
+  /**
    * Create an empty event graph.
    *
    * @param <Event> The type of event that might be contained by this event graph.
