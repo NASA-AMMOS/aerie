@@ -58,10 +58,22 @@ public class SimulationFacade implements AutoCloseable{
   public SimulationFacade(final PlanningHorizon planningHorizon, final MissionModel<?> missionModel) {
     this.missionModel = missionModel;
     this.planningHorizon = planningHorizon;
-    this.driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration());
+    this.driver = new ResumableSimulationDriver<>(missionModel, planningHorizon);
     this.itSimActivityId = 0;
     this.insertedActivities = new HashMap<>();
     this.activityTypes = new HashMap<>();
+  }
+
+  public MissionModel<?> getMissionModel() {
+    return missionModel;
+  }
+
+  public PlanningHorizon getPlanningHorizon() {
+    return planningHorizon;
+  }
+
+  public ResumableSimulationDriver<?> getDriver() {
+    return driver;
   }
 
   @Override
@@ -143,7 +155,7 @@ public class SimulationFacade implements AutoCloseable{
       insertedActivities.clear();
       planActDirectiveIdToSimulationActivityDirectiveId.clear();
       if (driver != null) driver.close();
-      driver = new ResumableSimulationDriver<>(missionModel, planningHorizon.getAerieHorizonDuration());
+      driver = new ResumableSimulationDriver<>(missionModel, planningHorizon);
       simulateActivities(oldInsertedActivities.keySet());
     }
   }
