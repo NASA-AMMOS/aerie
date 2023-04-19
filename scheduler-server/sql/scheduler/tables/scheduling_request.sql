@@ -3,6 +3,8 @@ create type status_t as enum('pending', 'incomplete', 'failed', 'success');
 create table scheduling_request (
   specification_id integer not null,
   analysis_id integer not null,
+  requested_by text not null default  '',
+  requested_at timestamptz not null default now(),
 
   status status_t not null default 'pending',
   reason jsonb null,
@@ -39,6 +41,10 @@ comment on column scheduling_request.reason is e''
   'The reason for failure when a scheduling request fails.';
 comment on column scheduling_request.specification_revision is e''
   'The revision of the scheduling_specification associated with this request.';
+comment on column scheduling_request.requested_by is e''
+  'The user who made the scheduling request.';
+comment on column scheduling_request.requested_at is e''
+  'When this scheduling request was made.';
 
 create or replace function create_scheduling_analysis()
 returns trigger
