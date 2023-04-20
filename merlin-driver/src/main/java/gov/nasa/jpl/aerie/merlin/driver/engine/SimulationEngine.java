@@ -63,6 +63,7 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** The EventGraphs separated by Durations between the events */
   public final TemporalEventSource timeline;
+  private LiveCells cells;
   /** The set of all jobs waiting for time to pass. */
   private final JobSchedule<JobId, SchedulingInstant> scheduledJobs = new JobSchedule<>();
   /** The set of all jobs waiting on a given signal. */
@@ -93,15 +94,14 @@ public final class SimulationEngine implements AutoCloseable {
     this.startTime = startTime;
     this.missionModel = missionModel;
     this.oldEngine = oldEngine;
-    if (oldEngine == null) {
-      this.timeline = new TemporalEventSource();
+    this.timeline = new TemporalEventSource();
+    if (oldEngine != null) {
+      oldEngine.cells = new LiveCells(oldEngine.timeline, oldEngine.missionModel.getInitialCells());
+      this.cells = new LiveCells(timeline, oldEngine.missionModel.getInitialCells());  // HACK: good for in-memory but with DB or difft mission model configuration,...
     } else {
-      this.timeline = new TemporalEventSourceDelta(oldEngine.timeline);
+      this.cells = new LiveCells(timeline, missionModel.getInitialCells());
     }
   }
-
-  /** When topics/cells become stale */
-  private final Map<Topic<?>, TreeSet<Duration>> staleTopics = new HashMap<>();
 
   /** When tasks become stale */
   private final Map<TaskId, Duration> staleTasks = new HashMap<>();
@@ -140,7 +140,7 @@ public final class SimulationEngine implements AutoCloseable {
     // read a cell more than once in a graph.  But, we should make sure we handle this case. TODO
     var earliest = Duration.MAX_VALUE;
     final var tasks = new HashMap<TaskId, HashSet<Pair<Topic<?>, Event>>>();
-    final var topicsStale = staleTopics.keySet();
+    final var topicsStale = timeline.staleTopics.keySet();
     for (var topic : topicsStale) {
       var topicReads = cellReadHistory.get(topic);
       if (topicReads == null || topicReads.isEmpty()) {
@@ -154,7 +154,7 @@ public final class SimulationEngine implements AutoCloseable {
       for (var entry : topicReadsAfter.entrySet()) {
         Duration d = entry.getKey();
         HashMap<TaskId, Event> taskIds = entry.getValue();
-        if (isTopicStale(topic, d)) {
+        if (timeline.isTopicStale(topic, d)) {
           if (d.shorterThan(earliest)) {
             earliest = d;
             tasks.clear();
@@ -170,33 +170,26 @@ public final class SimulationEngine implements AutoCloseable {
     return Pair.of(earliest, tasks);
   }
 
-  public void putStaleTopic(Topic<?> topic, Duration offsetTime) {
-    staleTopics.computeIfAbsent(topic, $ -> new TreeSet<>()).add(offsetTime);
-  }
-
-  public boolean removeStaleTopic(Topic<?> topic, Duration offsetTime) {
-    var set = staleTopics.get(topic);
-    if (set == null) return false;
-    boolean removed = set.remove(offsetTime);
-    if (removed && set.isEmpty()) {
-      staleTopics.remove(topic);
-    }
-    return removed;
-  }
-
   /** Get the earliest time that topics become stale and return those topics with the time */
   public Pair<List<Topic<?>>, Duration> earliestStaleTopics(Duration before) {
     var list = new ArrayList<Topic<?>>();
     Duration earliest = Duration.MAX_VALUE;
-    for (var entry : staleTopics.entrySet()) {
-      Duration d = entry.getValue().first();
-      if (d.noShorterThan(before)) {
+    for (var entry : timeline.staleTopics.entrySet()) {
+      Duration d = null;
+      for (var e : entry.getValue().entrySet()) {
+        if (e.getValue()) {
+          d = e.getKey();
+          break;
+        }
+      }
+      if (d == null || d.noShorterThan(before)) {
         continue;
       }
       int comp = d.compareTo(earliest);
       if (comp <= 0) {
         if (comp < 0) list = new ArrayList<>();
         list.add(entry.getKey());
+        earliest = d;
       }
     }
     return Pair.of(list, earliest);
@@ -222,7 +215,7 @@ public final class SimulationEngine implements AutoCloseable {
     removeTaskHistory(taskId);
   }
 
-  public void rescheduleStaleTasks(final LiveCells cells, Pair<Duration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReads) {
+  public void rescheduleStaleTasks(Pair<Duration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReads) {
     // Test to see if read value has changed.  If so, reschedule the affected task
     Duration timeOfStaleReads = earliestStaleReads.getLeft();
     for (var entry : earliestStaleReads.getRight().entrySet()) {
@@ -235,11 +228,25 @@ public final class SimulationEngine implements AutoCloseable {
           // Need to step cell up to the point of the read
           // Step up the cell to the time before the event graphs and then make a duplicate here
           // since different parts of the event graph will be evaluated.
-          this.timeline.cursor().stepUp(c.get(), timeOfStaleReads, false);
+          c.cursor.stepUp(c.get(), timeOfStaleReads, false);
+
+          // FIXME: Wouldn't it be better to manage staleness inside the timeline or cursor?
+          var oc = timeline.getOldCell(c);
+          oc.cursor.stepUp(oc.get(), timeOfStaleReads, false);
+          if (!c.get().getState().equals(oc.get().getState())) {
+            if (!timeline.isTopicStale(c.get().getTopic(), timeOfStaleReads)) {
+              timeline.setTopicStale(c.get().getTopic(), timeOfStaleReads);
+            }
+          } else {
+            if (timeline.isTopicStale(c.get().getTopic(), timeOfStaleReads)) {
+              timeline.setTopicUnstale(c.get().getTopic(), timeOfStaleReads);
+            }
+          }
+
           final Cell tempCell = c.get().duplicate();
           EventGraph<Event> events = this.timeline.eventsByTime.get(timeOfStaleReads);
-          this.timeline.cursor().stepUp(tempCell, events, Optional.of(noop), false);
-          if (isTopicStale(topic, timeOfStaleReads)) {
+          this.timeline.stepUp(tempCell, events, Optional.of(noop), false);
+          if (timeline.isTopicStale(topic, timeOfStaleReads)) {
             // Mark stale and reschedule task
             setTaskStale(taskId, timeOfStaleReads);
             foundStaleRead = true;
@@ -342,18 +349,6 @@ public final class SimulationEngine implements AutoCloseable {
     return staleTime.noLongerThan(timeOffset);
   }
 
-  /**
-   * Determine whether a topic been marked stale at a specified time.
-   * @param topic topic to check for staleness
-   * @param timeOffset the staleness time
-   * @return true if the topic is marked stale at timeOffset
-   */
-  public boolean isTopicStale(Topic<?> topic, Duration timeOffset) {
-    var set = this.staleTopics.get(topic);
-    final Duration staleTime = set.first();
-    return timeOffset.shorterThan(staleTime);
-  }
-
   /** Schedules any conditions or resources dependent on the given topic to be re-checked at the given time. */
   public void invalidateTopic(final Topic<?> topic, final Duration invalidationTime) {
     final var resources = this.waitingResources.invalidateTopic(topic);
@@ -397,13 +392,12 @@ public final class SimulationEngine implements AutoCloseable {
   /** Performs a collection of tasks concurrently, extending the given timeline by their stateful effects. */
   public EventGraph<Event> performJobs(
       final Collection<JobId> jobs,
-      final LiveCells context,
       final Duration currentTime,
       final Duration maximumTime,
       final Topic<Topic<?>> queryTopic) {
     var tip = EventGraph.<Event>empty();
     for (final var job$ : jobs) {
-      tip = EventGraph.concurrently(tip, TaskFrame.run(job$, context, (job, frame) -> {
+      tip = EventGraph.concurrently(tip, TaskFrame.run(job$, this.cells, (job, frame) -> {
         this.performJob(job, frame, currentTime, maximumTime, queryTopic);
       }));
     }
@@ -856,8 +850,8 @@ public final class SimulationEngine implements AutoCloseable {
     return Optional.empty();
   }
 
-  public Map<Topic<?>, TreeSet<Duration>> getStaleTopics() {
-    return staleTopics;
+  public Map<Topic<?>, TreeMap<Duration, Boolean>> getStaleTopics() {
+    return timeline.staleTopics;
   }
 
   public Map<TaskId, Duration> getStaleTasks() {
@@ -1003,8 +997,8 @@ public final class SimulationEngine implements AutoCloseable {
       if (isTaskStale(this.activeTask, this.currentTime)) {
         // Add this event to the timeline.
         this.frame.emit(Event.create(topic, event, this.activeTask));
-        if (!isTopicStale(topic, this.currentTime)) {
-          SimulationEngine.this.putStaleTopic(topic, this.currentTime);
+        if (!timeline.isTopicStale(topic, this.currentTime)) {
+          SimulationEngine.this.timeline.setTopicStale(topic, this.currentTime);
         }
       }
       SimulationEngine.this.invalidateTopic(topic, this.currentTime);

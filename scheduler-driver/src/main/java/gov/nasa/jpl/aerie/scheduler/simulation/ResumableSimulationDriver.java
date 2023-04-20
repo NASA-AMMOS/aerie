@@ -9,7 +9,6 @@ import gov.nasa.jpl.aerie.merlin.driver.StartOffsetReducer;
 import gov.nasa.jpl.aerie.merlin.driver.engine.JobSchedule;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -26,14 +25,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class ResumableSimulationDriver<Model> {
 
   private Duration curTime = Duration.ZERO;
   private SimulationEngine engine;
-  private LiveCells cells;
-  private LiveCells oldCells;
   //private TemporalEventSource timeline = new TemporalEventSource();
   private final MissionModel<Model> missionModel;
   private Instant startTime;
@@ -82,7 +78,7 @@ public class ResumableSimulationDriver<Model> {
     lastSimResults = null;
     lastSimResultsEnd = Duration.ZERO;
     // If rerunning the simulation, reuse the existing SimulationEngine to avoid redundant computation
-    this.rerunning = this.engine != null && this.cells.size() > 0;
+    this.rerunning = this.engine != null && this.engine.timeline.points.size() > 1;
     if (this.engine != null) this.engine.close();
     SimulationEngine oldEngine = rerunning ? this.engine : null;
     this.engine = new SimulationEngine(startTime, missionModel, oldEngine);
@@ -91,8 +87,7 @@ public class ResumableSimulationDriver<Model> {
 
     /* The top-level simulation timeline. */
     // this.timeline = new TemporalEventSource();
-    this.cells = new LiveCells(engine.timeline, missionModel.getInitialCells());
-    this.oldCells = oldEngine == null ? null : new LiveCells(oldEngine.timeline, oldEngine.getMissionModel().getInitialCells());
+
 
     /* The current real time. */
     curTime = Duration.ZERO;
@@ -116,7 +111,7 @@ public class ResumableSimulationDriver<Model> {
     engine.scheduleTask(time, missionModel.getDaemon(), Optional.empty());
 
     final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-    final var commit = engine.performJobs(batch.jobs(), cells, time, Duration.MAX_VALUE, queryTopic);
+    final var commit = engine.performJobs(batch.jobs(), time, Duration.MAX_VALUE, queryTopic);
     engine.timeline.add(commit, time);
   }
 
@@ -143,17 +138,19 @@ public class ResumableSimulationDriver<Model> {
       engine.timeline.add(delta);
 
       if (staleTopicTime.isEqualTo(nextTime)) {
-        // TODO: HERE!!
+        // TODO: Fill this in or remove it.  We may not need to do this since cells are already stepped up when needed.
+        //       But, we may need something to step cells just to derive resources.  Maybe that happens after this
+        //       while loop.
       }
 
       if (staleReadTime.isEqualTo(nextTime)) {
-        engine.rescheduleStaleTasks(cells, earliestStaleReads);
+        engine.rescheduleStaleTasks(earliestStaleReads);
       }
 
       if (timeOfNextJobs.isEqualTo(nextTime)) {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         // Run the jobs in this batch.
-        final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, queryTopic);
+        final var commit = engine.performJobs(batch.jobs(), curTime, Duration.MAX_VALUE, queryTopic);
         engine.timeline.add(commit, curTime);
       }
 
@@ -297,17 +294,19 @@ public class ResumableSimulationDriver<Model> {
       engine.timeline.add(delta);
 
       if (staleTopicTime.isEqualTo(nextTime)) {
-        // TODO: HERE!!
+        // TODO: Fill this in or remove it.  We may not need to do this since cells are already stepped up when needed.
+        //       But, we may need something to step cells just to derive resources.  Maybe that happens after this
+        //       while loop.
       }
 
       if (staleReadTime.isEqualTo(nextTime)) {
-        // TODO: HERE!!
+        engine.rescheduleStaleTasks(earliestStaleReads);
       }
 
       if (timeOfNextJobs.isEqualTo(nextTime)) {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
         // Run the jobs in this batch.
-        final var commit = engine.performJobs(batch.jobs(), cells, curTime, Duration.MAX_VALUE, queryTopic);
+        final var commit = engine.performJobs(batch.jobs(), curTime, Duration.MAX_VALUE, queryTopic);
         engine.timeline.add(commit, curTime);
       }
 

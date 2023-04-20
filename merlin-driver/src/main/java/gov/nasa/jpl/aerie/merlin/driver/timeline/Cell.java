@@ -71,12 +71,12 @@ public final class Cell<State> {
     return Arrays.stream(this.inner.selector.rows()).map(r -> r.topic()).collect(Collectors.toList());
   }
 
-  public Topic<?> getTopic() throws Exception {
+  public Topic<?> getTopic() {
     var topics = getTopics();
     if (topics != null && topics.size() == 1) {
       return topics.get(0);
     }
-    throw(new Exception("No single topic for cell! " + topics));
+    throw(new RuntimeException("No single topic for cell! " + topics));
   }
 
 

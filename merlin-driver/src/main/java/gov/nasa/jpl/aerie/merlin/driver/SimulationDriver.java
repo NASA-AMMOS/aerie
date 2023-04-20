@@ -46,7 +46,7 @@ public final class SimulationDriver {
       engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), Optional.empty());
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE, queryTopic);
+        final var commit = engine.performJobs(batch.jobs(), elapsedTime, Duration.MAX_VALUE, queryTopic);
         engine.timeline.add(commit, elapsedTime);
       }
 
@@ -85,7 +85,7 @@ public final class SimulationDriver {
         }
 
         // Run the jobs in this batch.
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration, queryTopic);
+        final var commit = engine.performJobs(batch.jobs(), elapsedTime, simulationDuration, queryTopic);
         engine.timeline.add(commit, elapsedTime);
       }
 
@@ -130,7 +130,7 @@ public final class SimulationDriver {
       engine.scheduleTask(Duration.ZERO, missionModel.getDaemon(), Optional.empty());
       {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE, queryTopic);
+        final var commit = engine.performJobs(batch.jobs(), elapsedTime, Duration.MAX_VALUE, queryTopic);
         engine.timeline.add(commit, elapsedTime);
       }
 
@@ -150,7 +150,7 @@ public final class SimulationDriver {
         //   even if they occur at the same real time.
 
         // Run the jobs in this batch.
-        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE, queryTopic);
+        final var commit = engine.performJobs(batch.jobs(), elapsedTime, Duration.MAX_VALUE, queryTopic);
         engine.timeline.add(commit, elapsedTime);
       }
     }

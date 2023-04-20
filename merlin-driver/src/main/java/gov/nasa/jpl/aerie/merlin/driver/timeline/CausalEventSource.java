@@ -1,6 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 import java.util.Arrays;
+import java.util.Optional;
 
 public final class CausalEventSource implements EventSource {
   private Event[] points = new Event[2];
@@ -39,6 +42,29 @@ public final class CausalEventSource implements EventSource {
     public void stepUp(final Cell<?> cell) {
       cell.apply(points, this.index, size);
       this.index = size;
+    }
+
+    @Override
+    public void stepUp(final Cell<?> cell, final Duration maxTime, final boolean includeMaxTime) {
+      throw new UnsupportedOperationException("Can't step through time with CausalCursor");
+    }
+
+    @Override
+    public void stepUp(final Cell<?> cell, final EventGraph<Event> events, final Optional<Event> lastEvent,
+                       final boolean includeLast) {
+      // Find the position of lastEvent after the index,
+      // which is the position before which the events have already been applied.
+      int pos = index;
+      while (pos < size) {
+        if (points[pos].equals(lastEvent)) break;
+        ++pos;
+      }
+      // Use the position as the end range to apply events to the cell, adjusting to include the event if specified
+      if (includeLast) {
+        pos = Math.min(pos + 1, size);
+      }
+      cell.apply(points, this.index, pos);
+      this.index = pos;
     }
   }
 }
