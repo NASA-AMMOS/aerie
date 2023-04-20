@@ -229,8 +229,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
    * apply Effects from Events up to some point in time.  The EventGraph represents partially time-ordered events.
    * Thus, the Cell may be stepped up to an Event within that partial order.
    *
-   * Assumes the corresponding cell from the oldTemporalEventSource has been stepped up to the same time.
-   * Also assumes that the same lastEvent exists in the oldTemporalEventSource.
+   * Staleness is not checked here and must be handled by the caller.
    *
    * @param cell the Cell to step up
    * @param events the Events that may affect the Cell
@@ -239,20 +238,6 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
    */
   public void stepUp(final Cell<?> cell, EventGraph<Event> events, final Optional<Event> lastEvent, final boolean includeLast) {
     cell.apply(events, lastEvent, includeLast);
-    // TODO: HERE!!!  Check for staleness here with TemporalEventSource.this.oldEventSource
-//    if (oldTemporalEventSource.isEmpty()) return;
-//    var oldCell = getOldCell(cell).duplicate();
-//    var oldGraph = oldTemporalEventSource.get().eventsByTime.get(cellTimes.get(cell));
-//
-//    oldCell.step();
-//    if (oldGraph != null) {
-//      oldCell.apply(oldGraph);
-//      if (oldCell.equals(cell)) {
-//        // then unstale
-//      } else {
-//        // stale
-//      }
-//    }
   }
 
   public LiveCell<?> getOldCell(LiveCell<?> cell) {
@@ -293,7 +278,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
      */
     public void stepUp(final Cell<?> cell, final Duration maxTime, final boolean includeMaxTime) {
       // TODO: If the cell is not stale, can't we avoid stepping both cells until there's a change in EventGraphs,
-      //       at which point we can duplicate the stepped cell or copy the cell's state? 
+      //       at which point we can duplicate the stepped cell or copy the cell's state?
       // TODO: And, don't we want to stop stepping up if are no more changes to Events?  Or, is that handled at a
       //       higher level, and we just need to step all the way to maxTime?
       // TODO: Should we take into account the plan horizon here or assume that's done at a higher level?

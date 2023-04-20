@@ -14,7 +14,6 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCell;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSourceDelta;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
@@ -215,10 +214,16 @@ public final class SimulationEngine implements AutoCloseable {
     removeTaskHistory(taskId);
   }
 
+  /**
+   * For the next time t that a set of tasks could potentially have a stale read, check if any read is stale for
+   * each of those tasks, and, if so, mark them stale at t and schedule them to re-run.
+   * 
+   * @param earliestStaleReads the time of the potential stale reads along with the tasks and the potentially stale topics they read
+   */
   public void rescheduleStaleTasks(Pair<Duration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReads) {
     // Test to see if read value has changed.  If so, reschedule the affected task
     Duration timeOfStaleReads = earliestStaleReads.getLeft();
-    for (var entry : earliestStaleReads.getRight().entrySet()) {
+    for (Map.Entry<TaskId, HashSet<Pair<Topic<?>, Event>>> entry : earliestStaleReads.getRight().entrySet()) {
       final var taskId = entry.getKey();
       boolean foundStaleRead = false;
       for (Pair<Topic<?>, Event> pair : entry.getValue()) {
@@ -226,39 +231,34 @@ public final class SimulationEngine implements AutoCloseable {
         final var noop = pair.getRight();
         for (LiveCell c : cells.getCells(topic)) {
           // Need to step cell up to the point of the read
-          // Step up the cell to the time before the event graphs and then make a duplicate here
-          // since different parts of the event graph will be evaluated.
+          // First, step up the cell to the time before the event graph where the read takes place and then
+          // make a duplicate of the cell since partial evaluation of an event graph makes the cell unusable
+          // for stepping further.
           c.cursor.stepUp(c.get(), timeOfStaleReads, false);
-
-          // FIXME: Wouldn't it be better to manage staleness inside the timeline or cursor?
-          var oc = timeline.getOldCell(c);
-          oc.cursor.stepUp(oc.get(), timeOfStaleReads, false);
-          if (!c.get().getState().equals(oc.get().getState())) {
-            if (!timeline.isTopicStale(c.get().getTopic(), timeOfStaleReads)) {
-              timeline.setTopicStale(c.get().getTopic(), timeOfStaleReads);
-            }
-          } else {
-            if (timeline.isTopicStale(c.get().getTopic(), timeOfStaleReads)) {
-              timeline.setTopicUnstale(c.get().getTopic(), timeOfStaleReads);
-            }
-          }
-
           final Cell tempCell = c.get().duplicate();
           EventGraph<Event> events = this.timeline.eventsByTime.get(timeOfStaleReads);
           this.timeline.stepUp(tempCell, events, Optional.of(noop), false);
-          if (timeline.isTopicStale(topic, timeOfStaleReads)) {
-            // Mark stale and reschedule task
-            setTaskStale(taskId, timeOfStaleReads);
-            foundStaleRead = true;
-            break;
+          if (timeline.oldTemporalEventSource.isPresent()) {
+            var tempOldCell = timeline.getOldCell(c).get().duplicate();
+            // Assumes the old cell has been stepped up to the same time already.  TODO: But, if not stale, shouldn't the old cell not exist or not be stepped up, in which case we duplicate to get the old cell instead unless the old event graph is the same?
+            // Assumes that the same noop event for the read exists at the same time in the oldTemporalEventSource.
+            var oldEvents = this.timeline.oldTemporalEventSource.get().eventsByTime.get(timeOfStaleReads);
+            if (oldEvents != null) {
+              if (timeline.isTopicStale(topic, timeOfStaleReads) || !oldEvents.equals(events)) {
+                this.timeline.oldTemporalEventSource.get().stepUp(tempOldCell, events, Optional.of(noop), false);
+                if (!tempCell.getState().equals(tempOldCell.getState())) {
+                  // Mark stale and reschedule task
+                  setTaskStale(taskId, timeOfStaleReads);
+                  foundStaleRead = true;
+                  break;
+                }
+              }
+            }
           }
-        }
-        if (foundStaleRead) {
-          break;
-        }
-      }
-    }
-
+        }  // for LiveCell
+        if (foundStaleRead) break; // already rescheduled task, so can move on to the next task
+      }  // for Pair<Topic<?>, Event>
+    }  // for Map.Entry<TaskId, HashSet<Pair<Topic<?>, Event>>>
   }
 
   public void removeTaskHistory(TaskId taskId) {
