@@ -42,6 +42,7 @@ begin;
   \ir tables/mission_model_parameters.sql
   \ir tables/simulation_dataset.sql
   \ir tables/plan_dataset.sql
+  \ir tables/plan_dataset_to_simulation_dataset.sql
 
   -- Plan Collaboration
   \ir plan_collaboration.sql

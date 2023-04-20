@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import org.apache.commons.lang3.tuple.Pair;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -14,7 +15,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
   private final @Language("SQL") String sql = """
       insert into plan_dataset (plan_id, offset_from_plan_start)
       values (?, ?::timestamptz - ?::timestamptz)
-      returning dataset_id
+      returning dataset_id, offset_from_plan_start
       """;
 
   private final PreparedStatement statement;
@@ -23,7 +24,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public PlanDatasetRecord apply(
+  public Pair<Long, Duration> apply(
       final long planId,
       final Timestamp planStart,
       final Timestamp datasetStart
@@ -36,9 +37,8 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 
     final var results = this.statement.executeQuery();
     if (!results.next()) throw new FailedInsertException("plan_dataset");
-    final var datasetId = results.getLong(1);
-
-    return new PlanDatasetRecord(planId, datasetId, offsetFromPlanStart);
+    final var datasetId = results.getLong("dataset_id");
+    return Pair.of(datasetId, offsetFromPlanStart);
   }
 
   @Override

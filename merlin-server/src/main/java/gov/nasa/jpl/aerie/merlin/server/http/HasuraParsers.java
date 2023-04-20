@@ -19,6 +19,7 @@ import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 import static gov.nasa.jpl.aerie.merlin.driver.json.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.datasetIdP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.planIdP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.simulationDatasetIdP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.timestampP;
 import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.profileSetP;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.pgTimestampP;
@@ -54,6 +55,17 @@ public abstract class HasuraParsers {
       = hasuraActionF(productP
                           .field("planId", planIdP)
                           .map(HasuraAction.PlanInput::new, HasuraAction.PlanInput::planId));
+
+  public static final JsonParser<HasuraAction<HasuraAction.GetConstraintViolationsInput>> hasuraGetConstraintsViolationsAction
+      = hasuraActionF(
+      productP
+          .field("planId", planIdP)
+          .field("simulationDatasetId", simulationDatasetIdP)
+          .map(
+              untuple(HasuraAction.GetConstraintViolationsInput::new),
+              $ -> tuple($.planId(), $.simulationDatasetId())
+          )
+  );
 
   public static final JsonParser<HasuraAction<HasuraAction.ConstraintsInput>> hasuraConstraintsCodeAction
       = hasuraActionF(
@@ -126,11 +138,16 @@ public abstract class HasuraParsers {
       = hasuraActionF(
           productP
             .field("planId", planIdP)
+            .optionalField("associatedSimulationDatasetId", nullableP(simulationDatasetIdP))
             .field("datasetStart", timestampP)
             .field("profileSet", profileSetP)
             .map(
-                untuple(HasuraAction.UploadExternalDatasetInput::new),
-                $ -> tuple($.planId(), $.datasetStart(), $.profileSet())));
+                untuple((planId, associatedSimulationDatasetId, datasetStart, profileSet) -> new HasuraAction.UploadExternalDatasetInput(
+                    planId,
+                    associatedSimulationDatasetId.flatMap($ -> $),
+                    datasetStart,
+                    profileSet)),
+                (HasuraAction.UploadExternalDatasetInput $) -> tuple($.planId(), Optional.of($.associatedSimulationDatasetId()), $.datasetStart(), $.profileSet())));
 
   public static final JsonParser<HasuraAction<HasuraAction.ExtendExternalDatasetInput>> hasuraExtendExternalDatasetActionP
       = hasuraActionF(

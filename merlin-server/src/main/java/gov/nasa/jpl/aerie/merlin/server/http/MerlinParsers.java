@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationFailure;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 
@@ -72,6 +73,12 @@ public abstract class MerlinParsers {
       . map(
           PlanId::new,
           PlanId::id);
+
+  public static final JsonParser<SimulationDatasetId> simulationDatasetIdP
+      = longP
+      . map(
+          SimulationDatasetId::new,
+          SimulationDatasetId::id);
 
   public static final JsonParser<DatasetId> datasetIdP
       = longP

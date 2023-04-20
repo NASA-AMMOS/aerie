@@ -39,7 +39,10 @@ public final class InstantiationException extends Exception {
 
   public record ExtraneousArgument(String parameterName) { }
 
-  public record UnconstructableArgument(String parameterName, String failure) { }
+  public record UnconstructableArgument(String parameterName, String failure) {
+    public UnconstructableArgument {
+    }
+  }
 
   public record MissingArgument(String parameterName, ValueSchema schema) { } // TODO remove schema
 

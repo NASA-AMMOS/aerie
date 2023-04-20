@@ -10,12 +10,14 @@ import gov.nasa.jpl.aerie.merlin.server.models.DatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * An owned interface to a concurrency-safe store of plans.
@@ -35,10 +37,10 @@ public interface PlanRepository {
 
   Map<Long, Constraint> getAllConstraintsInPlan(PlanId planId) throws NoSuchPlanException;
 
-  long addExternalDataset(PlanId planId, Timestamp datasetStart, ProfileSet profileSet) throws NoSuchPlanException;
+  long addExternalDataset(PlanId planId, Optional<SimulationDatasetId> associatedSimulationDatasetId, Timestamp datasetStart, ProfileSet profileSet) throws NoSuchPlanException;
   void extendExternalDataset(DatasetId datasetId, ProfileSet profileSet) throws NoSuchPlanDatasetException;
-  List<Pair<Duration, ProfileSet>> getExternalDatasets(PlanId planId) throws NoSuchPlanException;
-  Map<String, ValueSchema> getExternalResourceSchemas(PlanId planId) throws NoSuchPlanException;
+  List<Pair<Duration, ProfileSet>> getExternalDatasets(PlanId planId, Optional<SimulationDatasetId> simulationDatasetId) throws NoSuchPlanException;
+  Map<String, ValueSchema> getExternalResourceSchemas(PlanId planId, final Optional<SimulationDatasetId> simulationDatasetId) throws NoSuchPlanException;
 
   record CreatedPlan(PlanId planId, List<ActivityDirectiveId> activityIds) {}
 }

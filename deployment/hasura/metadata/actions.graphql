@@ -13,7 +13,12 @@ interface Fallible {
 }
 
 type Mutation {
-  addExternalDataset(planId: Int!, datasetStart: String!, profileSet: ProfileSet!): AddExternalDatasetResponse
+  addExternalDataset(
+    planId: Int!
+    associatedSimulationDatasetId: Int
+    datasetStart: String!
+    profileSet: ProfileSet!
+  ): AddExternalDatasetResponse
 }
 
 type Mutation {
@@ -86,7 +91,7 @@ type Query {
 }
 
 type Query {
-  constraintViolations(planId: Int!): ConstraintViolationsResponse
+  constraintViolations(planId: Int!, simulationDatasetId: Int!): ConstraintViolationsResponse
 }
 
 type Query {

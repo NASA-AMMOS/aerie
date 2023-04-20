@@ -6,6 +6,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.InstantiationException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanDatasetException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityDirectiveForValidation;
+import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import gov.nasa.jpl.aerie.merlin.server.services.GenerateConstraintsLibAction;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraActivityDirectiveEventTriggerP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraConstraintsCodeAction;
+import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraGetConstraintsViolationsAction;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraUploadExternalDatasetActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.HasuraParsers.hasuraMissionModelArgumentsActionP;
@@ -216,9 +219,11 @@ public final class MerlinBindings implements Plugin {
 }
   private void getConstraintViolations(final Context ctx) {
     try {
-      final var planId = parseJson(ctx.body(), hasuraPlanActionP).input().planId();
+      final var input = parseJson(ctx.body(), hasuraGetConstraintsViolationsAction).input();
+      final var planId = input.planId();
+      final var simulationDatasetId = input.simulationDatasetId();
 
-      final var constraintViolations = this.simulationAction.getViolations(planId);
+      final var constraintViolations = this.simulationAction.getViolations(planId, simulationDatasetId);
 
       ctx.result(ResponseSerializers.serializeConstraintViolations(constraintViolations).toString());
     } catch (final InvalidJsonException ex) {
@@ -351,10 +356,11 @@ public final class MerlinBindings implements Plugin {
       final var input = parseJson(ctx.body(), hasuraUploadExternalDatasetActionP).input();
 
       final var planId = input.planId();
+      final var associatedSimulationDatasetId = input.associatedSimulationDatasetId();
       final var datasetStart = input.datasetStart();
       final var profileSet = input.profileSet();
 
-      final var datasetId = this.planService.addExternalDataset(planId, datasetStart, profileSet);
+      final var datasetId = this.planService.addExternalDataset(planId, associatedSimulationDatasetId, datasetStart, profileSet);
 
       ctx.status(201).result(ResponseSerializers.serializeCreatedDatasetId(datasetId).toString());
     } catch (final NoSuchPlanException ex) {

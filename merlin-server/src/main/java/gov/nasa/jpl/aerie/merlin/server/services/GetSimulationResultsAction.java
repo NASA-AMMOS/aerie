@@ -17,6 +17,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.SimulationResultsHandle;
+import gov.nasa.jpl.aerie.merlin.server.models.SimulationDatasetId;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.temporal.ChronoUnit;
@@ -120,7 +121,7 @@ public final class GetSimulationResultsAction {
     return samples;
   }
 
-  public List<Violation> getViolations(final PlanId planId)
+  public List<Violation> getViolations(final PlanId planId, final SimulationDatasetId simulationDatasetId)
   throws NoSuchPlanException, MissionModelService.NoSuchMissionModelException
   {
     final var plan = this.planService.getPlanForValidation(planId);
@@ -165,7 +166,7 @@ public final class GetSimulationResultsAction {
           Interval.between(activityOffset, activityOffset.plus(activity.duration()))));
     }
 
-    final var externalDatasets = this.planService.getExternalDatasets(planId);
+    final var externalDatasets = this.planService.getExternalDatasets(planId, Optional.of(simulationDatasetId));
     final var realExternalProfiles = new HashMap<String, LinearProfile>();
     final var discreteExternalProfiles = new HashMap<String, DiscreteProfile>();
 
