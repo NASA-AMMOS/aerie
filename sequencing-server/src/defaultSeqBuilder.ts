@@ -65,8 +65,7 @@ function sortCommandsByTime(commands: CommandStem<{} | []>[]): {
   sortedCommands: CommandStem<{} | []>[];
   timeSorted: boolean;
 } {
-  // Holds the relative times converted into absolute times.
-  const relativeTimeTracker: Record<string, Temporal.Instant> = {};
+  const convertedCommands: CommandStem<{} | []>[] = [];
 
   let previousTime: Temporal.Instant | null = null;
 
@@ -82,25 +81,21 @@ function sortCommandsByTime(commands: CommandStem<{} | []>[]): {
     }
 
     if (command.relativeTime !== null && previousTime !== null) {
-      relativeTimeTracker[command.stem + command.relativeTime?.toString()] = previousTime.add(command.relativeTime);
-
-      previousTime = previousTime.add(command.relativeTime);
+      convertedCommands.push(command.absoluteTiming(previousTime.add(command.relativeTime)));
     } else {
+      convertedCommands.push(command);
       previousTime = command.absoluteTime;
     }
   }
 
-  // The commands will either be absolute or relative at this point, so we just compare their times.
-  commands.sort((a, b) => {
-    const firstCommandTime = a.absoluteTime ?? relativeTimeTracker[a.stem + a.relativeTime?.toString()];
-    const secondCommandTime = b.absoluteTime ?? relativeTimeTracker[b.stem + b.relativeTime?.toString()];
-
-    if (firstCommandTime !== undefined && secondCommandTime !== undefined) {
-      return Temporal.Instant.compare(firstCommandTime, secondCommandTime);
+  // The commands will all be absolute time at this point, so sort them.
+  convertedCommands.sort((a, b) => {
+    if (a.absoluteTime !== null && b.absoluteTime !== null) {
+      return Temporal.Instant.compare(a.absoluteTime, b.absoluteTime);
     }
 
     return 0;
   });
 
-  return { sortedCommands: commands, timeSorted: true };
+  return { sortedCommands: convertedCommands, timeSorted: true };
 }

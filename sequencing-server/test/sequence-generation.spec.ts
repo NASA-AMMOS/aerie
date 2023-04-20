@@ -2754,14 +2754,14 @@ describe('sequence generation', () => {
         {
           type: 'command',
           stem: 'PICK_BANANA',
-          time: { tag: '04:00:00.000', type: TimingTypes.COMMAND_RELATIVE },
+          time: { tag: '2023-091T12:19:00.000', type: TimingTypes.ABSOLUTE },
           args: [],
           metadata: { simulatedActivityId: simulatedActivityId1 },
         },
         {
           type: 'command',
           stem: 'PICK_BANANA',
-          time: { tag: '04:00:00.000', type: TimingTypes.COMMAND_RELATIVE },
+          time: { tag: '2023-091T12:19:00.000', type: TimingTypes.ABSOLUTE },
           args: [],
           metadata: { simulatedActivityId: simulatedActivityId2 },
         },

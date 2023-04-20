@@ -767,6 +767,7 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
       stem: this.stem,
       arguments: this.arguments,
       absoluteTime: absoluteTime,
+      metadata: this._metadata,
     });
   }
 
@@ -775,6 +776,7 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
       stem: this.stem,
       arguments: this.arguments,
       epochTime: epochTime,
+      metadata: this._metadata,
     });
   }
 
@@ -783,6 +785,7 @@ export class CommandStem<A extends Args[] | { [argName: string]: any } = [] | {}
       stem: this.stem,
       arguments: this.arguments,
       relativeTime: relativeTime,
+      metadata: this._metadata,
     });
   }
 
