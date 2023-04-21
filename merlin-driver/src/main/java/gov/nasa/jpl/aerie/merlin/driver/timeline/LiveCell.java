@@ -10,7 +10,7 @@ public final class LiveCell<State> {
   }
 
   public Cell<State> get() {
-    this.cursor.stepUp(this.cell);
+    // this.cursor.stepUp(this.cell);   // commenting out; how far to step a cell now requires context; should probably get rid of LiveCell class since cursor isn't useful here anymore
     return this.cell;
   }
 }

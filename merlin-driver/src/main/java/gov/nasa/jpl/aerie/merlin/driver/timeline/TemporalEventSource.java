@@ -240,6 +240,19 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     cell.apply(events, lastEvent, includeLast);
   }
 
+  /**
+   * Step up the Cell through the timeline of EventGraphs.  Stepping up means to
+   * apply Effects from Events up to some point in time.
+   *
+   * @param cell the Cell to step up
+   * @param maxTime the time beyond which Events are ignored
+   * @param includeMaxTime whether to apply the Events occurring at maxTime
+   */
+  public void stepUp(final LiveCell<?> cell, final Duration maxTime, final boolean includeMaxTime) {
+    cell.cursor.stepUp(cell.get(), maxTime, includeMaxTime);
+  }
+
+
   public LiveCell<?> getOldCell(LiveCell<?> cell) {
     return oldTemporalEventSource.get().liveCells.getCells(cell.get().getTopic()).stream().findFirst().get();
   }
@@ -282,6 +295,7 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
       // TODO: And, don't we want to stop stepping up if are no more changes to Events?  Or, is that handled at a
       //       higher level, and we just need to step all the way to maxTime?
       // TODO: Should we take into account the plan horizon here or assume that's done at a higher level?
+      // TODO: The above may be answered by looking where step() and stepUp() are called, like in LiveCell.get()
       final NavigableMap<Duration, EventGraph<Event>> subTimeline;
       NavigableMap<Duration, EventGraph<Event>> oldSubTimeline = null;
       var cellTime = cellTimes.get(cell);

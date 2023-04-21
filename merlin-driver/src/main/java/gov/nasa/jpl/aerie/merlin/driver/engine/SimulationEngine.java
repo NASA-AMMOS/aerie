@@ -217,7 +217,7 @@ public final class SimulationEngine implements AutoCloseable {
   /**
    * For the next time t that a set of tasks could potentially have a stale read, check if any read is stale for
    * each of those tasks, and, if so, mark them stale at t and schedule them to re-run.
-   * 
+   *
    * @param earliestStaleReads the time of the potential stale reads along with the tasks and the potentially stale topics they read
    */
   public void rescheduleStaleTasks(Pair<Duration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReads) {
@@ -935,6 +935,10 @@ public final class SimulationEngine implements AutoCloseable {
       @SuppressWarnings("unchecked")
       final var query = ((EngineCellId<?, State>) token);
 
+      // step up cell(s) for topic -- this used to be done in LiveCell.get()
+      var cells = timeline.liveCells.getCells(query.topic());
+      cells.forEach(cell -> timeline.stepUp(cell, currentTime, false));
+
       this.queryTrackingInfo.ifPresent(info -> {
         if (isTaskStale(info.getRight(), currentTime)) {
           // Create a noop event to mark when the read occurred in the EventGraph
@@ -980,6 +984,10 @@ public final class SimulationEngine implements AutoCloseable {
       // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
       final var query = (EngineCellId<?, State>) token;
+
+      // step up cell(s) for topic -- this used to be done in LiveCell.get()
+      var cells = timeline.liveCells.getCells(query.topic());
+      cells.forEach(cell -> timeline.stepUp(cell, currentTime, false));
 
       // Create a noop event to mark when the read occurred in the EventGraph
       var noop = Event.create(queryTopic, query.topic(), activeTask);

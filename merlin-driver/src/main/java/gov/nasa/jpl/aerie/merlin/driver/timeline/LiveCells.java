@@ -10,6 +10,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class LiveCells {
   // INVARIANT: Every Query<T> maps to a LiveCell<T>; that is, the type parameters are correlated.
@@ -53,8 +55,17 @@ public final class LiveCells {
   }
 
   public Set<LiveCell<?>> getCells(final Topic<?> topic) {
-    var cells = cellsForTopic.get(topic);
-    if (cells == null) return Collections.emptySet();
+    Set<LiveCell<?>> cells = new HashSet<>(cellsForTopic.get(topic));
+    var parentCells = parent.getCells(topic);
+    // Need to get the duplicated cell in cells corresponding to each matching parent cell
+    for (var c : parentCells) {
+      final Stream<Query<?>> queries = parent.cells.keySet().stream().filter(q -> parent.cells.get(q).equals(c));
+      // need to call getCell() to generate the duplicate of the parent cell
+      queries.map(q -> this.cells.get(getCell(q)));
+      // getCell() in statement above return Cell instead of LiveCell, so we throw that result away and get them directly.
+      var newCells = queries.map(q -> this.cells.get(q));
+      cells.addAll(newCells.collect(Collectors.toList()));
+    }
     return cells;
   }
 
