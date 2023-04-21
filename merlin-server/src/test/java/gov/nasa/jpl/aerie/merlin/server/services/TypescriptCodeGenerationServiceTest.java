@@ -16,7 +16,7 @@ class TypescriptCodeGenerationServiceTest {
   void testCodeGen() throws MissionModelService.NoSuchMissionModelException, NoSuchPlanException {
     final var codeGenService = new TypescriptCodeGenerationServiceAdapter(new StubMissionModelService(), new StubPlanService());
     final var expected = codeGenService.generateTypescriptTypes("abc", Optional.of(new PlanId(1L)));
-    assertEquals(
+    assertEquals(expected,
         """
             /** Start Codegen */
             import * as AST from './constraints-ast.js';
@@ -92,8 +92,7 @@ class TypescriptCodeGenerationServiceTest {
             Object.assign(globalThis, {
               ActivityType
             });
-            /** End Codegen */""",
-        expected
+            /** End Codegen */"""
     );
   }
 }
