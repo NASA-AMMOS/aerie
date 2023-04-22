@@ -1,10 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SlabList;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -18,54 +20,55 @@ import java.util.TreeSet;
 
 public class TemporalEventSource implements EventSource, Iterable<TemporalEventSource.TimePoint> {
   public LiveCells liveCells;
-  public SlabList<TimePoint> points;
-  public TreeMap<Duration, EventGraph<Event>> eventsByTime;  // TODO: REVIEW - Could do binary search on slab list if
-                                                             //       a list of time-graph pairs instead of deltas.
-  public Map<Topic<?>, TreeMap<Duration, EventGraph<Event>>> eventsByTopic;  // TODO: REVIEW - Could be slab list like eventsByTime
-  public Map<TaskId, TreeMap<Duration, EventGraph<Event>>> eventsByTask;
-  public Map<EventGraph<Event>, Set<Topic<?>>> topicsForEventGraph;
-  public Map<EventGraph<Event>, Set<TaskId>> tasksForEventGraph;
-  public HashMap<Cell<?>, Duration> cellTimes;
+  private final MissionModel<?> missionModel;
+  public SlabList<TimePoint> points = new SlabList<>();
+  public TreeMap<Duration, EventGraph<Event>> eventsByTime = new TreeMap<>();  // TODO: REVIEW - Could do binary search on slab list if
+                                                                               //       a list of time-graph pairs instead of deltas.
+  public Map<Topic<?>, TreeMap<Duration, EventGraph<Event>>> eventsByTopic = new HashMap<>();  // TODO: REVIEW - Could be slab list like eventsByTime
+  public Map<TaskId, TreeMap<Duration, EventGraph<Event>>> eventsByTask = new HashMap<>();
+  public Map<EventGraph<Event>, Set<Topic<?>>> topicsForEventGraph = new HashMap<>();
+  public Map<EventGraph<Event>, Set<TaskId>> tasksForEventGraph = new HashMap<>();
+  public Map<EventGraph<Event>, Duration> timeForEventGraph = new HashMap<>();
+  public HashMap<Cell<?>, Duration> cellTimes = new HashMap<>();
   public Optional<TemporalEventSource> oldTemporalEventSource;
+  /**
+   * cellCache keeps duplicates and old cells that can be reused to more quickly get a past cell value.
+   * For example, if a task needs to re-run but starts in the past, we can re-run it from a past point,
+   * and successive reads a cell can use a duplicate cached cell stepped up from its initial state.
+   */
+  private final HashMap<Topic<?>, TreeMap<Duration, LiveCell<?>>> cellCache = new HashMap<>();
+
+
 
   /** When topics/cells become stale */
   public final Map<Topic<?>, TreeMap<Duration, Boolean>> staleTopics = new HashMap<>();
 
 
-
   public TemporalEventSource() {
-    this(null, new SlabList<>(), new TreeMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), Optional.empty());
+    this(null, null, Optional.empty());
   }
 
   public TemporalEventSource(
       final LiveCells liveCells,
-      final SlabList<TimePoint> points,
-      final TreeMap<Duration, EventGraph<Event>> eventsByTime,
-      final Map<Topic<?>, TreeMap<Duration, EventGraph<Event>>> eventsByTopic,
-      final Map<TaskId, TreeMap<Duration, EventGraph<Event>>> eventsByTask,
-      final Map<EventGraph<Event>, Set<Topic<?>>> topicsForEventGraph,
-      final Map<EventGraph<Event>, Set<TaskId>> tasksForEventGraph,
-      final HashMap<Cell<?>, Duration> cellTimes,
+      final MissionModel<?> missionModel,
       final Optional<TemporalEventSource> oldTemporalEventSource)
   {
     this.liveCells = liveCells;
-    this.points = points;
-    this.eventsByTime = eventsByTime;
-    this.eventsByTopic = eventsByTopic;
-    this.eventsByTask = eventsByTask;
-    this.topicsForEventGraph = topicsForEventGraph;
-    this.tasksForEventGraph = tasksForEventGraph;
-    this.cellTimes = cellTimes;
+    this.missionModel = missionModel;
     this.oldTemporalEventSource = oldTemporalEventSource;
+    // Assumes the current time is zero, and the cells have not yet been stepped.
+    // FIXME: LiveCells creates duplicates of cells in its parent as they are queried; they will need celltimes, too.
+    //        Maybe if cellTimes.get() can be wrapped such that it inserts 0 if absent.
+    if (liveCells != null) {
+      for (LiveCell liveCell : liveCells.getCells()) {
+        final Cell cell = liveCell.get();
+        cellTimes.put(cell, Duration.ZERO);
+      }
+    }
   }
 
   public TemporalEventSource(LiveCells liveCells) {
-    this(liveCells, new SlabList<>(), new TreeMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), null);
-    // Assumes the current time is zero, and the cells have not yet been stepped.
-    for (LiveCell liveCell : liveCells.getCells()) {
-      final Cell cell = liveCell.get();
-      cellTimes.put(cell, Duration.ZERO);
-    }
+    this(liveCells, null, Optional.empty());
   }
 
   public void add(final Duration delta) {
@@ -95,13 +98,46 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     tasksForEventGraph.computeIfAbsent(graph, $ -> new TreeSet<>()).addAll(tasks);
   }
 
+  public void replaceEventGraph(EventGraph<Event> oldG, EventGraph<Event> newG) {
+    // TODO: Maybe the handling of the new graph could be in a separate put(EventGraph), and that of the old in a remove(EventGraph).
+    //       There is an add() that serves as a put().
+    //       See addIndices().
+    // TODO: Something doesn't feel right here.  See how these maps are handled elsewhere; this seems like too much work.
+    //       Maybe we should separate this into three methods (for time, task, and topic), and pass an extra arg for
+    //       whether the tasks, for example, changed, so that extractTasks() could be avoided.
+    // HERE!!!  BTW, MAKE A TODO LIST TO FINISH INCREMENTAL SIM!
+
+    // time
+    Duration time = timeForEventGraph.get(oldG);
+    timeForEventGraph.remove(time);
+    timeForEventGraph.put(newG, time);
+    eventsByTime.put(time, newG);
+
+    // task
+    var tasks = tasksForEventGraph.get(oldG);
+    tasks.forEach(t -> eventsByTask.get(t).remove(oldG));
+    tasksForEventGraph.remove(oldG);
+    var newTasks = extractTasks(newG);
+    tasksForEventGraph.put(newG, newTasks);
+    newTasks.forEach(t -> eventsByTask.computeIfAbsent(t, $ -> new TreeMap<>()).put(time, newG));
+
+    // topic
+    var topics = topicsForEventGraph.get(oldG);
+    topics.forEach(t -> eventsByTopic.get(t).remove(oldG));
+    topicsForEventGraph.remove(oldG);
+    var newTopics = extractTopics(newG);
+    topicsForEventGraph.put(newG, newTopics);
+    newTopics.forEach(t -> eventsByTopic.computeIfAbsent(t, $ -> new TreeMap<>()).put(time, newG));
+  }
+
+
   @Override
   public Iterator<TimePoint> iterator() {
     if (oldTemporalEventSource.isEmpty()) {
       return TemporalEventSource.this.points.iterator();
     }
     // Create an iterator that combines the old and new EventGraph timelines
-    // This TemporalEventSource only keeps modifications of EventGraphs in the oldTemporalEventSource.
+    // This TemporalEventSource only keeps modifications of EventGraphs from the oldTemporalEventSource.
     return new Iterator<>() {
       private Iterator<TemporalEventSource.TimePoint> oldIter = oldTemporalEventSource.get().iterator();
       private Duration accumulatedDuration = Duration.ZERO;
@@ -252,8 +288,51 @@ public class TemporalEventSource implements EventSource, Iterable<TemporalEventS
     cell.cursor.stepUp(cell.get(), maxTime, includeMaxTime);
   }
 
+  public <State> LiveCell<State> getCell(Topic<?> topic, Duration maxTime, boolean includeMaxTime) {
+    Optional<LiveCell<?>> cell = liveCells.getCells(topic).stream().findFirst();
+    if (cell.isEmpty()) {
+      throw new RuntimeException("Can't find cell for query.");
+    }
+    return getCell((LiveCell<State>)cell.get(), maxTime, includeMaxTime);
+  }
+
+  public <State> LiveCell<State> getCell(LiveCell<State> cell, Duration maxTime, boolean includeMaxTime) {
+    var time = cellTimes.get(cell.get());
+    // Use the one in LiveCells if not asking for a time in the past.
+    if (time == null || time.noLongerThan(maxTime)) {
+      stepUp(cell, maxTime, includeMaxTime);
+      cellTimes.put(cell.get(), maxTime);
+      return cell;
+    }
+    // For a cell in the past, use the cell cache
+    LiveCell<State> liveCell = getOrCreateCellInCache(cell.get().getTopic(), maxTime, includeMaxTime);
+    return liveCell;
+  }
+
+  public <State> LiveCell<State> getCell(Query<State> query, Duration maxTime, boolean includeMaxTime) {
+    Optional<LiveCell<State>> cell = liveCells.getLiveCell(query);
+    return getCell(cell.get(), maxTime, includeMaxTime);
+  }
+
+  public <State> LiveCell<State> getOrCreateCellInCache(Topic<?> topic, Duration maxTime, boolean includeMaxTime) {
+    final TreeMap<Duration, LiveCell<?>> inner = cellCache.computeIfAbsent(topic, $ -> new TreeMap<>());
+    final Map.Entry<Duration, LiveCell<?>> entry = inner.floorEntry(maxTime);
+    LiveCell<?> cell;
+    if (entry != null) {
+      cell = entry.getValue();
+      // TODO: maybe pass in boolean for whether to duplicate the cell in the cache instead of removing and adding back after stepping up
+      inner.remove(entry.getKey());
+    } else {
+      cell = missionModel.getInitialCells().getCells(topic).stream().findFirst().get();
+      cell = new LiveCell<>(cell.get().duplicate(), cursor());
+    }
+    stepUp(cell, maxTime, includeMaxTime);
+    inner.put(maxTime, cell);
+    return (LiveCell<State>) cell;
+  }
 
   public LiveCell<?> getOldCell(LiveCell<?> cell) {
+    if (oldTemporalEventSource.isEmpty()) return null;
     return oldTemporalEventSource.get().liveCells.getCells(cell.get().getTopic()).stream().findFirst().get();
   }
 

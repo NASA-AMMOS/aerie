@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -17,6 +18,7 @@ public final class LiveCells {
   // INVARIANT: Every Query<T> maps to a LiveCell<T>; that is, the type parameters are correlated.
   private final Map<Query<?>, LiveCell<?>> cells = new HashMap<>();
   private final Map<Topic<?>, HashSet<LiveCell<?>>> cellsForTopic = new HashMap<>();
+
   private final EventSource source;
   private final LiveCells parent;
 
@@ -70,13 +72,18 @@ public final class LiveCells {
   }
 
   private <State> Optional<Cell<State>> getCell(final Query<State> query) {
+    Optional<LiveCell<State>> liveCell = getLiveCell(query);
+    return liveCell.isPresent() ? Optional.of(liveCell.get().get()) : Optional.empty();
+  }
+
+  public <State> Optional<LiveCell<State>> getLiveCell(final Query<State> query) {
     // First, check if we have this cell already.
     {
       // SAFETY: By the invariant, if there is an entry for this query, it is of type Cell<State>.
       @SuppressWarnings("unchecked")
       final var cell = (LiveCell<State>) this.cells.get(query);
 
-      if (cell != null) return Optional.of(cell.get());
+      if (cell != null) return Optional.of(cell);
     }
 
     // Otherwise, go ask our parent for the cell.
@@ -86,6 +93,6 @@ public final class LiveCells {
 
     final var cell = put(query, cell$.get().duplicate());
 
-    return Optional.of(cell.get());
+    return Optional.of(cell);
   }
 }

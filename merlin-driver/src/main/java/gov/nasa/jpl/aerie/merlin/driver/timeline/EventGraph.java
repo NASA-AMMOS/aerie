@@ -37,6 +37,7 @@ import java.util.function.Function;
  */
 public sealed interface EventGraph<Event> extends EffectExpression<Event> {
   /** Use {@link EventGraph#empty()} instead of instantiating this class directly. */
+
   record Empty<Event>() implements EventGraph<Event> {
     // The behavior of the empty graph is independent of the parameterized Event type,
     // so we cache a single instance and re-use it for all Event types.
@@ -46,6 +47,11 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     public String toString() {
       return EffectExpressionDisplay.displayGraph(this);
     }
+    @Override
+    public boolean equals(Object o) {
+      // Making this explicit because a structural equals() is problematic in data structures of these
+      return ((Object)this).equals(o);
+    }
   }
 
   /** Use {@link EventGraph#atom} instead of instantiating this class directly. */
@@ -53,6 +59,10 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     @Override
     public String toString() {
       return EffectExpressionDisplay.displayGraph(this);
+    }
+    @Override
+    public boolean equals(Object o) {
+      return ((Object)this).equals(o);
     }
   }
 
@@ -62,6 +72,10 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     public String toString() {
       return EffectExpressionDisplay.displayGraph(this);
     }
+    @Override
+    public boolean equals(Object o) {
+      return ((Object)this).equals(o);
+    }
   }
 
   /** Use {@link EventGraph#concurrently(EventGraph[])}} instead of instantiating this class directly. */
@@ -69,6 +83,10 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     @Override
     public String toString() {
       return EffectExpressionDisplay.displayGraph(this);
+    }
+    @Override
+    public boolean equals(Object o) {
+      return ((Object)this).equals(o);
     }
   }
 
