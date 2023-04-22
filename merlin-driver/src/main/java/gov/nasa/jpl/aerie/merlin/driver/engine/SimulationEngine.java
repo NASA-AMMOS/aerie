@@ -93,13 +93,15 @@ public final class SimulationEngine implements AutoCloseable {
     this.startTime = startTime;
     this.missionModel = missionModel;
     this.oldEngine = oldEngine;
-    this.timeline = new TemporalEventSource();
+    this.timeline = new TemporalEventSource(null, missionModel,
+                                            Optional.ofNullable(oldEngine == null ? null : oldEngine.timeline));
     if (oldEngine != null) {
       oldEngine.cells = new LiveCells(oldEngine.timeline, oldEngine.missionModel.getInitialCells());
       this.cells = new LiveCells(timeline, oldEngine.missionModel.getInitialCells());  // HACK: good for in-memory but with DB or difft mission model configuration,...
     } else {
       this.cells = new LiveCells(timeline, missionModel.getInitialCells());
     }
+    this.timeline.liveCells = this.cells;
   }
 
   /** When tasks become stale */
@@ -135,8 +137,8 @@ public final class SimulationEngine implements AutoCloseable {
    * @return the time of the earliest read, the tasks doing the reads, and the noop Events/Topics read by each task
    */
   public Pair<Duration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReads(Duration after, Duration before) {
-    // We need to have the reads sorted according to the event graph.  Currently, it doesn't look like a task can
-    // read a cell more than once in a graph.  But, we should make sure we handle this case. TODO
+    // We need to have the reads sorted according to the event graph.  Currently, this function doesn't
+    // handle a task reading a cell more than once in a graph.  But, we should make sure we handle this case. TODO
     var earliest = Duration.MAX_VALUE;
     final var tasks = new HashMap<TaskId, HashSet<Pair<Topic<?>, Event>>>();
     final var topicsStale = timeline.staleTopics.keySet();
@@ -218,6 +220,11 @@ public final class SimulationEngine implements AutoCloseable {
    * For the next time t that a set of tasks could potentially have a stale read, check if any read is stale for
    * each of those tasks, and, if so, mark them stale at t and schedule them to re-run.
    *
+   * This method assumes that these are reads that occurred in the previous simulation and thus have an EventGraph
+   * in the old SimulationEngine's timeline with the read noop.  If the current timeline has an EventGraph at this
+   * same time, it is assumed to also have the noop events.
+   *
+   *
    * @param earliestStaleReads the time of the potential stale reads along with the tasks and the potentially stale topics they read
    */
   public void rescheduleStaleTasks(Pair<Duration, Map<TaskId, HashSet<Pair<Topic<?>, Event>>>> earliestStaleReads) {
@@ -225,38 +232,31 @@ public final class SimulationEngine implements AutoCloseable {
     Duration timeOfStaleReads = earliestStaleReads.getLeft();
     for (Map.Entry<TaskId, HashSet<Pair<Topic<?>, Event>>> entry : earliestStaleReads.getRight().entrySet()) {
       final var taskId = entry.getKey();
-      boolean foundStaleRead = false;
       for (Pair<Topic<?>, Event> pair : entry.getValue()) {
         final var topic = pair.getLeft();
         final var noop = pair.getRight();
-        for (LiveCell c : cells.getCells(topic)) {
-          // Need to step cell up to the point of the read
-          // First, step up the cell to the time before the event graph where the read takes place and then
-          // make a duplicate of the cell since partial evaluation of an event graph makes the cell unusable
-          // for stepping further.
-          c.cursor.stepUp(c.get(), timeOfStaleReads, false);
-          final Cell tempCell = c.get().duplicate();
-          EventGraph<Event> events = this.timeline.eventsByTime.get(timeOfStaleReads);
-          this.timeline.stepUp(tempCell, events, Optional.of(noop), false);
-          if (timeline.oldTemporalEventSource.isPresent()) {
-            var tempOldCell = timeline.getOldCell(c).get().duplicate();
-            // Assumes the old cell has been stepped up to the same time already.  TODO: But, if not stale, shouldn't the old cell not exist or not be stepped up, in which case we duplicate to get the old cell instead unless the old event graph is the same?
-            // Assumes that the same noop event for the read exists at the same time in the oldTemporalEventSource.
-            var oldEvents = this.timeline.oldTemporalEventSource.get().eventsByTime.get(timeOfStaleReads);
-            if (oldEvents != null) {
-              if (timeline.isTopicStale(topic, timeOfStaleReads) || !oldEvents.equals(events)) {
-                this.timeline.oldTemporalEventSource.get().stepUp(tempOldCell, events, Optional.of(noop), false);
-                if (!tempCell.getState().equals(tempOldCell.getState())) {
-                  // Mark stale and reschedule task
-                  setTaskStale(taskId, timeOfStaleReads);
-                  foundStaleRead = true;
-                  break;
-                }
-              }
-            }
+        // Need to step cell up to the point of the read
+        // First, step up the cell to the time before the event graph where the read takes place and then
+        // make a duplicate of the cell since partial evaluation of an event graph makes the cell unusable
+        // for stepping further.
+        var steppedCell = timeline.getCell(topic, timeOfStaleReads, false);
+        final Cell<?> tempCell = steppedCell.get().duplicate();
+        EventGraph<Event> events = this.timeline.eventsByTime.get(timeOfStaleReads);
+        if (events == null) throw new RuntimeException("No EventGraph for potentially stale read.");
+        this.timeline.stepUp(tempCell, events, Optional.of(noop), false);
+        // Assumes that the same noop event for the read exists at the same time in the oldTemporalEventSource.
+        var oldEvents = this.timeline.oldTemporalEventSource.get().eventsByTime.get(timeOfStaleReads);
+        if (oldEvents == null) throw new RuntimeException("No old EventGraph for potentially stale read.");
+        if (timeline.isTopicStale(topic, timeOfStaleReads) || !oldEvents.equals(events)) {
+          // Assumes the old cell has been stepped up to the same time already.  TODO: But, if not stale, shouldn't the old cell not exist or not be stepped up, in which case we duplicate to get the old cell instead unless the old event graph is the same?
+          var tempOldCell = timeline.getOldCell(steppedCell).get().duplicate();
+          this.timeline.oldTemporalEventSource.get().stepUp(tempOldCell, oldEvents, Optional.of(noop), false);
+          if (!tempCell.getState().equals(tempOldCell.getState())) {
+            // Mark stale and reschedule task
+            setTaskStale(taskId, timeOfStaleReads);
+            break;  // rescheduled task, so can move on to the next task
           }
-        }  // for LiveCell
-        if (foundStaleRead) break; // already rescheduled task, so can move on to the next task
+        }
       }  // for Pair<Topic<?>, Event>
     }  // for Map.Entry<TaskId, HashSet<Pair<Topic<?>, Event>>>
   }
@@ -272,7 +272,7 @@ public final class SimulationEngine implements AutoCloseable {
       if (g == null) g = oldGraphsForTask.get(time);  // else we can replace the old graph
       var newG = g.filter(e -> !taskId.equals(e.provenance()));
       if (newG != g) {
-        graphsForTask.put(time, newG); // TODO: Don't we need to update other members of timeline?  Need a timeline.put()?
+        timeline.replaceEventGraph(g, newG);
       }
     }
   }
@@ -935,9 +935,8 @@ public final class SimulationEngine implements AutoCloseable {
       @SuppressWarnings("unchecked")
       final var query = ((EngineCellId<?, State>) token);
 
-      // step up cell(s) for topic -- this used to be done in LiveCell.get()
-      var cells = timeline.liveCells.getCells(query.topic());
-      cells.forEach(cell -> timeline.stepUp(cell, currentTime, false));
+      // find or create a cell for the query and step it up -- this used to be done in LiveCell.get()
+      var cell = timeline.getCell(query.query(), currentTime, false);
 
       this.queryTrackingInfo.ifPresent(info -> {
         if (isTaskStale(info.getRight(), currentTime)) {
@@ -948,14 +947,14 @@ public final class SimulationEngine implements AutoCloseable {
         }
       });
 
-      this.expiry = min(this.expiry, this.frame.getExpiry(query.query()));
+      this.expiry = min(this.expiry, cell.get().getExpiry());
       this.referencedTopics.add(query.topic());
 
       // TODO: Cache the state (until the query returns) to avoid unnecessary copies
       //  if the same state is requested multiple times in a row.
-      final var state$ = this.frame.getState(query.query());
+      final var state$ = cell.get().getState();
 
-      return state$.orElseThrow(IllegalArgumentException::new);
+      return state$;
     }
 
     private static Optional<Duration> min(final Optional<Duration> a, final Optional<Duration> b) {
@@ -985,19 +984,26 @@ public final class SimulationEngine implements AutoCloseable {
       @SuppressWarnings("unchecked")
       final var query = (EngineCellId<?, State>) token;
 
-      // step up cell(s) for topic -- this used to be done in LiveCell.get()
-      var cells = timeline.liveCells.getCells(query.topic());
-      cells.forEach(cell -> timeline.stepUp(cell, currentTime, false));
+      // find or create a cell for the query and step it up -- this used to be done in LiveCell.get()
+      var cell = timeline.getCell(query.query(), currentTime, false);
 
-      // Create a noop event to mark when the read occurred in the EventGraph
-      var noop = Event.create(queryTopic, query.topic(), activeTask);
-      this.frame.emit(noop);
-      putInCellReadHistory(query.topic(), activeTask, noop, currentTime);
+      // Don't emit a noop event for the read if the task is not yet stale.
+      // The time that this task becomes stale was determined when it was created.
+      if (isTaskStale(this.activeTask, currentTime)) {
+        // TODO: REVIEW: What if the task becomes stale in the middle of a sequence of events within the same
+        //       timepoint/EventGraph?  Should this be emitting an event in that case?
+        //       Is there a problem of combining the existing or old EventGraph with a new one?
+
+        // Create a noop event to mark when the read occurred in the EventGraph
+        var noop = Event.create(queryTopic, query.topic(), activeTask);
+        this.frame.emit(noop);
+        putInCellReadHistory(query.topic(), activeTask, noop, currentTime);
+      }
 
       // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
       // if the same state is requested multiple times in a row.
-      final var state$ = this.frame.getState(query.query());
-      return state$.orElseThrow(IllegalArgumentException::new);
+      final var state$ = cell.get().getState();
+      return state$;
     }
 
     @Override
@@ -1005,20 +1011,22 @@ public final class SimulationEngine implements AutoCloseable {
       if (isTaskStale(this.activeTask, this.currentTime)) {
         // Add this event to the timeline.
         this.frame.emit(Event.create(topic, event, this.activeTask));
-        if (!timeline.isTopicStale(topic, this.currentTime)) {
-          SimulationEngine.this.timeline.setTopicStale(topic, this.currentTime);
-        }
+//        if (!timeline.isTopicStale(topic, this.currentTime)) {
+//          SimulationEngine.this.timeline.setTopicStale(topic, this.currentTime);
+//        }
       }
       SimulationEngine.this.invalidateTopic(topic, this.currentTime);
     }
 
     @Override
     public void spawn(final TaskFactory<?> state) {
-      final var task = TaskId.generate();
-      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state.create(SimulationEngine.this.executor)));
-      SimulationEngine.this.taskParent.put(task, this.activeTask);
-      SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
-      this.frame.signal(JobId.forTask(task));
+      if (isTaskStale(this.activeTask, this.currentTime)) {
+        final var task = TaskId.generate();
+        SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state.create(SimulationEngine.this.executor)));
+        SimulationEngine.this.taskParent.put(task, this.activeTask);
+        SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
+        this.frame.signal(JobId.forTask(task));
+      }
     }
   }
 
