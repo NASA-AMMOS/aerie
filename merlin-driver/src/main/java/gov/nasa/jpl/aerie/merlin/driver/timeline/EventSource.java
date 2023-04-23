@@ -9,7 +9,7 @@ public interface EventSource {
 
   interface Cursor {
     void stepUp(Cell<?> cell);
-    void stepUp(Cell<?> cell, Duration maxTime, boolean includeMaxTime);
-    void stepUp(Cell<?> cell, EventGraph<Event> events, Optional<Event> lastEvent, boolean includeLast);
+//    void stepUp(Cell<?> cell, Duration maxTime, boolean includeMaxTime);
+//    void stepUp(Cell<?> cell, EventGraph<Event> events, Optional<Event> lastEvent, boolean includeLast);
   }
 }

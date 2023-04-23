@@ -11,7 +11,6 @@ import gov.nasa.jpl.aerie.merlin.driver.UnfinishedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Cell;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCell;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.CellId;
@@ -94,7 +93,7 @@ public final class SimulationEngine implements AutoCloseable {
     this.missionModel = missionModel;
     this.oldEngine = oldEngine;
     this.timeline = new TemporalEventSource(null, missionModel,
-                                            Optional.ofNullable(oldEngine == null ? null : oldEngine.timeline));
+                                            oldEngine == null ? null : oldEngine.timeline);
     if (oldEngine != null) {
       oldEngine.cells = new LiveCells(oldEngine.timeline, oldEngine.missionModel.getInitialCells());
       this.cells = new LiveCells(timeline, oldEngine.missionModel.getInitialCells());  // HACK: good for in-memory but with DB or difft mission model configuration,...
@@ -240,17 +239,17 @@ public final class SimulationEngine implements AutoCloseable {
         // make a duplicate of the cell since partial evaluation of an event graph makes the cell unusable
         // for stepping further.
         var steppedCell = timeline.getCell(topic, timeOfStaleReads, false);
-        final Cell<?> tempCell = steppedCell.get().duplicate();
+        final Cell<?> tempCell = steppedCell.duplicate();
         EventGraph<Event> events = this.timeline.eventsByTime.get(timeOfStaleReads);
         if (events == null) throw new RuntimeException("No EventGraph for potentially stale read.");
         this.timeline.stepUp(tempCell, events, Optional.of(noop), false);
         // Assumes that the same noop event for the read exists at the same time in the oldTemporalEventSource.
-        var oldEvents = this.timeline.oldTemporalEventSource.get().eventsByTime.get(timeOfStaleReads);
+        var oldEvents = this.timeline.oldTemporalEventSource.eventsByTime.get(timeOfStaleReads);
         if (oldEvents == null) throw new RuntimeException("No old EventGraph for potentially stale read.");
         if (timeline.isTopicStale(topic, timeOfStaleReads) || !oldEvents.equals(events)) {
           // Assumes the old cell has been stepped up to the same time already.  TODO: But, if not stale, shouldn't the old cell not exist or not be stepped up, in which case we duplicate to get the old cell instead unless the old event graph is the same?
-          var tempOldCell = timeline.getOldCell(steppedCell).get().duplicate();
-          this.timeline.oldTemporalEventSource.get().stepUp(tempOldCell, oldEvents, Optional.of(noop), false);
+          var tempOldCell = timeline.getOldCell(steppedCell).duplicate();
+          this.timeline.oldTemporalEventSource.stepUp(tempOldCell, oldEvents, Optional.of(noop), false);
           if (!tempCell.getState().equals(tempOldCell.getState())) {
             // Mark stale and reschedule task
             setTaskStale(taskId, timeOfStaleReads);
@@ -947,12 +946,12 @@ public final class SimulationEngine implements AutoCloseable {
         }
       });
 
-      this.expiry = min(this.expiry, cell.get().getExpiry());
+      this.expiry = min(this.expiry, cell.getExpiry());
       this.referencedTopics.add(query.topic());
 
       // TODO: Cache the state (until the query returns) to avoid unnecessary copies
       //  if the same state is requested multiple times in a row.
-      final var state$ = cell.get().getState();
+      final var state$ = cell.getState();
 
       return state$;
     }
@@ -1002,7 +1001,7 @@ public final class SimulationEngine implements AutoCloseable {
 
       // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
       // if the same state is requested multiple times in a row.
-      final var state$ = cell.get().getState();
+      final var state$ = cell.getState();
       return state$;
     }
 
