@@ -212,16 +212,16 @@ export class Goal {
    * #### Notes on boundaries:
    * * If you are trying to schedule an activity, or a recurrence within a window but that window cuts off either the activity or the recurrence interval (depending on the goal type), it will not be scheduled. For example, if you had a recurrence interval of 3 seconds, scheduling a 2 second activity each recurrence, and had the following window, you'd get the following:
    * ```
-   * RECURRENCE INTERVAL: [++-++-++-]
-   * GOAL WINDOW:         [+++++----]
-   * RESULT:              [++-------]
+   * Recurrence interval: [++-++-++-]
+   * Goal window:         [+++++----]
+   * Result:              [++-------]
    * ```
    * That, is, the second activity won't be scheduled as the goal window cuts off its recurrence interval.
    * * Scheduling is _local_, not global. This means for every window that is matched (as it is possible to have disjoint windows, imagine a resource that fluctuates upward and downward but only applying that goal when the resource is over a certain value), the goal is applied individually. So, for that same recurrence interval setup as before, we could have:
    * ```
-   * RECURRENCE INTERVAL: [++-++-++-++-]
-   * GOAL WINDOW:         [+++++--+++--]
-   * RESULT:              [++-----++---] //(the second one is applied independently of the first!)
+   * Recurrence interval: [++-++-++-++-]
+   * Goal window:         [+++++--+++--]
+   * Result:              [++-----++---] //(the second one is applied independently of the first!)
    * ```
    * * When mapping out a temporal window to apply a goal over, keep in mind that the ending boundary of the goal is _exclusive_, i.e. if I want to apply a goal in the window of 10-12 seconds, it will apply only on seconds 10 and 11. This is in line with the [fencepost problem](https://en.wikipedia.org/wiki/Off-by-one_error#Fencepost_error).
    *
@@ -243,6 +243,7 @@ export class Goal {
    *
    * #### Inputs
    * - activityTemplate: the description of the activity whose recurrence we're interested in.
+   * - activityFinder: an optional activity expression. If present, it will be used as replacement of activityTemplate to match against existing activities in the plan.
    * - interval: a Duration of time specifying how often this activity must occur
    *
    * #### Behavior
@@ -263,9 +264,26 @@ export class Goal {
    *           interval: Temporal.Duration.from({ hours: 2 })
    *         })
    * }
-   * ```
    *
    * The goal above will place a `GrowBanana` activity in every 2-hour period of time that does not already contain one with the exact same parameters.
+   *
+   * ```
+   * #### With an activityFinder
+   * ```typescript
+   * export default function myGoal() {
+   *     return Goal.ActivityRecurrenceGoal({
+   *             activityFinder: ActivityExpression.build(ActivityTypes.GrowBanana, {growingDuration: Temporal.Duration.from({hours : 1})})
+   *             activityTemplate: ActivityTemplates.GrowBanana({
+   *             quantity: 1,
+   *             growingDuration: Temporal.Duration.from({ hours: 1 })
+   *           }),
+   *           interval: Temporal.Duration.from({ hours: 2 })
+   *         })
+   * }
+   * ```
+   *
+   * Same behavior as above but in this last example, an activity finder is used to match against existing activities in the plan that would satisfy the goal. Here, any GrowBanana activity with a `growingDuration` parameter equal to `Temporal.Duration.from({hours : 1})` would match, disregarding the value of the other parameter `quantity`.
+   *
    *
    * @param opts an object containing the activity template and the interval at which the activities must be placed
    */
@@ -302,7 +320,8 @@ export class Goal {
    *
    * #### Inputs
    * - **forEach**: a set of time windows (`Windows`, see [documentation](../../constraints-edsl-api/classes/Windows) on how to produce such an expression) or a set of activities (`ActivityExpression`)
-   * - **activityTemplate**: the description of the activity to insert after each activity identified by `forEach`
+   * - **activityTemplate**: the description of the activity to insert after each activity identified by `forEach`. If activityFinder is not defined, used for both matching against existing activities and creating new ones.
+   * - **activityFinder: an optional activity expression. If present, it will be used as replacement of activityTemplate to match against existing activities in the plan.
    * - **startsAt**: optionally specify a specific time when the activity should start relative to the window
    * - **startsWithin**: optionally specify a range when the activity should start relative to the window
    * - **endsAt**: optionally specify a specific time when the activity should end relative to the window
@@ -312,7 +331,7 @@ export class Goal {
    *
    *
    * #### Behavior
-   * The scheduler will find places in the plan where the `forEach` condition is true, and if not, it will insert a new instance using the given `activityTemplate` and temporal constraints.
+   * The scheduler will find places in the plan where the `forEach` condition is true, find if an activity matching either the activity template or activity finder is present and if not, it will insert a new instance using the given `activityTemplate` and temporal constraints.
    *
    * #### Examples
    *
@@ -347,6 +366,17 @@ export class Goal {
    * Behavior: for each continuous period of time during which the `/fruit` resource is equal to 4, place an activity of type `PeelBanana` ending exactly at the end of A + 6 minutes. Note that the scheduler will allow a default timing error of 500 milliseconds for temporal constraints. This parameter will be configurable in an upcoming release.
    *
    * KNOWN ISSUE: If the end is unconstrained while the activity has an uncontrollable duration, the scheduler may fail to place the activity. To work around this, add an `endsWithin` constraint that encompasses your expectation for the duration of the activity - this will help the scheduler narrow the search space.
+   *
+   * ```typescript
+   * export default () => Goal.CoexistenceGoal({
+   *   forEach: Real.Resource("/fruit").equal(4.0),
+   *   activityTemplate: ActivityTemplates.PeelBanana({peelDirection: "fromStem"}),
+   *   activityFinder: ActivityExpression.ofType(ActivityTypes.PeelBanana)
+   *   endsAt: TimingConstraint.singleton(WindowProperty.END).plus(Temporal.Duration.from({ minutes: 5 }))
+   * })
+   * ```
+   * Behavior: Same as above but the activity finder is being used to match against any existing PeelBanana activity in the plan, disregarding the value of its parameters.
+   *
    *
    * @param opts an object containing the activity template, a set of windows, and optionally temporal constraints.
    */
@@ -400,9 +430,9 @@ export class Goal {
   /**
    * The Cardinality Goal specifies that a certain activity should occur in the plan either a certain number of times, or for a certain total duration.
    * #### Inputs
-   * - **activityTemplate**: the description of the activity whose recurrence we're interested in.
+   * - **activityTemplate**: the description of the activity whose recurrence we're interested in. If activityFinder is not defined, used for both matching against existing activities and creating new ones.
+   * - **activityFinder: an optional activity expression. If present, it will be used as replacement of activityTemplate to match against existing activities in the plan.
    * - **specification**: an object with either an `occurrence` field, a `duration` field, or both (see examples below).
-   *
    * #### Behavior
    * The duration and occurrence are treated as lower bounds - so if the activity occurs more times, or for a longer duration, that is not considered a failure, and the scheduler will not add any more activities.
    *
@@ -451,6 +481,23 @@ export class Goal {
    *     })
    * }
    * ```
+   *
+   * With an activity finder:
+   *
+   * ```typescript
+   * export default function myGoal() {
+   *     return Goal.CardinalityGoal({
+   *         activityTemplate: ActivityTemplates.GrowBanana({
+   *             quantity: 1,
+   *             growingDuration: Temporal.Duration.from({ seconds: 1 }),
+   *         }),
+   *         activityFinder: ActivityExpression.build(ActivityTypes.GrowBanana, {quantity: 1}),
+   *         specification: { occurrence: 10, duration: Temporal.Duration.from({ seconds: 10 }) }
+   *     })
+   * }
+   * ```
+   * In this last example, an activity finder is used to match against existing activities in the plan that would satisfy the goal. Here, any GrowBanana activity with a `quantity` parameter equal to 1 would match, disregarding the value of the other parameter `growingDuration`.
+   *
    *
    * NOTE: In order to avoid placing multiple activities at the same start time, the Cardinality goal introduces an assumed mutual exclusion constraint - namely that new activities will not be allowed to overlap with existing activities.
    * @param opts an object containing the activity template and a  {@link ActivityCardinalityGoal} specification of what kind of cardinality is considered
@@ -518,9 +565,10 @@ export class ActivityExpression<T extends WindowsEDSL.Gen.ActivityType> {
   }
 
   /**
-   * Creates an actvity expression of a type
+   * Creates an actvity expression that matches all activities of the provided type that have matching arguments.
+   * The matching arguments can be a subset of all the arguments.
    * @param activityType the type
-   * @param matchingArgs args to match with
+   * @param matchingArgs the arguments to match
    */
   public static build<T extends WindowsEDSL.Gen.ActivityType>(activityType: T,
                                                                matchingArgs: WindowsEDSL.Gen.ActivityTypeParameterMapWithUndefined[T]): ActivityExpression<T> {
@@ -735,10 +783,17 @@ declare global {
   }
   export class ActivityExpression<T> {
     /**
-     * Creates an actvity expression of a type
+     * Creates an actvity expression that matches all activities of the provided type
      * @param activityType the type
      */
     public static ofType<T extends WindowsEDSL.Gen.ActivityType>(activityType: T): ActivityExpression<T>
+
+    /**
+     * Creates an actvity expression that matches all activities of the provided type that have matching arguments.
+     * The matching arguments can be a subset of all the arguments.
+     * @param activityType the type
+     * @param matchingArgs the arguments to match
+     */
     public static build<T extends WindowsEDSL.Gen.ActivityType>(activityType: T,
                                                                 matchingArgs: WindowsEDSL.Gen.ActivityTypeParameterMapWithUndefined[T]): ActivityExpression<T>
   }
