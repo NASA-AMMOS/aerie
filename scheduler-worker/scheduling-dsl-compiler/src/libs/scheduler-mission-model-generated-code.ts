@@ -10,3 +10,8 @@ export enum ActivityType {
   _ = '_',
 }
 
+
+export function makeArgumentsDiscreteProfiles<T>(args : T):T{
+  //placeholder function
+  return args
+}
