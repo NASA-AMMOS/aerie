@@ -10,3 +10,4 @@ array_relationships:
         name: profile_segment
       column_mapping:
         id: profile_id
+        dataset_id: dataset_id
