@@ -65,30 +65,13 @@ import java.util.stream.Collectors;
       activityTypes.add(this.parseActivityType(missionModelElement, activityTypeElement));
     }
 
-    final var autoValueMapperRequests = new ArrayList<TypeElement>();
-
-    for (final var activityType : activityTypes) {
-      final var typeName = activityType.getOutputTypeName();
-      final var typeElement = elementUtils.getTypeElement(typeName.toString());
-      final var annotation = typeElement.getAnnotation(AutoValueMapper.Record.class);
-      if (annotation == null) continue;
-      if (typeElement.getKind() != ElementKind.RECORD) {
-        throw new InvalidMissionModelException("@%s.%s is only allowed on records, but was used on %s".formatted(
-            AutoValueMapper.class.getSimpleName(),
-            AutoValueMapper.Record.class.getSimpleName(),
-            typeElement.getQualifiedName()));
-      }
-      autoValueMapperRequests.add(typeElement);
-    }
-
     return new MissionModelRecord(
         missionModelElement,
         topLevelModel.type,
         topLevelModel.expectsPlanStart,
         topLevelModel.configurationType,
         typeRules,
-        activityTypes,
-        autoValueMapperRequests);
+        activityTypes);
   }
 
   private record MissionModelTypeRecord(

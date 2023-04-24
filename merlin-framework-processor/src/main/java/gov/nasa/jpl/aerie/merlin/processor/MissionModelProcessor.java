@@ -39,9 +39,6 @@ public final class MissionModelProcessor implements Processor {
   private final Set<Element> foundActivityTypes = new HashSet<>();
   private final Set<Element> ownedActivityTypes = new HashSet<>();
 
-  private final Set<Element> foundAutoValueMapperRequests = new HashSet<>();
-  private final Set<Element> ownedAutoValueMapperRequests = new HashSet<>();
-
   // Effectively final, late-initialized
   private Messager messager = null;
   private Filer filer = null;
@@ -59,7 +56,7 @@ public final class MissionModelProcessor implements Processor {
     return Set.of(
         MissionModel.class.getCanonicalName(),
         ActivityType.class.getCanonicalName(),
-        AutoValueMapper.class.getCanonicalName());
+        AutoValueMapper.Record.class.getCanonicalName());
   }
 
   @Override
@@ -79,7 +76,6 @@ public final class MissionModelProcessor implements Processor {
   public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     // Accumulate any information added in this round.
     this.foundActivityTypes.addAll(roundEnv.getElementsAnnotatedWith(ActivityType.class));
-    this.foundAutoValueMapperRequests.addAll(roundEnv.getElementsAnnotatedWith(AutoValueMapper.Record.class));
 
     if (!roundEnv.getElementsAnnotatedWith(AutoValueMapper.class).isEmpty()) {
       this.messager.printMessage(
@@ -95,33 +91,15 @@ public final class MissionModelProcessor implements Processor {
 
     // Iterate over all elements annotated with @MissionModel
     for (final var element : roundEnv.getElementsAnnotatedWith(MissionModel.class)) {
+      final var autoValueMapperRequests = roundEnv.getElementsAnnotatedWith(AutoValueMapper.Record.class);
       final var packageElement = (PackageElement) element;
       try {
         final var missionModelRecord$ = missionModelParser.parseMissionModel(packageElement);
-        this.ownedAutoValueMapperRequests.addAll(missionModelRecord$.autoValueMapperRequests);
-
-        final var generatedFiles = new ArrayList<>(List.of(
-            missionModelGen.generateMerlinPlugin(missionModelRecord$),
-            missionModelGen.generateSchedulerPlugin(missionModelRecord$)));
-
-        missionModelRecord$.modelConfigurationType
-            .flatMap(configType -> missionModelGen.generateMissionModelConfigurationMapper(missionModelRecord$, configType))
-            .ifPresent(generatedFiles::add);
-
-        generatedFiles.addAll(List.of(
-            missionModelGen.generateModelType(missionModelRecord$),
-            missionModelGen.generateSchedulerModel(missionModelRecord$),
-            missionModelGen.generateActivityActions(missionModelRecord$),
-            missionModelGen.generateActivityTypes(missionModelRecord$)
-        ));
-
-        final var autoValueMappers = missionModelGen.generateAutoValueMappers(
-            missionModelRecord$,
-            missionModelRecord$.autoValueMapperRequests);
-        generatedFiles.add(autoValueMappers.getLeft());
 
         final var concatenatedTypeRules = new ArrayList<>(missionModelRecord$.typeRules);
-        concatenatedTypeRules.addAll(autoValueMappers.getRight());
+        for (final var request : autoValueMapperRequests) {
+          concatenatedTypeRules.add(AutoValueMappers.typeRule(request, missionModelRecord$.getAutoValueMappersName()));
+        }
 
         final var missionModelRecord = new MissionModelRecord(
             missionModelRecord$.$package,
@@ -129,9 +107,28 @@ public final class MissionModelProcessor implements Processor {
             missionModelRecord$.expectsPlanStart,
             missionModelRecord$.modelConfigurationType,
             concatenatedTypeRules,
-            missionModelRecord$.activityTypes,
-            missionModelRecord$.autoValueMapperRequests
+            missionModelRecord$.activityTypes
         );
+
+        final var generatedFiles = new ArrayList<>(List.of(
+            missionModelGen.generateMerlinPlugin(missionModelRecord),
+            missionModelGen.generateSchedulerPlugin(missionModelRecord)));
+
+        missionModelRecord.modelConfigurationType
+            .flatMap(configType -> missionModelGen.generateMissionModelConfigurationMapper(missionModelRecord, configType))
+            .ifPresent(generatedFiles::add);
+
+        generatedFiles.addAll(List.of(
+            missionModelGen.generateModelType(missionModelRecord),
+            missionModelGen.generateSchedulerModel(missionModelRecord),
+            missionModelGen.generateActivityActions(missionModelRecord),
+            missionModelGen.generateActivityTypes(missionModelRecord)
+        ));
+
+        final var autoValueMappers = AutoValueMappers.generateAutoValueMappers(
+            missionModelRecord,
+            autoValueMapperRequests);
+        generatedFiles.add(autoValueMappers);
 
         for (final var activityRecord : missionModelRecord.activityTypes) {
           this.ownedActivityTypes.add(activityRecord.inputType().declaration());
@@ -182,26 +179,6 @@ public final class MissionModelProcessor implements Processor {
             Diagnostic.Kind.WARNING,
             "@ActivityType-annotated class is not referenced by any @WithActivity",
             foundActivityType);
-      }
-
-      for (final var foundAutoValueMapperRequest : this.foundAutoValueMapperRequests) {
-        if (this.ownedAutoValueMapperRequests.contains(foundAutoValueMapperRequest)) continue;
-
-        this.messager.printMessage(
-            Diagnostic.Kind.WARNING,
-            "@%s.%s-annotated class is not the return type from any effect model. No value mappper was generated"
-                .formatted(AutoValueMapper.class.getSimpleName(), AutoValueMapper.Record.class.getSimpleName()),
-            foundAutoValueMapperRequest);
-
-
-        if (foundAutoValueMapperRequest.getKind() != ElementKind.RECORD) {
-          this.messager.printMessage(
-              Diagnostic.Kind.WARNING,
-              "@%s.%s is only allowed on records".formatted(
-                  AutoValueMapper.class.getSimpleName(),
-                  AutoValueMapper.Record.class.getSimpleName()),
-              foundAutoValueMapperRequest);
-        }
       }
     }
 
