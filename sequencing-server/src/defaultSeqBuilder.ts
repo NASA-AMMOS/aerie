@@ -56,7 +56,10 @@ export const defaultSeqBuilder: SeqBuilder = (
 
         // If we come across a relative command, convert it to absolute.
         if (command.relativeTime !== null && previousTime !== null) {
-          convertedCommands.push(command.absoluteTiming(previousTime.add(command.relativeTime)));
+          const absoluteCommand = command.absoluteTiming(previousTime.add(command.relativeTime));
+
+          convertedCommands.push(absoluteCommand);
+          previousTime = absoluteCommand.absoluteTime;
         } else {
           convertedCommands.push(command);
           previousTime = command.absoluteTime;
