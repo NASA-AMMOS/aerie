@@ -2783,7 +2783,7 @@ describe('sequence generation', () => {
       /** Begin Setup */
       const expansionId1 = await insertExpansion(
         graphqlClient,
-        'GrowBanana',
+        'PickBanana',
         `
     export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
       return [
@@ -2814,7 +2814,7 @@ describe('sequence generation', () => {
 
       // Create Activity Directives
       const [activityId1, activityId2] = await Promise.all([
-        insertActivityDirective(graphqlClient, planId, 'GrowBanana'),
+        insertActivityDirective(graphqlClient, planId, 'PickBanana'),
         insertActivityDirective(graphqlClient, planId, 'GrowBanana', '30 minutes'),
       ]);
 
@@ -2866,13 +2866,6 @@ describe('sequence generation', () => {
         timeSorted: true,
       });
 
-      /**
-        A\`2023-091T08:00:00.000\`.ADD_WATER,
-        R\`04:00:00.000\`.PICK_BANANA,
-        A\`2023-091T10:00:00.000\`.ADD_WATER,
-        R\`04:00:00.000\`.GROW_BANANA
-        */
-
       expect(getSequenceSeqJsonResponse.seqJson.steps).toEqual([
         {
           type: 'command',
@@ -2886,14 +2879,14 @@ describe('sequence generation', () => {
           stem: 'ADD_WATER',
           time: { tag: '2023-091T10:00:00.000', type: TimingTypes.ABSOLUTE },
           args: [],
-          metadata: { simulatedActivityId: simulatedActivityId1 },
+          metadata: { simulatedActivityId: simulatedActivityId2 },
         },
         {
           type: 'command',
           stem: 'PICK_BANANA',
           time: { tag: '2023-091T12:00:00.000', type: TimingTypes.ABSOLUTE },
           args: [],
-          metadata: { simulatedActivityId: simulatedActivityId2 },
+          metadata: { simulatedActivityId: simulatedActivityId1 },
         },
         {
           type: 'command',
