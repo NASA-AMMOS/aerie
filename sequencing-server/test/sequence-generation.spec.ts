@@ -2779,6 +2779,149 @@ describe('sequence generation', () => {
       /** End Cleanup */
     }, 30000);
 
+    it('should sort expanded commands correctly with relative and absolute times for multiple activities', async () => {
+      /** Begin Setup */
+      const expansionId1 = await insertExpansion(
+        graphqlClient,
+        'GrowBanana',
+        `
+    export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+      return [
+        A\`2023-091T08:00:00.000\`.ADD_WATER,
+        R\`04:00:00.000\`.PICK_BANANA,
+      ];
+    }
+    `,
+      );
+
+      const expansionId2 = await insertExpansion(
+        graphqlClient,
+        'GrowBanana',
+        `
+    export default function SingleCommandExpansion(props: { activityInstance: ActivityType }): ExpansionReturn {
+      return [
+        A\`2023-091T10:00:00.000\`.ADD_WATER,
+        R\`04:00:00.000\`.GROW_BANANA({ quantity: 10, durationSecs: 7200 })
+      ];
+    }
+    `,
+      );
+      // Create Expansion Set
+      const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [
+        expansionId1,
+        expansionId2,
+      ]);
+
+      // Create Activity Directives
+      const [activityId1, activityId2] = await Promise.all([
+        insertActivityDirective(graphqlClient, planId, 'GrowBanana'),
+        insertActivityDirective(graphqlClient, planId, 'GrowBanana', '30 minutes'),
+      ]);
+
+      // Simulate Plan
+      const simulationArtifactPk = await executeSimulation(graphqlClient, planId);
+      // Expand Plan to Sequence Fragments
+      const expansionRunPk = await expand(graphqlClient, expansionSetId, simulationArtifactPk.simulationDatasetId);
+      // Create Sequence
+      const sequencePk = await insertSequence(graphqlClient, {
+        seqId: 'test00000',
+        simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+      });
+      // Link Activity Instances to Sequence
+      await Promise.all([
+        linkActivityInstance(graphqlClient, sequencePk, activityId1),
+        linkActivityInstance(graphqlClient, sequencePk, activityId2),
+      ]);
+
+      // Get the simulated activity ids
+      const [simulatedActivityId1, simulatedActivityId2] = await Promise.all([
+        convertActivityDirectiveIdToSimulatedActivityId(
+          graphqlClient,
+          simulationArtifactPk.simulationDatasetId,
+          activityId1,
+        ),
+        convertActivityDirectiveIdToSimulatedActivityId(
+          graphqlClient,
+          simulationArtifactPk.simulationDatasetId,
+          activityId2,
+        ),
+      ]);
+      /** End Setup */
+
+      // Retrieve seqJson
+      const getSequenceSeqJsonResponse = await getSequenceSeqJson(
+        graphqlClient,
+        'test00000',
+        simulationArtifactPk.simulationDatasetId,
+      );
+
+      if (getSequenceSeqJsonResponse.status !== FallibleStatus.SUCCESS) {
+        throw getSequenceSeqJsonResponse.errors;
+      }
+
+      expect(getSequenceSeqJsonResponse.seqJson.id).toBe('test00000');
+      expect(getSequenceSeqJsonResponse.seqJson.metadata).toEqual({
+        planId: planId,
+        simulationDatasetId: simulationArtifactPk.simulationDatasetId,
+        timeSorted: true,
+      });
+
+      /**
+        A\`2023-091T08:00:00.000\`.ADD_WATER,
+        R\`04:00:00.000\`.PICK_BANANA,
+        A\`2023-091T10:00:00.000\`.ADD_WATER,
+        R\`04:00:00.000\`.GROW_BANANA
+        */
+
+      expect(getSequenceSeqJsonResponse.seqJson.steps).toEqual([
+        {
+          type: 'command',
+          stem: 'ADD_WATER',
+          time: { tag: '2023-091T08:00:00.000', type: TimingTypes.ABSOLUTE },
+          args: [],
+          metadata: { simulatedActivityId: simulatedActivityId1 },
+        },
+        {
+          type: 'command',
+          stem: 'ADD_WATER',
+          time: { tag: '2023-091T10:00:00.000', type: TimingTypes.ABSOLUTE },
+          args: [],
+          metadata: { simulatedActivityId: simulatedActivityId1 },
+        },
+        {
+          type: 'command',
+          stem: 'PICK_BANANA',
+          time: { tag: '2023-091T12:00:00.000', type: TimingTypes.ABSOLUTE },
+          args: [],
+          metadata: { simulatedActivityId: simulatedActivityId2 },
+        },
+        {
+          type: 'command',
+          stem: 'GROW_BANANA',
+          time: { tag: '2023-091T14:00:00.000', type: TimingTypes.ABSOLUTE },
+          args: [
+            { value: 10, name: 'quantity', type: 'number' },
+            { value: 7200, name: 'durationSecs', type: 'number' },
+          ],
+          metadata: { simulatedActivityId: simulatedActivityId2 },
+        },
+      ]);
+
+      /** Begin Cleanup */
+      await removeSequence(graphqlClient, sequencePk);
+      await removeExpansionRun(graphqlClient, expansionRunPk);
+      await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
+      await Promise.all([
+        removeActivityDirective(graphqlClient, activityId1, planId),
+        removeActivityDirective(graphqlClient, activityId2, planId),
+      ]);
+      await removeExpansionSet(graphqlClient, expansionSetId);
+      await removeExpansionRun(graphqlClient, expansionRunPk);
+      await removeExpansion(graphqlClient, expansionId1);
+      await removeExpansion(graphqlClient, expansionId2);
+      /** End Cleanup */
+    }, 30000);
+
     it('should not sort expansions if there is only one activity instance', async () => {
       /** Begin Setup */
       const expansionId = await insertExpansion(
