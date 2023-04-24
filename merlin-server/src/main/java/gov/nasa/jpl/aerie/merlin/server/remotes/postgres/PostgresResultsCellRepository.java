@@ -198,12 +198,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     try (final var claimSimulationAction = new ClaimSimulationAction(connection)) {
         claimSimulationAction.apply(datasetId);
     }
-
-    try (final var transactionContext = new TransactionContext(connection)) {
-      transactionContext.commit();
-    } catch (final SQLException ex) {
-      throw new DatabaseException(String.format("Failed to create partitions for simulation dataset id %s", datasetId), ex);
-    }
   }
 
   private static void cancelSimulation(
