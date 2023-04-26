@@ -215,7 +215,7 @@ seqjsonRouter.post('/get-seqjson-for-seqid-and-simulation-dataset', async (req, 
     }
     return {
       ...ai,
-      commands: row.commands?.map(CommandStem.fromSeqJson) ?? null,
+      commands: row.commands?.map(c => CommandStem.fromSeqJson(c)) ?? null,
       errors: row.errors,
     };
   });
@@ -374,7 +374,7 @@ seqjsonRouter.post('/bulk-get-seqjson-for-seqid-and-simulation-dataset', async (
         }
         return {
           ...ai,
-          commands: row.commands?.map(CommandStem.fromSeqJson) ?? null,
+          commands: row.commands?.map(c => CommandStem.fromSeqJson(c)) ?? null,
           errors: row.errors,
         };
       });

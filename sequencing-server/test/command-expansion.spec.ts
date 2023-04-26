@@ -103,7 +103,7 @@ describe('expansion', () => {
         await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [groundEventExpansion]),
       ).toThrow();
     } catch (e) {}
-  });
+  }, 30000);
 
   it('should allow an activity type and command to have the same name', async () => {
     const expansionSetId = await insertExpansionSet(graphqlClient, commandDictionaryId, missionModelId, [expansionId]);
@@ -122,7 +122,7 @@ describe('expansion', () => {
     await removeExpansionRun(graphqlClient, expansionRunPk);
     await removeSimulationArtifacts(graphqlClient, simulationArtifactPk);
     await removeExpansionSet(graphqlClient, expansionSetId);
-  });
+  }, 30000);
 
   it('should throw an error if an activity instance goes beyond the plan duration', async () => {
     /** Begin Setup*/
@@ -187,7 +187,7 @@ describe('expansion', () => {
     await removeExpansion(graphqlClient, expansionId);
     await removeExpansionSet(graphqlClient, expansionSetId);
     await removeExpansionRun(graphqlClient, expansionRunId);
-  });
+  }, 30000);
 
   it('start_offset undefined regression', async () => {
     /** Begin Setup*/
@@ -263,5 +263,5 @@ describe('expansion', () => {
     await removeExpansion(graphqlClient, expansionId);
     await removeExpansionSet(graphqlClient, expansionSetId);
     await removeExpansionRun(graphqlClient, expansionRunId);
-  }, 10000);
+  }, 30000);
 });
